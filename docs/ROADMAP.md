@@ -20,10 +20,10 @@ Doel: een professionele, goed gedocumenteerde basis neerzetten voordat er functi
 Doel: de gekozen technische bouwstenen daadwerkelijk inrichten, nog zonder productfunctionaliteit.
 
 - [ ] Basis feature-first mapstructuur opzetten in `lib/`.
-- [ ] Riverpod als state management inrichten.
-- [ ] GoRouter als navigatieoplossing inrichten.
+- [x] Riverpod als state management inrichten.
+- [x] GoRouter als navigatieoplossing inrichten.
 - [ ] Supabase-project koppelen (configuratie, geen datamodel nog).
-- [ ] Basis theming en app-shell.
+- [x] Basis theming en app-shell.
 
 ## Fase 2 — MVP: de eerste 30 minuten
 
