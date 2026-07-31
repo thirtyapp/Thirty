@@ -6,6 +6,7 @@
 THIRTY helpt gebruikers om dagelijks 30 gerichte minuten in hun gezondheid te investeren, ondersteund door AI-gedreven inzichten en begeleiding.
 
 Voor de volledige productvisie, zie [docs/VISION.md](docs/VISION.md).
+Voor de merk-, ervarings-, ontwerp- en besluitvormingsfilosofie, zie de [THIRTY Playbook](docs/playbook/README.md).
 Voor de fasering van het project, zie [docs/ROADMAP.md](docs/ROADMAP.md).
 Voor de ontwikkelwerkwijze en technische uitgangspunten, zie [CLAUDE.md](CLAUDE.md).
 

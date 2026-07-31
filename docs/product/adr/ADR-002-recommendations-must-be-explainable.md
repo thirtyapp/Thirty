@@ -23,3 +23,4 @@ Vertrouwen is een kernwaarde van THIRTY ([VISION.md](../../VISION.md): "vertrouw
 
 - [Recommendation Philosophy §2](../recommendation-philosophy.md#2-vereisten-voor-een-aanbeveling)
 - [Decision Framework §5, §7](../decision-framework.md#5-het-beslisproces-poorten-en-lagen)
+- [THIRTY Playbook — Hoofdstuk 4 §6, The AI Filter](../../playbook/04-product-decision-framework.md#6-the-ai-filter) — dit ADR is hier veralgemeend tot het toetsingskader voor elke toekomstige AI-feature.

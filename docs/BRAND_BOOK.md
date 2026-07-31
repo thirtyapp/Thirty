@@ -4,6 +4,8 @@ Dit is het officiële merkhandboek van THIRTY. Het is bedoeld voor iedereen die 
 
 Dit document is normatief, geen inspiratiebron. Bij twijfel over een ontwerp-, product- of communicatiebeslissing is [The Golden Rule](#1-the-golden-rule) de eerste toets — de rest van dit document werkt die regel uit voor elk specifiek domein.
 
+Voor de volledig uitgewerkte filosofie achter deze principes — de Circle Manifesto, het ervarings- en ontwerpsysteem, en het productbesluitvormingskader — zie de [THIRTY Playbook](playbook/README.md). Dit Brand Book blijft de kortere, normatieve basis waarop de Playbook voortbouwt; het wordt niet vervangen.
+
 ---
 
 ## 1. The Golden Rule

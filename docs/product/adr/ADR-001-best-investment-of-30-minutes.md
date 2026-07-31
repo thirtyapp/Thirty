@@ -23,3 +23,4 @@ De 30-minuteneenheid is niet een implementatiedetail maar de kern van de merkbel
 
 - [Recommendation Philosophy §1](../recommendation-philosophy.md#1-kernbelofte-de-30-minuteninvestering)
 - [Decision Framework §1](../decision-framework.md#1-kernbelofte)
+- [THIRTY Playbook — Hoofdstuk 4 §3, The Circle Filter](../../playbook/04-product-decision-framework.md#3-the-circle-filter) — dit ADR is hier veralgemeend tot een blijvend toetsingskader voor elke toekomstige feature, niet alleen aanbevelingen.

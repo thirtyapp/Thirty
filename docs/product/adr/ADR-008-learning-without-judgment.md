@@ -22,3 +22,4 @@ Dit sluit aan bij [BRAND_BOOK.md, Writing Guidelines](../../BRAND_BOOK.md#21-wri
 ## Gerelateerde documenten
 
 - [Decision Framework §10](../decision-framework.md#10-leerprincipe-thirty-leert-maar-beoordeelt-niet)
+- [THIRTY Playbook — Hoofdstuk 4 §6, The AI Filter](../../playbook/04-product-decision-framework.md#6-the-ai-filter) — dit ADR is hier veralgemeend tot het toetsingskader voor elke toekomstige AI-feature.

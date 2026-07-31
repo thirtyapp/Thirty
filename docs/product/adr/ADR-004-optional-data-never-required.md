@@ -23,3 +23,4 @@ THIRTY moet voor elke gebruiker werken, ongeacht welke apparaten hij bezit of ko
 
 - [Recommendation Philosophy §4](../recommendation-philosophy.md#4-informatiebronnen)
 - [Decision Framework §5, §7](../decision-framework.md#5-het-beslisproces-poorten-en-lagen)
+- [THIRTY Playbook — Hoofdstuk 4 §6, The AI Filter](../../playbook/04-product-decision-framework.md#6-the-ai-filter) — dit ADR is hier veralgemeend tot het toetsingskader voor elke toekomstige AI-feature.

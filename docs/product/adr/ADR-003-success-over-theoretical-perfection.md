@@ -23,3 +23,4 @@ Een optimale aanbeveling die de gebruiker niet haalt, levert geen gezondheidswin
 
 - [Recommendation Philosophy §3](../recommendation-philosophy.md#3-succes-boven-theoretische-perfectie)
 - [Decision Framework §2, §6](../decision-framework.md#2-definitie-positief-succesmoment)
+- [THIRTY Playbook — Hoofdstuk 4 §6, The AI Filter](../../playbook/04-product-decision-framework.md#6-the-ai-filter) — dit ADR is hier veralgemeend tot het toetsingskader voor elke toekomstige AI-feature.

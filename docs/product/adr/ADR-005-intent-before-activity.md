@@ -22,3 +22,4 @@ Dit onderscheid maakt aanbevelingen uitlegbaar op twee niveaus en maakt het moge
 ## Gerelateerde documenten
 
 - [Decision Framework §4, §8, §9](../decision-framework.md#4-intentie-versus-activiteit)
+- [THIRTY Playbook — Hoofdstuk 4 §6, The AI Filter](../../playbook/04-product-decision-framework.md#6-the-ai-filter) — dit ADR is hier veralgemeend tot het toetsingskader voor elke toekomstige AI-feature.

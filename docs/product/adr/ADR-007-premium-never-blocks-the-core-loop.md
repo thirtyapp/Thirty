@@ -23,3 +23,4 @@ Dit sluit aan bij [VISION.md](../../VISION.md) ("vertrouwen boven groei-trucs" �
 
 - [Product Discovery §5](../product-discovery.md#5-wanneer-introduceren-we-premium)
 - [Onboarding Principles §3](../onboarding-principles.md#3-premium-strategie)
+- [THIRTY Playbook — Hoofdstuk 4 §5, The Premium Filter](../../playbook/04-product-decision-framework.md#5-the-premium-filter) — dit ADR is hier veralgemeend tot het volledige toetsingskader voor elk toekomstig Premium-idee.

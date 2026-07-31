@@ -8,12 +8,13 @@ Lees in deze volgorde voor het volledige beeld:
 
 1. **[VISION.md](../VISION.md)** *(root van `docs/`)* — waarom THIRTY bestaat en voor wie. De visie waar geen enkel ander document tegenin mag gaan.
 2. **[BRAND_BOOK.md](../BRAND_BOOK.md)** *(root van `docs/`)* — hoe THIRTY voelt, klinkt en eruitziet: toon, emotionele reis, algemene UX-ontwerpprincipes.
-3. **[CLAUDE.md](../../CLAUDE.md)** *(repository-root)* — hoe we werken: technische uitgangspunten, productprincipes, ontwikkelwerkwijze.
-4. **[recommendation-philosophy.md](recommendation-philosophy.md)** — wát een aanbeveling van THIRTY moet zijn: de niet-onderhandelbare eisen en de informatiebronnen.
-5. **[decision-framework.md](decision-framework.md)** — hóe die eisen en bronnen zich tot elkaar verhouden: prioriteit, conflictoplossing, onzekerheid.
-6. **[product-discovery.md](product-discovery.md)** — wie de eerste gebruiker is, welke ervaring wordt nagestreefd, en welke vragen daarover nog open staan.
-7. **[onboarding-principles.md](onboarding-principles.md)** — de vastgestelde, onboarding-specifieke principes die uit Product Discovery zijn gedestilleerd.
-8. **[adr/](adr/)** — de losse, gedateerde beslissingen die aan bovenstaande documenten ten grondslag liggen.
+3. **[THIRTY Playbook](../playbook/README.md)** — de volledig uitgewerkte merk-, ervarings-, ontwerp- en productbesluitvormingsfilosofie die op VISION.md en BRAND_BOOK.md voortbouwt; Hoofdstuk 4 (Product Decision Framework) is in het bijzonder relevant voor deze productkennisbasis.
+4. **[CLAUDE.md](../../CLAUDE.md)** *(repository-root)* — hoe we werken: technische uitgangspunten, productprincipes, ontwikkelwerkwijze.
+5. **[recommendation-philosophy.md](recommendation-philosophy.md)** — wát een aanbeveling van THIRTY moet zijn: de niet-onderhandelbare eisen en de informatiebronnen.
+6. **[decision-framework.md](decision-framework.md)** — hóe die eisen en bronnen zich tot elkaar verhouden: prioriteit, conflictoplossing, onzekerheid.
+7. **[product-discovery.md](product-discovery.md)** — wie de eerste gebruiker is, welke ervaring wordt nagestreefd, en welke vragen daarover nog open staan.
+8. **[onboarding-principles.md](onboarding-principles.md)** — de vastgestelde, onboarding-specifieke principes die uit Product Discovery zijn gedestilleerd.
+9. **[adr/](adr/)** — de losse, gedateerde beslissingen die aan bovenstaande documenten ten grondslag liggen.
 
 ## Wie is leidend bij overlap
 
@@ -22,6 +23,7 @@ Lees in deze volgorde voor het volledige beeld:
 | Waarom bestaat THIRTY, voor wie? | [VISION.md](../VISION.md) |
 | Hoe voelt, klinkt en ziet THIRTY eruit? | [BRAND_BOOK.md](../BRAND_BOOK.md) |
 | Hoe werken we (proces, techniek, algemene productprincipes)? | [CLAUDE.md](../../CLAUDE.md) |
+| Moet een toekomstige feature überhaupt bestaan? | [THIRTY Playbook, Hoofdstuk 4](../playbook/04-product-decision-framework.md) |
 | Wat moet een aanbeveling waar maken? | [recommendation-philosophy.md](recommendation-philosophy.md) |
 | Wat wint als twee geldige signalen botsen? | [decision-framework.md](decision-framework.md) |
 | Wie is de eerste gebruiker, wat is nog onbeslist? | [product-discovery.md](product-discovery.md) |

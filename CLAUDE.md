@@ -89,5 +89,6 @@ Deze beperkingen worden losgelaten naarmate het project vordert, in overleg en s
 - [README.md](README.md) — introductie voor iedereen die het project voor het eerst opent.
 - [docs/VISION.md](docs/VISION.md) — waarom THIRTY bestaat en voor wie.
 - [docs/BRAND_BOOK.md](docs/BRAND_BOOK.md) — hoe THIRTY voelt, klinkt en eruitziet.
+- [docs/playbook/README.md](docs/playbook/README.md) — de THIRTY Playbook: de volledige merk-, ervarings-, ontwerp- en besluitvormingsfilosofie, voortbouwend op BRAND_BOOK.md.
 - [docs/ROADMAP.md](docs/ROADMAP.md) — de globale fasering van het project.
 - [docs/product/README.md](docs/product/README.md) — de productkennisbasis: aanbevelingsfilosofie, decision framework, onboarding-principes en ADR's.
