@@ -13,22 +13,17 @@ Zie [docs/VISION.md](docs/VISION.md) voor de volledige productvisie en [docs/ROA
 
 ## Product Principles
 
-THIRTY moet altijd:
+Kort, ter oriëntatie: THIRTY voelt rustig en eenvoudig aan, motiveert zonder schuldgevoel, toont één primaire actie per scherm, en is consistent in design en interactie.
 
-- Eenvoudig aanvoelen.
-- Rust uitstralen.
-- Gebruikers motiveren, nooit schuldgevoel geven.
-- Eén primaire actie per scherm hebben.
-- Consistent zijn in design en interactie.
-- Snel reageren en vloeiend aanvoelen.
+Dit is een samenvatting, geen normatieve definitie. [docs/BRAND_BOOK.md](docs/BRAND_BOOK.md) is de source of truth voor merk-, emotionele en UX-principes — zie met name [The Golden Rule](docs/BRAND_BOOK.md#1-the-golden-rule) ("voelt dit rustiger, eenvoudiger en menselijker dan het alternatief?"), [Core Values](docs/BRAND_BOOK.md#6-core-values) en [Design Principles](docs/BRAND_BOOK.md#11-design-principles). Raadpleeg dat document bij elke ontwerp-, product- of communicatiebeslissing; wijzig deze samenvatting niet zonder BRAND_BOOK.md eerst bij te werken.
+
+Responsiviteit is een technische kwaliteitseis, geen apart merkprincipe. Vloeiende beweging/animatie is normatief uitgewerkt in [docs/BRAND_BOOK.md, Motion](docs/BRAND_BOOK.md#16-motion).
 
 ## AI Principles
 
-Gebruik AI alleen wanneer het daadwerkelijk waarde toevoegt voor de gebruiker.
+Voeg alleen AI-functionaliteit toe die een duidelijk gebruikersprobleem oplost — nooit omdat het technisch mogelijk is. Dit is een grens voor engineeringbeslissingen, in dezelfde lijn als "geen overengineering" (zie [Manier van werken](#4-manier-van-werken)).
 
-Voeg geen AI-functionaliteit toe alleen omdat het technisch mogelijk is.
-
-Elke AI-feature moet een duidelijk gebruikersprobleem oplossen.
+Voor hoe de AI-companion zich vervolgens gedraagt en klinkt — terughoudend, alleen spreken waar het waarde toevoegt, nooit om aanwezig te lijken — is [docs/BRAND_BOOK.md, Brand Promise](docs/BRAND_BOOK.md#5-brand-promise) leidend. Voor de aanbevelingslogica zelf (wat een aanbeveling moet zijn en hoe ze tot stand komt) is [docs/product/](docs/product/README.md) leidend.
 
 ## 2. Technische uitgangspunten
 
@@ -93,4 +88,6 @@ Deze beperkingen worden losgelaten naarmate het project vordert, in overleg en s
 
 - [README.md](README.md) — introductie voor iedereen die het project voor het eerst opent.
 - [docs/VISION.md](docs/VISION.md) — waarom THIRTY bestaat en voor wie.
+- [docs/BRAND_BOOK.md](docs/BRAND_BOOK.md) — hoe THIRTY voelt, klinkt en eruitziet.
 - [docs/ROADMAP.md](docs/ROADMAP.md) — de globale fasering van het project.
+- [docs/product/README.md](docs/product/README.md) — de productkennisbasis: aanbevelingsfilosofie, decision framework, onboarding-principes en ADR's.
