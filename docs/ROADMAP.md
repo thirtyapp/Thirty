@@ -19,7 +19,7 @@ Doel: een professionele, goed gedocumenteerde basis neerzetten voordat er functi
 
 Doel: de gekozen technische bouwstenen daadwerkelijk inrichten, nog zonder productfunctionaliteit.
 
-- [ ] Basis feature-first mapstructuur opzetten in `lib/`.
+- [x] Basis feature-first mapstructuur opzetten in `lib/`.
 - [x] Riverpod als state management inrichten.
 - [x] GoRouter als navigatieoplossing inrichten.
 - [x] Supabase-project koppelen (configuratie, geen datamodel nog).
