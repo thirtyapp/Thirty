@@ -17,6 +17,7 @@ class ThirtyProgressCircle extends StatelessWidget {
     this.strokeWidth = 12,
     this.child,
     this.semanticLabel,
+    this.semanticValue,
     this.progressColor,
     this.trackColor,
     super.key,
@@ -32,6 +33,18 @@ class ThirtyProgressCircle extends StatelessWidget {
   /// Optional content centered inside the circle (e.g. a minutes label).
   final Widget? child;
   final String? semanticLabel;
+
+  /// Overrides the announced semantics value, which otherwise defaults to
+  /// the rounded percentage (e.g. `'50%'`).
+  ///
+  /// A percentage is the right default for an in-progress session, but it
+  /// is not the only meaning this component's progress value can carry —
+  /// e.g. a freshly opened, empty Circle (progress `0.0`) is potential,
+  /// never a shortfall (Playbook Ch.2 §3). Callers whose progress value
+  /// represents something other than "percent complete" should supply
+  /// their own calm, context-specific phrase here rather than have this
+  /// generic component guess at, or hardcode, caller-specific wording.
+  final String? semanticValue;
 
   /// Defaults to the theme's primary color.
   final Color? progressColor;
@@ -49,7 +62,7 @@ class ThirtyProgressCircle extends StatelessWidget {
 
     return Semantics(
       label: semanticLabel ?? 'Voortgang',
-      value: '${(clampedProgress * 100).round()}%',
+      value: semanticValue ?? '${(clampedProgress * 100).round()}%',
       child: SizedBox(
         width: size,
         height: size,

@@ -13,20 +13,27 @@ class AppTheme {
 
   static ThemeData get dark => _build(AppColors.dark, Brightness.dark);
 
-  // THIRTY's primary and secondary brand colors are both light/mid-tone teals,
-  // so dark text keeps accessible contrast on top of them in both themes.
-  static const Color _onAccent = Colors.black;
-
   static ThemeData _build(AppColors colors, Brightness brightness) {
+    // Circle Sage is deepened for light mode and lightened for dark mode
+    // (see AppColors) so it passes WCAG AA 4.5:1 as text on its own
+    // background, not just as a fill — which flips which on-color reads
+    // accessibly on top of it. Mist Sage (light) and its dark-mode
+    // counterpart stay light/soft respectively, so textPrimary always
+    // reads accessibly on secondary regardless of brightness.
+    final onPrimary = brightness == Brightness.light
+        ? Colors.white
+        : Colors.black;
+    final onSecondary = colors.textPrimary;
+
     final colorScheme =
         ColorScheme.fromSeed(
           seedColor: colors.primary,
           brightness: brightness,
         ).copyWith(
           primary: colors.primary,
-          onPrimary: _onAccent,
+          onPrimary: onPrimary,
           secondary: colors.secondary,
-          onSecondary: _onAccent,
+          onSecondary: onSecondary,
           surface: colors.surface,
           onSurface: colors.textPrimary,
           error: colors.error,

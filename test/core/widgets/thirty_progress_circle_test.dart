@@ -60,6 +60,33 @@ void main() {
       expect(semantics.value, '50%');
     });
 
+    testWidgets('defaults to announcing the rounded percentage', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(const ThirtyProgressCircle(progress: 0.0)),
+      );
+
+      final semantics = tester.getSemantics(find.byType(ThirtyProgressCircle));
+      expect(semantics.value, '0%');
+    });
+
+    testWidgets('uses a custom semantic value when provided, instead of '
+        'the percentage', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const ThirtyProgressCircle(
+            progress: 0.0,
+            semanticValue: 'Ready to begin.',
+          ),
+        ),
+      );
+
+      final semantics = tester.getSemantics(find.byType(ThirtyProgressCircle));
+      expect(semantics.value, 'Ready to begin.');
+      expect(semantics.value, isNot(contains('%')));
+    });
+
     testWidgets('renders optional center content', (WidgetTester tester) async {
       await tester.pumpWidget(
         _wrap(const ThirtyProgressCircle(progress: 0.5, child: Text('15 min'))),

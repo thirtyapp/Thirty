@@ -39,12 +39,10 @@ class RecommendationState {
 }
 
 const _todaysRecommendation = Recommendation(
-  intent: 'Meer energie',
-  activity: '30 minuten wandelen',
-  duration: '30 minuten',
-  why:
-      'Een rustige wandeling is vandaag een eenvoudige manier om energie '
-      'op te bouwen.',
+  intent: 'More Energy',
+  activity: '30 minute walk',
+  duration: '30 minutes',
+  why: 'A calm walk to help you build energy for the rest of the day.',
 );
 
 class RecommendationNotifier extends Notifier<RecommendationState> {

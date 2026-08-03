@@ -31,29 +31,37 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color warning;
   final Color error;
 
+  // Circle Sage, deepened ~17% from the reference brand value (#7C8B6D) so
+  // it clears WCAG AA 4.5:1 when THIRTY's outline button reuses this token
+  // as text color, not just as a fill. See docs/DESIGN_SYSTEM.md.
   static const light = AppColors(
-    primary: Color(0xFF22B8A8),
-    secondary: Color(0xFF8FD9CF),
-    background: Color(0xFFF8FAF9),
+    primary: Color(0xFF67735A),
+    secondary: Color(0xFFE9EEE6),
+    background: Color(0xFFFAF8F3),
     surface: Color(0xFFFFFFFF),
-    textPrimary: Color(0xFF14181B),
-    textSecondary: Color(0xFF4F5B63),
-    border: Color(0xFFE1E6E5),
-    disabled: Color(0xFFC9D0CE),
+    textPrimary: Color(0xFF1F2320),
+    textSecondary: Color(0xFF5F655D),
+    border: Color(0xFFD8D8D6),
+    disabled: Color(0xFFE6E6E5),
     success: Color(0xFF48C774),
     warning: Color(0xFFF4B740),
     error: Color(0xFFE55A5A),
   );
 
+  // Circle Sage, lightened ~8% from the reference brand value so it clears
+  // WCAG AA 4.5:1 as text/fill against the dark surface. Background, surface
+  // and text are a deliberately warm-toned dark palette (same sage hue
+  // family, pushed near-black) rather than an inversion of light mode.
+  // See docs/DESIGN_SYSTEM.md.
   static const dark = AppColors(
-    primary: Color(0xFF22B8A8),
-    secondary: Color(0xFF8FD9CF),
-    background: Color(0xFF111417),
-    surface: Color(0xFF1C2126),
-    textPrimary: Color(0xFFF3F5F4),
-    textSecondary: Color(0xFF9CA6AC),
-    border: Color(0xFF2C333A),
-    disabled: Color(0xFF3B434A),
+    primary: Color(0xFF869676),
+    secondary: Color(0xFF525A49),
+    background: Color(0xFF141612),
+    surface: Color(0xFF21241E),
+    textPrimary: Color(0xFFF0F2ED),
+    textSecondary: Color(0xFFADB4A7),
+    border: Color(0xFF6E6F6A),
+    disabled: Color(0xFF53544F),
     success: Color(0xFF48C774),
     warning: Color(0xFFF4B740),
     error: Color(0xFFE55A5A),
