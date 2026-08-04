@@ -35,6 +35,7 @@ Nog niet beslíste onderwerpen staan hier niet als principe — ze staan, explic
 - De gratis versie levert de volledige kernbelofte (dagelijkse aanbeveling + basisbegeleiding) zonder compromis.
 - Premium voegt verdieping toe (bijvoorbeeld diepere personalisatie of inzicht in patronen); het ontgrendelt nooit de kern zelf.
 - Premium wordt uitnodigend geïntroduceerd ("dit zou je ook kunnen"), nooit als gemis geframed ("dit mis je nu").
+- De expliciete, benoembare lijst van wat onvoorwaardelijk gratis is, is vastgesteld — zie [ADR-007](adr/ADR-007-premium-never-blocks-the-core-loop.md) en [PREMIUM_STRATEGY.md §1](PREMIUM_STRATEGY.md#1-free-product-promise).
 
 → [ADR-007 — Premium Never Blocks the Core Loop](adr/ADR-007-premium-never-blocks-the-core-loop.md)
 
@@ -49,7 +50,7 @@ Onderstaande zijn vastgestelde grenzen — geen open vragen. Waar een risico al 
 - **Geen vroege of agressieve paywall** — zie Premium-strategie hierboven.
 - **Geen AI-content die zich voordoet als gepersonaliseerd terwijl ze generiek is** — al vastgelegd in [CLAUDE.md, AI Principles](../../CLAUDE.md#ai-principles): AI wordt alleen ingezet wanneer het aantoonbaar waarde toevoegt.
 - **Geen sociale vergelijking of leaderboards** — direct uitgesloten door [VISION.md](../VISION.md) ("geen platform dat draait om vergelijken, competitie of vanity metrics") en door [Recommendation Philosophy §4](recommendation-philosophy.md#4-informatiebronnen) (sociale gezondheid is nooit een zelfstandige categorie).
-- **Geen opdringerige notificaties** — toon is al vastgelegd in [BRAND_BOOK.md §5](../BRAND_BOOK.md#5-brand-promise) ("ze herinneren zacht, ze jagen niet op"); timing/frequentie van re-engagement is nog niet beslist, zie [Product Discovery §6, vraag 7](product-discovery.md#6-open-vragen).
+- **Geen opdringerige notificaties** — toon is al vastgelegd in [BRAND_BOOK.md §5](../BRAND_BOOK.md#5-brand-promise) ("ze herinneren zacht, ze jagen niet op"); timing/frequentie van re-engagement is nog niet beslist, zie [Product Discovery §6, vraag 6](product-discovery.md#6-open-vragen).
 - **Geen overclaimen van AI- of medische mogelijkheden** — zie [Recommendation Philosophy §2](recommendation-philosophy.md#2-vereisten-voor-een-aanbeveling): THIRTY mag nooit doen alsof het meer weet dan het werkelijk weet.
 
 ## 5. Open vragen (verwijzing)
@@ -61,8 +62,9 @@ De volgende onderwerpen zijn bewust **niet** als principe opgenomen omdat ze nog
 3. Exact triggermoment voor de account-uitnodiging.
 4. Definitie van "afgeronde 30 minuten".
 5. Concreet triggermoment voor het tonen van Premium.
-6. Expliciete, benoembare lijst van wat onvoorwaardelijk gratis is.
-7. Re-engagement/notificatie-timing en -frequentie.
-8. Validatie van de persona uit Product Discovery.
+6. Re-engagement/notificatie-timing en -frequentie.
+7. Validatie van de persona uit Product Discovery.
 
 Zodra een van deze vragen beantwoord is, wordt dit document bijgewerkt (en waar relevant een ADR toegevoegd) — niet product-discovery.md, dat exploratief blijft.
+
+*(De voormalige vraag over een expliciete, benoembare vrije-kernlijst is beantwoord — zie §3 hierboven, [ADR-007](adr/ADR-007-premium-never-blocks-the-core-loop.md) en [PREMIUM_STRATEGY.md §1](PREMIUM_STRATEGY.md#1-free-product-promise).)*

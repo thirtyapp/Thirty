@@ -16,11 +16,12 @@ Dit sluit aan bij [VISION.md](../../VISION.md) ("vertrouwen boven groei-trucs" �
 
 ## Consequenties
 
-- Er moet, vóórdat Premium daadwerkelijk wordt gebouwd, een expliciete, benoembare lijst komen van wat onvoorwaardelijk gratis blijft (zie [Product Discovery §6, open vraag 6](../product-discovery.md#6-open-vragen)).
+- **Vastgesteld (2026-08-04):** de expliciete, benoembare lijst van wat onvoorwaardelijk gratis blijft. Onvoorwaardelijk, voor elke gebruiker, voor altijd: het kern-cirkelritueel; The First Breath, in zijn geheel; een betekenisvolle dagelijkse aanbeveling; het starten en afronden van een Circle; de basis World-ervaring; normale seizoensexpressie van die World; permanente Personal Growth; geen streak-druk; geen schuldmechanieken; een volledige en respectvolle dagelijkse ervaring. Volledige redenering en bronverwijzingen: [PREMIUM_STRATEGY.md §1, Free Product Promise](../PREMIUM_STRATEGY.md#1-free-product-promise). Dit beantwoordt de voormalige open vraag in [Product Discovery §6](../product-discovery.md#6-open-vragen) over de vrije-kernlijst.
 - Het concrete, meetbare triggermoment waarop Premium voor het eerst getoond wordt, is nog open (zie [Product Discovery §6, open vraag 5](../product-discovery.md#6-open-vragen)) en moet beslist zijn vóór dit principe in een scherm wordt uitgewerkt.
 
 ## Gerelateerde documenten
 
 - [Product Discovery §5](../product-discovery.md#5-wanneer-introduceren-we-premium)
 - [Onboarding Principles §3](../onboarding-principles.md#3-premium-strategie)
+- [PREMIUM_STRATEGY.md](../PREMIUM_STRATEGY.md) — de commerciële strategie en prioritering achter Premium; deze ADR blijft het besluit van record voor de gratis/Premium-grens, PREMIUM_STRATEGY.md bouwt erop voort zonder het te herhalen.
 - [THIRTY Playbook — Hoofdstuk 4 §5, The Premium Filter](../../playbook/04-product-decision-framework.md#5-the-premium-filter) — dit ADR is hier veralgemeend tot het volledige toetsingskader voor elk toekomstig Premium-idee.

@@ -68,9 +68,10 @@ Deze vragen zijn nog niet beslist. Zolang dat zo is, mag geen enkel ander docume
 3. Wat is het exacte triggermoment voor de account-uitnodiging?
 4. Wat telt precies als "afgeronde 30 minuten"?
 5. Welk concreet, meetbaar signaal markeert het moment waarop Premium voor het eerst getoond mag worden?
-6. Welke onderdelen van de kernbelofte zijn expliciet en onvoorwaardelijk gratis, als benoembare lijst?
-7. Is er, ook zonder uitwerking, een principebeslissing nodig over re-engagement/notificaties? (Zie ook [BRAND_BOOK.md §5](../BRAND_BOOK.md#5-brand-promise) voor de bestaande notificatie-toon: "zacht herinneren, niet opjagen" — dat beantwoordt de tóón, niet de timing/frequentie.)
-8. Is de persona in §1 gevalideerd met echte gebruikers, of blijft ze een ontwerphypothese?
+6. Is er, ook zonder uitwerking, een principebeslissing nodig over re-engagement/notificaties? (Zie ook [BRAND_BOOK.md §5](../BRAND_BOOK.md#5-brand-promise) voor de bestaande notificatie-toon: "zacht herinneren, niet opjagen" — dat beantwoordt de tóón, niet de timing/frequentie.)
+7. Is de persona in §1 gevalideerd met echte gebruikers, of blijft ze een ontwerphypothese?
+
+*(De voormalige vraag 6 — welke onderdelen van de kernbelofte expliciet en onvoorwaardelijk gratis zijn, als benoembare lijst — is beantwoord: zie [ADR-007](adr/ADR-007-premium-never-blocks-the-core-loop.md) en [PREMIUM_STRATEGY.md §1](PREMIUM_STRATEGY.md#1-free-product-promise).)*
 
 ## 7. Onboarding-overzicht (conceptueel)
 

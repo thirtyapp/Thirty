@@ -14,7 +14,8 @@ Lees in deze volgorde voor het volledige beeld:
 6. **[decision-framework.md](decision-framework.md)** — hóe die eisen en bronnen zich tot elkaar verhouden: prioriteit, conflictoplossing, onzekerheid.
 7. **[product-discovery.md](product-discovery.md)** — wie de eerste gebruiker is, welke ervaring wordt nagestreefd, en welke vragen daarover nog open staan.
 8. **[onboarding-principles.md](onboarding-principles.md)** — de vastgestelde, onboarding-specifieke principes die uit Product Discovery zijn gedestilleerd.
-9. **[adr/](adr/)** — de losse, gedateerde beslissingen die aan bovenstaande documenten ten grondslag liggen.
+9. **[PREMIUM_STRATEGY.md](PREMIUM_STRATEGY.md)** — de commerciële strategie achter Premium: waarom iemand betaalt, in welke prioriteitsvolgorde, en de toetsingsvraag voor elk toekomstig Premium-idee.
+10. **[adr/](adr/)** — de losse, gedateerde beslissingen die aan bovenstaande documenten ten grondslag liggen.
 
 ## Wie is leidend bij overlap
 
@@ -28,6 +29,7 @@ Lees in deze volgorde voor het volledige beeld:
 | Wat wint als twee geldige signalen botsen? | [decision-framework.md](decision-framework.md) |
 | Wie is de eerste gebruiker, wat is nog onbeslist? | [product-discovery.md](product-discovery.md) |
 | Wat is de vastgestelde onboarding-aanpak? | [onboarding-principles.md](onboarding-principles.md) |
+| Waarom is Premium commercieel de moeite waard, en in welke volgorde? | [PREMIUM_STRATEGY.md](PREMIUM_STRATEGY.md) |
 | Waarom is een specifiek besluit genomen, en wanneer? | de betreffende [ADR](adr/) |
 
 Bij elk conflict geldt: **[VISION.md](../VISION.md) wint altijd** — geen enkel ander document mag de visie tegenspreken. Voor toon en emotionele ervaring geldt hetzelfde voorrangsrecht voor [BRAND_BOOK.md](../BRAND_BOOK.md): de documenten in deze map herhalen de brand-principes niet, ze verwijzen ernaar.
