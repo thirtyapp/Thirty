@@ -1,7 +1,7 @@
 # THIRTY World System
 
-**Version:** v1.0
-**Status:** Approved v1.0
+**Version:** v1.0.1
+**Status:** Approved v1.0.1
 
 ## Purpose
 
@@ -491,25 +491,25 @@ Every item above is a direct application of the [Premium Filter](../playbook/04-
 
 The World System connects to The First Breath — THIRTY's existing Home reveal ritual — as follows.
 
-**Sequence concept:**
+**Canonical sequence** *(reconciled 2026-08-04 — see Version History. This supersedes the sequence this section originally stated, which placed World emergence before Circle opening; that ordering conflicted with the approved implementation and has been corrected here, not there.)*:
 
-1. Closed Circle.
-2. THIRTY symbol appears.
-3. One soft heartbeat pulse.
-4. Seasonal atmosphere is subtly present.
-5. The symbol fades.
-6. The current World emerges.
-7. The Circle opens.
-8. Today's Circle content appears.
+1. The closed Circle is present.
+2. The stable THIRTY symbol appears.
+3. The symbol performs one subtle heartbeat.
+4. The symbol returns to rest and fades out completely.
+5. The Circle opens.
+6. The selected World appears.
+7. Home content follows through the existing reveal hierarchy.
 
 **The THIRTY logo itself remains stable. The logo must not be seasonally redrawn.**
 
-Seasonal variation belongs to:
+Seasonal variation belongs entirely to the World revealed at step 6:
 
 - background atmosphere;
 - light;
-- subtle environmental detail;
-- the World revealed after the logo.
+- subtle environmental detail.
+
+It never belongs to the symbol at steps 2–4. The symbol carries no seasonal, daypart, weather, World, or Premium variation of any kind — see [THIRTY_SYMBOL.md](../brand/THIRTY_SYMBOL.md) for the full symbol specification, including its relationship to the Circle and its motion-compatibility requirements.
 
 **Formal rule:**
 
@@ -710,6 +710,14 @@ None of those documents is modified by this one. Where a future decision in any 
 ---
 
 ## Version History
+
+### v1.0.1 — 2026-08-04
+
+- Reconciles §13's First Breath sequence with the approved Home implementation: the Circle now opens before the selected World appears (previously stated in the opposite order, an inconsistency surfaced during First Breath v2 discovery).
+- Restates the sequence as the canonical seven-step form: closed Circle, symbol appearance, heartbeat, symbol fade-out, Circle opening, World appearance, Home content reveal.
+- Clarifies that seasonal/daypart/weather/World/Premium variation belongs only to the World step, never to the symbol.
+- Adds a cross-reference to the new [THIRTY_SYMBOL.md](../brand/THIRTY_SYMBOL.md) specification (Draft).
+- No other section changed; no load-bearing claim outside §13 altered.
 
 ### v1.0
 
