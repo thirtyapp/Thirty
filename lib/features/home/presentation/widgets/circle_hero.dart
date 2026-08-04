@@ -367,15 +367,34 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                     ),
                   ),
                   const SizedBox(height: AppSpacing.section),
-                  FadeTransition(
-                    opacity: _buttonOpacity,
-                    child: ThirtyButton(
-                      label: isStarted ? 'Circle started' : 'Start Circle',
-                      onPressed: isStarted
-                          ? null
-                          : () => ref
-                                .read(recommendationProvider.notifier)
-                                .start(),
+                  // FadeTransition alone only controls painting and
+                  // semantics inclusion — it never gates hit-testing, so
+                  // without this wrapper the button could already be
+                  // tapped mid-reveal, before the ritual has actually
+                  // offered it. IgnorePointer is rebuilt from
+                  // _buttonOpacity's own value on every animation tick
+                  // (AnimatedBuilder), so it tracks the existing reveal
+                  // exactly rather than a second, separately-timed guess
+                  // at when the button is "ready." The button subtree is
+                  // supplied as `child` so it isn't rebuilt every frame.
+                  AnimatedBuilder(
+                    animation: _buttonOpacity,
+                    builder: (context, child) {
+                      return IgnorePointer(
+                        ignoring: _buttonOpacity.value < 1.0,
+                        child: child,
+                      );
+                    },
+                    child: FadeTransition(
+                      opacity: _buttonOpacity,
+                      child: ThirtyButton(
+                        label: isStarted ? 'Circle started' : 'Start Circle',
+                        onPressed: isStarted
+                            ? null
+                            : () => ref
+                                  .read(recommendationProvider.notifier)
+                                  .start(),
+                      ),
                     ),
                   ),
                 ],
