@@ -7,6 +7,7 @@ import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/theme/app_theme.dart';
 import 'package:thirty/core/widgets/thirty_progress_circle.dart';
+import 'package:thirty/core/world_rendering/quiet_trail_hero_asset_view.dart';
 import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/horizon_illustration.dart';
@@ -105,7 +106,7 @@ void main() {
             .getCenter(find.byType(ThirtyProgressCircle))
             .dx;
         final illustrationCenterX = tester
-            .getCenter(find.byType(HorizonIllustration))
+            .getCenter(find.byType(QuietTrailHeroAssetView))
             .dx;
         final headingCenterX = tester
             .getCenter(find.text("Today's Circle"))
@@ -118,6 +119,27 @@ void main() {
         expect(illustrationCenterX, closeTo(screenCenterX, 0.5));
         expect(headingCenterX, closeTo(screenCenterX, 0.5));
         expect(activityCenterX, closeTo(screenCenterX, 0.5));
+      },
+    );
+
+    testWidgets(
+      'renders the approved Quiet Trail illustration, inset inside the '
+      'ring',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(await _wrap());
+        await tester.pumpAndSettle();
+
+        expect(find.byType(QuietTrailHeroAssetView), findsOneWidget);
+        expect(find.byType(HorizonIllustration), findsNothing);
+
+        final illustrationSize = tester.getSize(
+          find.byType(QuietTrailHeroAssetView),
+        );
+        final circleSize = tester.getSize(find.byType(ThirtyProgressCircle));
+
+        expect(illustrationSize.width, illustrationSize.height);
+        expect(illustrationSize.width, lessThan(circleSize.width));
+        expect(illustrationSize.height, lessThan(circleSize.height));
       },
     );
 

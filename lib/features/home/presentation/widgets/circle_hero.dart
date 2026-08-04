@@ -3,12 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/activity_category.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_progress_circle.dart';
+import '../../../../core/world_rendering/quiet_trail_hero_asset_view.dart';
 import '../../application/first_breath_provider.dart';
 import '../../application/recommendation_provider.dart';
-import 'horizon_illustration.dart';
 
 /// THIRTY's first true emotional experience: the Circle Hero.
 ///
@@ -107,6 +108,14 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   static const _circleWidthFraction = 0.88;
   static const _circleMinSize = 260.0;
   static const _circleMaxSize = 440.0;
+
+  // The one source of truth for the Home Circle's ring thickness — passed
+  // explicitly to [ThirtyProgressCircle] below rather than left to its
+  // default, because the illustration's inset size (build()) is derived
+  // from this same value. Relying on the default in one place while
+  // duplicating the number in the other would let the two silently drift
+  // apart.
+  static const _circleStrokeWidth = 12.0;
 
   // The text column beneath the Circle reads as its caption, not as an
   // independent block — so its max width is derived from the Circle's own
@@ -235,6 +244,12 @@ class _CircleHeroState extends ConsumerState<CircleHero>
             .clamp(_circleMinSize, safeMaxSize)
             .toDouble();
         final textMaxWidth = circleSize * _textColumnWidthFraction;
+        // Inset so the illustration's circular edge sits at the ring's
+        // inner edge, never under the stroke itself — the ring keeps
+        // painting after the illustration (ThirtyProgressCircle's Stack
+        // order is unchanged), so staying inside its inner boundary is
+        // what keeps the two from visually overlapping.
+        final illustrationSize = circleSize - (_circleStrokeWidth * 2);
 
         return SingleChildScrollView(
           // SingleChildScrollView gives its child loose (not full-width)
@@ -273,6 +288,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                       return ThirtyProgressCircle(
                         progress: _circleProgress.value,
                         size: circleSize,
+                        strokeWidth: _circleStrokeWidth,
                         semanticLabel: "Today's Circle",
                         // Today's Circle is always announced as open and
                         // ready here, never as a percentage — an empty
@@ -285,8 +301,11 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                     },
                     child: FadeTransition(
                       opacity: _illustrationOpacity,
-                      child: const ExcludeSemantics(
-                        child: HorizonIllustration(),
+                      child: ExcludeSemantics(
+                        child: _worldIllustrationFor(
+                          recommendation.category,
+                          illustrationSize,
+                        ),
                       ),
                     ),
                   ),
@@ -367,4 +386,23 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       },
     );
   }
+}
+
+/// The approved World illustration for [category], sized to fill [size] ×
+/// [size] — the one place `circle_hero.dart` maps a recommendation's
+/// [ActivityCategory] to a World's illustration widget.
+///
+/// An exhaustive switch, not a registry: [ActivityCategory] has exactly
+/// one shipped value today (WORLD_SYSTEM.md §16 names every other category
+/// only as a placeholder), so this stays the smallest mapping that
+/// compiles safely — a future category left unhandled here fails to
+/// compile instead of silently falling through to the wrong illustration.
+Widget _worldIllustrationFor(ActivityCategory category, double size) {
+  return switch (category) {
+    ActivityCategory.walking => SizedBox(
+      width: size,
+      height: size,
+      child: const QuietTrailHeroAssetView(),
+    ),
+  };
 }
