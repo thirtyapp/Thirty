@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/activity_category.dart';
+
 /// THIRTY's daily recommendation. Hardcoded for now — no ranking, no
 /// personalization; see docs/product/decision-framework.md for how this
 /// will eventually be chosen.
@@ -9,12 +11,20 @@ class Recommendation {
     required this.activity,
     required this.duration,
     required this.why,
+    required this.category,
   });
 
   final String intent;
   final String activity;
   final String duration;
   final String why;
+
+  /// Drives which visual identity (see `presentation/illustrations/`)
+  /// represents this recommendation — nothing about ranking or selection,
+  /// purely a label for that lookup. Shared with the World Engine
+  /// (`core/worlds/`) as the single source of truth for this
+  /// classification — see [ActivityCategory].
+  final ActivityCategory category;
 }
 
 /// Whether the user has started today's recommendation. Purely local and
@@ -43,6 +53,7 @@ const _todaysRecommendation = Recommendation(
   activity: '30 minute walk',
   duration: '30 minutes',
   why: 'A calm walk to help you build energy for the rest of the day.',
+  category: ActivityCategory.walking,
 );
 
 class RecommendationNotifier extends Notifier<RecommendationState> {
