@@ -1,7 +1,7 @@
 # THIRTY Symbol
 
-**Version:** v0.2
-**Status:** Draft v0.2 — not yet Approved. No image, icon, or code asset may be produced from this document until it reaches Approved status.
+**Version:** v1.0
+**Status:** Approved v1.0. Direction approved; final geometry, the production master vector asset, and implementation remain separate, later approvals (§14). No image, icon, or code asset may be produced from this document until those later stages are completed.
 
 ## Purpose
 
@@ -296,7 +296,7 @@ A symbol that cannot be answered well on all of these is not ready, regardless o
 
 This document does not decide:
 
-- final logo geometry;
+- final symbol geometry;
 - final wordmark typography;
 - exact dimensions;
 - exact heartbeat timing;
@@ -315,17 +315,17 @@ These require later, separate design and implementation passes, checked against 
 
 - **The [Playbook](../playbook/README.md)** governs product philosophy, including whether the symbol's existence and behaviour are acceptable at all.
 - **[BRAND_BOOK.md](../BRAND_BOOK.md)** governs brand expression more broadly — tone, personality, and the app-icon guidance in §23, which this document's §8 defers to rather than repeats.
-- **This document, THIRTY_SYMBOL.md,** governs the approved symbol direction, once it reaches Approved status — form, colour, and asset requirements.
+- **This document, THIRTY_SYMBOL.md,** governs the approved symbol direction — form, colour, and asset requirements.
 - **[MOTION_LANGUAGE.md](../motion/MOTION_LANGUAGE.md)** governs the symbol's animation — this document states what the motion must respect (§6, §12); Motion Language governs how motion in general is reasoned about.
 - **[WORLD_SYSTEM.md](../worlds/WORLD_SYSTEM.md)** governs the sequence relationship between the symbol, the Circle, and the World (§13).
 - **[PREMIUM_STRATEGY.md](../product/PREMIUM_STRATEGY.md)** and **[ADR-007](../product/adr/ADR-007-premium-never-blocks-the-core-loop.md)** govern the free/Premium boundary this document's §9 restates.
 - **A later technical task or ADR** governs implementation — Flutter widget structure, asset pipeline, and rendering, checked against this document rather than deciding it here.
 
-This document remains in **Draft** status. It is not marked Approved during the task that authored it, and no asset should be generated from it until an explicit approval step promotes it, in the same spirit as the Playbook's own approval workflow ([GOVERNANCE.md](../playbook/GOVERNANCE.md#approval-workflow)).
+This document is **Approved** (v1.0). Reaching Approved status promotes the direction only — no image, icon, or code asset should be generated from it until the remaining pipeline stages below are separately completed, in the same spirit as the Playbook's own approval workflow ([GOVERNANCE.md](../playbook/GOVERNANCE.md#approval-workflow)).
 
-**This Draft is a direction, not a design.** It approves *what the symbol must be and must never become* (§1–§12) — it does not itself contain, imply, or approve any final geometry, typography, or artwork. The distinct stages that follow it are:
+**This approval is a direction, not a design.** It approves *what the symbol must be and must never become* (§1–§12) — it does not itself contain, imply, or approve any final geometry, typography, or artwork. The distinct stages are:
 
-1. **Approve the symbol-direction document** — this document (THIRTY_SYMBOL.md) moves from Draft to Approved, unchanged in kind from what it is now: principles, not pixels.
+1. **Approve the symbol-direction document** — complete: this document (THIRTY_SYMBOL.md) is Approved (v1.0), unchanged in kind from what it was in Draft: principles, not pixels.
 2. **Create several visual symbol concepts** — a future, separate design pass explores multiple candidate forms against §3's principles and rejection list. None of those concepts exists yet, and none is implied by this document.
 3. **Select and refine one concept** — a deliberate narrowing from several candidates to one, checked against the full specification (§3–§7).
 4. **Approve the master vector asset** — the specific, final file (§7) is reviewed and approved on its own, separately from the direction that shaped it.
@@ -336,6 +336,22 @@ Each stage requires its own explicit approval; none is skipped by completing an 
 ---
 
 ## Version History
+
+### v1.0
+
+- Initial approved version.
+- Approved after reduced-motion refinement and editorial review.
+- Establishes the official THIRTY symbol direction.
+- Selects a standalone symbol for First Breath.
+- Preserves the distinction between the THIRTY symbol and the Circle.
+- Requires reduced-motion support in the First Breath v2 implementation.
+- Future direction changes require explicit Brand Design approval.
+
+### v0.3 — 2026-08-05
+
+- Editorial review pass, per the full checklist in this repository's THIRTY Symbol review task. Confirmed the canonical First Breath sequence, standalone-symbol decision, Symbol/Circle distinction, colour authority, motion compatibility, reduced-motion requirement, accessibility decisions, Premium/multiple-World independence, asset requirements, approval pipeline, and ownership/authority all remain internally consistent and unchanged in substance.
+- §14 Non-Goals: corrected "final logo geometry" to "final symbol geometry" — the only terminology drift found. The document's own decision (§2) is a symbol, not a logo; "logo" is otherwise reserved for discussing the wider logo system or a rejected assumption (§1), and this line did not fit either case.
+- No change to §1–§13 or §15 beyond this single wording correction. Still Draft; not yet Approved.
 
 ### v0.2 — 2026-08-04
 
@@ -363,16 +379,18 @@ THIRTY Brand Design
 
 **Review Process**
 
+- This Approved status covers the symbol *direction* only (§1–§13) — it does not approve final geometry, a specific visual concept, or a production asset; those remain separate, later approvals (stages 2–4 below).
 - Symbol-direction changes require explicit Brand Design approval.
+- Visual concepts remain subject to selection and refinement before any one is chosen (approval pipeline stage 2–3 above).
 - Final geometry requires visual concept review (approval pipeline stage 2–3 above).
-- The production asset requires explicit approval, separate from the direction that shaped it (stage 4 above).
+- The production master vector asset requires explicit approval, separate from the direction that shaped it (stage 4 above).
 - Implementation must follow the approved asset and this specification, not redefine either (stage 5 above).
 - Neither Flutter code nor an AI-generated draft may redefine the symbol.
 
 Once Approved, this document is never silently edited — only through an explicit, dated patch or amendment, in the same spirit as the Playbook's own approval workflow.
 
-No image, icon, or code asset may be generated from this document while it remains in Draft status.
+No image, icon, or code asset may be generated from this document until the remaining approval-pipeline stages (§14, stages 2–4) are separately completed. Approval of this direction document alone does not authorise asset generation.
 
 ---
 
-*This is v0.2 of the THIRTY Symbol specification, in Draft status. It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), [WORLD_SYSTEM.md](../worlds/WORLD_SYSTEM.md), [MOTION_LANGUAGE.md](../motion/MOTION_LANGUAGE.md), and [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), and contradicts none of them. It requires review and explicit approval before any asset may be produced from it.*
+*This is v1.0 of the THIRTY Symbol specification, in Approved status. It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), [WORLD_SYSTEM.md](../worlds/WORLD_SYSTEM.md), [MOTION_LANGUAGE.md](../motion/MOTION_LANGUAGE.md), and [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), and contradicts none of them. It governs the approved symbol direction — form, colour, and asset requirements; final geometry and the production master vector asset remain separate, later approvals (§14). Future direction changes require explicit Brand Design approval.*

@@ -744,4 +744,4 @@ Implementation work must follow this document rather than redefine it.
 
 ---
 
-*This is v1.0 of the THIRTY World System, in Approved status. It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), and [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), and contradicts none of them. It governs illustrated environments, variation and progression; it does not replace the Playbook's authority over product philosophy, nor the Design System's authority over token values.*
+*This is v1.0.1 of the THIRTY World System, in Approved status. It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), and [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), and contradicts none of them. It governs illustrated environments, variation and progression; it does not replace the Playbook's authority over product philosophy, nor the Design System's authority over token values.*
