@@ -1,7 +1,7 @@
 # THIRTY Wordmark
 
-**Version:** v1.0
-**Status:** Approved v1.0. Approval covers the wordmark **direction** only (§1–§10) — it does not approve a final font, final letter geometry, final proportions, final tracking, final weight, a specific visual concept, a production master vector wordmark asset, exact First Breath dimensions, exact animation timing, or Flutter/SVG integration. Those remain separate, later approvals (§13, Approval Pipeline, stages 3–6). It does not itself authorise any image, font selection, or code asset (§12, Non-Goals).
+**Version:** v1.0.1
+**Status:** Approved v1.0.1. Approval covers the wordmark **direction** only (§1–§10) — it does not approve a final font, final letter geometry, final proportions, final tracking, final weight, a specific visual concept, a production master vector wordmark asset, exact First Breath dimensions, exact animation timing, or Flutter/SVG integration. Those remain separate, later approvals (§13, Approval Pipeline, stages 3–6). It does not itself authorise any image, font selection, or code asset (§12, Non-Goals). Approval Pipeline stage 3 (visual concept round) is now complete and stage 4 (select and manually refine) is in progress — see [THIRTY_WORDMARK_CONSTRUCTION.md](THIRTY_WORDMARK_CONSTRUCTION.md) for that in-progress work; it governs construction, not direction.
 
 ## Purpose
 
@@ -316,20 +316,28 @@ These require later, separate design and implementation passes, checked against 
 
 ### Approval Pipeline
 
-This document is **Approved (v1.0)**. Reaching Approved status promotes the wordmark *direction* only (§1–§10) — it does not itself contain, imply, or approve any final geometry, typography, or artwork (§12). The full pipeline from here to an implemented First Breath v2:
+This document is **Approved (v1.0.1)**. Reaching Approved status promotes the wordmark *direction* only (§1–§10) — it does not itself contain, imply, or approve any final geometry, typography, or artwork (§12). The full pipeline from here to an implemented First Breath v2:
 
 1. **Approve the wordmark-led First Breath decision** — complete. Recorded in [THIRTY_SYMBOL.md v2.0](THIRTY_SYMBOL.md#status-update--first-breath-is-now-wordmark-led-v20).
-2. **Approve this wordmark direction document** — complete through this task. This document is Approved (v1.0), per [GOVERNANCE.md's approval workflow](../playbook/GOVERNANCE.md#approval-workflow).
-3. **Create multiple wordmark-only visual concepts** — not started. A future, separate design pass, checked against §3's typographic direction and rejection list. None exists yet. Earlier exploratory symbol, gesture, and lock-up concepts considered before the wordmark-led decision were rejected and are not repository assets — they do not count toward this stage, which begins from nothing.
-4. **Select and refine one wordmark** — not started. A deliberate narrowing from several candidates to one, checked against the full specification (§3–§7).
+2. **Approve this wordmark direction document** — complete. This document is Approved (v1.0.1), per [GOVERNANCE.md's approval workflow](../playbook/GOVERNANCE.md#approval-workflow).
+3. **Create multiple wordmark-only visual concepts** — complete. Two finalists were produced: **Ownable Restraint** and **Terminal System**, both standalone wordmark concepts checked against §3's typographic direction and rejection list. The concept images themselves are held outside this repository as reference material and are not repository assets.
+4. **Select and refine one wordmark** — **in progress.** **Ownable Restraint** is selected as the primary development candidate; **Terminal System** is retained as reserve. See [THIRTY_WORDMARK_CONSTRUCTION.md](THIRTY_WORDMARK_CONSTRUCTION.md) for the construction brief this stage now proceeds under. No final geometry, typeface, tracking, or proportions are approved by this selection — it narrows exploration, it does not conclude refinement.
 5. **Approve the production master vector wordmark asset** — not started. The specific, final file is reviewed and approved on its own, separately from the direction that shaped it.
 6. **Implement First Breath v2** — not started. A Flutter implementation task builds both the normal-motion and reduced-motion (§4) paths from the approved asset and this specification, checked against them rather than redefining either.
 
-Each stage requires its own explicit approval; none is skipped by completing an earlier one. This task completes stage 2. No stage past 2 is authorised by anything in this document — approval of direction does not authorise any font, geometry, asset, or code.
+Each stage requires its own explicit approval; none is skipped by completing an earlier one. This task completes stage 2; a companion task advances stage 3 to complete and stage 4 to in-progress, recorded here administratively. No stage past 2 is authorised by anything in this document — approval of direction does not authorise any font, geometry, asset, or code. Stage 4 remains **not complete**: a selected development candidate is not an approved wordmark.
 
 ---
 
 ## Version History
+
+### v1.0.1 — 2026-08-06
+
+- Administrative reconciliation only, per [GOVERNANCE.md's](../playbook/GOVERNANCE.md#criteria-for-modifying-an-existing-chapter) patch criteria — no direction change. Records the completion of the wordmark-only visual concept round and the start of manual selection/refinement.
+- Approval Pipeline (§13): stage 3 (create multiple wordmark-only visual concepts) marked complete — two finalists, **Ownable Restraint** and **Terminal System**, were produced. Stage 4 (select and refine one wordmark) marked in progress: **Ownable Restraint** selected as primary development candidate, **Terminal System** retained as reserve. Stage 4 is explicitly **not** marked complete.
+- Adds a cross-reference to the new [THIRTY_WORDMARK_CONSTRUCTION.md](THIRTY_WORDMARK_CONSTRUCTION.md) (Draft v0.1), which governs the construction brief stage 4's manual refinement now proceeds under.
+- No change to §1–§12 or the approved direction itself — typographic direction, motion relationship, Circle relationship, feasibility, colour, accessibility, and Premium/World independence are all unchanged in substance.
+- The concept-round reference images are not repository assets and are not added, copied, traced, or embedded by this change.
 
 ### v1.0 — 2026-08-06
 
@@ -363,15 +371,15 @@ THIRTY Brand Design
 
 - This Approved status covers direction only (§1–§10) — it does not approve a final font, final letter geometry, final proportions, final tracking, final weight, a specific visual concept, or a production master vector wordmark asset; those remain separate, later approvals (Approval Pipeline stages 3–6 above).
 - Wordmark-direction changes require explicit THIRTY Brand Design approval — this v1.0 approval was made at that authority.
-- Final typography requires visual concept review before selection (Approval Pipeline stages 3–4).
+- Final typography requires visual concept review before selection (Approval Pipeline stages 3–4) — now in progress; see [THIRTY_WORDMARK_CONSTRUCTION.md](THIRTY_WORDMARK_CONSTRUCTION.md).
 - The production master vector wordmark asset requires explicit approval, separate from the direction that shaped it (stage 5).
 - Implementation must follow the approved direction and the approved production asset, not redefine either (stage 6).
 - Neither Flutter code nor an AI-generated concept may redefine the wordmark.
 
-Once Approved, this document is never silently edited — only through an explicit, dated patch or amendment, in the same spirit as the Playbook's own approval workflow and as [THIRTY_SYMBOL.md](THIRTY_SYMBOL.md) already practices.
+Once Approved, this document is never silently edited — only through an explicit, dated patch or amendment, in the same spirit as the Playbook's own approval workflow and as [THIRTY_SYMBOL.md](THIRTY_SYMBOL.md) already practices. v1.0.1 is exactly that: a dated administrative patch recording pipeline progress, not a direction change.
 
 No image, icon, font, or code asset may be generated from this document until the remaining approval-pipeline stages (§13, stages 3–5) are separately completed. Reaching Approved status for this direction document alone does not authorise asset generation.
 
 ---
 
-*This is v1.0 of the THIRTY Wordmark specification, in Approved status. Approval covers wordmark direction only; final typography and the production master vector wordmark asset remain separate, later approvals (§13). It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), [WORLD_SYSTEM.md](../worlds/WORLD_SYSTEM.md), [MOTION_LANGUAGE.md](../motion/MOTION_LANGUAGE.md), [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), and [THIRTY_SYMBOL.md](THIRTY_SYMBOL.md), and contradicts none of them. It governs the active First Breath brand-mark direction — form, colour, and relationship to the Circle. Future direction changes require explicit THIRTY Brand Design approval.*
+*This is v1.0.1 of the THIRTY Wordmark specification, in Approved status. Approval covers wordmark direction only; final typography and the production master vector wordmark asset remain separate, later approvals (§13) — now in progress, per [THIRTY_WORDMARK_CONSTRUCTION.md](THIRTY_WORDMARK_CONSTRUCTION.md). It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), [WORLD_SYSTEM.md](../worlds/WORLD_SYSTEM.md), [MOTION_LANGUAGE.md](../motion/MOTION_LANGUAGE.md), [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), and [THIRTY_SYMBOL.md](THIRTY_SYMBOL.md), and contradicts none of them. It governs the active First Breath brand-mark direction — form, colour, and relationship to the Circle. Future direction changes require explicit THIRTY Brand Design approval.*
