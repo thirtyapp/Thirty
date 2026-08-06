@@ -1,7 +1,7 @@
 # THIRTY World System
 
-**Version:** v1.0.1
-**Status:** Approved v1.0.1
+**Version:** v1.0.2
+**Status:** Approved v1.0.2
 
 ## Purpose
 
@@ -491,17 +491,19 @@ Every item above is a direct application of the [Premium Filter](../playbook/04-
 
 The World System connects to The First Breath — THIRTY's existing Home reveal ritual — as follows.
 
-**Canonical sequence** *(reconciled 2026-08-04 — see Version History. This supersedes the sequence this section originally stated, which placed World emergence before Circle opening; that ordering conflicted with the approved implementation and has been corrected here, not there.)*:
+**Canonical sequence** *(reconciled 2026-08-06 — see Version History, v1.0.2. This supersedes the symbol-led sequence this section stated from 2026-08-04, following [THIRTY_SYMBOL.md v2.0](../brand/THIRTY_SYMBOL.md#status-update--first-breath-is-now-wordmark-led-v20)'s explicit direction change: First Breath is now wordmark-led, not symbol-led. The step order itself — brand mark, then Circle opening, then World — is unchanged; only what appears at steps 2–4 changed.)*:
 
 1. The closed Circle is present.
-2. The stable THIRTY symbol appears.
-3. The symbol performs one subtle heartbeat.
-4. The symbol returns to rest and fades out completely.
+2. The stable THIRTY wordmark appears inside it.
+3. The wordmark remains briefly and completely still.
+4. The wordmark fades out completely.
 5. The Circle opens.
 6. The selected World appears.
 7. Home content follows through the existing reveal hierarchy.
 
-**The THIRTY logo itself remains stable. The logo must not be seasonally redrawn.**
+The wordmark receives no heartbeat or scale animation — a deliberate departure from the symbol-led sequence's single restrained pulse, reasoned in full in [THIRTY_WORDMARK.md §4](../brand/THIRTY_WORDMARK.md#4-motion-relationship): a horizontal wordmark depends on stable letterforms for clarity, and stillness communicates presence without risking the moment feeling performative.
+
+**The THIRTY wordmark itself remains stable. It must not be seasonally redrawn.**
 
 Seasonal variation belongs entirely to the World revealed at step 6:
 
@@ -509,7 +511,7 @@ Seasonal variation belongs entirely to the World revealed at step 6:
 - light;
 - subtle environmental detail.
 
-It never belongs to the symbol at steps 2–4. The symbol carries no seasonal, daypart, weather, World, or Premium variation of any kind — see [THIRTY_SYMBOL.md](../brand/THIRTY_SYMBOL.md) for the full symbol specification, including its relationship to the Circle and its motion-compatibility requirements.
+It never belongs to the wordmark at steps 2–4. The wordmark carries no seasonal, daypart, weather, World, or Premium variation of any kind — see [THIRTY_WORDMARK.md](../brand/THIRTY_WORDMARK.md) for the full wordmark direction, including its relationship to the Circle and its motion requirements. [THIRTY_SYMBOL.md](../brand/THIRTY_SYMBOL.md) remains the record of the superseded standalone-symbol direction, retained for a possible future, separate brand context — it no longer governs First Breath.
 
 **Formal rule:**
 
@@ -711,6 +713,15 @@ None of those documents is modified by this one. Where a future decision in any 
 
 ## Version History
 
+### v1.0.2 — 2026-08-06
+
+- Reconciles §13's First Breath sequence with [THIRTY_SYMBOL.md v2.0](../brand/THIRTY_SYMBOL.md#status-update--first-breath-is-now-wordmark-led-v20)'s explicit direction change: First Breath is now wordmark-led, not symbol-led. A standalone THIRTY symbol is no longer required for First Breath.
+- Restates steps 2–4 of the canonical sequence around the THIRTY wordmark (appears, remains still, fades out) rather than the symbol (appears, heartbeat, fades out). The step order itself — brand mark, then Circle opening, then World — is unchanged from v1.0.1.
+- States explicitly that the wordmark receives no heartbeat or scale animation, and cites [THIRTY_WORDMARK.md §4](../brand/THIRTY_WORDMARK.md#4-motion-relationship) for the reasoning.
+- Adds a cross-reference to the new [THIRTY_WORDMARK.md](../brand/THIRTY_WORDMARK.md) specification (Draft v0.1), now the authority for what appears at steps 2–4.
+- Retains the cross-reference to [THIRTY_SYMBOL.md](../brand/THIRTY_SYMBOL.md), now recorded as the superseded-for-First-Breath, dormant standalone-symbol direction rather than the active one.
+- No other section changed; no load-bearing claim outside §13 altered.
+
 ### v1.0.1 — 2026-08-04
 
 - Reconciles §13's First Breath sequence with the approved Home implementation: the Circle now opens before the selected World appears (previously stated in the opposite order, an inconsistency surfaced during First Breath v2 discovery).
@@ -744,4 +755,4 @@ Implementation work must follow this document rather than redefine it.
 
 ---
 
-*This is v1.0.1 of the THIRTY World System, in Approved status. It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), and [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), and contradicts none of them. It governs illustrated environments, variation and progression; it does not replace the Playbook's authority over product philosophy, nor the Design System's authority over token values.*
+*This is v1.0.2 of the THIRTY World System, in Approved status. It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), and [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), and contradicts none of them. It governs illustrated environments, variation and progression; it does not replace the Playbook's authority over product philosophy, nor the Design System's authority over token values. §13's First Breath sequence is wordmark-led as of v1.0.2 — see [THIRTY_WORDMARK.md](../brand/THIRTY_WORDMARK.md).*

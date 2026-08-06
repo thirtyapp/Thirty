@@ -1,7 +1,7 @@
 # THIRTY Motion Language
 
-**Version:** v1.0
-**Status:** Approved v1.0
+**Version:** v1.0.1
+**Status:** Approved v1.0.1
 
 ## Purpose
 
@@ -109,9 +109,9 @@ Motion should always have a clear visual hierarchy. This is a separate axis from
 
 **Purpose:** The movement that deserves the user's full attention.
 
-**Examples:** The First Breath logo, Circle Opening, Circle Closed.
+**Examples:** The First Breath wordmark, Circle Opening, Circle Closed.
 
-Only one Primary Motion may exist at a time.
+Only one Primary Motion may exist at a time. Each of these three moments is its own Primary Motion, in its own sequential moment — never simultaneous with another (§5, Motion Budget).
 
 ### Secondary Motion
 
@@ -323,6 +323,11 @@ Those belong in future implementation documentation, checked against this docume
 
 ## Version History
 
+### v1.0.1 — 2026-08-06
+
+- Terminology reconciliation only, per [GOVERNANCE.md's](../playbook/GOVERNANCE.md#criteria-for-modifying-an-existing-chapter) patch criteria — no meaning changed. §4's Primary Motion example "The First Breath logo" is now "The First Breath wordmark," matching [THIRTY_SYMBOL.md v2.0](../brand/THIRTY_SYMBOL.md#status-update--first-breath-is-now-wordmark-led-v20)'s explicit direction change: First Breath is now wordmark-led, not symbol-led.
+- No other section changed. This document's motion principles, categories, hierarchy, budget, timing, easing, choreography, haptics, and accessibility requirements are unaffected — First Breath remains Ritual Motion, Primary Motion, Ceremonial timing, and silent, exactly as before.
+
 ### v1.0
 
 - Initial approved version.
@@ -348,4 +353,4 @@ Implementation work must follow this document rather than redefine it.
 
 ---
 
-*This is v1.0 of the THIRTY Motion Language, in Approved status. It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), and [WORLD_SYSTEM.md](../worlds/WORLD_SYSTEM.md), and contradicts none of them. Future modifications require an explicit design decision or ADR, per [Playbook GOVERNANCE.md](../playbook/GOVERNANCE.md).*
+*This is v1.0.1 of the THIRTY Motion Language, in Approved status. It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), and [WORLD_SYSTEM.md](../worlds/WORLD_SYSTEM.md), and contradicts none of them. Future modifications require an explicit design decision or ADR, per [Playbook GOVERNANCE.md](../playbook/GOVERNANCE.md).*

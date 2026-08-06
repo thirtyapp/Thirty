@@ -1,7 +1,28 @@
 # THIRTY Symbol
 
-**Version:** v1.0
-**Status:** Approved v1.0. Direction approved; final geometry, the production master vector asset, and implementation remain separate, later approvals (§14). No image, icon, or code asset may be produced from this document until those later stages are completed.
+**Version:** v2.0.1
+**Status:** v1.0 direction Approved; **superseded for First Breath by v2.0** (see Status Update below). The standalone-symbol direction described in this document remains Approved as a possible future, separate brand context (§8) — it is no longer required for First Breath, and First Breath v2 does not depend on it. [THIRTY_WORDMARK.md](THIRTY_WORDMARK.md) now governs the active First Breath brand direction. No image, icon, or code asset may be produced from this document — true in v1.0, unchanged in v2.0 and v2.0.1.
+
+## Status Update — First Breath Is Now Wordmark-Led (v2.0)
+
+**This is an explicit direction change, not a temporary experiment.** It is recorded here, in place, rather than in a silent edit, per this document's own amendment discipline (§15, Ownership) and [GOVERNANCE.md's](../playbook/GOVERNANCE.md#approval-workflow) approval workflow.
+
+**The previous decision (v1.0, Approved).** THIRTY approved a standalone-symbol direction for First Breath: §2 below decided "a standalone symbol. No wordmark, no combined mark, for First Breath," reasoned from mobile Circle size, calm ritual use, language independence, small-size recognisability, accessibility, and future app-icon use.
+
+**Why it was reconsidered.** Subsequent visual exploration toward that direction repeatedly produced gestures dominated by unwanted associations — generic wellness imagery; leaves, stones, flames, eyes, bowls, and spa marks; sports and performance geometry; rising stripes and established-brand associations; interface symbols; circles or near-circular forms; and gestures too weak to work without a wordmark alongside them. Across that exploration, the existing THIRTY wordmark consistently provided the strongest, calmest, and most credible brand presence — the opposite of what §2's reasoning predicted, and reason enough to revisit a decision that only ever approved a *direction*, never a *design* (§15, "This approval is a direction, not a design").
+
+**The new decision.** First Breath will become wordmark-led. A standalone THIRTY symbol is no longer required for First Breath and is no longer a prerequisite for First Breath v2. [THIRTY_WORDMARK.md](THIRTY_WORDMARK.md) is the new authoritative direction document for the First Breath brand moment; this document's §2 decision is superseded for that specific use (the paragraph is left below, unedited, as the historical record of what was decided and why — not deleted, and not silently reversed).
+
+**What remains useful from this document.** Nothing in §1, §3–§7, §9–§13 was ever contradicted by anything visual exploration produced — the *principles* (calm, intention, continuity; subordinate to the Circle; monochrome Circle Sage; no gradients or atmosphere baked in; decorative accessibility treatment; mandatory reduced motion; Premium/World independence) failed nothing. What failed was translating a *standalone mark* into a form that honoured them. Those principles remain the working reference for any future standalone-symbol exploration (§8), and several of them — Circle relationship, colour inheritance, accessibility pattern, reduced-motion structure — are carried forward, adapted for a wordmark, into THIRTY_WORDMARK.md directly.
+
+**What is no longer authoritative for First Breath.** §2's decision ("a standalone symbol... for First Breath") and every downstream claim that assumes a symbol appears during First Breath (§1's opening claim, §7's "no text" requirement, §11's "Announcing 'THIRTY' mid-ritual"'s framing around a wordless mark) describe the superseded v1.0 direction. Where those sections and THIRTY_WORDMARK.md now disagree, THIRTY_WORDMARK.md governs for First Breath.
+
+**Consequences.**
+
+- **First Breath:** the canonical sequence in [World System §13](../worlds/WORLD_SYSTEM.md#13-first-breath-relationship) now reads "wordmark," not "symbol" — reconciled alongside this document (see that section's Version History, v1.0.2).
+- **Motion:** the wordmark receives no heartbeat. It appears, remains completely still, and fades — see [THIRTY_WORDMARK.md §4](THIRTY_WORDMARK.md#4-motion-relationship) for the reasoning. This is a deliberate departure from this document's §6, not an oversight: §6's heartbeat was designed for a small abstract mark, and a horizontal wordmark's legibility depends on stable letterforms a heartbeat would put at risk.
+- **Accessibility:** the decorative-during-First-Breath pattern this document sets in §11 is preserved, restated for the wordmark in THIRTY_WORDMARK.md's own accessibility section.
+- **Future assets:** no final symbol geometry or production asset was ever approved under v1.0 (§14, §15 always deferred that) — none is lost by this supersession. Future standalone-symbol work remains possible (§8) but requires its own fresh decision and approval, is optional, and must not block First Breath v2.
 
 ## Purpose
 
@@ -21,7 +42,7 @@ It builds on, and must never contradict:
 - **Circle Sage is THIRTY's brand-identity color** — [DESIGN_SYSTEM.md, "Brand Identity vs. Implementation Tokens"](../DESIGN_SYSTEM.md#brand-identity-vs-implementation-tokens): the value to use "for brand assets, marketing, illustration, product communication, and any static or non-interactive expression of THIRTY's visual identity." The symbol is exactly that kind of expression. §5 below inherits Circle Sage (`#7C8B6D`), not [Brand Book §13](../BRAND_BOOK.md#13-color-philosophy)'s earlier turquoise table, which DESIGN_SYSTEM.md v1.1 has since superseded for brand-identity purposes — a pre-existing divergence between those two documents that this document does not attempt to resolve; it simply defers to the more recent, more specific one, as DESIGN_SYSTEM.md itself instructs.
 - **First Breath is Ritual Motion, Primary Motion, Ceremonial timing, and silent** — [Motion Language §3.A, §4, §6, §10](../motion/MOTION_LANGUAGE.md). §6 below inherits these constraints rather than restating their reasoning.
 - **The First Breath, in full, is unconditionally free** — [PREMIUM_STRATEGY.md §1](../product/PREMIUM_STRATEGY.md#1-free-product-promise); [ADR-007](../product/adr/ADR-007-premium-never-blocks-the-core-loop.md). §9 below restates this as it applies specifically to the symbol.
-- **The canonical First Breath sequence** — [World System §13](../worlds/WORLD_SYSTEM.md#13-first-breath-relationship), reconciled alongside this document (see that section's Version History, v1.0.1).
+- **The canonical First Breath sequence** — [World System §13](../worlds/WORLD_SYSTEM.md#13-first-breath-relationship), reconciled alongside this document (see that section's Version History, v1.0.2). The sequence is now wordmark-led (v2.0, Status Update above) — this document's §6 and §12 describe the superseded symbol-led version of it.
 
 Where this document is silent, the Playbook, Brand Book, World System, Motion Language, and Design System govern. Where a future decision would require contradicting a claim made here, that is a deliberate amendment, made with the same care as any other — not a quiet drift.
 
@@ -47,6 +68,8 @@ Where this document is silent, the Playbook, Brand Book, World System, Motion La
 
 ## 1. Purpose
 
+> **v2.0 note:** "appears during The First Breath" describes the superseded v1.0 direction — see the Status Update above. [THIRTY_WORDMARK.md](THIRTY_WORDMARK.md) now defines what appears during First Breath. The four claims below still hold for a possible future, separate standalone-symbol context (§8).
+
 The THIRTY symbol is the stable brand mark that appears during The First Breath and may later inform other brand contexts (§8). Four claims define it:
 
 - **The Circle is the product** ([Playbook Ch.1 §3](../playbook/01-the-circle-manifesto.md#3-the-meaning-of-the-circle)) — the daily unit of attention, the shape progress takes. The symbol is not this.
@@ -61,7 +84,9 @@ The THIRTY symbol is the stable brand mark that appears during The First Breath 
 
 ## 2. Symbol Versus Wordmark
 
-**Decision: a standalone symbol. No wordmark, no combined mark, for First Breath.**
+> **Superseded for First Breath (v2.0).** The decision below was First Breath's approved direction in v1.0. It no longer governs First Breath — see the Status Update above and [THIRTY_WORDMARK.md](THIRTY_WORDMARK.md). It is left unedited here as the historical record of what was decided and why; it remains the relevant reasoning if a standalone symbol is ever explored again for a future, separate brand context (§8).
+
+**Decision (v1.0, historical — not current for First Breath): a standalone symbol. No wordmark, no combined mark, for First Breath.**
 
 The word "THIRTY" is not assumed to appear anywhere in the First Breath ritual, and this document does not assume it should.
 
@@ -118,7 +143,7 @@ The symbol sits inside the closed Circle, clearly subordinate to it:
 - it must remain legible without a background plate behind it;
 - it must not mimic Circle progress in any way — no arc, no partial fill, no sweep;
 - it must not create a second concentric ring;
-- it must stay centred within the Circle while the Circle itself remains visually stable (the closed Circle does not move during the symbol's phase — see [World System §13](../worlds/WORLD_SYSTEM.md#13-first-breath-relationship)'s canonical sequence, steps 1–4);
+- it must stay centred within the Circle while the Circle itself remains visually stable — a principle [World System §13](../worlds/WORLD_SYSTEM.md#13-first-breath-relationship) restates for the wordmark's own phase as of v1.0.2 (the closed Circle does not move during steps 1–4 of the canonical sequence, whichever mark currently occupies them);
 - the Circle does not reshape itself around the symbol — the relationship is one of a small mark resting inside a large, calm, unchanged space, never the reverse.
 
 Proportional relationship, without pixel measurements: the symbol should occupy a materially smaller fraction of the Circle's interior than the World illustration is designed to. Where the illustration is inset only enough to clear the ring's stroke, the symbol should read as a small, quiet mark with room to spare around it on every side — closer to a signature than to a filling.
@@ -147,6 +172,8 @@ Future atmosphere may exist around the symbol (light, softness, a subtle glow be
 
 ## 6. Motion Compatibility
 
+> **v2.0 note:** the symbol's First Breath appearance, described below, is superseded — see the Status Update above. The wordmark's motion requirements (no heartbeat) are defined in [THIRTY_WORDMARK.md §4](THIRTY_WORDMARK.md#4-motion-relationship). This section remains the reference for a possible future, separate standalone-symbol context (§8).
+
 The symbol must remain visually stable through every phase of its First Breath appearance: arrival, one restrained heartbeat, return to rest, and fade-out.
 
 **The symbol itself must not:**
@@ -168,6 +195,8 @@ These exclusions are not new rules — they restate [Motion Language §7](../mot
 
 ## 7. Asset Requirements
 
+> **v2.0 note:** "the approved First Breath mark" below refers to the superseded v1.0 direction — see the Status Update above. First Breath's mark is now the wordmark, governed by [THIRTY_WORDMARK.md](THIRTY_WORDMARK.md), which is text by definition. This section's asset requirements remain the reference for a possible future, separate standalone-symbol context (§8).
+
 The future approved asset must satisfy:
 
 - a vector master as the preferred source format;
@@ -185,20 +214,23 @@ This document does not select a Flutter package, decide SVG integration architec
 
 ## 8. Platform Relationships
 
-The approved THIRTY symbol may later inform:
+> **v2.0 note:** "First Breath" is removed from the list below — see the Status Update above. A future, separately approved standalone symbol may still inform the other contexts listed; First Breath is now governed by [THIRTY_WORDMARK.md](THIRTY_WORDMARK.md) instead.
+
+A future, separately approved THIRTY symbol may later inform:
 
 - the app icon;
 - the splash experience;
 - onboarding;
 - the website;
-- a social avatar;
-- First Breath.
+- a social avatar.
 
 These uses may require separate crops or compositions — a symbol correct for a small mark resting inside a large, calm Circle (§4) is not automatically correct for a rounded-square app icon that has no Circle around it at all. The exact First Breath asset should not be assumed to copy directly into every platform context without a specific check for each one.
 
 The app icon remains a separate future deliverable. No existing Flutter scaffold icon (iOS `AppIcon.appiconset`, `LaunchImage.imageset`; macOS `AppIcon.appiconset`; web `favicon.png`/`icons/`; Windows `app_icon.ico`) is modified by this document or by any task that produced it.
 
 ## 9. Premium Boundary
+
+> **v2.0 note:** the free/Premium boundary principle below is unchanged and carried forward — see [THIRTY_WORDMARK.md §9](THIRTY_WORDMARK.md#9-free-and-premium-boundary) for its current statement, restated for the wordmark. The specific description below ("symbol appearance, heartbeat, fade-out") describes the superseded v1.0 First Breath ritual.
 
 - The THIRTY symbol is available to every user, free and Premium alike.
 - The complete First Breath brand ritual — symbol appearance, heartbeat, fade-out — is free, per [PREMIUM_STRATEGY.md §1](../product/PREMIUM_STRATEGY.md#1-free-product-promise) ("The First Breath, in full") and [ADR-007](../product/adr/ADR-007-premium-never-blocks-the-core-loop.md).
@@ -231,6 +263,8 @@ Every future Circle Hero World reuses the same brand ritual unchanged. Nothing a
 
 ## 11. Accessibility
 
+> **v2.0 note:** the decorative-treatment pattern below is unchanged and carried forward — see [THIRTY_WORDMARK.md §8](THIRTY_WORDMARK.md#8-accessibility) for its current statement for the wordmark, including one difference worth noting (a wordmark is literal text, not an abstract mark). The heading below describes the superseded v1.0 First Breath ritual.
+
 **Decision: the symbol is decorative during First Breath.**
 
 The Circle already exposes the only meaningful semantics for this moment, via `ThirtyProgressCircle`'s existing `Semantics` node: "Today's Circle" / "Ready to begin." Announcing "THIRTY" mid-ritual adds narration noise, not useful information — a screen-reader user already knows which app they opened before First Breath ever plays (the platform itself announces the app on launch), so a second, mid-ritual name announcement is redundant rather than informative.
@@ -240,6 +274,8 @@ This matches the precedent [circle_hero.dart](../../lib/features/home/presentati
 Heartbeat, opacity, and scale changes on the symbol must not be exposed to accessibility services — there is no meaning inside that motion for a screen reader to preserve, since the symbol itself is decorative.
 
 ## 12. Reduced Motion
+
+> **v2.0 note:** the mandatory-reduced-motion requirement below is unchanged and carried forward — see [THIRTY_WORDMARK.md §4](THIRTY_WORDMARK.md#4-motion-relationship) for its current statement, restated for the wordmark (which never had a heartbeat to remove in the first place). The specific seven-step ritual below describes the superseded v1.0 symbol sequence.
 
 **Reduced-motion support is mandatory in the First Breath v2 implementation sprint.**
 
@@ -276,7 +312,9 @@ Those are implementation decisions for the later technical pass (§14, §15), ch
 
 ## 13. Review Checklist
 
-Before any First Breath symbol asset ships, it should be able to answer these honestly:
+> **v2.0 note:** this checklist is for a possible future, separate standalone-symbol effort (§8) — it is not a First Breath checklist. [THIRTY_WORDMARK.md §11](THIRTY_WORDMARK.md#11-review-checklist) is the current First Breath checklist.
+
+Before any standalone symbol asset ships, it should be able to answer these honestly:
 
 - Does the symbol remain distinct from the Circle?
 - Is it recognisable at mobile size?
@@ -321,21 +359,43 @@ These require later, separate design and implementation passes, checked against 
 - **[PREMIUM_STRATEGY.md](../product/PREMIUM_STRATEGY.md)** and **[ADR-007](../product/adr/ADR-007-premium-never-blocks-the-core-loop.md)** govern the free/Premium boundary this document's §9 restates.
 - **A later technical task or ADR** governs implementation — Flutter widget structure, asset pipeline, and rendering, checked against this document rather than deciding it here.
 
-This document is **Approved** (v1.0). Reaching Approved status promotes the direction only — no image, icon, or code asset should be generated from it until the remaining pipeline stages below are separately completed, in the same spirit as the Playbook's own approval workflow ([GOVERNANCE.md](../playbook/GOVERNANCE.md#approval-workflow)).
+This document's symbol *direction* remains **Approved** (from v1.0) — reaching Approved status in v1.0 promoted the direction only, and that has not changed. What v2.0 changes is applicability: this pipeline is **no longer First Breath's approval pipeline** (see [THIRTY_WORDMARK.md's own pipeline](THIRTY_WORDMARK.md#approval-pipeline) for that) — it remains the pipeline a future, separate, optional standalone-symbol effort would follow, if and when one is proposed (§8, Status Update above). No image, icon, or code asset should be generated from it regardless, in the same spirit as the Playbook's own approval workflow ([GOVERNANCE.md](../playbook/GOVERNANCE.md#approval-workflow)).
 
-**This approval is a direction, not a design.** It approves *what the symbol must be and must never become* (§1–§12) — it does not itself contain, imply, or approve any final geometry, typography, or artwork. The distinct stages are:
+**This approval was, and remains, a direction, not a design.** It approves *what a standalone symbol must be and must never become* (§1–§12) — it does not itself contain, imply, or approve any final geometry, typography, or artwork. The distinct stages, for a future standalone-symbol effort only:
 
-1. **Approve the symbol-direction document** — complete: this document (THIRTY_SYMBOL.md) is Approved (v1.0), unchanged in kind from what it was in Draft: principles, not pixels.
+1. **Approve the symbol-direction document** — complete: this document (THIRTY_SYMBOL.md) is Approved (v1.0 direction), unchanged in kind from what it was in Draft: principles, not pixels.
 2. **Create several visual symbol concepts** — a future, separate design pass explores multiple candidate forms against §3's principles and rejection list. None of those concepts exists yet, and none is implied by this document.
 3. **Select and refine one concept** — a deliberate narrowing from several candidates to one, checked against the full specification (§3–§7).
 4. **Approve the master vector asset** — the specific, final file (§7) is reviewed and approved on its own, separately from the direction that shaped it.
-5. **Implement First Breath v2** — a Flutter implementation task builds both the normal-motion and reduced-motion (§12) paths from the approved asset and this specification, checked against them rather than redefining either.
+5. **Implement in whatever context it was approved for** — no longer necessarily First Breath (§8, Status Update). A future implementation task builds both the normal-motion and reduced-motion (§12) paths from the approved asset and this specification, checked against them rather than redefining either.
 
-Each stage requires its own explicit approval; none is skipped by completing an earlier one, and this document's own approval (stage 1) does not fast-forward to stage 4.
+Each stage requires its own explicit approval; none is skipped by completing an earlier one, and this document's own approval (stage 1) does not fast-forward to stage 4. This pipeline is dormant unless and until a future decision restarts it (§8) — nothing in v2.0 advances it.
 
 ---
 
 ## Version History
+
+### v2.0.1 — 2026-08-06
+
+- Editorial and cross-document consistency pass, per [GOVERNANCE.md's](../playbook/GOVERNANCE.md#criteria-for-modifying-an-existing-chapter) patch criteria — no meaning changed beyond what v2.0 already decided; this pass corrects places where v2.0's own supersession was not yet reflected in every section.
+- §"A note on authority": corrected a stale cross-reference — World System §13 is now cited at its current v1.0.2, not v1.0.1.
+- §6 (Motion Compatibility), §7 (Asset Requirements), §9 (Premium Boundary), §11 (Accessibility), §12 (Reduced Motion), and §13 (Review Checklist): each received an inline "v2.0 note" marking its content as the superseded v1.0 First Breath specification, pointing to the corresponding current section of [THIRTY_WORDMARK.md](THIRTY_WORDMARK.md). None of the underlying historical content was rewritten or deleted.
+- §7's "no text, since the approved First Breath mark is a standalone symbol" and §13's "Before any First Breath symbol asset ships" were the two clearest present-tense claims that a standalone symbol was still First Breath's active direction — both corrected.
+- §8 (Platform Relationships): removed "First Breath" from the list of contexts a future symbol may inform — First Breath is no longer one of them; the list now describes only a future, separately approved symbol's possible other uses.
+- §4 (Relationship to the Circle): corrected a parenthetical reference to "the symbol's phase" in the canonical sequence — steps 1–4 of [World System §13](../worlds/WORLD_SYSTEM.md#13-first-breath-relationship) now belong to the wordmark, not the symbol.
+- No load-bearing claim changed — this pass makes v2.0's already-decided supersession consistently legible section-by-section, which v2.0 itself stated but did not yet fully thread through §6–§13.
+
+### v2.0 — 2026-08-06
+
+- **Explicit direction change: First Breath becomes wordmark-led.** Recorded in full in the Status Update section immediately below the title, per this document's own amendment discipline (Ownership, below) and [GOVERNANCE.md's](../playbook/GOVERNANCE.md#approval-workflow) approval workflow.
+- The v1.0 standalone-symbol decision (§2) is superseded **for First Breath**, following repeated visual exploration that produced only generic wellness, sports, or interface associations, or gestures too weak without a wordmark — never a form that survived §3's own rejection list while also standing alone. The existing THIRTY wordmark consistently outperformed every explored symbol concept for calm, credible brand presence.
+- [THIRTY_WORDMARK.md](THIRTY_WORDMARK.md) (new, Draft v0.1) is now the authoritative direction document for the First Breath brand moment.
+- The standalone-symbol *direction* itself (§1, §3–§7, §9–§13) is **not withdrawn** — it remains Approved as a possible future, separate brand context (§8), paused rather than cancelled, requiring its own fresh decision and approval before any future use, and explicitly must not block First Breath v2.
+- No final symbol geometry, visual concept, or production asset was ever approved under v1.0 — none is lost by this change (§14, §15 always deferred those stages).
+- §2 is left unedited, with an inline note marking it superseded for First Breath and historical — no rejected AI-generated concept is presented as a repository asset, and no prior rationale is deleted.
+- §15's approval pipeline is reframed as dormant for a future, optional standalone-symbol effort — it is no longer First Breath's pipeline.
+- Reduced-motion remains mandatory for First Breath v2 — the requirement itself is unchanged; it now belongs to THIRTY_WORDMARK.md's wordmark ritual rather than this document's symbol ritual.
+- Companion reconciliation: [World System §13](../worlds/WORLD_SYSTEM.md#13-first-breath-relationship) (v1.0.2) restates the canonical First Breath sequence around the wordmark; [Motion Language §4](../motion/MOTION_LANGUAGE.md#4-motion-hierarchy) received a terminology reconciliation for the same reason.
 
 ### v1.0
 
@@ -379,18 +439,19 @@ THIRTY Brand Design
 
 **Review Process**
 
-- This Approved status covers the symbol *direction* only (§1–§13) — it does not approve final geometry, a specific visual concept, or a production asset; those remain separate, later approvals (stages 2–4 below).
-- Symbol-direction changes require explicit Brand Design approval.
-- Visual concepts remain subject to selection and refinement before any one is chosen (approval pipeline stage 2–3 above).
+- This Approved status covers the standalone-symbol *direction* only (§1–§13) — it does not approve final geometry, a specific visual concept, or a production asset; those remain separate, later approvals (stages 2–4 above), and remain dormant pending a future decision to revisit standalone-symbol work (§8, Status Update).
+- **This direction no longer governs First Breath (v2.0).** [THIRTY_WORDMARK.md](THIRTY_WORDMARK.md) governs the active First Breath brand direction; its own Ownership section governs changes to that.
+- Symbol-direction changes require explicit Brand Design approval — this v2.0 supersession was made at that authority.
+- Visual concepts remain subject to selection and refinement before any one is chosen (approval pipeline stage 2–3 above), for a future standalone-symbol effort only.
 - Final geometry requires visual concept review (approval pipeline stage 2–3 above).
 - The production master vector asset requires explicit approval, separate from the direction that shaped it (stage 4 above).
 - Implementation must follow the approved asset and this specification, not redefine either (stage 5 above).
 - Neither Flutter code nor an AI-generated draft may redefine the symbol.
 
-Once Approved, this document is never silently edited — only through an explicit, dated patch or amendment, in the same spirit as the Playbook's own approval workflow.
+Once Approved, this document is never silently edited — only through an explicit, dated patch or amendment, in the same spirit as the Playbook's own approval workflow. v2.0 was exactly that: a dated, explicit amendment, not a quiet rewrite. v2.0.1 is a dated patch on top of it — a consistency correction, not a further amendment.
 
-No image, icon, or code asset may be generated from this document until the remaining approval-pipeline stages (§14, stages 2–4) are separately completed. Approval of this direction document alone does not authorise asset generation.
+No image, icon, or code asset may be generated from this document until the remaining approval-pipeline stages (§14, stages 2–4) are separately completed — and, as of v2.0, only if a future decision reopens the standalone-symbol effort at all. Approval of this direction document alone never authorised asset generation, in v1.0, v2.0, or v2.0.1.
 
 ---
 
-*This is v1.0 of the THIRTY Symbol specification, in Approved status. It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), [WORLD_SYSTEM.md](../worlds/WORLD_SYSTEM.md), [MOTION_LANGUAGE.md](../motion/MOTION_LANGUAGE.md), and [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), and contradicts none of them. It governs the approved symbol direction — form, colour, and asset requirements; final geometry and the production master vector asset remain separate, later approvals (§14). Future direction changes require explicit Brand Design approval.*
+*This is v2.0.1 of the THIRTY Symbol specification. Its standalone-symbol direction (§1, §3–§7, §9–§13) remains Approved as a possible future, separate brand context — it is superseded for First Breath, which [THIRTY_WORDMARK.md](THIRTY_WORDMARK.md) now governs. It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), [WORLD_SYSTEM.md](../worlds/WORLD_SYSTEM.md), [MOTION_LANGUAGE.md](../motion/MOTION_LANGUAGE.md), and [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), and contradicts none of them. Final geometry and a production master vector asset remain separate, later approvals (§14), dormant unless standalone-symbol work is explicitly restarted. Future direction changes require explicit Brand Design approval.*
