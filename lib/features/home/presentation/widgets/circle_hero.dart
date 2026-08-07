@@ -365,9 +365,15 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     // them here.
     final String ctaLabel;
     final VoidCallback? onCtaPressed;
+    // The Circle's own semantics.value shares this same switch — one
+    // status maps to exactly one CTA state *and* one announced meaning,
+    // so both are decided in the same place rather than duplicating the
+    // status check.
+    final String circleSemanticValue;
     switch (recommendationState.status) {
       case RecommendationStatus.notStarted:
         ctaLabel = 'Start Circle';
+        circleSemanticValue = 'Ready to begin.';
         // A single, soft haptic confirms the one moment THIRTY's product
         // principles reserve it for — "a decision has been made"
         // (Playbook Ch.2 §5) — fired here, not inside ThirtyButton or
@@ -385,12 +391,14 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         };
       case RecommendationStatus.started:
         ctaLabel = 'Close Circle';
+        circleSemanticValue = 'Circle in progress.';
         onCtaPressed = () => ref.read(recommendationProvider.notifier).close();
       case RecommendationStatus.closed:
         // Functional placeholder only — see circle_hero.dart's own review
         // notes (Premium Pass 02B Revised Experiment 1): not the final
         // Closed copy/composition, which is a separate, later pass.
         ctaLabel = 'Circle closed';
+        circleSemanticValue = 'Circle closed.';
         onCtaPressed = null;
     }
 
@@ -471,12 +479,13 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                         size: circleSize,
                         strokeWidth: _circleStrokeWidth,
                         semanticLabel: "Today's Circle",
-                        // Today's Circle is always announced as open and
-                        // ready here, never as a percentage — an empty
-                        // Circle is potential, never a shortfall
+                        // Today's Circle is always announced by its
+                        // lifecycle meaning here, never as a percentage —
+                        // an empty Circle is potential, never a shortfall
                         // (Playbook Ch.2 §3). "0%" would frame it as the
-                        // opposite of what it means.
-                        semanticValue: 'Ready to begin.',
+                        // opposite of what it means, in any of the three
+                        // states above.
+                        semanticValue: circleSemanticValue,
                         child: child,
                       );
                     },

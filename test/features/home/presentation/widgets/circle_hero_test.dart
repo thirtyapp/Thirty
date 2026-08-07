@@ -889,5 +889,100 @@ void main() {
         expect(button.onPressed, isNull);
       });
     });
+
+    group(
+      'Circle lifecycle semantics (Premium Pass 02B.1 / 02C Precheck)',
+      () {
+        testWidgets('notStarted announces "Ready to begin."', (
+          WidgetTester tester,
+        ) async {
+          await tester.pumpWidget(await _wrap());
+          await tester.pumpAndSettle();
+
+          final semantics = tester.getSemantics(
+            find.byType(ThirtyProgressCircle),
+          );
+          expect(semantics.label, "Today's Circle");
+          expect(semantics.value, 'Ready to begin.');
+        });
+
+        testWidgets('started announces "Circle in progress."', (
+          WidgetTester tester,
+        ) async {
+          await tester.pumpWidget(
+            await _wrap(
+              storedPrefs: {
+                firstBreathLastPlayedDateKey: '2026-08-02',
+                recommendationDayKey: '2026-08-02',
+                recommendationStatusKey: 'started',
+                recommendationStartedAtKey: _today.toIso8601String(),
+              },
+            ),
+          );
+          await tester.pump();
+
+          final semantics = tester.getSemantics(
+            find.byType(ThirtyProgressCircle),
+          );
+          expect(semantics.label, "Today's Circle");
+          expect(semantics.value, 'Circle in progress.');
+        });
+
+        testWidgets('closed announces "Circle closed."', (
+          WidgetTester tester,
+        ) async {
+          final closedAt = _today.add(const Duration(minutes: 30));
+          await tester.pumpWidget(
+            await _wrap(
+              storedPrefs: {
+                firstBreathLastPlayedDateKey: '2026-08-02',
+                recommendationDayKey: '2026-08-02',
+                recommendationStatusKey: 'closed',
+                recommendationStartedAtKey: _today.toIso8601String(),
+                recommendationClosedAtKey: closedAt.toIso8601String(),
+              },
+            ),
+          );
+          await tester.pump();
+
+          final semantics = tester.getSemantics(
+            find.byType(ThirtyProgressCircle),
+          );
+          expect(semantics.label, "Today's Circle");
+          expect(semantics.value, 'Circle closed.');
+        });
+
+        testWidgets(
+          'a same-day restored started->closed transition updates the '
+          'existing semantics node rather than creating a new one',
+          (WidgetTester tester) async {
+            final (widget, container) = await _wrapWithContainer();
+            addTearDown(container.dispose);
+
+            await tester.pumpWidget(widget);
+            await tester.pumpAndSettle();
+
+            await tester.ensureVisible(find.byType(ThirtyButton));
+            await tester.tap(find.byType(ThirtyButton)); // Start.
+            await tester.pump();
+
+            final startedSemantics = tester.getSemantics(
+              find.byType(ThirtyProgressCircle),
+            );
+            expect(startedSemantics.value, 'Circle in progress.');
+            final startedId = startedSemantics.id;
+
+            await tester.tap(find.byType(ThirtyButton)); // Close.
+            await tester.pump();
+
+            final closedSemantics = tester.getSemantics(
+              find.byType(ThirtyProgressCircle),
+            );
+            expect(closedSemantics.value, 'Circle closed.');
+            expect(closedSemantics.id, startedId);
+          },
+        );
+      },
+    );
   });
 }
