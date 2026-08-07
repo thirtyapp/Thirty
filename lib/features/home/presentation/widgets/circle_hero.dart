@@ -52,11 +52,12 @@ import '../../application/recommendation_provider.dart';
 /// meets the Circle first instead of settling in empty space above it. The
 /// heading and recommendation share one readable text column, capped
 /// narrower than the Circle itself, so they read as its caption rather than
-/// stretching edge to edge; every text style in that column uses a smaller,
-/// existing type-scale slot than the one before, so the reading order
-/// (Circle → heading → recommendation → explanation → button) reads as a
-/// caption under the Circle, never as a competing block beside it. The
-/// wordmark that appears inside the Circle before it opens is sized off
+/// stretching edge to edge; within that column, activity — the concrete
+/// recommendation — carries the most visual weight, "Today's Circle" is
+/// reduced to a small eyebrow above it, and intent/why stay quieter still,
+/// so the column reads as one composed daily moment under the Circle rather
+/// than a heading followed by decreasing captions. The wordmark that
+/// appears inside the Circle before it opens is sized off
 /// that same interior region (`circleSize - strokeWidth * 2`), never off
 /// the Circle's outer size — a small mark resting inside a large, unchanged
 /// space, exactly as the World illustration that later occupies the same
@@ -347,6 +348,20 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     final isStarted =
         recommendationState.status == RecommendationStatus.started;
 
+    // The recommendation column's three text moments read as one composed
+    // block, not three independent widgets. "Why" and activity need no
+    // entry here: bodyMedium and titleMedium already are their targets
+    // (see their call sites below). Intent alone carries this screen's one
+    // editorial-serif moment (AppTypography.editorialDisplay) — see that
+    // method's own doc comment for why the role, not this content, owns
+    // the name.
+    final eyebrowStyle = textTheme.labelLarge?.copyWith(
+      fontSize: 13,
+      height: 1.25,
+      letterSpacing: 0.5,
+    );
+    final intentStyle = AppTypography.editorialDisplay(colors);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         // The Circle must never be clipped: cap it below the width that's
@@ -444,7 +459,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.m),
+                  const SizedBox(height: AppSpacing.l),
                   // The heading and the recommendation share one readable
                   // column beneath the Circle — capped narrower than the
                   // Circle itself so the activity title and description
@@ -458,11 +473,11 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                           opacity: _headingOpacity,
                           child: Text(
                             "Today's Circle",
-                            style: textTheme.headlineSmall,
+                            style: eyebrowStyle,
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.l),
+                        const SizedBox(height: AppSpacing.s),
                         // Intent fades in as its own beat; activity and its
                         // explanation are one semantic group and always
                         // fade in together under a single animation.
@@ -470,9 +485,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                           opacity: _intentOpacity,
                           child: Text(
                             recommendation.intent,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: colors.textSecondary,
-                            ),
+                            style: intentStyle,
                             textAlign: TextAlign.center,
                           ),
                         ),

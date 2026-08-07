@@ -65,4 +65,26 @@ class AppTypography {
       ),
     );
   }
+
+  /// The one warm, editorial-serif moment a screen is permitted (Newsreader,
+  /// bundled OFL asset — see `pubspec.yaml`), reserved for that screen's
+  /// single most meaningful daily moment — never for functional information,
+  /// metadata, or interaction, which stay on [textTheme]'s Inter. Which
+  /// piece of content earns this role is a per-screen composition decision
+  /// (currently the recommendation's intent in `circle_hero.dart`), so this
+  /// is named for the role, not for today's content. Deliberately not a
+  /// [TextTheme] slot: unlike [textTheme]'s entries, this style has no
+  /// Material-widget fallback to protect, and giving it a second full
+  /// TextTheme would suggest a parallel type system where none is needed
+  /// for a single, deliberate accent.
+  static TextStyle editorialDisplay(AppColors colors) {
+    return TextStyle(
+      fontFamily: 'Newsreader',
+      fontWeight: FontWeight.w400,
+      fontSize: 28,
+      height: 1.21,
+      letterSpacing: 0,
+      color: colors.textPrimary,
+    );
+  }
 }

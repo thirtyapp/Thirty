@@ -75,3 +75,7 @@ flutter:
           weight: 500
         - asset: assets/fonts/Inter-SemiBold.ttf
           weight: 600
+    - family: Newsreader
+      fonts:
+        - asset: assets/fonts/Newsreader[opsz,wght].ttf
+          weight: 400
