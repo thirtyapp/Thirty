@@ -160,6 +160,14 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   // size rather than from the screen, and stays narrower than the Circle.
   static const _textColumnWidthFraction = 0.85;
 
+  // The CTA is a bound compositional choice for this one screen, not a
+  // property of ThirtyButton itself: deliberately narrower than the text
+  // column above it (intermediate/intentional width) — wider than
+  // content-sized so it reads as the recommendation's compositional
+  // close, but clearly short of the column's own width so it never
+  // becomes a banner competing with the Circle.
+  static const _buttonWidthFraction = 0.70;
+
   late final AnimationController _controller;
   late final Animation<double> _wordmarkOpacity;
   late final Animation<double> _circleProgress;
@@ -375,6 +383,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
             .clamp(_circleMinSize, safeMaxSize)
             .toDouble();
         final textMaxWidth = circleSize * _textColumnWidthFraction;
+        final buttonWidth = textMaxWidth * _buttonWidthFraction;
         // Inset so the illustration's circular edge sits at the ring's
         // inner edge, never under the stroke itself — the ring keeps
         // painting after the illustration (ThirtyProgressCircle's Stack
@@ -535,13 +544,22 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                     },
                     child: FadeTransition(
                       opacity: _buttonOpacity,
-                      child: ThirtyButton(
-                        label: isStarted ? 'Circle started' : 'Start Circle',
-                        onPressed: isStarted
-                            ? null
-                            : () => ref
-                                  .read(recommendationProvider.notifier)
-                                  .start(),
+                      // minWidth, not a fixed width: at the smallest
+                      // screens the intentional 0.70 width is narrower
+                      // than "Start Circle"/"Circle started" need, which
+                      // overflows under a fixed SizedBox — minWidth keeps
+                      // the intentional width whenever content fits it,
+                      // and only yields to the label when it doesn't.
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minWidth: buttonWidth),
+                        child: ThirtyButton(
+                          label: isStarted ? 'Circle started' : 'Start Circle',
+                          onPressed: isStarted
+                              ? null
+                              : () => ref
+                                    .read(recommendationProvider.notifier)
+                                    .start(),
+                        ),
                       ),
                     ),
                   ),
