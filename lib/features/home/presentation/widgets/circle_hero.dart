@@ -354,8 +354,45 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     final colors = Theme.of(context).extension<AppColors>()!;
     final recommendationState = ref.watch(recommendationProvider);
     final recommendation = recommendationState.recommendation;
-    final isStarted =
-        recommendationState.status == RecommendationStatus.started;
+
+    // Same Home throughout the whole daily lifecycle (READY/ACTIVE/CLOSED)
+    // — no route, no page transition, no second screen: the Circle stays
+    // at exactly the same place and size across all three, only this CTA
+    // changes. An exhaustive switch over the three technical
+    // RecommendationStatus values, rather than a scattered
+    // isStarted/isClosed/canClose set of booleans, since each status maps
+    // to exactly one label/action pair and nothing else varies between
+    // them here.
+    final String ctaLabel;
+    final VoidCallback? onCtaPressed;
+    switch (recommendationState.status) {
+      case RecommendationStatus.notStarted:
+        ctaLabel = 'Start Circle';
+        // A single, soft haptic confirms the one moment THIRTY's product
+        // principles reserve it for — "a decision has been made"
+        // (Playbook Ch.2 §5) — fired here, not inside ThirtyButton or
+        // RecommendationNotifier, so it stays tied to this exact physical
+        // Start Circle tap: it can only ever fire once per valid press
+        // (onPressed is already null while disabled/still gated by First
+        // Breath's IgnorePointer above), never on a rebuild or a state
+        // restore. Close Circle deliberately gets no haptic in this pass
+        // — Circle Closed's own haptic is reserved product-level, but is
+        // designed as its own later, physical experiment, not assumed
+        // here.
+        onCtaPressed = () {
+          HapticFeedback.lightImpact();
+          ref.read(recommendationProvider.notifier).start();
+        };
+      case RecommendationStatus.started:
+        ctaLabel = 'Close Circle';
+        onCtaPressed = () => ref.read(recommendationProvider.notifier).close();
+      case RecommendationStatus.closed:
+        // Functional placeholder only — see circle_hero.dart's own review
+        // notes (Premium Pass 02B Revised Experiment 1): not the final
+        // Closed copy/composition, which is a separate, later pass.
+        ctaLabel = 'Circle closed';
+        onCtaPressed = null;
+    }
 
     // The recommendation column's three text moments read as one composed
     // block, not three independent widgets. "Why" and activity need no
@@ -547,33 +584,16 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                       opacity: _buttonOpacity,
                       // minWidth, not a fixed width: at the smallest
                       // screens the intentional 0.70 width is narrower
-                      // than "Start Circle"/"Circle started" need, which
-                      // overflows under a fixed SizedBox — minWidth keeps
-                      // the intentional width whenever content fits it,
-                      // and only yields to the label when it doesn't.
+                      // than "Start Circle"/"Close Circle"/"Circle closed"
+                      // need, which overflows under a fixed SizedBox —
+                      // minWidth keeps the intentional width whenever
+                      // content fits it, and only yields to the label
+                      // when it doesn't.
                       child: ConstrainedBox(
                         constraints: BoxConstraints(minWidth: buttonWidth),
                         child: ThirtyButton(
-                          label: isStarted ? 'Circle started' : 'Start Circle',
-                          // A single, soft haptic confirms the one moment
-                          // THIRTY's product principles reserve it for —
-                          // "a decision has been made" (Playbook Ch.2 §5)
-                          // — fired here, not inside ThirtyButton or
-                          // RecommendationNotifier, so it stays tied to
-                          // this exact physical Start Circle tap: it can
-                          // only ever fire once per valid press (onPressed
-                          // is already null while disabled/already
-                          // started/still gated by First Breath's
-                          // IgnorePointer above), never on a rebuild, a
-                          // state restore, or a future unrelated button.
-                          onPressed: isStarted
-                              ? null
-                              : () {
-                                  HapticFeedback.lightImpact();
-                                  ref
-                                      .read(recommendationProvider.notifier)
-                                      .start();
-                                },
+                          label: ctaLabel,
+                          onPressed: onCtaPressed,
                         ),
                       ),
                     ),

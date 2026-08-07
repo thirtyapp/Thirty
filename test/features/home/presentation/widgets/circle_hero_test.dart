@@ -249,7 +249,7 @@ void main() {
       await tester.tap(find.text('Start Circle'));
       await tester.pump();
 
-      expect(find.text('Circle started'), findsOneWidget);
+      expect(find.text('Close Circle'), findsOneWidget);
       expect(find.text('Start Circle'), findsNothing);
     });
 
@@ -575,7 +575,7 @@ void main() {
           await tester.tap(find.text('Start Circle'));
           await tester.pump();
 
-          expect(find.text('Circle started'), findsOneWidget);
+          expect(find.text('Close Circle'), findsOneWidget);
         },
       );
 
@@ -615,7 +615,7 @@ void main() {
             container.read(recommendationProvider).status,
             RecommendationStatus.notStarted,
           );
-          expect(find.text('Circle started'), findsNothing);
+          expect(find.text('Close Circle'), findsNothing);
           expect(find.text('Start Circle'), findsOneWidget);
         },
       );
@@ -638,7 +638,7 @@ void main() {
           container.read(recommendationProvider).status,
           RecommendationStatus.notStarted,
         );
-        expect(find.text('Circle started'), findsNothing);
+        expect(find.text('Close Circle'), findsNothing);
       });
 
       testWidgets(
@@ -658,11 +658,13 @@ void main() {
             container.read(recommendationProvider).status,
             RecommendationStatus.started,
           );
-          expect(find.text('Circle started'), findsOneWidget);
+          expect(find.text('Close Circle'), findsOneWidget);
           expect(find.text('Start Circle'), findsNothing);
 
+          // Same-Home: the CTA stays enabled after Start — it becomes the
+          // user's way to Close Circle, not a terminal disabled state.
           final button = tester.widget<ThirtyButton>(find.byType(ThirtyButton));
-          expect(button.onPressed, isNull);
+          expect(button.onPressed, isNotNull);
         },
       );
 
@@ -685,7 +687,7 @@ void main() {
             container.read(recommendationProvider).status,
             RecommendationStatus.started,
           );
-          expect(find.text('Circle started'), findsOneWidget);
+          expect(find.text('Close Circle'), findsOneWidget);
         },
       );
 
@@ -733,24 +735,36 @@ void main() {
       );
 
       testWidgets(
-        'does not fire an additional haptic once the Circle is already '
-        'started',
+        'does not fire a haptic when the now-enabled Close Circle CTA is '
+        'tapped — Circle Closed reserves its own haptic for a later, '
+        'separate pass',
         (WidgetTester tester) async {
           final calls = _recordHapticCalls(tester);
+          final (widget, container) = await _wrapWithContainer();
+          addTearDown(container.dispose);
 
-          await tester.pumpWidget(await _wrap());
+          await tester.pumpWidget(widget);
           await tester.pumpAndSettle();
 
           await tester.ensureVisible(find.byType(ThirtyButton));
           await tester.tap(find.byType(ThirtyButton));
           await tester.pump();
           expect(calls, hasLength(1));
+          expect(
+            container.read(recommendationProvider).status,
+            RecommendationStatus.started,
+          );
 
-          // The button is now disabled ("Circle started"); a further tap
-          // attempt must not add a second haptic.
-          await tester.tap(find.byType(ThirtyButton), warnIfMissed: false);
+          // Same-Home: the button is now the enabled "Close Circle" CTA,
+          // not a disabled leftover — tapping it performs a real,
+          // meaningful close() transition, which still must add no haptic.
+          await tester.tap(find.byType(ThirtyButton));
           await tester.pump();
 
+          expect(
+            container.read(recommendationProvider).status,
+            RecommendationStatus.closed,
+          );
           expect(calls, hasLength(1));
         },
       );
@@ -772,6 +786,108 @@ void main() {
           expect(calls, isEmpty);
         },
       );
+    });
+
+    group('Same-Home Circle lifecycle (Premium Pass 02B Revised '
+        'Experiment 1)', () {
+      testWidgets(
+        'closing preserves startedAt and records closedAt',
+        (WidgetTester tester) async {
+          final (widget, container) = await _wrapWithContainer();
+          addTearDown(container.dispose);
+
+          await tester.pumpWidget(widget);
+          await tester.pumpAndSettle();
+
+          await tester.ensureVisible(find.byType(ThirtyButton));
+          await tester.tap(find.byType(ThirtyButton));
+          await tester.pump();
+          final startedAt = container.read(recommendationProvider).startedAt;
+          expect(startedAt, isNotNull);
+          expect(container.read(recommendationProvider).closedAt, isNull);
+
+          await tester.tap(find.byType(ThirtyButton));
+          await tester.pump();
+
+          final state = container.read(recommendationProvider);
+          expect(state.status, RecommendationStatus.closed);
+          expect(state.startedAt, startedAt);
+          expect(state.closedAt, isNotNull);
+        },
+      );
+
+      testWidgets(
+        'the closed CTA is disabled, and a further tap changes nothing',
+        (WidgetTester tester) async {
+          final (widget, container) = await _wrapWithContainer();
+          addTearDown(container.dispose);
+
+          await tester.pumpWidget(widget);
+          await tester.pumpAndSettle();
+
+          await tester.ensureVisible(find.byType(ThirtyButton));
+          await tester.tap(find.byType(ThirtyButton)); // Start.
+          await tester.pump();
+          await tester.tap(find.byType(ThirtyButton)); // Close.
+          await tester.pump();
+
+          expect(find.text('Circle closed'), findsOneWidget);
+          final button = tester.widget<ThirtyButton>(find.byType(ThirtyButton));
+          expect(button.onPressed, isNull);
+
+          final closedAt = container.read(recommendationProvider).closedAt;
+          await tester.tap(find.byType(ThirtyButton), warnIfMissed: false);
+          await tester.pump();
+
+          final state = container.read(recommendationProvider);
+          expect(state.status, RecommendationStatus.closed);
+          expect(state.closedAt, closedAt);
+          expect(find.text('Circle closed'), findsOneWidget);
+        },
+      );
+
+      testWidgets('a same-day restored started state shows Close Circle', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(
+          await _wrap(
+            storedPrefs: {
+              firstBreathLastPlayedDateKey: '2026-08-02',
+              recommendationDayKey: '2026-08-02',
+              recommendationStatusKey: 'started',
+              recommendationStartedAtKey: _today.toIso8601String(),
+            },
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Close Circle'), findsOneWidget);
+        expect(find.text('Start Circle'), findsNothing);
+        final button = tester.widget<ThirtyButton>(find.byType(ThirtyButton));
+        expect(button.onPressed, isNotNull);
+      });
+
+      testWidgets('a same-day restored closed state shows Circle closed', (
+        WidgetTester tester,
+      ) async {
+        final closedAt = _today.add(const Duration(minutes: 30));
+        await tester.pumpWidget(
+          await _wrap(
+            storedPrefs: {
+              firstBreathLastPlayedDateKey: '2026-08-02',
+              recommendationDayKey: '2026-08-02',
+              recommendationStatusKey: 'closed',
+              recommendationStartedAtKey: _today.toIso8601String(),
+              recommendationClosedAtKey: closedAt.toIso8601String(),
+            },
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Circle closed'), findsOneWidget);
+        final button = tester.widget<ThirtyButton>(find.byType(ThirtyButton));
+        expect(button.onPressed, isNull);
+      });
     });
   });
 }
