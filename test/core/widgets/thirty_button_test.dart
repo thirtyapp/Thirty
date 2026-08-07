@@ -142,5 +142,58 @@ void main() {
 
       expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
     });
+
+    testWidgets(
+      'replaces the default splash with a quiet local pressed overlay',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          _wrap(ThirtyButton(label: 'Start', onPressed: () {})),
+        );
+
+        final inkWell = tester.widget<InkWell>(find.byType(InkWell));
+
+        expect(inkWell.splashFactory, NoSplash.splashFactory);
+        expect(
+          inkWell.overlayColor?.resolve({WidgetState.pressed}),
+          isNotNull,
+        );
+        // Hover/focus stay on InkWell's own defaults — only the pressed
+        // state is resolved to a custom color.
+        expect(inkWell.overlayColor?.resolve({WidgetState.hovered}), isNull);
+      },
+    );
+
+    testWidgets(
+      'gives primary and secondary distinct, non-null pressed overlays '
+      '(variant-aware, accessibility-verified — Premium Pass 01D '
+      'Experiment 3B)',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          _wrap(ThirtyButton(label: 'Start', onPressed: () {})),
+        );
+        final primaryOverlay = tester
+            .widget<InkWell>(find.byType(InkWell))
+            .overlayColor
+            ?.resolve({WidgetState.pressed});
+
+        await tester.pumpWidget(
+          _wrap(
+            ThirtyButton(
+              label: 'Start',
+              onPressed: () {},
+              variant: ThirtyButtonVariant.secondary,
+            ),
+          ),
+        );
+        final secondaryOverlay = tester
+            .widget<InkWell>(find.byType(InkWell))
+            .overlayColor
+            ?.resolve({WidgetState.pressed});
+
+        expect(primaryOverlay, isNotNull);
+        expect(secondaryOverlay, isNotNull);
+        expect(primaryOverlay, isNot(secondaryOverlay));
+      },
+    );
   });
 }
