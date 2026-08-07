@@ -79,7 +79,7 @@ class ThirtyButton extends StatelessWidget {
           child: Material(
             color: backgroundColor,
             shape: RoundedRectangleBorder(
-              borderRadius: AppRadius.medium,
+              borderRadius: AppRadius.small,
               side: borderSide,
             ),
             clipBehavior: Clip.antiAlias,
