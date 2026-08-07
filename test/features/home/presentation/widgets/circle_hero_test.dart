@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -86,6 +87,33 @@ Future<(Widget, ProviderContainer)> _wrapWithContainer({
     ),
   );
   return (widget, container);
+}
+
+/// Records every `HapticFeedback.vibrate` call THIRTY's Start Circle
+/// button makes on [SystemChannels.platform] — the exact platform-channel
+/// method/argument [HapticFeedback.lightImpact] invokes (see the Flutter
+/// SDK's `haptic_feedback.dart`), read directly rather than through a new
+/// haptic-abstraction layer that would exist only to make this mockable.
+/// The mock handler is torn down after the test so it can't leak into
+/// others.
+List<String?> _recordHapticCalls(WidgetTester tester) {
+  final calls = <String?>[];
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    SystemChannels.platform,
+    (MethodCall call) async {
+      if (call.method == 'HapticFeedback.vibrate') {
+        calls.add(call.arguments as String?);
+      }
+      return null;
+    },
+  );
+  addTearDown(() {
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      null,
+    );
+  });
+  return calls;
 }
 
 /// The [FadeTransition] this task added directly around the Start Circle
@@ -685,6 +713,65 @@ void main() {
 
         expect(buttonGate().ignoring, isFalse);
       });
+    });
+
+    group('Start Circle haptic', () {
+      testWidgets(
+        'fires exactly one lightImpact haptic on a valid Start Circle tap',
+        (WidgetTester tester) async {
+          final calls = _recordHapticCalls(tester);
+
+          await tester.pumpWidget(await _wrap());
+          await tester.pumpAndSettle();
+
+          await tester.ensureVisible(find.byType(ThirtyButton));
+          await tester.tap(find.byType(ThirtyButton));
+          await tester.pump();
+
+          expect(calls, ['HapticFeedbackType.lightImpact']);
+        },
+      );
+
+      testWidgets(
+        'does not fire an additional haptic once the Circle is already '
+        'started',
+        (WidgetTester tester) async {
+          final calls = _recordHapticCalls(tester);
+
+          await tester.pumpWidget(await _wrap());
+          await tester.pumpAndSettle();
+
+          await tester.ensureVisible(find.byType(ThirtyButton));
+          await tester.tap(find.byType(ThirtyButton));
+          await tester.pump();
+          expect(calls, hasLength(1));
+
+          // The button is now disabled ("Circle started"); a further tap
+          // attempt must not add a second haptic.
+          await tester.tap(find.byType(ThirtyButton), warnIfMissed: false);
+          await tester.pump();
+
+          expect(calls, hasLength(1));
+        },
+      );
+
+      testWidgets(
+        'does not fire a haptic for a tap blocked by First Breath gating, '
+        'before the button has fully revealed',
+        (WidgetTester tester) async {
+          final calls = _recordHapticCalls(tester);
+
+          await tester.pumpWidget(await _wrap());
+          await tester.pump();
+
+          // Same setup as the "ignores taps while hidden" interaction-gate
+          // test above: the button is fully transparent/gated here.
+          await tester.tap(find.byType(ThirtyButton), warnIfMissed: false);
+          await tester.pump();
+
+          expect(calls, isEmpty);
+        },
+      );
     });
   });
 }

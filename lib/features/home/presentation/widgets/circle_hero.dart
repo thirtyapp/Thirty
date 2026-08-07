@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/activity_category.dart';
@@ -554,11 +555,25 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                         constraints: BoxConstraints(minWidth: buttonWidth),
                         child: ThirtyButton(
                           label: isStarted ? 'Circle started' : 'Start Circle',
+                          // A single, soft haptic confirms the one moment
+                          // THIRTY's product principles reserve it for —
+                          // "a decision has been made" (Playbook Ch.2 §5)
+                          // — fired here, not inside ThirtyButton or
+                          // RecommendationNotifier, so it stays tied to
+                          // this exact physical Start Circle tap: it can
+                          // only ever fire once per valid press (onPressed
+                          // is already null while disabled/already
+                          // started/still gated by First Breath's
+                          // IgnorePointer above), never on a rebuild, a
+                          // state restore, or a future unrelated button.
                           onPressed: isStarted
                               ? null
-                              : () => ref
-                                    .read(recommendationProvider.notifier)
-                                    .start(),
+                              : () {
+                                  HapticFeedback.lightImpact();
+                                  ref
+                                      .read(recommendationProvider.notifier)
+                                      .start();
+                                },
                         ),
                       ),
                     ),
