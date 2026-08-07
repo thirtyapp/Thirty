@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- THIRTY's native launch background — the one warm off-white the
+         app must show from the very first native frame, before Flutter's
+         own Scaffold (also #FAF8F3) ever paints. Single, unconditional
+         value: no day/night variant, no logo, no gradient. -->
+    <color name="launch_background">#FFFAF8F3</color>
+</resources>

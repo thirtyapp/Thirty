@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Required in addition to values-v31/styles.xml, not a duplicate:
+         Android's resource-qualifier precedence ranks night mode above
+         platform version, so on a dark-mode Android 12+ device
+         values-night/styles.xml's plain LaunchTheme (no splash-screen
+         overrides) would otherwise win over values-v31/styles.xml,
+         letting the auto-derived Flutter launcher icon reappear in dark
+         mode only. This file closes that gap with the same override,
+         under values-night's existing Theme.Black.NoTitleBar parent.
+         NormalTheme is not redefined here for the same reason as in
+         values-v31/styles.xml — values-night/styles.xml's version
+         (already using @color/launch_background) already applies
+         unchanged.
+
+         windowSplashScreenAnimatedIcon uses @android:color/transparent,
+         not a local empty vector drawable — see values-v31/styles.xml's
+         comment for why (a degenerate-sized vector was confirmed, via
+         cold-start screenshots, to trigger a silent fallback to the
+         launcher icon). -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowSplashScreenBackground">@color/launch_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+</resources>

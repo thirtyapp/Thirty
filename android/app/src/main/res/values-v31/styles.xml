@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ (API 31) shows its own mandatory system splash screen
+         before this LaunchTheme's windowBackground ever gets a chance to
+         paint. Without these three attributes it falls back to deriving
+         a splash icon from the launcher icon (still the unmodified
+         Flutter default) on the platform's own default background —
+         exactly the "second logo moment" this pass avoids. NormalTheme
+         is deliberately not redefined here: values/styles.xml's version
+         (already using @color/launch_background) already applies
+         unchanged on API 31+, so redefining it here would only
+         duplicate it.
+
+         windowSplashScreenAnimatedIcon uses @android:color/transparent,
+         not a local empty vector drawable: a 1dp empty vector was tested
+         and confirmed (via cold-start screenshots) to be treated as
+         degenerate by the platform's icon-loading logic, which silently
+         fell back to deriving the icon from the launcher icon instead —
+         the exact "Flutter logo" problem this override exists to avoid.
+         A color reference has no intrinsic size for that logic to reject,
+         so the platform paints nothing instead of falling back. -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowSplashScreenBackground">@color/launch_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+</resources>
