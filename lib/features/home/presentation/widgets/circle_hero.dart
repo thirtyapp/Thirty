@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/activity_category.dart';
+import '../../../../core/branding/thirty_wordmark_view.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_progress_circle.dart';
@@ -17,12 +18,21 @@ import '../../application/recommendation_provider.dart';
 /// widget animations — Playbook Ch.2 §4 ("motion must mean something
 /// before it may exist") and the brief's own instruction that this must
 /// "feel like one sequence." A single [AnimationController] drives every
-/// phase through [Interval]s on one timeline:
+/// phase through [Interval]s (and, for the wordmark's non-monotonic
+/// appear-hold-fade shape, a [TweenSequence]) on one timeline:
 ///
-/// 1. Hold — yesterday's Circle sits fully closed, still, for ~700ms.
-/// 2. The First Breath — the Circle releases from closed (1.0) to open
-///    (0.0) over ~2200ms: one slow exhale, soft decelerating ease, no
-///    bounce, no spring, no overshoot, no abrupt final stop.
+/// 1. The wordmark — the closed Circle is already present and still. The
+///    THIRTY wordmark fades in (300ms), holds fully visible and
+///    motionless (700ms), then fades fully out (300ms). Opacity only: no
+///    scale, no translation, no heartbeat
+///    (`docs/brand/THIRTY_WORDMARK.md` §4 — "The Circle is not the logo.
+///    The Circle is the product.").
+/// 2. The First Breath — only once the wordmark has fully faded out (its
+///    own opacity is exactly 0), the Circle releases from closed (1.0) to
+///    open (0.0) over 2200ms: one slow exhale, soft decelerating ease, no
+///    bounce, no spring, no overshoot, no abrupt final stop. There is no
+///    frame in which the wordmark still has any opacity and the Circle
+///    already has progress.
 /// 3+. Only once the Circle has finished opening: the illustration, then
 ///    four content groups fade in one at a time, never together — the
 ///    heading, the recommendation's intent, and finally its activity
@@ -45,15 +55,26 @@ import '../../application/recommendation_provider.dart';
 /// stretching edge to edge; every text style in that column uses a smaller,
 /// existing type-scale slot than the one before, so the reading order
 /// (Circle → heading → recommendation → explanation → button) reads as a
-/// caption under the Circle, never as a competing block beside it.
+/// caption under the Circle, never as a competing block beside it. The
+/// wordmark that appears inside the Circle before it opens is sized off
+/// that same interior region (`circleSize - strokeWidth * 2`), never off
+/// the Circle's outer size — a small mark resting inside a large, unchanged
+/// space, exactly as the World illustration that later occupies the same
+/// region already is.
 ///
 /// This ritual plays at most once per local calendar day (see
-/// [firstBreathProvider]). On every later open the same day, the
+/// [firstBreathProvider]), and never plays with visible motion when the
+/// platform/user has requested reduced motion
+/// ([MediaQuery.disableAnimationsOf]). In either case the
 /// [AnimationController] is set straight to its end value instead of
-/// played — every [Interval]-derived animation below then resolves
-/// directly to its final value with no visible motion, so the "already
-/// played today" case reuses the exact same timeline definitions as the
-/// "play it" case rather than branching the widget tree in two.
+/// played — every [Interval]/[TweenSequence]-derived animation below then
+/// resolves directly to its final value (Circle open, wordmark invisible,
+/// all content settled) with no visible motion, so both the "already
+/// played today" case and the "reduced motion" case reuse the exact same
+/// timeline definitions as the "play it" case rather than branching the
+/// widget tree in two. Reduced motion still marks the ritual played for
+/// today on the first open of the day — it removes movement and waiting,
+/// never meaning or access (`docs/motion/MOTION_LANGUAGE.md` §11).
 class CircleHero extends ConsumerStatefulWidget {
   const CircleHero({super.key});
 
@@ -63,7 +84,13 @@ class CircleHero extends ConsumerStatefulWidget {
 
 class _CircleHeroState extends ConsumerState<CircleHero>
     with SingleTickerProviderStateMixin {
-  static const _holdPhase = Duration(milliseconds: 700);
+  // The wordmark's own appear-hold-fade beat, played before the Circle
+  // begins to open (docs/brand/THIRTY_WORDMARK.md §4, §12 — First Breath
+  // v2). Opacity only; no scale, translate, or heartbeat.
+  static const _wordmarkFadeInPhase = Duration(milliseconds: 300);
+  static const _wordmarkHoldPhase = Duration(milliseconds: 700);
+  static const _wordmarkFadeOutPhase = Duration(milliseconds: 300);
+
   static const _breathePhase = Duration(milliseconds: 2200);
   static const _illustrationPhase = Duration(milliseconds: 500);
   static const _headingPhase = Duration(milliseconds: 400);
@@ -85,7 +112,9 @@ class _CircleHeroState extends ConsumerState<CircleHero>
 
   static const _totalDuration = Duration(
     milliseconds:
-        700 + // _holdPhase
+        300 + // _wordmarkFadeInPhase
+        700 + // _wordmarkHoldPhase
+        300 + // _wordmarkFadeOutPhase
         2200 + // _breathePhase
         500 + // _illustrationPhase
         200 + // pause before heading
@@ -111,11 +140,19 @@ class _CircleHeroState extends ConsumerState<CircleHero>
 
   // The one source of truth for the Home Circle's ring thickness — passed
   // explicitly to [ThirtyProgressCircle] below rather than left to its
-  // default, because the illustration's inset size (build()) is derived
-  // from this same value. Relying on the default in one place while
-  // duplicating the number in the other would let the two silently drift
-  // apart.
+  // default, because the illustration's and wordmark's inset sizes
+  // (build()) are both derived from this same value. Relying on the
+  // default in one place while duplicating the number elsewhere would let
+  // them silently drift apart.
   static const _circleStrokeWidth = 12.0;
+
+  // The wordmark's own width, as a fraction of the Circle's usable
+  // interior (`circleSize - strokeWidth * 2`) — reproduces the visually
+  // validated scale matrix from `docs/brand/THIRTY_WORDMARK.md` §6 (236px
+  // interior → ~138px wordmark, 416px interior → ~243px wordmark).
+  // [ThirtyWordmarkView] guards its own aspect ratio internally, so only
+  // the width needs to be given here.
+  static const _wordmarkWidthFraction = 0.585;
 
   // The text column beneath the Circle reads as its caption, not as an
   // independent block — so its max width is derived from the Circle's own
@@ -123,6 +160,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   static const _textColumnWidthFraction = 0.85;
 
   late final AnimationController _controller;
+  late final Animation<double> _wordmarkOpacity;
   late final Animation<double> _circleProgress;
   late final Animation<double> _illustrationOpacity;
   late final Animation<double> _headingOpacity;
@@ -130,13 +168,15 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   late final Animation<double> _activityWhyOpacity;
   late final Animation<double> _buttonOpacity;
 
+  // Guards the play-vs-skip decision (and the MediaQuery read it needs) so
+  // it runs exactly once per widget lifetime, not again on a later,
+  // unrelated dependency change (e.g. a theme change) while the ritual is
+  // already under way or already settled.
+  bool _ritualStarted = false;
+
   @override
   void initState() {
     super.initState();
-
-    // Read once: this ritual must not react to its own side effect of
-    // marking itself played (see the `whenComplete` below).
-    final shouldPlay = ref.read(firstBreathProvider);
 
     _controller = AnimationController(vsync: this, duration: _totalDuration);
 
@@ -155,7 +195,15 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       return elapsedMs / totalMs;
     }
 
-    final holdEnd = advance(_holdPhase);
+    // The wordmark's own three sub-boundaries are expressed as
+    // TweenSequence weights below, not as Intervals, so only their
+    // cumulative effect on the shared clock (elapsedMs) is needed here —
+    // advance() is still called for each phase, in order, so
+    // wordmarkFadeOutEnd (used by _circleProgress below) lands on the
+    // correct fraction.
+    advance(_wordmarkFadeInPhase);
+    advance(_wordmarkHoldPhase);
+    final wordmarkFadeOutEnd = advance(_wordmarkFadeOutPhase);
     final breatheEnd = advance(_breathePhase);
     final illustrationEnd = advance(_illustrationPhase);
     final headingStart = advance(_pauseShort);
@@ -167,15 +215,62 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     final buttonStart = advance(_pauseLong);
     final buttonEnd = advance(_buttonPhase);
 
+    // The wordmark's appear-hold-fade shape is not monotonic (up, then
+    // flat, then down), so a single Interval can't express it — a
+    // TweenSequence can. Its items are weighted in the same milliseconds
+    // as the phases above, so its internal boundaries use the same
+    // wordmarkFadeInEnd/wordmarkHoldEnd/wordmarkFadeOutEnd fractions as
+    // below, to floating-point precision. The trailing ConstantTween(0.0)
+    // covers the rest of the timeline, so opacity is 0 for the whole time
+    // the Circle is opening and afterwards — no frame renders the
+    // wordmark visible while the Circle already has progress
+    // (docs/brand/THIRTY_WORDMARK.md §4).
+    _wordmarkOpacity = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(
+          begin: 0.0,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeOut)),
+        weight: _wordmarkFadeInPhase.inMilliseconds.toDouble(),
+      ),
+      TweenSequenceItem(
+        tween: ConstantTween(1.0),
+        weight: _wordmarkHoldPhase.inMilliseconds.toDouble(),
+      ),
+      TweenSequenceItem(
+        tween: Tween(
+          begin: 1.0,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.easeOut)),
+        weight: _wordmarkFadeOutPhase.inMilliseconds.toDouble(),
+      ),
+      TweenSequenceItem(
+        tween: ConstantTween(0.0),
+        weight:
+            (totalMs -
+                    _wordmarkFadeInPhase.inMilliseconds -
+                    _wordmarkHoldPhase.inMilliseconds -
+                    _wordmarkFadeOutPhase.inMilliseconds)
+                .toDouble(),
+      ),
+    ]).animate(_controller);
+
     // The Circle releases from closed (1.0) to open (0.0) — the inverse of
     // a normal fill — because this ritual is yesterday's complete Circle
     // giving way to today's empty one (Playbook Ch.1 §8, "The Philosophy
     // of Starting Again"). Soft, decelerating ease; no bounce, no
-    // elastic, no overshoot.
+    // elastic, no overshoot. Starts at wordmarkFadeOutEnd — the same
+    // timeline boundary _wordmarkOpacity's fade-out segment ends on, to
+    // floating-point precision — so the Circle never begins opening while
+    // the wordmark still has any opacity.
     _circleProgress = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Interval(holdEnd, breatheEnd, curve: Curves.easeOutCubic),
+        curve: Interval(
+          wordmarkFadeOutEnd,
+          breatheEnd,
+          curve: Curves.easeOutCubic,
+        ),
       ),
     );
 
@@ -193,26 +288,47 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     );
     _activityWhyOpacity = CurvedAnimation(
       parent: _controller,
-      curve: Interval(
-        activityWhyStart,
-        activityWhyEnd,
-        curve: Curves.easeOut,
-      ),
+      curve: Interval(activityWhyStart, activityWhyEnd, curve: Curves.easeOut),
     );
     _buttonOpacity = CurvedAnimation(
       parent: _controller,
       curve: Interval(buttonStart, buttonEnd, curve: Curves.easeOut),
     );
+  }
 
-    if (shouldPlay) {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Runs exactly once: the play-vs-skip decision (and the MediaQuery
+    // read it depends on) must not repeat on a later, unrelated
+    // dependency change while the ritual is already playing or settled.
+    if (_ritualStarted) return;
+    _ritualStarted = true;
+
+    // Read once: this ritual must not react to its own side effect of
+    // marking itself played (see the `whenComplete`/direct call below).
+    final shouldPlay = ref.read(firstBreathProvider);
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
+
+    if (shouldPlay && !reducedMotion) {
       _controller.forward().whenComplete(() {
         if (!mounted) return;
         ref.read(firstBreathProvider.notifier).markPlayedToday();
       });
     } else {
-      // Already played today: land on the fully-settled end state with no
-      // visible motion, rather than replaying the ritual.
+      // Already played today, or reduced motion is requested: land on the
+      // fully-settled end state with no visible motion, rather than
+      // playing (any part of) the ritual. Reduced motion still preserves
+      // every step's meaning — the wordmark still "happened", the Circle
+      // is still open, content is still present — only the movement and
+      // the wait are removed (docs/motion/MOTION_LANGUAGE.md §11). If
+      // this is the first open of the day, the ritual is still marked
+      // played even though nothing visibly animated.
       _controller.value = 1.0;
+      if (shouldPlay) {
+        ref.read(firstBreathProvider.notifier).markPlayedToday();
+      }
     }
   }
 
@@ -248,8 +364,11 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         // inner edge, never under the stroke itself — the ring keeps
         // painting after the illustration (ThirtyProgressCircle's Stack
         // order is unchanged), so staying inside its inner boundary is
-        // what keeps the two from visually overlapping.
-        final illustrationSize = circleSize - (_circleStrokeWidth * 2);
+        // what keeps the two from visually overlapping. The wordmark
+        // shares this same interior region, never the Circle's outer size.
+        final circleInteriorSize = circleSize - (_circleStrokeWidth * 2);
+        final illustrationSize = circleInteriorSize;
+        final wordmarkWidth = circleInteriorSize * _wordmarkWidthFraction;
 
         return SingleChildScrollView(
           // SingleChildScrollView gives its child loose (not full-width)
@@ -299,14 +418,30 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                         child: child,
                       );
                     },
-                    child: FadeTransition(
-                      opacity: _illustrationOpacity,
-                      child: ExcludeSemantics(
-                        child: _worldIllustrationFor(
-                          recommendation.category,
-                          illustrationSize,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // The wordmark is decorative only
+                        // (ThirtyWordmarkView already wraps itself in
+                        // ExcludeSemantics) — the Circle above is the
+                        // ritual's only semantics owner.
+                        FadeTransition(
+                          opacity: _wordmarkOpacity,
+                          child: SizedBox(
+                            width: wordmarkWidth,
+                            child: const ThirtyWordmarkView(),
+                          ),
                         ),
-                      ),
+                        FadeTransition(
+                          opacity: _illustrationOpacity,
+                          child: ExcludeSemantics(
+                            child: _worldIllustrationFor(
+                              recommendation.category,
+                              illustrationSize,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: AppSpacing.m),

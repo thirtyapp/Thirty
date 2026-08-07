@@ -18,13 +18,24 @@ class ThirtyWordmarkView extends StatelessWidget {
 
   static const _assetPath = 'assets/brand/thirty_wordmark.svg';
 
+  // assets/brand/thirty_wordmark.svg's own viewBox (`166.30199 x
+  // 34.217251`) — kept here, next to the asset path it belongs to, rather
+  // than duplicated by callers. `SvgPicture.asset` documents that it needs
+  // either an explicit width/height or tight layout constraints in both
+  // dimensions to size correctly; this AspectRatio is what supplies that,
+  // from a caller-given width alone.
+  static const _aspectRatio = 166.30199 / 34.217251;
+
   @override
   Widget build(BuildContext context) {
     // Decorative only (THIRTY_WORDMARK.md §8 — the Circle already owns the
     // only meaningful semantics for this moment) — this view must never
     // announce a second, duplicate description.
     return ExcludeSemantics(
-      child: SvgPicture.asset(_assetPath, fit: BoxFit.contain),
+      child: AspectRatio(
+        aspectRatio: _aspectRatio,
+        child: SvgPicture.asset(_assetPath, fit: BoxFit.contain),
+      ),
     );
   }
 }

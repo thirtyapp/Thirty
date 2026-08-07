@@ -48,6 +48,29 @@ void main() {
       expect(svgPicture.fit, BoxFit.contain);
     });
 
+    testWidgets(
+      "preserves the SVG's own aspect ratio when given only a width, no "
+      'height',
+      (tester) async {
+        const width = 200.0;
+        // assets/brand/thirty_wordmark.svg's own viewBox
+        // (`166.30199 x 34.217251`) — the widget must guard this ratio
+        // itself, since a caller giving only a width (no height) is
+        // exactly how this widget is actually used (e.g. CircleHero).
+        const expectedAspectRatio = 166.30199 / 34.217251;
+
+        await tester.pumpWidget(
+          _wrap(const SizedBox(width: width, child: ThirtyWordmarkView())),
+        );
+        await tester.pumpAndSettle();
+
+        final size = tester.getSize(find.byType(ThirtyWordmarkView));
+
+        expect(size.width, width);
+        expect(size.height, closeTo(width / expectedAspectRatio, 0.01));
+      },
+    );
+
     testWidgets('is decorative and carries no semantic content', (
       tester,
     ) async {
