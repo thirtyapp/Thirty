@@ -38,6 +38,7 @@ dependencies:
   go_router: ^17.3.0
   supabase_flutter: ^2.16.0
   shared_preferences: ^2.5.5
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +64,7 @@ flutter:
 
   assets:
     - assets/worlds/quiet_trail/
+    - assets/brand/
 
   fonts:
     - family: Inter
