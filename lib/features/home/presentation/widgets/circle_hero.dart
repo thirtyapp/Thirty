@@ -144,7 +144,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   // (build()) are both derived from this same value. Relying on the
   // default in one place while duplicating the number elsewhere would let
   // them silently drift apart.
-  static const _circleStrokeWidth = 12.0;
+  static const _circleStrokeWidth = 10.0;
 
   // The wordmark's own width, as a fraction of the Circle's usable
   // interior (`circleSize - strokeWidth * 2`) — reproduces the visually

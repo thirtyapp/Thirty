@@ -62,7 +62,7 @@ void main() {
         'assets/worlds/quiet_trail/quiet_trail_hero_master_v1.png',
       );
       expect(image.fit, BoxFit.cover);
-      expect(image.alignment, Alignment.center);
+      expect(image.alignment, const Alignment(0.18, 0.16));
       expect(image.filterQuality, FilterQuality.high);
     });
 

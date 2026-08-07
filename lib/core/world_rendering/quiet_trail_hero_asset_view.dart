@@ -24,6 +24,11 @@ class QuietTrailHeroAssetView extends StatelessWidget {
   static const _assetPath =
       'assets/worlds/quiet_trail/quiet_trail_hero_master_v1.png';
 
+  /// Nudges the cover-crop toward the illustration's subject (the
+  /// tree/path), which sits right/below center in the source art —
+  /// centered alignment left too much quiet empty space top/left.
+  static const _imageAlignment = Alignment(0.18, 0.16);
+
   @override
   Widget build(BuildContext context) {
     // Decorative only (WORLD_SYSTEM.md, Design Principles: "The World is a
@@ -38,7 +43,7 @@ class QuietTrailHeroAssetView extends StatelessWidget {
           child: Image.asset(
             _assetPath,
             fit: BoxFit.cover,
-            alignment: Alignment.center,
+            alignment: _imageAlignment,
             filterQuality: FilterQuality.high,
           ),
         ),
