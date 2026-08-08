@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thirty/core/branding/thirty_wordmark_view.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
+import 'package:thirty/core/theme/app_colors.dart';
 import 'package:thirty/core/theme/app_theme.dart';
 import 'package:thirty/core/widgets/thirty_button.dart';
 import 'package:thirty/core/widgets/thirty_progress_circle.dart';
@@ -87,6 +88,37 @@ Future<(Widget, ProviderContainer)> _wrapWithContainer({
     ),
   );
   return (widget, container);
+}
+
+/// Same [container]-backed CircleHero as [_wrapWithContainer], but with an
+/// explicit, live-togglable reduced-motion MediaQuery override — used only
+/// by the "LIVE REDUCED MOTION" tests below, which pump this same shape
+/// twice with a different [reducedMotion] value to prove breathing reacts
+/// to a reduced-motion change that happens mid-session, with no
+/// RecommendationStatus change and no CircleHero remount in between (same
+/// widget type at the same tree position both times, so its State —
+/// including the breathing AnimationController — survives the second
+/// pumpWidget call exactly as it would across a real app-level toggle).
+Widget _circleHeroWithReducedMotion(
+  ProviderContainer container, {
+  required bool reducedMotion,
+}) {
+  return UncontrolledProviderScope(
+    container: container,
+    child: MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(disableAnimations: reducedMotion),
+            child: const CircleHero(),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// Records every `HapticFeedback.vibrate` call THIRTY's Start Circle
@@ -984,5 +1016,417 @@ void main() {
         );
       },
     );
+
+    group('Circle color lifecycle (Premium Pass 02C Experiment 5 — '
+        'Vanishing First Breath + Clean READY)', () {
+      // notStarted has no visible stroke at all — the previous ghost track
+      // (Experiment 4 Revised) read like a UI border on device and was
+      // rejected. ThirtyProgressCircle still occupies the same
+      // space/geometry (size/strokeWidth unchanged), only its stroke is
+      // invisible.
+      final readyTrackColor = Colors.transparent;
+      // First Breath's own progress arc now paints in the exact same sage
+      // ThirtyProgressCircle already defaults progressColor to — a closed
+      // sage Circle at progress 1.0, geometrically vanishing as progress
+      // sweeps to 0.0, with the transparent track (above) left behind.
+      final firstBreathSageColor = AppColors.light.primary;
+      final closedTrackColor = AppColors.light.border.withValues(alpha: 0.6);
+      final activeBaseTrackColor = AppColors.light.primary.withValues(
+        alpha: 0.22,
+      );
+
+      ThirtyProgressCircle circleWidget(WidgetTester tester) =>
+          tester.widget<ThirtyProgressCircle>(
+            find.byType(ThirtyProgressCircle),
+          );
+
+      group('First Breath vanish', () {
+        testWidgets(
+          'A. FIRST BREATH CLOSED: at progress 1.0, a transparent track '
+          'plus a full sage progress circle reads as a closed sage Circle',
+          (WidgetTester tester) async {
+            await tester.pumpWidget(await _wrap());
+            await tester.pump();
+
+            final circle = circleWidget(tester);
+            expect(circle.progress, 1.0);
+            expect(circle.trackColor, readyTrackColor);
+            expect(circle.progressColor, firstBreathSageColor);
+          },
+        );
+
+        testWidgets(
+          'B. WORDMARK PHASE: the Circle is still sage and geometrically '
+          'closed for as long as progress is still 1.0',
+          (WidgetTester tester) async {
+            await tester.pumpWidget(await _wrap());
+            // Mid-hold: hold spans 300–1000ms, well before the Circle
+            // begins opening at _wordmarkFadeOutEndMs (1300ms).
+            await tester.pump(const Duration(milliseconds: 500));
+
+            final circle = circleWidget(tester);
+            expect(circle.progress, 1.0);
+            expect(circle.trackColor, readyTrackColor);
+            expect(circle.progressColor, firstBreathSageColor);
+          },
+        );
+
+        testWidgets(
+          'C. OPENING: progress sweeps 1.0 -> 0.0 exactly as before, sage '
+          'progressColor and transparent trackColor throughout',
+          (WidgetTester tester) async {
+            await tester.pumpWidget(await _wrap());
+
+            await tester.pump(
+              const Duration(milliseconds: _wordmarkFadeOutEndMs + 1000),
+            );
+
+            final circle = circleWidget(tester);
+            expect(circle.progress, greaterThan(0.0));
+            expect(circle.progress, lessThan(1.0));
+            expect(circle.trackColor, readyTrackColor);
+            expect(circle.progressColor, firstBreathSageColor);
+          },
+        );
+
+        testWidgets(
+          'D. STABLE READY: at progress 0.0, the transparent track leaves '
+          'no visible Circle stroke; extra pump-tijd changes nothing',
+          (WidgetTester tester) async {
+            await tester.pumpWidget(await _wrap());
+            await tester.pumpAndSettle();
+
+            final circle = circleWidget(tester);
+            expect(circle.progress, 0.0);
+            expect(circle.trackColor, readyTrackColor);
+
+            await tester.pump(const Duration(seconds: 2));
+            expect(circleWidget(tester).trackColor, readyTrackColor);
+          },
+        );
+      });
+
+      testWidgets(
+        'READY: trackColor stays fully transparent, no breathing',
+        (WidgetTester tester) async {
+          await tester.pumpWidget(await _wrap());
+          await tester.pumpAndSettle();
+
+          expect(circleWidget(tester).trackColor, readyTrackColor);
+
+          await tester.pump(const Duration(seconds: 4));
+          expect(circleWidget(tester).trackColor, readyTrackColor);
+        },
+      );
+
+      testWidgets(
+        'READY + REDUCED MOTION: trackColor stays fully transparent',
+        (WidgetTester tester) async {
+          await tester.pumpWidget(await _wrap(disableAnimations: true));
+          await tester.pump();
+
+          expect(circleWidget(tester).trackColor, readyTrackColor);
+        },
+      );
+
+      testWidgets('RESTORED READY: a same-day restored notStarted state has '
+          'no visible Circle stroke', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          await _wrap(
+            storedPrefs: {firstBreathLastPlayedDateKey: '2026-08-02'},
+          ),
+        );
+        await tester.pump();
+
+        expect(circleWidget(tester).trackColor, readyTrackColor);
+      });
+
+      testWidgets(
+        'START: trackColor switches to sage and breathing begins, progress '
+        'stays 0.0',
+        (WidgetTester tester) async {
+          final (widget, container) = await _wrapWithContainer();
+          addTearDown(container.dispose);
+
+          await tester.pumpWidget(widget);
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(find.byType(ThirtyButton));
+          await tester.tap(find.byType(ThirtyButton));
+          await tester.pump();
+
+          expect(
+            container.read(recommendationProvider).status,
+            RecommendationStatus.started,
+          );
+          expect(circleWidget(tester).progress, 0.0);
+          // Directly on the sage track from the very first started frame —
+          // no separate gray->sage transition/crossfade.
+          expect(circleWidget(tester).trackColor, activeBaseTrackColor);
+
+          await tester.pump(const Duration(milliseconds: 1750));
+
+          final circle = circleWidget(tester);
+          expect(circle.trackColor, isNot(activeBaseTrackColor));
+          expect(circle.trackColor!.r, activeBaseTrackColor.r);
+          expect(circle.trackColor!.g, activeBaseTrackColor.g);
+          expect(circle.trackColor!.b, activeBaseTrackColor.b);
+          expect(circle.progress, 0.0);
+        },
+      );
+
+      testWidgets(
+        'PEAK: the cycle reaches ~0.286 effective alpha at its half-cycle '
+        'point, RGB stays colors.primary',
+        (WidgetTester tester) async {
+          final (widget, container) = await _wrapWithContainer();
+          addTearDown(container.dispose);
+
+          await tester.pumpWidget(widget);
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(find.byType(ThirtyButton));
+          await tester.tap(find.byType(ThirtyButton));
+          await tester.pump();
+
+          // The breath controller's own duration (3500ms) is exactly half
+          // of the full 7000ms cycle — its peak (Tween.end, alpha
+          // multiplier 1.30) lands there before reversing back down.
+          await tester.pump(const Duration(milliseconds: 3500));
+
+          final circle = circleWidget(tester);
+          expect(circle.progress, 0.0);
+          expect(circle.trackColor!.r, activeBaseTrackColor.r);
+          expect(circle.trackColor!.g, activeBaseTrackColor.g);
+          expect(circle.trackColor!.b, activeBaseTrackColor.b);
+          final peakAlpha = circle.trackColor!.a;
+          expect(peakAlpha, closeTo(0.286, 0.005));
+        },
+      );
+
+      testWidgets(
+        'CYCLE: breathing alpha stays within the 0.22-0.286 sage range, RGB '
+        'stays colors.primary throughout, and never touches progress',
+        (WidgetTester tester) async {
+          final (widget, container) = await _wrapWithContainer();
+          addTearDown(container.dispose);
+
+          await tester.pumpWidget(widget);
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(find.byType(ThirtyButton));
+          await tester.tap(find.byType(ThirtyButton));
+          await tester.pump();
+
+          for (var elapsedMs = 0; elapsedMs <= 7000; elapsedMs += 500) {
+            await tester.pump(const Duration(milliseconds: 500));
+
+            final circle = circleWidget(tester);
+            expect(circle.progress, 0.0);
+            expect(circle.trackColor!.r, activeBaseTrackColor.r);
+            expect(circle.trackColor!.g, activeBaseTrackColor.g);
+            expect(circle.trackColor!.b, activeBaseTrackColor.b);
+            expect(circle.trackColor!.a, greaterThanOrEqualTo(0.218));
+            expect(circle.trackColor!.a, lessThanOrEqualTo(0.29));
+          }
+        },
+      );
+
+      testWidgets(
+        'CLOSE: breathing stops and trackColor resets to the exact neutral '
+        'base',
+        (WidgetTester tester) async {
+          final (widget, container) = await _wrapWithContainer();
+          addTearDown(container.dispose);
+
+          await tester.pumpWidget(widget);
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(find.byType(ThirtyButton));
+          await tester.tap(find.byType(ThirtyButton)); // Start.
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 1750)); // Mid-breath.
+
+          await tester.tap(find.byType(ThirtyButton)); // Close.
+          await tester.pump();
+
+          expect(circleWidget(tester).trackColor, closedTrackColor);
+
+          await tester.pump(const Duration(seconds: 4));
+          expect(circleWidget(tester).trackColor, closedTrackColor);
+        },
+      );
+
+      testWidgets(
+        'REDUCED MOTION: started stays statically sage at 0.22, no '
+        'breathing',
+        (WidgetTester tester) async {
+          await tester.pumpWidget(
+            await _wrap(
+              storedPrefs: {
+                firstBreathLastPlayedDateKey: '2026-08-02',
+                recommendationDayKey: '2026-08-02',
+                recommendationStatusKey: 'started',
+                recommendationStartedAtKey: _today.toIso8601String(),
+              },
+              disableAnimations: true,
+            ),
+          );
+          await tester.pump();
+
+          expect(circleWidget(tester).trackColor, activeBaseTrackColor);
+
+          await tester.pump(const Duration(seconds: 4));
+          expect(circleWidget(tester).trackColor, activeBaseTrackColor);
+        },
+      );
+
+      testWidgets(
+        'RESTORED STARTED: a cold-restored started day starts directly on '
+        'the sage track and breathes without a start() call',
+        (WidgetTester tester) async {
+          await tester.pumpWidget(
+            await _wrap(
+              storedPrefs: {
+                firstBreathLastPlayedDateKey: '2026-08-02',
+                recommendationDayKey: '2026-08-02',
+                recommendationStatusKey: 'started',
+                recommendationStartedAtKey: _today.toIso8601String(),
+              },
+            ),
+          );
+          await tester.pump();
+
+          expect(circleWidget(tester).trackColor, activeBaseTrackColor);
+
+          await tester.pump(const Duration(milliseconds: 1750));
+
+          final circle = circleWidget(tester);
+          expect(circle.trackColor, isNot(activeBaseTrackColor));
+          expect(circle.trackColor!.r, activeBaseTrackColor.r);
+          expect(circle.trackColor!.g, activeBaseTrackColor.g);
+          expect(circle.trackColor!.b, activeBaseTrackColor.b);
+          expect(circle.progress, 0.0);
+        },
+      );
+
+      testWidgets('RESTORED CLOSED: neutral, no breathing', (
+        WidgetTester tester,
+      ) async {
+        final closedAt = _today.add(const Duration(minutes: 30));
+        await tester.pumpWidget(
+          await _wrap(
+            storedPrefs: {
+              firstBreathLastPlayedDateKey: '2026-08-02',
+              recommendationDayKey: '2026-08-02',
+              recommendationStatusKey: 'closed',
+              recommendationStartedAtKey: _today.toIso8601String(),
+              recommendationClosedAtKey: closedAt.toIso8601String(),
+            },
+          ),
+        );
+        await tester.pump();
+
+        expect(circleWidget(tester).trackColor, closedTrackColor);
+
+        await tester.pump(const Duration(seconds: 4));
+        expect(circleWidget(tester).trackColor, closedTrackColor);
+      });
+
+      testWidgets(
+        'LIVE REDUCED MOTION: false->true stops breathing and resets to '
+        'static sage 0.22, with no RecommendationStatus change',
+        (WidgetTester tester) async {
+          SharedPreferences.setMockInitialValues({});
+          final prefs = await SharedPreferences.getInstance();
+          final container = ProviderContainer(
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(prefs),
+              nowProvider.overrideWithValue(_today),
+            ],
+          );
+          addTearDown(container.dispose);
+
+          await tester.pumpWidget(
+            _circleHeroWithReducedMotion(container, reducedMotion: false),
+          );
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(find.byType(ThirtyButton));
+          await tester.tap(find.byType(ThirtyButton)); // Start.
+          await tester.pump();
+
+          expect(
+            container.read(recommendationProvider).status,
+            RecommendationStatus.started,
+          );
+          await tester.pump(const Duration(milliseconds: 1750));
+          expect(
+            circleWidget(tester).trackColor,
+            isNot(activeBaseTrackColor),
+          );
+
+          // Live toggle: reducedMotion becomes true while status stays
+          // started — same container, same CircleHero State.
+          await tester.pumpWidget(
+            _circleHeroWithReducedMotion(container, reducedMotion: true),
+          );
+          await tester.pump();
+
+          expect(
+            container.read(recommendationProvider).status,
+            RecommendationStatus.started,
+          );
+          expect(circleWidget(tester).trackColor, activeBaseTrackColor);
+
+          await tester.pump(const Duration(seconds: 4));
+          expect(circleWidget(tester).trackColor, activeBaseTrackColor);
+        },
+      );
+
+      testWidgets(
+        'LIVE REDUCED MOTION: true->false starts breathing, with no '
+        'RecommendationStatus change',
+        (WidgetTester tester) async {
+          SharedPreferences.setMockInitialValues({
+            firstBreathLastPlayedDateKey: '2026-08-02',
+            recommendationDayKey: '2026-08-02',
+            recommendationStatusKey: 'started',
+            recommendationStartedAtKey: _today.toIso8601String(),
+          });
+          final prefs = await SharedPreferences.getInstance();
+          final container = ProviderContainer(
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(prefs),
+              nowProvider.overrideWithValue(_today),
+            ],
+          );
+          addTearDown(container.dispose);
+
+          await tester.pumpWidget(
+            _circleHeroWithReducedMotion(container, reducedMotion: true),
+          );
+          await tester.pump();
+
+          expect(
+            container.read(recommendationProvider).status,
+            RecommendationStatus.started,
+          );
+          expect(circleWidget(tester).trackColor, activeBaseTrackColor);
+
+          // Live toggle: reducedMotion becomes false while status stays
+          // started — same container, same CircleHero State.
+          await tester.pumpWidget(
+            _circleHeroWithReducedMotion(container, reducedMotion: false),
+          );
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 1750));
+
+          expect(
+            container.read(recommendationProvider).status,
+            RecommendationStatus.started,
+          );
+          expect(
+            circleWidget(tester).trackColor,
+            isNot(activeBaseTrackColor),
+          );
+        },
+      );
+    });
   });
 }

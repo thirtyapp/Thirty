@@ -85,7 +85,7 @@ class CircleHero extends ConsumerStatefulWidget {
 }
 
 class _CircleHeroState extends ConsumerState<CircleHero>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   // The wordmark's own appear-hold-fade beat, played before the Circle
   // begins to open (docs/brand/THIRTY_WORDMARK.md §4, §12 — First Breath
   // v2). Opacity only; no scale, translate, or heartbeat.
@@ -178,11 +178,34 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   late final Animation<double> _activityWhyOpacity;
   late final Animation<double> _buttonOpacity;
 
+  // Ambient/secondary motion (Motion Language taxonomy — "breathes...
+  // exists to create life rather than attract attention"), entirely
+  // separate from the First Breath ritual's single one-shot timeline above:
+  // this one repeats indefinitely for as long as today's Circle is
+  // RecommendationStatus.started, so it needs its own controller/ticker
+  // rather than sharing _controller's single, non-repeating timeline.
+  static const _breathCycleHalf = Duration(milliseconds: 3500);
+  late final AnimationController _breathController;
+  late final Animation<double> _breathAlpha;
+
   // Guards the play-vs-skip decision (and the MediaQuery read it needs) so
   // it runs exactly once per widget lifetime, not again on a later,
   // unrelated dependency change (e.g. a theme change) while the ritual is
   // already under way or already settled.
   bool _ritualStarted = false;
+
+  // The last RecommendationStatus/reducedMotion pair breathing was synced
+  // to. Both start null so the very first build — including a cold restore
+  // that lands directly on `started` — always runs _syncBreathing exactly
+  // once; a later build only runs it again when either actually changes,
+  // never on an unrelated rebuild where both stay the same (which would
+  // otherwise restart the repeat() cycle from its base value on every
+  // frame). reducedMotion is included because it can change live (a system
+  // setting toggled) while status stays `started` the whole time — the
+  // reduced-motion contract must hold at that instant too, not just at the
+  // moment status last changed.
+  RecommendationStatus? _lastBreathStatus;
+  bool? _lastBreathReducedMotion;
 
   @override
   void initState() {
@@ -304,6 +327,48 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       parent: _controller,
       curve: Interval(buttonStart, buttonEnd, curve: Curves.easeOut),
     );
+
+    // "The active Circle breathes; it does not count" — a slow, symmetric
+    // easeInOut alpha modulation, repeat(reverse: true) doing the
+    // 1.00→1.30→1.00 round trip in 3500ms + 3500ms = 7000ms, with no
+    // hold/pause at either end. Left at rest (value 0.0, alpha 1.0) until
+    // _syncBreathing below starts or stops it. 1.30, not 0.85: Premium Pass
+    // 02C Experiment 1's dimming direction (0.60↔0.51 effective trackColor
+    // alpha) was visually rejected on device as imperceptible — Experiment
+    // 2 instead brightens the ring toward more presence (0.60 × 1.30 =
+    // 0.78 effective), the same multiplier architecture, only the
+    // direction/amplitude changed.
+    _breathController = AnimationController(
+      vsync: this,
+      duration: _breathCycleHalf,
+    );
+    _breathAlpha = Tween<double>(begin: 1.0, end: 1.30).animate(
+      CurvedAnimation(parent: _breathController, curve: Curves.easeInOut),
+    );
+  }
+
+  /// Starts/stops the Circle's ambient breathing for [status], and resets
+  /// it to its static base value (alpha 1.00) whenever it isn't
+  /// [RecommendationStatus.started] — never left hanging on an in-between
+  /// alpha, including on close. Reduced motion keeps `started` fully
+  /// static too, the same way First Breath's own reduced-motion path
+  /// removes movement without removing meaning
+  /// (docs/motion/MOTION_LANGUAGE.md §11); the "Close Circle" CTA already
+  /// carries the state information breathing would otherwise add.
+  void _syncBreathing(RecommendationStatus status, bool reducedMotion) {
+    switch (status) {
+      case RecommendationStatus.notStarted:
+      case RecommendationStatus.closed:
+        _breathController.stop();
+        _breathController.value = 0.0;
+      case RecommendationStatus.started:
+        if (reducedMotion) {
+          _breathController.stop();
+          _breathController.value = 0.0;
+        } else {
+          _breathController.repeat(reverse: true);
+        }
+    }
   }
 
   @override
@@ -345,6 +410,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   @override
   void dispose() {
     _controller.dispose();
+    _breathController.dispose();
     super.dispose();
   }
 
@@ -354,6 +420,29 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     final colors = Theme.of(context).extension<AppColors>()!;
     final recommendationState = ref.watch(recommendationProvider);
     final recommendation = recommendationState.recommendation;
+
+    // Breathing is synced here, not via a widget-replacement hook like
+    // didUpdateWidget — this ConsumerStatefulWidget is never replaced when
+    // Riverpod state changes, only rebuilt — and not via a second
+    // ref.listen subscription either: a plain comparison against the last
+    // (status, reducedMotion) pair this method itself synced to is the
+    // smallest correct option, since it both (a) catches every real
+    // transition exactly once, including the very first build of a
+    // cold-restored `started` day, and (b) is a no-op on any other rebuild
+    // (theme change, unrelated provider, animation tick) where neither has
+    // actually changed — so repeat() is never restarted mid-cycle by
+    // something other than a genuine start()/close() or a live
+    // reduced-motion toggle. reducedMotion must be compared too, not just
+    // status: a system-level reduced-motion change can happen while status
+    // stays `started` the whole time, and the reduced-motion contract has
+    // to hold at that instant, not just at the moment status last changed.
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
+    if (recommendationState.status != _lastBreathStatus ||
+        reducedMotion != _lastBreathReducedMotion) {
+      _lastBreathStatus = recommendationState.status;
+      _lastBreathReducedMotion = reducedMotion;
+      _syncBreathing(recommendationState.status, reducedMotion);
+    }
 
     // Same Home throughout the whole daily lifecycle (READY/ACTIVE/CLOSED)
     // — no route, no page transition, no second screen: the Circle stays
@@ -439,6 +528,49 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         final circleInteriorSize = circleSize - (_circleStrokeWidth * 2);
         final illustrationSize = circleInteriorSize;
         final wordmarkWidth = circleInteriorSize * _wordmarkWidthFraction;
+        // The Circle's own lifecycle color (Premium Pass 02C Experiment 5 —
+        // "Vanishing First Breath + Clean READY": device review rejected
+        // Experiment 4 Revised's neutral ghost track as reading like a UI
+        // border in stable READY. notStarted's track is now fully
+        // transparent — no visible stroke at all, only the Circle's own
+        // geometry/space stays reserved in the layout — and Start Circle
+        // becomes the sole moment any track appears. started switches the
+        // stroke's RGB to colors.primary at a deliberately low base alpha
+        // (0.22) — a soft sage presence, not a full ring — for _breathAlpha
+        // to modulate. _breathAlpha sits at exactly 1.0 (its Tween.begin)
+        // whenever _syncBreathing has left _breathController at rest, so
+        // notStarted/closed stay static, and a reduced-motion `started`
+        // lands on a static 0.22 rather than breathing.
+        final baseTrackColor = switch (recommendationState.status) {
+          RecommendationStatus.notStarted => Colors.transparent,
+          RecommendationStatus.closed => colors.border.withValues(
+            alpha: 0.60,
+          ),
+          RecommendationStatus.started => colors.primary.withValues(
+            alpha: 0.22,
+          ),
+        };
+        // The First Breath ritual's own progress arc (`_circleProgress`,
+        // 1.0 → 0.0) now paints in sage, not a neutral ghost: with
+        // trackColor transparent above, progress 1.0's full circle reads as
+        // a closed sage Circle, and the arc shrinking to 0 as First Breath
+        // completes reads as that same sage Circle geometrically
+        // vanishing — no opacity fade, no second controller, the existing
+        // progress animation is the vanish transition. This is the exact
+        // same sage colors.primary ThirtyProgressCircle would already
+        // resolve to by default (its own `progressColor ?? colors.primary`)
+        // — made explicit here, rather than left to that default, only so
+        // it reads as an intentional part of this lifecycle-color block
+        // rather than an incidental default. A static value, not switched
+        // on status: it is only ever visible while `_circleProgress.value >
+        // 0`, which happens only during First Breath's one-shot opening —
+        // RecommendationStatus cannot have changed away from notStarted by
+        // then, since the Start Circle CTA stays gated (IgnorePointer)
+        // until well after the Circle has finished opening.
+        // `_circleProgress` is permanently settled at 0.0 afterward, so
+        // this color is simply never painted again (ThirtyProgressCircle's
+        // own painter skips the progress arc entirely once progress <= 0).
+        final circleProgressColor = colors.primary;
 
         return SingleChildScrollView(
           // SingleChildScrollView gives its child loose (not full-width)
@@ -472,12 +604,32 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   AnimatedBuilder(
-                    animation: _circleProgress,
+                    // Merged, not just _circleProgress: _circleProgress
+                    // itself only ever ticks once (during First Breath's
+                    // opening) and is permanently settled afterward, but
+                    // this builder must still rebuild on every breathing
+                    // tick for as long as today's Circle is started.
+                    animation: Listenable.merge([_circleProgress, _breathAlpha]),
                     builder: (context, child) {
                       return ThirtyProgressCircle(
                         progress: _circleProgress.value,
                         size: circleSize,
                         strokeWidth: _circleStrokeWidth,
+                        // The Circle "breathes" — an ambient, wholly
+                        // secondary alpha modulation of this already-
+                        // visible ring, never the ring's progress/geometry
+                        // — while today's Circle is started (Playbook's
+                        // Ambient Motion category: "exists to create life
+                        // rather than attract attention"). See
+                        // _syncBreathing for exactly when this moves.
+                        trackColor: baseTrackColor.withValues(
+                          alpha: baseTrackColor.a * _breathAlpha.value,
+                        ),
+                        // See circleProgressColor's own doc comment: sage,
+                        // painting the closed-then-vanishing First Breath
+                        // Circle — only ever visible during First Breath's
+                        // own opening sweep.
+                        progressColor: circleProgressColor,
                         semanticLabel: "Today's Circle",
                         // Today's Circle is always announced by its
                         // lifecycle meaning here, never as a percentage —
