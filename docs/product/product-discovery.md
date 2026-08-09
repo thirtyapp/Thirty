@@ -63,10 +63,10 @@ Premium wordt niet tijdens de eerste sessie genoemd, en niet als onderbreking va
 
 Deze vragen zijn nog niet beslist. Zolang dat zo is, mag geen enkel ander document (inclusief [Onboarding Principles](onboarding-principles.md)) doen alsof ze al beantwoord zijn.
 
-1. Wat is de bron/logica van de allereerste suggestie zonder gebruikersdata?
+1. ~~Wat is de bron/logica van de allereerste suggestie zonder gebruikersdata?~~ **Beantwoord** door Recommendation MVP v0's Daily Context Question — zie [ADR-009](adr/ADR-009-daily-intention-question.md) en [recommendation-mvp-v0.md §2](recommendation-mvp-v0.md#2-de-drie-intentions).
 2. Bewaren we iets vóór er een account is — en zo ja, op basis van welk principe?
 3. Wat is het exacte triggermoment voor de account-uitnodiging?
-4. Wat telt precies als "afgeronde 30 minuten"?
+4. Wat telt precies als "afgeronde 30 minuten"? **Blijft expliciet open** — [ADR-010](adr/ADR-010-circle-closed-not-completion.md) legt vast dat "Circle Closed" (Recommendation MVP v0) hier nadrukkelijk geen antwoord op is, om te voorkomen dat die interactie stilzwijgend als impliciet antwoord gaat gelden.
 5. Welk concreet, meetbaar signaal markeert het moment waarop Premium voor het eerst getoond mag worden?
 6. Is er, ook zonder uitwerking, een principebeslissing nodig over re-engagement/notificaties? (Zie ook [BRAND_BOOK.md §5](../BRAND_BOOK.md#5-brand-promise) voor de bestaande notificatie-toon: "zacht herinneren, niet opjagen" — dat beantwoordt de tóón, niet de timing/frequentie.)
 7. Is de persona in §1 gevalideerd met echte gebruikers, of blijft ze een ontwerphypothese?

@@ -8,6 +8,7 @@ import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/providers/theme_mode_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
+import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
 
 Future<Widget> _wrap() async {
   SharedPreferences.setMockInitialValues({});
@@ -25,8 +26,13 @@ void main() {
     await tester.pumpWidget(await _wrap());
     await tester.pumpAndSettle();
 
-    expect(find.byType(CircleHero), findsOneWidget);
     expect(find.byType(MaterialApp), findsOneWidget);
+    expect(find.byType(DailyIntentionPrompt), findsOneWidget);
+
+    await tester.tap(find.text('More Energy'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CircleHero), findsOneWidget);
   });
 
   testWidgets('switching ThemeMode via the showcase updates the provider', (

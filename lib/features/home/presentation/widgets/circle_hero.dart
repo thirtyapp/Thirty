@@ -419,7 +419,13 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
     final recommendationState = ref.watch(recommendationProvider);
-    final recommendation = recommendationState.recommendation;
+    // Non-null by construction: `HomePage` only ever mounts CircleHero once
+    // recommendationState.recommendation is non-null (home_page.dart), and
+    // it can only become null again by this widget being unmounted first
+    // (a new local day resets to no-recommendation — see
+    // recommendation_provider.dart), never while CircleHero itself is still
+    // on screen.
+    final recommendation = recommendationState.recommendation!;
 
     // Breathing is synced here, not via a widget-replacement hook like
     // didUpdateWidget — this ConsumerStatefulWidget is never replaced when
@@ -773,14 +779,20 @@ class _CircleHeroState extends ConsumerState<CircleHero>
 /// [size] — the one place `circle_hero.dart` maps a recommendation's
 /// [ActivityCategory] to a World's illustration widget.
 ///
-/// An exhaustive switch, not a registry: [ActivityCategory] has exactly
-/// one shipped value today (WORLD_SYSTEM.md §16 names every other category
-/// only as a placeholder), so this stays the smallest mapping that
-/// compiles safely — a future category left unhandled here fails to
-/// compile instead of silently falling through to the wrong illustration.
+/// An exhaustive switch, not a registry — a future category left unhandled
+/// here fails to compile instead of silently falling through to the wrong
+/// illustration. [ActivityCategory.walking] has an approved Place (Quiet
+/// Trail); [ActivityCategory.generalWellness] deliberately renders the
+/// exact same illustration in Recommendation MVP v0
+/// (`docs/product/recommendation-mvp-v0.md`) — it has no Place of its own
+/// yet (see that enum value's own doc comment), and no new World/Place is
+/// introduced by that milestone. Both cases are listed explicitly, not
+/// merged behind a default, so a future third category still fails to
+/// compile until it's deliberately handled here too.
 Widget _worldIllustrationFor(ActivityCategory category, double size) {
   return switch (category) {
-    ActivityCategory.walking => SizedBox(
+    ActivityCategory.walking ||
+    ActivityCategory.generalWellness => SizedBox(
       width: size,
       height: size,
       child: const QuietTrailHeroAssetView(),

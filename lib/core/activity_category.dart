@@ -10,8 +10,17 @@
 /// only one type for it, living in `core/` rather than nested under a
 /// single feature or under `core/worlds/`.
 ///
-/// Only [walking] is a shipped value today. WORLD_SYSTEM.md §16 names
-/// Meditation, Reading and Stretching only as placeholders for future
-/// categories; each is added here only once it has an approved [Place],
-/// never speculatively ahead of one.
-enum ActivityCategory { walking }
+/// [walking] is the only category with an approved [Place] today.
+/// WORLD_SYSTEM.md §16 names Meditation, Reading and Stretching only as
+/// placeholders for future categories; each of those is added here only
+/// once it has an approved Place, never speculatively ahead of one.
+///
+/// [generalWellness] is a deliberate, documented exception to that rule,
+/// introduced by Recommendation MVP v0
+/// (`docs/product/recommendation-mvp-v0.md`): a neutral category for
+/// non-walking activities (e.g. quiet reading, writing something down) that
+/// do not yet have an approved Place. It exists so those activities are
+/// categorized honestly rather than mislabeled as [walking] — it is not
+/// itself a World/Place identity, and `circle_hero.dart` renders it with
+/// the same illustration as [walking] until a Place is designed for it.
+enum ActivityCategory { walking, generalWellness }

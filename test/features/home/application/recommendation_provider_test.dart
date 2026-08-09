@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 
 final _today = DateTime(2026, 8, 2, 9);
@@ -40,21 +41,200 @@ Future<(ProviderContainer, _TestClock)> _containerWith(
   return (container, clock);
 }
 
+/// A stored-prefs map for a today (2026-08-02) that already has an
+/// intention/activity chosen — the shape most lifecycle tests below need,
+/// since [RecommendationNotifier.start]/`.close()` are no-ops until today's
+/// recommendation exists.
+Map<String, Object> _chosenToday({
+  Intention intention = Intention.moreEnergy,
+  ActivityId activityId = ActivityId.thirtyMinuteWalk,
+}) => {
+  recommendationDayKey: '2026-08-02',
+  recommendationIntentionKey: intention.name,
+  recommendationActivityIdKey: activityId.name,
+};
+
 void main() {
   group('recommendationProvider', () {
-    test('a new day defaults to notStarted with null timestamps', () async {
-      final (container, _) = await _containerWith({});
-      addTearDown(container.dispose);
+    test(
+      'a new day with no stored state has no recommendation and is notStarted',
+      () async {
+        final (container, _) = await _containerWith({});
+        addTearDown(container.dispose);
 
-      final state = container.read(recommendationProvider);
+        final state = container.read(recommendationProvider);
 
-      expect(state.status, RecommendationStatus.notStarted);
-      expect(state.startedAt, isNull);
-      expect(state.closedAt, isNull);
+        expect(state.recommendation, isNull);
+        expect(state.status, RecommendationStatus.notStarted);
+        expect(state.startedAt, isNull);
+        expect(state.closedAt, isNull);
+      },
+    );
+
+    group('chooseIntention()', () {
+      test('resolves a recommendation and sets status to notStarted', () async {
+        final (container, _) = await _containerWith({}, now: _today);
+        addTearDown(container.dispose);
+
+        container.read(
+          recommendationProvider.notifier,
+        ).chooseIntention(Intention.clearerHead);
+        final state = container.read(recommendationProvider);
+
+        expect(state.recommendation, isNotNull);
+        expect(state.recommendation!.intent, 'Clearer Head');
+        expect(state.status, RecommendationStatus.notStarted);
+        expect(state.startedAt, isNull);
+        expect(state.closedAt, isNull);
+      });
+
+      test('is a no-op once today\'s recommendation already exists', () async {
+        final (container, _) = await _containerWith(
+          _chosenToday(
+            intention: Intention.gentlerPace,
+            activityId: ActivityId.easyWalk,
+          ),
+          now: _today,
+        );
+        addTearDown(container.dispose);
+
+        final before = container.read(recommendationProvider).recommendation;
+        container.read(
+          recommendationProvider.notifier,
+        ).chooseIntention(Intention.moreEnergy);
+        final after = container.read(recommendationProvider).recommendation;
+
+        expect(after!.intent, before!.intent);
+        expect(after.activityId, before.activityId);
+      });
+
+      test('persists intention and activityId so a restart restores them', () async {
+        final (container, _) = await _containerWith({}, now: _today);
+        addTearDown(container.dispose);
+
+        container.read(
+          recommendationProvider.notifier,
+        ).chooseIntention(Intention.moreEnergy);
+        // The persist write is fire-and-forget; pump the microtask queue.
+        await Future<void>.delayed(Duration.zero);
+        final prefs = container.read(sharedPreferencesProvider);
+
+        expect(prefs.getString(recommendationDayKey), '2026-08-02');
+        expect(prefs.getString(recommendationIntentionKey), 'moreEnergy');
+        expect(prefs.getString(recommendationActivityIdKey), isNotNull);
+        expect(prefs.getString(recommendationStatusKey), 'notStarted');
+      });
+
+      test(
+        'avoids repeating yesterday\'s canonical activity when another '
+        'approved activity exists in the pool',
+        () async {
+          // Yesterday's normal deterministic candidate for moreEnergy.
+          final yesterdayIndex = epochDay(_yesterday);
+          final yesterdayActivity = selectActivityId(
+            intention: Intention.moreEnergy,
+            dayIndex: yesterdayIndex,
+          );
+
+          final (container, _) = await _containerWith({
+            recommendationDayKey: '2026-08-01',
+            recommendationIntentionKey: Intention.moreEnergy.name,
+            recommendationActivityIdKey: yesterdayActivity.name,
+          }, now: _today);
+          addTearDown(container.dispose);
+
+          container.read(
+            recommendationProvider.notifier,
+          ).chooseIntention(Intention.moreEnergy);
+          final state = container.read(recommendationProvider);
+
+          final todayNormalCandidate = selectActivityId(
+            intention: Intention.moreEnergy,
+            dayIndex: epochDay(_today),
+          );
+
+          if (todayNormalCandidate == yesterdayActivity) {
+            expect(state.recommendation!.activityId, isNot(yesterdayActivity));
+          } else {
+            expect(state.recommendation!.activityId, todayNormalCandidate);
+          }
+        },
+      );
+
+      test(
+        'does NOT avoid a canonical activity stored two or more days ago — '
+        'anti-repetition applies only to exactly the previous local day',
+        () async {
+          final todayNormalCandidate = selectActivityId(
+            intention: Intention.moreEnergy,
+            dayIndex: epochDay(_today),
+          );
+
+          // A gap of two days: the app was last opened on 2026-07-31, not
+          // 2026-08-01 (yesterday). The stored activity is deliberately
+          // set to today's own normal candidate — if the stale two-day-old
+          // day were mistakenly treated as "yesterday," anti-repetition
+          // would shift away from it; it must not.
+          final (container, _) = await _containerWith({
+            recommendationDayKey: '2026-07-31',
+            recommendationIntentionKey: Intention.moreEnergy.name,
+            recommendationActivityIdKey: todayNormalCandidate.name,
+          }, now: _today);
+          addTearDown(container.dispose);
+
+          container.read(
+            recommendationProvider.notifier,
+          ).chooseIntention(Intention.moreEnergy);
+          final state = container.read(recommendationProvider);
+
+          expect(state.recommendation!.activityId, todayNormalCandidate);
+        },
+      );
+    });
+
+    group('the (recommendation == null) state invariant', () {
+      test(
+        'a fresh, never-chosen day always has notStarted status and null '
+        'timestamps',
+        () async {
+          final (container, _) = await _containerWith({}, now: _today);
+          addTearDown(container.dispose);
+
+          final state = container.read(recommendationProvider);
+          expect(state.recommendation, isNull);
+          expect(state.status, RecommendationStatus.notStarted);
+          expect(state.startedAt, isNull);
+          expect(state.closedAt, isNull);
+        },
+      );
+
+      test('start() is a no-op before today\'s recommendation exists', () async {
+        final (container, _) = await _containerWith({}, now: _today);
+        addTearDown(container.dispose);
+
+        container.read(recommendationProvider.notifier).start();
+        final state = container.read(recommendationProvider);
+
+        expect(state.recommendation, isNull);
+        expect(state.status, RecommendationStatus.notStarted);
+        expect(state.startedAt, isNull);
+      });
+
+      test('close() is a no-op before today\'s recommendation exists', () async {
+        final (container, _) = await _containerWith({}, now: _today);
+        addTearDown(container.dispose);
+
+        container.read(recommendationProvider.notifier).close();
+        final state = container.read(recommendationProvider);
+
+        expect(state.recommendation, isNull);
+        expect(state.status, RecommendationStatus.notStarted);
+        expect(state.closedAt, isNull);
+      });
     });
 
     test('start() moves notStarted to started and records startedAt', () async {
-      final (container, _) = await _containerWith({}, now: _today);
+      final (container, _) = await _containerWith(_chosenToday(), now: _today);
       addTearDown(container.dispose);
 
       container.read(recommendationProvider.notifier).start();
@@ -69,7 +249,10 @@ void main() {
       'start() uses the real moment of the call, not a stale build-time '
       'snapshot',
       () async {
-        final (container, clock) = await _containerWith({}, now: _today);
+        final (container, clock) = await _containerWith(
+          _chosenToday(),
+          now: _today,
+        );
         addTearDown(container.dispose);
 
         // Force build() to run — and read the clock providers once — before
@@ -87,7 +270,10 @@ void main() {
     );
 
     test('a second start() is a no-op and does not overwrite startedAt', () async {
-      final (container, clock) = await _containerWith({}, now: _today);
+      final (container, clock) = await _containerWith(
+        _chosenToday(),
+        now: _today,
+      );
       addTearDown(container.dispose);
 
       container.read(recommendationProvider.notifier).start();
@@ -105,7 +291,10 @@ void main() {
       'close() moves started to closed, keeps startedAt, records the real '
       'moment of the close() call as closedAt',
       () async {
-        final (container, clock) = await _containerWith({}, now: _today);
+        final (container, clock) = await _containerWith(
+          _chosenToday(),
+          now: _today,
+        );
         addTearDown(container.dispose);
 
         container.read(recommendationProvider.notifier).start();
@@ -120,7 +309,7 @@ void main() {
     );
 
     test('close() from notStarted is a no-op', () async {
-      final (container, _) = await _containerWith({}, now: _today);
+      final (container, _) = await _containerWith(_chosenToday(), now: _today);
       addTearDown(container.dispose);
 
       container.read(recommendationProvider.notifier).close();
@@ -132,7 +321,10 @@ void main() {
     });
 
     test('a second close() is a no-op and does not overwrite closedAt', () async {
-      final (container, clock) = await _containerWith({}, now: _today);
+      final (container, clock) = await _containerWith(
+        _chosenToday(),
+        now: _today,
+      );
       addTearDown(container.dispose);
 
       container.read(recommendationProvider.notifier).start();
@@ -150,13 +342,14 @@ void main() {
 
     test('restores a started state persisted earlier today', () async {
       final (container, _) = await _containerWith({
-        recommendationDayKey: '2026-08-02',
+        ..._chosenToday(),
         recommendationStatusKey: 'started',
         recommendationStartedAtKey: _today.toIso8601String(),
       }, now: _laterToday);
       addTearDown(container.dispose);
 
       final state = container.read(recommendationProvider);
+      expect(state.recommendation, isNotNull);
       expect(state.status, RecommendationStatus.started);
       expect(state.startedAt, _today);
       expect(state.closedAt, isNull);
@@ -167,7 +360,7 @@ void main() {
       'earlier session',
       () async {
         final (container, _) = await _containerWith({
-          recommendationDayKey: '2026-08-02',
+          ..._chosenToday(),
           recommendationStatusKey: 'started',
           recommendationStartedAtKey: _today.toIso8601String(),
           // Stale leftover — must never surface as this started state's
@@ -184,7 +377,7 @@ void main() {
 
     test('restores a closed state persisted earlier today', () async {
       final (container, _) = await _containerWith({
-        recommendationDayKey: '2026-08-02',
+        ..._chosenToday(),
         recommendationStatusKey: 'closed',
         recommendationStartedAtKey: _today.toIso8601String(),
         recommendationClosedAtKey: _laterToday.toIso8601String(),
@@ -192,6 +385,7 @@ void main() {
       addTearDown(container.dispose);
 
       final state = container.read(recommendationProvider);
+      expect(state.recommendation, isNotNull);
       expect(state.status, RecommendationStatus.closed);
       expect(state.startedAt, _today);
       expect(state.closedAt, _laterToday);
@@ -201,7 +395,7 @@ void main() {
       'a closed record missing its closedAt fails safe to notStarted',
       () async {
         final (container, _) = await _containerWith({
-          recommendationDayKey: '2026-08-02',
+          ..._chosenToday(),
           recommendationStatusKey: 'closed',
           recommendationStartedAtKey: _today.toIso8601String(),
           // No recommendationClosedAtKey at all.
@@ -209,6 +403,7 @@ void main() {
         addTearDown(container.dispose);
 
         final state = container.read(recommendationProvider);
+        expect(state.recommendation, isNotNull);
         expect(state.status, RecommendationStatus.notStarted);
         expect(state.startedAt, isNull);
         expect(state.closedAt, isNull);
@@ -220,7 +415,7 @@ void main() {
       'notStarted',
       () async {
         final (container, _) = await _containerWith({
-          recommendationDayKey: '2026-08-02',
+          ..._chosenToday(),
           recommendationStatusKey: 'closed',
           recommendationStartedAtKey: _laterToday.toIso8601String(),
           // Impossible ordering: closed before it started.
@@ -229,6 +424,7 @@ void main() {
         addTearDown(container.dispose);
 
         final state = container.read(recommendationProvider);
+        expect(state.recommendation, isNotNull);
         expect(state.status, RecommendationStatus.notStarted);
         expect(state.startedAt, isNull);
         expect(state.closedAt, isNull);
@@ -236,9 +432,11 @@ void main() {
     );
 
     test(
-      'a state persisted on an earlier calendar day resets to notStarted',
+      'a state persisted on an earlier calendar day resets to no '
+      'recommendation, notStarted',
       () async {
         final (container, _) = await _containerWith({
+          ..._chosenToday(),
           recommendationDayKey: '2026-08-01',
           recommendationStatusKey: 'started',
           recommendationStartedAtKey: _yesterday.toIso8601String(),
@@ -246,6 +444,7 @@ void main() {
         addTearDown(container.dispose);
 
         final state = container.read(recommendationProvider);
+        expect(state.recommendation, isNull);
         expect(state.status, RecommendationStatus.notStarted);
         expect(state.startedAt, isNull);
         expect(state.closedAt, isNull);
@@ -257,13 +456,33 @@ void main() {
       () async {
         // Same day, status says "started", but startedAt is unparseable.
         final (container, _) = await _containerWith({
-          recommendationDayKey: '2026-08-02',
+          ..._chosenToday(),
           recommendationStatusKey: 'started',
           recommendationStartedAtKey: 'not-a-date',
         }, now: _today);
         addTearDown(container.dispose);
 
         final state = container.read(recommendationProvider);
+        expect(state.recommendation, isNotNull);
+        expect(state.status, RecommendationStatus.notStarted);
+        expect(state.startedAt, isNull);
+        expect(state.closedAt, isNull);
+      },
+    );
+
+    test(
+      'a same-day record with an unrecognized intention/activityId falls '
+      'back to no recommendation, notStarted',
+      () async {
+        final (container, _) = await _containerWith({
+          recommendationDayKey: '2026-08-02',
+          recommendationIntentionKey: 'not-a-real-intention',
+          recommendationActivityIdKey: 'not-a-real-activity',
+        }, now: _today);
+        addTearDown(container.dispose);
+
+        final state = container.read(recommendationProvider);
+        expect(state.recommendation, isNull);
         expect(state.status, RecommendationStatus.notStarted);
         expect(state.startedAt, isNull);
         expect(state.closedAt, isNull);

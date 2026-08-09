@@ -30,7 +30,7 @@ Doel: de gekozen technische bouwstenen daadwerkelijk inrichten, nog zonder produ
 Doel: de kernbelofte van THIRTY werkend krijgen voor een eerste groep gebruikers — geen volledige featureset, wel een samenhangende, bruikbare eerste ervaring.
 
 - [ ] Gebruikersonboarding (wie is de gebruiker, wat is het startpunt).
-- [ ] Dagelijkse "30 minuten"-invulling: het kernmechanisme van de app.
+- [~] Dagelijkse "30 minuten"-invulling: het kernmechanisme van de app. **In uitvoering** — Recommendation MVP v0 ([docs/product/recommendation-mvp-v0.md](product/recommendation-mvp-v0.md)) levert een eerste, opzettelijk beperkte versie (gebruiker kiest een richting, THIRTY kiest deterministisch een activiteit); dit is nog niet de volledige kernbelofte ("de beste investering van ongeveer 30 minuten"), zie dat document §1.
 - [ ] Basale voortgangsweergave.
 - [ ] Eerste versie van AI-ondersteuning bij de invulling van de 30 minuten.
 

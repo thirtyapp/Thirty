@@ -15,7 +15,8 @@ Lees in deze volgorde voor het volledige beeld:
 7. **[product-discovery.md](product-discovery.md)** — wie de eerste gebruiker is, welke ervaring wordt nagestreefd, en welke vragen daarover nog open staan.
 8. **[onboarding-principles.md](onboarding-principles.md)** — de vastgestelde, onboarding-specifieke principes die uit Product Discovery zijn gedestilleerd.
 9. **[PREMIUM_STRATEGY.md](PREMIUM_STRATEGY.md)** — de commerciële strategie achter Premium: waarom iemand betaalt, in welke prioriteitsvolgorde, en de toetsingsvraag voor elk toekomstig Premium-idee.
-10. **[adr/](adr/)** — de losse, gedateerde beslissingen die aan bovenstaande documenten ten grondslag liggen.
+10. **[recommendation-mvp-v0.md](recommendation-mvp-v0.md)** — de eerste concrete, geïmplementeerde toepassing van recommendation-philosophy.md en decision-framework.md: de drie Intentions, de goedgekeurde activiteiten, en het deterministische selectiemechanisme van Recommendation MVP v0.
+11. **[adr/](adr/)** — de losse, gedateerde beslissingen die aan bovenstaande documenten ten grondslag liggen.
 
 ## Wie is leidend bij overlap
 
@@ -53,3 +54,5 @@ Een ADR (Architecture/Product Decision Record) legt één specifieke, vaak onomk
 - [ADR-006 — No Account Before First Value](adr/ADR-006-no-account-before-first-value.md)
 - [ADR-007 — Premium Never Blocks the Core Loop](adr/ADR-007-premium-never-blocks-the-core-loop.md)
 - [ADR-008 — Learning Without Judgment](adr/ADR-008-learning-without-judgment.md)
+- [ADR-009 — Daily Intention Question Is v0's Sole Personalization Signal](adr/ADR-009-daily-intention-question.md)
+- [ADR-010 — Circle Closed Is Not Verified Activity Completion](adr/ADR-010-circle-closed-not-completion.md)

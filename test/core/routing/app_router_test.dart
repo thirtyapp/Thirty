@@ -8,23 +8,35 @@ import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
 import 'package:thirty/core/world_rendering/quiet_trail_hero_asset_view.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
+import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
 
 void main() {
-  testWidgets('the root route shows HomePage', (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
+  testWidgets(
+    'the root route shows HomePage, starting with the Daily Context '
+    'Question and moving to the Circle Hero once an intention is chosen',
+    (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-        child: const ThirtyApp(),
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: const ThirtyApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.byType(CircleHero), findsOneWidget);
-    expect(find.text('THIRTY — Design System'), findsNothing);
-  });
+      expect(find.byType(DailyIntentionPrompt), findsOneWidget);
+      expect(find.byType(CircleHero), findsNothing);
+      expect(find.text('THIRTY — Design System'), findsNothing);
+
+      await tester.tap(find.text('More Energy'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CircleHero), findsOneWidget);
+      expect(find.byType(DailyIntentionPrompt), findsNothing);
+    },
+  );
 
   testWidgets('the /showcase route shows the design system showcase', (
     WidgetTester tester,

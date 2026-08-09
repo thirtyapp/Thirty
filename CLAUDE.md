@@ -75,9 +75,9 @@ Een taak is pas afgerond wanneer:
 
 ## 5. Wat hier (nog) niet gebeurt
 
-Dit is een document uit de opstartfase van het project. Op dit moment geldt nog:
+Op dit moment geldt nog:
 
-- Geen functionaliteit/appcode.
+- Geen Supabase-datalaag (tabellen, queries, authenticatie) — Supabase is verbonden maar wordt nog nergens gebruikt om data te lezen of schrijven.
 - Geen packages/dependencies installeren buiten wat al in `pubspec.yaml` staat.
 - Geen platformmappen verwijderen of toevoegen.
 - Geen CI/CD-opzet.

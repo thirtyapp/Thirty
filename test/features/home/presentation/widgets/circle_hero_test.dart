@@ -19,6 +19,20 @@ import 'package:thirty/features/home/presentation/widgets/horizon_illustration.d
 
 final _today = DateTime(2026, 8, 2);
 
+/// Today's recommendation already chosen — the shape almost every test
+/// below needs, since CircleHero itself assumes a non-null recommendation
+/// (it's `HomePage`'s job, not CircleHero's, to gate on the Daily Context
+/// Question — see `daily_intention_prompt_test.dart` and
+/// `home_page_test.dart`). Merged underneath each test's own `storedPrefs`
+/// in [_wrap]/[_wrapWithContainer] below, so a test that supplies its own
+/// `recommendationStatusKey`/timestamps for the same day still gets a
+/// valid recommendation to restore them onto.
+const _defaultChosenPrefs = <String, Object>{
+  recommendationDayKey: '2026-08-02',
+  recommendationIntentionKey: 'moreEnergy',
+  recommendationActivityIdKey: 'thirtyMinuteWalk',
+};
+
 // Millisecond phase boundaries mirrored from circle_hero.dart's own
 // cumulative-fraction arithmetic (wordmark fade-in 300ms, hold 700ms,
 // fade-out 300ms, Circle breathe 2200ms, illustration 500ms, then the
@@ -36,7 +50,10 @@ Future<Widget> _wrap({
   Map<String, Object> storedPrefs = const {},
   bool disableAnimations = false,
 }) async {
-  SharedPreferences.setMockInitialValues(storedPrefs);
+  SharedPreferences.setMockInitialValues({
+    ..._defaultChosenPrefs,
+    ...storedPrefs,
+  });
   final prefs = await SharedPreferences.getInstance();
 
   // Reduced motion is only wired up via an explicit MediaQuery override
@@ -71,7 +88,10 @@ Future<Widget> _wrap({
 Future<(Widget, ProviderContainer)> _wrapWithContainer({
   Map<String, Object> storedPrefs = const {},
 }) async {
-  SharedPreferences.setMockInitialValues(storedPrefs);
+  SharedPreferences.setMockInitialValues({
+    ..._defaultChosenPrefs,
+    ...storedPrefs,
+  });
   final prefs = await SharedPreferences.getInstance();
 
   final container = ProviderContainer(
@@ -248,7 +268,7 @@ void main() {
       expect(_circleProgress(tester), 0.0);
       expect(find.text("Today's Circle"), findsOneWidget);
       expect(find.text('More Energy'), findsOneWidget);
-      expect(find.text('30 minute walk'), findsOneWidget);
+      expect(find.text('30-minute walk'), findsOneWidget);
       expect(find.text('Start Circle'), findsOneWidget);
     });
 
@@ -298,7 +318,7 @@ void main() {
           .getCenter(find.byType(QuietTrailHeroAssetView))
           .dx;
       final headingCenterX = tester.getCenter(find.text("Today's Circle")).dx;
-      final activityCenterX = tester.getCenter(find.text('30 minute walk')).dx;
+      final activityCenterX = tester.getCenter(find.text('30-minute walk')).dx;
 
       expect(circleCenterX, closeTo(screenCenterX, 0.5));
       expect(illustrationCenterX, closeTo(screenCenterX, 0.5));
@@ -541,7 +561,7 @@ void main() {
               .widget<FadeTransition>(
                 find
                     .ancestor(
-                      of: find.text('30 minute walk'),
+                      of: find.text('30-minute walk'),
                       matching: find.byType(FadeTransition),
                     )
                     .first,
@@ -558,7 +578,7 @@ void main() {
               .widget<FadeTransition>(
                 find
                     .ancestor(
-                      of: find.text('30 minute walk'),
+                      of: find.text('30-minute walk'),
                       matching: find.byType(FadeTransition),
                     )
                     .first,
@@ -1333,7 +1353,7 @@ void main() {
         'LIVE REDUCED MOTION: false->true stops breathing and resets to '
         'static sage 0.22, with no RecommendationStatus change',
         (WidgetTester tester) async {
-          SharedPreferences.setMockInitialValues({});
+          SharedPreferences.setMockInitialValues(_defaultChosenPrefs);
           final prefs = await SharedPreferences.getInstance();
           final container = ProviderContainer(
             overrides: [
@@ -1384,8 +1404,8 @@ void main() {
         'RecommendationStatus change',
         (WidgetTester tester) async {
           SharedPreferences.setMockInitialValues({
+            ..._defaultChosenPrefs,
             firstBreathLastPlayedDateKey: '2026-08-02',
-            recommendationDayKey: '2026-08-02',
             recommendationStatusKey: 'started',
             recommendationStartedAtKey: _today.toIso8601String(),
           });
