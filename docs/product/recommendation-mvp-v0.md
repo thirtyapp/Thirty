@@ -30,13 +30,12 @@ Vóór de aanbeveling op elke nieuwe lokale kalenderdag wordt gekozen, stelt THI
 
 ## 3. Activiteiteninventaris
 
-Elke canonieke activiteit (`ActivityId` in code — zie `lib/features/home/application/activity_catalog.dart`) hoort bij precies één Intention-pool, met één uitzondering: **Gentle mobility** is de enige activiteit die in twee pools voorkomt (More Energy én Gentler Pace) — expliciet gemodelleerd als dezelfde onderliggende canonieke identiteit, zodat anti-repetitie herkent dat de gebruiker Gentle mobility al gisteren kreeg, ook als de intentie van vandaag anders is. Dit is een bewust smalle, met-de-hand aangewezen uitzondering — geen algemene "activiteitfamilie"-abstractie. **30-minute walk, Phone-free walk en Easy walk blijven drie afzonderlijke canonieke activiteiten**, ondanks hun conceptuele overlap; perceived repetition daartussen wordt gevalideerd met echte gebruikers, niet vooraf technisch opgelost.
+Elke canonieke activiteit (`ActivityId` in code — zie `lib/features/home/application/activity_catalog.dart`) hoort in deze versie bij precies één Intention-pool. **30-minute walk, Phone-free walk en Easy walk blijven drie afzonderlijke canonieke activiteiten**, ondanks hun conceptuele overlap; perceived repetition daartussen wordt gevalideerd met echte gebruikers, niet vooraf technisch opgelost. Het mechanisme ondersteunt nog steeds dat één canonieke activiteit in meerdere pools voorkomt — zie `ActivityId`'s eigen doc comment in code — maar heeft daar momenteel geen voorbeeld van: **Gentle mobility is uit v0 verwijderd**, omdat de concrete invulling ("move in ways you choose") ondanks veilige copy nog te veel aan de gebruiker overliet. v0 test specifiek of gebruikers waarde hechten aan één concrete dagelijkse keuze van THIRTY, dus blijft elke behouden activiteit concreet genoeg dat de gebruiker onmiddellijk weet welke actie gekozen is. Poolgroottes zijn daardoor bewust ongelijk (2/3/2) — er is geen vervangende activiteit toegevoegd om ze weer gelijk te maken.
 
 ### More Energy
 | Activiteit | Productbasis | Veiligheid |
 |---|---|---|
 | 30-minute walk | Toegankelijke, zelfstandige beweging zonder workoutstructuur of prestatiedoel. | Geen tempo-, afstand-, stappen- of hartslagdoelen; geen claim dat wandelen medisch geschikt is voor iedereen. |
-| Gentle mobility | Comfortabele, zelfstandige beweging zonder uitrusting of formele workout. | Geen voorgeschreven houdingen, herhalingen, bewegingsbereiken of correctieve claims; nooit door ongemak heen. |
 | Move to music | Zelfstandige beweging op eigen muziek en tempo. | Nooit geframed als workout, calorieverbranding of intensiteitsdoel. |
 
 ### Clearer Head
@@ -50,7 +49,6 @@ Elke canonieke activiteit (`ActivityId` in code — zie `lib/features/home/appli
 | Activiteit | Productbasis | Veiligheid |
 |---|---|---|
 | Easy walk | Een bewust ongehaaste activiteit zonder prestatiedoelen. | Geen tempo-, afstand-, stappen- of medische geschiktheidsclaims. |
-| Gentle mobility | Zelfde onderliggende activiteit als Gentle mobility onder More Energy — zie hierboven. | Zelfde als hierboven. |
 | Quiet music break | Eén zelfgekozen ontspanningsactiviteit zonder productiviteits- of fysieke-prestatiedoelen. | Geen zenuwstelsel-, stress-behandeling-, stemming-behandeling- of slaapclaims. |
 
 Alle activiteiten zijn algemene wellness. Geen enkele activiteit personaliseert op, of houdt rekening met: pijn, blessure, revalidatie, symptomen, gediagnosticeerde aandoeningen, zwangerschap/postpartum, medicatie, mental-health-behandeling, slaapbehandeling, eetstoornissen, gewichtsverlies, voeding, supplementen, therapeutische ademhaling, intensiteitszones, hartslagdoelen, tempo-/afstandsdoelen, gewichten/belasting, sets/reps, voorgeschreven rekbereiken, correctieve oefening, of iets dat professionele beoordeling vereist. Beweging blijft comfortabel en zelf-getempood.

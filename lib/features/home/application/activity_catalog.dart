@@ -39,16 +39,18 @@ String intentionMeaning(Intention intention) => switch (intention) {
 /// underlying activity" identity anti-repetition compares against, distinct
 /// from how that activity is presented/explained for a given [Intention].
 ///
-/// [gentleMobility] is the only [ActivityId] that appears in more than one
-/// [activityPools] entry (`moreEnergy` and `gentlerPace`) — a deliberate,
-/// narrow exception, not a general "activity family" abstraction. Every
-/// other value belongs to exactly one pool, even where two activities are
-/// conceptually similar (e.g. [thirtyMinuteWalk], [phoneFreeWalk] and
-/// [easyWalk] are three distinct walks, not variants of one canonical
-/// activity) — see `docs/product/recommendation-mvp-v0.md`.
+/// Every value belongs to exactly one [activityPools] entry in this
+/// version, even where two activities are conceptually similar (e.g.
+/// [thirtyMinuteWalk], [phoneFreeWalk] and [easyWalk] are three distinct
+/// walks, not variants of one canonical activity). The same [ActivityId]
+/// appearing in more than one pool remains a supported way to model one
+/// activity offered under multiple intentions — see
+/// `docs/product/recommendation-mvp-v0.md` — it simply has no current
+/// example: v0 deliberately keeps every retained activity concrete enough
+/// that the user immediately knows the chosen action, which ruled out the
+/// one previous candidate for this (Gentle mobility).
 enum ActivityId {
   thirtyMinuteWalk,
-  gentleMobility,
   moveToMusic,
   phoneFreeWalk,
   writeItDown,
@@ -58,34 +60,24 @@ enum ActivityId {
 }
 
 /// The approved activities for each [Intention], in a fixed order —
-/// [selectActivityId] indexes into this order deterministically. Every pool
-/// has at least two entries, which is what guarantees anti-repetition
-/// always has an alternative to fall back to.
+/// [selectActivityId] indexes into this order deterministically. Pool
+/// sizes are intentionally unequal; every pool still has at least two
+/// entries, which is what guarantees anti-repetition always has an
+/// alternative to fall back to.
 const Map<Intention, List<ActivityId>> activityPools = {
-  Intention.moreEnergy: [
-    ActivityId.thirtyMinuteWalk,
-    ActivityId.gentleMobility,
-    ActivityId.moveToMusic,
-  ],
+  Intention.moreEnergy: [ActivityId.thirtyMinuteWalk, ActivityId.moveToMusic],
   Intention.clearerHead: [
     ActivityId.phoneFreeWalk,
     ActivityId.writeItDown,
     ActivityId.quietReading,
   ],
-  Intention.gentlerPace: [
-    ActivityId.easyWalk,
-    ActivityId.gentleMobility,
-    ActivityId.quietMusicBreak,
-  ],
+  Intention.gentlerPace: [ActivityId.easyWalk, ActivityId.quietMusicBreak],
 };
 
 /// [activityId]'s display name — intention-independent, unlike
-/// [whyCopyFor]. [ActivityId.gentleMobility] has exactly one label even
-/// though it appears under two intentions, since it is one canonical
-/// activity presented with two different reasons.
+/// [whyCopyFor].
 String activityLabel(ActivityId activityId) => switch (activityId) {
   ActivityId.thirtyMinuteWalk => '30-minute walk',
-  ActivityId.gentleMobility => 'Gentle mobility',
   ActivityId.moveToMusic => 'Move to music',
   ActivityId.phoneFreeWalk => 'Phone-free walk',
   ActivityId.writeItDown => 'Write it down',
@@ -107,7 +99,6 @@ ActivityCategory activityCategory(ActivityId activityId) => switch (activityId) 
   ActivityId.thirtyMinuteWalk ||
   ActivityId.phoneFreeWalk ||
   ActivityId.easyWalk => ActivityCategory.walking,
-  ActivityId.gentleMobility ||
   ActivityId.moveToMusic ||
   ActivityId.writeItDown ||
   ActivityId.quietReading ||
@@ -115,10 +106,10 @@ ActivityCategory activityCategory(ActivityId activityId) => switch (activityId) 
 };
 
 /// The "Why This Today?" copy for ([intention], [activityId]) — deliberately
-/// keyed on the pair, not on [activityId] alone, because
-/// [ActivityId.gentleMobility]'s reason must differ between the two
-/// intentions it serves (More Energy vs. Gentler Pace) even though the
-/// activity itself is the same.
+/// keyed on the pair, not on [activityId] alone, so a future activity
+/// shared across pools (see [ActivityId]'s own doc comment) could carry a
+/// different reason per intention even though the activity itself is the
+/// same.
 ///
 /// Every string here may reference only (1) the intention the user
 /// explicitly selected, and (2) a truthful, practical characteristic of the
@@ -129,9 +120,6 @@ const Map<(Intention, ActivityId), String> _whyCopy = {
   (Intention.moreEnergy, ActivityId.thirtyMinuteWalk):
       'For more energy: a 30-minute walk, wherever you are — no pace or '
       'distance to keep up with.',
-  (Intention.moreEnergy, ActivityId.gentleMobility):
-      'For more energy: gentle mobility, simple self-guided movement with '
-      'no equipment needed.',
   (Intention.moreEnergy, ActivityId.moveToMusic):
       'For more energy: moving to your own music, at whatever pace feels '
       'good.',
@@ -139,17 +127,15 @@ const Map<(Intention, ActivityId), String> _whyCopy = {
       'For a clearer head: a walk with your phone\'s content set aside — '
       'just you and where you\'re walking.',
   (Intention.clearerHead, ActivityId.writeItDown):
-      'For a clearer head: writing down what\'s on your mind, giving it '
-      'one place to sit.',
+      'For a clearer head: spend about 30 minutes writing down the tasks, '
+      'reminders and loose thoughts competing for your attention, in any '
+      'order. No need to solve or organise them.',
   (Intention.clearerHead, ActivityId.quietReading):
       'For a clearer head: quiet reading, one thing to focus on instead '
       'of many.',
   (Intention.gentlerPace, ActivityId.easyWalk):
       'For a gentler pace: an easy, unhurried walk with nothing to hit '
       'or beat.',
-  (Intention.gentlerPace, ActivityId.gentleMobility):
-      'For a gentler pace: gentle mobility, comfortable self-guided '
-      'movement with no targets.',
   (Intention.gentlerPace, ActivityId.quietMusicBreak):
       'For a gentler pace: a quiet music break, just for you, with no '
       'goal attached.',

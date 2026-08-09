@@ -21,7 +21,7 @@ void main() {
       }
     });
 
-    test('gentleMobility is the only ActivityId shared across pools', () {
+    test('no ActivityId is currently shared across more than one pool', () {
       final poolsContaining = <ActivityId, int>{};
       for (final pool in activityPools.values) {
         for (final activityId in pool) {
@@ -33,7 +33,7 @@ void main() {
           .where((entry) => entry.value > 1)
           .map((entry) => entry.key);
 
-      expect(sharedIds, [ActivityId.gentleMobility]);
+      expect(sharedIds, isEmpty);
     });
 
     test(
@@ -89,23 +89,6 @@ void main() {
         }
       }
     });
-
-    test(
-      'gentleMobility has the same label under both intentions but '
-      'different why-copy',
-      () {
-        expect(
-          activityLabel(ActivityId.gentleMobility),
-          'Gentle mobility',
-        );
-        expect(
-          whyCopyFor(Intention.moreEnergy, ActivityId.gentleMobility),
-          isNot(
-            whyCopyFor(Intention.gentlerPace, ActivityId.gentleMobility),
-          ),
-        );
-      },
-    );
 
     test('no why-copy contains a forbidden claim pattern', () {
       for (final entry in activityPools.entries) {
