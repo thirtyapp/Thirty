@@ -2,10 +2,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:thirty/core/analytics/analytics_event_type.dart';
+import 'package:thirty/core/analytics/analytics_service.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
+
+/// Records every [track] call instead of reaching Supabase — lets Phase E
+/// instrumentation tests assert exactly which events fired, in which
+/// order, without any network dependency.
+class _RecordingAnalyticsService implements AnalyticsService {
+  final List<AnalyticsEventType> events = [];
+
+  @override
+  void track(AnalyticsEventType type, {Map<String, Object?>? metadata}) {
+    events.add(type);
+  }
+}
 
 final _today = DateTime(2026, 8, 2, 9);
 final _laterToday = DateTime(2026, 8, 2, 10);
@@ -26,6 +40,7 @@ class _TestClock {
 Future<(ProviderContainer, _TestClock)> _containerWith(
   Map<String, Object> storedPrefs, {
   DateTime? now,
+  AnalyticsService? analytics,
 }) async {
   SharedPreferences.setMockInitialValues(storedPrefs);
   final prefs = await SharedPreferences.getInstance();
@@ -36,6 +51,8 @@ Future<(ProviderContainer, _TestClock)> _containerWith(
       sharedPreferencesProvider.overrideWithValue(prefs),
       nowProvider.overrideWithValue(now ?? _today),
       eventClockProvider.overrideWithValue(clock.call),
+      if (analytics != null)
+        analyticsServiceProvider.overrideWithValue(analytics),
     ],
   );
   return (container, clock);
@@ -488,5 +505,84 @@ void main() {
         expect(state.closedAt, isNull);
       },
     );
+
+    group('Batch 1 instrumentation (Phase E)', () {
+      test('start() records exactly one circleStarted event', () async {
+        final analytics = _RecordingAnalyticsService();
+        final (container, _) = await _containerWith(
+          _chosenToday(),
+          now: _today,
+          analytics: analytics,
+        );
+        addTearDown(container.dispose);
+
+        container.read(recommendationProvider.notifier).start();
+
+        expect(analytics.events, [AnalyticsEventType.circleStarted]);
+      });
+
+      test('close() records exactly one circleClosed event', () async {
+        final analytics = _RecordingAnalyticsService();
+        final (container, _) = await _containerWith(
+          _chosenToday(),
+          now: _today,
+          analytics: analytics,
+        );
+        addTearDown(container.dispose);
+
+        container.read(recommendationProvider.notifier).start();
+        container.read(recommendationProvider.notifier).close();
+
+        expect(analytics.events, [
+          AnalyticsEventType.circleStarted,
+          AnalyticsEventType.circleClosed,
+        ]);
+      });
+
+      test(
+        'a no-op start() (already started) records no additional event',
+        () async {
+          final analytics = _RecordingAnalyticsService();
+          final (container, _) = await _containerWith(
+            _chosenToday(),
+            now: _today,
+            analytics: analytics,
+          );
+          addTearDown(container.dispose);
+
+          container.read(recommendationProvider.notifier).start();
+          container.read(recommendationProvider.notifier).start();
+
+          expect(analytics.events, [AnalyticsEventType.circleStarted]);
+        },
+      );
+
+      test(
+        'a no-op close() (already closed, or before start()) records no '
+        'additional event',
+        () async {
+          final analytics = _RecordingAnalyticsService();
+          final (container, _) = await _containerWith(
+            _chosenToday(),
+            now: _today,
+            analytics: analytics,
+          );
+          addTearDown(container.dispose);
+
+          // Before start(): no-op.
+          container.read(recommendationProvider.notifier).close();
+          expect(analytics.events, isEmpty);
+
+          container.read(recommendationProvider.notifier).start();
+          container.read(recommendationProvider.notifier).close();
+          container.read(recommendationProvider.notifier).close();
+
+          expect(analytics.events, [
+            AnalyticsEventType.circleStarted,
+            AnalyticsEventType.circleClosed,
+          ]);
+        },
+      );
+    });
   });
 }

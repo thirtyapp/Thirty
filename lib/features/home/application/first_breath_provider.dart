@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
+import '../../../core/utils/date_key.dart';
 
 /// SharedPreferences key for the last local calendar date (`YYYY-MM-DD`)
 /// on which The First Breath ritual played. Exposed so tests can seed or
@@ -24,7 +25,7 @@ class FirstBreathNotifier extends Notifier<bool> {
   @override
   bool build() {
     final prefs = ref.watch(sharedPreferencesProvider);
-    final today = _dateKey(ref.watch(nowProvider));
+    final today = dateKey(ref.watch(nowProvider));
     final lastPlayedDate = prefs.getString(firstBreathLastPlayedDateKey);
     return lastPlayedDate != today;
   }
@@ -33,16 +34,9 @@ class FirstBreathNotifier extends Notifier<bool> {
   /// until the local calendar date changes.
   Future<void> markPlayedToday() async {
     final prefs = ref.read(sharedPreferencesProvider);
-    final today = _dateKey(ref.read(nowProvider));
+    final today = dateKey(ref.read(nowProvider));
     await prefs.setString(firstBreathLastPlayedDateKey, today);
     state = false;
-  }
-
-  static String _dateKey(DateTime date) {
-    final year = date.year.toString().padLeft(4, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    final day = date.day.toString().padLeft(2, '0');
-    return '$year-$month-$day';
   }
 }
 

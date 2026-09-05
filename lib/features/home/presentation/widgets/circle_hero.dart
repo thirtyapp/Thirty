@@ -371,6 +371,50 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     }
   }
 
+  /// Batch 1, Phase B — the irreversible Close Circle confirmation.
+  ///
+  /// Closing today's Circle cannot be undone until the next daily reset
+  /// (`recommendation_provider.dart`'s local-calendar-day scoping), and
+  /// testers had no warning before that transition — this dialog is the
+  /// fix. `showDialog`'s own modal barrier already blocks a second tap on
+  /// the Close Circle button underneath while it is open, and
+  /// [RecommendationNotifier.close] is already a no-op outside
+  /// [RecommendationStatus.started] — together those make a double-confirm
+  /// or a race between two taps impossible to turn into an inconsistent
+  /// state.
+  ///
+  /// Tapping outside the dialog or the system back button resolves exactly
+  /// like tapping "Keep Circle open": `showDialog` pops `null`, not `true`,
+  /// so only an explicit "Close Circle" tap inside the dialog ever proceeds
+  /// to [RecommendationNotifier.close] — an accidental dismiss can never
+  /// silently close the Circle.
+  Future<void> _confirmCloseCircle(BuildContext context) async {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Close today's Circle?"),
+        content: const Text("You won't be able to reopen it until tomorrow."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Keep Circle open'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(foregroundColor: colors.error),
+            child: const Text('Close Circle'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    ref.read(recommendationProvider.notifier).close();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -458,7 +502,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     // isStarted/isClosed/canClose set of booleans, since each status maps
     // to exactly one label/action pair and nothing else varies between
     // them here.
-    final String ctaLabel;
+    // Null once closed — see `bottomContent` below, which replaces the
+    // button entirely with an explanatory "Done for today" message rather
+    // than a disabled, ambiguous dead end (Batch 1, Phase C).
+    final String? ctaLabel;
     final VoidCallback? onCtaPressed;
     // The Circle's own semantics.value shares this same switch — one
     // status maps to exactly one CTA state *and* one announced meaning,
@@ -487,12 +534,12 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       case RecommendationStatus.started:
         ctaLabel = 'Close Circle';
         circleSemanticValue = 'Circle in progress.';
-        onCtaPressed = () => ref.read(recommendationProvider.notifier).close();
+        // Batch 1, Phase B: no longer closes directly on tap — see
+        // _confirmCloseCircle's own doc comment for the confirmation this
+        // now requires before the irreversible transition.
+        onCtaPressed = () => _confirmCloseCircle(context);
       case RecommendationStatus.closed:
-        // Functional placeholder only — see circle_hero.dart's own review
-        // notes (Premium Pass 02B Revised Experiment 1): not the final
-        // Closed copy/composition, which is a separate, later pass.
-        ctaLabel = 'Circle closed';
+        ctaLabel = null;
         circleSemanticValue = 'Circle closed.';
         onCtaPressed = null;
     }
@@ -749,20 +796,55 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                     },
                     child: FadeTransition(
                       opacity: _buttonOpacity,
-                      // minWidth, not a fixed width: at the smallest
-                      // screens the intentional 0.70 width is narrower
-                      // than "Start Circle"/"Close Circle"/"Circle closed"
-                      // need, which overflows under a fixed SizedBox —
-                      // minWidth keeps the intentional width whenever
-                      // content fits it, and only yields to the label
-                      // when it doesn't.
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(minWidth: buttonWidth),
-                        child: ThirtyButton(
-                          label: ctaLabel,
-                          onPressed: onCtaPressed,
-                        ),
-                      ),
+                      // Batch 1, Phase C: once closed there is no CTA at
+                      // all — an explanatory "Done for today" message
+                      // replaces the old disabled "Circle closed" button,
+                      // which testers read as a stuck/broken dead end
+                      // rather than an intentional daily boundary. The
+                      // next-open date is never invented here: "tomorrow"
+                      // is exactly the existing authoritative reset rule
+                      // (recommendation_provider.dart's local-calendar-day
+                      // scoping), not a guessed time of day.
+                      child: ctaLabel == null
+                          ? ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: textMaxWidth,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Done for today',
+                                    style: textTheme.titleMedium,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(
+                                    'Your next Circle opens tomorrow.',
+                                    style: textTheme.bodyMedium?.copyWith(
+                                      color: colors.textSecondary,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            )
+                          // minWidth, not a fixed width: at the smallest
+                          // screens the intentional 0.70 width is narrower
+                          // than "Start Circle"/"Close Circle" need, which
+                          // overflows under a fixed SizedBox — minWidth
+                          // keeps the intentional width whenever content
+                          // fits it, and only yields to the label when it
+                          // doesn't.
+                          : ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minWidth: buttonWidth,
+                              ),
+                              child: ThirtyButton(
+                                label: ctaLabel,
+                                onPressed: onCtaPressed,
+                              ),
+                            ),
                     ),
                   ),
                 ],

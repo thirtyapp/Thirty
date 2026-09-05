@@ -247,6 +247,36 @@ Future<double> _pumpUntilButtonPartiallyFaded(WidgetTester tester) async {
   fail('The button reveal never produced a partial-fade frame.');
 }
 
+/// Taps the Close Circle button, then confirms the Batch 1 confirmation
+/// dialog it now opens ("Close today's Circle?" / "You won't be able to
+/// reopen it until tomorrow.") — the drop-in replacement for what used to
+/// be a single direct-close tap, everywhere a test needs the Circle to
+/// actually end up closed. Deliberately uses discrete `pump()` calls, never
+/// `pumpAndSettle()`: the Circle's own ambient breathing animation
+/// (`_breathController.repeat()`) is still running for as long as the
+/// dialog is open on a `started` Circle, and `pumpAndSettle()` would hang
+/// waiting for a repeat() that never settles — the same reason every other
+/// breathing-adjacent test in this file already avoids it.
+///
+/// `find.text('Close Circle')` alone would be ambiguous once the dialog is
+/// open — the underlying (now-obscured) Close Circle button still carries
+/// that exact label too — so this scopes the second tap to inside the
+/// [AlertDialog].
+Future<void> _tapAndConfirmClose(WidgetTester tester) async {
+  await tester.tap(find.byType(ThirtyButton));
+  await tester.pump();
+  await tester.tap(
+    find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.text('Close Circle'),
+    ),
+  );
+  await tester.pump();
+  // Lets the dialog's own exit transition finish, so it's fully gone from
+  // the tree afterward rather than lingering mid-animation.
+  await tester.pump(const Duration(milliseconds: 200));
+}
+
 void main() {
   group('CircleHero', () {
     testWidgets(
@@ -808,10 +838,9 @@ void main() {
           );
 
           // Same-Home: the button is now the enabled "Close Circle" CTA,
-          // not a disabled leftover — tapping it performs a real,
+          // not a disabled leftover — confirming it performs a real,
           // meaningful close() transition, which still must add no haptic.
-          await tester.tap(find.byType(ThirtyButton));
-          await tester.pump();
+          await _tapAndConfirmClose(tester);
 
           expect(
             container.read(recommendationProvider).status,
@@ -858,8 +887,7 @@ void main() {
           expect(startedAt, isNotNull);
           expect(container.read(recommendationProvider).closedAt, isNull);
 
-          await tester.tap(find.byType(ThirtyButton));
-          await tester.pump();
+          await _tapAndConfirmClose(tester);
 
           final state = container.read(recommendationProvider);
           expect(state.status, RecommendationStatus.closed);
@@ -869,7 +897,8 @@ void main() {
       );
 
       testWidgets(
-        'the closed CTA is disabled, and a further tap changes nothing',
+        'once closed there is no CTA at all — only the explanatory closed '
+        'message, and no ThirtyButton survives to accidentally reopen it',
         (WidgetTester tester) async {
           final (widget, container) = await _wrapWithContainer();
           addTearDown(container.dispose);
@@ -880,21 +909,18 @@ void main() {
           await tester.ensureVisible(find.byType(ThirtyButton));
           await tester.tap(find.byType(ThirtyButton)); // Start.
           await tester.pump();
-          await tester.tap(find.byType(ThirtyButton)); // Close.
-          await tester.pump();
+          await _tapAndConfirmClose(tester); // Close.
 
-          expect(find.text('Circle closed'), findsOneWidget);
-          final button = tester.widget<ThirtyButton>(find.byType(ThirtyButton));
-          expect(button.onPressed, isNull);
-
-          final closedAt = container.read(recommendationProvider).closedAt;
-          await tester.tap(find.byType(ThirtyButton), warnIfMissed: false);
-          await tester.pump();
+          expect(find.text('Done for today'), findsOneWidget);
+          expect(
+            find.text('Your next Circle opens tomorrow.'),
+            findsOneWidget,
+          );
+          expect(find.byType(ThirtyButton), findsNothing);
+          expect(find.text('Circle closed'), findsNothing);
 
           final state = container.read(recommendationProvider);
           expect(state.status, RecommendationStatus.closed);
-          expect(state.closedAt, closedAt);
-          expect(find.text('Circle closed'), findsOneWidget);
         },
       );
 
@@ -919,27 +945,33 @@ void main() {
         expect(button.onPressed, isNotNull);
       });
 
-      testWidgets('a same-day restored closed state shows Circle closed', (
-        WidgetTester tester,
-      ) async {
-        final closedAt = _today.add(const Duration(minutes: 30));
-        await tester.pumpWidget(
-          await _wrap(
-            storedPrefs: {
-              firstBreathLastPlayedDateKey: '2026-08-02',
-              recommendationDayKey: '2026-08-02',
-              recommendationStatusKey: 'closed',
-              recommendationStartedAtKey: _today.toIso8601String(),
-              recommendationClosedAtKey: closedAt.toIso8601String(),
-            },
-          ),
-        );
-        await tester.pump();
+      testWidgets(
+        'a same-day restored closed state shows the explanatory closed '
+        'message, with no CTA',
+        (WidgetTester tester) async {
+          final closedAt = _today.add(const Duration(minutes: 30));
+          await tester.pumpWidget(
+            await _wrap(
+              storedPrefs: {
+                firstBreathLastPlayedDateKey: '2026-08-02',
+                recommendationDayKey: '2026-08-02',
+                recommendationStatusKey: 'closed',
+                recommendationStartedAtKey: _today.toIso8601String(),
+                recommendationClosedAtKey: closedAt.toIso8601String(),
+              },
+            ),
+          );
+          await tester.pump();
 
-        expect(find.text('Circle closed'), findsOneWidget);
-        final button = tester.widget<ThirtyButton>(find.byType(ThirtyButton));
-        expect(button.onPressed, isNull);
-      });
+          expect(find.text('Done for today'), findsOneWidget);
+          expect(
+            find.text('Your next Circle opens tomorrow.'),
+            findsOneWidget,
+          );
+          expect(find.byType(ThirtyButton), findsNothing);
+          expect(find.text('Circle closed'), findsNothing);
+        },
+      );
     });
 
     group(
@@ -1024,8 +1056,7 @@ void main() {
             expect(startedSemantics.value, 'Circle in progress.');
             final startedId = startedSemantics.id;
 
-            await tester.tap(find.byType(ThirtyButton)); // Close.
-            await tester.pump();
+            await _tapAndConfirmClose(tester); // Close.
 
             final closedSemantics = tester.getSemantics(
               find.byType(ThirtyProgressCircle),
@@ -1263,8 +1294,7 @@ void main() {
           await tester.pump();
           await tester.pump(const Duration(milliseconds: 1750)); // Mid-breath.
 
-          await tester.tap(find.byType(ThirtyButton)); // Close.
-          await tester.pump();
+          await _tapAndConfirmClose(tester);
 
           expect(circleWidget(tester).trackColor, closedTrackColor);
 
@@ -1444,6 +1474,105 @@ void main() {
           expect(
             circleWidget(tester).trackColor,
             isNot(activeBaseTrackColor),
+          );
+        },
+      );
+    });
+
+    group('Batch 1 — Close Circle confirmation (Phase B)', () {
+      testWidgets(
+        'tapping Close Circle shows the confirmation dialog before '
+        'changing any state',
+        (WidgetTester tester) async {
+          final (widget, container) = await _wrapWithContainer();
+          addTearDown(container.dispose);
+
+          await tester.pumpWidget(widget);
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(find.byType(ThirtyButton));
+          await tester.tap(find.byType(ThirtyButton)); // Start.
+          await tester.pump();
+
+          await tester.tap(find.byType(ThirtyButton)); // Opens confirmation.
+          await tester.pump();
+
+          expect(find.byType(AlertDialog), findsOneWidget);
+          expect(find.text("Close today's Circle?"), findsOneWidget);
+          expect(
+            find.text("You won't be able to reopen it until tomorrow."),
+            findsOneWidget,
+          );
+          expect(find.text('Keep Circle open'), findsOneWidget);
+          expect(
+            find.descendant(
+              of: find.byType(AlertDialog),
+              matching: find.text('Close Circle'),
+            ),
+            findsOneWidget,
+          );
+          // Opening the dialog alone must not have touched canonical state.
+          final state = container.read(recommendationProvider);
+          expect(state.status, RecommendationStatus.started);
+          expect(state.closedAt, isNull);
+        },
+      );
+
+      testWidgets(
+        '"Keep Circle open" leaves the active Circle completely unchanged',
+        (WidgetTester tester) async {
+          final (widget, container) = await _wrapWithContainer();
+          addTearDown(container.dispose);
+
+          await tester.pumpWidget(widget);
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(find.byType(ThirtyButton));
+          await tester.tap(find.byType(ThirtyButton)); // Start.
+          await tester.pump();
+          final startedAt = container.read(recommendationProvider).startedAt;
+
+          await tester.tap(find.byType(ThirtyButton)); // Opens confirmation.
+          await tester.pump();
+          await tester.tap(find.text('Keep Circle open'));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 200));
+
+          expect(find.byType(AlertDialog), findsNothing);
+          final state = container.read(recommendationProvider);
+          expect(state.status, RecommendationStatus.started);
+          expect(state.startedAt, startedAt);
+          expect(state.closedAt, isNull);
+          expect(find.text('Close Circle'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'dismissing the dialog by tapping outside it resolves the same as '
+        'an explicit cancel — the Circle stays open. showDialog resolves a '
+        'dismiss (tap-outside or the system back button) the same way: '
+        'anything other than an explicit confirm leaves the Circle '
+        'untouched, so this also stands in for the back-button case.',
+        (WidgetTester tester) async {
+          final (widget, container) = await _wrapWithContainer();
+          addTearDown(container.dispose);
+
+          await tester.pumpWidget(widget);
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(find.byType(ThirtyButton));
+          await tester.tap(find.byType(ThirtyButton)); // Start.
+          await tester.pump();
+
+          await tester.tap(find.byType(ThirtyButton)); // Opens confirmation.
+          await tester.pump();
+
+          // The dialog's own barrier, well away from its centered content.
+          await tester.tapAt(const Offset(5, 5));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 200));
+
+          expect(find.byType(AlertDialog), findsNothing);
+          expect(
+            container.read(recommendationProvider).status,
+            RecommendationStatus.started,
           );
         },
       );

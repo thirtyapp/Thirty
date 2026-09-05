@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/activity_category.dart';
+import '../../../core/analytics/analytics_event_type.dart';
+import '../../../core/analytics/analytics_service.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
+import '../../../core/utils/date_key.dart';
 import 'activity_catalog.dart';
 
 /// THIRTY's daily recommendation — Recommendation MVP v0
@@ -153,17 +156,20 @@ class RecommendationState {
 /// this, matching [`FirstBreathNotifier`] and
 /// [`ThemeModeNotifier`](../../../core/providers/theme_mode_provider.dart).
 ///
-/// **Known limitation:** the day boundary is only re-evaluated when this
-/// provider rebuilds (a fresh [nowProvider] read) — an app instance kept
-/// open, uninterrupted, across local midnight will not itself notice the
-/// calendar day changed until something causes a rebuild (e.g. the app
-/// being backgrounded and resumed). No midnight timer or lifecycle
-/// observer is introduced to close that gap in this pass.
+/// **Known limitation:** the day boundary is only re-evaluated when
+/// [nowProvider] is invalidated and re-read — Batch 1 (Phase D) closes the
+/// main real-world gap by invalidating it on every app foreground resume
+/// (`core/app/thirty_app.dart`'s `_ThirtyAppState`), so an app backgrounded
+/// overnight and reopened the next day correctly lands on a fresh Circle.
+/// An app instance kept open, uninterrupted, in the foreground across local
+/// midnight without ever backgrounding still will not notice until some
+/// other rebuild happens — no midnight timer is introduced to close that
+/// narrower remaining gap.
 class RecommendationNotifier extends Notifier<RecommendationState> {
   @override
   RecommendationState build() {
     final prefs = ref.watch(sharedPreferencesProvider);
-    final today = _dateKey(ref.watch(nowProvider));
+    final today = dateKey(ref.watch(nowProvider));
 
     final freshNoRecommendation = RecommendationState(
       recommendation: null,
@@ -262,7 +268,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
 
     final prefs = ref.read(sharedPreferencesProvider);
     final now = ref.read(nowProvider);
-    final today = _dateKey(now);
+    final today = dateKey(now);
 
     ActivityId? previousActivityId;
     final storedDay = prefs.getString(recommendationDayKey);
@@ -303,6 +309,11 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       startedAt: startedAt,
     );
     unawaited(_persist(state));
+    // Fired only on a real transition — the two guard clauses above already
+    // make this method a no-op on a repeat call, so a double/duplicate
+    // start() can never record a duplicate circleStarted event either
+    // (Batch 1, Phase E instrumentation).
+    ref.read(analyticsServiceProvider).track(AnalyticsEventType.circleStarted);
   }
 
   /// Closes today's Circle. A no-op unless [RecommendationState.status] is
@@ -327,6 +338,11 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       closedAt: closedAt,
     );
     unawaited(_persist(state));
+    // Fired only on a real transition, for the same reason start() above
+    // only fires once per Circle — this is also the frozen post-fix
+    // measurement protocol's "Daily Check-In completed" (see
+    // AnalyticsEventType.circleClosed's own doc comment).
+    ref.read(analyticsServiceProvider).track(AnalyticsEventType.circleClosed);
   }
 
   /// Builds today's [Recommendation] from the approved catalog
@@ -389,7 +405,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// own callers.
   Future<void> _persist(RecommendationState state) async {
     final prefs = ref.read(sharedPreferencesProvider);
-    final today = _dateKey(ref.read(nowProvider));
+    final today = dateKey(ref.read(nowProvider));
 
     await prefs.setString(recommendationDayKey, today);
     await prefs.setString(recommendationStatusKey, state.status.name);
@@ -418,7 +434,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     }
   }
 
-  /// Whether [storedDayKey] (a `_dateKey`-shaped `YYYY-MM-DD` string) names
+  /// Whether [storedDayKey] (a [dateKey]-shaped `YYYY-MM-DD` string) names
   /// the local calendar day immediately before [now]'s — i.e. exactly
   /// "yesterday," never "two or more days ago." Compared via
   /// [epochDay] (built on [DateTime.utc]) rather than a local-time
@@ -429,13 +445,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final storedDate = DateTime.tryParse(storedDayKey);
     if (storedDate == null) return false;
     return epochDay(storedDate) == epochDay(now) - 1;
-  }
-
-  static String _dateKey(DateTime date) {
-    final year = date.year.toString().padLeft(4, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    final day = date.day.toString().padLeft(2, '0');
-    return '$year-$month-$day';
   }
 }
 
