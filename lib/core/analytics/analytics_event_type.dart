@@ -30,18 +30,40 @@
 ///   early return. Carries `intention` and `activity_id` (both stable
 ///   identifiers, never display copy) as metadata — see
 ///   [SupabaseAnalyticsService.track]'s `metadata` parameter.
+///
+/// Batch 1 / V1 Productization (see
+/// `docs/product/adr/ADR-013-v1-free-foundation-and-journal.md`) adds two
+/// events for the optional action-report foundation — both fired only when
+/// `RecommendationNotifier.reportAttempt`/`reportUsefulness` actually
+/// records a response, never speculatively:
+///
+/// - [circleAttemptReported] — the user answered "Did you try this
+///   activity?". Carries `response` (one of
+///   [CircleAttemptResponse.wireName]'s values — `circle_journal.dart`) as
+///   metadata. A response of `not_today` is a reported non-action, not a
+///   failure; there being no event at all (no answer given) is UNKNOWN,
+///   never inferred as either.
+/// - [circleUsefulnessReported] — the user answered the optional
+///   usefulness follow-up. Carries `response` (one of
+///   [CircleUsefulnessResponse.wireName]'s values) as metadata. Purely
+///   self-reported usefulness — never treated as a verified health or
+///   wellbeing outcome.
 enum AnalyticsEventType {
   appOpened,
   circleStarted,
   circleClosed,
   recommendationShown,
+  circleAttemptReported,
+  circleUsefulnessReported,
 }
 
 /// The stable string this event is written as in `analytics_events.
 /// event_type` — snake_case to match the Supabase table's own `CHECK`
 /// constraint (`supabase/migrations/20260905000000_create_analytics_events.sql`,
 /// extended for [recommendationShown] by
-/// `supabase/migrations/20260906000000_add_recommendation_shown_event.sql`),
+/// `supabase/migrations/20260906000000_add_recommendation_shown_event.sql`,
+/// and for [circleAttemptReported]/[circleUsefulnessReported] by
+/// `supabase/migrations/20260906010000_add_action_report_events.sql`),
 /// deliberately not [AnalyticsEventType.name] (camelCase) so the raw table
 /// reads naturally for manual inspection in Supabase Studio.
 extension AnalyticsEventTypeWire on AnalyticsEventType {
@@ -50,5 +72,8 @@ extension AnalyticsEventTypeWire on AnalyticsEventType {
     AnalyticsEventType.circleStarted => 'circle_started',
     AnalyticsEventType.circleClosed => 'circle_closed',
     AnalyticsEventType.recommendationShown => 'recommendation_shown',
+    AnalyticsEventType.circleAttemptReported => 'circle_attempt_reported',
+    AnalyticsEventType.circleUsefulnessReported =>
+      'circle_usefulness_reported',
   };
 }

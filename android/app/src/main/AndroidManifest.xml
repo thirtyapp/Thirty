@@ -1,8 +1,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- ADR-013 §7 — THIRTY's Circle journal and recommendation state are
+         device-local only, with no account or cloud-sync system (AGENTS.md
+         §5). android:allowBackup defaults to true, which would otherwise
+         let Android's Auto Backup silently restore this same local state
+         (SharedPreferences) onto another device via the user's Google
+         account — a de facto cloud restore, contradicting that promise.
+         Disabling it here is the whole fix: on API 31+, allowBackup=false
+         also disables Android 12's separate device-to-device transfer
+         flow, so no XML backup/data-extraction rules file is needed. -->
     <application
         android:label="thirty"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"

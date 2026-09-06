@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:thirty/core/app/thirty_app.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
 import 'package:thirty/core/world_rendering/quiet_trail_hero_asset_view.dart';
+import 'package:thirty/features/home/presentation/circle_history_page.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
 
@@ -35,6 +37,28 @@ void main() {
 
       expect(find.byType(CircleHero), findsOneWidget);
       expect(find.byType(DailyIntentionPrompt), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'tapping the history icon on the root route opens /history '
+    '(CircleHistoryPage) — ADR-013 §6',
+    (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: const ThirtyApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.history));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CircleHistoryPage), findsOneWidget);
     },
   );
 

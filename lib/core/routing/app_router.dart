@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/home/presentation/circle_history_page.dart';
 import '../../features/home/presentation/home_page.dart';
 import '../dev_preview/quiet_trail_hero_preview_page.dart';
 import '../providers/theme_mode_provider.dart';
@@ -17,6 +18,10 @@ import '../showcase/design_system_showcase_page.dart';
 List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
   return [
     GoRoute(path: '/', builder: (context, state) => const HomePage()),
+    GoRoute(
+      path: '/history',
+      builder: (context, state) => const CircleHistoryPage(),
+    ),
     GoRoute(
       path: '/showcase',
       builder: (context, state) {

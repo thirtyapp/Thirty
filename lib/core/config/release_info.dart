@@ -10,6 +10,14 @@
 /// `recommendation_shown` analytics event shipped (see
 /// `docs/product/adr/ADR-012-batch-2-recommendation-diversity.md`).
 ///
+/// "THIRTY — V1 PRODUCTIZATION BATCH 1 / FREE FOUNDATION" (`1.3.0+4`): the
+/// build under which the frozen 21-placement V1 catalogue, the
+/// cross-direction diversity guard, the optional action-report foundation,
+/// the prospective local Circle journal, the read-only history/data
+/// controls, and the `circle_attempt_reported`/`circle_usefulness_reported`
+/// analytics events shipped (see
+/// `docs/product/adr/ADR-013-v1-free-foundation-and-journal.md`).
+///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the
 /// frozen evaluation boundary the post-fix measurement protocol depends
@@ -24,5 +32,5 @@ class ReleaseInfo {
   const ReleaseInfo._();
 
   /// Keep in sync with `pubspec.yaml`'s `version:` field.
-  static const String appVersion = '1.2.0+3';
+  static const String appVersion = '1.3.0+4';
 }

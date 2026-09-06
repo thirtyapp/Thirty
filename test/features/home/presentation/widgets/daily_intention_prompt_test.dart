@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -84,6 +85,48 @@ void main() {
         semantics.properties.label,
         'More Energy. ${intentionMeaning(Intention.moreEnergy)}',
       );
+    },
+  );
+
+  testWidgets(
+    'a real assistive-technology tap action (SemanticsAction.tap), not '
+    'just the button/label flags, actually chooses the intention '
+    '(ADR-013 §9)',
+    (tester) async {
+      final (widget, container) = await _wrap();
+      addTearDown(container.dispose);
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(widget);
+
+      // find.bySemanticsLabel resolves via the runtime SemanticsNode tree
+      // itself (unlike find.text, which walks up from the render object
+      // and can land on an unrelated ancestor node) — the precise way to
+      // target the exact node an assistive technology would activate.
+      final semantics = tester.getSemantics(
+        find.bySemanticsLabel(
+          'Clearer Head. ${intentionMeaning(Intention.clearerHead)}',
+        ),
+      );
+      expect(
+        semantics.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+        reason:
+            'the node TalkBack would activate must itself carry a tap '
+            'action — a label/button flag alone is not enough',
+      );
+
+      // ignore: deprecated_member_use
+      tester.binding.pipelineOwner.semanticsOwner!.performAction(
+        semantics.id,
+        SemanticsAction.tap,
+      );
+      await tester.pump();
+
+      final state = container.read(recommendationProvider);
+      expect(state.recommendation, isNotNull);
+      expect(state.recommendation!.intent, 'Clearer Head');
+
+      handle.dispose();
     },
   );
 }

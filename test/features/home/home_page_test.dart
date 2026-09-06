@@ -54,4 +54,62 @@ void main() {
       expect(find.byType(DailyIntentionPrompt), findsNothing);
     },
   );
+
+  testWidgets(
+    'the history icon is reachable from every state this page can be in '
+    '(ADR-013 §6) — see app_router_test.dart for where tapping it actually '
+    'navigates',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(await _wrap());
+      expect(find.byIcon(Icons.history), findsOneWidget);
+
+      await tester.pumpWidget(
+        await _wrap(
+          storedPrefs: {
+            recommendationDayKey: '2026-08-02',
+            recommendationIntentionKey: 'moreEnergy',
+            recommendationActivityIdKey: 'thirtyMinuteWalk',
+          },
+        ),
+      );
+      expect(find.byIcon(Icons.history), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'ActionReportPrompt is not shown before today\'s Circle is closed',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        await _wrap(
+          storedPrefs: {
+            recommendationDayKey: '2026-08-02',
+            recommendationIntentionKey: 'moreEnergy',
+            recommendationActivityIdKey: 'thirtyMinuteWalk',
+          },
+        ),
+      );
+
+      expect(find.text('Did you try this activity?'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'ActionReportPrompt appears once today\'s Circle is closed',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        await _wrap(
+          storedPrefs: {
+            recommendationDayKey: '2026-08-02',
+            recommendationIntentionKey: 'moreEnergy',
+            recommendationActivityIdKey: 'thirtyMinuteWalk',
+            recommendationStatusKey: 'closed',
+            recommendationStartedAtKey: _today.toIso8601String(),
+            recommendationClosedAtKey: _today.toIso8601String(),
+          },
+        ),
+      );
+
+      expect(find.text('Did you try this activity?'), findsOneWidget);
+    },
+  );
 }

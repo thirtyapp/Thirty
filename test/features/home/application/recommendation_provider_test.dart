@@ -7,6 +7,7 @@ import 'package:thirty/core/analytics/analytics_service.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 
 /// Records every [track] call instead of reaching Supabase — lets Phase E
@@ -717,6 +718,503 @@ void main() {
           AnalyticsEventType.circleStarted,
           AnalyticsEventType.circleClosed,
         ]);
+      });
+    });
+
+    group('Recommendation content (ADR-013 §3)', () {
+      test(
+        'carries circleId (== today), the raw intention, and catalogVersion',
+        () async {
+          final (container, _) = await _containerWith({}, now: _today);
+          addTearDown(container.dispose);
+
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.gentlerPace);
+          final recommendation = container
+              .read(recommendationProvider)
+              .recommendation!;
+
+          expect(recommendation.circleId, '2026-08-02');
+          expect(recommendation.intention, Intention.gentlerPace);
+          expect(recommendation.catalogVersion, catalogVersion);
+        },
+      );
+
+      test('a restored recommendation carries the same circleId/intention/'
+          'catalogVersion as a freshly chosen one', () async {
+        final (container, _) = await _containerWith(
+          _chosenToday(
+            intention: Intention.clearerHead,
+            activityId: ActivityId.quietReading,
+          ),
+          now: _today,
+        );
+        addTearDown(container.dispose);
+
+        final recommendation = container
+            .read(recommendationProvider)
+            .recommendation!;
+
+        expect(recommendation.circleId, '2026-08-02');
+        expect(recommendation.intention, Intention.clearerHead);
+        expect(recommendation.catalogVersion, catalogVersion);
+      });
+    });
+
+    group(
+      'invalid stored activity/intention combination (ADR-013 §2) recovers '
+      'safely',
+      () {
+        test(
+          'an activityId that does not belong to the stored intention\'s '
+          'pool is treated as no recommendation, not silently trusted',
+          () async {
+            final (container, _) = await _containerWith({
+              recommendationDayKey: '2026-08-02',
+              recommendationIntentionKey: Intention.moreEnergy.name,
+              // quietReading only belongs to clearerHead's pool.
+              recommendationActivityIdKey: ActivityId.quietReading.name,
+            }, now: _today);
+            addTearDown(container.dispose);
+
+            final state = container.read(recommendationProvider);
+
+            expect(state.recommendation, isNull);
+            expect(state.status, RecommendationStatus.notStarted);
+          },
+        );
+
+        test(
+          'the same incompatible pair does not crash chooseIntention() — a '
+          'fresh, compatible choice can still be made afterward',
+          () async {
+            final (container, _) = await _containerWith({
+              recommendationDayKey: '2026-08-02',
+              recommendationIntentionKey: Intention.moreEnergy.name,
+              recommendationActivityIdKey: ActivityId.quietReading.name,
+            }, now: _today);
+            addTearDown(container.dispose);
+
+            container
+                .read(recommendationProvider.notifier)
+                .chooseIntention(Intention.gentlerPace);
+            final state = container.read(recommendationProvider);
+
+            expect(state.recommendation, isNotNull);
+            expect(state.recommendation!.intent, 'Gentler Pace');
+            expect(
+              activityPools[Intention.gentlerPace],
+              contains(state.recommendation!.activityId),
+            );
+          },
+        );
+      },
+    );
+
+    group('optional action-report foundation (ADR-013 §4)', () {
+      test('reportAttempt() is a no-op before today\'s Circle is closed', () async {
+        final (container, _) = await _containerWith(_chosenToday(), now: _today);
+        addTearDown(container.dispose);
+
+        // notStarted:
+        container
+            .read(recommendationProvider.notifier)
+            .reportAttempt(CircleAttemptResponse.yes);
+        expect(
+          container.read(recommendationProvider).attemptResponse,
+          isNull,
+        );
+
+        // started:
+        container.read(recommendationProvider.notifier).start();
+        container
+            .read(recommendationProvider.notifier)
+            .reportAttempt(CircleAttemptResponse.yes);
+        expect(
+          container.read(recommendationProvider).attemptResponse,
+          isNull,
+        );
+      });
+
+      for (final response in CircleAttemptResponse.values) {
+        test('reportAttempt(${response.name}) is recorded once closed, and '
+            'never required to close or to receive a recommendation', () async {
+          final (container, _) = await _containerWith(
+            _chosenToday(),
+            now: _today,
+          );
+          addTearDown(container.dispose);
+
+          container.read(recommendationProvider.notifier).start();
+          container.read(recommendationProvider.notifier).close();
+          container
+              .read(recommendationProvider.notifier)
+              .reportAttempt(response);
+
+          final state = container.read(recommendationProvider);
+          expect(state.attemptResponse, response);
+          // Close already happened without any answer, and this answer
+          // changes nothing about the Circle's own lifecycle status.
+          expect(state.status, RecommendationStatus.closed);
+        });
+      }
+
+      test('no answer at all leaves attemptResponse null — UNKNOWN, never a '
+          'failure', () async {
+        final (container, _) = await _containerWith(_chosenToday(), now: _today);
+        addTearDown(container.dispose);
+
+        container.read(recommendationProvider.notifier).start();
+        container.read(recommendationProvider.notifier).close();
+
+        expect(
+          container.read(recommendationProvider).attemptResponse,
+          isNull,
+        );
+      });
+
+      test('reportAttempt() overwrites an earlier answer for the same day '
+          '— changing your mind is allowed', () async {
+        final (container, _) = await _containerWith(_chosenToday(), now: _today);
+        addTearDown(container.dispose);
+
+        container.read(recommendationProvider.notifier).start();
+        container.read(recommendationProvider.notifier).close();
+        container
+            .read(recommendationProvider.notifier)
+            .reportAttempt(CircleAttemptResponse.notToday);
+        container
+            .read(recommendationProvider.notifier)
+            .reportAttempt(CircleAttemptResponse.yes);
+
+        expect(
+          container.read(recommendationProvider).attemptResponse,
+          CircleAttemptResponse.yes,
+        );
+      });
+
+      test(
+        'reportUsefulness() is a no-op without an affirmative attempt '
+        'response first',
+        () async {
+          final (container, _) = await _containerWith(
+            _chosenToday(),
+            now: _today,
+          );
+          addTearDown(container.dispose);
+
+          container.read(recommendationProvider.notifier).start();
+          container.read(recommendationProvider.notifier).close();
+
+          // No attempt answer at all yet:
+          container
+              .read(recommendationProvider.notifier)
+              .reportUsefulness(CircleUsefulnessResponse.veryUseful);
+          expect(
+            container.read(recommendationProvider).usefulnessResponse,
+            isNull,
+          );
+
+          // An explicit non-affirmative attempt:
+          container
+              .read(recommendationProvider.notifier)
+              .reportAttempt(CircleAttemptResponse.notToday);
+          container
+              .read(recommendationProvider.notifier)
+              .reportUsefulness(CircleUsefulnessResponse.veryUseful);
+          expect(
+            container.read(recommendationProvider).usefulnessResponse,
+            isNull,
+          );
+        },
+      );
+
+      for (final attempt in [
+        CircleAttemptResponse.yes,
+        CircleAttemptResponse.aLittle,
+      ]) {
+        test('reportUsefulness() is recorded after an affirmative '
+            '${attempt.name} attempt', () async {
+          final (container, _) = await _containerWith(
+            _chosenToday(),
+            now: _today,
+          );
+          addTearDown(container.dispose);
+
+          container.read(recommendationProvider.notifier).start();
+          container.read(recommendationProvider.notifier).close();
+          container.read(recommendationProvider.notifier).reportAttempt(attempt);
+          container
+              .read(recommendationProvider.notifier)
+              .reportUsefulness(CircleUsefulnessResponse.somewhatUseful);
+
+          expect(
+            container.read(recommendationProvider).usefulnessResponse,
+            CircleUsefulnessResponse.somewhatUseful,
+          );
+        });
+      }
+
+      test('changing the attempt answer to a non-affirmative one clears a '
+          'previously recorded usefulness response', () async {
+        final (container, _) = await _containerWith(_chosenToday(), now: _today);
+        addTearDown(container.dispose);
+
+        container.read(recommendationProvider.notifier).start();
+        container.read(recommendationProvider.notifier).close();
+        container
+            .read(recommendationProvider.notifier)
+            .reportAttempt(CircleAttemptResponse.yes);
+        container
+            .read(recommendationProvider.notifier)
+            .reportUsefulness(CircleUsefulnessResponse.veryUseful);
+        expect(
+          container.read(recommendationProvider).usefulnessResponse,
+          isNotNull,
+        );
+
+        container
+            .read(recommendationProvider.notifier)
+            .reportAttempt(CircleAttemptResponse.notToday);
+
+        expect(
+          container.read(recommendationProvider).usefulnessResponse,
+          isNull,
+        );
+      });
+
+      test('reporting an attempt/usefulness response never itself changes '
+          'today\'s recommendation, and causes no automatic repeat or '
+          'progression', () async {
+        final (container, _) = await _containerWith(_chosenToday(), now: _today);
+        addTearDown(container.dispose);
+
+        final before = container.read(recommendationProvider).recommendation;
+        container.read(recommendationProvider.notifier).start();
+        container.read(recommendationProvider.notifier).close();
+        container
+            .read(recommendationProvider.notifier)
+            .reportAttempt(CircleAttemptResponse.yes);
+        container
+            .read(recommendationProvider.notifier)
+            .reportUsefulness(CircleUsefulnessResponse.veryUseful);
+        // Calling chooseIntention again must still be the ordinary no-op —
+        // an action report must never re-open today's choice.
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.gentlerPace);
+
+        final after = container.read(recommendationProvider).recommendation;
+        expect(after!.activityId, before!.activityId);
+        expect(after.intention, before.intention);
+      });
+
+      test('a closed state with valid attempt/usefulness responses '
+          'restores correctly', () async {
+        final (container, _) = await _containerWith({
+          ..._chosenToday(),
+          recommendationStatusKey: 'closed',
+          recommendationStartedAtKey: _today.toIso8601String(),
+          recommendationClosedAtKey: _laterToday.toIso8601String(),
+          recommendationAttemptResponseKey: CircleAttemptResponse.aLittle.name,
+          recommendationUsefulnessResponseKey:
+              CircleUsefulnessResponse.notUseful.name,
+        }, now: _evenLaterToday);
+        addTearDown(container.dispose);
+
+        final state = container.read(recommendationProvider);
+        expect(state.attemptResponse, CircleAttemptResponse.aLittle);
+        expect(state.usefulnessResponse, CircleUsefulnessResponse.notUseful);
+      });
+
+      test('a stored usefulness response is dropped on restore if the '
+          'stored attempt response is not affirmative — an invalid '
+          'combination is never trusted', () async {
+        final (container, _) = await _containerWith({
+          ..._chosenToday(),
+          recommendationStatusKey: 'closed',
+          recommendationStartedAtKey: _today.toIso8601String(),
+          recommendationClosedAtKey: _laterToday.toIso8601String(),
+          recommendationAttemptResponseKey: CircleAttemptResponse.notToday.name,
+          recommendationUsefulnessResponseKey:
+              CircleUsefulnessResponse.veryUseful.name,
+        }, now: _evenLaterToday);
+        addTearDown(container.dispose);
+
+        final state = container.read(recommendationProvider);
+        expect(state.attemptResponse, CircleAttemptResponse.notToday);
+        expect(state.usefulnessResponse, isNull);
+      });
+
+      test('action-report analytics fire only on a genuine recorded '
+          'response, never on a no-op call', () async {
+        final analytics = _RecordingAnalyticsService();
+        final (container, _) = await _containerWith(
+          _chosenToday(),
+          now: _today,
+          analytics: analytics,
+        );
+        addTearDown(container.dispose);
+
+        // No-op: not closed yet.
+        container
+            .read(recommendationProvider.notifier)
+            .reportAttempt(CircleAttemptResponse.yes);
+        expect(analytics.events, isEmpty);
+
+        container.read(recommendationProvider.notifier).start();
+        container.read(recommendationProvider.notifier).close();
+        // No-op: no affirmative attempt yet.
+        container
+            .read(recommendationProvider.notifier)
+            .reportUsefulness(CircleUsefulnessResponse.veryUseful);
+        expect(
+          analytics.events,
+          [AnalyticsEventType.circleStarted, AnalyticsEventType.circleClosed],
+        );
+
+        container
+            .read(recommendationProvider.notifier)
+            .reportAttempt(CircleAttemptResponse.yes);
+        container
+            .read(recommendationProvider.notifier)
+            .reportUsefulness(CircleUsefulnessResponse.veryUseful);
+
+        expect(analytics.events, [
+          AnalyticsEventType.circleStarted,
+          AnalyticsEventType.circleClosed,
+          AnalyticsEventType.circleAttemptReported,
+          AnalyticsEventType.circleUsefulnessReported,
+        ]);
+        final attemptCall = analytics.calls.firstWhere(
+          (call) => call.$1 == AnalyticsEventType.circleAttemptReported,
+        );
+        expect(attemptCall.$2, {'response': 'yes'});
+        final usefulnessCall = analytics.calls.firstWhere(
+          (call) => call.$1 == AnalyticsEventType.circleUsefulnessReported,
+        );
+        expect(usefulnessCall.$2, {'response': 'veryUseful'});
+      });
+    });
+
+    group('Circle journal integration (ADR-013 §5)', () {
+      test('chooseIntention() creates a journal entry for today, carrying '
+          'the resolved direction/activity/catalogVersion', () async {
+        final (container, _) = await _containerWith({}, now: _today);
+        addTearDown(container.dispose);
+
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy);
+        await Future<void>.delayed(Duration.zero);
+
+        final journal = CircleJournalRepository(
+          container.read(sharedPreferencesProvider),
+        );
+        final entries = journal.readAll();
+        expect(entries, hasLength(1));
+        final entry = entries.single;
+        expect(entry.circleId, '2026-08-02');
+        expect(entry.localDate, '2026-08-02');
+        expect(entry.direction, Intention.moreEnergy);
+        expect(entry.catalogVersion, catalogVersion);
+        expect(entry.startedAt, isNull);
+        expect(entry.closedAt, isNull);
+      });
+
+      test('start()/close() update the same day\'s journal entry rather '
+          'than creating additional ones', () async {
+        final (container, clock) = await _containerWith({}, now: _today);
+        addTearDown(container.dispose);
+
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy);
+        await Future<void>.delayed(Duration.zero);
+
+        container.read(recommendationProvider.notifier).start();
+        await Future<void>.delayed(Duration.zero);
+        clock.advanceTo(_laterToday);
+        container.read(recommendationProvider.notifier).close();
+        await Future<void>.delayed(Duration.zero);
+
+        final journal = CircleJournalRepository(
+          container.read(sharedPreferencesProvider),
+        );
+        final entries = journal.readAll();
+        expect(entries, hasLength(1));
+        expect(entries.single.startedAt, isNotNull);
+        expect(entries.single.closedAt, isNotNull);
+      });
+
+      test('is self-healing: start() still records a journal entry even if '
+          'the "shown" write for today never happened (e.g. an app kill '
+          'between chooseIntention and Start, restored in a later session)',
+          () async {
+        final (container, _) = await _containerWith(
+          _chosenToday(
+            intention: Intention.gentlerPace,
+            activityId: ActivityId.easyWalk,
+          ),
+          now: _today,
+        );
+        addTearDown(container.dispose);
+
+        // No journal key seeded at all — only the live per-day prefs.
+        container.read(recommendationProvider.notifier).start();
+        await Future<void>.delayed(Duration.zero);
+
+        final journal = CircleJournalRepository(
+          container.read(sharedPreferencesProvider),
+        );
+        final entries = journal.readAll();
+        expect(entries, hasLength(1));
+        expect(entries.single.circleId, '2026-08-02');
+        expect(entries.single.direction, Intention.gentlerPace);
+        expect(entries.single.activityId, ActivityId.easyWalk);
+        expect(entries.single.startedAt, isNotNull);
+      });
+
+      test('reportAttempt()/reportUsefulness() update the same journal '
+          'entry', () async {
+        final (container, _) = await _containerWith(_chosenToday(), now: _today);
+        addTearDown(container.dispose);
+
+        container.read(recommendationProvider.notifier).start();
+        container.read(recommendationProvider.notifier).close();
+        container
+            .read(recommendationProvider.notifier)
+            .reportAttempt(CircleAttemptResponse.aLittle);
+        container
+            .read(recommendationProvider.notifier)
+            .reportUsefulness(CircleUsefulnessResponse.somewhatUseful);
+        await Future<void>.delayed(Duration.zero);
+
+        final journal = CircleJournalRepository(
+          container.read(sharedPreferencesProvider),
+        );
+        final entry = journal.readAll().single;
+        expect(entry.attemptResponse, CircleAttemptResponse.aLittle);
+        expect(entry.usefulnessResponse, CircleUsefulnessResponse.somewhatUseful);
+      });
+
+      test('never fabricates historical entries from Batch 2\'s '
+          'per-intention anti-repetition history — only today\'s live '
+          'choice produces a journal entry', () async {
+        final (container, _) = await _containerWith({
+          // Pre-existing Batch 2 history, but no journal key at all, and
+          // no chooseIntention() call today.
+          recommendationHistoryKeyFor(Intention.moreEnergy): [
+            ActivityId.thirtyMinuteWalk.name,
+          ],
+        }, now: _today);
+        addTearDown(container.dispose);
+
+        final journal = CircleJournalRepository(
+          container.read(sharedPreferencesProvider),
+        );
+        expect(journal.readAll(), isEmpty);
       });
     });
   });

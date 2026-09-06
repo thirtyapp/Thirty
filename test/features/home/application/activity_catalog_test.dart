@@ -14,6 +14,78 @@ const _forbiddenPhrases = [
 ];
 
 void main() {
+  group('V1 launch catalogue (ADR-013)', () {
+    test('exactly 3 directions, each with exactly 7 reviewed placements '
+        '(21 total)', () {
+      expect(activityPools.keys.toSet(), Intention.values.toSet());
+      for (final entry in activityPools.entries) {
+        expect(
+          entry.value.length,
+          7,
+          reason: '${entry.key} does not have exactly 7 placements',
+        );
+      }
+      final total = activityPools.values.fold(0, (sum, p) => sum + p.length);
+      expect(total, 21);
+    });
+
+    test('every placement across every direction is a distinct ActivityId '
+        '(no renamed duplicates padding out the count)', () {
+      final allPlacements = activityPools.values.expand((pool) => pool);
+      expect(allPlacements.toSet(), hasLength(21));
+    });
+
+    test('every direction covers at least 4 genuinely different semantic '
+        'activity families — walking variants alone never satisfy this', () {
+      for (final entry in activityPools.entries) {
+        final families = entry.value.map(activityFamily).toSet();
+        expect(
+          families.length,
+          greaterThanOrEqualTo(4),
+          reason:
+              '${entry.key} only covers ${families.length} distinct '
+              'families: $families',
+        );
+      }
+    });
+
+    test('every ActivityId used by a pool has a complete catalogue entry '
+        '(title, first action, instructions, preparation, pacing note)', () {
+      for (final activityId in activityPools.values.expand((p) => p)) {
+        final definition = activityCatalog[activityId];
+        expect(definition, isNotNull, reason: '$activityId has no entry');
+        expect(activityFirstAction(activityId), isNotEmpty);
+        expect(activityInstructions(activityId), isNotEmpty);
+        expect(activityPreparation(activityId), isNotEmpty);
+        expect(activityPacingNote(activityId), isNotEmpty);
+      }
+    });
+
+    test('every pacing note reads as explicitly self-paced/stoppable, never '
+        'a duration or count to hit', () {
+      const forbiddenPacingPhrases = [
+        'must',
+        'have to',
+        'required',
+        'timer',
+      ];
+      for (final activityId in activityPools.values.expand((p) => p)) {
+        final note = activityPacingNote(activityId).toLowerCase();
+        for (final phrase in forbiddenPacingPhrases) {
+          expect(
+            note.contains(phrase),
+            isFalse,
+            reason: '"$phrase" found in pacing note for $activityId',
+          );
+        }
+      }
+    });
+
+    test('catalogVersion is a positive, frozen integer', () {
+      expect(catalogVersion, greaterThan(0));
+    });
+  });
+
   group('activityPools', () {
     test('every pool has at least two activities', () {
       for (final pool in activityPools.values) {
@@ -182,17 +254,22 @@ void main() {
       expect(pool, contains(result));
     });
 
-    test('anti-repetition never triggers when recentActivityIds excludes an '
-        'activity other than the normal candidate', () {
+    test('excluding the pool\'s last member never disturbs dayIndex 0\'s '
+        'own candidate', () {
+      // Excluding an item from the *end* of the pool never renumbers the
+      // index-0 position — this holds for any pool size, unlike excluding
+      // an arbitrary other member (which can legitimately shift later
+      // indices once the pool is reduced; see the "N-1 excluded" test
+      // below for that generalization instead).
       final pool = activityPools[Intention.moreEnergy]!;
-      const dayIndex = 5;
-      final normalCandidate = pool[dayIndex % pool.length];
-      final otherActivity = pool.firstWhere((a) => a != normalCandidate);
+      final normalCandidate = pool[0];
+      final excluded = pool.last;
+      expect(excluded, isNot(normalCandidate));
 
       final result = selectActivityId(
         intention: Intention.moreEnergy,
-        dayIndex: dayIndex,
-        recentActivityIds: {otherActivity},
+        dayIndex: 0,
+        recentActivityIds: {excluded},
       );
 
       expect(result, normalCandidate);
@@ -213,11 +290,11 @@ void main() {
       expect(result, pool[dayIndex % pool.length]);
     });
 
-    test('a 3-item pool with two of three excluded deterministically returns '
-        'the one remaining candidate, regardless of dayIndex', () {
+    test('with every candidate but one excluded, the one remaining candidate '
+        'is returned deterministically, regardless of dayIndex', () {
       final pool = activityPools[Intention.clearerHead]!;
-      final excluded = {pool[0], pool[1]};
-      final remaining = pool[2];
+      final remaining = pool[3];
+      final excluded = pool.where((id) => id != remaining).toSet();
 
       for (var dayIndex = 0; dayIndex < 5; dayIndex++) {
         final result = selectActivityId(
@@ -244,5 +321,90 @@ void main() {
 
       expect(result, normalCandidate);
     });
+  });
+
+  group('selectActivityId — cross-direction family avoidance (ADR-013 §2)', () {
+    test('a null lastShownFamily filters nothing, matching the default', () {
+      for (final intention in Intention.values) {
+        final pool = activityPools[intention]!;
+        for (var dayIndex = 0; dayIndex < pool.length; dayIndex++) {
+          final withDefault = selectActivityId(
+            intention: intention,
+            dayIndex: dayIndex,
+          );
+          final withExplicitNull = selectActivityId(
+            intention: intention,
+            dayIndex: dayIndex,
+            lastShownFamily: null,
+          );
+          expect(withExplicitNull, withDefault);
+        }
+      }
+    });
+
+    test(
+      'excludes candidates sharing the immediately prior family when a '
+      'different-family alternative exists',
+      () {
+        final pool = activityPools[Intention.moreEnergy]!;
+        const dayIndex = 0;
+        final normalCandidate = pool[dayIndex % pool.length];
+        final lastShownFamily = activityFamily(normalCandidate);
+
+        final result = selectActivityId(
+          intention: Intention.moreEnergy,
+          dayIndex: dayIndex,
+          lastShownFamily: lastShownFamily,
+        );
+
+        expect(result, isNot(normalCandidate));
+        expect(activityFamily(result), isNot(lastShownFamily));
+      },
+    );
+
+    test(
+      'falls back to the history-filtered pool (ignoring the family guard) '
+      'when every remaining candidate shares the prior family',
+      () {
+        final pool = activityPools[Intention.moreEnergy]!;
+        final onlySurvivor = pool.first;
+        final excludeEverythingElse = pool
+            .where((id) => id != onlySurvivor)
+            .toSet();
+        final lastShownFamily = activityFamily(onlySurvivor);
+
+        for (var dayIndex = 0; dayIndex < 5; dayIndex++) {
+          final result = selectActivityId(
+            intention: Intention.moreEnergy,
+            dayIndex: dayIndex,
+            recentActivityIds: excludeEverythingElse,
+            lastShownFamily: lastShownFamily,
+          );
+          expect(result, onlySurvivor);
+        }
+      },
+    );
+
+    test(
+      'the per-intention history filter still applies first, independently '
+      'of the family guard',
+      () {
+        final pool = activityPools[Intention.clearerHead]!;
+        const dayIndex = 0;
+        final normalCandidate = pool[dayIndex % pool.length];
+
+        final result = selectActivityId(
+          intention: Intention.clearerHead,
+          dayIndex: dayIndex,
+          recentActivityIds: {normalCandidate},
+          // A family that matches nothing in this pool, so only the
+          // history filter is actually exercised by this case.
+          lastShownFamily: null,
+        );
+
+        expect(result, isNot(normalCandidate));
+        expect(pool, contains(result));
+      },
+    );
   });
 }

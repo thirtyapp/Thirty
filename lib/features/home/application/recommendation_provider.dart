@@ -10,6 +10,7 @@ import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../../../core/utils/date_key.dart';
 import 'activity_catalog.dart';
+import 'circle_journal.dart';
 
 /// THIRTY's daily recommendation — Recommendation MVP v0
 /// (`docs/product/recommendation-mvp-v0.md`): the user picks an [Intention]
@@ -27,6 +28,9 @@ class Recommendation {
     required this.why,
     required this.category,
     required this.activityId,
+    required this.intention,
+    required this.circleId,
+    required this.catalogVersion,
   });
 
   final String intent;
@@ -45,6 +49,23 @@ class Recommendation {
   /// not displayed anywhere, used only for persistence and next-day
   /// anti-repetition (`activity_catalog.dart`'s [selectActivityId]).
   final ActivityId activityId;
+
+  /// The raw [Intention] this recommendation was resolved for — kept
+  /// alongside [intent] (its display label) so the Circle journal
+  /// (`circle_journal.dart`) and the cross-direction diversity guard's
+  /// persistence can use the stable enum identity rather than re-parsing
+  /// display copy (ADR-013).
+  final Intention intention;
+
+  /// This Circle's stable identity — currently always equal to the local
+  /// calendar date it belongs to (`date_key.dart`'s [dateKey] format),
+  /// since Free is bounded to one Circle per local day (ADR-013 §3/§5).
+  final String circleId;
+
+  /// The `activity_catalog.dart` [catalogVersion] active when this
+  /// recommendation was resolved (ADR-013 §3 — "relevant content/version
+  /// identity").
+  final int catalogVersion;
 }
 
 /// Today's Circle's lifecycle status. Deliberately only the three states
@@ -104,6 +125,26 @@ const recommendationStartedAtKey = 'recommendation_started_at';
 /// [DateTime.toIso8601String].
 const recommendationClosedAtKey = 'recommendation_closed_at';
 
+/// SharedPreferences key for [RecommendationState.attemptResponse]'s
+/// [CircleAttemptResponse.name] (ADR-013 §4) — absent whenever no answer
+/// has been given yet, cleared alongside every other per-day key by
+/// [RecommendationNotifier._persistChoice] on a fresh day.
+const recommendationAttemptResponseKey = 'recommendation_attempt_response';
+
+/// SharedPreferences key for [RecommendationState.usefulnessResponse]'s
+/// [CircleUsefulnessResponse.name] (ADR-013 §4). See
+/// [recommendationAttemptResponseKey].
+const recommendationUsefulnessResponseKey =
+    'recommendation_usefulness_response';
+
+/// SharedPreferences key for the [ActivitySemanticFamily.name] of the most
+/// recently *shown* Circle, regardless of which [Intention] it belonged to
+/// (ADR-013 §2 — cross-direction family avoidance). Deliberately a single,
+/// intention-independent key — unlike [recommendationHistoryKeyFor], this
+/// guard compares against whatever the immediately prior Circle was, no
+/// matter which direction it came from.
+const recommendationLastFamilyKey = 'recommendation_last_family';
+
 /// Today's Circle: its content ([recommendation]) plus its session/
 /// lifecycle state.
 ///
@@ -124,6 +165,8 @@ class RecommendationState {
     required this.status,
     this.startedAt,
     this.closedAt,
+    this.attemptResponse,
+    this.usefulnessResponse,
   }) : assert(
          recommendation != null ||
              (status == RecommendationStatus.notStarted &&
@@ -131,6 +174,18 @@ class RecommendationState {
                  closedAt == null),
          'A Circle must never be started or closed before today\'s '
          'recommendation exists.',
+       ),
+       assert(
+         attemptResponse == null || status == RecommendationStatus.closed,
+         'An attempt response can only exist once today\'s Circle is '
+         'closed.',
+       ),
+       assert(
+         usefulnessResponse == null ||
+             attemptResponse == CircleAttemptResponse.yes ||
+             attemptResponse == CircleAttemptResponse.aLittle,
+         'A usefulness response can only follow an affirmative attempt '
+         'response.',
        );
 
   final Recommendation? recommendation;
@@ -141,6 +196,16 @@ class RecommendationState {
 
   /// When today's Circle was closed. Null iff [status] is not [closed].
   final DateTime? closedAt;
+
+  /// The user's optional "Did you try this activity?" answer (ADR-013
+  /// §4) — `null` means no answer was given, never a negative. Only ever
+  /// non-null while [status] is [RecommendationStatus.closed].
+  final CircleAttemptResponse? attemptResponse;
+
+  /// The user's optional self-reported usefulness rating (ADR-013 §4) —
+  /// only ever non-null alongside an affirmative [attemptResponse]
+  /// ([CircleAttemptResponse.yes] or [CircleAttemptResponse.aLittle]).
+  final CircleUsefulnessResponse? usefulnessResponse;
 }
 
 /// The smallest technical state machine behind today's Circle:
@@ -206,10 +271,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       return freshNoRecommendation;
     }
 
-    final recommendation = _restoreRecommendation(prefs);
-    // Same day, but no valid (intention, activityId) pair persisted yet —
-    // the Daily Context Question hasn't been answered today. This also
-    // fails safe the same way if the persisted pair is somehow corrupt.
+    final recommendation = _restoreRecommendation(prefs, today);
+    // Same day, but no valid, direction-compatible (intention, activityId)
+    // pair persisted yet — the Daily Context Question hasn't been answered
+    // today. This also fails safe the same way if the persisted pair is
+    // somehow corrupt or no longer belongs to that intention's pool (ADR-013
+    // §2 — "invalid stored activity/intention combinations recover safely").
     if (recommendation == null) {
       return freshNoRecommendation;
     }
@@ -246,11 +313,32 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         // being missing, so it fails safe the same way.
         if (storedStartedAt == null || storedClosedAt == null) return fresh;
         if (storedClosedAt.isBefore(storedStartedAt)) return fresh;
+
+        // Attempt/usefulness responses (ADR-013 §4) are restored only
+        // alongside a conceptually valid closed state — the constructor's
+        // own assertions require this ordering regardless, so an invalid
+        // stored pairing (e.g. a usefulness answer without an affirmative
+        // attempt) is simply dropped rather than restored.
+        final storedAttempt = CircleAttemptResponse.values
+            .asNameMap()[prefs.getString(recommendationAttemptResponseKey)];
+        final storedUsefulnessRaw = CircleUsefulnessResponse.values
+            .asNameMap()[prefs.getString(
+              recommendationUsefulnessResponseKey,
+            )];
+        final attemptIsAffirmative =
+            storedAttempt == CircleAttemptResponse.yes ||
+            storedAttempt == CircleAttemptResponse.aLittle;
+        final storedUsefulness = attemptIsAffirmative
+            ? storedUsefulnessRaw
+            : null;
+
         return RecommendationState(
           recommendation: recommendation,
           status: RecommendationStatus.closed,
           startedAt: storedStartedAt,
           closedAt: storedClosedAt,
+          attemptResponse: storedAttempt,
+          usefulnessResponse: storedUsefulness,
         );
 
       case RecommendationStatus.notStarted:
@@ -302,13 +390,16 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         .map((name) => ActivityId.values.asNameMap()[name])
         .whereType<ActivityId>()
         .toSet();
+    final lastShownFamily = ActivitySemanticFamily.values
+        .asNameMap()[prefs.getString(recommendationLastFamilyKey)];
 
     final activityId = selectActivityId(
       intention: intention,
       dayIndex: epochDay(now),
       recentActivityIds: recentActivityIds,
+      lastShownFamily: lastShownFamily,
     );
-    final recommendation = _buildRecommendation(intention, activityId);
+    final recommendation = _buildRecommendation(intention, activityId, today);
 
     // Bounded to pool.length - 1 most-recent entries — see
     // recommendationHistoryKeyFor's own doc comment for why that specific
@@ -324,7 +415,14 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       status: RecommendationStatus.notStarted,
     );
     unawaited(
-      _persistChoice(today, intention, activityId, historyKey, cappedHistory),
+      _persistChoice(
+        today: today,
+        intention: intention,
+        activityId: activityId,
+        historyKey: historyKey,
+        cappedHistory: cappedHistory,
+        shownAt: now,
+      ),
     );
     ref
         .read(analyticsServiceProvider)
@@ -368,9 +466,20 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// [RecommendationState.closedAt]. [RecommendationState.startedAt] is
   /// carried over unchanged.
   ///
-  /// Foundation-only in this pass: nothing in the product UI calls this
-  /// yet — there is no Close Circle affordance until the Active experience
-  /// this state machine is built for actually exists.
+  /// Closes today's Circle. A no-op unless [RecommendationState.status] is
+  /// currently [RecommendationStatus.started] — calling this before a
+  /// start, or again after already closed, does nothing, and in
+  /// particular never overwrites an already-recorded
+  /// [RecommendationState.closedAt]. [RecommendationState.startedAt] is
+  /// carried over unchanged.
+  ///
+  /// **Critical semantics (ADR-013 §3):** closing today's Circle does
+  /// **not** mean the recommended activity was actually done, does not
+  /// mean thirty minutes elapsed, and does not prove any wellbeing
+  /// benefit — it is a factual app interaction only (ADR-010). The
+  /// optional [reportAttempt]/[reportUsefulness] foundation this unlocks is
+  /// the only place a user's own account of what happened is recorded, and
+  /// even that is always self-reported, never verified.
   void close() {
     if (state.recommendation == null) return;
     if (state.status != RecommendationStatus.started) return;
@@ -390,11 +499,86 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     ref.read(analyticsServiceProvider).track(AnalyticsEventType.circleClosed);
   }
 
+  /// Records the user's optional "Did you try this activity?" answer
+  /// (ADR-013 §4) for today's Circle. A no-op unless today's Circle is
+  /// currently [RecommendationStatus.closed] — this can never be answered
+  /// before Close, and is never required to Close or to receive tomorrow's
+  /// Circle.
+  ///
+  /// Overwrites any earlier answer for today — changing your mind is
+  /// allowed. Answering anything other than [CircleAttemptResponse.yes] or
+  /// [CircleAttemptResponse.aLittle] clears any previously recorded
+  /// [RecommendationState.usefulnessResponse] for today, since usefulness
+  /// may only ever follow an affirmative attempt.
+  ///
+  /// Fires [AnalyticsEventType.circleAttemptReported] with the response as
+  /// allowlisted metadata — never free text, never a health claim.
+  void reportAttempt(CircleAttemptResponse response) {
+    final recommendation = state.recommendation;
+    if (recommendation == null) return;
+    if (state.status != RecommendationStatus.closed) return;
+
+    final isAffirmative =
+        response == CircleAttemptResponse.yes ||
+        response == CircleAttemptResponse.aLittle;
+    state = RecommendationState(
+      recommendation: recommendation,
+      status: state.status,
+      startedAt: state.startedAt,
+      closedAt: state.closedAt,
+      attemptResponse: response,
+      usefulnessResponse: isAffirmative ? state.usefulnessResponse : null,
+    );
+    unawaited(_persist(state));
+    ref
+        .read(analyticsServiceProvider)
+        .track(
+          AnalyticsEventType.circleAttemptReported,
+          metadata: {'response': response.wireName},
+        );
+  }
+
+  /// Records the user's optional self-reported usefulness rating (ADR-013
+  /// §4). A no-op unless today's Circle is closed **and**
+  /// [RecommendationState.attemptResponse] is already affirmative
+  /// ([CircleAttemptResponse.yes] or [CircleAttemptResponse.aLittle]) — this
+  /// question is only ever offered as a follow-up to an affirmative
+  /// attempt, never standalone. See [reportAttempt] for the shared
+  /// "never required, always self-reported" semantics.
+  void reportUsefulness(CircleUsefulnessResponse response) {
+    final recommendation = state.recommendation;
+    if (recommendation == null) return;
+    if (state.status != RecommendationStatus.closed) return;
+    final attempt = state.attemptResponse;
+    final isAffirmative =
+        attempt == CircleAttemptResponse.yes ||
+        attempt == CircleAttemptResponse.aLittle;
+    if (!isAffirmative) return;
+
+    state = RecommendationState(
+      recommendation: recommendation,
+      status: state.status,
+      startedAt: state.startedAt,
+      closedAt: state.closedAt,
+      attemptResponse: attempt,
+      usefulnessResponse: response,
+    );
+    unawaited(_persist(state));
+    ref
+        .read(analyticsServiceProvider)
+        .track(
+          AnalyticsEventType.circleUsefulnessReported,
+          metadata: {'response': response.wireName},
+        );
+  }
+
   /// Builds today's [Recommendation] from the approved catalog
-  /// (`activity_catalog.dart`) for ([intention], [activityId]).
+  /// (`activity_catalog.dart`) for ([intention], [activityId]), resolved on
+  /// local date [today].
   Recommendation _buildRecommendation(
     Intention intention,
     ActivityId activityId,
+    String today,
   ) {
     return Recommendation(
       intent: intentionLabel(intention),
@@ -403,34 +587,49 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       why: whyCopyFor(intention, activityId),
       category: activityCategory(activityId),
       activityId: activityId,
+      intention: intention,
+      circleId: today,
+      catalogVersion: catalogVersion,
     );
   }
 
-  /// Restores today's [Recommendation] from [prefs], or `null` if no valid
-  /// (intention, activityId) pair is persisted — the caller has already
-  /// confirmed the persisted day matches today.
-  Recommendation? _restoreRecommendation(SharedPreferences prefs) {
+  /// Restores today's [Recommendation] from [prefs], or `null` if no valid,
+  /// direction-compatible (intention, activityId) pair is persisted — the
+  /// caller has already confirmed the persisted day matches [today].
+  ///
+  /// **Compatibility check (ADR-013 §2):** a persisted [activityId] that no
+  /// longer belongs to the persisted [Intention]'s pool — e.g. after a
+  /// hypothetical future catalogue revision moved it elsewhere — is treated
+  /// exactly like a missing/corrupt value, not silently trusted, since
+  /// activity identity and direction compatibility must always be
+  /// validated together.
+  Recommendation? _restoreRecommendation(SharedPreferences prefs, String today) {
     final intention = Intention.values
         .asNameMap()[prefs.getString(recommendationIntentionKey)];
     final activityId = ActivityId.values
         .asNameMap()[prefs.getString(recommendationActivityIdKey)];
     if (intention == null || activityId == null) return null;
-    return _buildRecommendation(intention, activityId);
+    if (!activityPools[intention]!.contains(activityId)) return null;
+    return _buildRecommendation(intention, activityId, today);
   }
 
   /// Persists [intention]/[activityId] as today's freshly-chosen
   /// recommendation, alongside [RecommendationStatus.notStarted], and
   /// [cappedHistory] under [historyKey] (Batch 2's diversity guard — see
-  /// [recommendationHistoryKeyFor]). Any started/closed timestamps from an
-  /// earlier day are explicitly cleared — a fresh choice must never inherit
-  /// a stale session.
-  Future<void> _persistChoice(
-    String today,
-    Intention intention,
-    ActivityId activityId,
-    String historyKey,
-    List<String> cappedHistory,
-  ) async {
+  /// [recommendationHistoryKeyFor]). Any started/closed/attempt/usefulness
+  /// values from an earlier day are explicitly cleared — a fresh choice
+  /// must never inherit a stale session. Also records this Circle's
+  /// "shown" journal entry (`circle_journal.dart`) and this activity's
+  /// [ActivitySemanticFamily] as the new cross-direction diversity-guard
+  /// baseline ([recommendationLastFamilyKey]).
+  Future<void> _persistChoice({
+    required String today,
+    required Intention intention,
+    required ActivityId activityId,
+    required String historyKey,
+    required List<String> cappedHistory,
+    required DateTime shownAt,
+  }) async {
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setString(recommendationDayKey, today);
     await prefs.setString(recommendationIntentionKey, intention.name);
@@ -441,19 +640,47 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     );
     await prefs.remove(recommendationStartedAtKey);
     await prefs.remove(recommendationClosedAtKey);
+    await prefs.remove(recommendationAttemptResponseKey);
+    await prefs.remove(recommendationUsefulnessResponseKey);
     await prefs.setStringList(historyKey, cappedHistory);
+    await prefs.setString(
+      recommendationLastFamilyKey,
+      activityFamily(activityId).name,
+    );
+    // Guards the read below, which runs after several await points — if
+    // this Notifier's container was disposed in the meantime (e.g. a test
+    // tearing down without awaiting this fire-and-forget call; see
+    // [_persist]'s own doc comment), `ref` is no longer usable and must not
+    // be read again.
+    if (!ref.mounted) return;
+    await ref
+        .read(circleJournalRepositoryProvider)
+        .recordShown(
+          circleId: today,
+          localDate: today,
+          direction: intention,
+          activityId: activityId,
+          shownAt: shownAt,
+        );
   }
 
-  /// Persists [state]'s lifecycle (status/timestamps) for today. Fired
-  /// without being awaited by [start]/[close] so the in-memory [state]
-  /// assignment above — and the rebuild it triggers — stays synchronous
-  /// with the user's tap, exactly as before this pass; the write happens in
-  /// the background afterward, same ordering trade-off already accepted by
+  /// Persists [state]'s lifecycle and optional attempt/usefulness responses
+  /// for today, mirroring it into both the live per-day preference keys
+  /// (read back by [build]) and the durable Circle journal
+  /// (`circle_journal.dart`). Fired without being awaited by
+  /// [start]/[close]/[reportAttempt]/[reportUsefulness] so the in-memory
+  /// [state] assignment above — and the rebuild it triggers — stays
+  /// synchronous with the user's tap, exactly as before this pass; the
+  /// write happens in the background afterward, same ordering trade-off
+  /// already accepted by
   /// [`FirstBreathNotifier.markPlayedToday`](first_breath_provider.dart)'s
-  /// own callers.
+  /// own callers. [CircleJournalRepository]'s own upsert methods are
+  /// self-healing against this fire-and-forget ordering — see their doc
+  /// comments.
   Future<void> _persist(RecommendationState state) async {
     final prefs = ref.read(sharedPreferencesProvider);
     final today = dateKey(ref.read(nowProvider));
+    final recommendation = state.recommendation;
 
     await prefs.setString(recommendationDayKey, today);
     await prefs.setString(recommendationStatusKey, state.status.name);
@@ -479,6 +706,77 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       // explicit clear keeps the persisted record itself honest, not just
       // the code path that happens to read it today.
       await prefs.remove(recommendationClosedAtKey);
+    }
+
+    final attemptResponse = state.attemptResponse;
+    if (attemptResponse != null) {
+      await prefs.setString(
+        recommendationAttemptResponseKey,
+        attemptResponse.name,
+      );
+    } else {
+      await prefs.remove(recommendationAttemptResponseKey);
+    }
+
+    final usefulnessResponse = state.usefulnessResponse;
+    if (usefulnessResponse != null) {
+      await prefs.setString(
+        recommendationUsefulnessResponseKey,
+        usefulnessResponse.name,
+      );
+    } else {
+      await prefs.remove(recommendationUsefulnessResponseKey);
+    }
+
+    if (recommendation == null) return;
+    // See _persistChoice's matching comment — this read also happens after
+    // several await points.
+    if (!ref.mounted) return;
+    final journal = ref.read(circleJournalRepositoryProvider);
+    final circleId = recommendation.circleId;
+    final direction = recommendation.intention;
+    final activityId = recommendation.activityId;
+
+    switch (state.status) {
+      case RecommendationStatus.started:
+        await journal.recordStarted(
+          circleId: circleId,
+          localDate: circleId,
+          direction: direction,
+          activityId: activityId,
+          startedAt: startedAt!,
+        );
+      case RecommendationStatus.closed:
+        await journal.recordClosed(
+          circleId: circleId,
+          localDate: circleId,
+          direction: direction,
+          activityId: activityId,
+          closedAt: closedAt!,
+        );
+      case RecommendationStatus.notStarted:
+        break;
+    }
+
+    if (attemptResponse != null) {
+      await journal.recordAttempt(
+        circleId: circleId,
+        localDate: circleId,
+        direction: direction,
+        activityId: activityId,
+        response: attemptResponse,
+        respondedAt: closedAt ?? startedAt ?? ref.read(nowProvider),
+      );
+    }
+    if (usefulnessResponse != null) {
+      await journal.recordUsefulness(
+        circleId: circleId,
+        localDate: circleId,
+        direction: direction,
+        activityId: activityId,
+        response: usefulnessResponse,
+        respondedAt: closedAt ?? startedAt ?? ref.read(nowProvider),
+      );
     }
   }
 }

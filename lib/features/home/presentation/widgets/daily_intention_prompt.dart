@@ -60,9 +60,21 @@ class _IntentionOption extends ConsumerWidget {
     final label = intentionLabel(intention);
     final meaning = intentionMeaning(intention);
 
+    // ADR-013 §9 — a bare `button: true` + `label` semantics node carries
+    // no actual action for an assistive technology to invoke: TalkBack
+    // would announce this as a button but a double-tap would do nothing,
+    // since ExcludeSemantics removes ThirtyCard's own gesture-derived
+    // semantics from the tree entirely. `onTap` here is what gives this
+    // node a real SemanticsAction.tap an assistive technology can invoke —
+    // see daily_intention_prompt_test.dart's explicit
+    // `performAction(..., SemanticsAction.tap)` regression test.
     return Semantics(
       button: true,
       label: '$label. $meaning',
+      onTap: () =>
+          ref.read(recommendationProvider.notifier).chooseIntention(
+            intention,
+          ),
       child: ExcludeSemantics(
         child: ThirtyCard(
           onTap: () =>
