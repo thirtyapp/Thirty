@@ -27,12 +27,13 @@ class _FakeReminderGateway implements ReminderGateway {
   Future<bool> hasPermission() async => permissionGranted;
 
   @override
-  Future<void> scheduleDaily({
+  Future<ScheduleOutcome> scheduleDaily({
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
   }) async {
     scheduleCallCount++;
+    return ScheduleOutcome.scheduled;
   }
 
   @override

@@ -1,35 +1,29 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'reminder_gateway.dart';
 
 /// The real local-notification adapter — `flutter_local_notifications`,
-/// the one package approved for THIRTY's optional local reminder (Step 5
-/// local closure).
+/// `timezone` and `flutter_timezone` (the three packages approved for
+/// THIRTY's optional local reminder — Step 5 local closure).
 ///
-/// **Deliberately schedules against [tz.UTC], not a device-specific named
-/// IANA zone.** The `timezone` package cannot itself determine the
-/// device's local zone (its own README says so — a `flutter_timezone`
-/// dependency or a hand-written platform channel would be needed for
-/// that, and this batch's dependency approval covers only
-/// `flutter_local_notifications` + `timezone`). Instead,
-/// [scheduleDaily]'s caller (`reminder_provider.dart`'s
-/// `ReminderNotifier`) always computes [firstOccurrenceLocal] fresh from
-/// Dart's own always-locally-correct `DateTime` arithmetic — which
-/// already reflects the OS's current timezone/DST — and this gateway
-/// converts that one instant to UTC before scheduling.
+/// Every schedule call resolves the device's actual current IANA
+/// timezone via [FlutterTimezone.getLocalTimezone] and schedules against
+/// that named [tz.Location] — never against [tz.UTC] — so the user's
+/// chosen wall-clock time (e.g. "8:00 PM") is preserved correctly across
+/// a DST transition, not just the fixed instant it happened to be
+/// computed at. Resolving fresh on every call (rather than caching a
+/// location at [initialize] time) is also how a genuine timezone change
+/// (the user travels, or changes their device clock) gets picked up —
+/// `ReminderNotifier` already reschedules on every app resume.
 ///
-/// **Known limitation, documented rather than hidden:** the underlying
-/// `matchDateTimeComponents: DateTimeComponents.time` recurrence then
-/// repeats at that fixed *UTC* clock time daily, which will not
-/// automatically follow a later DST transition until the app is next
-/// resumed (`thirty_app.dart`'s lifecycle hook recomputes and
-/// reschedules on every foreground resume, which corrects it within one
-/// app open). Given "no minute-perfect delivery promise" is already
-/// required (frozen architecture / parent §27), a reminder that may
-/// drift by one hour until the next app open — rather than silently
-/// dropping a fourth dependency into the app — is the accepted tradeoff.
+/// If the device's timezone cannot be resolved, [scheduleDaily] returns
+/// [ScheduleOutcome.timezoneUnavailable] and schedules nothing — it never
+/// falls back to [tz.UTC] or any other assumed zone, because a reminder
+/// silently scheduled against the wrong timezone is a truthfulness
+/// defect, not an acceptable degradation.
 class LocalNotificationsReminderGateway implements ReminderGateway {
   static const _notificationId = 7301;
   static const _channelId = 'thirty_reminder';
@@ -37,12 +31,12 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
 
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
+  bool _timezoneDataLoaded = false;
 
   @override
   Future<void> initialize() async {
     if (_initialized) return;
     try {
-      tzdata.initializeTimeZones();
       await _plugin.initialize(
         settings: const InitializationSettings(
           android: AndroidInitializationSettings('@mipmap/ic_launcher'),
@@ -89,18 +83,31 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
   }
 
   @override
-  Future<void> scheduleDaily({
+  Future<ScheduleOutcome> scheduleDaily({
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
   }) async {
+    final location = await _resolveLocalLocation();
+    if (location == null) return ScheduleOutcome.timezoneUnavailable;
+
     try {
       await _plugin.cancel(id: _notificationId);
       await _plugin.zonedSchedule(
         id: _notificationId,
         title: 'THIRTY',
         body: 'A moment for your next Circle, if it fits today.',
-        scheduledDate: tz.TZDateTime.from(firstOccurrenceLocal.toUtc(), tz.UTC),
+        // The component constructor, not `.from` — this treats
+        // year/month/day/hour/minute as wall-clock time *in* [location],
+        // which is what makes the daily recurrence DST-correct.
+        scheduledDate: tz.TZDateTime(
+          location,
+          firstOccurrenceLocal.year,
+          firstOccurrenceLocal.month,
+          firstOccurrenceLocal.day,
+          firstOccurrenceLocal.hour,
+          firstOccurrenceLocal.minute,
+        ),
         notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             _channelId,
@@ -113,8 +120,9 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.time,
       );
+      return ScheduleOutcome.scheduled;
     } catch (_) {
-      // Never throws — see class doc comment.
+      return ScheduleOutcome.failed;
     }
   }
 
@@ -124,6 +132,23 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
       await _plugin.cancel(id: _notificationId);
     } catch (_) {
       // Never throws.
+    }
+  }
+
+  /// Resolves the device's actual current IANA timezone as a `timezone`
+  /// package [tz.Location], or `null` if either the platform lookup or
+  /// the subsequent `timezone` database lookup fails — never a guessed
+  /// or default zone.
+  Future<tz.Location?> _resolveLocalLocation() async {
+    try {
+      if (!_timezoneDataLoaded) {
+        tzdata.initializeTimeZones();
+        _timezoneDataLoaded = true;
+      }
+      final info = await FlutterTimezone.getLocalTimezone();
+      return tz.getLocation(info.identifier);
+    } catch (_) {
+      return null;
     }
   }
 }

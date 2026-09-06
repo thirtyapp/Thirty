@@ -11,6 +11,7 @@ import 'package:thirty/features/reminder/application/reminder_provider.dart';
 
 class _FakeReminderGateway implements ReminderGateway {
   bool permissionGranted = true;
+  ScheduleOutcome scheduleOutcome = ScheduleOutcome.scheduled;
   int initializeCallCount = 0;
   int requestPermissionCallCount = 0;
   int scheduleCallCount = 0;
@@ -34,7 +35,7 @@ class _FakeReminderGateway implements ReminderGateway {
   Future<bool> hasPermission() async => permissionGranted;
 
   @override
-  Future<void> scheduleDaily({
+  Future<ScheduleOutcome> scheduleDaily({
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
@@ -43,6 +44,7 @@ class _FakeReminderGateway implements ReminderGateway {
     lastFirstOccurrence = firstOccurrenceLocal;
     lastHour = hour;
     lastMinute = minute;
+    return scheduleOutcome;
   }
 
   @override

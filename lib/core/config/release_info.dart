@@ -65,12 +65,16 @@
 /// the parent prompt-priority order (see
 /// `docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`, including
 /// its Reconciliation and Local closure sections). The optional local
-/// reminder (`flutter_local_notifications`/`timezone`) and the
-/// default-off analytics-consent gate (`ConsentGatedAnalyticsService`)
-/// both shipped in the same build. Live billing proof (a real Play/
-/// RevenueCat test purchase) and live reminder-delivery proof both
-/// remain BLOCKED pending a real Android device — see that ADR's
-/// Consequences.
+/// reminder (`flutter_local_notifications`/`timezone`/`flutter_timezone`)
+/// schedules against the device's actual resolved local IANA timezone,
+/// never a fixed/UTC fallback, so the user's chosen wall-clock time
+/// survives a DST transition; and the default-off analytics-consent gate
+/// (`ConsentGatedAnalyticsService`) both shipped in the same build. Live
+/// billing proof (a real Play/RevenueCat test purchase) and live
+/// reminder-delivery proof both remain BLOCKED pending a real Android
+/// device — see that ADR's Consequences. A privacy policy and a support
+/// contact remain REQUIRED BEFORE FEATURE-COMPLETE — neither has been
+/// supplied yet.
 ///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the

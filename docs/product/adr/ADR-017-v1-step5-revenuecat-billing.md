@@ -1,9 +1,11 @@
 # ADR-017 — V1 Step 5 / RevenueCat Billing Integration
 
 **Status:** Accepted (billing code, onboarding, Settings, analytics
-consent, local reminder) / **BLOCKED** (live billing proof; live reminder
-delivery proof — both require a real device this session does not have;
-see Consequences)
+consent, local reminder with correct device-local-timezone scheduling) /
+**BLOCKED** (live billing proof; live reminder delivery proof — both
+require a real device this session does not have; see Consequences) /
+**REQUIRED BEFORE FEATURE-COMPLETE** (privacy policy and support contact
+content — not yet supplied by the founder/operator)
 
 ## Context
 
@@ -191,15 +193,20 @@ No row above is LIVE TESTED or PROVIDER-SANDBOX TESTED — see Consequences.
   `config/revenuecat.local.json`; build and run on a licensed test-track
   device to perform the real purchase this ADR cannot.
 - **LIVE REMINDER DELIVERY PROOF: BLOCKED**, same root cause as billing —
-  this session has no physical/emulated Android device. Everything
-  gateway-adjacent (`LocalNotificationsReminderGateway`) is verified by
-  code inspection against the current official `flutter_local_notifications`
-  documentation, not live-tested; everything above the gateway
-  (`ReminderNotifier`'s state machine, scheduling-decision logic, prompt
-  priority) is DETERMINISTIC ADAPTER TESTED against a fake
-  `ReminderGateway`. A real device is needed to confirm actual OS
-  notification delivery, the Android 13+ permission dialog, boot-receiver
-  survival, and real DST behavior.
+  this session has no physical/emulated Android device. What IS verified
+  deterministically, without a device: the `timezone` package's own DST
+  correctness for the component `TZDateTime` constructor (real IANA
+  tzdata, real spring-forward/fall-back transitions), and
+  `LocalNotificationsReminderGateway`'s timezone-resolution branching
+  (mocking the `flutter_timezone`/`flutter_local_notifications` platform
+  channels directly — a supported `flutter_test` technique, not a
+  device). REAL DEVICE TEST REQUIRED for: actual OS notification
+  delivery and its exact rendered content, the Android 13+ permission
+  dialog's real behavior, boot-receiver survival across an actual reboot,
+  and a real timezone/DST transition experienced on a physical device
+  clock (the deterministic tests prove the mechanism is correct; they
+  cannot prove Android's alarm subsystem honors it identically on every
+  OEM skin).
 - **Production safety:** no code path outside test overrides can ever set
   `premiumEntitlementProvider`/`entitlementStatusProvider` to
   active/`true` without a verified RevenueCat entitlement. Malformed or
@@ -207,13 +214,17 @@ No row above is LIVE TESTED or PROVIDER-SANDBOX TESTED — see Consequences.
   affects Free — verified by `revenue_cat_config_test.dart` and
   `entitlement_gateway_test.dart`. Analytics consent defaults `false` and
   gates every transmission centrally — verified by
-  `analytics_consent_test.dart`.
-- **Test suite:** 560/560 passing (460 batch-2C baseline + 56 Step 5 + 12
-  first reconciliation + 32 local closure), `flutter analyze` clean.
-  Regression coverage for Batches 1/2A/2B/2C is unaffected —
-  `premiumEntitlementProvider` kept its exact overridable shape, so no
-  existing test needed to change beyond the two `ListView` viewport-scroll
-  fixes Settings' growth required.
+  `analytics_consent_test.dart`. A timezone resolution failure fails
+  closed for the reminder only (never schedules against a wrong zone)
+  and never affects Free — verified by
+  `local_notifications_reminder_gateway_test.dart`.
+- **Test suite:** 569/569 passing (460 batch-2C baseline + 56 Step 5 + 12
+  first reconciliation + 32 local closure + 8 final local timezone
+  reconciliation), `flutter analyze` clean. Regression coverage for
+  Batches 1/2A/2B/2C is unaffected — `premiumEntitlementProvider` kept
+  its exact overridable shape, so no existing test needed to change
+  beyond the two `ListView` viewport-scroll fixes Settings' growth
+  required.
 - **Privacy/data boundary:** no purchase token, receipt, or RevenueCat
   identifier is sent to Supabase/general analytics; the reminder's
   enabled/hour/minute/permission state stays local-only (SharedPreferences),
@@ -250,18 +261,24 @@ correction §35) and specify all three concretely. Corrected disposition:
   "reflection comes first... Premium invitation waits until neither is
   being presented."
 - **Settings — theme added; analytics consent added in the local-closure
-  pass below; privacy/support remain a genuine content gap.** Added a
-  real System/Light/Dark theme control (`themeModeProvider` already drove
-  `ThirtyApp`'s actual rendering; the only existing UI for it was the
-  internal `/showcase` developer route, not a product surface — this
-  batch is the first real product exposure of an already-working
-  mechanism, not a fabricated feature). Privacy-policy/support-contact
-  links remain explicitly **not** added — no such artifact (file, URL, or
-  documented address) exists anywhere in this repository. **Gate status:
-  BLOCKED ON MISSING OPERATIONAL CONTENT**, not `MISSING_AUTHORITY` — the
-  product *decision* to have them is already authoritative (§32); what's
-  missing is the actual content/config value, which only the
-  founder/operator can supply.
+  pass below; privacy/support are REQUIRED BEFORE FEATURE-COMPLETE, not
+  optional.** Added a real System/Light/Dark theme control
+  (`themeModeProvider` already drove `ThirtyApp`'s actual rendering; the
+  only existing UI for it was the internal `/showcase` developer route,
+  not a product surface — this batch is the first real product exposure
+  of an already-working mechanism, not a fabricated feature).
+  Privacy-policy/support-contact links remain explicitly **not** added —
+  no such artifact (file, URL, or documented address) exists anywhere in
+  this repository, and none is invented here. Corrected status (an
+  earlier draft of this ADR understated this as merely "blocked on
+  operational content," implying it was optional polish): §32's
+  feature-complete definition explicitly requires "privacy/support" as an
+  exit criterion — **PRIVACY POLICY: REQUIRED BEFORE FEATURE-COMPLETE —
+  CONTENT/URL NOT YET SUPPLIED; SUPPORT CONTACT: REQUIRED BEFORE
+  FEATURE-COMPLETE — CONTACT NOT YET SUPPLIED.** Only the
+  founder/operator can supply the actual values; no Settings UI row was
+  added for either, since a row pointing at nothing would itself be
+  untruthful — one can be added the moment a real URL/contact exists.
 - **Local reminder — implemented in the local-closure pass below**, once
   the founder explicitly approved the two-package dependency request
   originally recorded here.
@@ -287,7 +304,8 @@ independent of reminder permission and of Premium entitlement state — no
 code path connects any of the three.
 
 **Local reminder** (`lib/core/reminder/`, `lib/features/reminder/`):
-`flutter_local_notifications` (22.3.0) + `timezone` (0.11.1) added — the
+`flutter_local_notifications` (22.3.0) + `timezone` (0.11.1) +
+`flutter_timezone` (5.1.0) added — the
 resolved dependency-request below, approved by the founder. `ReminderGateway`
 mirrors `EntitlementGateway`'s exact seam pattern (one interface, a real
 implementation, fakes in tests); `ReminderNotifier` persists
@@ -304,23 +322,39 @@ order below; `SettingsPage` exposes on/off, the chosen time, and a
 truthful permission-state message with no repeated permission-request
 loop.
 
-**Known, documented tradeoff — UTC-anchored scheduling, not a named
-IANA zone.** `flutter_local_notifications`' own README states the
-`timezone` package cannot itself determine the device's local IANA zone
-(`flutter_timezone` or a hand-written platform channel would be needed
-for that) — a third package the founder's approval did not cover.
-Rather than silently adding a fourth dependency or shipping an incorrect
-fixed-offset workaround, `LocalNotificationsReminderGateway` schedules
-against `tz.UTC`, with the *first* occurrence always computed fresh from
-Dart's own local-timezone-correct `DateTime` arithmetic
-(`ReminderNotifier._rescheduleIfNeeded`) every time state changes or the
-app resumes. The accepted consequence: after a DST transition, the
-reminder may fire up to one hour off from the user's chosen wall-clock
-time until the app is next opened, at which point `thirty_app.dart`'s
-existing foreground-resume hook re-anchors it correctly. This is
-consistent with the frozen "no minute-perfect delivery promise," and was
-judged preferable to a third dependency for a narrow, self-correcting
-edge case.
+**Superseded — the original UTC-anchored tradeoff did not satisfy the
+frozen contract.** An earlier version of this batch scheduled against
+`tz.UTC` rather than a named IANA zone, accepting up to a one-hour drift
+around DST until the app was next opened. That was assessed as violating
+the frozen requirement for a *correct* local wall-clock reminder time,
+not merely an imperfect one — a self-correcting wrong answer is still a
+wrong answer in the interim. **Corrected:** the founder approved exactly
+one further dependency, `flutter_timezone` (5.1.0), whose sole job is
+resolving the device's actual IANA identifier (its own README is what
+first identified this as the missing piece — `timezone` cannot do this
+itself). `LocalNotificationsReminderGateway.scheduleDaily` now resolves
+`FlutterTimezone.getLocalTimezone()` fresh on every call, and schedules
+using `tz.TZDateTime`'s **component constructor** — `TZDateTime(location,
+year, month, day, hour, minute)`, not `.from(instant, location)` — which
+treats the given fields as wall-clock time *in* that location and is
+correctly DST-aware by construction (verified directly:
+`local_notifications_reminder_gateway_test.dart` proves the same
+`hour: 8` renders as physically different UTC offsets/instants either
+side of a real spring-forward and fall-back transition in
+`America/New_York`, and that the same wall-clock hour resolves to
+different absolute instants across two named zones). Resolving fresh
+(never caching a location) is also what makes a genuine device timezone
+change self-correct on the very next reschedule, no different from any
+other state change.
+
+**If timezone resolution fails, nothing is silently scheduled wrong.**
+`scheduleDaily` returns `ScheduleOutcome.timezoneUnavailable` and skips
+straight past the notification-plugin call entirely — it never falls
+back to `tz.UTC` or any assumed zone. `ReminderState.timezoneUnavailable`
+carries this into `SettingsPage`, which shows a truthful "your reminder
+time is saved, but we couldn't confirm your device's timezone" message
+rather than either claiming success or alarming the user; Free and the
+saved reminder preference are both completely unaffected.
 
 **Prompt-priority order, completed:** `reflectionPendingProvider` →
 `showReminderInvitationProvider` → `showPremiumOfferInvitationProvider`,
@@ -363,9 +397,21 @@ Premium-invitation ever renders at once — verified directly in
 > reminder (explicitly rejected by both frozen architecture and the
 > parent document — "no remote push... in V1").
 
-Both packages were explicitly approved by the founder for exactly this
-purpose (not Firebase Messaging, remote push, backend scheduling, or any
-unrelated dependency) and added — **LOCAL REMINDER V1: implemented**, with
+**Second dependency request — `flutter_timezone`, approved and
+implemented:** package `flutter_timezone` (5.1.0); required because
+`timezone`'s own README states it cannot resolve the device's local IANA
+identifier itself; simplest route because it is the package
+`flutter_local_notifications`' own documentation names for exactly this
+gap, needs no server component, and required no Android manifest changes
+beyond what was already in place; alternatives rejected for the same
+reasons as before (hand-written platform-channel code is a larger,
+riskier custom framework; a fixed-offset workaround would be a
+known-wrong answer, not a documented tradeoff).
+
+All three packages were explicitly approved by the founder for exactly
+this purpose (not Firebase Messaging, remote push, backend scheduling, or
+any unrelated dependency) and added — **LOCAL REMINDER V1: implemented**,
+with
 live delivery/permission-flow proof deferred to real-device testing (see
 Consequences).
 

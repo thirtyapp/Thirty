@@ -14,6 +14,26 @@ import 'local_notifications_reminder_gateway.dart';
 /// Every method must never throw — a scheduling/permission failure fails
 /// closed (no reminder fires) without ever affecting the rest of the app,
 /// exactly like [EntitlementGateway]'s own contract.
+///
+/// [ScheduleOutcome.timezoneUnavailable] exists specifically so a failure
+/// to resolve the device's actual local timezone is never silently
+/// swallowed into "scheduled" — the frozen contract requires the user's
+/// chosen wall-clock time to be preserved correctly across timezone/DST
+/// changes, so scheduling against a wrong/default zone would be a
+/// truthfulness defect, not an acceptable fallback.
+enum ScheduleOutcome {
+  /// Scheduled against the device's actual resolved local timezone.
+  scheduled,
+
+  /// The device's local timezone could not be resolved — nothing was
+  /// scheduled. The caller must surface this truthfully (never claim the
+  /// reminder is active) and must never fall back to a wrong timezone.
+  timezoneUnavailable,
+
+  /// Some other scheduling failure occurred.
+  failed,
+}
+
 abstract class ReminderGateway {
   /// One-time plugin/timezone-database setup. Safe to call more than
   /// once (idempotent).
@@ -35,8 +55,10 @@ abstract class ReminderGateway {
   /// non-duplicating). [firstOccurrenceLocal] is the next wall-clock
   /// moment (in the device's current local time) the reminder should
   /// fire; the underlying OS schedule then repeats daily at
-  /// [hour]:[minute] from that point on.
-  Future<void> scheduleDaily({
+  /// [hour]:[minute] — in the device's actual resolved local timezone,
+  /// preserving that wall-clock time correctly across DST — from that
+  /// point on.
+  Future<ScheduleOutcome> scheduleDaily({
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,

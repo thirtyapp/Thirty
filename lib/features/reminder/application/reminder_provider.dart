@@ -12,18 +12,22 @@ import '../../home/application/recommendation_provider.dart';
 /// already-frozen contract from `THIRTY V1 PRODUCTIZATION + COMMERCIAL
 /// REVIEW.md` §27/§28: Free, optional, local, at most one per day.
 ///
-/// [enabled] is the user's own on/off choice; [permissionGranted] is
-/// separate, live platform truth — Settings shows both, exactly as the
-/// parent authority requires ("Settings shows the actual
-/// permission/schedule state with on/off and one local time"). A user
-/// can want reminders (`enabled == true`) while the OS permission is
-/// denied; nothing here nags them about it more than once.
+/// [enabled] is the user's own on/off choice; [permissionGranted] and
+/// [timezoneUnavailable] are separate, live platform truths — Settings
+/// shows all three, exactly as the parent authority requires ("Settings
+/// shows the actual permission/schedule state with on/off and one local
+/// time"). A user can want reminders (`enabled == true`) while the OS
+/// permission is denied, or while the device's timezone momentarily
+/// can't be resolved; nothing here nags them about it more than once,
+/// and neither state is ever silently hidden behind a false "it's
+/// working" claim.
 class ReminderState {
   const ReminderState({
     required this.enabled,
     required this.hour,
     required this.minute,
     required this.permissionGranted,
+    this.timezoneUnavailable = false,
   });
 
   final bool enabled;
@@ -31,12 +35,26 @@ class ReminderState {
   final int minute;
   final bool permissionGranted;
 
-  ReminderState copyWith({bool? enabled, int? hour, int? minute, bool? permissionGranted}) {
+  /// `true` only right after a schedule attempt could not resolve the
+  /// device's actual local timezone (`ScheduleOutcome.timezoneUnavailable`
+  /// — see `local_notifications_reminder_gateway.dart`). Never persisted
+  /// — it is live platform truth, re-resolved on every reschedule
+  /// attempt, exactly like [permissionGranted].
+  final bool timezoneUnavailable;
+
+  ReminderState copyWith({
+    bool? enabled,
+    int? hour,
+    int? minute,
+    bool? permissionGranted,
+    bool? timezoneUnavailable,
+  }) {
     return ReminderState(
       enabled: enabled ?? this.enabled,
       hour: hour ?? this.hour,
       minute: minute ?? this.minute,
       permissionGranted: permissionGranted ?? this.permissionGranted,
+      timezoneUnavailable: timezoneUnavailable ?? this.timezoneUnavailable,
     );
   }
 }
@@ -146,6 +164,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
     final gateway = ref.read(reminderGatewayProvider);
     if (!state.enabled || !state.permissionGranted) {
       await gateway.cancel();
+      state = state.copyWith(timezoneUnavailable: false);
       return;
     }
 
@@ -158,10 +177,13 @@ class ReminderNotifier extends Notifier<ReminderState> {
       state.minute,
       suppressToday: todayResolved,
     );
-    await gateway.scheduleDaily(
+    final outcome = await gateway.scheduleDaily(
       firstOccurrenceLocal: firstOccurrence,
       hour: state.hour,
       minute: state.minute,
+    );
+    state = state.copyWith(
+      timezoneUnavailable: outcome == ScheduleOutcome.timezoneUnavailable,
     );
   }
 }

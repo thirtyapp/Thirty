@@ -310,10 +310,15 @@ class _ReminderRowState extends ConsumerState<_ReminderRow> {
             children: [
               Expanded(
                 child: Text(
-                  state.permissionGranted
-                      ? 'Reminds you at $timeLabel, if it fits that day.'
-                      : 'Notifications are turned off for THIRTY in '
-                            'system settings, so this won\'t fire yet.',
+                  !state.permissionGranted
+                      ? 'Notifications are turned off for THIRTY in '
+                            'system settings, so this won\'t fire yet.'
+                      : state.timezoneUnavailable
+                      ? 'Your reminder time is saved, but we couldn\'t '
+                            'confirm your device\'s timezone just now, so '
+                            'it isn\'t scheduled yet. This will resolve on '
+                            'its own the next time you open THIRTY.'
+                      : 'Reminds you at $timeLabel, if it fits that day.',
                   style: textTheme.bodySmall?.copyWith(
                     color: colors.textSecondary,
                   ),

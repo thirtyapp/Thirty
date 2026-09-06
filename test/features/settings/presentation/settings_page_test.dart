@@ -18,6 +18,7 @@ import 'package:thirty/features/settings/presentation/settings_page.dart';
 
 class _FakeReminderGateway implements ReminderGateway {
   bool permissionGranted = true;
+  ScheduleOutcome scheduleOutcome = ScheduleOutcome.scheduled;
   int scheduleCallCount = 0;
   int cancelCallCount = 0;
 
@@ -31,12 +32,13 @@ class _FakeReminderGateway implements ReminderGateway {
   Future<bool> hasPermission() async => permissionGranted;
 
   @override
-  Future<void> scheduleDaily({
+  Future<ScheduleOutcome> scheduleDaily({
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
   }) async {
     scheduleCallCount++;
+    return scheduleOutcome;
   }
 
   @override
@@ -358,4 +360,30 @@ void main() {
     expect(container.read(reminderProvider).enabled, isFalse);
     expect(reminderGateway.cancelCallCount, greaterThan(0));
   });
+
+  testWidgets(
+    'shows a truthful message when the device timezone cannot be '
+    'resolved, without ever claiming the reminder is scheduled',
+    (tester) async {
+      final reminderGateway = _FakeReminderGateway()
+        ..scheduleOutcome = ScheduleOutcome.timezoneUnavailable;
+      final (widget, container) = await _wrap(
+        gateway: _FakeEntitlementGateway(),
+        reminderGateway: reminderGateway,
+        prefs: {reminderEnabledKey: true},
+      );
+      addTearDown(container.dispose);
+      await container.read(reminderProvider.notifier).initialize();
+
+      await tester.pumpWidget(widget);
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+
+      expect(
+        find.textContaining('we couldn\'t confirm your device\'s timezone'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Reminds you at'), findsNothing);
+    },
+  );
 }
