@@ -1,0 +1,7 @@
+# The controlling frozen Premium document's SHA-256 is explicitly verified
+# against its exact bytes (see docs/product/adr/ADR-013's "Contract
+# reconciliation" note). Force LF on checkout regardless of a checking-out
+# machine's core.autocrlf, so that verified hash stays reproducible instead
+# of silently drifting via CRLF normalization (as it did on Windows before
+# this rule was added).
+docs/product/RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md text eol=lf

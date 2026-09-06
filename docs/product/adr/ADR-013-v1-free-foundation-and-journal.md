@@ -176,11 +176,16 @@ single JSON object: `{"schemaVersion": 1, "entries": [...]}`.
   "process interruption during writes" safe: a fire-and-forget write from
   an earlier step that never lands (app killed, or simply hasn't resolved
   yet) does not silently lose that day's later events.
-- **Retention cap:** at most `circleJournalRetentionDays` (365) entries are
+- **Retention cap:** at most `circleJournalMaxRecords` (366) entries are
   kept, oldest local date dropped first — the frozen recurring Premium
-  architecture's target of a rolling ~365-day history, interpreted as a
-  count cap (simpler and equally effective, since at most one entry exists
-  per local date already).
+  architecture's own two figures
+  (`RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md` §9): a
+  **365-day rolling retention window**, and a separately stated **hard cap
+  of 366 Circle records**. Both are taken literally, not reconciled into a
+  single number — the retention window is still 365 days; 366 is the
+  enforced entry-count bound. (An earlier version of this ADR and the
+  shipped Batch 1 code used 365 for both, before that document was
+  incorporated — see "Contract reconciliation" below.)
 - **Fail-safe reads:** a missing value, non-JSON string, unrecognized or
   future `schemaVersion`, or malformed `entries` list all read back as an
   empty journal rather than throwing. A single corrupt entry inside an
@@ -285,8 +290,25 @@ which alone did not catch this).
   history entry point, so this batch's functional surface stays fully
   separable from that unrelated, ongoing visual pass.
 
+## Contract reconciliation (post-Batch-1)
+
+`RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md` — the
+controlling frozen Premium document — became available to this repository
+after Batch 1 shipped and this ADR was first written. It confirms Batch 1's
+scope directly (§37: "execute the existing Batch 1 — Free Circle: useful
+action and reliable daily state — with the narrow prospective-journal
+prerequisite... Preserve the current Circle WIP") and identifies one
+numeric discrepancy: its §9 "Local history contract" states the journal's
+hard cap as **366** Circle records, not the 365 Batch 1 shipped
+(`circleJournalRetentionDays`, since renamed `circleJournalMaxRecords`).
+The retention *window* remains 365 days in both — only the enforced
+record-count cap changed, corrected in a narrow follow-up commit. No other
+discrepancy between this document and the shipped Batch 1 implementation
+was found.
+
 ## Related documents
 
+- [RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md](../RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md) — the controlling frozen Premium document; authoritative above this ADR for Premium product scope
 - [PREMIUM_STRATEGY.md](../PREMIUM_STRATEGY.md)
 - [ADR-007 — Premium Never Blocks the Core Loop](ADR-007-premium-never-blocks-the-core-loop.md)
 - [ADR-010 — Circle Closed Is Not Verified Activity Completion](ADR-010-circle-closed-not-completion.md)

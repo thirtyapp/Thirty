@@ -225,10 +225,21 @@ const circleJournalKey = 'circle_journal_v1';
 /// read/write path — never as an incidental side effect.
 const circleJournalSchemaVersion = 1;
 
-/// The rolling retention cap: at most this many of the most recent local
-/// dates are kept, oldest dropped first. Matches the frozen recurring
-/// Premium architecture's target of a rolling 365-day history.
-const circleJournalRetentionDays = 365;
+/// The hard cap on retained journal entries: at most this many of the most
+/// recent local dates are kept, oldest dropped first.
+///
+/// The frozen recurring Premium architecture
+/// (`docs/product/RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md`
+/// §9, "Local history contract") states these as two separate figures: a
+/// **365-day rolling retention window**, and a **hard cap of 366 Circle
+/// records**. This constant is the latter — the actual enforced bound — not
+/// a "366 days" reinterpretation of the former; the retention window
+/// remains 365 days. One entry exists per local date, so in ordinary
+/// operation (no missed days) this cap is reached one day after the
+/// 365-day window itself would have started dropping entries — the source
+/// document does not explain the one-entry difference further, and none is
+/// invented here.
+const circleJournalMaxRecords = 366;
 
 /// Reads, writes, and bounds THIRTY's prospective local Circle journal.
 ///
@@ -250,7 +261,7 @@ const circleJournalRetentionDays = 365;
 ///
 /// One entry per local date, upserted as that date's Circle progresses
 /// through [recordShown]/[recordStarted]/[recordClosed]/[recordAttempt]/
-/// [recordUsefulness] — never more than [circleJournalRetentionDays]
+/// [recordUsefulness] — never more than [circleJournalMaxRecords]
 /// entries kept at once.
 class CircleJournalRepository {
   CircleJournalRepository(this._prefs);
@@ -443,8 +454,8 @@ class CircleJournalRepository {
 
   Future<void> _save(List<CircleJournalEntry> entries) async {
     entries.sort((a, b) => a.localDate.compareTo(b.localDate));
-    final capped = entries.length > circleJournalRetentionDays
-        ? entries.sublist(entries.length - circleJournalRetentionDays)
+    final capped = entries.length > circleJournalMaxRecords
+        ? entries.sublist(entries.length - circleJournalMaxRecords)
         : entries;
 
     final json = jsonEncode({

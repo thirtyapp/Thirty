@@ -187,11 +187,11 @@ void main() {
     });
 
     test(
-      'retention cap: never keeps more than circleJournalRetentionDays '
+      'retention cap: never keeps more than circleJournalMaxRecords '
       'entries, dropping the oldest first',
       () async {
         final repo = CircleJournalRepository(await _prefsWith({}));
-        final totalDays = circleJournalRetentionDays + 5;
+        final totalDays = circleJournalMaxRecords + 5;
         final base = DateTime(2025, 1, 1);
 
         for (var i = 0; i < totalDays; i++) {
@@ -210,7 +210,7 @@ void main() {
         }
 
         final entries = repo.readAll();
-        expect(entries.length, circleJournalRetentionDays);
+        expect(entries.length, circleJournalMaxRecords);
         // The oldest 5 days were dropped — the earliest surviving entry is
         // day index 5 (base + 5 days).
         final expectedOldest = base.add(const Duration(days: 5));

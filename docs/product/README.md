@@ -15,8 +15,9 @@ Lees in deze volgorde voor het volledige beeld:
 7. **[product-discovery.md](product-discovery.md)** — wie de eerste gebruiker is, welke ervaring wordt nagestreefd, en welke vragen daarover nog open staan.
 8. **[onboarding-principles.md](onboarding-principles.md)** — de vastgestelde, onboarding-specifieke principes die uit Product Discovery zijn gedestilleerd.
 9. **[PREMIUM_STRATEGY.md](PREMIUM_STRATEGY.md)** — de commerciële strategie achter Premium: waarom iemand betaalt, in welke prioriteitsvolgorde, en de toetsingsvraag voor elk toekomstig Premium-idee.
-10. **[recommendation-mvp-v0.md](recommendation-mvp-v0.md)** — de eerste concrete, geïmplementeerde toepassing van recommendation-philosophy.md en decision-framework.md: de drie Intentions, de goedgekeurde activiteiten, en het deterministische selectiemechanisme van Recommendation MVP v0.
-11. **[adr/](adr/)** — de losse, gedateerde beslissingen die aan bovenstaande documenten ten grondslag liggen.
+10. **[RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md](RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md)** — het bevroren, controlerende contract voor de V1 Premium-implementatie zelf: de exacte Plans/Coach/Insights-scope, het lokale journaal-contract, en het bevroren maandelijkse-abonnementsmodel. Bouwt voort op PREMIUM_STRATEGY.md's prioriteitsvolgorde zonder die tegen te spreken; is leidend voor elke toekomstige V1-implementatiebatch die Plans, Coach, Insights of het journaal raakt.
+11. **[recommendation-mvp-v0.md](recommendation-mvp-v0.md)** — de eerste concrete, geïmplementeerde toepassing van recommendation-philosophy.md en decision-framework.md: de drie Intentions, de goedgekeurde activiteiten, en het deterministische selectiemechanisme van Recommendation MVP v0.
+12. **[adr/](adr/)** — de losse, gedateerde beslissingen die aan bovenstaande documenten ten grondslag liggen.
 
 ## Wie is leidend bij overlap
 
@@ -31,6 +32,7 @@ Lees in deze volgorde voor het volledige beeld:
 | Wie is de eerste gebruiker, wat is nog onbeslist? | [product-discovery.md](product-discovery.md) |
 | Wat is de vastgestelde onboarding-aanpak? | [onboarding-principles.md](onboarding-principles.md) |
 | Waarom is Premium commercieel de moeite waard, en in welke volgorde? | [PREMIUM_STRATEGY.md](PREMIUM_STRATEGY.md) |
+| Wat is de exacte, bevroren V1-scope van Circle Plans/Coach/Insights, het journaal-contract en het abonnementsmodel? | [RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md](RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md) |
 | Waarom is een specifiek besluit genomen, en wanneer? | de betreffende [ADR](adr/) |
 
 Bij elk conflict geldt: **[VISION.md](../VISION.md) wint altijd** — geen enkel ander document mag de visie tegenspreken. Voor toon en emotionele ervaring geldt hetzelfde voorrangsrecht voor [BRAND_BOOK.md](../BRAND_BOOK.md): de documenten in deze map herhalen de brand-principes niet, ze verwijzen ernaar.
