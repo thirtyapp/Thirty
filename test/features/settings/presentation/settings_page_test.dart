@@ -3,13 +3,47 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:thirty/core/analytics/analytics_consent.dart';
 import 'package:thirty/core/premium/entitlement_gateway.dart';
 import 'package:thirty/core/premium/entitlement_status.dart';
 import 'package:thirty/core/premium/premium_access.dart';
+import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/providers/theme_mode_provider.dart';
+import 'package:thirty/core/reminder/reminder_gateway.dart';
 import 'package:thirty/core/theme/app_theme.dart';
+import 'package:thirty/features/reminder/application/reminder_provider.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
+
+class _FakeReminderGateway implements ReminderGateway {
+  bool permissionGranted = true;
+  int scheduleCallCount = 0;
+  int cancelCallCount = 0;
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  Future<bool> requestPermission() async => permissionGranted;
+
+  @override
+  Future<bool> hasPermission() async => permissionGranted;
+
+  @override
+  Future<void> scheduleDaily({
+    required DateTime firstOccurrenceLocal,
+    required int hour,
+    required int minute,
+  }) async {
+    scheduleCallCount++;
+  }
+
+  @override
+  Future<void> cancel() async {
+    cancelCallCount++;
+  }
+}
 
 class _FakeEntitlementGateway implements EntitlementGateway {
   _FakeEntitlementGateway({this.initialStatus = EntitlementStatus.inactive});
@@ -39,9 +73,19 @@ class _FakeEntitlementGateway implements EntitlementGateway {
 
 Future<(Widget, ProviderContainer)> _wrap({
   required _FakeEntitlementGateway gateway,
+  _FakeReminderGateway? reminderGateway,
+  Map<String, Object> prefs = const {},
 }) async {
+  SharedPreferences.setMockInitialValues(prefs);
+  final resolvedPrefs = await SharedPreferences.getInstance();
   final container = ProviderContainer(
-    overrides: [entitlementGatewayProvider.overrideWithValue(gateway)],
+    overrides: [
+      entitlementGatewayProvider.overrideWithValue(gateway),
+      sharedPreferencesProvider.overrideWithValue(resolvedPrefs),
+      reminderGatewayProvider.overrideWithValue(
+        reminderGateway ?? _FakeReminderGateway(),
+      ),
+    ],
   );
   await container.read(entitlementStatusProvider.notifier).initialize();
   final widget = UncontrolledProviderScope(
@@ -188,6 +232,13 @@ void main() {
 
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
+    // The Settings list has grown past the default test viewport + cache
+    // extent since Appearance/Analytics were added — scroll to bring this
+    // card into the mounted range before asserting on it.
+    await tester.scrollUntilVisible(
+      find.text('Your Circle history — view, export or delete'),
+      200,
+    );
 
     expect(
       find.text('Your Circle history — view, export or delete'),
@@ -217,4 +268,94 @@ void main() {
       expect(container.read(themeModeProvider), ThemeMode.dark);
     },
   );
+
+  testWidgets(
+    'exposes an analytics consent toggle, defaulting to off and updating '
+    'the real analyticsConsentProvider the app reads before transmitting '
+    'anything',
+    (tester) async {
+      final gateway = _FakeEntitlementGateway();
+      final (widget, container) = await _wrap(gateway: gateway);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(widget);
+      await tester.pumpAndSettle();
+
+      expect(container.read(analyticsConsentProvider), isFalse);
+      expect(find.text('Share anonymous usage data'), findsOneWidget);
+
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      expect(container.read(analyticsConsentProvider), isTrue);
+    },
+  );
+
+  testWidgets(
+    'reminder off by default; enabling it opens the time picker and '
+    'requests permission only at that point',
+    (tester) async {
+      final reminderGateway = _FakeReminderGateway();
+      final (widget, container) = await _wrap(
+        gateway: _FakeEntitlementGateway(),
+        reminderGateway: reminderGateway,
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(widget);
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+
+      expect(container.read(reminderProvider).enabled, isFalse);
+
+      await tester.tap(find.byType(Switch).last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(container.read(reminderProvider).enabled, isTrue);
+      expect(reminderGateway.scheduleCallCount, greaterThan(0));
+    },
+  );
+
+  testWidgets(
+    'shows a truthful message when permission is denied, without a '
+    'repeated permission-request loop',
+    (tester) async {
+      final reminderGateway = _FakeReminderGateway()..permissionGranted = false;
+      final (widget, container) = await _wrap(
+        gateway: _FakeEntitlementGateway(),
+        reminderGateway: reminderGateway,
+        prefs: {reminderEnabledKey: true},
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(widget);
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+
+      expect(
+        find.textContaining('Notifications are turned off for THIRTY'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('disabling the reminder cancels pending work', (tester) async {
+    final reminderGateway = _FakeReminderGateway();
+    final (widget, container) = await _wrap(
+      gateway: _FakeEntitlementGateway(),
+      reminderGateway: reminderGateway,
+      prefs: {reminderEnabledKey: true},
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+
+    await tester.tap(find.byType(Switch).last);
+    await tester.pumpAndSettle();
+
+    expect(container.read(reminderProvider).enabled, isFalse);
+    expect(reminderGateway.cancelCallCount, greaterThan(0));
+  });
 }

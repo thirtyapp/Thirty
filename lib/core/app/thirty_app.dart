@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/reminder/application/reminder_provider.dart';
 import '../analytics/analytics_event_type.dart';
 import '../analytics/analytics_service.dart';
 import '../premium/premium_access.dart';
@@ -60,6 +61,12 @@ class _ThirtyAppState extends ConsumerState<ThirtyApp>
     // this must never block resume, and failures already resolve to
     // `EntitlementStatus.unavailable` rather than throwing.
     unawaited(ref.read(entitlementStatusProvider.notifier).initialize());
+    // Step 5 local closure: re-anchor the reminder schedule to the
+    // device's current local time/timezone and re-check the live OS
+    // permission on every resume — see `ReminderNotifier.initialize`'s
+    // own doc comment and `LocalNotificationsReminderGateway`'s "known
+    // limitation" note on why this specific resume hook matters for DST.
+    unawaited(ref.read(reminderProvider.notifier).initialize());
   }
 
   /// "First observed app use" (never "install" — this app cannot observe

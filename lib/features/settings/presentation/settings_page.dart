@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/analytics/analytics_consent.dart';
 import '../../../core/premium/entitlement_gateway.dart';
 import '../../../core/premium/entitlement_status.dart';
 import '../../../core/premium/premium_access.dart';
@@ -10,6 +11,7 @@ import '../../../core/providers/theme_mode_provider.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
+import '../../reminder/application/reminder_provider.dart';
 
 /// THIRTY's Settings surface — Step 5
 /// (`docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`,
@@ -25,16 +27,18 @@ import '../../../core/widgets/thirty_card.dart';
 ///   `ThirtyApp`'s real `MaterialApp.router`; before this screen, the
 ///   only place a user could reach it was the internal `/showcase`
 ///   developer route, not a real product surface;
+/// - analytics consent (`AnalyticsConsentNotifier` — off by default, the
+///   sole gate `analyticsServiceProvider` now checks before transmitting
+///   anything);
+/// - the local reminder's on/off state, permission state and one time
+///   (`ReminderNotifier` — parent §27/§28), reusing the same
+///   `showTimePicker` flow as `ReminderInvitationCard`;
 /// - the existing Circle-history data controls (export/delete).
 ///
-/// Deliberately **not** included, because no authoritative value or
-/// working consent model exists yet to back it truthfully — fabricating
-/// any of these would be worse than omitting them: a local reminder
-/// on/off control (BLOCKED on the dependency request in ADR-017's
-/// reconciliation), an analytics choice toggle (no consent model exists
-/// in code — analytics currently always fires), and privacy/support
-/// links (no privacy policy or support contact exists anywhere in this
-/// repository). See the Step 5 reconciliation report for the exact gap.
+/// Deliberately **not** included, because no authoritative value exists
+/// anywhere in this repository to back it truthfully — fabricating
+/// either would be worse than omitting them: a support contact and a
+/// privacy-policy link.
 ///
 /// `url_launcher` here is already present transitively via
 /// `supabase_flutter`'s own dependency graph — not a new package added for
@@ -151,6 +155,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             const SizedBox(height: AppSpacing.s),
             ThirtyCard(child: _ThemeModeRow(themeMode: ref.watch(themeModeProvider))),
             const SizedBox(height: AppSpacing.m),
+            Text('Analytics', style: textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.s),
+            ThirtyCard(child: _AnalyticsConsentRow()),
+            const SizedBox(height: AppSpacing.m),
+            Text('Reminder', style: textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.s),
+            ThirtyCard(child: _ReminderRow(state: ref.watch(reminderProvider))),
+            const SizedBox(height: AppSpacing.m),
             Text('Your data', style: textTheme.titleMedium),
             const SizedBox(height: AppSpacing.s),
             ThirtyCard(
@@ -195,6 +207,126 @@ class _ThemeModeRow extends ConsumerWidget {
             .read(themeModeProvider.notifier)
             .setThemeMode(selection.first),
       ),
+    );
+  }
+}
+
+class _AnalyticsConsentRow extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final consent = ref.watch(analyticsConsentProvider);
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Share anonymous usage data', style: textTheme.bodyMedium),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Off by default. Helps us understand what to improve. '
+                'Your Circle history is never included.',
+                style: textTheme.bodySmall?.copyWith(
+                  color: colors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Switch(
+          value: consent,
+          onChanged: (value) =>
+              ref.read(analyticsConsentProvider.notifier).setConsent(value),
+        ),
+      ],
+    );
+  }
+}
+
+class _ReminderRow extends ConsumerStatefulWidget {
+  const _ReminderRow({required this.state});
+
+  final ReminderState state;
+
+  @override
+  ConsumerState<_ReminderRow> createState() => _ReminderRowState();
+}
+
+class _ReminderRowState extends ConsumerState<_ReminderRow> {
+  Future<void> _pickTimeAndEnable() async {
+    final initial = TimeOfDay(hour: widget.state.hour, minute: widget.state.minute);
+    final picked = await showTimePicker(context: context, initialTime: initial);
+    if (picked == null || !mounted) return;
+    await ref
+        .read(reminderProvider.notifier)
+        .enable(hour: picked.hour, minute: picked.minute);
+  }
+
+  Future<void> _pickTimeAndUpdate() async {
+    final initial = TimeOfDay(hour: widget.state.hour, minute: widget.state.minute);
+    final picked = await showTimePicker(context: context, initialTime: initial);
+    if (picked == null || !mounted) return;
+    await ref
+        .read(reminderProvider.notifier)
+        .setTime(hour: picked.hour, minute: picked.minute);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final state = widget.state;
+    final timeLabel = TimeOfDay(
+      hour: state.hour,
+      minute: state.minute,
+    ).format(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text('Daily reminder', style: textTheme.bodyMedium),
+            ),
+            Switch(
+              value: state.enabled,
+              onChanged: (value) async {
+                if (value) {
+                  await _pickTimeAndEnable();
+                } else {
+                  await ref.read(reminderProvider.notifier).disable();
+                }
+              },
+            ),
+          ],
+        ),
+        if (state.enabled) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  state.permissionGranted
+                      ? 'Reminds you at $timeLabel, if it fits that day.'
+                      : 'Notifications are turned off for THIRTY in '
+                            'system settings, so this won\'t fire yet.',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: _pickTimeAndUpdate,
+                child: const Text('Change time'),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 }

@@ -2,6 +2,20 @@
     <!-- Step 5 — required by Google Play Billing / the RevenueCat SDK
          (`purchases_flutter`) to process in-app purchases at all. -->
     <uses-permission android:name="com.android.vending.BILLING" />
+    <!-- Step 5 local closure — required by flutter_local_notifications for
+         the optional local reminder (frozen architecture §17/parent §27).
+         Deliberately NOT requesting SCHEDULE_EXACT_ALARM/USE_EXACT_ALARM —
+         the reminder is inexact/non-urgent by design
+         (`AndroidScheduleMode.inexactAllowWhileIdle` in
+         `local_notifications_reminder_gateway.dart`), so no exact-alarm
+         special access is ever needed. POST_NOTIFICATIONS/VIBRATE are no
+         longer auto-merged by the plugin from v16 onward and must be
+         declared explicitly; RECEIVE_BOOT_COMPLETED lets the boot receiver
+         below re-arm the reminder after a reboot (Android clears all
+         AlarmManager alarms on reboot). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- ADR-013 §7 — THIRTY's Circle journal and recommendation state are
          device-local only, with no account or cloud-sync system (AGENTS.md
          §5). android:allowBackup defaults to true, which would otherwise
@@ -43,6 +57,22 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Step 5 local closure — flutter_local_notifications' own
+             receivers: one fires the scheduled reminder itself, the other
+             re-arms it after a reboot/app update. No exported="true", no
+             action-button receiver and no foreground service are declared
+             — this app uses neither. -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+            </intent-filter>
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

@@ -9,6 +9,7 @@ import 'core/app/thirty_app.dart';
 import 'core/config/supabase_config.dart';
 import 'core/premium/premium_access.dart';
 import 'core/providers/shared_preferences_provider.dart';
+import 'features/reminder/application/reminder_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,6 +48,10 @@ Future<void> main() async {
   // resolves to `unavailable` on any configuration/SDK failure rather
   // than throwing, so this is never an unhandled error either.
   unawaited(container.read(entitlementStatusProvider.notifier).initialize());
+  // Same fire-and-forget discipline: a reminder-scheduling failure must
+  // never block the first frame or affect the rest of the app (parent
+  // §27's own failure behavior — see `ReminderGateway`'s doc comment).
+  unawaited(container.read(reminderProvider.notifier).initialize());
 
   runApp(
     UncontrolledProviderScope(container: container, child: const ThirtyApp()),

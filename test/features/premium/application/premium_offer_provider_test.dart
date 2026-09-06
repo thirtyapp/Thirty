@@ -10,13 +10,21 @@ import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/presentation/widgets/action_report_prompt.dart';
 import 'package:thirty/features/premium/application/premium_offer_provider.dart';
+import 'package:thirty/features/reminder/application/reminder_invitation_provider.dart';
 
 void main() {
   Future<ProviderContainer> containerWith({
     bool entitled = false,
     Map<String, Object> extraPrefs = const {},
   }) async {
-    SharedPreferences.setMockInitialValues(extraPrefs);
+    // Pre-mark the reminder invitation as already shown by default — these
+    // tests exercise Premium-invitation eligibility specifically; the
+    // reminder-invitation/Premium-invitation interaction itself has its
+    // own dedicated test below.
+    SharedPreferences.setMockInitialValues({
+      reminderInvitationShownKey: true,
+      ...extraPrefs,
+    });
     final prefs = await SharedPreferences.getInstance();
     final container = ProviderContainer(
       overrides: [
@@ -153,6 +161,23 @@ void main() {
 
         expect(container.read(reflectionPendingProvider), isFalse);
         expect(container.read(showPremiumOfferInvitationProvider), isTrue);
+      },
+    );
+
+    test(
+      'never true while the reminder invitation is currently eligible — '
+      'prompt-priority rule (parent §28): reminder invitation before '
+      'Premium invitation',
+      () async {
+        final container = await containerWith(
+          extraPrefs: {reminderInvitationShownKey: false},
+        );
+        addTearDown(container.dispose);
+        await closeOneCircle(container, '2026-09-01');
+        await closeOneCircle(container, '2026-09-02');
+
+        expect(container.read(showReminderInvitationProvider), isTrue);
+        expect(container.read(showPremiumOfferInvitationProvider), isFalse);
       },
     );
   });

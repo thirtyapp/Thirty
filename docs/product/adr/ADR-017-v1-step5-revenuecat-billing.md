@@ -1,8 +1,9 @@
 # ADR-017 — V1 Step 5 / RevenueCat Billing Integration
 
-**Status:** Accepted (billing code, onboarding, Settings reconciliation) /
-**BLOCKED** (live billing proof; local reminder pending dependency
-approval — see Consequences and Reconciliation)
+**Status:** Accepted (billing code, onboarding, Settings, analytics
+consent, local reminder) / **BLOCKED** (live billing proof; live reminder
+delivery proof — both require a real device this session does not have;
+see Consequences)
 
 ## Context
 
@@ -189,23 +190,36 @@ No row above is LIVE TESTED or PROVIDER-SANDBOX TESTED — see Consequences.
   supply `REVENUECAT_ANDROID_API_KEY`/`REVENUECAT_ENTITLEMENT_ID` via
   `config/revenuecat.local.json`; build and run on a licensed test-track
   device to perform the real purchase this ADR cannot.
-- **Reminders remain unbuilt, blocked on a dependency decision** — see
-  Reconciliation below, not a documentation gap.
+- **LIVE REMINDER DELIVERY PROOF: BLOCKED**, same root cause as billing —
+  this session has no physical/emulated Android device. Everything
+  gateway-adjacent (`LocalNotificationsReminderGateway`) is verified by
+  code inspection against the current official `flutter_local_notifications`
+  documentation, not live-tested; everything above the gateway
+  (`ReminderNotifier`'s state machine, scheduling-decision logic, prompt
+  priority) is DETERMINISTIC ADAPTER TESTED against a fake
+  `ReminderGateway`. A real device is needed to confirm actual OS
+  notification delivery, the Android 13+ permission dialog, boot-receiver
+  survival, and real DST behavior.
 - **Production safety:** no code path outside test overrides can ever set
   `premiumEntitlementProvider`/`entitlementStatusProvider` to
   active/`true` without a verified RevenueCat entitlement. Malformed or
   missing billing configuration fails closed for Premium and never
   affects Free — verified by `revenue_cat_config_test.dart` and
-  `entitlement_gateway_test.dart`.
-- **Test suite:** 528/528 passing (460 batch-2C baseline + 56 Step 5 +
-  12 reconciliation), `flutter analyze` clean. Regression coverage for
-  Batches 1/2A/2B/2C is unaffected — `premiumEntitlementProvider` kept
-  its exact overridable shape, so no existing test needed to change.
+  `entitlement_gateway_test.dart`. Analytics consent defaults `false` and
+  gates every transmission centrally — verified by
+  `analytics_consent_test.dart`.
+- **Test suite:** 560/560 passing (460 batch-2C baseline + 56 Step 5 + 12
+  first reconciliation + 32 local closure), `flutter analyze` clean.
+  Regression coverage for Batches 1/2A/2B/2C is unaffected —
+  `premiumEntitlementProvider` kept its exact overridable shape, so no
+  existing test needed to change beyond the two `ListView` viewport-scroll
+  fixes Settings' growth required.
 - **Privacy/data boundary:** no purchase token, receipt, or RevenueCat
-  identifier is sent to Supabase/general analytics; none of this batch's
-  new code touches the analytics service at all (frozen architecture
-  §23 — funnel events deferred to the measurement batch, not required
-  for Step 5 acceptance).
+  identifier is sent to Supabase/general analytics; the reminder's
+  enabled/hour/minute/permission state stays local-only (SharedPreferences),
+  never transmitted anywhere. Consent-gated analytics still carries no new
+  payload fields from this batch (frozen architecture §23 — funnel events
+  deferred to the measurement batch, not required for Step 5 acceptance).
 
 ## Reconciliation (targeted authority correction, same batch)
 
@@ -235,43 +249,86 @@ correction §35) and specify all three concretely. Corrected disposition:
   never appears while a reflection question is pending, exactly matching
   "reflection comes first... Premium invitation waits until neither is
   being presented."
-- **Settings — reconciled to the actual V1 minimum, not fully complete.**
-  Added a real System/Light/Dark theme control
-  (`themeModeProvider` already drove `ThirtyApp`'s actual rendering; the
-  only existing UI for it was the internal `/showcase` developer route,
-  not a product surface — this batch is the first real product exposure
-  of an already-working mechanism, not a fabricated feature). Explicitly
-  **not** added, because no authoritative value or working mechanism
-  exists to back it truthfully: an analytics consent toggle (no consent
-  model exists anywhere in code — `SupabaseAnalyticsService.track` always
-  fires unconditionally), and privacy-policy/support-contact links (no
-  such artifact — file, URL, or documented address — exists anywhere in
-  this repository). **Gate status for these two:
-  BLOCKED ON MISSING OPERATIONAL CONTENT**, not re-invented as
-  `MISSING_AUTHORITY` — the product *decision* to have them is already
-  authoritative (§32); what's missing is the actual content/config value,
-  which only the founder/operator can supply.
-- **Local reminder — BLOCKED ON DEPENDENCY APPROVAL, not missing
-  authority.** §27/§28 fully specify the policy (opt-in after first
-  closed Circle, inexact local scheduling, on/off + one time in Settings,
-  calm non-punitive copy, no permission request at cold launch). What
-  blocks implementation is purely technical: no package capable of
-  scheduling/posting a real Android local notification exists anywhere
-  in the resolved dependency graph (confirmed by inspecting
-  `pubspec.lock` — no `flutter_local_notifications`, no
-  `permission_handler`, no `timezone`, no equivalent), and the founder's
-  standing dependency-exception authorization (this ADR's Decision §1)
-  names `purchases_flutter` only. Implementing real OS-level scheduling
-  and runtime notification-permission requests without a plugin would
-  mean hand-writing native Android platform-channel code — a bespoke
-  framework this batch's own governing instructions explicitly discourage
-  in preference to an established package. A reminder toggle with no
-  real scheduling behind it would be a non-functional, half-finished
-  feature presented as working, which is worse than not building it — so
-  none of the reminder UI/state model was built pending the explicit
-  dependency request below.
+- **Settings — theme added; analytics consent added in the local-closure
+  pass below; privacy/support remain a genuine content gap.** Added a
+  real System/Light/Dark theme control (`themeModeProvider` already drove
+  `ThirtyApp`'s actual rendering; the only existing UI for it was the
+  internal `/showcase` developer route, not a product surface — this
+  batch is the first real product exposure of an already-working
+  mechanism, not a fabricated feature). Privacy-policy/support-contact
+  links remain explicitly **not** added — no such artifact (file, URL, or
+  documented address) exists anywhere in this repository. **Gate status:
+  BLOCKED ON MISSING OPERATIONAL CONTENT**, not `MISSING_AUTHORITY` — the
+  product *decision* to have them is already authoritative (§32); what's
+  missing is the actual content/config value, which only the
+  founder/operator can supply.
+- **Local reminder — implemented in the local-closure pass below**, once
+  the founder explicitly approved the two-package dependency request
+  originally recorded here.
 
-**REMINDER DEPENDENCY REQUEST**
+## Local closure (analytics consent + local reminder, same batch)
+
+Founder approval was subsequently granted for exactly two additional
+dependencies (`flutter_local_notifications`, `timezone`) for the
+already-frozen local reminder only, and a further contract correction was
+made: analytics consent is **not** a mere content/operational gap — the
+parent authority (§28) requires an explicit local opt-in gate, which is a
+real code change, not a missing external value. Both are now implemented.
+
+**Analytics consent** (`analytics_consent.dart`): `analyticsConsentProvider`
+defaults to `false` and is the sole gate `analyticsServiceProvider`
+(`analytics_service.dart`'s new `ConsentGatedAnalyticsService` wrapper)
+checks before ever calling `SupabaseAnalyticsService.track` — every
+existing and future call site goes through this one provider, so none
+can accidentally bypass it. No queued/backfilled pre-consent events exist
+to flush once enabled; disabling never touches journal/Plan/Coach/Insight
+state. A Settings toggle ("Share anonymous usage data") exposes it,
+independent of reminder permission and of Premium entitlement state — no
+code path connects any of the three.
+
+**Local reminder** (`lib/core/reminder/`, `lib/features/reminder/`):
+`flutter_local_notifications` (22.3.0) + `timezone` (0.11.1) added — the
+resolved dependency-request below, approved by the founder. `ReminderGateway`
+mirrors `EntitlementGateway`'s exact seam pattern (one interface, a real
+implementation, fakes in tests); `ReminderNotifier` persists
+enabled/hour/minute via `SharedPreferences`, tracks live OS permission
+state separately (`ReminderState.permissionGranted`), and reacts to
+`recommendationProvider`'s status changes via `ref.listen` inside
+`build()` to re-anchor the schedule whenever today's Circle actually
+starts or closes (§27: "closing/starting today suppresses an unnecessary
+later 'start' reminder"). A single canonical notification id is always
+cancelled before rescheduling, so no duplicate can ever exist. The quiet
+one-time invitation (`ReminderInvitationCard`) appears after the first
+closed Circle, gated on `reflectionPendingProvider` per the prompt-priority
+order below; `SettingsPage` exposes on/off, the chosen time, and a
+truthful permission-state message with no repeated permission-request
+loop.
+
+**Known, documented tradeoff — UTC-anchored scheduling, not a named
+IANA zone.** `flutter_local_notifications`' own README states the
+`timezone` package cannot itself determine the device's local IANA zone
+(`flutter_timezone` or a hand-written platform channel would be needed
+for that) — a third package the founder's approval did not cover.
+Rather than silently adding a fourth dependency or shipping an incorrect
+fixed-offset workaround, `LocalNotificationsReminderGateway` schedules
+against `tz.UTC`, with the *first* occurrence always computed fresh from
+Dart's own local-timezone-correct `DateTime` arithmetic
+(`ReminderNotifier._rescheduleIfNeeded`) every time state changes or the
+app resumes. The accepted consequence: after a DST transition, the
+reminder may fire up to one hour off from the user's chosen wall-clock
+time until the app is next opened, at which point `thirty_app.dart`'s
+existing foreground-resume hook re-anchors it correctly. This is
+consistent with the frozen "no minute-perfect delivery promise," and was
+judged preferable to a third dependency for a narrow, self-correcting
+edge case.
+
+**Prompt-priority order, completed:** `reflectionPendingProvider` →
+`showReminderInvitationProvider` → `showPremiumOfferInvitationProvider`,
+each gating the next, so at most one of reflection/reminder-invitation/
+Premium-invitation ever renders at once — verified directly in
+`premium_offer_provider_test.dart`.
+
+**REMINDER DEPENDENCY REQUEST — approved, implemented as specified**
 
 > **PACKAGE:** `flutter_local_notifications` (plus its `timezone`
 > dependency, pulled in transitively for `zonedSchedule`).
@@ -306,8 +363,11 @@ correction §35) and specify all three concretely. Corrected disposition:
 > reminder (explicitly rejected by both frozen architecture and the
 > parent document — "no remote push... in V1").
 
-No package is authorized by this document. **LOCAL REMINDER V1 remains
-BLOCKED pending founder approval of the request above.**
+Both packages were explicitly approved by the founder for exactly this
+purpose (not Firebase Messaging, remote push, backend scheduling, or any
+unrelated dependency) and added — **LOCAL REMINDER V1: implemented**, with
+live delivery/permission-flow proof deferred to real-device testing (see
+Consequences).
 
 ## Related documents
 

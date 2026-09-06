@@ -57,17 +57,20 @@
 /// build under which `premiumEntitlementProvider` stopped being a
 /// hardcoded pre-billing seam and started reading verified RevenueCat
 /// entitlement state; the `/premium` offer and `/settings` (status,
-/// upgrade, restore, manage subscription, theme) surfaces shipped; the
-/// one quiet post-second-Circle Premium invitation shipped, correctly
-/// suppressed while a reflection question is pending; and the one-time
-/// first-use onboarding explanation shipped (see
+/// upgrade, restore, manage subscription, theme, analytics consent,
+/// reminder) surfaces shipped; the one-time first-use onboarding
+/// explanation shipped; and the quiet post-second-Circle Premium
+/// invitation and the quiet post-first-Circle reminder invitation
+/// shipped, each correctly deferring to reflection and to each other per
+/// the parent prompt-priority order (see
 /// `docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`, including
-/// its Reconciliation section). Live billing proof (a real Play/
-/// RevenueCat test purchase) remains BLOCKED pending owner-side
-/// RevenueCat/Google Play configuration. The local reminder remains
-/// BLOCKED pending founder approval of the `flutter_local_notifications`
-/// dependency request in that ADR — its product policy is already
-/// authoritative; only the scheduling package is missing.
+/// its Reconciliation and Local closure sections). The optional local
+/// reminder (`flutter_local_notifications`/`timezone`) and the
+/// default-off analytics-consent gate (`ConsentGatedAnalyticsService`)
+/// both shipped in the same build. Live billing proof (a real Play/
+/// RevenueCat test purchase) and live reminder-delivery proof both
+/// remain BLOCKED pending a real Android device — see that ADR's
+/// Consequences.
 ///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the

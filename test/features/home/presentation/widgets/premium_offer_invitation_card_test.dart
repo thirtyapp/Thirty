@@ -10,9 +10,13 @@ import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/premium/application/premium_offer_provider.dart';
 import 'package:thirty/features/premium/presentation/widgets/premium_offer_invitation_card.dart';
+import 'package:thirty/features/reminder/application/reminder_invitation_provider.dart';
 
 Future<(Widget, ProviderContainer)> _wrap({bool entitled = false}) async {
-  SharedPreferences.setMockInitialValues({});
+  // Pre-mark the reminder invitation as already shown — this file tests
+  // the Premium invitation specifically; their interaction has its own
+  // dedicated coverage in premium_offer_provider_test.dart.
+  SharedPreferences.setMockInitialValues({reminderInvitationShownKey: true});
   final prefs = await SharedPreferences.getInstance();
   final container = ProviderContainer(
     overrides: [

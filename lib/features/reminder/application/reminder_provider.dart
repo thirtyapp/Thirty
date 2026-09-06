@@ -1,0 +1,197 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/providers/clock_provider.dart';
+import '../../../core/providers/shared_preferences_provider.dart';
+import '../../../core/reminder/reminder_gateway.dart';
+import '../../home/application/recommendation_provider.dart';
+
+/// THIRTY's one optional local reminder — Step 5 local closure
+/// (`docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`), the
+/// already-frozen contract from `THIRTY V1 PRODUCTIZATION + COMMERCIAL
+/// REVIEW.md` §27/§28: Free, optional, local, at most one per day.
+///
+/// [enabled] is the user's own on/off choice; [permissionGranted] is
+/// separate, live platform truth — Settings shows both, exactly as the
+/// parent authority requires ("Settings shows the actual
+/// permission/schedule state with on/off and one local time"). A user
+/// can want reminders (`enabled == true`) while the OS permission is
+/// denied; nothing here nags them about it more than once.
+class ReminderState {
+  const ReminderState({
+    required this.enabled,
+    required this.hour,
+    required this.minute,
+    required this.permissionGranted,
+  });
+
+  final bool enabled;
+  final int hour;
+  final int minute;
+  final bool permissionGranted;
+
+  ReminderState copyWith({bool? enabled, int? hour, int? minute, bool? permissionGranted}) {
+    return ReminderState(
+      enabled: enabled ?? this.enabled,
+      hour: hour ?? this.hour,
+      minute: minute ?? this.minute,
+      permissionGranted: permissionGranted ?? this.permissionGranted,
+    );
+  }
+}
+
+const reminderEnabledKey = 'reminder_enabled_v1';
+const reminderHourKey = 'reminder_hour_v1';
+const reminderMinuteKey = 'reminder_minute_v1';
+
+/// A sensible pre-filled time shown before the user has ever chosen their
+/// own — only meaningful once [ReminderState.enabled] becomes `true`.
+const _defaultHour = 20;
+const _defaultMinute = 0;
+
+class ReminderNotifier extends Notifier<ReminderState> {
+  @override
+  ReminderState build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+
+    // React to today's Circle actually starting/closing by re-anchoring
+    // the schedule (parent §27: "closing/starting today suppresses an
+    // unnecessary later 'start' reminder"). `ref.listen` inside `build()`
+    // is the supported Riverpod pattern for reacting to another
+    // provider's changes without coupling this notifier's own rebuilds
+    // to it — mirrors `entitlementStatusProvider`'s own use of a
+    // dedicated `initialize()` rather than a `ref.watch`-driven rebuild.
+    ref.listen<RecommendationState>(recommendationProvider, (previous, next) {
+      if (previous?.status != next.status) {
+        unawaited(_rescheduleIfNeeded());
+      }
+    });
+
+    return ReminderState(
+      enabled: prefs.getBool(reminderEnabledKey) ?? false,
+      hour: prefs.getInt(reminderHourKey) ?? _defaultHour,
+      minute: prefs.getInt(reminderMinuteKey) ?? _defaultMinute,
+      permissionGranted: false,
+    );
+  }
+
+  /// Resolves the current OS permission truth and, for an already-enabled
+  /// reminder, re-anchors its schedule to the device's current local
+  /// time/timezone. Called once from `main.dart` at startup and again on
+  /// every foreground resume (`thirty_app.dart`) — never a `build()`-time
+  /// side effect, matching `EntitlementNotifier`'s own discipline.
+  Future<void> initialize() async {
+    final gateway = ref.read(reminderGatewayProvider);
+    await gateway.initialize();
+    final granted = await gateway.hasPermission();
+    state = state.copyWith(permissionGranted: granted);
+    await _rescheduleIfNeeded();
+  }
+
+  /// The user has just elected to enable reminders at [hour]:[minute].
+  /// Requests the OS permission — never before this explicit action
+  /// (parent §27: "do not request system permission at cold launch").
+  /// Denial still records [enabled] as the user's own choice (truthfully
+  /// reflected as non-functional via [ReminderState.permissionGranted]
+  /// in Settings) rather than silently discarding it.
+  Future<void> enable({required int hour, required int minute}) async {
+    final gateway = ref.read(reminderGatewayProvider);
+    final granted = await gateway.requestPermission();
+    state = state.copyWith(
+      enabled: true,
+      hour: hour,
+      minute: minute,
+      permissionGranted: granted,
+    );
+    await _persist();
+    await _rescheduleIfNeeded();
+  }
+
+  /// Turns the reminder off and cancels any pending scheduled work.
+  Future<void> disable() async {
+    if (!state.enabled) return;
+    state = state.copyWith(enabled: false);
+    await _persist();
+    await ref.read(reminderGatewayProvider).cancel();
+  }
+
+  /// Changes the reminder time without otherwise touching [enabled] or
+  /// [permissionGranted]. Re-anchoring (never duplicating — a single
+  /// canonical notification id is always cancelled before rescheduling)
+  /// happens only if the reminder is actually active.
+  Future<void> setTime({required int hour, required int minute}) async {
+    state = state.copyWith(hour: hour, minute: minute);
+    await _persist();
+    await _rescheduleIfNeeded();
+  }
+
+  /// Re-checks the live OS permission state (e.g. the user may have
+  /// changed it from system settings while THIRTY was backgrounded) and
+  /// reconciles the schedule accordingly.
+  Future<void> refreshPermission() async {
+    final granted = await ref.read(reminderGatewayProvider).hasPermission();
+    state = state.copyWith(permissionGranted: granted);
+    await _rescheduleIfNeeded();
+  }
+
+  Future<void> _persist() async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setBool(reminderEnabledKey, state.enabled);
+    await prefs.setInt(reminderHourKey, state.hour);
+    await prefs.setInt(reminderMinuteKey, state.minute);
+  }
+
+  Future<void> _rescheduleIfNeeded() async {
+    final gateway = ref.read(reminderGatewayProvider);
+    if (!state.enabled || !state.permissionGranted) {
+      await gateway.cancel();
+      return;
+    }
+
+    final now = ref.read(eventClockProvider)();
+    final todayResolved =
+        ref.read(recommendationProvider).status != RecommendationStatus.notStarted;
+    final firstOccurrence = _nextOccurrence(
+      now,
+      state.hour,
+      state.minute,
+      suppressToday: todayResolved,
+    );
+    await gateway.scheduleDaily(
+      firstOccurrenceLocal: firstOccurrence,
+      hour: state.hour,
+      minute: state.minute,
+    );
+  }
+}
+
+/// The next local wall-clock moment [hour]:[minute] should fire, given
+/// [now] — today, unless [suppressToday] (today's Circle already
+/// started/closed) or [hour]:[minute] has already passed today, in which
+/// case tomorrow. Exposed at top level (not a private method) so
+/// `reminder_provider_test.dart` can verify this pure calculation
+/// directly, independent of provider/gateway wiring.
+DateTime nextReminderOccurrence(
+  DateTime now,
+  int hour,
+  int minute, {
+  required bool suppressToday,
+}) {
+  var candidate = DateTime(now.year, now.month, now.day, hour, minute);
+  if (suppressToday || !candidate.isAfter(now)) {
+    candidate = candidate.add(const Duration(days: 1));
+  }
+  return candidate;
+}
+
+DateTime _nextOccurrence(
+  DateTime now,
+  int hour,
+  int minute, {
+  required bool suppressToday,
+}) => nextReminderOccurrence(now, hour, minute, suppressToday: suppressToday);
+
+final reminderProvider = NotifierProvider<ReminderNotifier, ReminderState>(
+  ReminderNotifier.new,
+);

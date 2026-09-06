@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/release_info.dart';
 import '../providers/clock_provider.dart';
 import '../utils/date_key.dart';
+import 'analytics_consent.dart';
 import 'analytics_event_type.dart';
 import 'cohort.dart';
 import 'tester_identity_provider.dart';
@@ -73,6 +74,26 @@ class SupabaseAnalyticsService implements AnalyticsService {
   }
 }
 
+/// Wraps [inner] so **no event reaches it at all** unless
+/// [analyticsConsentProvider] is currently `true` — the one central gate
+/// every call site in this app already goes through by construction,
+/// since [analyticsServiceProvider] is the sole way any code reaches an
+/// [AnalyticsService] (Step 5 local closure). A future call site cannot
+/// accidentally bypass consent by importing [SupabaseAnalyticsService]
+/// directly, because nothing outside this file ever does.
+class ConsentGatedAnalyticsService implements AnalyticsService {
+  ConsentGatedAnalyticsService(this._ref, this._inner);
+
+  final Ref _ref;
+  final AnalyticsService _inner;
+
+  @override
+  void track(AnalyticsEventType type, {Map<String, Object?>? metadata}) {
+    if (!_ref.read(analyticsConsentProvider)) return;
+    _inner.track(type, metadata: metadata);
+  }
+}
+
 final analyticsServiceProvider = Provider<AnalyticsService>(
-  (ref) => SupabaseAnalyticsService(ref),
+  (ref) => ConsentGatedAnalyticsService(ref, SupabaseAnalyticsService(ref)),
 );

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/premium/premium_access.dart';
 import '../../plans/presentation/widgets/plan_session_panel.dart';
 import '../../premium/presentation/widgets/premium_offer_invitation_card.dart';
+import '../../reminder/presentation/widgets/reminder_invitation_card.dart';
 import '../application/recommendation_provider.dart';
 import 'widgets/action_report_prompt.dart';
 import 'widgets/circle_hero.dart';
@@ -24,7 +25,12 @@ import 'widgets/daily_intention_prompt.dart';
 /// `circle_hero.dart` itself, so this batch's functional addition stays
 /// independent of that file's own in-progress visual work (see ADR-013
 /// §10). [PlanSessionPanel] (Batch 2A) renders below that, and only when
-/// today's Circle is Plan-resolved.
+/// today's Circle is Plan-resolved. Below that, at most one of
+/// `ReminderInvitationCard` or `PremiumOfferInvitationCard` ever renders
+/// — each is internally gated on the other (and both on
+/// `ActionReportPrompt`'s own pending state) to enforce the parent V1
+/// prompt-priority order: reflection, then reminder invitation, then
+/// Premium invitation, never stacked (Step 5 local closure).
 ///
 /// The AppBar's history icon opens [CircleHistoryPage] (ADR-013 §6) — the
 /// one entry point into the user's own recorded Circle history, reachable
@@ -74,6 +80,7 @@ class HomePage extends ConsumerWidget {
                   Expanded(child: CircleHero()),
                   ActionReportPrompt(),
                   PlanSessionPanel(),
+                  ReminderInvitationCard(),
                   PremiumOfferInvitationCard(),
                 ],
               )
