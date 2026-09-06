@@ -11,6 +11,7 @@ import 'package:thirty/core/world_rendering/quiet_trail_hero_asset_view.dart';
 import 'package:thirty/features/home/presentation/circle_history_page.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
+import 'package:thirty/features/plans/presentation/plan_path_page.dart';
 
 void main() {
   testWidgets(
@@ -59,6 +60,28 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(CircleHistoryPage), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'the /plans route shows PlanPathPage, reachable regardless of the '
+    'AppBar icon\'s own entitlement gating (Batch 2A)',
+    (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: const ThirtyApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      appRouter.go('/plans');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PlanPathPage), findsOneWidget);
     },
   );
 

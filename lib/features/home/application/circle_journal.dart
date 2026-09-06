@@ -79,6 +79,12 @@ class CircleJournalEntry {
     this.closedAt,
     this.attemptResponse,
     this.usefulnessResponse,
+    this.planId,
+    this.planVersion,
+    this.stageId,
+    this.planCycleId,
+    this.treatmentUsed,
+    this.revisitUsed,
   });
 
   /// The journal record schema version this entry was written under — see
@@ -121,11 +127,49 @@ class CircleJournalEntry {
   /// was not affirmative.
   final CircleUsefulnessResponse? usefulnessResponse;
 
+  /// This Circle's Plan identity, if it was Plan-resolved
+  /// (`../../plans/application/plan_provider.dart`'s
+  /// `PlanSessionAssignment`) — `null` for a Free-selector-resolved Circle,
+  /// including every record written before Batch 2A. All five Plan fields
+  /// below are additive and independent of one another only in the sense
+  /// that an old record simply has none of them; a Plan-resolved record
+  /// always carries all five together.
+  final String? planId;
+
+  /// The `plan_catalog.dart` `planContentVersion` active when this Circle
+  /// was resolved — `null` iff [planId] is `null`.
+  final int? planVersion;
+
+  /// The assigned [StageId] (`../../plans/domain/plan_ids.dart`) — `null`
+  /// iff [planId] is `null`.
+  final String? stageId;
+
+  /// The Plan cycle this Circle belonged to
+  /// (`../../plans/domain/plan_state.dart`'s `PlanProgress.cycleId`) —
+  /// deliberately a separate field from [circleId]/[localDate] (a Plan
+  /// cycle spans many Circles, unlike this Circle's own 1:1 date
+  /// identity). `null` iff [planId] is `null`.
+  final String? planCycleId;
+
+  /// Which of the stage's two authored guidance texts was shown —
+  /// `'standard'` or `'lighter'`
+  /// (`../../plans/domain/plan_state.dart`'s `PlanTreatment.name`). `null`
+  /// iff [planId] is `null`.
+  final String? treatmentUsed;
+
+  /// Whether this Circle was assigned via a queued one-off revisit rather
+  /// than ordinary forward progression
+  /// (`../../plans/application/plan_provider.dart`'s
+  /// `PlanSessionAssignment.isRevisit`) — `null` iff [planId] is `null`,
+  /// never a bare `false` standing in for "not applicable."
+  final bool? revisitUsed;
+
   CircleJournalEntry copyWith({
     DateTime? startedAt,
     DateTime? closedAt,
     CircleAttemptResponse? attemptResponse,
     CircleUsefulnessResponse? usefulnessResponse,
+    String? treatmentUsed,
   }) {
     return CircleJournalEntry(
       schemaVersion: schemaVersion,
@@ -139,6 +183,12 @@ class CircleJournalEntry {
       closedAt: closedAt ?? this.closedAt,
       attemptResponse: attemptResponse ?? this.attemptResponse,
       usefulnessResponse: usefulnessResponse ?? this.usefulnessResponse,
+      planId: planId,
+      planVersion: planVersion,
+      stageId: stageId,
+      planCycleId: planCycleId,
+      treatmentUsed: treatmentUsed ?? this.treatmentUsed,
+      revisitUsed: revisitUsed,
     );
   }
 
@@ -154,6 +204,12 @@ class CircleJournalEntry {
     'closedAt': closedAt?.toIso8601String(),
     'attemptResponse': attemptResponse?.wireName,
     'usefulnessResponse': usefulnessResponse?.wireName,
+    'planId': planId,
+    'planVersion': planVersion,
+    'stageId': stageId,
+    'planCycleId': planCycleId,
+    'treatmentUsed': treatmentUsed,
+    'revisitUsed': revisitUsed,
   };
 
   /// Parses one journal entry, or `null` if [json] is missing or has an
@@ -195,6 +251,27 @@ class CircleJournalEntry {
         ? null
         : DateTime.tryParse('$closedAtRaw');
 
+    // Plan fields (Batch 2A) are additive and opaque at this layer — this
+    // file deliberately does not depend on `../../plans/` (which itself
+    // depends on `activity_catalog.dart`, so validating a stage/plan
+    // reference here would create an import cycle). A raw string/int/bool
+    // of the right type is trusted as-is; anything else is treated as
+    // absent, exactly like every other optional field above. Semantic
+    // validity of a Plan reference is `PlanNotifier`'s own responsibility
+    // (`../../plans/application/plan_provider.dart`), not the journal's.
+    final planIdRaw = json['planId'];
+    final planId = planIdRaw is String ? planIdRaw : null;
+    final planVersionRaw = json['planVersion'];
+    final planVersion = planVersionRaw is int ? planVersionRaw : null;
+    final stageIdRaw = json['stageId'];
+    final stageId = stageIdRaw is String ? stageIdRaw : null;
+    final planCycleIdRaw = json['planCycleId'];
+    final planCycleId = planCycleIdRaw is String ? planCycleIdRaw : null;
+    final treatmentUsedRaw = json['treatmentUsed'];
+    final treatmentUsed = treatmentUsedRaw is String ? treatmentUsedRaw : null;
+    final revisitUsedRaw = json['revisitUsed'];
+    final revisitUsed = revisitUsedRaw is bool ? revisitUsedRaw : null;
+
     return CircleJournalEntry(
       schemaVersion: schemaVersion,
       circleId: circleId,
@@ -209,6 +286,12 @@ class CircleJournalEntry {
           .asNameMap()[json['attemptResponse']],
       usefulnessResponse: CircleUsefulnessResponse.values
           .asNameMap()[json['usefulnessResponse']],
+      planId: planId,
+      planVersion: planVersion,
+      stageId: stageId,
+      planCycleId: planCycleId,
+      treatmentUsed: treatmentUsed,
+      revisitUsed: revisitUsed,
     );
   }
 }
@@ -279,18 +362,35 @@ class CircleJournalRepository {
   /// `RecommendationNotifier.chooseIntention` is already a no-op past the
   /// first call for a given day, so this should never actually overwrite
   /// an existing entry) today's "shown" record.
+  ///
+  /// [planId]/[planVersion]/[stageId]/[planCycleId]/[treatmentUsed]/
+  /// [revisitUsed] (Batch 2A) are all `null` for a Free-selector-resolved
+  /// Circle — the caller (`recommendation_provider.dart`) passes them
+  /// together only when this Circle was Plan-resolved.
   Future<void> recordShown({
     required String circleId,
     required String localDate,
     required Intention direction,
     required ActivityId activityId,
     required DateTime shownAt,
+    String? planId,
+    int? planVersion,
+    String? stageId,
+    String? planCycleId,
+    String? treatmentUsed,
+    bool? revisitUsed,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
     direction: direction,
     activityId: activityId,
     fallbackShownAt: shownAt,
+    planId: planId,
+    planVersion: planVersion,
+    stageId: stageId,
+    planCycleId: planCycleId,
+    treatmentUsed: treatmentUsed,
+    revisitUsed: revisitUsed,
     update: (entry) => entry,
   );
 
@@ -303,36 +403,62 @@ class CircleJournalRepository {
   /// [localDate]/[direction]/[activityId] instead of silently losing the
   /// day's record. Its `shownAt` becomes [startedAt] in that case, the
   /// closest honest estimate available (ADR-013 §3, "handle safely:
-  /// process interruption during writes").
+  /// process interruption during writes"). See [recordShown] for the
+  /// optional Plan fields.
   Future<void> recordStarted({
     required String circleId,
     required String localDate,
     required Intention direction,
     required ActivityId activityId,
     required DateTime startedAt,
+    String? planId,
+    int? planVersion,
+    String? stageId,
+    String? planCycleId,
+    String? treatmentUsed,
+    bool? revisitUsed,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
     direction: direction,
     activityId: activityId,
     fallbackShownAt: startedAt,
+    planId: planId,
+    planVersion: planVersion,
+    stageId: stageId,
+    planCycleId: planCycleId,
+    treatmentUsed: treatmentUsed,
+    revisitUsed: revisitUsed,
     update: (entry) => entry.copyWith(startedAt: startedAt),
   );
 
   /// Records [closedAt] on [circleId]'s entry. See [recordStarted] for the
-  /// self-healing behaviour if the entry doesn't exist yet.
+  /// self-healing behaviour if the entry doesn't exist yet, and
+  /// [recordShown] for the optional Plan fields.
   Future<void> recordClosed({
     required String circleId,
     required String localDate,
     required Intention direction,
     required ActivityId activityId,
     required DateTime closedAt,
+    String? planId,
+    int? planVersion,
+    String? stageId,
+    String? planCycleId,
+    String? treatmentUsed,
+    bool? revisitUsed,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
     direction: direction,
     activityId: activityId,
     fallbackShownAt: closedAt,
+    planId: planId,
+    planVersion: planVersion,
+    stageId: stageId,
+    planCycleId: planCycleId,
+    treatmentUsed: treatmentUsed,
+    revisitUsed: revisitUsed,
     update: (entry) => entry.copyWith(closedAt: closedAt),
   );
 
@@ -351,12 +477,24 @@ class CircleJournalRepository {
     required ActivityId activityId,
     required CircleAttemptResponse response,
     required DateTime respondedAt,
+    String? planId,
+    int? planVersion,
+    String? stageId,
+    String? planCycleId,
+    String? treatmentUsed,
+    bool? revisitUsed,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
     direction: direction,
     activityId: activityId,
     fallbackShownAt: respondedAt,
+    planId: planId,
+    planVersion: planVersion,
+    stageId: stageId,
+    planCycleId: planCycleId,
+    treatmentUsed: treatmentUsed,
+    revisitUsed: revisitUsed,
     update: (entry) {
       final isAffirmative =
           response == CircleAttemptResponse.yes ||
@@ -373,6 +511,12 @@ class CircleJournalRepository {
         closedAt: entry.closedAt,
         attemptResponse: response,
         usefulnessResponse: isAffirmative ? entry.usefulnessResponse : null,
+        planId: entry.planId,
+        planVersion: entry.planVersion,
+        stageId: entry.stageId,
+        planCycleId: entry.planCycleId,
+        treatmentUsed: entry.treatmentUsed,
+        revisitUsed: entry.revisitUsed,
       );
     },
   );
@@ -386,12 +530,24 @@ class CircleJournalRepository {
     required ActivityId activityId,
     required CircleUsefulnessResponse response,
     required DateTime respondedAt,
+    String? planId,
+    int? planVersion,
+    String? stageId,
+    String? planCycleId,
+    String? treatmentUsed,
+    bool? revisitUsed,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
     direction: direction,
     activityId: activityId,
     fallbackShownAt: respondedAt,
+    planId: planId,
+    planVersion: planVersion,
+    stageId: stageId,
+    planCycleId: planCycleId,
+    treatmentUsed: treatmentUsed,
+    revisitUsed: revisitUsed,
     update: (entry) => entry.copyWith(usefulnessResponse: response),
   );
 
@@ -421,6 +577,14 @@ class CircleJournalRepository {
   /// (with `shownAt` set to [fallbackShownAt]) and applies [update] to
   /// that instead. See [recordStarted]'s doc comment for why this never
   /// simply no-ops on a missing entry.
+  ///
+  /// [planId]/[planVersion]/[stageId]/[planCycleId]/[treatmentUsed]/
+  /// [revisitUsed] (Batch 2A) are only ever used when synthesizing a *new*
+  /// entry (`index == -1`) — once an entry exists, its own Plan identity is
+  /// never overwritten by a later call (`CircleJournalEntry.copyWith`
+  /// preserves it by default), matching how [catalogVersion]/[activityId]
+  /// are already fixed at creation and never revised by a later `record*`
+  /// call.
   Future<void> _upsert({
     required String circleId,
     required String localDate,
@@ -428,6 +592,12 @@ class CircleJournalRepository {
     required ActivityId activityId,
     required DateTime fallbackShownAt,
     required CircleJournalEntry Function(CircleJournalEntry entry) update,
+    String? planId,
+    int? planVersion,
+    String? stageId,
+    String? planCycleId,
+    String? treatmentUsed,
+    bool? revisitUsed,
   }) async {
     final entries = _readRaw();
     final index = entries.indexWhere((entry) => entry.circleId == circleId);
@@ -440,6 +610,12 @@ class CircleJournalRepository {
             activityId: activityId,
             catalogVersion: catalogVersion,
             shownAt: fallbackShownAt,
+            planId: planId,
+            planVersion: planVersion,
+            stageId: stageId,
+            planCycleId: planCycleId,
+            treatmentUsed: treatmentUsed,
+            revisitUsed: revisitUsed,
           )
         : entries[index];
 

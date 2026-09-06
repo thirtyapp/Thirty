@@ -48,6 +48,30 @@
 ///   [CircleUsefulnessResponse.wireName]'s values) as metadata. Purely
 ///   self-reported usefulness — never treated as a verified health or
 ///   wellbeing outcome.
+///
+/// Batch 2A (see
+/// `docs/product/adr/ADR-014-v1-batch-2a-circle-plans.md`) adds five
+/// events for Circle Plans — all carrying only stable identifiers
+/// (`plan_id`, and where relevant `stage_id`) as metadata, never narrative
+/// text, and all fired only on the real transition
+/// `../../features/plans/application/plan_provider.dart`'s `PlanNotifier`
+/// methods describe, never speculatively or on a no-op call:
+///
+/// - [planStarted] — a Plan actually became the active Plan
+///   (`PlanNotifier.activatePlan` on a genuine change, including resuming
+///   a previously active Plan later).
+/// - [planSessionShown] — `PlanNotifier.resolveSessionFor` actually
+///   assigned a stage to today's Circle. Exposure only, exactly like
+///   [recommendationShown] — never evidence the assigned activity was
+///   attempted or completed (ADR-010).
+/// - [planCycleCompleted] — `PlanNotifier.advanceCursorForCircle` advanced
+///   a Plan past its fifth stage. Never itself evidence of five
+///   completed real-world activities — only that five Circles were
+///   sequentially closed under that Plan (ADR-010 applies at every step).
+/// - [planRevisitQueued] — the user queued a one-off revisit
+///   (`PlanNotifier.queueRevisit`).
+/// - [planRevisitUsed] — a queued revisit was actually applied to a
+///   resolved Session (`PlanNotifier.resolveSessionFor`'s revisit path).
 enum AnalyticsEventType {
   appOpened,
   circleStarted,
@@ -55,6 +79,11 @@ enum AnalyticsEventType {
   recommendationShown,
   circleAttemptReported,
   circleUsefulnessReported,
+  planStarted,
+  planSessionShown,
+  planCycleCompleted,
+  planRevisitQueued,
+  planRevisitUsed,
 }
 
 /// The stable string this event is written as in `analytics_events.
@@ -75,5 +104,10 @@ extension AnalyticsEventTypeWire on AnalyticsEventType {
     AnalyticsEventType.circleAttemptReported => 'circle_attempt_reported',
     AnalyticsEventType.circleUsefulnessReported =>
       'circle_usefulness_reported',
+    AnalyticsEventType.planStarted => 'plan_started',
+    AnalyticsEventType.planSessionShown => 'plan_session_shown',
+    AnalyticsEventType.planCycleCompleted => 'plan_cycle_completed',
+    AnalyticsEventType.planRevisitQueued => 'plan_revisit_queued',
+    AnalyticsEventType.planRevisitUsed => 'plan_revisit_used',
   };
 }

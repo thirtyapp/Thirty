@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
+import '../../plans/domain/plan_catalog.dart';
+import '../../plans/domain/plan_ids.dart';
 import '../application/activity_catalog.dart';
 import '../application/circle_journal.dart';
 
@@ -163,6 +165,13 @@ class _JournalEntryCard extends StatelessWidget {
             '${activityLabel(entry.activityId)}',
             style: textTheme.bodyMedium,
           ),
+          if (_planContextLabel(entry) case final label?) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              label,
+              style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+            ),
+          ],
           const SizedBox(height: AppSpacing.s),
           _StatusLine(label: 'Shown', value: _formatTime(entry.shownAt)),
           _StatusLine(
@@ -194,6 +203,29 @@ class _JournalEntryCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// A plain, bounded Plan-context line for [entry] — "Plan name, stage/
+  /// place, cycle" (frozen architecture §15) — or `null` for a
+  /// Free-selector-resolved entry, or one whose stage reference no longer
+  /// resolves in the current catalogue (fail-safe: the rest of the record
+  /// still displays normally either way). Never an activity browser, a
+  /// score, or anything beyond this one factual line.
+  static String? _planContextLabel(CircleJournalEntry entry) {
+    final planIdName = entry.planId;
+    final stageId = entry.stageId;
+    if (planIdName == null || stageId == null) return null;
+
+    final planId = PlanId.values.asNameMap()[planIdName];
+    if (planId == null) return null;
+    final plan = planDefinitionFor(planId);
+    final stageIndex = plan.stages.indexWhere((s) => s.id == stageId);
+    final stageLabel = stageIndex >= 0
+        ? ', stage ${stageIndex + 1} of ${plan.stages.length}'
+        : '';
+    final cycleId = entry.planCycleId;
+    final cycleLabel = cycleId == null ? '' : ' (cycle $cycleId)';
+    return 'Plan: ${plan.name}$stageLabel$cycleLabel';
   }
 
   static String _formatTime(DateTime time) {

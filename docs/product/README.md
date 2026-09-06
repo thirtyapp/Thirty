@@ -61,3 +61,4 @@ Een ADR (Architecture/Product Decision Record) legt één specifieke, vaak onomk
 - [ADR-011 — Batch 1 / Post-Fix Retention Cohort](adr/ADR-011-batch-1-post-fix-retention-cohort.md)
 - [ADR-012 — Batch 2 / Recommendation Diversity](adr/ADR-012-batch-2-recommendation-diversity.md)
 - [ADR-013 — V1 Productization Batch 1 / Free Foundation + Prospective Local Journal](adr/ADR-013-v1-free-foundation-and-journal.md)
+- [ADR-014 — V1 Productization Batch 2A / Circle Plans + Guided Sessions](adr/ADR-014-v1-batch-2a-circle-plans.md)

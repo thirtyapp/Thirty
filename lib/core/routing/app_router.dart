@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/home/presentation/circle_history_page.dart';
 import '../../features/home/presentation/home_page.dart';
+import '../../features/plans/presentation/plan_path_page.dart';
 import '../dev_preview/quiet_trail_hero_preview_page.dart';
 import '../providers/theme_mode_provider.dart';
 import '../showcase/design_system_showcase_page.dart';
@@ -21,6 +22,15 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
     GoRoute(
       path: '/history',
       builder: (context, state) => const CircleHistoryPage(),
+    ),
+    // Reachable by direct navigation always (tests/DI overrides use this
+    // freely); `home_page.dart`'s AppBar only links to it when
+    // `premiumEntitlementProvider` is true — see that provider's own doc
+    // comment (`../premium/premium_access.dart`) for why visibility, not
+    // this route's registration, is the actual access seam.
+    GoRoute(
+      path: '/plans',
+      builder: (context, state) => const PlanPathPage(),
     ),
     GoRoute(
       path: '/showcase',

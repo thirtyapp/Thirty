@@ -18,6 +18,17 @@
 /// analytics events shipped (see
 /// `docs/product/adr/ADR-013-v1-free-foundation-and-journal.md`).
 ///
+/// "THIRTY — V1 PRODUCTIZATION BATCH 2A / CIRCLE PLANS + GUIDED SESSIONS"
+/// (`1.4.0+5`): the build under which the three five-stage Circle Plans,
+/// their forward-cursor/one-off-revisit/cycle state, the daily
+/// Plan-vs-Free resolution rule, the standard/lighter treatment toggle,
+/// the additive Plan journal fields, the pre-billing
+/// `premiumEntitlementProvider` access seam, and the
+/// `plan_started`/`plan_session_shown`/`plan_cycle_completed`/
+/// `plan_revisit_queued`/`plan_revisit_used` analytics events shipped (see
+/// `docs/product/adr/ADR-014-v1-batch-2a-circle-plans.md`). No billing,
+/// Coach, Insights, or Premium Atmosphere work is included in this build.
+///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the
 /// frozen evaluation boundary the post-fix measurement protocol depends
@@ -32,5 +43,5 @@ class ReleaseInfo {
   const ReleaseInfo._();
 
   /// Keep in sync with `pubspec.yaml`'s `version:` field.
-  static const String appVersion = '1.3.0+4';
+  static const String appVersion = '1.4.0+5';
 }

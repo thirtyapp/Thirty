@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/theme/app_theme.dart';
@@ -13,7 +14,10 @@ import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt
 
 final _today = DateTime(2026, 8, 2);
 
-Future<Widget> _wrap({Map<String, Object> storedPrefs = const {}}) async {
+Future<Widget> _wrap({
+  Map<String, Object> storedPrefs = const {},
+  bool entitled = false,
+}) async {
   SharedPreferences.setMockInitialValues(storedPrefs);
   final prefs = await SharedPreferences.getInstance();
 
@@ -21,6 +25,7 @@ Future<Widget> _wrap({Map<String, Object> storedPrefs = const {}}) async {
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
       nowProvider.overrideWithValue(_today),
+      premiumEntitlementProvider.overrideWithValue(entitled),
     ],
     child: MaterialApp(theme: AppTheme.light, home: const HomePage()),
   );
@@ -110,6 +115,23 @@ void main() {
       );
 
       expect(find.text('Did you try this activity?'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'the Plans ("Your path") icon is absent by default (no production '
+    'entitlement — Batch 2A access seam)',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(await _wrap());
+      expect(find.byIcon(Icons.route_outlined), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'the Plans icon appears only when entitled',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(await _wrap(entitled: true));
+      expect(find.byIcon(Icons.route_outlined), findsOneWidget);
     },
   );
 }

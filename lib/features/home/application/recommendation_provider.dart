@@ -9,6 +9,9 @@ import '../../../core/analytics/analytics_service.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../../../core/utils/date_key.dart';
+import '../../plans/application/plan_provider.dart';
+import '../../plans/domain/plan_ids.dart';
+import '../../plans/domain/plan_state.dart';
 import 'activity_catalog.dart';
 import 'circle_journal.dart';
 
@@ -31,6 +34,12 @@ class Recommendation {
     required this.intention,
     required this.circleId,
     required this.catalogVersion,
+    this.planId,
+    this.stageId,
+    this.planCycleId,
+    this.planVersion,
+    this.isPlanRevisit = false,
+    this.treatmentUsed,
   });
 
   final String intent;
@@ -66,6 +75,38 @@ class Recommendation {
   /// recommendation was resolved (ADR-013 §3 — "relevant content/version
   /// identity").
   final int catalogVersion;
+
+  /// This Circle's Plan identity, if it was Plan-resolved
+  /// (`../../plans/application/plan_provider.dart`'s
+  /// `PlanNotifier.resolveSessionFor`) rather than the complete Free
+  /// selector (`activity_catalog.dart`'s [selectActivityId]) — `null` for
+  /// every Free-selector-resolved Circle. All five Plan-related fields
+  /// below are only ever meaningful together with a non-null [planId].
+  final PlanId? planId;
+
+  /// The assigned [StageId] — `null` iff [planId] is `null`.
+  final StageId? stageId;
+
+  /// The Plan cycle this Circle belonged to
+  /// (`../../plans/domain/plan_state.dart`'s `PlanProgress.cycleId`) —
+  /// `null` iff [planId] is `null`.
+  final String? planCycleId;
+
+  /// The `../../plans/domain/plan_catalog.dart` `planContentVersion`
+  /// active when this Circle was resolved — `null` iff [planId] is `null`.
+  final int? planVersion;
+
+  /// Whether this Circle was assigned via a queued one-off revisit
+  /// (frozen architecture §9) rather than ordinary forward progression —
+  /// always `false` when [planId] is `null`.
+  final bool isPlanRevisit;
+
+  /// Which of the stage's two authored guidance texts is currently
+  /// selected for display (`../../plans/domain/plan_state.dart`'s
+  /// `PlanTreatment`) — `null` iff [planId] is `null`. Mutable after
+  /// resolution via [RecommendationNotifier.setPlanTreatment]; changing it
+  /// never substitutes a different [activityId] (frozen architecture §10).
+  final PlanTreatment? treatmentUsed;
 }
 
 /// Today's Circle's lifecycle status. Deliberately only the three states
@@ -144,6 +185,34 @@ const recommendationUsefulnessResponseKey =
 /// guard compares against whatever the immediately prior Circle was, no
 /// matter which direction it came from.
 const recommendationLastFamilyKey = 'recommendation_last_family';
+
+/// SharedPreferences key for today's [Recommendation.planId]'s
+/// [PlanId.name] (Batch 2A) — absent for a Free-selector-resolved Circle.
+/// All five `recommendationPlan*`/`recommendationStageId*`/
+/// `recommendationTreatment*` keys below are only ever meaningful together;
+/// see [_restoreRecommendation].
+const recommendationPlanIdKey = 'recommendation_plan_id';
+
+/// SharedPreferences key for today's [Recommendation.stageId]. See
+/// [recommendationPlanIdKey].
+const recommendationStageIdKey = 'recommendation_stage_id';
+
+/// SharedPreferences key for today's [Recommendation.planCycleId]. See
+/// [recommendationPlanIdKey].
+const recommendationPlanCycleIdKey = 'recommendation_plan_cycle_id';
+
+/// SharedPreferences key for today's [Recommendation.planVersion]. See
+/// [recommendationPlanIdKey].
+const recommendationPlanVersionKey = 'recommendation_plan_version';
+
+/// SharedPreferences key for today's [Recommendation.isPlanRevisit]. See
+/// [recommendationPlanIdKey].
+const recommendationIsPlanRevisitKey = 'recommendation_is_plan_revisit';
+
+/// SharedPreferences key for today's [Recommendation.treatmentUsed]'s
+/// [PlanTreatment.name] — the one Plan-related field
+/// [RecommendationNotifier.setPlanTreatment] can change after resolution.
+const recommendationTreatmentKey = 'recommendation_treatment';
 
 /// Today's Circle: its content ([recommendation]) plus its session/
 /// lifecycle state.
@@ -376,6 +445,19 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// Phase F) — but only on this real, once-per-day resolution, never on
   /// the no-op early return above, matching [start]/[close]'s own
   /// "only a genuine transition is measured" discipline.
+  ///
+  /// **Circle Plans (Batch 2A):** before falling through to the Free
+  /// selector above, this first asks
+  /// `../../plans/application/plan_provider.dart`'s
+  /// `PlanNotifier.resolveSessionFor` whether [intention] matches an
+  /// active, in-progress Plan — the frozen architecture's "daily
+  /// resolution rule." A non-null result substitutes that Plan's assigned
+  /// [ActivityId] (and carries the Plan/stage/cycle identity into
+  /// [Recommendation]) in place of [selectActivityId]; a `null` result
+  /// (no entitlement, no active Plan, a direction mismatch, or a completed
+  /// cycle with no repeat chosen) is the exact, unmodified Free path. A
+  /// Plan never overrides the user's chosen [intention] — it only ever
+  /// supplies which activity fulfils it.
   void chooseIntention(Intention intention) {
     if (state.recommendation != null) return;
 
@@ -383,32 +465,52 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final now = ref.read(nowProvider);
     final today = dateKey(now);
 
-    final pool = activityPools[intention]!;
-    final historyKey = recommendationHistoryKeyFor(intention);
-    final storedHistory = prefs.getStringList(historyKey) ?? const [];
-    final recentActivityIds = storedHistory
-        .map((name) => ActivityId.values.asNameMap()[name])
-        .whereType<ActivityId>()
-        .toSet();
-    final lastShownFamily = ActivitySemanticFamily.values
-        .asNameMap()[prefs.getString(recommendationLastFamilyKey)];
+    final planAssignment = ref
+        .read(planProvider.notifier)
+        .resolveSessionFor(intention);
 
-    final activityId = selectActivityId(
-      intention: intention,
-      dayIndex: epochDay(now),
-      recentActivityIds: recentActivityIds,
-      lastShownFamily: lastShownFamily,
+    final ActivityId activityId;
+    String? historyKey;
+    List<String>? cappedHistory;
+
+    if (planAssignment != null) {
+      activityId = planAssignment.activityId;
+    } else {
+      final pool = activityPools[intention]!;
+      historyKey = recommendationHistoryKeyFor(intention);
+      final storedHistory = prefs.getStringList(historyKey) ?? const [];
+      final recentActivityIds = storedHistory
+          .map((name) => ActivityId.values.asNameMap()[name])
+          .whereType<ActivityId>()
+          .toSet();
+      final lastShownFamily = ActivitySemanticFamily.values
+          .asNameMap()[prefs.getString(recommendationLastFamilyKey)];
+
+      activityId = selectActivityId(
+        intention: intention,
+        dayIndex: epochDay(now),
+        recentActivityIds: recentActivityIds,
+        lastShownFamily: lastShownFamily,
+      );
+
+      // Bounded to pool.length - 1 most-recent entries — see
+      // recommendationHistoryKeyFor's own doc comment for why that
+      // specific cap. Only maintained for a Free-selector resolution — a
+      // Plan-resolved day's activity comes from the Plan's own state, not
+      // this diversity guard.
+      final updatedHistory = [...storedHistory, activityId.name];
+      final historyCap = pool.length - 1;
+      cappedHistory = updatedHistory.length > historyCap
+          ? updatedHistory.sublist(updatedHistory.length - historyCap)
+          : updatedHistory;
+    }
+
+    final recommendation = _buildRecommendation(
+      intention,
+      activityId,
+      today,
+      planAssignment: planAssignment,
     );
-    final recommendation = _buildRecommendation(intention, activityId, today);
-
-    // Bounded to pool.length - 1 most-recent entries — see
-    // recommendationHistoryKeyFor's own doc comment for why that specific
-    // cap.
-    final updatedHistory = [...storedHistory, activityId.name];
-    final historyCap = pool.length - 1;
-    final cappedHistory = updatedHistory.length > historyCap
-        ? updatedHistory.sublist(updatedHistory.length - historyCap)
-        : updatedHistory;
 
     state = RecommendationState(
       recommendation: recommendation,
@@ -422,6 +524,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         historyKey: historyKey,
         cappedHistory: cappedHistory,
         shownAt: now,
+        planAssignment: planAssignment,
       ),
     );
     ref
@@ -484,9 +587,10 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     if (state.recommendation == null) return;
     if (state.status != RecommendationStatus.started) return;
 
+    final recommendation = state.recommendation!;
     final closedAt = ref.read(eventClockProvider)();
     state = RecommendationState(
-      recommendation: state.recommendation,
+      recommendation: recommendation,
       status: RecommendationStatus.closed,
       startedAt: state.startedAt,
       closedAt: closedAt,
@@ -497,6 +601,63 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     // measurement protocol's "Daily Check-In completed" (see
     // AnalyticsEventType.circleClosed's own doc comment).
     ref.read(analyticsServiceProvider).track(AnalyticsEventType.circleClosed);
+
+    // Circle Plans (Batch 2A): a real Close of a Plan-resolved Circle
+    // advances that Plan's forward guidance cursor exactly once (frozen
+    // architecture §8) — never on the no-op guard clauses above, so a
+    // duplicate close() can never advance it twice. A revisit-sourced
+    // Circle never advances the cursor (see
+    // `PlanNotifier.advanceCursorForCircle`'s own doc comment).
+    final planId = recommendation.planId;
+    if (planId != null) {
+      ref
+          .read(planProvider.notifier)
+          .advanceCursorForCircle(
+            planId,
+            recommendation.circleId,
+            isRevisit: recommendation.isPlanRevisit,
+          );
+    }
+  }
+
+  /// Switches which of a Plan Session's two authored guidance texts is
+  /// currently shown for today's Circle (frozen architecture §10). A
+  /// no-op unless today's recommendation exists and is Plan-resolved
+  /// (`Recommendation.planId != null`) — Free-selector Circles have no
+  /// treatment to switch. Never changes [Recommendation.activityId] or any
+  /// other identity field — only [Recommendation.treatmentUsed], and the
+  /// journal's own `treatmentUsed` record for today's Circle.
+  void setPlanTreatment(PlanTreatment treatment) {
+    final recommendation = state.recommendation;
+    if (recommendation == null || recommendation.planId == null) return;
+    if (recommendation.treatmentUsed == treatment) return;
+
+    final updated = Recommendation(
+      intent: recommendation.intent,
+      activity: recommendation.activity,
+      duration: recommendation.duration,
+      why: recommendation.why,
+      category: recommendation.category,
+      activityId: recommendation.activityId,
+      intention: recommendation.intention,
+      circleId: recommendation.circleId,
+      catalogVersion: recommendation.catalogVersion,
+      planId: recommendation.planId,
+      stageId: recommendation.stageId,
+      planCycleId: recommendation.planCycleId,
+      planVersion: recommendation.planVersion,
+      isPlanRevisit: recommendation.isPlanRevisit,
+      treatmentUsed: treatment,
+    );
+    state = RecommendationState(
+      recommendation: updated,
+      status: state.status,
+      startedAt: state.startedAt,
+      closedAt: state.closedAt,
+      attemptResponse: state.attemptResponse,
+      usefulnessResponse: state.usefulnessResponse,
+    );
+    unawaited(_persist(state));
   }
 
   /// Records the user's optional "Did you try this activity?" answer
@@ -574,12 +735,17 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
 
   /// Builds today's [Recommendation] from the approved catalog
   /// (`activity_catalog.dart`) for ([intention], [activityId]), resolved on
-  /// local date [today].
+  /// local date [today]. [planAssignment] (Batch 2A), when non-null, folds
+  /// that Plan Session's identity in and defaults
+  /// [Recommendation.treatmentUsed] to [PlanTreatment.standard] — the user
+  /// has not yet chosen lighter treatment for a freshly-resolved Session.
   Recommendation _buildRecommendation(
     Intention intention,
     ActivityId activityId,
-    String today,
-  ) {
+    String today, {
+    PlanSessionAssignment? planAssignment,
+    PlanTreatment? treatmentOverride,
+  }) {
     return Recommendation(
       intent: intentionLabel(intention),
       activity: activityLabel(activityId),
@@ -590,6 +756,14 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       intention: intention,
       circleId: today,
       catalogVersion: catalogVersion,
+      planId: planAssignment?.planId,
+      stageId: planAssignment?.stageId,
+      planCycleId: planAssignment?.planCycleId,
+      planVersion: planAssignment?.planVersion,
+      isPlanRevisit: planAssignment?.isRevisit ?? false,
+      treatmentUsed: planAssignment == null
+          ? null
+          : (treatmentOverride ?? PlanTreatment.standard),
     );
   }
 
@@ -603,6 +777,16 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// exactly like a missing/corrupt value, not silently trusted, since
   /// activity identity and direction compatibility must always be
   /// validated together.
+  ///
+  /// **Plan fields (Batch 2A):** restored only if every one of
+  /// [recommendationPlanIdKey]/[recommendationStageIdKey]/
+  /// [recommendationPlanCycleIdKey]/[recommendationPlanVersionKey] parses
+  /// validly together — a partially corrupt subset never invalidates the
+  /// whole day's activity (§20's "never silently replace today's resolved
+  /// activity"): the base [Recommendation] is still restored, simply
+  /// without its Plan context. [recommendationTreatmentKey] defaults to
+  /// [PlanTreatment.standard] when the Circle is Plan-resolved but no
+  /// treatment was ever explicitly persisted.
   Recommendation? _restoreRecommendation(SharedPreferences prefs, String today) {
     final intention = Intention.values
         .asNameMap()[prefs.getString(recommendationIntentionKey)];
@@ -610,25 +794,62 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         .asNameMap()[prefs.getString(recommendationActivityIdKey)];
     if (intention == null || activityId == null) return null;
     if (!activityPools[intention]!.contains(activityId)) return null;
-    return _buildRecommendation(intention, activityId, today);
+
+    final planId = PlanId.values.asNameMap()[prefs.getString(recommendationPlanIdKey)];
+    final stageId = prefs.getString(recommendationStageIdKey);
+    final planCycleId = prefs.getString(recommendationPlanCycleIdKey);
+    final planVersion = prefs.getInt(recommendationPlanVersionKey);
+    final isValidPlanRecord =
+        planId != null &&
+        stageId != null &&
+        planCycleId != null &&
+        planVersion != null;
+
+    if (!isValidPlanRecord) {
+      return _buildRecommendation(intention, activityId, today);
+    }
+
+    final isRevisit = prefs.getBool(recommendationIsPlanRevisitKey) ?? false;
+    final treatment = PlanTreatment.values
+            .asNameMap()[prefs.getString(recommendationTreatmentKey)] ??
+        PlanTreatment.standard;
+
+    return _buildRecommendation(
+      intention,
+      activityId,
+      today,
+      planAssignment: PlanSessionAssignment(
+        planId: planId,
+        stageId: stageId,
+        activityId: activityId,
+        planCycleId: planCycleId,
+        planVersion: planVersion,
+        isRevisit: isRevisit,
+      ),
+      treatmentOverride: treatment,
+    );
   }
 
   /// Persists [intention]/[activityId] as today's freshly-chosen
   /// recommendation, alongside [RecommendationStatus.notStarted], and
   /// [cappedHistory] under [historyKey] (Batch 2's diversity guard — see
-  /// [recommendationHistoryKeyFor]). Any started/closed/attempt/usefulness
-  /// values from an earlier day are explicitly cleared — a fresh choice
-  /// must never inherit a stale session. Also records this Circle's
-  /// "shown" journal entry (`circle_journal.dart`) and this activity's
-  /// [ActivitySemanticFamily] as the new cross-direction diversity-guard
-  /// baseline ([recommendationLastFamilyKey]).
+  /// [recommendationHistoryKeyFor]) — both `null` when [planAssignment] is
+  /// non-null, since a Plan-resolved day never touches that guard. Any
+  /// started/closed/attempt/usefulness values from an earlier day are
+  /// explicitly cleared — a fresh choice must never inherit a stale
+  /// session. Also records this Circle's "shown" journal entry
+  /// (`circle_journal.dart`), this activity's [ActivitySemanticFamily] as
+  /// the new cross-direction diversity-guard baseline
+  /// ([recommendationLastFamilyKey]), and — only when [planAssignment] is
+  /// non-null — today's Plan identity (Batch 2A).
   Future<void> _persistChoice({
     required String today,
     required Intention intention,
     required ActivityId activityId,
-    required String historyKey,
-    required List<String> cappedHistory,
+    required String? historyKey,
+    required List<String>? cappedHistory,
     required DateTime shownAt,
+    PlanSessionAssignment? planAssignment,
   }) async {
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setString(recommendationDayKey, today);
@@ -642,11 +863,42 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     await prefs.remove(recommendationClosedAtKey);
     await prefs.remove(recommendationAttemptResponseKey);
     await prefs.remove(recommendationUsefulnessResponseKey);
-    await prefs.setStringList(historyKey, cappedHistory);
+    if (historyKey != null && cappedHistory != null) {
+      await prefs.setStringList(historyKey, cappedHistory);
+    }
     await prefs.setString(
       recommendationLastFamilyKey,
       activityFamily(activityId).name,
     );
+
+    if (planAssignment != null) {
+      await prefs.setString(recommendationPlanIdKey, planAssignment.planId.name);
+      await prefs.setString(recommendationStageIdKey, planAssignment.stageId);
+      await prefs.setString(
+        recommendationPlanCycleIdKey,
+        planAssignment.planCycleId,
+      );
+      await prefs.setInt(
+        recommendationPlanVersionKey,
+        planAssignment.planVersion,
+      );
+      await prefs.setBool(
+        recommendationIsPlanRevisitKey,
+        planAssignment.isRevisit,
+      );
+      await prefs.setString(
+        recommendationTreatmentKey,
+        PlanTreatment.standard.name,
+      );
+    } else {
+      await prefs.remove(recommendationPlanIdKey);
+      await prefs.remove(recommendationStageIdKey);
+      await prefs.remove(recommendationPlanCycleIdKey);
+      await prefs.remove(recommendationPlanVersionKey);
+      await prefs.remove(recommendationIsPlanRevisitKey);
+      await prefs.remove(recommendationTreatmentKey);
+    }
+
     // Guards the read below, which runs after several await points — if
     // this Notifier's container was disposed in the meantime (e.g. a test
     // tearing down without awaiting this fire-and-forget call; see
@@ -661,6 +913,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           direction: intention,
           activityId: activityId,
           shownAt: shownAt,
+          planId: planAssignment?.planId.name,
+          planVersion: planAssignment?.planVersion,
+          stageId: planAssignment?.stageId,
+          planCycleId: planAssignment?.planCycleId,
+          treatmentUsed: planAssignment == null ? null : PlanTreatment.standard.name,
+          revisitUsed: planAssignment?.isRevisit,
         );
   }
 
@@ -728,6 +986,16 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       await prefs.remove(recommendationUsefulnessResponseKey);
     }
 
+    // Circle Plans (Batch 2A): mirror today's current treatment choice —
+    // `setPlanTreatment` is the only method that can change it after
+    // resolution, but every call to `_persist` (start/close/reportAttempt/
+    // reportUsefulness too) re-writes the current value so it never drifts
+    // out of sync with in-memory state.
+    final treatmentUsed = recommendation?.treatmentUsed;
+    if (treatmentUsed != null) {
+      await prefs.setString(recommendationTreatmentKey, treatmentUsed.name);
+    }
+
     if (recommendation == null) return;
     // See _persistChoice's matching comment — this read also happens after
     // several await points.
@@ -736,6 +1004,14 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final circleId = recommendation.circleId;
     final direction = recommendation.intention;
     final activityId = recommendation.activityId;
+    final planId = recommendation.planId?.name;
+    final planVersion = recommendation.planVersion;
+    final stageId = recommendation.stageId;
+    final planCycleId = recommendation.planCycleId;
+    final treatmentUsedName = treatmentUsed?.name;
+    final revisitUsed = recommendation.planId == null
+        ? null
+        : recommendation.isPlanRevisit;
 
     switch (state.status) {
       case RecommendationStatus.started:
@@ -745,6 +1021,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           direction: direction,
           activityId: activityId,
           startedAt: startedAt!,
+          planId: planId,
+          planVersion: planVersion,
+          stageId: stageId,
+          planCycleId: planCycleId,
+          treatmentUsed: treatmentUsedName,
+          revisitUsed: revisitUsed,
         );
       case RecommendationStatus.closed:
         await journal.recordClosed(
@@ -753,6 +1035,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           direction: direction,
           activityId: activityId,
           closedAt: closedAt!,
+          planId: planId,
+          planVersion: planVersion,
+          stageId: stageId,
+          planCycleId: planCycleId,
+          treatmentUsed: treatmentUsedName,
+          revisitUsed: revisitUsed,
         );
       case RecommendationStatus.notStarted:
         break;
@@ -766,6 +1054,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         activityId: activityId,
         response: attemptResponse,
         respondedAt: closedAt ?? startedAt ?? ref.read(nowProvider),
+        planId: planId,
+        planVersion: planVersion,
+        stageId: stageId,
+        planCycleId: planCycleId,
+        treatmentUsed: treatmentUsedName,
+        revisitUsed: revisitUsed,
       );
     }
     if (usefulnessResponse != null) {
@@ -776,6 +1070,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         activityId: activityId,
         response: usefulnessResponse,
         respondedAt: closedAt ?? startedAt ?? ref.read(nowProvider),
+        planId: planId,
+        planVersion: planVersion,
+        stageId: stageId,
+        planCycleId: planCycleId,
+        treatmentUsed: treatmentUsedName,
+        revisitUsed: revisitUsed,
       );
     }
   }

@@ -371,5 +371,153 @@ void main() {
         expect(repo.readAll(), hasLength(1));
       });
     });
+
+    group('Circle Plan fields (Batch 2A)', () {
+      test('recordShown() with Plan fields carries them onto the created '
+          'entry', () async {
+        final repo = CircleJournalRepository(await _prefsWith({}));
+
+        await repo.recordShown(
+          circleId: '2026-08-02',
+          localDate: '2026-08-02',
+          direction: Intention.moreEnergy,
+          activityId: ActivityId.energisingBreathReset,
+          shownAt: DateTime(2026, 8, 2, 9),
+          planId: 'moreEnergyPath',
+          planVersion: 1,
+          stageId: 'more_energy_1_establish',
+          planCycleId: 'moreEnergyPath_cycle_1',
+          treatmentUsed: 'standard',
+          revisitUsed: false,
+        );
+
+        final entry = repo.readAll().single;
+        expect(entry.planId, 'moreEnergyPath');
+        expect(entry.planVersion, 1);
+        expect(entry.stageId, 'more_energy_1_establish');
+        expect(entry.planCycleId, 'moreEnergyPath_cycle_1');
+        expect(entry.treatmentUsed, 'standard');
+        expect(entry.revisitUsed, isFalse);
+      });
+
+      test('a Free-selector recordShown() (no Plan fields) leaves all five '
+          'Plan fields null', () async {
+        final repo = CircleJournalRepository(await _prefsWith({}));
+
+        await repo.recordShown(
+          circleId: '2026-08-02',
+          localDate: '2026-08-02',
+          direction: Intention.moreEnergy,
+          activityId: ActivityId.thirtyMinuteWalk,
+          shownAt: DateTime(2026, 8, 2, 9),
+        );
+
+        final entry = repo.readAll().single;
+        expect(entry.planId, isNull);
+        expect(entry.planVersion, isNull);
+        expect(entry.stageId, isNull);
+        expect(entry.planCycleId, isNull);
+        expect(entry.treatmentUsed, isNull);
+        expect(entry.revisitUsed, isNull);
+      });
+
+      test('Plan identity set by recordShown() survives a later '
+          'recordStarted()/recordClosed() call made without Plan '
+          'arguments', () async {
+        final repo = CircleJournalRepository(await _prefsWith({}));
+
+        await repo.recordShown(
+          circleId: '2026-08-02',
+          localDate: '2026-08-02',
+          direction: Intention.moreEnergy,
+          activityId: ActivityId.energisingBreathReset,
+          shownAt: DateTime(2026, 8, 2, 9),
+          planId: 'moreEnergyPath',
+          planVersion: 1,
+          stageId: 'more_energy_1_establish',
+          planCycleId: 'moreEnergyPath_cycle_1',
+          treatmentUsed: 'standard',
+          revisitUsed: false,
+        );
+        await repo.recordStarted(
+          circleId: '2026-08-02',
+          localDate: '2026-08-02',
+          direction: Intention.moreEnergy,
+          activityId: ActivityId.energisingBreathReset,
+          startedAt: DateTime(2026, 8, 2, 10),
+        );
+
+        final entry = repo.readAll().single;
+        expect(entry.startedAt, isNotNull);
+        expect(entry.planId, 'moreEnergyPath');
+        expect(entry.stageId, 'more_energy_1_establish');
+      });
+
+      test('round-trips through toJson()/fromJson() with every Plan field '
+          'set', () async {
+        final entry = CircleJournalEntry(
+          schemaVersion: circleJournalSchemaVersion,
+          circleId: '2026-08-02',
+          localDate: '2026-08-02',
+          direction: Intention.moreEnergy,
+          activityId: ActivityId.energisingBreathReset,
+          catalogVersion: catalogVersion,
+          shownAt: DateTime(2026, 8, 2, 9),
+          planId: 'moreEnergyPath',
+          planVersion: 1,
+          stageId: 'more_energy_1_establish',
+          planCycleId: 'moreEnergyPath_cycle_1',
+          treatmentUsed: 'lighter',
+          revisitUsed: true,
+        );
+
+        final decoded = CircleJournalEntry.fromJson(entry.toJson());
+
+        expect(decoded, isNotNull);
+        expect(decoded!.planId, 'moreEnergyPath');
+        expect(decoded.planVersion, 1);
+        expect(decoded.stageId, 'more_energy_1_establish');
+        expect(decoded.planCycleId, 'moreEnergyPath_cycle_1');
+        expect(decoded.treatmentUsed, 'lighter');
+        expect(decoded.revisitUsed, isTrue);
+      });
+
+      test('a pre-Batch-2A journal entry (no Plan fields at all) still '
+          'decodes correctly, with every Plan field null', () async {
+        // A hand-written fixture matching exactly what Batch 1 (ADR-013)
+        // shipped, before any of these five fields existed.
+        final preExistingBatch1Entry = {
+          'schemaVersion': circleJournalSchemaVersion,
+          'circleId': '2026-08-02',
+          'localDate': '2026-08-02',
+          'direction': Intention.moreEnergy.name,
+          'activityId': ActivityId.thirtyMinuteWalk.name,
+          'catalogVersion': catalogVersion,
+          'shownAt': DateTime(2026, 8, 2, 9).toIso8601String(),
+          'startedAt': DateTime(2026, 8, 2, 9, 5).toIso8601String(),
+          'closedAt': DateTime(2026, 8, 2, 9, 35).toIso8601String(),
+          'attemptResponse': 'yes',
+          'usefulnessResponse': 'veryUseful',
+        };
+        final prefs = await _prefsWith({
+          circleJournalKey: jsonEncode({
+            'schemaVersion': circleJournalSchemaVersion,
+            'entries': [preExistingBatch1Entry],
+          }),
+        });
+        final repo = CircleJournalRepository(prefs);
+
+        final entry = repo.readAll().single;
+        expect(entry.circleId, '2026-08-02');
+        expect(entry.attemptResponse, CircleAttemptResponse.yes);
+        expect(entry.usefulnessResponse, CircleUsefulnessResponse.veryUseful);
+        expect(entry.planId, isNull);
+        expect(entry.planVersion, isNull);
+        expect(entry.stageId, isNull);
+        expect(entry.planCycleId, isNull);
+        expect(entry.treatmentUsed, isNull);
+        expect(entry.revisitUsed, isNull);
+      });
+    });
   });
 }

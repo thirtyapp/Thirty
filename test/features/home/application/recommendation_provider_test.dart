@@ -4,11 +4,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:thirty/core/analytics/analytics_event_type.dart';
 import 'package:thirty/core/analytics/analytics_service.dart';
+import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/plans/application/plan_provider.dart';
+import 'package:thirty/features/plans/domain/plan_catalog.dart';
+import 'package:thirty/features/plans/domain/plan_ids.dart';
+import 'package:thirty/features/plans/domain/plan_state.dart';
 
 /// Records every [track] call instead of reaching Supabase — lets Phase E
 /// instrumentation tests assert exactly which events fired, in which
@@ -49,6 +54,7 @@ Future<(ProviderContainer, _TestClock)> _containerWith(
   Map<String, Object> storedPrefs, {
   DateTime? now,
   AnalyticsService? analytics,
+  bool entitled = false,
 }) async {
   SharedPreferences.setMockInitialValues(storedPrefs);
   final prefs = await SharedPreferences.getInstance();
@@ -59,6 +65,7 @@ Future<(ProviderContainer, _TestClock)> _containerWith(
       sharedPreferencesProvider.overrideWithValue(prefs),
       nowProvider.overrideWithValue(now ?? _today),
       eventClockProvider.overrideWithValue(clock.call),
+      premiumEntitlementProvider.overrideWithValue(entitled),
       if (analytics != null)
         analyticsServiceProvider.overrideWithValue(analytics),
     ],
@@ -1216,6 +1223,305 @@ void main() {
         );
         expect(journal.readAll(), isEmpty);
       });
+    });
+
+    group('Circle Plans daily integration (Batch 2A)', () {
+      test(
+        'an entitled, matching-direction active Plan resolves a Plan '
+        'Session instead of the Free selector',
+        () async {
+          final (container, _) = await _containerWith(
+            {},
+            now: _today,
+            entitled: true,
+          );
+          addTearDown(container.dispose);
+
+          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.moreEnergy);
+
+          final recommendation = container
+              .read(recommendationProvider)
+              .recommendation!;
+          final firstStage = planDefinitionFor(PlanId.moreEnergyPath).stages.first;
+
+          expect(recommendation.planId, PlanId.moreEnergyPath);
+          expect(recommendation.stageId, firstStage.id);
+          expect(recommendation.activityId, firstStage.activityId);
+          expect(recommendation.planCycleId, isNotNull);
+          expect(recommendation.isPlanRevisit, isFalse);
+          expect(recommendation.treatmentUsed, PlanTreatment.standard);
+        },
+      );
+
+      test(
+        'a non-matching direction uses the Free selector even with an '
+        'active Plan',
+        () async {
+          final (container, _) = await _containerWith(
+            {},
+            now: _today,
+            entitled: true,
+          );
+          addTearDown(container.dispose);
+
+          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.clearerHead);
+
+          final recommendation = container
+              .read(recommendationProvider)
+              .recommendation!;
+          expect(recommendation.planId, isNull);
+          expect(recommendation.stageId, isNull);
+        },
+      );
+
+      test(
+        'without entitlement, an active Plan is ignored and the Free '
+        'selector is used',
+        () async {
+          final (container, _) = await _containerWith(
+            {},
+            now: _today,
+            entitled: false,
+          );
+          addTearDown(container.dispose);
+
+          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.moreEnergy);
+
+          expect(
+            container.read(recommendationProvider).recommendation!.planId,
+            isNull,
+          );
+        },
+      );
+
+      test(
+        'a Plan never overrides the user\'s chosen direction — the '
+        'resolved intention is always exactly what the user selected',
+        () async {
+          final (container, _) = await _containerWith(
+            {},
+            now: _today,
+            entitled: true,
+          );
+          addTearDown(container.dispose);
+
+          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.gentlerPace);
+
+          expect(
+            container.read(recommendationProvider).recommendation!.intention,
+            Intention.gentlerPace,
+          );
+        },
+      );
+
+      test(
+        'a completed cycle with no repeat chosen falls back to the Free '
+        'selector for a matching direction',
+        () async {
+          final (container, clock) = await _containerWith(
+            {},
+            now: _today,
+            entitled: true,
+          );
+          addTearDown(container.dispose);
+
+          final planNotifier = container.read(planProvider.notifier);
+          planNotifier.activatePlan(PlanId.moreEnergyPath);
+          final stages = planDefinitionFor(PlanId.moreEnergyPath).stages;
+          for (var i = 0; i < stages.length; i++) {
+            planNotifier.advanceCursorForCircle(
+              PlanId.moreEnergyPath,
+              'synthetic-circle-$i',
+              isRevisit: false,
+            );
+          }
+          expect(
+            planNotifier.progressFor(PlanId.moreEnergyPath).status,
+            PlanCycleStatus.completed,
+          );
+
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.moreEnergy);
+
+          expect(
+            container.read(recommendationProvider).recommendation!.planId,
+            isNull,
+          );
+        },
+      );
+
+      test(
+        'same-day identity freeze: activating a different Plan after '
+        'resolution never changes today\'s already-resolved activity',
+        () async {
+          final (container, _) = await _containerWith(
+            {},
+            now: _today,
+            entitled: true,
+          );
+          addTearDown(container.dispose);
+
+          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.moreEnergy);
+          final before = container.read(recommendationProvider).recommendation;
+
+          container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+          container.read(planProvider.notifier).deactivatePlan();
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.moreEnergy);
+
+          final after = container.read(recommendationProvider).recommendation;
+          expect(after!.activityId, before!.activityId);
+          expect(after.planId, before.planId);
+          expect(after.stageId, before.stageId);
+        },
+      );
+
+      test(
+        'close() advances the Plan forward cursor exactly once, even if '
+        'attempted twice',
+        () async {
+          final (container, clock) = await _containerWith(
+            {},
+            now: _today,
+            entitled: true,
+          );
+          addTearDown(container.dispose);
+
+          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.moreEnergy);
+          container.read(recommendationProvider.notifier).start();
+          clock.advanceTo(_laterToday);
+          container.read(recommendationProvider.notifier).close();
+          // A second close() is already a hard no-op (status is no longer
+          // `started`) — calling it again must not double-advance.
+          container.read(recommendationProvider.notifier).close();
+
+          final progress = container
+              .read(planProvider.notifier)
+              .progressFor(PlanId.moreEnergyPath);
+          expect(progress.forwardCursor, 1);
+        },
+      );
+
+      test(
+        'a revisit-sourced Circle does not advance the forward cursor on '
+        'close()',
+        () async {
+          final (container, clock) = await _containerWith(
+            {},
+            now: _today,
+            entitled: true,
+          );
+          addTearDown(container.dispose);
+
+          final planNotifier = container.read(planProvider.notifier);
+          planNotifier.activatePlan(PlanId.moreEnergyPath);
+          // Advance once so there is a lastEncounteredStageId to revisit.
+          planNotifier.advanceCursorForCircle(
+            PlanId.moreEnergyPath,
+            'synthetic-circle-0',
+            isRevisit: false,
+          );
+          expect(
+            planNotifier.progressFor(PlanId.moreEnergyPath).forwardCursor,
+            1,
+          );
+          planNotifier.queueRevisit();
+
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.moreEnergy);
+          final recommendation = container
+              .read(recommendationProvider)
+              .recommendation!;
+          expect(recommendation.isPlanRevisit, isTrue);
+
+          container.read(recommendationProvider.notifier).start();
+          clock.advanceTo(_laterToday);
+          container.read(recommendationProvider.notifier).close();
+
+          expect(
+            planNotifier.progressFor(PlanId.moreEnergyPath).forwardCursor,
+            1,
+          );
+        },
+      );
+
+      test(
+        'journal entry for a Plan-resolved Circle carries planId/stageId/'
+        'planCycleId/treatmentUsed',
+        () async {
+          final (container, _) = await _containerWith(
+            {},
+            now: _today,
+            entitled: true,
+          );
+          addTearDown(container.dispose);
+
+          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.moreEnergy);
+          await Future<void>.delayed(Duration.zero);
+
+          final journal = CircleJournalRepository(
+            container.read(sharedPreferencesProvider),
+          );
+          final entry = journal.readAll().single;
+          expect(entry.planId, PlanId.moreEnergyPath.name);
+          expect(entry.treatmentUsed, PlanTreatment.standard.name);
+          expect(entry.revisitUsed, isFalse);
+        },
+      );
+
+      test(
+        'setPlanTreatment changes treatmentUsed without changing '
+        'activityId, and is a no-op for a Free-selector Circle',
+        () async {
+          final (container, _) = await _containerWith(
+            {},
+            now: _today,
+            entitled: true,
+          );
+          addTearDown(container.dispose);
+
+          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.moreEnergy);
+          final activityBefore = container
+              .read(recommendationProvider)
+              .recommendation!
+              .activityId;
+
+          container
+              .read(recommendationProvider.notifier)
+              .setPlanTreatment(PlanTreatment.lighter);
+
+          final after = container.read(recommendationProvider).recommendation!;
+          expect(after.treatmentUsed, PlanTreatment.lighter);
+          expect(after.activityId, activityBefore);
+        },
+      );
     });
   });
 }

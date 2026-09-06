@@ -79,6 +79,55 @@ void main() {
   );
 
   testWidgets(
+    'a Plan-resolved entry (Batch 2A) shows a bounded Plan/stage/cycle '
+    'context line',
+    (tester) async {
+      final (widget, prefs) = await _wrap();
+      final journal = CircleJournalRepository(prefs);
+      await journal.recordShown(
+        circleId: '2026-08-02',
+        localDate: '2026-08-02',
+        direction: Intention.moreEnergy,
+        activityId: ActivityId.energisingBreathReset,
+        shownAt: DateTime(2026, 8, 2, 9),
+        planId: 'moreEnergyPath',
+        planVersion: 1,
+        stageId: 'more_energy_1_establish',
+        planCycleId: 'moreEnergyPath_cycle_1',
+        treatmentUsed: 'standard',
+        revisitUsed: false,
+      );
+
+      await tester.pumpWidget(widget);
+
+      expect(
+        find.textContaining('More Energy Path'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('stage 1 of 5'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'a Free-selector entry (no Plan fields) shows no Plan context line',
+    (tester) async {
+      final (widget, prefs) = await _wrap();
+      final journal = CircleJournalRepository(prefs);
+      await journal.recordShown(
+        circleId: '2026-08-02',
+        localDate: '2026-08-02',
+        direction: Intention.moreEnergy,
+        activityId: ActivityId.thirtyMinuteWalk,
+        shownAt: DateTime(2026, 8, 2, 9),
+      );
+
+      await tester.pumpWidget(widget);
+
+      expect(find.textContaining('Plan:'), findsNothing);
+    },
+  );
+
+  testWidgets(
     'Delete all clears the journal only after explicit confirmation',
     (tester) async {
       final (widget, prefs) = await _wrap();
