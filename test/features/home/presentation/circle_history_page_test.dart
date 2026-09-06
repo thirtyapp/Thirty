@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +10,7 @@ import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/theme/app_theme.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/insights/domain/insight_snapshot.dart';
 import 'package:thirty/core/widgets/thirty_button.dart';
 import 'package:thirty/features/home/presentation/circle_history_page.dart';
 
@@ -160,6 +163,38 @@ void main() {
 
       expect(journal.readAll(), isEmpty);
       expect(find.textContaining('Nothing recorded yet'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Delete all also clears any retained Insight snapshots — a derived '
+    'observation must never outlive the evidence it was drawn from',
+    (tester) async {
+      final (widget, prefs) = await _wrap();
+      final journal = CircleJournalRepository(prefs);
+      await journal.recordShown(
+        circleId: '2026-08-02',
+        localDate: '2026-08-02',
+        direction: Intention.moreEnergy,
+        activityId: ActivityId.thirtyMinuteWalk,
+        shownAt: DateTime(2026, 8, 2, 9),
+      );
+      await prefs.setString(
+        insightSnapshotsKey,
+        jsonEncode({
+          'schemaVersion': insightSnapshotsSchemaVersion,
+          'lastAssessedAt': '2026-08-02T09:00:00.000',
+          'snapshots': <Object?>[],
+        }),
+      );
+
+      await tester.pumpWidget(widget);
+      await tester.tap(find.text('Delete all'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete permanently'));
+      await tester.pumpAndSettle();
+
+      expect(prefs.getString(insightSnapshotsKey), isNull);
     },
   );
 

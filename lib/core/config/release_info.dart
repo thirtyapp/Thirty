@@ -40,6 +40,19 @@
 /// billing, runtime AI, or Premium Atmosphere work is included in this
 /// build.
 ///
+/// "THIRTY — V1 PRODUCTIZATION BATCH 2C / MINIMUM CIRCLE INSIGHTS"
+/// (`1.6.0+7`): the build under which the three bounded Insight families
+/// (direction/path continuity, chosen pacing, deliberate revisits), the
+/// claim-specific evidence/pattern-gate evaluator, the bounded local
+/// snapshot history (capped at 52), the seven-day assessment cadence with
+/// an immediate live-validity recheck, the three-target application
+/// adapter (activate/resume a Plan, set the lighter default, queue a
+/// revisit), the `InsightCard` presentation surface inside "Your path",
+/// and the `insight_shown`/`insight_application_accepted`/
+/// `insight_application_invalidated` analytics events shipped (see
+/// `docs/product/adr/ADR-016-v1-batch-2c-circle-insights.md`). No billing,
+/// runtime AI, or Premium Atmosphere work is included in this build.
+///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the
 /// frozen evaluation boundary the post-fix measurement protocol depends
@@ -54,5 +67,5 @@ class ReleaseInfo {
   const ReleaseInfo._();
 
   /// Keep in sync with `pubspec.yaml`'s `version:` field.
-  static const String appVersion = '1.5.0+6';
+  static const String appVersion = '1.6.0+7';
 }

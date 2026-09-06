@@ -5,6 +5,8 @@ import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
 import '../../coach/presentation/widgets/coach_cue_banner.dart';
+import '../../insights/application/insight_provider.dart';
+import '../../insights/presentation/widgets/insight_card.dart';
 import '../application/plan_provider.dart';
 import '../domain/plan_catalog.dart';
 import '../domain/plan_ids.dart';
@@ -26,11 +28,30 @@ import '../domain/plan_state.dart';
 /// `../../../core/premium/premium_access.dart` and
 /// `../../../core/routing/app_router.dart`) — in production today, that is
 /// never, since no billing exists yet.
-class PlanPathPage extends ConsumerWidget {
+class PlanPathPage extends ConsumerStatefulWidget {
   const PlanPathPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlanPathPage> createState() => _PlanPathPageState();
+}
+
+class _PlanPathPageState extends ConsumerState<PlanPathPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Batch 2C: "assess a new current Insight at most once per seven-day
+    // interval when the user opens the relevant surface" — scheduled for
+    // after the first frame, never during build, since it may write
+    // persisted state (`InsightNotifier.refreshIfDue`). A no-op unless the
+    // cadence interval has actually elapsed.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(insightProvider.notifier).refreshIfDue();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final plansState = ref.watch(planProvider);
 
     return Scaffold(
@@ -38,10 +59,11 @@ class PlanPathPage extends ConsumerWidget {
       body: SafeArea(
         child: ListView.separated(
           padding: const EdgeInsets.all(AppSpacing.page),
-          itemCount: PlanId.values.length,
+          itemCount: PlanId.values.length + 1,
           separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.s),
           itemBuilder: (context, index) {
-            final planId = PlanId.values[index];
+            if (index == 0) return const InsightCard();
+            final planId = PlanId.values[index - 1];
             return _PlanCard(
               planId: planId,
               isActive: plansState.activePlanId == planId,

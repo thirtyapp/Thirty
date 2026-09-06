@@ -93,6 +93,28 @@
 ///   same two application types (`setLighterDefaultForPlan(_, false)` or
 ///   `clearQueuedRevisit`). Same metadata shape as
 ///   [coachApplicationAccepted].
+///
+/// Batch 2C (see
+/// `docs/product/adr/ADR-016-v1-batch-2c-circle-insights.md`) adds three
+/// bounded events for the minimum Circle Insights layer — never narrative
+/// observation text, evidence dates, or journal content, and never treated
+/// as evidence of real-world value or benefit:
+///
+/// - [insightShown] — a current Insight was actually displayed
+///   (`../../features/insights/presentation/widgets/insight_card.dart`).
+///   Exposure only, exactly like [coachCueShown] — never evidence the user
+///   read, understood, or acted on it. Carries `family` and `plan_id`.
+/// - [insightApplicationAccepted] — the user explicitly applied an
+///   Insight's one bounded application
+///   (`../../features/insights/application/insight_provider.dart`'s
+///   `InsightNotifier.applyCurrent`). Carries `family`, `plan_id`, and
+///   `application_type` — never itself evidence the resulting Session was
+///   attempted or useful (ADR-010).
+/// - [insightApplicationInvalidated] — a previously shown Insight's
+///   application became invalid before the user acted on it (state changed
+///   elsewhere, or supporting history was deleted/expired) and was
+///   withdrawn rather than executed as a stale command. Same metadata
+///   shape as [insightApplicationAccepted], minus `application_type`.
 enum AnalyticsEventType {
   appOpened,
   circleStarted,
@@ -108,6 +130,9 @@ enum AnalyticsEventType {
   coachCueShown,
   coachApplicationAccepted,
   coachApplicationCleared,
+  insightShown,
+  insightApplicationAccepted,
+  insightApplicationInvalidated,
 }
 
 /// The stable string this event is written as in `analytics_events.
@@ -136,5 +161,10 @@ extension AnalyticsEventTypeWire on AnalyticsEventType {
     AnalyticsEventType.coachCueShown => 'coach_cue_shown',
     AnalyticsEventType.coachApplicationAccepted => 'coach_application_accepted',
     AnalyticsEventType.coachApplicationCleared => 'coach_application_cleared',
+    AnalyticsEventType.insightShown => 'insight_shown',
+    AnalyticsEventType.insightApplicationAccepted =>
+      'insight_application_accepted',
+    AnalyticsEventType.insightApplicationInvalidated =>
+      'insight_application_invalidated',
   };
 }

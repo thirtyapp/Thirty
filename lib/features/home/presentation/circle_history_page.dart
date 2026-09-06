@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
+import '../../insights/application/insight_provider.dart';
 import '../../plans/domain/plan_catalog.dart';
 import '../../plans/domain/plan_ids.dart';
 import '../application/activity_catalog.dart';
@@ -119,6 +120,10 @@ class CircleHistoryPage extends ConsumerWidget {
 
     await journal.clearAll();
     ref.invalidate(circleJournalRepositoryProvider);
+    // Batch 2C: a derived Insight must never outlive the evidence it was
+    // drawn from — "stop derived personalization... remove its dependent
+    // snapshots" (frozen architecture §9).
+    await ref.read(insightProvider.notifier).clearAll();
   }
 }
 
