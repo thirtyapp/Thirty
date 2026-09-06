@@ -6,20 +6,35 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/premium/entitlement_gateway.dart';
 import '../../../core/premium/entitlement_status.dart';
 import '../../../core/premium/premium_access.dart';
+import '../../../core/providers/theme_mode_provider.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
 
 /// THIRTY's Settings surface — Step 5
-/// (`docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`).
+/// (`docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`,
+/// reconciled against the parent `THIRTY V1 PRODUCTIZATION + COMMERCIAL
+/// REVIEW.md` §9/§32's actual V1 Settings minimum).
 ///
-/// Frozen architecture §14 defines exactly what Settings must expose for
-/// billing: current Premium status, an entry point when inactive, manage
-/// subscription when relevant, restore purchases, and the local
-/// data/history controls already defined elsewhere. This screen is
-/// deliberately narrow — it does not attempt a general Settings
-/// information architecture (no onboarding/reminder controls exist to
-/// surface here; see the Step 5 report's UI-authority section for why).
+/// Exposes exactly the controls that authority both requires *and* this
+/// app can truthfully back today:
+///
+/// - Premium status/upgrade, restore, manage subscription (frozen
+///   architecture §14);
+/// - theme (System/Light/Dark) — [themeModeProvider] already drives
+///   `ThirtyApp`'s real `MaterialApp.router`; before this screen, the
+///   only place a user could reach it was the internal `/showcase`
+///   developer route, not a real product surface;
+/// - the existing Circle-history data controls (export/delete).
+///
+/// Deliberately **not** included, because no authoritative value or
+/// working consent model exists yet to back it truthfully — fabricating
+/// any of these would be worse than omitting them: a local reminder
+/// on/off control (BLOCKED on the dependency request in ADR-017's
+/// reconciliation), an analytics choice toggle (no consent model exists
+/// in code — analytics currently always fires), and privacy/support
+/// links (no privacy policy or support contact exists anywhere in this
+/// repository). See the Step 5 reconciliation report for the exact gap.
 ///
 /// `url_launcher` here is already present transitively via
 /// `supabase_flutter`'s own dependency graph — not a new package added for
@@ -132,6 +147,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
             ),
             const SizedBox(height: AppSpacing.m),
+            Text('Appearance', style: textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.s),
+            ThirtyCard(child: _ThemeModeRow(themeMode: ref.watch(themeModeProvider))),
+            const SizedBox(height: AppSpacing.m),
             Text('Your data', style: textTheme.titleMedium),
             const SizedBox(height: AppSpacing.s),
             ThirtyCard(
@@ -150,6 +169,31 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ThemeModeRow extends ConsumerWidget {
+  const _ThemeModeRow({required this.themeMode});
+
+  final ThemeMode themeMode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Semantics(
+      container: true,
+      label: 'Theme',
+      child: SegmentedButton<ThemeMode>(
+        segments: const [
+          ButtonSegment(value: ThemeMode.system, label: Text('System')),
+          ButtonSegment(value: ThemeMode.light, label: Text('Light')),
+          ButtonSegment(value: ThemeMode.dark, label: Text('Dark')),
+        ],
+        selected: {themeMode},
+        onSelectionChanged: (selection) => ref
+            .read(themeModeProvider.notifier)
+            .setThemeMode(selection.first),
       ),
     );
   }

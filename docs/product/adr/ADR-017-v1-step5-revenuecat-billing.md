@@ -1,7 +1,8 @@
 # ADR-017 — V1 Step 5 / RevenueCat Billing Integration
 
-**Status:** Accepted (code) / **BLOCKED** (live billing proof — see
-Consequences)
+**Status:** Accepted (billing code, onboarding, Settings reconciliation) /
+**BLOCKED** (live billing proof; local reminder pending dependency
+approval — see Consequences and Reconciliation)
 
 ## Context
 
@@ -132,19 +133,23 @@ founder direction during this batch:**
 9. **Quiet offer placement** (`premium_offer_provider.dart`,
    `premium_offer_invitation_card.dart`): the frozen document's §26 is
    concrete, unambiguous authority — "a single nonmodal invitation after
-   the second closed Circle on distinct dates" — so it was implemented,
-   unlike onboarding/reminders (see below). A plain inline `ThirtyCard` on
-   the home screen, never a dialog; marks itself shown exactly once
-   (persisted, independent of entitlement state, so losing/regaining
-   Premium never re-triggers it) the first time it actually renders.
+   the second closed Circle on distinct dates" — so it was implemented.
+   A plain inline `ThirtyCard` on the home screen, never a dialog; marks
+   itself shown exactly once (persisted, independent of entitlement
+   state, so losing/regaining Premium never re-triggers it) the first
+   time it actually renders. **Corrected in the Reconciliation below:**
+   it must also never render while a reflection question is pending.
 
-10. **Onboarding and reminders: explicitly out of scope, by design, not
-    oversight.** Neither exists in code, and no detailed policy for
-    either exists in any authority document beyond high-level bullets
-    ("one optional local reminder" with no permission flow, cadence or
-    copy specified). Building either now would mean this ADR inventing
-    product policy it has no authority to invent. **Gate status: BLOCKED
-    BY MISSING IMPLEMENTATION AUTHORITY** for both — not attempted.
+10. **Onboarding, Settings and reminders — see Reconciliation below.**
+    The original version of this ADR marked all three
+    `BLOCKED BY MISSING IMPLEMENTATION AUTHORITY`, reasoning that neither
+    existed in code nor in any authority document. That premise was
+    corrected: the parent `THIRTY V1 PRODUCTIZATION + COMMERCIAL
+    REVIEW.md` (§9, §27, §28, §32) — explicitly preserved, unaffected
+    parent-document sections per the frozen correction's own §35 —
+    already specifies both in concrete, implementable detail. This ADR
+    is not silently rewritten; the correction is recorded below with
+    what changed and why.
 
 ### Purchase lifecycle verification matrix
 
@@ -184,28 +189,129 @@ No row above is LIVE TESTED or PROVIDER-SANDBOX TESTED — see Consequences.
   supply `REVENUECAT_ANDROID_API_KEY`/`REVENUECAT_ENTITLEMENT_ID` via
   `config/revenuecat.local.json`; build and run on a licensed test-track
   device to perform the real purchase this ADR cannot.
-- **Onboarding and reminders remain unbuilt.** Their absence is a
-  documented, deliberate scope boundary, not an oversight — resuming them
-  requires a founder decision on notification cadence/copy and Settings
-  information architecture, which is out of this ADR's authority.
+- **Reminders remain unbuilt, blocked on a dependency decision** — see
+  Reconciliation below, not a documentation gap.
 - **Production safety:** no code path outside test overrides can ever set
   `premiumEntitlementProvider`/`entitlementStatusProvider` to
   active/`true` without a verified RevenueCat entitlement. Malformed or
   missing billing configuration fails closed for Premium and never
   affects Free — verified by `revenue_cat_config_test.dart` and
   `entitlement_gateway_test.dart`.
-- **Test suite:** 516/516 passing (460 baseline + 56 new), `flutter
-  analyze` clean. Regression coverage for Batches 1/2A/2B/2C is
-  unaffected — `premiumEntitlementProvider` kept its exact overridable
-  shape, so no existing test needed to change.
+- **Test suite:** 528/528 passing (460 batch-2C baseline + 56 Step 5 +
+  12 reconciliation), `flutter analyze` clean. Regression coverage for
+  Batches 1/2A/2B/2C is unaffected — `premiumEntitlementProvider` kept
+  its exact overridable shape, so no existing test needed to change.
 - **Privacy/data boundary:** no purchase token, receipt, or RevenueCat
   identifier is sent to Supabase/general analytics; none of this batch's
   new code touches the analytics service at all (frozen architecture
   §23 — funnel events deferred to the measurement batch, not required
   for Step 5 acceptance).
 
+## Reconciliation (targeted authority correction, same batch)
+
+This ADR originally classified onboarding, Settings-beyond-billing and
+reminders as `BLOCKED BY MISSING IMPLEMENTATION AUTHORITY`, on the premise
+that no authority existed for them beyond one-line mentions. That premise
+was incorrect: `THIRTY V1 PRODUCTIZATION + COMMERCIAL REVIEW.md` §9, §27,
+§28 and §32 are explicitly preserved, unaffected parent sections (frozen
+correction §35) and specify all three concretely. Corrected disposition:
+
+- **Onboarding — implemented.** `daily_intention_prompt.dart` now shows
+  one first-use explanation ("Choose a direction. THIRTY gives you one
+  activity to do offline, in about thirty minutes. Tomorrow brings a new
+  Circle.") directly above the three always-reachable direction choices —
+  integrated into the existing entry flow per §28, not a separate screen.
+  Shown exactly once: persisted (`onboardingIntroShownKey`) the moment a
+  direction is actually chosen, and never shown at all for an install
+  that already has prior journal history (an upgraded pre-onboarding
+  user is never told this is their first use).
+- **Prompt-priority defect found and fixed.** Auditing 9cb3a6e against
+  §28's prompt-priority rule found a real stacking violation:
+  `PremiumOfferInvitationCard` could render simultaneously with
+  `ActionReportPrompt`'s reflection question, since both were independent
+  conditions on the same screen. Fixed by extracting
+  `reflectionPendingProvider` (`action_report_prompt.dart`) and gating
+  `showPremiumOfferInvitationProvider` on it — the Premium invitation now
+  never appears while a reflection question is pending, exactly matching
+  "reflection comes first... Premium invitation waits until neither is
+  being presented."
+- **Settings — reconciled to the actual V1 minimum, not fully complete.**
+  Added a real System/Light/Dark theme control
+  (`themeModeProvider` already drove `ThirtyApp`'s actual rendering; the
+  only existing UI for it was the internal `/showcase` developer route,
+  not a product surface — this batch is the first real product exposure
+  of an already-working mechanism, not a fabricated feature). Explicitly
+  **not** added, because no authoritative value or working mechanism
+  exists to back it truthfully: an analytics consent toggle (no consent
+  model exists anywhere in code — `SupabaseAnalyticsService.track` always
+  fires unconditionally), and privacy-policy/support-contact links (no
+  such artifact — file, URL, or documented address — exists anywhere in
+  this repository). **Gate status for these two:
+  BLOCKED ON MISSING OPERATIONAL CONTENT**, not re-invented as
+  `MISSING_AUTHORITY` — the product *decision* to have them is already
+  authoritative (§32); what's missing is the actual content/config value,
+  which only the founder/operator can supply.
+- **Local reminder — BLOCKED ON DEPENDENCY APPROVAL, not missing
+  authority.** §27/§28 fully specify the policy (opt-in after first
+  closed Circle, inexact local scheduling, on/off + one time in Settings,
+  calm non-punitive copy, no permission request at cold launch). What
+  blocks implementation is purely technical: no package capable of
+  scheduling/posting a real Android local notification exists anywhere
+  in the resolved dependency graph (confirmed by inspecting
+  `pubspec.lock` — no `flutter_local_notifications`, no
+  `permission_handler`, no `timezone`, no equivalent), and the founder's
+  standing dependency-exception authorization (this ADR's Decision §1)
+  names `purchases_flutter` only. Implementing real OS-level scheduling
+  and runtime notification-permission requests without a plugin would
+  mean hand-writing native Android platform-channel code — a bespoke
+  framework this batch's own governing instructions explicitly discourage
+  in preference to an established package. A reminder toggle with no
+  real scheduling behind it would be a non-functional, half-finished
+  feature presented as working, which is worse than not building it — so
+  none of the reminder UI/state model was built pending the explicit
+  dependency request below.
+
+**REMINDER DEPENDENCY REQUEST**
+
+> **PACKAGE:** `flutter_local_notifications` (plus its `timezone`
+> dependency, pulled in transitively for `zonedSchedule`).
+>
+> **WHY REQUIRED:** §27 requires real inexact local notification
+> scheduling, Android 13+ runtime permission request, cancel/reschedule
+> on toggle/time change, and reboot/timezone/DST-safe rescheduling. Flutter's
+> SDK has no built-in notification API; achieving this without a plugin
+> means writing and maintaining native Android code (a `BroadcastReceiver`
+> for `AlarmManager`, a boot receiver, `NotificationManagerCompat` calls,
+> and manual permission-request platform channels) — strictly more code,
+> more platform-specific risk, and no test coverage this repository's
+> existing Dart-only test suite could exercise.
+>
+> **WHY THIS IS THE SIMPLEST ROUTE:** it is the de facto standard, actively
+> maintained Flutter package for exactly this need, already handles the
+> Android 13+ permission flow, inexact/exact alarm selection, and
+> boot-safe rescheduling internally, and needs no server component —
+> consistent with "no general backend" (frozen architecture §22).
+>
+> **PLATFORM IMPACT:** Android manifest additions for a boot-completed
+> receiver and the `POST_NOTIFICATIONS`/`SCHEDULE_EXACT_ALARM`-adjacent
+> (inexact-only, so no exact-alarm special access) permissions; no iOS
+> work needed (Android-only V1). No Gradle/minSdk changes expected beyond
+> what Flutter's own default already satisfies.
+>
+> **ALTERNATIVES REJECTED:** hand-written native platform-channel code
+> (larger, riskier, explicitly discouraged by this batch's own governing
+> instructions as "an unnecessary custom framework"); `Timer`-only
+> in-Dart scheduling (silently stops working once the app process is
+> killed — cannot satisfy "local reminder" at all); a remote/push-based
+> reminder (explicitly rejected by both frozen architecture and the
+> parent document — "no remote push... in V1").
+
+No package is authorized by this document. **LOCAL REMINDER V1 remains
+BLOCKED pending founder approval of the request above.**
+
 ## Related documents
 
 - [RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md](../RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md) §5–§9, §14, §22, §26, §36 step 5 — the controlling contract this ADR implements.
+- `THIRTY V1 PRODUCTIZATION + COMMERCIAL REVIEW.md` §9, §17, §27, §28, §32 — the parent-document sections explicitly preserved unaffected by the frozen correction (§35), and the actual authority basis for onboarding/reminder/Settings in the Reconciliation above.
 - [ADR-014](ADR-014-v1-batch-2a-circle-plans.md) §16 — the original `premiumEntitlementProvider` seam this ADR replaces the implementation of, without changing its shape.
 - [ADR-015](ADR-015-v1-batch-2b-circle-coach.md), [ADR-016](ADR-016-v1-batch-2c-circle-insights.md) — the Coach/Insights surfaces gated by the same single entitlement.

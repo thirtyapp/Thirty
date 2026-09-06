@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:thirty/core/premium/entitlement_gateway.dart';
 import 'package:thirty/core/premium/entitlement_status.dart';
 import 'package:thirty/core/premium/premium_access.dart';
+import 'package:thirty/core/providers/theme_mode_provider.dart';
 import 'package:thirty/core/theme/app_theme.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
 
@@ -193,4 +194,27 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'exposes the real System/Light/Dark theme control, reflecting and '
+    'updating the actual themeModeProvider the app renders with',
+    (tester) async {
+      final gateway = _FakeEntitlementGateway();
+      final (widget, container) = await _wrap(gateway: gateway);
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(widget);
+      await tester.pumpAndSettle();
+
+      expect(find.text('System'), findsOneWidget);
+      expect(find.text('Light'), findsOneWidget);
+      expect(find.text('Dark'), findsOneWidget);
+      expect(container.read(themeModeProvider), ThemeMode.system);
+
+      await tester.tap(find.text('Dark'));
+      await tester.pumpAndSettle();
+
+      expect(container.read(themeModeProvider), ThemeMode.dark);
+    },
+  );
 }

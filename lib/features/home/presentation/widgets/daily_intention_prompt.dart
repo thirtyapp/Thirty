@@ -1,10 +1,42 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_card.dart';
 import '../../application/activity_catalog.dart';
+import '../../application/circle_journal.dart';
 import '../../application/recommendation_provider.dart';
+
+/// SharedPreferences key recording that THIRTY's one first-use explanation
+/// has already been shown — Step 5 onboarding reconciliation (`THIRTY V1
+/// PRODUCTIZATION + COMMERCIAL REVIEW.md` §28). Set the moment the user
+/// actually chooses their first direction, never merely on render — an
+/// app closed before a first choice should still explain itself next
+/// time (frozen "no long opening every time the app returns" is about
+/// the First Breath ritual, not this one-time explanatory line).
+const onboardingIntroShownKey = 'onboarding_intro_shown_v1';
+
+/// Whether [DailyIntentionPrompt] should render its one-time first-use
+/// explanation above the daily question.
+///
+/// `false` once already shown. Also `false` for an install that already
+/// has any journal history — an existing user upgrading from a
+/// pre-onboarding build has already learned the mechanic and must never
+/// see a "first use" explanation addressed to a new user (and this also
+/// marks the flag so the check is a single read thereafter).
+final showOnboardingIntroProvider = Provider<bool>((ref) {
+  final prefs = ref.watch(sharedPreferencesProvider);
+  if (prefs.getBool(onboardingIntroShownKey) ?? false) return false;
+
+  final hasPriorHistory = ref
+      .watch(circleJournalRepositoryProvider)
+      .readAll()
+      .isNotEmpty;
+  return !hasPriorHistory;
+});
 
 /// THIRTY's Daily Context Question — Recommendation MVP v0
 /// (`docs/product/recommendation-mvp-v0.md`): "What would help most
@@ -24,6 +56,7 @@ class DailyIntentionPrompt extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
+    final showIntro = ref.watch(showOnboardingIntroProvider);
 
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.page),
@@ -31,6 +64,18 @@ class DailyIntentionPrompt extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (showIntro) ...[
+            Text(
+              'Choose a direction. THIRTY gives you one activity to do '
+              'offline, in about thirty minutes. Tomorrow brings a new '
+              'Circle.',
+              style: textTheme.bodyMedium?.copyWith(
+                color: colors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.m),
+          ],
           Text(
             'What would help most today?',
             style: textTheme.headlineSmall,
@@ -54,6 +99,18 @@ class _IntentionOption extends ConsumerWidget {
   final Intention intention;
   final AppColors colors;
 
+  /// Chooses [intention] and — the first time this is ever called —
+  /// permanently marks the first-use explanation as shown
+  /// ([onboardingIntroShownKey]), so it never appears again once the user
+  /// has actually completed their first choice.
+  void _choose(WidgetRef ref) {
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (!(prefs.getBool(onboardingIntroShownKey) ?? false)) {
+      unawaited(prefs.setBool(onboardingIntroShownKey, true));
+    }
+    ref.read(recommendationProvider.notifier).chooseIntention(intention);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
@@ -71,16 +128,10 @@ class _IntentionOption extends ConsumerWidget {
     return Semantics(
       button: true,
       label: '$label. $meaning',
-      onTap: () =>
-          ref.read(recommendationProvider.notifier).chooseIntention(
-            intention,
-          ),
+      onTap: () => _choose(ref),
       child: ExcludeSemantics(
         child: ThirtyCard(
-          onTap: () =>
-              ref.read(recommendationProvider.notifier).chooseIntention(
-                intention,
-              ),
+          onTap: () => _choose(ref),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

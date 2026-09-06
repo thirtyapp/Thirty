@@ -133,4 +133,65 @@ void main() {
       expect(find.text('Was it useful?'), findsNothing);
     },
   );
+
+  group('reflectionPendingProvider (Step 5 prompt-priority reconciliation)', () {
+    Future<ProviderContainer> containerWith(Map<String, Object> prefs) async {
+      SharedPreferences.setMockInitialValues(prefs);
+      final resolved = await SharedPreferences.getInstance();
+      return ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(resolved),
+          nowProvider.overrideWithValue(_today),
+        ],
+      );
+    }
+
+    test('false before today\'s Circle is closed', () async {
+      final container = await containerWith({
+        recommendationDayKey: '2026-08-02',
+        recommendationIntentionKey: 'moreEnergy',
+        recommendationActivityIdKey: 'thirtyMinuteWalk',
+      });
+      addTearDown(container.dispose);
+
+      expect(container.read(reflectionPendingProvider), isFalse);
+    });
+
+    test('true once closed with the attempt question unanswered', () async {
+      final container = await containerWith(_closedToday());
+      addTearDown(container.dispose);
+
+      expect(container.read(reflectionPendingProvider), isTrue);
+    });
+
+    test('true after an affirmative attempt with usefulness unanswered', () async {
+      final container = await containerWith(_closedToday());
+      addTearDown(container.dispose);
+      container.read(recommendationProvider.notifier).reportAttempt(
+        CircleAttemptResponse.aLittle,
+      );
+
+      expect(container.read(reflectionPendingProvider), isTrue);
+    });
+
+    test('false once "Not today" is reported — no follow-up question', () async {
+      final container = await containerWith(_closedToday());
+      addTearDown(container.dispose);
+      container.read(recommendationProvider.notifier).reportAttempt(
+        CircleAttemptResponse.notToday,
+      );
+
+      expect(container.read(reflectionPendingProvider), isFalse);
+    });
+
+    test('false once both questions are answered', () async {
+      final container = await containerWith(_closedToday());
+      addTearDown(container.dispose);
+      final notifier = container.read(recommendationProvider.notifier);
+      notifier.reportAttempt(CircleAttemptResponse.aLittle);
+      notifier.reportUsefulness(CircleUsefulnessResponse.somewhatUseful);
+
+      expect(container.read(reflectionPendingProvider), isFalse);
+    });
+  });
 }

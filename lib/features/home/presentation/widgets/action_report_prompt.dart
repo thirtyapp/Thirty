@@ -17,13 +17,36 @@ import '../../application/recommendation_provider.dart';
 /// has either been answered or has no further question to ask, it renders
 /// nothing again — there is no repeat prompting, no reminder, and no
 /// visual pressure to answer.
+/// Whether [ActionReportPrompt] currently has an unanswered question to
+/// show — exposed as its own provider (Step 5 authority reconciliation)
+/// so other optional-prompt surfaces can honor the parent V1
+/// prompt-priority rule (`THIRTY V1 PRODUCTIZATION + COMMERCIAL
+/// REVIEW.md` §28: reflection takes priority over an eligible
+/// reminder/Premium invitation — see
+/// `../../../premium/application/premium_offer_provider.dart`).
+/// [ActionReportPrompt] itself is written against the same underlying
+/// [_isReflectionPending] check, so the two can never drift apart.
+final reflectionPendingProvider = Provider<bool>((ref) {
+  return _isReflectionPending(ref.watch(recommendationProvider));
+});
+
+bool _isReflectionPending(RecommendationState state) {
+  if (state.status != RecommendationStatus.closed) return false;
+  final attempt = state.attemptResponse;
+  if (attempt == null) return true;
+  final isAffirmative =
+      attempt == CircleAttemptResponse.yes ||
+      attempt == CircleAttemptResponse.aLittle;
+  return isAffirmative && state.usefulnessResponse == null;
+}
+
 class ActionReportPrompt extends ConsumerWidget {
   const ActionReportPrompt({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(recommendationProvider);
-    if (state.status != RecommendationStatus.closed) {
+    if (!_isReflectionPending(state)) {
       return const SizedBox.shrink();
     }
 

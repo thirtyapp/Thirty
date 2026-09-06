@@ -56,15 +56,18 @@
 /// "THIRTY — V1 STEP 5 / REVENUECAT BILLING INTEGRATION" (`1.7.0+8`): the
 /// build under which `premiumEntitlementProvider` stopped being a
 /// hardcoded pre-billing seam and started reading verified RevenueCat
-/// entitlement state, the `/premium` offer and `/settings` (status,
-/// upgrade, restore, manage subscription) surfaces shipped, and the one
-/// quiet post-second-Circle Premium invitation shipped (see
-/// `docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`). Live
-/// billing proof (a real Play/RevenueCat test purchase) remains BLOCKED
-/// pending owner-side RevenueCat/Google Play configuration — see that
-/// ADR's Consequences. Onboarding and reminder work remain out of scope,
-/// by design: neither exists in code and no detailed policy for either
-/// exists in any authority document.
+/// entitlement state; the `/premium` offer and `/settings` (status,
+/// upgrade, restore, manage subscription, theme) surfaces shipped; the
+/// one quiet post-second-Circle Premium invitation shipped, correctly
+/// suppressed while a reflection question is pending; and the one-time
+/// first-use onboarding explanation shipped (see
+/// `docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`, including
+/// its Reconciliation section). Live billing proof (a real Play/
+/// RevenueCat test purchase) remains BLOCKED pending owner-side
+/// RevenueCat/Google Play configuration. The local reminder remains
+/// BLOCKED pending founder approval of the `flutter_local_notifications`
+/// dependency request in that ADR — its product policy is already
+/// authoritative; only the scheduling package is missing.
 ///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the

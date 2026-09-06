@@ -3,19 +3,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:thirty/core/premium/premium_access.dart';
+import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/presentation/widgets/action_report_prompt.dart';
 import 'package:thirty/features/premium/application/premium_offer_provider.dart';
 
 void main() {
-  Future<ProviderContainer> containerWith({bool entitled = false}) async {
-    SharedPreferences.setMockInitialValues({});
+  Future<ProviderContainer> containerWith({
+    bool entitled = false,
+    Map<String, Object> extraPrefs = const {},
+  }) async {
+    SharedPreferences.setMockInitialValues(extraPrefs);
     final prefs = await SharedPreferences.getInstance();
     final container = ProviderContainer(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
         premiumEntitlementProvider.overrideWithValue(entitled),
+        nowProvider.overrideWithValue(DateTime(2026, 9, 2)),
       ],
     );
     return container;
@@ -88,5 +95,65 @@ void main() {
 
       expect(container.read(showPremiumOfferInvitationProvider), isFalse);
     });
+
+    test(
+      'never true while a reflection question is pending — prompt-priority '
+      'rule (parent §28): reflection first, Premium invitation waits until '
+      'neither is being presented',
+      () async {
+        final container = await containerWith(
+          extraPrefs: {
+            recommendationDayKey: '2026-09-02',
+            recommendationIntentionKey: 'moreEnergy',
+            recommendationActivityIdKey: 'thirtyMinuteWalk',
+            recommendationStatusKey: 'closed',
+            recommendationStartedAtKey: DateTime(
+              2026,
+              9,
+              2,
+            ).toIso8601String(),
+            recommendationClosedAtKey: DateTime(2026, 9, 2).toIso8601String(),
+          },
+        );
+        addTearDown(container.dispose);
+        await closeOneCircle(container, '2026-09-01');
+        await closeOneCircle(container, '2026-09-02');
+
+        expect(container.read(reflectionPendingProvider), isTrue);
+        expect(container.read(showPremiumOfferInvitationProvider), isFalse);
+      },
+    );
+
+    test(
+      'becomes true once the pending reflection is answered, still on the '
+      'same visit',
+      () async {
+        final container = await containerWith(
+          extraPrefs: {
+            recommendationDayKey: '2026-09-02',
+            recommendationIntentionKey: 'moreEnergy',
+            recommendationActivityIdKey: 'thirtyMinuteWalk',
+            recommendationStatusKey: 'closed',
+            recommendationStartedAtKey: DateTime(
+              2026,
+              9,
+              2,
+            ).toIso8601String(),
+            recommendationClosedAtKey: DateTime(2026, 9, 2).toIso8601String(),
+          },
+        );
+        addTearDown(container.dispose);
+        await closeOneCircle(container, '2026-09-01');
+        await closeOneCircle(container, '2026-09-02');
+        expect(container.read(showPremiumOfferInvitationProvider), isFalse);
+
+        container
+            .read(recommendationProvider.notifier)
+            .reportAttempt(CircleAttemptResponse.notToday);
+
+        expect(container.read(reflectionPendingProvider), isFalse);
+        expect(container.read(showPremiumOfferInvitationProvider), isTrue);
+      },
+    );
   });
 }
