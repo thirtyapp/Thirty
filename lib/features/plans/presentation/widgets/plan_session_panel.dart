@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
+import '../../../coach/presentation/widgets/coach_cue_banner.dart';
 import '../../../home/application/recommendation_provider.dart';
+import '../../application/plan_provider.dart';
 import '../../domain/plan_catalog.dart';
 import '../../domain/plan_state.dart';
 
@@ -48,6 +50,8 @@ class PlanSessionPanel extends ConsumerWidget {
         : stage.standardGuidance;
     final textTheme = Theme.of(context).textTheme;
     final notifier = ref.read(recommendationProvider.notifier);
+    final progress = ref.watch(planProvider).progress[planId]!;
+    final planNotifier = ref.read(planProvider.notifier);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -110,6 +114,31 @@ class PlanSessionPanel extends ConsumerWidget {
                 ),
               ],
             ),
+            const SizedBox(height: AppSpacing.s),
+            // Batch 2B (ADR-015 §7, application type #1): the persistent
+            // Plan-level default — distinct from the current-Session
+            // Standard/Lighter choice above, which never changes this on
+            // its own.
+            Semantics(
+              label: 'Use lighter guidance as the default for this Plan',
+              toggled: progress.lighterDefault,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Use lighter guidance as the default for this Plan',
+                      style: textTheme.bodySmall,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: progress.lighterDefault,
+                    onChanged: (value) =>
+                        planNotifier.setLighterDefaultForPlan(planId, value),
+                  ),
+                ],
+              ),
+            ),
+            CoachCueBanner(planId: planId, suppressStageExplanation: true),
           ],
         ),
       ),

@@ -40,6 +40,7 @@ class Recommendation {
     this.planVersion,
     this.isPlanRevisit = false,
     this.treatmentUsed,
+    this.treatmentSource,
   });
 
   final String intent;
@@ -107,6 +108,16 @@ class Recommendation {
   /// resolution via [RecommendationNotifier.setPlanTreatment]; changing it
   /// never substitutes a different [activityId] (frozen architecture §10).
   final PlanTreatment? treatmentUsed;
+
+  /// Truthfully records *why* [treatmentUsed] is what it is — Batch 2B
+  /// (ADR-015 §10) — `null` iff [planId] is `null`. Set to
+  /// [PlanTreatmentSource.directChoice] whenever
+  /// [RecommendationNotifier.setPlanTreatment] is called; set from
+  /// `../../plans/application/plan_provider.dart`'s
+  /// `PlanSessionAssignment.treatmentSource` at resolution time otherwise —
+  /// never counted as a fresh user choice merely because the resulting
+  /// [treatmentUsed] happens to be [PlanTreatment.lighter].
+  final PlanTreatmentSource? treatmentSource;
 }
 
 /// Today's Circle's lifecycle status. Deliberately only the three states
@@ -213,6 +224,12 @@ const recommendationIsPlanRevisitKey = 'recommendation_is_plan_revisit';
 /// [PlanTreatment.name] — the one Plan-related field
 /// [RecommendationNotifier.setPlanTreatment] can change after resolution.
 const recommendationTreatmentKey = 'recommendation_treatment';
+
+/// SharedPreferences key for today's [Recommendation.treatmentSource]'s
+/// [PlanTreatmentSource.name] (Batch 2B) — mirrors [recommendationTreatmentKey]
+/// one-for-one: both are set together at resolution, and both are updated
+/// together by [RecommendationNotifier.setPlanTreatment].
+const recommendationTreatmentSourceKey = 'recommendation_treatment_source';
 
 /// Today's Circle: its content ([recommendation]) plus its session/
 /// lifecycle state.
@@ -627,6 +644,13 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// treatment to switch. Never changes [Recommendation.activityId] or any
   /// other identity field — only [Recommendation.treatmentUsed], and the
   /// journal's own `treatmentUsed` record for today's Circle.
+  ///
+  /// Always records [Recommendation.treatmentSource] as
+  /// [PlanTreatmentSource.directChoice] (Batch 2B, ADR-015 §10) — this
+  /// method is only ever called for an explicit current-Session choice,
+  /// never for the automatic application of a saved Plan-level default
+  /// (that happens once, at resolution, inside
+  /// `../../plans/application/plan_provider.dart`'s `resolveSessionFor`).
   void setPlanTreatment(PlanTreatment treatment) {
     final recommendation = state.recommendation;
     if (recommendation == null || recommendation.planId == null) return;
@@ -648,6 +672,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       planVersion: recommendation.planVersion,
       isPlanRevisit: recommendation.isPlanRevisit,
       treatmentUsed: treatment,
+      treatmentSource: PlanTreatmentSource.directChoice,
     );
     state = RecommendationState(
       recommendation: updated,
@@ -737,14 +762,18 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// (`activity_catalog.dart`) for ([intention], [activityId]), resolved on
   /// local date [today]. [planAssignment] (Batch 2A), when non-null, folds
   /// that Plan Session's identity in and defaults
-  /// [Recommendation.treatmentUsed] to [PlanTreatment.standard] — the user
-  /// has not yet chosen lighter treatment for a freshly-resolved Session.
+  /// [Recommendation.treatmentUsed]/[Recommendation.treatmentSource] to
+  /// [PlanSessionAssignment.initialTreatment]/
+  /// [PlanSessionAssignment.treatmentSource] (Batch 2B, ADR-015 §7) — a
+  /// freshly-resolved Session already respects a saved Plan-level lighter
+  /// default, never a hardcoded standard.
   Recommendation _buildRecommendation(
     Intention intention,
     ActivityId activityId,
     String today, {
     PlanSessionAssignment? planAssignment,
     PlanTreatment? treatmentOverride,
+    PlanTreatmentSource? treatmentSourceOverride,
   }) {
     return Recommendation(
       intent: intentionLabel(intention),
@@ -763,7 +792,10 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       isPlanRevisit: planAssignment?.isRevisit ?? false,
       treatmentUsed: planAssignment == null
           ? null
-          : (treatmentOverride ?? PlanTreatment.standard),
+          : (treatmentOverride ?? planAssignment.initialTreatment),
+      treatmentSource: planAssignment == null
+          ? null
+          : (treatmentSourceOverride ?? planAssignment.treatmentSource),
     );
   }
 
@@ -813,6 +845,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final treatment = PlanTreatment.values
             .asNameMap()[prefs.getString(recommendationTreatmentKey)] ??
         PlanTreatment.standard;
+    // Batch 2B: absent on any record persisted before this batch shipped —
+    // falls back to ordinaryDefault, the same honest "no explicit choice
+    // recorded" meaning that state already carries.
+    final treatmentSource = PlanTreatmentSource.values
+            .asNameMap()[prefs.getString(recommendationTreatmentSourceKey)] ??
+        PlanTreatmentSource.ordinaryDefault;
 
     return _buildRecommendation(
       intention,
@@ -825,8 +863,11 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         planCycleId: planCycleId,
         planVersion: planVersion,
         isRevisit: isRevisit,
+        initialTreatment: treatment,
+        treatmentSource: treatmentSource,
       ),
       treatmentOverride: treatment,
+      treatmentSourceOverride: treatmentSource,
     );
   }
 
@@ -888,7 +929,11 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       );
       await prefs.setString(
         recommendationTreatmentKey,
-        PlanTreatment.standard.name,
+        planAssignment.initialTreatment.name,
+      );
+      await prefs.setString(
+        recommendationTreatmentSourceKey,
+        planAssignment.treatmentSource.name,
       );
     } else {
       await prefs.remove(recommendationPlanIdKey);
@@ -897,6 +942,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       await prefs.remove(recommendationPlanVersionKey);
       await prefs.remove(recommendationIsPlanRevisitKey);
       await prefs.remove(recommendationTreatmentKey);
+      await prefs.remove(recommendationTreatmentSourceKey);
     }
 
     // Guards the read below, which runs after several await points — if
@@ -917,8 +963,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           planVersion: planAssignment?.planVersion,
           stageId: planAssignment?.stageId,
           planCycleId: planAssignment?.planCycleId,
-          treatmentUsed: planAssignment == null ? null : PlanTreatment.standard.name,
+          treatmentUsed: planAssignment?.initialTreatment.name,
           revisitUsed: planAssignment?.isRevisit,
+          treatmentSource: planAssignment?.treatmentSource.name,
         );
   }
 
@@ -995,6 +1042,15 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     if (treatmentUsed != null) {
       await prefs.setString(recommendationTreatmentKey, treatmentUsed.name);
     }
+    // Batch 2B: mirrors treatmentSource the same way treatmentUsed is
+    // mirrored just above — see that block's own doc comment.
+    final treatmentSource = recommendation?.treatmentSource;
+    if (treatmentSource != null) {
+      await prefs.setString(
+        recommendationTreatmentSourceKey,
+        treatmentSource.name,
+      );
+    }
 
     if (recommendation == null) return;
     // See _persistChoice's matching comment — this read also happens after
@@ -1009,6 +1065,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final stageId = recommendation.stageId;
     final planCycleId = recommendation.planCycleId;
     final treatmentUsedName = treatmentUsed?.name;
+    final treatmentSourceName = treatmentSource?.name;
     final revisitUsed = recommendation.planId == null
         ? null
         : recommendation.isPlanRevisit;
@@ -1027,6 +1084,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           planCycleId: planCycleId,
           treatmentUsed: treatmentUsedName,
           revisitUsed: revisitUsed,
+          treatmentSource: treatmentSourceName,
         );
       case RecommendationStatus.closed:
         await journal.recordClosed(
@@ -1041,6 +1099,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           planCycleId: planCycleId,
           treatmentUsed: treatmentUsedName,
           revisitUsed: revisitUsed,
+          treatmentSource: treatmentSourceName,
         );
       case RecommendationStatus.notStarted:
         break;
@@ -1060,6 +1119,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         planCycleId: planCycleId,
         treatmentUsed: treatmentUsedName,
         revisitUsed: revisitUsed,
+        treatmentSource: treatmentSourceName,
       );
     }
     if (usefulnessResponse != null) {
@@ -1076,6 +1136,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         planCycleId: planCycleId,
         treatmentUsed: treatmentUsedName,
         revisitUsed: revisitUsed,
+        treatmentSource: treatmentSourceName,
       );
     }
   }

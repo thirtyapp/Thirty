@@ -29,6 +29,17 @@
 /// `docs/product/adr/ADR-014-v1-batch-2a-circle-plans.md`). No billing,
 /// Coach, Insights, or Premium Atmosphere work is included in this build.
 ///
+/// "THIRTY — V1 PRODUCTIZATION BATCH 2B / MINIMUM CIRCLE COACH" (`1.5.0+6`):
+/// the build under which the six bounded Coach situation families, their
+/// one-cue priority policy, the persistent Plan-level lighter default and
+/// its `PlanTreatmentSource` provenance, the additive
+/// `treatmentSource` journal field, the `CoachCueBanner` presentation
+/// surface, and the `coach_cue_shown`/`coach_application_accepted`/
+/// `coach_application_cleared` analytics events shipped (see
+/// `docs/product/adr/ADR-015-v1-batch-2b-circle-coach.md`). No Insights,
+/// billing, runtime AI, or Premium Atmosphere work is included in this
+/// build.
+///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the
 /// frozen evaluation boundary the post-fix measurement protocol depends
@@ -43,5 +54,5 @@ class ReleaseInfo {
   const ReleaseInfo._();
 
   /// Keep in sync with `pubspec.yaml`'s `version:` field.
-  static const String appVersion = '1.4.0+5';
+  static const String appVersion = '1.5.0+6';
 }

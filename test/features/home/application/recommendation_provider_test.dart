@@ -1524,4 +1524,52 @@ void main() {
       );
     });
   });
+
+  group('Circle Coach (Batch 2B, ADR-015) — same-day identity freeze', () {
+    test('setLighterDefaultForPlan after today\'s resolution never rerolls '
+        'or changes today\'s already-resolved Recommendation', () async {
+      final (container, _) = await _containerWith({}, entitled: true);
+      addTearDown(container.dispose);
+      final planNotifier = container.read(planProvider.notifier);
+      planNotifier.activatePlan(PlanId.moreEnergyPath);
+      container
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.moreEnergy);
+
+      final before = container.read(recommendationProvider).recommendation!;
+      expect(before.treatmentUsed, PlanTreatment.standard);
+      expect(before.treatmentSource, PlanTreatmentSource.ordinaryDefault);
+
+      planNotifier.setLighterDefaultForPlan(PlanId.moreEnergyPath, true);
+
+      final after = container.read(recommendationProvider).recommendation!;
+      expect(after.activityId, before.activityId);
+      expect(after.circleId, before.circleId);
+      expect(after.treatmentUsed, PlanTreatment.standard);
+      expect(after.treatmentSource, PlanTreatmentSource.ordinaryDefault);
+    });
+
+    test('a direct setPlanTreatment choice is recorded as directChoice, '
+        'never as an automatic application of the saved default', () async {
+      final (container, _) = await _containerWith({}, entitled: true);
+      addTearDown(container.dispose);
+      final planNotifier = container.read(planProvider.notifier);
+      planNotifier.activatePlan(PlanId.moreEnergyPath);
+      container
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.moreEnergy);
+
+      container
+          .read(recommendationProvider.notifier)
+          .setPlanTreatment(PlanTreatment.lighter);
+
+      final recommendation =
+          container.read(recommendationProvider).recommendation!;
+      expect(recommendation.treatmentSource, PlanTreatmentSource.directChoice);
+      expect(
+        planNotifier.progressFor(PlanId.moreEnergyPath).lighterDefault,
+        isFalse,
+      );
+    });
+  });
 }

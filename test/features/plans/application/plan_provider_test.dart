@@ -652,4 +652,121 @@ void main() {
     });
   });
 
+  group('setLighterDefaultForPlan — Batch 2B (ADR-015)', () {
+    test('enables the persistent default and persists it across a fresh '
+        'container (simulated restart)', () async {
+      final container = await _containerWith();
+      final notifier = container.read(planProvider.notifier);
+      notifier.activatePlan(PlanId.moreEnergyPath);
+
+      notifier.setLighterDefaultForPlan(PlanId.moreEnergyPath, true);
+      expect(
+        notifier.progressFor(PlanId.moreEnergyPath).lighterDefault,
+        isTrue,
+      );
+
+      await Future<void>.delayed(Duration.zero);
+      final prefs = container.read(sharedPreferencesProvider);
+      final restored = <String, Object>{
+        for (final key in prefs.getKeys())
+          if (prefs.get(key) != null) key: prefs.get(key)!,
+      };
+      container.dispose();
+
+      final container2 = await _containerWith(storedPrefs: restored);
+      addTearDown(container2.dispose);
+      expect(
+        container2
+            .read(planProvider.notifier)
+            .progressFor(PlanId.moreEnergyPath)
+            .lighterDefault,
+        isTrue,
+      );
+    });
+
+    test('disables it again (reversible)', () async {
+      final container = await _containerWith();
+      addTearDown(container.dispose);
+      final notifier = container.read(planProvider.notifier);
+      notifier.activatePlan(PlanId.moreEnergyPath);
+      notifier.setLighterDefaultForPlan(PlanId.moreEnergyPath, true);
+
+      notifier.setLighterDefaultForPlan(PlanId.moreEnergyPath, false);
+
+      expect(
+        notifier.progressFor(PlanId.moreEnergyPath).lighterDefault,
+        isFalse,
+      );
+    });
+
+    test('is a no-op when already set to the requested value (no duplicate '
+        'analytics)', () async {
+      final analytics = _RecordingAnalyticsService();
+      final container = await _containerWith(analytics: analytics);
+      addTearDown(container.dispose);
+      final notifier = container.read(planProvider.notifier);
+      notifier.activatePlan(PlanId.moreEnergyPath);
+
+      notifier.setLighterDefaultForPlan(PlanId.moreEnergyPath, true);
+      notifier.setLighterDefaultForPlan(PlanId.moreEnergyPath, true);
+
+      expect(
+        analytics.events
+            .where((e) => e == AnalyticsEventType.coachApplicationAccepted),
+        hasLength(1),
+      );
+    });
+
+    test('a repeated cycle inherits the current saved default', () async {
+      final container = await _containerWith();
+      addTearDown(container.dispose);
+      final notifier = container.read(planProvider.notifier);
+      notifier.activatePlan(PlanId.moreEnergyPath);
+      notifier.setLighterDefaultForPlan(PlanId.moreEnergyPath, true);
+      for (var i = 0; i < 5; i++) {
+        notifier.advanceCursorForCircle(
+          PlanId.moreEnergyPath,
+          'circle-$i',
+          isRevisit: false,
+        );
+      }
+
+      notifier.repeatCycle(PlanId.moreEnergyPath);
+
+      expect(
+        notifier.progressFor(PlanId.moreEnergyPath).lighterDefault,
+        isTrue,
+      );
+    });
+
+    test('a future resolveSessionFor call respects the saved default as '
+        'PlanTreatment.lighter with source savedPreference', () async {
+      final container = await _containerWith();
+      addTearDown(container.dispose);
+      final notifier = container.read(planProvider.notifier);
+      notifier.activatePlan(PlanId.moreEnergyPath);
+      notifier.setLighterDefaultForPlan(PlanId.moreEnergyPath, true);
+
+      final assignment = notifier.resolveSessionFor(Intention.moreEnergy);
+
+      expect(assignment, isNotNull);
+      expect(assignment!.initialTreatment, PlanTreatment.lighter);
+      expect(assignment.treatmentSource, PlanTreatmentSource.savedPreference);
+    });
+
+    test('without a saved default, resolveSessionFor uses standard '
+        'treatment with source ordinaryDefault', () async {
+      final container = await _containerWith();
+      addTearDown(container.dispose);
+      final notifier = container.read(planProvider.notifier);
+      notifier.activatePlan(PlanId.moreEnergyPath);
+
+      final assignment = notifier.resolveSessionFor(Intention.moreEnergy);
+
+      expect(assignment, isNotNull);
+      expect(assignment!.initialTreatment, PlanTreatment.standard);
+      expect(assignment.treatmentSource, PlanTreatmentSource.ordinaryDefault);
+    });
+  });
+
 }

@@ -40,6 +40,8 @@ class PlanSessionAssignment {
     required this.planCycleId,
     required this.planVersion,
     required this.isRevisit,
+    required this.initialTreatment,
+    required this.treatmentSource,
   });
 
   final PlanId planId;
@@ -54,6 +56,23 @@ class PlanSessionAssignment {
   /// `Recommendation.isPlanRevisit`) to decide whether closing this Circle
   /// should advance [PlanProgress.forwardCursor] — a revisit never does.
   final bool isRevisit;
+
+  /// The [PlanTreatment] this Session resolves with *before* any current-
+  /// Session override — Batch 2B (ADR-015 §7): [PlanTreatment.lighter] iff
+  /// [PlanProgress.lighterDefault] was already `true` at resolution time,
+  /// otherwise [PlanTreatment.standard]. `recommendation_provider.dart`'s
+  /// `RecommendationNotifier.setPlanTreatment` may still change the
+  /// *current* Session's treatment after resolution — this field is only
+  /// ever the starting value.
+  final PlanTreatment initialTreatment;
+
+  /// Truthfully records *why* [initialTreatment] is what it is — see
+  /// [PlanTreatmentSource]'s own doc comment. Always
+  /// [PlanTreatmentSource.savedPreference] or
+  /// [PlanTreatmentSource.ordinaryDefault] at resolution time — never
+  /// [PlanTreatmentSource.directChoice], since no explicit current-Session
+  /// choice exists yet for a freshly resolved Session.
+  final PlanTreatmentSource treatmentSource;
 }
 
 /// Manages all local Circle Plan state — Batch 2A
@@ -118,6 +137,16 @@ class PlanNotifier extends Notifier<PlansState> {
             'stage_id': progress.lastEncounteredStageId!,
           },
         );
+    // Batch 2B (ADR-015): a queued revisit is one of Coach's two executable
+    // application types — bounded, distinct telemetry from planRevisitQueued
+    // above, which measures Plan-layer state; this measures the Coach
+    // application itself (frozen architecture §14/R4).
+    ref
+        .read(analyticsServiceProvider)
+        .track(
+          AnalyticsEventType.coachApplicationAccepted,
+          metadata: {'plan_id': planId.name, 'application_type': 'revisit'},
+        );
   }
 
   /// Clears a queued revisit before it applies to any Circle — the user
@@ -128,6 +157,36 @@ class PlanNotifier extends Notifier<PlansState> {
     final progress = state.progress[planId]!;
     if (!progress.pendingRevisit) return;
     _updateProgress(planId, progress.copyWith(pendingRevisit: false));
+    ref
+        .read(analyticsServiceProvider)
+        .track(
+          AnalyticsEventType.coachApplicationCleared,
+          metadata: {'plan_id': planId.name, 'application_type': 'revisit'},
+        );
+  }
+
+  /// Sets or clears the persistent "use lighter guidance as the default for
+  /// this Plan" preference — Batch 2B (ADR-015 §7, application type #1).
+  /// Reversible; never expires on its own; a no-op if [value] already
+  /// matches the stored preference (no duplicate analytics, matching every
+  /// other setter in this class). Never touches today's already-resolved
+  /// `Recommendation` — only a later [resolveSessionFor] call reads the new
+  /// value, to seed a *future* Session's initial treatment.
+  void setLighterDefaultForPlan(PlanId planId, bool value) {
+    final progress = state.progress[planId]!;
+    if (progress.lighterDefault == value) return;
+    _updateProgress(planId, progress.copyWith(lighterDefault: value));
+    ref
+        .read(analyticsServiceProvider)
+        .track(
+          value
+              ? AnalyticsEventType.coachApplicationAccepted
+              : AnalyticsEventType.coachApplicationCleared,
+          metadata: {
+            'plan_id': planId.name,
+            'application_type': 'lighter_default',
+          },
+        );
   }
 
   /// Starts a new cycle for [planId], only once its current cycle is
@@ -155,6 +214,10 @@ class PlanNotifier extends Notifier<PlansState> {
       forwardCursor: 0,
       status: PlanCycleStatus.inProgress,
       cycleHistory: [...progress.cycleHistory, finishedRecord],
+      // Batch 2B: "repeat cycles inherit the current user-selected
+      // preference" (ADR-015 §7) — a fresh cycle is not a fresh person, and
+      // this preference does not silently expire just because a cycle did.
+      lighterDefault: progress.lighterDefault,
     );
     _updateProgress(planId, fresh);
   }
@@ -220,6 +283,19 @@ class PlanNotifier extends Notifier<PlansState> {
           metadata: {'plan_id': planId.name, 'stage_id': stage.id},
         );
 
+    // Batch 2B (ADR-015 §7): a freshly resolved Session's initial treatment
+    // seeds from the saved Plan-level default, never from a hardcoded
+    // standard — "future eligible Plan Sessions" must actually respect it.
+    // This is never counted as a fresh user choice: [PlanTreatmentSource]
+    // is [savedPreference] here, exactly matching "do not count automatic
+    // application of an already-saved preference as a new user choice."
+    final initialTreatment = progress.lighterDefault
+        ? PlanTreatment.lighter
+        : PlanTreatment.standard;
+    final treatmentSource = progress.lighterDefault
+        ? PlanTreatmentSource.savedPreference
+        : PlanTreatmentSource.ordinaryDefault;
+
     return PlanSessionAssignment(
       planId: planId,
       stageId: stage.id,
@@ -227,6 +303,8 @@ class PlanNotifier extends Notifier<PlansState> {
       planCycleId: progress.cycleId,
       planVersion: progress.contentVersion,
       isRevisit: isRevisit,
+      initialTreatment: initialTreatment,
+      treatmentSource: treatmentSource,
     );
   }
 

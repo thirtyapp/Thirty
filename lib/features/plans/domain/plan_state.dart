@@ -23,6 +23,29 @@ enum PlanCycleStatus { inProgress, completed }
 /// never changes which [ActivityId] a Session recommends.
 enum PlanTreatment { standard, lighter }
 
+/// Truthfully distinguishes *why* a Session's [PlanTreatment] is what it is
+/// — Batch 2B (`docs/product/adr/ADR-015-v1-batch-2b-circle-coach.md` §10,
+/// "treatment source semantics"). Required so a future Insight can tell an
+/// automatic application of an already-saved preference apart from a real,
+/// new user choice — "do not count automatic application of an
+/// already-saved preference as a new user choice."
+enum PlanTreatmentSource {
+  /// Neither a saved preference nor an explicit choice for this Session —
+  /// [PlanTreatment.standard] because [PlanProgress.lighterDefault] is
+  /// `false` and the user has not overridden it today.
+  ordinaryDefault,
+
+  /// The user explicitly picked a treatment for *this* Session
+  /// (`../application/plan_provider.dart`'s `RecommendationNotifier`-side
+  /// `setPlanTreatment` — never itself a change to [PlanProgress.lighterDefault]).
+  directChoice,
+
+  /// This Session's [PlanTreatment] was set automatically because
+  /// [PlanProgress.lighterDefault] was already `true` when it resolved —
+  /// not a new choice, even though the resulting treatment is lighter.
+  savedPreference,
+}
+
 /// A finished (or abandoned-by-repeat) cycle, kept for historical record —
 /// "keeps historical prior-cycle records" (frozen architecture §13).
 /// Never rewritten once appended.
@@ -85,6 +108,7 @@ class PlanProgress {
     this.cycleHistory = const [],
     this.lastAdvancedCircleId,
     this.cycleCompletedAt,
+    this.lighterDefault = false,
   });
 
   /// A brand-new, never-started [planId] — stage index 0, no history, no
@@ -161,6 +185,18 @@ class PlanProgress {
   /// [PlanCycleRecord] once an explicit repeat starts a new cycle.
   final DateTime? cycleCompletedAt;
 
+  /// The persistent "use lighter guidance as the default for this Plan"
+  /// preference — Batch 2B (frozen architecture §7, application type #1).
+  /// Set explicitly by the user
+  /// (`../application/plan_provider.dart`'s `setLighterDefaultForPlan`),
+  /// never inferred. Visible, reversible, and never expires on its own —
+  /// it stays exactly as the user left it across gaps, app restarts, and
+  /// (via [repeatCycle]-adjacent logic carrying it forward) repeat cycles.
+  /// Changing it never touches the current Session's already-resolved
+  /// [PlanTreatment] — only a later `resolveSessionFor` call reads it, to
+  /// seed a *new* Session's initial [PlanTreatment]/[PlanTreatmentSource].
+  final bool lighterDefault;
+
   PlanProgress copyWith({
     int? forwardCursor,
     StageId? lastEncounteredStageId,
@@ -171,6 +207,7 @@ class PlanProgress {
     List<PlanCycleRecord>? cycleHistory,
     String? lastAdvancedCircleId,
     DateTime? cycleCompletedAt,
+    bool? lighterDefault,
     bool clearLastEncounteredStageId = false,
     bool clearCycleCompletedAt = false,
   }) {
@@ -190,6 +227,7 @@ class PlanProgress {
       cycleCompletedAt: clearCycleCompletedAt
           ? null
           : (cycleCompletedAt ?? this.cycleCompletedAt),
+      lighterDefault: lighterDefault ?? this.lighterDefault,
     );
   }
 
@@ -205,6 +243,7 @@ class PlanProgress {
     'cycleHistory': cycleHistory.map((c) => c.toJson()).toList(),
     'lastAdvancedCircleId': lastAdvancedCircleId,
     'cycleCompletedAt': cycleCompletedAt?.toIso8601String(),
+    'lighterDefault': lighterDefault,
   };
 
   /// Parses one Plan's persisted progress, or `null` if any required field
@@ -240,6 +279,11 @@ class PlanProgress {
     final lastAdvancedCircleId = lastAdvancedCircleIdRaw is String
         ? lastAdvancedCircleIdRaw
         : null;
+    // Absent on every pre-Batch-2B persisted record — defaults to `false`,
+    // exactly [PlanProgress]'s own constructor default, so an old record
+    // decodes with no lighter-default preference rather than failing to
+    // parse (Batch 2B must not invalidate Batch 2A's persisted state).
+    final lighterDefault = json['lighterDefault'] == true;
 
     final rawHistory = json['cycleHistory'];
     final history = <PlanCycleRecord>[];
@@ -268,6 +312,7 @@ class PlanProgress {
       cycleHistory: history,
       lastAdvancedCircleId: lastAdvancedCircleId,
       cycleCompletedAt: cycleCompletedAt,
+      lighterDefault: lighterDefault,
     );
   }
 }

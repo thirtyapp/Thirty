@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
+import '../../coach/presentation/widgets/coach_cue_banner.dart';
 import '../application/plan_provider.dart';
 import '../domain/plan_catalog.dart';
 import '../domain/plan_ids.dart';
@@ -105,6 +106,19 @@ class _PlanCard extends ConsumerWidget {
                       '${plan.stages.length}',
             style: textTheme.bodyMedium,
           ),
+          if (progress.lighterDefault) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Lighter guidance is this Plan\'s default.',
+              style: textTheme.bodySmall?.copyWith(
+                color: colors.textSecondary,
+              ),
+            ),
+          ],
+          if (isActive) ...[
+            const SizedBox(height: AppSpacing.xs),
+            CoachCueBanner(planId: planId),
+          ],
           const SizedBox(height: AppSpacing.s),
           if (!isActive)
             ThirtyButton(

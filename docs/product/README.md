@@ -62,3 +62,4 @@ Een ADR (Architecture/Product Decision Record) legt één specifieke, vaak onomk
 - [ADR-012 — Batch 2 / Recommendation Diversity](adr/ADR-012-batch-2-recommendation-diversity.md)
 - [ADR-013 — V1 Productization Batch 1 / Free Foundation + Prospective Local Journal](adr/ADR-013-v1-free-foundation-and-journal.md)
 - [ADR-014 — V1 Productization Batch 2A / Circle Plans + Guided Sessions](adr/ADR-014-v1-batch-2a-circle-plans.md)
+- [ADR-015 — V1 Productization Batch 2B / Minimum Circle Coach](adr/ADR-015-v1-batch-2b-circle-coach.md)

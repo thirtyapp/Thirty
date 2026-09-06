@@ -85,6 +85,7 @@ class CircleJournalEntry {
     this.planCycleId,
     this.treatmentUsed,
     this.revisitUsed,
+    this.treatmentSource,
   });
 
   /// The journal record schema version this entry was written under — see
@@ -164,6 +165,16 @@ class CircleJournalEntry {
   /// never a bare `false` standing in for "not applicable."
   final bool? revisitUsed;
 
+  /// Truthfully records *why* [treatmentUsed] is what it is — Batch 2B
+  /// (`../../plans/domain/plan_state.dart`'s `PlanTreatmentSource.name`):
+  /// `'ordinaryDefault'`, `'directChoice'`, or `'savedPreference'`. `null`
+  /// iff [planId] is `null`, and always `null` on every record written
+  /// before Batch 2B, exactly like [treatmentUsed] was for every
+  /// pre-Batch-2A record. Required so a future Insight can distinguish an
+  /// automatic application of an already-saved preference from a genuine
+  /// new user choice (ADR-015 §10).
+  final String? treatmentSource;
+
   CircleJournalEntry copyWith({
     DateTime? startedAt,
     DateTime? closedAt,
@@ -189,6 +200,7 @@ class CircleJournalEntry {
       planCycleId: planCycleId,
       treatmentUsed: treatmentUsed ?? this.treatmentUsed,
       revisitUsed: revisitUsed,
+      treatmentSource: treatmentSource,
     );
   }
 
@@ -210,6 +222,7 @@ class CircleJournalEntry {
     'planCycleId': planCycleId,
     'treatmentUsed': treatmentUsed,
     'revisitUsed': revisitUsed,
+    'treatmentSource': treatmentSource,
   };
 
   /// Parses one journal entry, or `null` if [json] is missing or has an
@@ -271,6 +284,10 @@ class CircleJournalEntry {
     final treatmentUsed = treatmentUsedRaw is String ? treatmentUsedRaw : null;
     final revisitUsedRaw = json['revisitUsed'];
     final revisitUsed = revisitUsedRaw is bool ? revisitUsedRaw : null;
+    final treatmentSourceRaw = json['treatmentSource'];
+    final treatmentSource = treatmentSourceRaw is String
+        ? treatmentSourceRaw
+        : null;
 
     return CircleJournalEntry(
       schemaVersion: schemaVersion,
@@ -292,6 +309,7 @@ class CircleJournalEntry {
       planCycleId: planCycleId,
       treatmentUsed: treatmentUsed,
       revisitUsed: revisitUsed,
+      treatmentSource: treatmentSource,
     );
   }
 }
@@ -379,6 +397,7 @@ class CircleJournalRepository {
     String? planCycleId,
     String? treatmentUsed,
     bool? revisitUsed,
+    String? treatmentSource,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
@@ -391,6 +410,7 @@ class CircleJournalRepository {
     planCycleId: planCycleId,
     treatmentUsed: treatmentUsed,
     revisitUsed: revisitUsed,
+    treatmentSource: treatmentSource,
     update: (entry) => entry,
   );
 
@@ -417,6 +437,7 @@ class CircleJournalRepository {
     String? planCycleId,
     String? treatmentUsed,
     bool? revisitUsed,
+    String? treatmentSource,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
@@ -429,6 +450,7 @@ class CircleJournalRepository {
     planCycleId: planCycleId,
     treatmentUsed: treatmentUsed,
     revisitUsed: revisitUsed,
+    treatmentSource: treatmentSource,
     update: (entry) => entry.copyWith(startedAt: startedAt),
   );
 
@@ -447,6 +469,7 @@ class CircleJournalRepository {
     String? planCycleId,
     String? treatmentUsed,
     bool? revisitUsed,
+    String? treatmentSource,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
@@ -459,6 +482,7 @@ class CircleJournalRepository {
     planCycleId: planCycleId,
     treatmentUsed: treatmentUsed,
     revisitUsed: revisitUsed,
+    treatmentSource: treatmentSource,
     update: (entry) => entry.copyWith(closedAt: closedAt),
   );
 
@@ -483,6 +507,7 @@ class CircleJournalRepository {
     String? planCycleId,
     String? treatmentUsed,
     bool? revisitUsed,
+    String? treatmentSource,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
@@ -495,6 +520,7 @@ class CircleJournalRepository {
     planCycleId: planCycleId,
     treatmentUsed: treatmentUsed,
     revisitUsed: revisitUsed,
+    treatmentSource: treatmentSource,
     update: (entry) {
       final isAffirmative =
           response == CircleAttemptResponse.yes ||
@@ -517,6 +543,7 @@ class CircleJournalRepository {
         planCycleId: entry.planCycleId,
         treatmentUsed: entry.treatmentUsed,
         revisitUsed: entry.revisitUsed,
+        treatmentSource: entry.treatmentSource,
       );
     },
   );
@@ -536,6 +563,7 @@ class CircleJournalRepository {
     String? planCycleId,
     String? treatmentUsed,
     bool? revisitUsed,
+    String? treatmentSource,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
@@ -548,6 +576,7 @@ class CircleJournalRepository {
     planCycleId: planCycleId,
     treatmentUsed: treatmentUsed,
     revisitUsed: revisitUsed,
+    treatmentSource: treatmentSource,
     update: (entry) => entry.copyWith(usefulnessResponse: response),
   );
 
@@ -598,6 +627,7 @@ class CircleJournalRepository {
     String? planCycleId,
     String? treatmentUsed,
     bool? revisitUsed,
+    String? treatmentSource,
   }) async {
     final entries = _readRaw();
     final index = entries.indexWhere((entry) => entry.circleId == circleId);
@@ -616,6 +646,7 @@ class CircleJournalRepository {
             planCycleId: planCycleId,
             treatmentUsed: treatmentUsed,
             revisitUsed: revisitUsed,
+            treatmentSource: treatmentSource,
           )
         : entries[index];
 

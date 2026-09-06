@@ -72,6 +72,27 @@
 ///   (`PlanNotifier.queueRevisit`).
 /// - [planRevisitUsed] — a queued revisit was actually applied to a
 ///   resolved Session (`PlanNotifier.resolveSessionFor`'s revisit path).
+///
+/// Batch 2B (see
+/// `docs/product/adr/ADR-015-v1-batch-2b-circle-coach.md`) adds three
+/// bounded events for the minimum Circle Coach — never narrative text,
+/// never a health/medical claim, and never treated as evidence of real-
+/// world value (exposure and application acceptance are not usefulness):
+///
+/// - [coachCueShown] — a Coach cue was actually displayed to the user
+///   (`../../features/coach/presentation/widgets/coach_cue_banner.dart`).
+///   Exposure only, exactly like [recommendationShown]/[planSessionShown]
+///   — never evidence the user read, understood, or acted on it.
+/// - [coachApplicationAccepted] — the user explicitly accepted one of
+///   Coach's two executable application types (`../../features/plans/
+///   application/plan_provider.dart`'s `setLighterDefaultForPlan(_, true)`
+///   or `queueRevisit`). Carries `application_type` (`'lighter_default'`
+///   or `'revisit'`) as metadata — never itself evidence the resulting
+///   Session was attempted or useful (ADR-010).
+/// - [coachApplicationCleared] — the user explicitly reversed one of those
+///   same two application types (`setLighterDefaultForPlan(_, false)` or
+///   `clearQueuedRevisit`). Same metadata shape as
+///   [coachApplicationAccepted].
 enum AnalyticsEventType {
   appOpened,
   circleStarted,
@@ -84,6 +105,9 @@ enum AnalyticsEventType {
   planCycleCompleted,
   planRevisitQueued,
   planRevisitUsed,
+  coachCueShown,
+  coachApplicationAccepted,
+  coachApplicationCleared,
 }
 
 /// The stable string this event is written as in `analytics_events.
@@ -109,5 +133,8 @@ extension AnalyticsEventTypeWire on AnalyticsEventType {
     AnalyticsEventType.planCycleCompleted => 'plan_cycle_completed',
     AnalyticsEventType.planRevisitQueued => 'plan_revisit_queued',
     AnalyticsEventType.planRevisitUsed => 'plan_revisit_used',
+    AnalyticsEventType.coachCueShown => 'coach_cue_shown',
+    AnalyticsEventType.coachApplicationAccepted => 'coach_application_accepted',
+    AnalyticsEventType.coachApplicationCleared => 'coach_application_cleared',
   };
 }
