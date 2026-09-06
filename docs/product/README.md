@@ -56,3 +56,5 @@ Een ADR (Architecture/Product Decision Record) legt één specifieke, vaak onomk
 - [ADR-008 — Learning Without Judgment](adr/ADR-008-learning-without-judgment.md)
 - [ADR-009 — Daily Intention Question Is v0's Sole Personalization Signal](adr/ADR-009-daily-intention-question.md)
 - [ADR-010 — Circle Closed Is Not Verified Activity Completion](adr/ADR-010-circle-closed-not-completion.md)
+- [ADR-011 — Batch 1 / Post-Fix Retention Cohort](adr/ADR-011-batch-1-post-fix-retention-cohort.md)
+- [ADR-012 — Batch 2 / Recommendation Diversity](adr/ADR-012-batch-2-recommendation-diversity.md)

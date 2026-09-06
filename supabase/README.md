@@ -13,6 +13,12 @@ behavioural instrumentation (see
 It does not authorize any broader Supabase data layer — that remains its
 own, separate, future decision.
 
+`migrations/20260906000000_add_recommendation_shown_event.sql` is Batch 2's
+one additive change to that same table — it only widens the existing
+`event_type` CHECK constraint to also allow `recommendation_shown` (see
+[`docs/product/adr/ADR-012-batch-2-recommendation-diversity.md`](../docs/product/adr/ADR-012-batch-2-recommendation-diversity.md)).
+No new table, column, or access pattern.
+
 ## What it creates
 
 One table, `public.analytics_events` — insert-only from the app, append-only,
@@ -22,9 +28,11 @@ schema and the reasoning behind each column.
 ## Applying it
 
 This repo does not use the Supabase CLI's local project scaffolding (no
-`supabase/config.toml`). Apply the migration by pasting
-`migrations/20260905000000_create_analytics_events.sql` into the target
-Supabase project's SQL editor (Dashboard → SQL Editor → New query → Run).
+`supabase/config.toml`). Apply each migration, in filename (date) order, by
+pasting it into the target Supabase project's SQL editor (Dashboard → SQL
+Editor → New query → Run) — first
+`migrations/20260905000000_create_analytics_events.sql`, then
+`migrations/20260906000000_add_recommendation_shown_event.sql`.
 
 ## Rolling back
 

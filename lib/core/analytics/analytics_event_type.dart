@@ -1,7 +1,9 @@
-/// The three raw behavioural events Batch 1's instrumentation records —
-/// deliberately the smallest set that can derive every metric the frozen
-/// post-fix measurement protocol needs (see
-/// `docs/product/adr/ADR-011-batch-1-post-fix-retention-cohort.md`):
+/// The raw behavioural events THIRTY's instrumentation records.
+///
+/// Batch 1 (see
+/// `docs/product/adr/ADR-011-batch-1-post-fix-retention-cohort.md`)
+/// introduced the smallest set that could derive every metric the frozen
+/// post-fix measurement protocol needs:
 ///
 /// - [appOpened] — fired on cold start and on every foreground resume.
 ///   The earliest [appOpened] row for a tester is their "first observed
@@ -17,11 +19,29 @@
 ///   evidence of the recommended activity actually being done — Batch 1
 ///   introduces no new "Check-In" concept, it only names this same
 ///   existing event for the measurement protocol's own vocabulary.
-enum AnalyticsEventType { appOpened, circleStarted, circleClosed }
+///
+/// Batch 2 (see
+/// `docs/product/adr/ADR-012-batch-2-recommendation-diversity.md`) adds one
+/// event, to make recommendation exposure — not just Circle start/close —
+/// observable:
+///
+/// - [recommendationShown] — [RecommendationNotifier.chooseIntention]
+///   actually resolving today's recommendation, never fired on its no-op
+///   early return. Carries `intention` and `activity_id` (both stable
+///   identifiers, never display copy) as metadata — see
+///   [SupabaseAnalyticsService.track]'s `metadata` parameter.
+enum AnalyticsEventType {
+  appOpened,
+  circleStarted,
+  circleClosed,
+  recommendationShown,
+}
 
 /// The stable string this event is written as in `analytics_events.
 /// event_type` — snake_case to match the Supabase table's own `CHECK`
-/// constraint (`supabase/migrations/20260905000000_create_analytics_events.sql`),
+/// constraint (`supabase/migrations/20260905000000_create_analytics_events.sql`,
+/// extended for [recommendationShown] by
+/// `supabase/migrations/20260906000000_add_recommendation_shown_event.sql`),
 /// deliberately not [AnalyticsEventType.name] (camelCase) so the raw table
 /// reads naturally for manual inspection in Supabase Studio.
 extension AnalyticsEventTypeWire on AnalyticsEventType {
@@ -29,5 +49,6 @@ extension AnalyticsEventTypeWire on AnalyticsEventType {
     AnalyticsEventType.appOpened => 'app_opened',
     AnalyticsEventType.circleStarted => 'circle_started',
     AnalyticsEventType.circleClosed => 'circle_closed',
+    AnalyticsEventType.recommendationShown => 'recommendation_shown',
   };
 }

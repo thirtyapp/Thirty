@@ -95,15 +95,16 @@ String activityLabel(ActivityId activityId) => switch (activityId) {
 /// exists so `Recommendation.category` stays a truthful description of the
 /// activity, even though, in v0, every category currently renders the same
 /// illustration in `circle_hero.dart`.
-ActivityCategory activityCategory(ActivityId activityId) => switch (activityId) {
-  ActivityId.thirtyMinuteWalk ||
-  ActivityId.phoneFreeWalk ||
-  ActivityId.easyWalk => ActivityCategory.walking,
-  ActivityId.moveToMusic ||
-  ActivityId.writeItDown ||
-  ActivityId.quietReading ||
-  ActivityId.quietMusicBreak => ActivityCategory.generalWellness,
-};
+ActivityCategory activityCategory(ActivityId activityId) =>
+    switch (activityId) {
+      ActivityId.thirtyMinuteWalk ||
+      ActivityId.phoneFreeWalk ||
+      ActivityId.easyWalk => ActivityCategory.walking,
+      ActivityId.moveToMusic ||
+      ActivityId.writeItDown ||
+      ActivityId.quietReading ||
+      ActivityId.quietMusicBreak => ActivityCategory.generalWellness,
+    };
 
 /// The "Why This Today?" copy for ([intention], [activityId]) — deliberately
 /// keyed on the pair, not on [activityId] alone, so a future activity
@@ -164,33 +165,37 @@ String whyCopyFor(Intention intention, ActivityId activityId) {
 /// [selectActivityId] rotates through [activityPools] with — never a
 /// hash code, and never randomness.
 int epochDay(DateTime date) =>
-    DateTime.utc(
-      date.year,
-      date.month,
-      date.day,
-    ).millisecondsSinceEpoch ~/
+    DateTime.utc(date.year, date.month, date.day).millisecondsSinceEpoch ~/
     Duration.millisecondsPerDay;
 
 /// Deterministically picks one [ActivityId] from [intention]'s pool.
 ///
-/// - **Deterministic:** the same ([dayIndex], [intention]) always resolves
-///   to the same [ActivityId] — no scoring, no AI, no probabilistic
-///   ranking.
-/// - **Anti-repetition:** if the normal candidate (`dayIndex % pool.length`)
-///   equals [previousActivityId], the next candidate in the pool is used
-///   instead — a single, fixed step, not a weighted or novelty-scored
-///   choice. Every [activityPools] entry has at least two activities, so an
-///   alternative is always available.
+/// - **Deterministic:** the same ([dayIndex], [intention], [recentActivityIds])
+///   always resolves to the same [ActivityId] — no scoring, no AI, no
+///   probabilistic ranking, no randomness.
+/// - **Anti-repetition (Batch 2 — see
+///   [ADR-012](../../../../docs/product/adr/ADR-012-batch-2-recommendation-diversity.md)):**
+///   [recentActivityIds] is excluded from the candidate pool before the
+///   normal `dayIndex`-based rotation runs. [RecommendationNotifier]
+///   (`recommendation_provider.dart`) is the sole caller and is responsible
+///   for keeping [recentActivityIds] bounded to at most
+///   `pool.length - 1` entries for [intention] — that cap is what
+///   guarantees at least one candidate always survives the exclusion below,
+///   so this function never needs to fall back to an empty pool in
+///   practice. If a caller ever violates that cap (e.g. a future pool
+///   shrinks to a single activity), the deterministic, documented fallback
+///   is to ignore [recentActivityIds] entirely for that call and rotate
+///   over the full, unfiltered pool — never a deadlock, and never a
+///   cross-[Intention] substitution.
 ActivityId selectActivityId({
   required Intention intention,
   required int dayIndex,
-  ActivityId? previousActivityId,
+  Set<ActivityId> recentActivityIds = const {},
 }) {
   final pool = activityPools[intention]!;
-  final normalIndex = dayIndex % pool.length;
-  final candidate = pool[normalIndex];
-  if (candidate != previousActivityId) {
-    return candidate;
-  }
-  return pool[(normalIndex + 1) % pool.length];
+  final candidates = pool
+      .where((id) => !recentActivityIds.contains(id))
+      .toList();
+  final effectivePool = candidates.isEmpty ? pool : candidates;
+  return effectivePool[dayIndex % effectivePool.length];
 }

@@ -36,20 +36,14 @@ void main() {
       expect(sharedIds, isEmpty);
     });
 
-    test(
-      '30-minute walk, phone-free walk and easy walk are three distinct '
-      'ActivityIds, not a shared canonical identity',
-      () {
-        expect(
-          {
-            ActivityId.thirtyMinuteWalk,
-            ActivityId.phoneFreeWalk,
-            ActivityId.easyWalk,
-          },
-          hasLength(3),
-        );
-      },
-    );
+    test('30-minute walk, phone-free walk and easy walk are three distinct '
+        'ActivityIds, not a shared canonical identity', () {
+      expect({
+        ActivityId.thirtyMinuteWalk,
+        ActivityId.phoneFreeWalk,
+        ActivityId.easyWalk,
+      }, hasLength(3));
+    });
   });
 
   group('activityLabel / activityCategory / whyCopyFor', () {
@@ -82,13 +76,16 @@ void main() {
       },
     );
 
-    test('every (intention, activityId) pair reachable from a pool has why-copy', () {
-      for (final entry in activityPools.entries) {
-        for (final activityId in entry.value) {
-          expect(whyCopyFor(entry.key, activityId), isNotEmpty);
+    test(
+      'every (intention, activityId) pair reachable from a pool has why-copy',
+      () {
+        for (final entry in activityPools.entries) {
+          for (final activityId in entry.value) {
+            expect(whyCopyFor(entry.key, activityId), isNotEmpty);
+          }
         }
-      }
-    });
+      },
+    );
 
     test('no why-copy contains a forbidden claim pattern', () {
       for (final entry in activityPools.entries) {
@@ -98,7 +95,8 @@ void main() {
             expect(
               why.contains(phrase),
               isFalse,
-              reason: '"$phrase" found in why-copy for '
+              reason:
+                  '"$phrase" found in why-copy for '
                   '(${entry.key}, $activityId)',
             );
           }
@@ -131,17 +129,20 @@ void main() {
   });
 
   group('selectActivityId', () {
-    test('is deterministic: same (dayIndex, intention) always resolves the same way', () {
-      final first = selectActivityId(
-        intention: Intention.moreEnergy,
-        dayIndex: 42,
-      );
-      final second = selectActivityId(
-        intention: Intention.moreEnergy,
-        dayIndex: 42,
-      );
-      expect(first, second);
-    });
+    test(
+      'is deterministic: same (dayIndex, intention) always resolves the same way',
+      () {
+        final first = selectActivityId(
+          intention: Intention.moreEnergy,
+          dayIndex: 42,
+        );
+        final second = selectActivityId(
+          intention: Intention.moreEnergy,
+          dayIndex: 42,
+        );
+        expect(first, second);
+      },
+    );
 
     test('resolves to a member of the intention\'s own pool', () {
       for (final intention in Intention.values) {
@@ -165,42 +166,83 @@ void main() {
       }
     });
 
-    test(
-      'anti-repetition: when the normal candidate matches the previous '
-      'activity, the next pool candidate is chosen instead',
-      () {
-        final pool = activityPools[Intention.moreEnergy]!;
-        const dayIndex = 5;
-        final normalCandidate = pool[dayIndex % pool.length];
+    test('anti-repetition: excluding the normal candidate picks a different '
+        'pool member instead', () {
+      final pool = activityPools[Intention.moreEnergy]!;
+      const dayIndex = 5;
+      final normalCandidate = pool[dayIndex % pool.length];
 
+      final result = selectActivityId(
+        intention: Intention.moreEnergy,
+        dayIndex: dayIndex,
+        recentActivityIds: {normalCandidate},
+      );
+
+      expect(result, isNot(normalCandidate));
+      expect(pool, contains(result));
+    });
+
+    test('anti-repetition never triggers when recentActivityIds excludes an '
+        'activity other than the normal candidate', () {
+      final pool = activityPools[Intention.moreEnergy]!;
+      const dayIndex = 5;
+      final normalCandidate = pool[dayIndex % pool.length];
+      final otherActivity = pool.firstWhere((a) => a != normalCandidate);
+
+      final result = selectActivityId(
+        intention: Intention.moreEnergy,
+        dayIndex: dayIndex,
+        recentActivityIds: {otherActivity},
+      );
+
+      expect(result, normalCandidate);
+    });
+
+    test('exhausted pool (every candidate excluded) falls back to the full, '
+        'unfiltered pool rather than deadlocking', () {
+      final pool = activityPools[Intention.moreEnergy]!;
+      const dayIndex = 5;
+
+      final result = selectActivityId(
+        intention: Intention.moreEnergy,
+        dayIndex: dayIndex,
+        recentActivityIds: pool.toSet(),
+      );
+
+      expect(pool, contains(result));
+      expect(result, pool[dayIndex % pool.length]);
+    });
+
+    test('a 3-item pool with two of three excluded deterministically returns '
+        'the one remaining candidate, regardless of dayIndex', () {
+      final pool = activityPools[Intention.clearerHead]!;
+      final excluded = {pool[0], pool[1]};
+      final remaining = pool[2];
+
+      for (var dayIndex = 0; dayIndex < 5; dayIndex++) {
         final result = selectActivityId(
-          intention: Intention.moreEnergy,
+          intention: Intention.clearerHead,
           dayIndex: dayIndex,
-          previousActivityId: normalCandidate,
+          recentActivityIds: excluded,
         );
+        expect(result, remaining);
+      }
+    });
 
-        expect(result, isNot(normalCandidate));
-        expect(pool, contains(result));
-      },
-    );
+    test('recentActivityIds from another intention\'s pool never affect this '
+        'intention\'s selection', () {
+      final pool = activityPools[Intention.moreEnergy]!;
+      const dayIndex = 5;
+      final normalCandidate = pool[dayIndex % pool.length];
+      final unrelatedActivity = activityPools[Intention.clearerHead]!.first;
 
-    test(
-      'anti-repetition never triggers when the previous activity differs '
-      'from the normal candidate',
-      () {
-        final pool = activityPools[Intention.moreEnergy]!;
-        const dayIndex = 5;
-        final normalCandidate = pool[dayIndex % pool.length];
-        final otherActivity = pool.firstWhere((a) => a != normalCandidate);
+      final result = selectActivityId(
+        intention: Intention.moreEnergy,
+        dayIndex: dayIndex,
+        recentActivityIds: {unrelatedActivity},
+      );
 
-        final result = selectActivityId(
-          intention: Intention.moreEnergy,
-          dayIndex: dayIndex,
-          previousActivityId: otherActivity,
-        );
-
-        expect(result, normalCandidate);
-      },
-    );
+      expect(result, normalCandidate);
+    });
   });
 }

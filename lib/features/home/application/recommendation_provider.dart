@@ -66,10 +66,30 @@ const recommendationIntentionKey = 'recommendation_intention';
 
 /// SharedPreferences key for today's selected [ActivityId.name] — absent
 /// until [RecommendationNotifier.chooseIntention] has been called for
-/// today. Also the value [RecommendationNotifier.chooseIntention] reads
-/// *before* overwriting it, on the day it detects a new day has started, to
-/// identify "yesterday's" canonical activity for anti-repetition.
+/// today.
 const recommendationActivityIdKey = 'recommendation_activity_id';
+
+/// SharedPreferences key prefix for [intention]'s bounded recent-activity
+/// history (Batch 2 — see
+/// [ADR-012](../../../../docs/product/adr/ADR-012-batch-2-recommendation-diversity.md)),
+/// stored as a `StringList` of [ActivityId.name] values, oldest first.
+///
+/// One list per [Intention] (never a single shared list) — the anti-
+/// repetition guard only ever needs to compare against activities drawn
+/// from the *same* pool, and keeping the lists separate means switching
+/// intentions from one day to the next never spends down another
+/// intention's history budget. Bounded to `pool.length - 1` entries by
+/// [RecommendationNotifier.chooseIntention] itself (see
+/// [selectActivityId]'s own doc comment for why that specific cap) —
+/// nothing enforces the cap at read time, so a corrupt/oversized stored
+/// list is simply truncated the next time it's written, never rejected.
+///
+/// Survives normal app restart (it's SharedPreferences, like every other
+/// key here); a device-level clear-storage legitimately wipes it, which
+/// simply resets that intention's diversity guard to "no history," the
+/// same safe starting state a first-ever use has.
+String recommendationHistoryKeyFor(Intention intention) =>
+    'recommendation_history_${intention.name}';
 
 /// SharedPreferences key for [RecommendationStatus.name] — `'started'` or
 /// `'closed'` only; a `notStarted` day is represented by the day-key not
@@ -179,8 +199,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     // No stored day, or a day that isn't today: nothing valid to restore
     // for *today* — yesterday's (or no) state is silently treated as
     // absent, not carried forward. It is left in SharedPreferences as-is;
-    // chooseIntention() reads it back exactly once (for anti-repetition)
-    // before overwriting it with today's values.
+    // only chooseIntention()'s own per-intention history key
+    // (recommendationHistoryKeyFor) is read for anti-repetition, never this
+    // stale "today" record.
     if (prefs.getString(recommendationDayKey) != today) {
       return freshNoRecommendation;
     }
@@ -198,8 +219,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       status: RecommendationStatus.notStarted,
     );
 
-    final storedStatus = RecommendationStatus.values.asNameMap()[prefs
-        .getString(recommendationStatusKey)];
+    final storedStatus = RecommendationStatus.values
+        .asNameMap()[prefs.getString(recommendationStatusKey)];
     final storedStartedAt = DateTime.tryParse(
       prefs.getString(recommendationStartedAtKey) ?? '',
     );
@@ -251,18 +272,22 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   ///
   /// The activity is chosen deterministically
   /// (`activity_catalog.dart`'s [selectActivityId]) from [intention]'s pool,
-  /// keyed on today's calendar day, and avoids repeating **the previous
-  /// local calendar day's** canonical activity when another approved
-  /// activity exists in the pool — the product rule is specifically "the
-  /// previous local day," not "whenever THIRTY was last opened." That
-  /// activity is read directly from whatever is still persisted under
-  /// [recommendationActivityIdKey], but only when [recommendationDayKey]
-  /// is exactly yesterday's date — a gap of two or more days (the app
-  /// wasn't opened yesterday) leaves [previousActivityId] `null`, so
-  /// anti-repetition simply doesn't apply, rather than treating stale,
-  /// multi-day-old data as if it were yesterday's. No separate "previous
-  /// day" key is kept beyond that one same/one-day-old read — matching the
-  /// "no longer-term recommendation history" requirement.
+  /// keyed on today's calendar day, and avoids repeating any activity still
+  /// in [intention]'s bounded recent-history list
+  /// ([recommendationHistoryKeyFor]) — Batch 2's diversity guard (see
+  /// [ADR-012](../../../../docs/product/adr/ADR-012-batch-2-recommendation-diversity.md)),
+  /// which replaces v0's narrower "only the immediately preceding local
+  /// calendar day" rule. Unlike that superseded rule, this history is keyed
+  /// on *how many times [intention] was actually chosen*, not on calendar
+  /// adjacency — a multi-day gap between uses no longer defeats the guard.
+  /// Capped at `pool.length - 1` entries so at least one alternative always
+  /// remains (see [selectActivityId]'s own doc comment for the exhaustion
+  /// fallback this cap exists to make unreachable in practice).
+  ///
+  /// Also records a [AnalyticsEventType.recommendationShown] event (Batch 2,
+  /// Phase F) — but only on this real, once-per-day resolution, never on
+  /// the no-op early return above, matching [start]/[close]'s own
+  /// "only a genuine transition is measured" discipline.
   void chooseIntention(Intention intention) {
     if (state.recommendation != null) return;
 
@@ -270,26 +295,46 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final now = ref.read(nowProvider);
     final today = dateKey(now);
 
-    ActivityId? previousActivityId;
-    final storedDay = prefs.getString(recommendationDayKey);
-    if (storedDay != null && _isExactlyYesterday(storedDay, now)) {
-      previousActivityId = ActivityId.values.asNameMap()[prefs.getString(
-        recommendationActivityIdKey,
-      )];
-    }
+    final pool = activityPools[intention]!;
+    final historyKey = recommendationHistoryKeyFor(intention);
+    final storedHistory = prefs.getStringList(historyKey) ?? const [];
+    final recentActivityIds = storedHistory
+        .map((name) => ActivityId.values.asNameMap()[name])
+        .whereType<ActivityId>()
+        .toSet();
 
     final activityId = selectActivityId(
       intention: intention,
       dayIndex: epochDay(now),
-      previousActivityId: previousActivityId,
+      recentActivityIds: recentActivityIds,
     );
     final recommendation = _buildRecommendation(intention, activityId);
+
+    // Bounded to pool.length - 1 most-recent entries — see
+    // recommendationHistoryKeyFor's own doc comment for why that specific
+    // cap.
+    final updatedHistory = [...storedHistory, activityId.name];
+    final historyCap = pool.length - 1;
+    final cappedHistory = updatedHistory.length > historyCap
+        ? updatedHistory.sublist(updatedHistory.length - historyCap)
+        : updatedHistory;
 
     state = RecommendationState(
       recommendation: recommendation,
       status: RecommendationStatus.notStarted,
     );
-    unawaited(_persistChoice(today, intention, activityId));
+    unawaited(
+      _persistChoice(today, intention, activityId, historyKey, cappedHistory),
+    );
+    ref
+        .read(analyticsServiceProvider)
+        .track(
+          AnalyticsEventType.recommendationShown,
+          metadata: {
+            'intention': intention.name,
+            'activity_id': activityId.name,
+          },
+        );
   }
 
   /// Starts today's Circle. A no-op unless today's recommendation already
@@ -365,24 +410,26 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// (intention, activityId) pair is persisted — the caller has already
   /// confirmed the persisted day matches today.
   Recommendation? _restoreRecommendation(SharedPreferences prefs) {
-    final intention = Intention.values.asNameMap()[prefs.getString(
-      recommendationIntentionKey,
-    )];
-    final activityId = ActivityId.values.asNameMap()[prefs.getString(
-      recommendationActivityIdKey,
-    )];
+    final intention = Intention.values
+        .asNameMap()[prefs.getString(recommendationIntentionKey)];
+    final activityId = ActivityId.values
+        .asNameMap()[prefs.getString(recommendationActivityIdKey)];
     if (intention == null || activityId == null) return null;
     return _buildRecommendation(intention, activityId);
   }
 
   /// Persists [intention]/[activityId] as today's freshly-chosen
-  /// recommendation, alongside [RecommendationStatus.notStarted]. Any
-  /// started/closed timestamps from an earlier day are explicitly cleared —
-  /// a fresh choice must never inherit a stale session.
+  /// recommendation, alongside [RecommendationStatus.notStarted], and
+  /// [cappedHistory] under [historyKey] (Batch 2's diversity guard — see
+  /// [recommendationHistoryKeyFor]). Any started/closed timestamps from an
+  /// earlier day are explicitly cleared — a fresh choice must never inherit
+  /// a stale session.
   Future<void> _persistChoice(
     String today,
     Intention intention,
     ActivityId activityId,
+    String historyKey,
+    List<String> cappedHistory,
   ) async {
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setString(recommendationDayKey, today);
@@ -394,6 +441,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     );
     await prefs.remove(recommendationStartedAtKey);
     await prefs.remove(recommendationClosedAtKey);
+    await prefs.setStringList(historyKey, cappedHistory);
   }
 
   /// Persists [state]'s lifecycle (status/timestamps) for today. Fired
@@ -432,19 +480,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       // the code path that happens to read it today.
       await prefs.remove(recommendationClosedAtKey);
     }
-  }
-
-  /// Whether [storedDayKey] (a [dateKey]-shaped `YYYY-MM-DD` string) names
-  /// the local calendar day immediately before [now]'s — i.e. exactly
-  /// "yesterday," never "two or more days ago." Compared via
-  /// [epochDay] (built on [DateTime.utc]) rather than a local-time
-  /// [DateTime.difference], so this can't be perturbed by a daylight-saving
-  /// transition landing between the two dates. An unparseable
-  /// [storedDayKey] is never "yesterday."
-  static bool _isExactlyYesterday(String storedDayKey, DateTime now) {
-    final storedDate = DateTime.tryParse(storedDayKey);
-    if (storedDate == null) return false;
-    return epochDay(storedDate) == epochDay(now) - 1;
   }
 }
 

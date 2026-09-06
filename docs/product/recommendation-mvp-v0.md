@@ -64,16 +64,18 @@ Minimaal pad: **dagelijks antwoord → intentie → goedgekeurde activiteitenpoo
 
 **Mechanisme:** een stabiel, kalender-afgeleid geheel getal per lokale dag (`epochDay`, gebouwd op `DateTime.utc` — nooit op een lokale-tijd-verschil, dus ongevoelig voor zomertijdovergangen) wordt modulo de lengte van de intentie-pool genomen om de "normale" kandidaat te bepalen. Zie `activity_catalog.dart`'s `epochDay()`/`selectActivityId()`.
 
-### Anti-repetitie
+### Anti-repetitie (herzien in Batch 2 — [ADR-012](adr/ADR-012-batch-2-recommendation-diversity.md))
 
-Minimale regel: **beveel niet dezelfde canonieke activiteit aan als de vorige lokale dag, wanneer een andere goedgekeurde activiteit in de pool van vandaag bestaat.** Komt de normale deterministische kandidaat overeen met de canonieke activiteit van gisteren, dan wordt de eerstvolgende geldige kandidaat in de pool gekozen. Geen langetermijngeschiedenis, geen gewichten, geen novelty-score — precies één stap terugkijken, elke keer opnieuw afgeleid uit wat nog in lokale opslag staat (zie §5), niet uit een apart bijgehouden logboek.
+v0's oorspronkelijke regel ("niet dezelfde activiteit als de vorige lokale dag") beschermde alleen tegen opeenvolgende dagen; een gebruiker die THIRTY om de dag (of onregelmatiger) opent, kon dezelfde activiteit binnen enkele dagen terugzien zodra de vorige-dag-vergelijking niet meer van toepassing was. Dit bleek de directe oorzaak van gerapporteerde herhaling bij een behouden tester.
+
+**Huidige regel:** elke Intention houdt een begrensde geschiedenis bij van recent getoonde `ActivityId`'s uit haar eigen pool, met een maximum van `pool.length - 1` items. De normale deterministische kandidaat (`dayIndex % pool.length`, zie hierboven) wordt bepaald **na** het uitsluiten van die geschiedenis uit de pool. Dit garandeert geen herhaling totdat elke andere activiteit in de pool sinds de vorige keer is getoond — ongeacht hoeveel kalenderdagen daartussen zitten — en de cap (`pool.length - 1`) garandeert dat er altijd minstens één niet-uitgesloten kandidaat overblijft, dus nooit een impasse. Nog steeds geen scoring, geen AI, geen willekeur: exact dezelfde soort deterministische rotatie als voorheen, alleen toegepast op een kleinere, geschiedenis-bewuste subset van de pool. Zie `activity_catalog.dart`'s `selectActivityId()`.
 
 ## 5. Lokale opslag
 
-Alleen `shared_preferences`, geen Supabase in deze milestone.
+Alleen `shared_preferences`. Supabase wordt sinds Batch 1 uitsluitend gebruikt voor het losstaande, insert-only analytics-sink (`supabase/README.md`) — nooit voor aanbevelings- of Circle-state.
 
 **Vandaag:** lokale datum, gekozen Intention, geselecteerde ActivityId, bestaande Circle-lifecycle (status/started/closed timestamps).
-**Vorige dag:** geen apart bewaarde staat — de vorige canonieke activiteit wordt afgeleid uit wat nog onder de "vandaag"-sleutels staat op het moment dat een nieuwe dag wordt gedetecteerd, vóórdat dat wordt overschreven.
+**Anti-repetitiegeschiedenis (Batch 2 — [ADR-012](adr/ADR-012-batch-2-recommendation-diversity.md)):** per Intention één losse, begrensde lijst van recent getoonde `ActivityId`'s (`recommendationHistoryKeyFor` in `recommendation_provider.dart`), maximaal `pool.length - 1` items, bijgewerkt telkens die Intention daadwerkelijk wordt gekozen. Overleeft een normale app-herstart; een device-brede clear-storage zet deze geschiedenis terug naar leeg — hetzelfde veilige startpunt als eerste gebruik.
 
 Een herstart op dezelfde dag herstelt dezelfde aanbeveling. Een nieuwe lokale dag start een nieuwe vraag/aanbevelingscyclus.
 
@@ -94,4 +96,5 @@ Geen AI/LLM-integratie, geen Supabase-aanbevelingslogica, geen accounts, geen au
 - [Recommendation Philosophy](recommendation-philosophy.md) en [Decision Framework](decision-framework.md) — de bredere, duurzame eisen en het raamwerk waarvan dit document de eerste concrete toepassing is.
 - [ADR-009 — Daily Intention Question](adr/ADR-009-daily-intention-question.md)
 - [ADR-010 — Circle Closed Is Not Verified Activity Completion](adr/ADR-010-circle-closed-not-completion.md)
+- [ADR-012 — Batch 2 / Recommendation Diversity](adr/ADR-012-batch-2-recommendation-diversity.md)
 - [Product Discovery §6](product-discovery.md#6-open-vragen) — open vraag 1 is door dit document beantwoord; vraag 4 blijft expliciet open.
