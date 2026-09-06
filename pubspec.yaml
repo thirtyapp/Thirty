@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.6.0+7
+version: 1.7.0+8
 
 environment:
   sdk: ^3.12.2
@@ -39,6 +39,14 @@ dependencies:
   supabase_flutter: ^2.16.0
   shared_preferences: ^2.5.5
   flutter_svg: ^2.3.0
+  purchases_flutter: ^10.11.0
+  # Already resolved transitively via supabase_flutter's own dependency
+  # graph — declared directly here only so `settings_page.dart`'s "manage
+  # subscription" deep link can import it without a
+  # `depend_on_referenced_packages` lint failure. Not part of the Step 5
+  # dependency exception (that exception covers `purchases_flutter` only)
+  # because it adds no new package to the resolved dependency tree.
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

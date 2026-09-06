@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/premium/premium_access.dart';
 import '../../plans/presentation/widgets/plan_session_panel.dart';
+import '../../premium/presentation/widgets/premium_offer_invitation_card.dart';
 import '../application/recommendation_provider.dart';
 import 'widgets/action_report_prompt.dart';
 import 'widgets/circle_hero.dart';
@@ -30,7 +31,11 @@ import 'widgets/daily_intention_prompt.dart';
 /// from every state this page can be in. A second AppBar icon opens
 /// [PlanPathPage] (Batch 2A), but only when [premiumEntitlementProvider] is
 /// `true` — see `../../../core/premium/premium_access.dart`'s own doc
-/// comment for why this is the chosen pre-billing access seam.
+/// comment for why this is the chosen access seam, now backed by verified
+/// RevenueCat entitlement state (Step 5,
+/// `docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`). A third
+/// AppBar icon always opens Settings (`../../settings/presentation/settings_page.dart`),
+/// regardless of entitlement.
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
@@ -55,6 +60,11 @@ class HomePage extends ConsumerWidget {
             tooltip: 'Your Circle history',
             onPressed: () => context.push('/history'),
           ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () => context.push('/settings'),
+          ),
         ],
       ),
       body: SafeArea(
@@ -64,6 +74,7 @@ class HomePage extends ConsumerWidget {
                   Expanded(child: CircleHero()),
                   ActionReportPrompt(),
                   PlanSessionPanel(),
+                  PremiumOfferInvitationCard(),
                 ],
               )
             : const DailyIntentionPrompt(),

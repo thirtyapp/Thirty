@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Step 5 — required by Google Play Billing / the RevenueCat SDK
+         (`purchases_flutter`) to process in-app purchases at all. -->
+    <uses-permission android:name="com.android.vending.BILLING" />
     <!-- ADR-013 §7 — THIRTY's Circle journal and recommendation state are
          device-local only, with no account or cloud-sync system (AGENTS.md
          §5). android:allowBackup defaults to true, which would otherwise

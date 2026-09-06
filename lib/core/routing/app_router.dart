@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../features/home/presentation/circle_history_page.dart';
 import '../../features/home/presentation/home_page.dart';
 import '../../features/plans/presentation/plan_path_page.dart';
+import '../../features/premium/presentation/premium_offer_page.dart';
+import '../../features/settings/presentation/settings_page.dart';
 import '../dev_preview/quiet_trail_hero_preview_page.dart';
 import '../providers/theme_mode_provider.dart';
 import '../showcase/design_system_showcase_page.dart';
@@ -31,6 +33,14 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
     GoRoute(
       path: '/plans',
       builder: (context, state) => const PlanPathPage(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsPage(),
+    ),
+    GoRoute(
+      path: '/premium',
+      builder: (context, state) => const PremiumOfferPage(),
     ),
     GoRoute(
       path: '/showcase',

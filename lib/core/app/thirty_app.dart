@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../analytics/analytics_event_type.dart';
 import '../analytics/analytics_service.dart';
+import '../premium/premium_access.dart';
 import '../providers/clock_provider.dart';
 import '../providers/theme_mode_provider.dart';
 import '../routing/app_router.dart';
@@ -49,6 +52,14 @@ class _ThirtyAppState extends ConsumerState<ThirtyApp>
     if (state != AppLifecycleState.resumed) return;
     ref.invalidate(nowProvider);
     _trackAppOpened();
+    // Step 5: re-resolve verified entitlement state on every foreground
+    // resume (frozen architecture §17's "app restart, lifecycle refresh")
+    // — a cancellation, expiry or recovery that happened while THIRTY was
+    // backgrounded must be reflected without requiring a cold restart.
+    // Fire-and-forget for the same reason as `main.dart`'s initial call:
+    // this must never block resume, and failures already resolve to
+    // `EntitlementStatus.unavailable` rather than throwing.
+    unawaited(ref.read(entitlementStatusProvider.notifier).initialize());
   }
 
   /// "First observed app use" (never "install" — this app cannot observe

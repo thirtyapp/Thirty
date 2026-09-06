@@ -63,3 +63,5 @@ Een ADR (Architecture/Product Decision Record) legt één specifieke, vaak onomk
 - [ADR-013 — V1 Productization Batch 1 / Free Foundation + Prospective Local Journal](adr/ADR-013-v1-free-foundation-and-journal.md)
 - [ADR-014 — V1 Productization Batch 2A / Circle Plans + Guided Sessions](adr/ADR-014-v1-batch-2a-circle-plans.md)
 - [ADR-015 — V1 Productization Batch 2B / Minimum Circle Coach](adr/ADR-015-v1-batch-2b-circle-coach.md)
+- [ADR-016 — V1 Productization Batch 2C / Minimum Circle Insights](adr/ADR-016-v1-batch-2c-circle-insights.md)
+- [ADR-017 — V1 Step 5 / RevenueCat Billing Integration](adr/ADR-017-v1-step5-revenuecat-billing.md)

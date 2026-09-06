@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/app/thirty_app.dart';
 import 'core/config/supabase_config.dart';
+import 'core/premium/premium_access.dart';
 import 'core/providers/shared_preferences_provider.dart';
 
 Future<void> main() async {
@@ -32,12 +35,20 @@ Future<void> main() async {
 
   final sharedPreferences = await SharedPreferences.getInstance();
 
+  final container = ProviderContainer(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+    ],
+  );
+
+  // Fire-and-forget: Free must stay immediately usable regardless of
+  // billing/network state (frozen architecture §7), so entitlement
+  // resolution never blocks the first frame. `EntitlementNotifier`
+  // resolves to `unavailable` on any configuration/SDK failure rather
+  // than throwing, so this is never an unhandled error either.
+  unawaited(container.read(entitlementStatusProvider.notifier).initialize());
+
   runApp(
-    ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
-      ],
-      child: const ThirtyApp(),
-    ),
+    UncontrolledProviderScope(container: container, child: const ThirtyApp()),
   );
 }

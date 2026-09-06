@@ -26,8 +26,9 @@ import '../domain/plan_state.dart';
 ///
 /// Reachable only when [premiumEntitlementProvider] is `true` (see
 /// `../../../core/premium/premium_access.dart` and
-/// `../../../core/routing/app_router.dart`) — in production today, that is
-/// never, since no billing exists yet.
+/// `../../../core/routing/app_router.dart`) — since Step 5
+/// (`docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`), that
+/// reflects a verified RevenueCat entitlement, not a hardcoded `false`.
 class PlanPathPage extends ConsumerStatefulWidget {
   const PlanPathPage({super.key});
 

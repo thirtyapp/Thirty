@@ -53,6 +53,19 @@
 /// `docs/product/adr/ADR-016-v1-batch-2c-circle-insights.md`). No billing,
 /// runtime AI, or Premium Atmosphere work is included in this build.
 ///
+/// "THIRTY — V1 STEP 5 / REVENUECAT BILLING INTEGRATION" (`1.7.0+8`): the
+/// build under which `premiumEntitlementProvider` stopped being a
+/// hardcoded pre-billing seam and started reading verified RevenueCat
+/// entitlement state, the `/premium` offer and `/settings` (status,
+/// upgrade, restore, manage subscription) surfaces shipped, and the one
+/// quiet post-second-Circle Premium invitation shipped (see
+/// `docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`). Live
+/// billing proof (a real Play/RevenueCat test purchase) remains BLOCKED
+/// pending owner-side RevenueCat/Google Play configuration — see that
+/// ADR's Consequences. Onboarding and reminder work remain out of scope,
+/// by design: neither exists in code and no detailed policy for either
+/// exists in any authority document.
+///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the
 /// frozen evaluation boundary the post-fix measurement protocol depends
@@ -67,5 +80,5 @@ class ReleaseInfo {
   const ReleaseInfo._();
 
   /// Keep in sync with `pubspec.yaml`'s `version:` field.
-  static const String appVersion = '1.6.0+7';
+  static const String appVersion = '1.7.0+8';
 }
