@@ -76,6 +76,18 @@
 /// contact remain REQUIRED BEFORE FEATURE-COMPLETE — neither has been
 /// supplied yet.
 ///
+/// `1.7.0+9`: a narrow bootstrap correction only — no product surface
+/// changed. The first Play-delivered release AAB (`1.7.0+8`) shipped
+/// without `--dart-define-from-file=config/supabase.local.json`, so
+/// `main()`'s then-unconditional `SupabaseConfig.assertValid()` threw
+/// before `runApp` ever ran (a white screen on every launch). Fixed by
+/// replacing that fail-fast assertion with `isConfigured` plus
+/// `initializeSupabaseIfConfigured` (`main.dart`), which now treats a
+/// missing/invalid Supabase configuration exactly like a reachability
+/// failure — non-fatal, `runApp` always runs — and by gating
+/// `SupabaseAnalyticsService` on the new `supabaseAvailableProvider` so it
+/// never attempts to touch an uninitialized client in the first place.
+///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the
 /// frozen evaluation boundary the post-fix measurement protocol depends
@@ -90,5 +102,5 @@ class ReleaseInfo {
   const ReleaseInfo._();
 
   /// Keep in sync with `pubspec.yaml`'s `version:` field.
-  static const String appVersion = '1.7.0+8';
+  static const String appVersion = '1.7.0+9';
 }

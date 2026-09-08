@@ -49,3 +49,8 @@ config/supabase.local.json
 
 # Local RevenueCat configuration (real project values, never committed)
 config/revenuecat.local.json
+
+# Release signing (upload keystore path + passwords, never committed)
+/android/key.properties
+*.jks
+*.keystore

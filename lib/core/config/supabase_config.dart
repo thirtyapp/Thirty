@@ -13,16 +13,12 @@ class SupabaseConfig {
     publishableKey: String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY'),
   );
 
-  /// Throws a [StateError] when [url] or [publishableKey] is missing —
-  /// blank or whitespace-only counts as missing. Fails fast, before
-  /// `Supabase.initialize` or `runApp` ever run.
-  void assertValid() {
-    if (url.trim().isEmpty || publishableKey.trim().isEmpty) {
-      throw StateError(
-        'Supabase-configuratie ontbreekt. Start de app met '
-        'flutter run --dart-define-from-file=config/supabase.local.json '
-        '(zie config/supabase.example.json).',
-      );
-    }
-  }
+  /// Whether both values needed to safely initialize Supabase are present.
+  /// Blank/whitespace-only counts as missing. Supabase backs only the one
+  /// narrow, optional, consent-gated analytics path (see
+  /// `analytics_service.dart`) — never the Free product itself — so a
+  /// missing value here must skip `Supabase.initialize` and leave telemetry
+  /// unavailable, never prevent `runApp` from running (`main.dart`).
+  bool get isConfigured =>
+      url.trim().isNotEmpty && publishableKey.trim().isNotEmpty;
 }

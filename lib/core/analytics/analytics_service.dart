@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/release_info.dart';
 import '../providers/clock_provider.dart';
+import '../providers/supabase_availability_provider.dart';
 import '../utils/date_key.dart';
 import 'analytics_consent.dart';
 import 'analytics_event_type.dart';
@@ -56,6 +57,11 @@ class SupabaseAnalyticsService implements AnalyticsService {
     required DateTime occurredAt,
     Map<String, Object?>? metadata,
   }) async {
+    // Never touch `Supabase.instance` unless `main.dart` actually completed
+    // `Supabase.initialize` — an unconfigured/uninitialized client throws
+    // just by being accessed, and that's a broken-initialization-path
+    // symptom, not something to merely catch after the fact.
+    if (!_ref.read(supabaseAvailableProvider)) return;
     try {
       await Supabase.instance.client.from('analytics_events').insert({
         'tester_id': identity.testerId,
