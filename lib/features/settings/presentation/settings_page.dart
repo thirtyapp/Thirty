@@ -166,7 +166,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             Text('Your data', style: textTheme.titleMedium),
             const SizedBox(height: AppSpacing.s),
             ThirtyCard(
-              onTap: () => context.push('/history'),
+              // Since Batch B, `/history` is the Journal branch root of
+              // the primary navigation shell — `go`, not `push`, is the
+              // correct way to reach a shell branch from a route (like
+              // Settings) that lives outside it; see
+              // `../../home/presentation/home_page.dart`'s own doc comment
+              // for why.
+              onTap: () => context.go('/history'),
               child: Row(
                 children: [
                   Expanded(

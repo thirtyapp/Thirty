@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
@@ -31,7 +32,16 @@ class CircleHistoryPage extends ConsumerWidget {
     final entries = journal.readAll().reversed.toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Your Circle history')),
+      appBar: AppBar(
+        title: const Text('Your Circle history'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () => context.push('/settings'),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [

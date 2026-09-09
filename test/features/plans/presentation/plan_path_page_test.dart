@@ -9,8 +9,6 @@ import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/theme/app_theme.dart';
-import 'package:thirty/features/insights/application/insight_provider.dart';
-import 'package:thirty/features/insights/presentation/widgets/insight_card.dart';
 import 'package:thirty/features/plans/application/plan_provider.dart';
 import 'package:thirty/features/plans/domain/plan_catalog.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
@@ -189,49 +187,18 @@ void main() {
     expect(find.text('Resume'), findsOneWidget);
   });
 
-  group('Batch 2C — Insights integration', () {
-    testWidgets('renders the InsightCard once, above the Plan list', (
-      tester,
-    ) async {
+  testWidgets(
+    'no longer hosts InsightCard — it moved to its own Insights '
+    'destination in Batch B (see insights_page_test.dart)',
+    (tester) async {
       final (widget, container) = await _wrap();
       addTearDown(container.dispose);
 
       await tester.pumpWidget(widget);
 
-      // skipOffstage: false — with no eligible Insight yet, InsightCard
-      // legitimately renders as a zero-size SizedBox.shrink(), which the
-      // default finder treats as offstage; this test asserts the card is
-      // wired into the page at all, regardless of its current content.
-      expect(
-        find.byType(InsightCard, skipOffstage: false),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets(
-      'opening the page assesses a current Insight when eligible evidence '
-      'already exists',
-      (tester) async {
-        final (widget, container) = await _wrap();
-        addTearDown(container.dispose);
-        final notifier = container.read(planProvider.notifier);
-        notifier.activatePlan(PlanId.gentlerPacePath);
-        notifier.advanceCursorForCircle(
-          PlanId.gentlerPacePath,
-          'circle-0',
-          isRevisit: false,
-        );
-        notifier.activatePlan(PlanId.moreEnergyPath);
-        expect(container.read(insightProvider).lastAssessedAt, isNull);
-
-        await tester.pumpWidget(widget);
-        await tester.pump();
-
-        expect(container.read(insightProvider).lastAssessedAt, isNotNull);
-        expect(find.textContaining('Gentler Pace'), findsOneWidget);
-      },
-    );
-  });
+      expect(find.text('Insight'), findsNothing);
+    },
+  );
 
   group('Batch A — unentitled Free preview', () {
     testWidgets(

@@ -7,8 +7,6 @@ import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
 import '../../coach/presentation/widgets/coach_cue_banner.dart';
-import '../../insights/application/insight_provider.dart';
-import '../../insights/presentation/widgets/insight_card.dart';
 import '../application/plan_provider.dart';
 import '../domain/plan_catalog.dart';
 import '../domain/plan_ids.dart';
@@ -26,65 +24,53 @@ import '../domain/plan_state.dart';
 /// never an activity browser: nothing here lets the user pick a specific
 /// activity — only a broad direction Plan.
 ///
-/// **Reachable regardless of entitlement** (`../../../core/routing/app_router.dart`
-/// registers `/plans` unconditionally; `home_page.dart`'s AppBar icon only
-/// controls *visibility* of one entry point, never access). What actually
-/// protects paid content is [build] branching on [premiumEntitlementProvider]
-/// itself: entitled renders the full list below via [_PlanCard]; unentitled
-/// renders [_PlanPreviewCard] instead — each Plan's name/purpose (not
-/// secret) plus a truthful read-only saved-position line where one exists,
-/// with no interactive control and no [CoachCueBanner] (frozen architecture
-/// §38.5's "reported content-level entitlement gap" — Coach/Insights
-/// providers and widgets computing or showing paid content when reached
-/// directly). This preserves the approved UX exactly: a calm, informative
-/// Free preview at the destination itself, never a route-level redirect to
-/// `/premium` and never an automatic paywall on open.
-class PlanPathPage extends ConsumerStatefulWidget {
+/// **Reachable regardless of entitlement** — since Batch B, `/plans` is a
+/// branch root of the primary navigation shell
+/// (`../../../core/routing/app_shell.dart`), always present as a bottom-nav
+/// destination. What protects paid content is [build] branching on
+/// [premiumEntitlementProvider] itself: entitled renders the full list
+/// below via [_PlanCard]; unentitled renders [_PlanPreviewCard] instead —
+/// each Plan's name/purpose (not secret) plus a truthful read-only
+/// saved-position line where one exists, with no interactive control and
+/// no [CoachCueBanner] (frozen architecture §38.5's "reported
+/// content-level entitlement gap"). This preserves the approved UX
+/// exactly: a calm, informative Free preview at the destination itself,
+/// never a route-level redirect to `/premium` and never an automatic
+/// paywall on open.
+///
+/// `InsightCard` moved out to its own destination
+/// (`../../insights/presentation/insights_page.dart`) in Batch B — it is
+/// no longer rendered here.
+class PlanPathPage extends ConsumerWidget {
   const PlanPathPage({super.key});
 
   @override
-  ConsumerState<PlanPathPage> createState() => _PlanPathPageState();
-}
-
-class _PlanPathPageState extends ConsumerState<PlanPathPage> {
-  @override
-  void initState() {
-    super.initState();
-    // Batch 2C: "assess a new current Insight at most once per seven-day
-    // interval when the user opens the relevant surface" — scheduled for
-    // after the first frame, never during build, since it may write
-    // persisted state (`InsightNotifier.refreshIfDue`). A no-op unless the
-    // cadence interval has actually elapsed.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      ref.read(insightProvider.notifier).refreshIfDue();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final plansState = ref.watch(planProvider);
     final isEntitled = ref.watch(premiumEntitlementProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Your path')),
+      appBar: AppBar(
+        title: const Text('Your path'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () => context.push('/settings'),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: ListView.separated(
                 padding: const EdgeInsets.all(AppSpacing.page),
-                itemCount: PlanId.values.length + 1,
+                itemCount: PlanId.values.length,
                 separatorBuilder: (_, _) =>
                     const SizedBox(height: AppSpacing.s),
                 itemBuilder: (context, index) {
-                  // InsightCard stays first regardless of entitlement — it
-                  // already branches its own action area on
-                  // [premiumEntitlementProvider] (see its own doc comment),
-                  // so a retained observation from before entitlement ended
-                  // stays exactly as readable here as it always was.
-                  if (index == 0) return const InsightCard();
-                  final planId = PlanId.values[index - 1];
+                  final planId = PlanId.values[index];
                   final progress = plansState.progress[planId]!;
                   return isEntitled
                       ? _PlanCard(

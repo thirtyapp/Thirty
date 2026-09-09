@@ -58,10 +58,14 @@ class DailyIntentionPrompt extends ConsumerWidget {
     final colors = Theme.of(context).extension<AppColors>()!;
     final showIntro = ref.watch(showOnboardingIntroProvider);
 
-    return Padding(
+    // A plain `Column` centered in the available height overflowed once
+    // Batch B's persistent bottom `NavigationBar` (`../../../../core/routing/app_shell.dart`)
+    // reduced how much vertical space Today's body has, on small screens —
+    // `SingleChildScrollView` is the minimal fix: content still reads the
+    // same, it just scrolls instead of asserting when it doesn't fit.
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.page),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (showIntro) ...[
