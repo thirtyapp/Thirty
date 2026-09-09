@@ -54,19 +54,26 @@ class _FakeReminderGateway implements ReminderGateway {
 }
 
 final _today = DateTime(2026, 9, 2, 9, 0);
+// Deliberately before the 8:00 reminder time used below — the Day N+1
+// test isolates suppression from the separate, already-correct "today's
+// time already passed" rule `nextReminderOccurrence` applies regardless
+// of suppression.
+final _tomorrow = DateTime(2026, 9, 3, 7, 0);
 
 Future<ProviderContainer> _containerWith({
   Map<String, Object> prefs = const {},
   required _FakeReminderGateway gateway,
+  DateTime? now,
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
   final resolved = await SharedPreferences.getInstance();
+  final resolvedNow = now ?? _today;
   return ProviderContainer(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(resolved),
       reminderGatewayProvider.overrideWithValue(gateway),
-      nowProvider.overrideWithValue(_today),
-      eventClockProvider.overrideWithValue(() => _today),
+      nowProvider.overrideWithValue(resolvedNow),
+      eventClockProvider.overrideWithValue(() => resolvedNow),
     ],
   );
 }
@@ -247,6 +254,11 @@ void main() {
             .read(recommendationProvider.notifier)
             .chooseIntention(Intention.moreEnergy);
         container.read(recommendationProvider.notifier).start();
+        // `ref.listen`'s callback fires `_rescheduleIfNeeded()`
+        // `unawaited` — let its microtasks (including its own live
+        // `gateway.hasPermission()` re-check) actually run before
+        // asserting on their effect.
+        await Future<void>.delayed(Duration.zero);
 
         expect(gateway.scheduleCallCount, greaterThan(scheduledBefore));
         // Suppressed today (already started) — next occurrence is tomorrow.
@@ -271,6 +283,117 @@ void main() {
       // additional reschedule should fire from the listener.
       expect(scheduledAfterChoose, gateway.scheduleCallCount);
     });
+
+    test(
+      'closing today\'s Circle (after starting it) suppresses the same '
+      'day, targeting the same next occurrence as starting alone — '
+      'never pushed further out by the second status change',
+      () async {
+        final gateway = _FakeReminderGateway();
+        final container = await _containerWith(gateway: gateway);
+        addTearDown(container.dispose);
+        await container
+            .read(reminderProvider.notifier)
+            .enable(hour: 8, minute: 0);
+        final notifier = container.read(recommendationProvider.notifier);
+        notifier.chooseIntention(Intention.moreEnergy);
+        notifier.start();
+        await Future<void>.delayed(Duration.zero);
+        final occurrenceAfterStart = gateway.lastFirstOccurrence;
+
+        notifier.close();
+        await Future<void>.delayed(Duration.zero);
+
+        expect(gateway.lastFirstOccurrence, occurrenceAfterStart);
+        expect(gateway.lastFirstOccurrence!.day, _today.day + 1);
+      },
+    );
+
+    test(
+      'Day N+1: a stale Day-N started/closed status cannot suppress the '
+      'new day\'s reminder — eligibility is restored automatically, '
+      'exactly the founder-approved "reminds again the next day '
+      'automatically" behavior (rule 4/5 of the reminder contract '
+      'amendment). This models a fresh app session on the new day — '
+      'THIRTY\'s own Dart code has no way to run at midnight with no app '
+      'open at all; that guarantee is provided entirely by '
+      '`flutter_local_notifications`\' native Android '
+      '`ScheduledNotificationReceiver`, which re-arms its own next '
+      'occurrence purely in native code once a notification has actually '
+      'fired (verified by reading that plugin\'s Java source directly) — '
+      'a platform boundary no Flutter-side test can exercise. What THIS '
+      'test proves is the one thing entirely within THIRTY\'s own control: '
+      'if the Day-N session correctly targeted Day N+1 (already covered '
+      'above) and the app happens to be reopened on Day N+1, it must '
+      'never remain incorrectly suppressed by Day N\'s leftover status.',
+      () async {
+        final gateway = _FakeReminderGateway();
+        final dayNContainer = await _containerWith(gateway: gateway);
+        addTearDown(dayNContainer.dispose);
+        await dayNContainer
+            .read(reminderProvider.notifier)
+            .enable(hour: 8, minute: 0);
+        final dayNNotifier = dayNContainer.read(
+          recommendationProvider.notifier,
+        );
+        dayNNotifier.chooseIntention(Intention.moreEnergy);
+        dayNNotifier.start();
+        dayNNotifier.close();
+        // Let both the reminder's own reactive reschedule and
+        // `RecommendationNotifier`'s fire-and-forget persistence actually
+        // complete before reading persisted prefs back out below.
+        await Future<void>.delayed(Duration.zero);
+        final dayNPrefs = dayNContainer.read(sharedPreferencesProvider);
+
+        // A fresh container/gateway — a new app process on Day N+1, never
+        // having opened THIRTY on Day N+1 itself yet — inheriting exactly
+        // what Day N actually persisted (reminder prefs, and Day N's own
+        // closed recommendation under Day N's day-key).
+        final dayNPlusOneGateway = _FakeReminderGateway();
+        final dayNPlusOneContainer = await _containerWith(
+          gateway: dayNPlusOneGateway,
+          now: _tomorrow,
+          prefs: {
+            for (final key in [
+              reminderEnabledKey,
+              reminderHourKey,
+              reminderMinuteKey,
+            ])
+              key: dayNPrefs.get(key)!,
+            for (final key in [
+              recommendationDayKey,
+              recommendationIntentionKey,
+              recommendationActivityIdKey,
+              recommendationStatusKey,
+              recommendationStartedAtKey,
+              recommendationClosedAtKey,
+            ])
+              if (dayNPrefs.get(key) != null) key: dayNPrefs.get(key)!,
+          },
+        );
+        addTearDown(dayNPlusOneContainer.dispose);
+
+        // The day-key mismatch (Day N's date vs Day N+1's `now`) must
+        // reset `RecommendationState.status` to `notStarted` on its own —
+        // proving the stale `closed` status cannot leak across the day
+        // boundary regardless of what the reminder feature does.
+        expect(
+          dayNPlusOneContainer.read(recommendationProvider).status,
+          RecommendationStatus.notStarted,
+        );
+
+        await dayNPlusOneContainer.read(reminderProvider.notifier).initialize();
+
+        expect(dayNPlusOneGateway.scheduleCallCount, 1);
+        // Not suppressed — Day N+1 is a fresh, unresolved day, so the
+        // reminder is eligible for *today* (Day N+1) at the configured
+        // time, not pushed to Day N+2.
+        expect(
+          dayNPlusOneGateway.lastFirstOccurrence,
+          DateTime(_tomorrow.year, _tomorrow.month, _tomorrow.day, 8, 0),
+        );
+      },
+    );
 
     test('refreshPermission() reconciles the schedule after an external '
         'permission change', () async {

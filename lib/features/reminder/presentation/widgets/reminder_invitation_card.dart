@@ -8,10 +8,14 @@ import '../../../../core/widgets/thirty_card.dart';
 import '../../application/reminder_invitation_provider.dart';
 import '../../application/reminder_provider.dart';
 
-/// THIRTY's one quiet reminder invitation — parent authority (`THIRTY V1
+/// THIRTY's one reminder invitation — parent authority (`THIRTY V1
 /// PRODUCTIZATION + COMMERCIAL REVIEW.md` §27): "after the first Circle
 /// closes, the user becomes eligible for one unobtrusive invitation to
-/// choose a daily reminder time."
+/// choose a daily reminder time." §48's Reminder Return-Ritual Amendment
+/// asks this one eligible moment to read as an invitation into THIRTY's
+/// intended daily ritual, not a buried convenience — a wording change
+/// only; eligibility, timing, and every consent/control guarantee below
+/// are unchanged.
 ///
 /// Renders nothing unless [showReminderInvitationProvider] is `true`. A
 /// plain inline card — never a dialog, never a permission prompt by
@@ -69,7 +73,8 @@ class _ReminderInvitationCardState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'A moment for your next Circle, if it fits today.',
+              'When would you like THIRTY to remind you about tomorrow\'s '
+              'Circle?',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.s),

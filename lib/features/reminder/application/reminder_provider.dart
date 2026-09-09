@@ -7,10 +7,16 @@ import '../../../core/providers/shared_preferences_provider.dart';
 import '../../../core/reminder/reminder_gateway.dart';
 import '../../home/application/recommendation_provider.dart';
 
-/// THIRTY's one optional local reminder — Step 5 local closure
+/// THIRTY's one local reminder — Step 5 local closure
 /// (`docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`), the
 /// already-frozen contract from `THIRTY V1 PRODUCTIZATION + COMMERCIAL
-/// REVIEW.md` §27/§28: Free, optional, local, at most one per day.
+/// REVIEW.md` §27/§28: Free, explicitly opt-in, local, at most one per
+/// day. §48 (2026-09-09, "Reminder Return-Ritual Amendment") narrows §27
+/// without replacing it: consent stays opt-in, but once enabled the
+/// reminder must remain eligible every local calendar day until disabled
+/// or permission is lost — reliably, not merely "if the app happens to
+/// be reopened" — with next-day eligibility restored automatically even
+/// when the app is never launched on that later day.
 ///
 /// [enabled] is the user's own on/off choice; [permissionGranted] and
 /// [timezoneUnavailable] are separate, live platform truths — Settings
@@ -99,11 +105,13 @@ class ReminderNotifier extends Notifier<ReminderState> {
   /// time/timezone. Called once from `main.dart` at startup and again on
   /// every foreground resume (`thirty_app.dart`) — never a `build()`-time
   /// side effect, matching `EntitlementNotifier`'s own discipline.
+  ///
+  /// The live permission check itself now lives inside
+  /// [_rescheduleIfNeeded] (see its own doc comment) — this method's job
+  /// is only to run the one-time plugin setup first.
   Future<void> initialize() async {
     final gateway = ref.read(reminderGatewayProvider);
     await gateway.initialize();
-    final granted = await gateway.hasPermission();
-    state = state.copyWith(permissionGranted: granted);
     await _rescheduleIfNeeded();
   }
 
@@ -146,10 +154,9 @@ class ReminderNotifier extends Notifier<ReminderState> {
 
   /// Re-checks the live OS permission state (e.g. the user may have
   /// changed it from system settings while THIRTY was backgrounded) and
-  /// reconciles the schedule accordingly.
+  /// reconciles the schedule accordingly. [_rescheduleIfNeeded] now does
+  /// this check itself, so this is a thin, stable public name for it.
   Future<void> refreshPermission() async {
-    final granted = await ref.read(reminderGatewayProvider).hasPermission();
-    state = state.copyWith(permissionGranted: granted);
     await _rescheduleIfNeeded();
   }
 
@@ -160,9 +167,31 @@ class ReminderNotifier extends Notifier<ReminderState> {
     await prefs.setInt(reminderMinuteKey, state.minute);
   }
 
+  /// The one place that decides whether THIRTY's reminder should currently
+  /// be scheduled, and for when.
+  ///
+  /// Re-checks the *live* OS permission via [ReminderGateway.hasPermission]
+  /// itself, rather than trusting [ReminderState.permissionGranted] —
+  /// that field starts at a hardcoded `false` in [build] and is normally
+  /// only corrected once [initialize]'s own async permission check
+  /// resolves. Reading it here instead of that field closes a real race:
+  /// the `ref.listen` in [build] is wired up synchronously the moment this
+  /// notifier is first read, before [initialize]'s awaits have completed,
+  /// so a `recommendationProvider` status change landing in that narrow
+  /// window would previously see the stale default `false` and wrongly
+  /// [ReminderGateway.cancel] an already-armed reminder it had no real
+  /// reason to touch.
   Future<void> _rescheduleIfNeeded() async {
     final gateway = ref.read(reminderGatewayProvider);
-    if (!state.enabled || !state.permissionGranted) {
+    if (!state.enabled) {
+      await gateway.cancel();
+      state = state.copyWith(timezoneUnavailable: false);
+      return;
+    }
+
+    final granted = await gateway.hasPermission();
+    state = state.copyWith(permissionGranted: granted);
+    if (!granted) {
       await gateway.cancel();
       state = state.copyWith(timezoneUnavailable: false);
       return;

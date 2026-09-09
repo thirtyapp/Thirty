@@ -95,7 +95,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ReminderInvitationCard), findsOneWidget);
-    expect(find.textContaining('A moment for your next Circle'), findsNothing);
+    expect(find.textContaining('remind you about tomorrow\'s Circle'), findsNothing);
   });
 
   testWidgets('renders the invitation after the first closed Circle', (
@@ -108,7 +108,7 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('A moment for your next Circle'), findsOneWidget);
+    expect(find.textContaining('remind you about tomorrow\'s Circle'), findsOneWidget);
     expect(find.text('Choose a time'), findsOneWidget);
     expect(find.text('Not now'), findsOneWidget);
   });
@@ -136,7 +136,7 @@ void main() {
     await tester.tap(find.text('Not now'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('A moment for your next Circle'), findsNothing);
+    expect(find.textContaining('remind you about tomorrow\'s Circle'), findsNothing);
     expect(container.read(reminderProvider).enabled, isFalse);
   });
 
@@ -157,7 +157,7 @@ void main() {
 
     expect(container.read(reminderProvider).enabled, isTrue);
     expect(gateway.scheduleCallCount, greaterThan(0));
-    expect(find.textContaining('A moment for your next Circle'), findsNothing);
+    expect(find.textContaining('remind you about tomorrow\'s Circle'), findsNothing);
   });
 
   testWidgets('never renders once reminders are already enabled', (
@@ -188,6 +188,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('A moment for your next Circle'), findsNothing);
+    expect(find.textContaining('remind you about tomorrow\'s Circle'), findsNothing);
   });
 }
