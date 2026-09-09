@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/premium/premium_access.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
@@ -24,11 +26,19 @@ import '../domain/plan_state.dart';
 /// never an activity browser: nothing here lets the user pick a specific
 /// activity — only a broad direction Plan.
 ///
-/// Reachable only when [premiumEntitlementProvider] is `true` (see
-/// `../../../core/premium/premium_access.dart` and
-/// `../../../core/routing/app_router.dart`) — since Step 5
-/// (`docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`), that
-/// reflects a verified RevenueCat entitlement, not a hardcoded `false`.
+/// **Reachable regardless of entitlement** (`../../../core/routing/app_router.dart`
+/// registers `/plans` unconditionally; `home_page.dart`'s AppBar icon only
+/// controls *visibility* of one entry point, never access). What actually
+/// protects paid content is [build] branching on [premiumEntitlementProvider]
+/// itself: entitled renders the full list below via [_PlanCard]; unentitled
+/// renders [_PlanPreviewCard] instead — each Plan's name/purpose (not
+/// secret) plus a truthful read-only saved-position line where one exists,
+/// with no interactive control and no [CoachCueBanner] (frozen architecture
+/// §38.5's "reported content-level entitlement gap" — Coach/Insights
+/// providers and widgets computing or showing paid content when reached
+/// directly). This preserves the approved UX exactly: a calm, informative
+/// Free preview at the destination itself, never a route-level redirect to
+/// `/premium` and never an automatic paywall on open.
 class PlanPathPage extends ConsumerStatefulWidget {
   const PlanPathPage({super.key});
 
@@ -54,23 +64,52 @@ class _PlanPathPageState extends ConsumerState<PlanPathPage> {
   @override
   Widget build(BuildContext context) {
     final plansState = ref.watch(planProvider);
+    final isEntitled = ref.watch(premiumEntitlementProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Your path')),
       body: SafeArea(
-        child: ListView.separated(
-          padding: const EdgeInsets.all(AppSpacing.page),
-          itemCount: PlanId.values.length + 1,
-          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.s),
-          itemBuilder: (context, index) {
-            if (index == 0) return const InsightCard();
-            final planId = PlanId.values[index - 1];
-            return _PlanCard(
-              planId: planId,
-              isActive: plansState.activePlanId == planId,
-              progress: plansState.progress[planId]!,
-            );
-          },
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.all(AppSpacing.page),
+                itemCount: PlanId.values.length + 1,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.s),
+                itemBuilder: (context, index) {
+                  // InsightCard stays first regardless of entitlement — it
+                  // already branches its own action area on
+                  // [premiumEntitlementProvider] (see its own doc comment),
+                  // so a retained observation from before entitlement ended
+                  // stays exactly as readable here as it always was.
+                  if (index == 0) return const InsightCard();
+                  final planId = PlanId.values[index - 1];
+                  final progress = plansState.progress[planId]!;
+                  return isEntitled
+                      ? _PlanCard(
+                          planId: planId,
+                          isActive: plansState.activePlanId == planId,
+                          progress: progress,
+                        )
+                      : _PlanPreviewCard(planId: planId, progress: progress);
+                },
+              ),
+            ),
+            if (!isEntitled)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.page,
+                  0,
+                  AppSpacing.page,
+                  AppSpacing.page,
+                ),
+                child: ThirtyButton(
+                  label: 'Open Premium',
+                  onPressed: () => context.push('/premium'),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -169,6 +208,59 @@ class _PlanCard extends ConsumerWidget {
               label: 'Pause this plan',
               variant: ThirtyButtonVariant.secondary,
               onPressed: notifier.deactivatePlan,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// The unentitled counterpart to [_PlanCard] — a calm, informative Free
+/// preview (frozen architecture §38.5: "a Free user may open a calm
+/// informative preview of the paid destination"), never the interactive
+/// management surface itself.
+///
+/// Shows only [planId]'s name and one-line purpose — already public,
+/// descriptive text, not paid content — plus, when [progress] shows the
+/// Plan was ever engaged, a truthful *read-only* saved-position line
+/// (frozen architecture §18: "do not erase saved positions"; §38.5:
+/// "preserve... saved positions"). No activate/resume/pause/revisit
+/// control and no [CoachCueBanner] — those become reachable again only
+/// once [premiumEntitlementProvider] is `true`, exactly mirroring
+/// [PlanNotifier]'s own now-guarded mutation methods.
+class _PlanPreviewCard extends StatelessWidget {
+  const _PlanPreviewCard({required this.planId, required this.progress});
+
+  final PlanId planId;
+  final PlanProgress progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final plan = planDefinitionFor(planId);
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final hasEverStarted = progress.lastEncounteredStageId != null;
+    final isCompleted = progress.status == PlanCycleStatus.completed;
+
+    return ThirtyCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(plan.name, style: textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            plan.purpose,
+            style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+          ),
+          if (hasEverStarted) ...[
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              isCompleted
+                  ? 'Saved: this guided cycle was finished.'
+                  : 'Saved at stage ${progress.forwardCursor + 1} of '
+                        '${plan.stages.length}.',
+              style: textTheme.bodySmall,
             ),
           ],
         ],

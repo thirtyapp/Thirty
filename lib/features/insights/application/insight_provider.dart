@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/analytics/analytics_event_type.dart';
 import '../../../core/analytics/analytics_service.dart';
+import '../../../core/premium/premium_access.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../../home/application/circle_journal.dart';
@@ -68,7 +69,15 @@ class InsightNotifier extends Notifier<InsightsState> {
   /// silence, i.e. no new snapshot, is acceptable); [lastAssessedAt]
   /// itself always advances so the cadence stays anchored to real
   /// assessment attempts.
+  ///
+  /// A no-op without [premiumEntitlementProvider] — computing a *new*
+  /// observation is new paid interpretation (frozen architecture §18); it
+  /// never touches [state.snapshots], so any already-retained snapshot
+  /// stays exactly as readable as before (§18/§38.3: retained observations
+  /// remain readable after entitlement ends — only *generating a new one*
+  /// is gated).
   void refreshIfDue() {
+    if (!ref.read(premiumEntitlementProvider)) return;
     final now = ref.read(nowProvider);
     final last = state.lastAssessedAt;
     if (last != null && now.difference(last).inDays < insightCadenceDays) {
@@ -110,7 +119,14 @@ class InsightNotifier extends Notifier<InsightsState> {
   /// snapshot or it is no longer valid (fires
   /// [AnalyticsEventType.insightApplicationInvalidated] in the latter case
   /// so a stale-command attempt is at least observable, never executed).
+  ///
+  /// A no-op without [premiumEntitlementProvider] — applying an Insight
+  /// calls the same guarded [PlanNotifier] mutation methods this method's
+  /// own switch below delegates to, so this check is a defense-in-depth
+  /// duplicate of theirs, not a new rule; it also skips firing this
+  /// method's own analytics for an attempt that can never actually apply.
   void applyCurrent() {
+    if (!ref.read(premiumEntitlementProvider)) return;
     if (state.snapshots.isEmpty) return;
     final latest = state.snapshots.last;
     final plansState = ref.read(planProvider);

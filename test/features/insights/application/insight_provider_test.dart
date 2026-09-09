@@ -15,7 +15,9 @@ import 'package:thirty/features/insights/application/insight_provider.dart';
 import 'package:thirty/features/insights/domain/insight_family.dart';
 import 'package:thirty/features/insights/domain/insight_snapshot.dart';
 import 'package:thirty/features/plans/application/plan_provider.dart';
+import 'package:thirty/features/plans/domain/plan_catalog.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
+import 'package:thirty/features/plans/domain/plan_state.dart';
 
 class _RecordingAnalyticsService implements AnalyticsService {
   final List<(AnalyticsEventType, Map<String, Object?>?)> events = [];
@@ -394,6 +396,137 @@ void main() {
           .setLighterDefaultForPlan(PlanId.clearerHeadPath, true);
 
       expect(container.read(currentInsightProvider), isNull);
+    });
+  });
+
+  group('Batch A — new paid interpretation fails closed without '
+      'entitlement, retained reads do not', () {
+    test('refreshIfDue is a no-op without entitlement, even with eligible '
+        'evidence present', () async {
+      final container = await _containerWith(entitled: false);
+      addTearDown(container.dispose);
+      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+      await _seedDirectLighterChoices(container, PlanId.clearerHeadPath, [
+        '2026-08-20',
+        '2026-08-23',
+        '2026-08-27',
+        '2026-09-01',
+        '2026-09-05',
+      ]);
+
+      container.read(insightProvider.notifier).refreshIfDue();
+
+      final state = container.read(insightProvider);
+      expect(state.lastAssessedAt, isNull);
+      expect(state.snapshots, isEmpty);
+    });
+
+    test('applyCurrent is a no-op without entitlement, even for a valid '
+        'retained snapshot (seeded directly, since refreshIfDue cannot '
+        'produce one unentitled)', () async {
+      final analytics = _RecordingAnalyticsService();
+      // Plan state is seeded directly here, not via `activatePlan()` —
+      // that mutator is itself now gated the same way, so calling it under
+      // `entitled: false` would silently no-op and this test would end up
+      // proving nothing (a real bug caught while writing this test).
+      final container = await _containerWith(
+        entitled: false,
+        analytics: analytics,
+        storedPrefs: {
+          insightSnapshotsKey: jsonEncode({
+            'schemaVersion': insightSnapshotsSchemaVersion,
+            'lastAssessedAt': '2026-09-01T00:00:00.000',
+            'snapshots': [
+              {
+                'id': 'a',
+                'family': 'chosenPacing',
+                'applicationType': 'setLighterDefault',
+                'targetPlanId': 'clearerHeadPath',
+                'targetStageId': null,
+                'isPatternClaim': true,
+                'evidenceCount': 5,
+                'evidenceDateKeys': ['2026-08-20'],
+                'usefulnessNumerator': null,
+                'usefulnessDenominator': null,
+                'generatedAt': '2026-09-01T00:00:00.000',
+                'ruleVersion': insightRuleVersion,
+                'templateVersion': insightTemplateVersion,
+              },
+            ],
+          }),
+          plansStateKey: jsonEncode({
+            'schemaVersion': plansStateSchemaVersion,
+            'activePlanId': PlanId.clearerHeadPath.name,
+            'progress': {
+              for (final id in PlanId.values)
+                id.name: {
+                  'planId': id.name,
+                  'contentVersion': planContentVersion,
+                  'cycleId': '${id.name}_cycle_1',
+                  'cycleStartedAt': _today.toIso8601String(),
+                  'forwardCursor': 0,
+                  'lastEncounteredStageId': null,
+                  'pendingRevisit': false,
+                  'status': PlanCycleStatus.inProgress.name,
+                  'cycleHistory': <Object?>[],
+                  'lastAdvancedCircleId': null,
+                },
+            },
+          }),
+        },
+      );
+      addTearDown(container.dispose);
+      // Confirms this snapshot really is currently valid — so the no-op
+      // below is this method's own guard, not a withdrawn application.
+      expect(container.read(currentInsightProvider), isNotNull);
+
+      container.read(insightProvider.notifier).applyCurrent();
+
+      expect(
+        container
+            .read(planProvider)
+            .progress[PlanId.clearerHeadPath]!
+            .lighterDefault,
+        isFalse,
+      );
+      expect(analytics.events, isEmpty);
+    });
+
+    test('a retained snapshot stays readable via currentInsightProvider '
+        'without entitlement — only generating/applying is gated, not '
+        'reading', () async {
+      final container = await _containerWith(
+        entitled: false,
+        storedPrefs: {
+          insightSnapshotsKey: jsonEncode({
+            'schemaVersion': insightSnapshotsSchemaVersion,
+            'lastAssessedAt': '2026-09-01T00:00:00.000',
+            'snapshots': [
+              {
+                'id': 'a',
+                'family': 'directionPathContinuity',
+                'applicationType': 'activateOrResumePlan',
+                'targetPlanId': 'gentlerPacePath',
+                'targetStageId': null,
+                'isPatternClaim': false,
+                'evidenceCount': 1,
+                'evidenceDateKeys': <String>[],
+                'usefulnessNumerator': null,
+                'usefulnessDenominator': null,
+                'generatedAt': '2026-09-01T00:00:00.000',
+                'ruleVersion': insightRuleVersion,
+                'templateVersion': insightTemplateVersion,
+              },
+            ],
+          }),
+        },
+      );
+      addTearDown(container.dispose);
+
+      final insight = container.read(currentInsightProvider);
+
+      expect(insight, isNotNull);
+      expect(insight!.targetPlanId, PlanId.gentlerPacePath);
     });
   });
 }

@@ -769,4 +769,191 @@ void main() {
     });
   });
 
+  group('Batch A — paid-orchestration mutators fail closed without '
+      'entitlement', () {
+    test('activatePlan is a no-op without entitlement', () async {
+      final container = await _containerWith(entitled: false);
+      addTearDown(container.dispose);
+      final notifier = container.read(planProvider.notifier);
+
+      notifier.activatePlan(PlanId.moreEnergyPath);
+
+      expect(container.read(planProvider).activePlanId, isNull);
+    });
+
+    test('queueRevisit is a no-op without entitlement, even for an active '
+        'Plan that has already encountered a stage (seeded directly, not '
+        'via the now-gated activatePlan)', () async {
+      final container = await _containerWith(
+        storedPrefs: {
+          plansStateKey: jsonEncode({
+            'schemaVersion': plansStateSchemaVersion,
+            'activePlanId': PlanId.moreEnergyPath.name,
+            'progress': {
+              for (final id in PlanId.values)
+                id.name: {
+                  'planId': id.name,
+                  'contentVersion': planContentVersion,
+                  'cycleId': '${id.name}_cycle_1',
+                  'cycleStartedAt': _today.toIso8601String(),
+                  'forwardCursor': 1,
+                  'lastEncounteredStageId': id == PlanId.moreEnergyPath
+                      ? stageAt(PlanId.moreEnergyPath, 0).id
+                      : null,
+                  'pendingRevisit': false,
+                  'status': PlanCycleStatus.inProgress.name,
+                  'cycleHistory': <Object?>[],
+                  'lastAdvancedCircleId': null,
+                },
+            },
+          }),
+        },
+        entitled: false,
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(planProvider.notifier);
+
+      notifier.queueRevisit();
+
+      expect(
+        notifier.progressFor(PlanId.moreEnergyPath).pendingRevisit,
+        isFalse,
+      );
+    });
+
+    test('clearQueuedRevisit is a no-op without entitlement', () async {
+      final container = await _containerWith(
+        storedPrefs: {
+          plansStateKey: jsonEncode({
+            'schemaVersion': plansStateSchemaVersion,
+            'activePlanId': PlanId.moreEnergyPath.name,
+            'progress': {
+              for (final id in PlanId.values)
+                id.name: {
+                  'planId': id.name,
+                  'contentVersion': planContentVersion,
+                  'cycleId': '${id.name}_cycle_1',
+                  'cycleStartedAt': _today.toIso8601String(),
+                  'forwardCursor': 1,
+                  'lastEncounteredStageId': id == PlanId.moreEnergyPath
+                      ? stageAt(PlanId.moreEnergyPath, 0).id
+                      : null,
+                  'pendingRevisit': id == PlanId.moreEnergyPath,
+                  'status': PlanCycleStatus.inProgress.name,
+                  'cycleHistory': <Object?>[],
+                  'lastAdvancedCircleId': null,
+                },
+            },
+          }),
+        },
+        entitled: false,
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(planProvider.notifier);
+
+      notifier.clearQueuedRevisit();
+
+      expect(
+        notifier.progressFor(PlanId.moreEnergyPath).pendingRevisit,
+        isTrue,
+      );
+    });
+
+    test('setLighterDefaultForPlan is a no-op without entitlement',
+        () async {
+      final container = await _containerWith(entitled: false);
+      addTearDown(container.dispose);
+      final notifier = container.read(planProvider.notifier);
+
+      notifier.setLighterDefaultForPlan(PlanId.moreEnergyPath, true);
+
+      expect(
+        notifier.progressFor(PlanId.moreEnergyPath).lighterDefault,
+        isFalse,
+      );
+    });
+
+    test('repeatCycle is a no-op without entitlement, even for a '
+        'completed cycle (seeded directly)', () async {
+      final container = await _containerWith(
+        storedPrefs: {
+          plansStateKey: jsonEncode({
+            'schemaVersion': plansStateSchemaVersion,
+            'activePlanId': PlanId.moreEnergyPath.name,
+            'progress': {
+              for (final id in PlanId.values)
+                id.name: {
+                  'planId': id.name,
+                  'contentVersion': planContentVersion,
+                  'cycleId': '${id.name}_cycle_1',
+                  'cycleStartedAt': _today.toIso8601String(),
+                  'forwardCursor': 5,
+                  'lastEncounteredStageId': id == PlanId.moreEnergyPath
+                      ? stageAt(PlanId.moreEnergyPath, 4).id
+                      : null,
+                  'pendingRevisit': false,
+                  'status': id == PlanId.moreEnergyPath
+                      ? PlanCycleStatus.completed.name
+                      : PlanCycleStatus.inProgress.name,
+                  'cycleHistory': <Object?>[],
+                  'lastAdvancedCircleId': null,
+                },
+            },
+          }),
+        },
+        entitled: false,
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(planProvider.notifier);
+      final cycleIdBefore =
+          notifier.progressFor(PlanId.moreEnergyPath).cycleId;
+
+      notifier.repeatCycle(PlanId.moreEnergyPath);
+
+      expect(
+        notifier.progressFor(PlanId.moreEnergyPath).cycleId,
+        cycleIdBefore,
+      );
+      expect(
+        notifier.progressFor(PlanId.moreEnergyPath).status,
+        PlanCycleStatus.completed,
+      );
+    });
+
+    test('deactivatePlan remains available without entitlement — clearing '
+        'an already-active Plan reveals no paid content', () async {
+      final container = await _containerWith(
+        storedPrefs: {
+          plansStateKey: jsonEncode({
+            'schemaVersion': plansStateSchemaVersion,
+            'activePlanId': PlanId.moreEnergyPath.name,
+            'progress': {
+              for (final id in PlanId.values)
+                id.name: {
+                  'planId': id.name,
+                  'contentVersion': planContentVersion,
+                  'cycleId': '${id.name}_cycle_1',
+                  'cycleStartedAt': _today.toIso8601String(),
+                  'forwardCursor': 1,
+                  'lastEncounteredStageId': null,
+                  'pendingRevisit': false,
+                  'status': PlanCycleStatus.inProgress.name,
+                  'cycleHistory': <Object?>[],
+                  'lastAdvancedCircleId': null,
+                },
+            },
+          }),
+        },
+        entitled: false,
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(planProvider.notifier);
+
+      notifier.deactivatePlan();
+
+      expect(container.read(planProvider).activePlanId, isNull);
+      // The saved position itself is untouched.
+      expect(notifier.progressFor(PlanId.moreEnergyPath).forwardCursor, 1);
+    });
+  });
 }

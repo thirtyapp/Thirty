@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/analytics/analytics_event_type.dart';
 import '../../../../core/analytics/analytics_service.dart';
+import '../../../../core/premium/premium_access.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_card.dart';
@@ -79,6 +81,17 @@ class InsightCard extends ConsumerWidget {
     final evidence = _evidenceText(insight);
     final applicationLabel = _applicationLabel(insight, progress);
 
+    // Frozen architecture §18/§38.3: a retained observation stays readable
+    // after entitlement ends — [insight] above is only ever a live recheck
+    // of an *already-generated* snapshot ([currentInsightProvider] never
+    // computes a new one), so it renders unconditionally either way. Only
+    // the *application* — new paid orchestration — is gated: an unentitled
+    // viewer sees the same truthful observation/evidence text, with the
+    // action button replaced by a deliberate route to the existing Premium
+    // offer instead of a button that would silently no-op against
+    // `InsightNotifier.applyCurrent()`'s own matching entitlement guard.
+    final isEntitled = ref.watch(premiumEntitlementProvider);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s),
       child: ThirtyCard(
@@ -102,9 +115,13 @@ class InsightCard extends ConsumerWidget {
               ],
               const SizedBox(height: AppSpacing.s),
               ThirtyButton(
-                label: applicationLabel,
+                label: isEntitled
+                    ? applicationLabel
+                    : 'Open Premium to apply this',
                 variant: ThirtyButtonVariant.secondary,
-                onPressed: () => ref.read(insightProvider.notifier).applyCurrent(),
+                onPressed: isEntitled
+                    ? () => ref.read(insightProvider.notifier).applyCurrent()
+                    : () => context.push('/premium'),
               ),
             ],
           ),

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,14 +12,25 @@ import 'package:thirty/core/theme/app_theme.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/insights/application/insight_provider.dart';
+import 'package:thirty/features/insights/domain/insight_snapshot.dart';
 import 'package:thirty/features/insights/presentation/widgets/insight_card.dart';
 import 'package:thirty/features/plans/application/plan_provider.dart';
+import 'package:thirty/features/plans/domain/plan_catalog.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
+import 'package:thirty/features/plans/domain/plan_state.dart';
 
 final _today = DateTime(2026, 9, 6);
 
+/// Hosts a plain `MaterialApp` (no `GoRouter`) — matching
+/// `settings_page_test.dart`'s and `plan_path_page_test.dart`'s own
+/// convention of verifying a `context.push`-driven button's
+/// presence/label without tapping it. Real end-to-end navigation to
+/// `/premium` is covered separately in `app_router_test.dart` against the
+/// real app; a local `GoRouter` here previously caused `pumpAndSettle` to
+/// hang indefinitely and was removed.
 Future<(Widget, ProviderContainer)> _wrap({
   Map<String, Object> storedPrefs = const {},
+  bool entitled = true,
 }) async {
   SharedPreferences.setMockInitialValues(storedPrefs);
   final prefs = await SharedPreferences.getInstance();
@@ -27,7 +40,7 @@ Future<(Widget, ProviderContainer)> _wrap({
       sharedPreferencesProvider.overrideWithValue(prefs),
       nowProvider.overrideWithValue(_today),
       eventClockProvider.overrideWithValue(() => _today),
-      premiumEntitlementProvider.overrideWithValue(true),
+      premiumEntitlementProvider.overrideWithValue(entitled),
     ],
   );
   final widget = UncontrolledProviderScope(
@@ -179,5 +192,92 @@ void main() {
 
     final semantics = tester.getSemantics(find.byType(InsightCard));
     expect(semantics, isNotNull);
+  });
+
+  group('Batch A — entitlement boundary', () {
+    testWidgets(
+      'a never-subscribed unentitled user with no retained snapshot sees '
+      'nothing (no Insight was ever computed to read)',
+      (tester) async {
+        final (widget, container) = await _wrap(entitled: false);
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(widget);
+
+        expect(find.byType(InsightCard), findsOneWidget);
+        expect(find.text('Insight'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'a retained snapshot (as if generated while entitled, before '
+      'entitlement was lost) stays fully readable, but Apply is replaced '
+      'with a route to the existing Premium offer instead of silently '
+      'applying — state seeded directly rather than round-tripped through '
+      'a live entitled container, since building two separate widget '
+      'trees/ProviderContainers within one testWidgets test was found to '
+      'hang tester.pumpWidget indefinitely',
+      (tester) async {
+        final (widget, container) = await _wrap(
+          entitled: false,
+          storedPrefs: {
+            plansStateKey: jsonEncode({
+              'schemaVersion': plansStateSchemaVersion,
+              'activePlanId': PlanId.moreEnergyPath.name,
+              'progress': {
+                for (final id in PlanId.values)
+                  id.name: {
+                    'planId': id.name,
+                    'contentVersion': planContentVersion,
+                    'cycleId': '${id.name}_cycle_1',
+                    'cycleStartedAt': _today.toIso8601String(),
+                    'forwardCursor': id == PlanId.gentlerPacePath ? 1 : 0,
+                    'lastEncounteredStageId': id == PlanId.gentlerPacePath
+                        ? stageAt(PlanId.gentlerPacePath, 0).id
+                        : null,
+                    'pendingRevisit': false,
+                    'status': PlanCycleStatus.inProgress.name,
+                    'cycleHistory': <Object?>[],
+                    'lastAdvancedCircleId': null,
+                  },
+              },
+            }),
+            insightSnapshotsKey: jsonEncode({
+              'schemaVersion': insightSnapshotsSchemaVersion,
+              'lastAssessedAt': _today.toIso8601String(),
+              'snapshots': [
+                {
+                  'id': 'a',
+                  'family': 'directionPathContinuity',
+                  'applicationType': 'activateOrResumePlan',
+                  'targetPlanId': 'gentlerPacePath',
+                  'targetStageId': null,
+                  'isPatternClaim': false,
+                  'evidenceCount': 1,
+                  'evidenceDateKeys': <String>[],
+                  'usefulnessNumerator': null,
+                  'usefulnessDenominator': null,
+                  'generatedAt': _today.toIso8601String(),
+                  'ruleVersion': insightRuleVersion,
+                  'templateVersion': insightTemplateVersion,
+                },
+              ],
+            }),
+          },
+        );
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(widget);
+
+        // The observation itself is still readable — this is retained
+        // history, not new computation.
+        expect(find.textContaining('Gentler Pace'), findsOneWidget);
+        // But the applying action is gone — replaced with a route to the
+        // existing Premium offer, never a button that would silently
+        // no-op against `InsightNotifier.applyCurrent()`'s own guard.
+        expect(find.text('Resume this Plan'), findsNothing);
+        expect(find.text('Open Premium to apply this'), findsOneWidget);
+      },
+    );
   });
 }

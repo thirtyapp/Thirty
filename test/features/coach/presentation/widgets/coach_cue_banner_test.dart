@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +9,7 @@ import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/theme/app_theme.dart';
+import 'package:thirty/features/coach/application/coach_provider.dart';
 import 'package:thirty/features/coach/presentation/widgets/coach_cue_banner.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
@@ -21,6 +24,7 @@ final _today = DateTime(2026, 8, 10, 9);
 Future<(Widget, ProviderContainer)> _wrap({
   required Widget Function(ProviderContainer container) childBuilder,
   Map<String, Object> storedPrefs = const {},
+  bool entitled = true,
 }) async {
   SharedPreferences.setMockInitialValues(storedPrefs);
   final prefs = await SharedPreferences.getInstance();
@@ -30,7 +34,7 @@ Future<(Widget, ProviderContainer)> _wrap({
       sharedPreferencesProvider.overrideWithValue(prefs),
       nowProvider.overrideWithValue(_today),
       eventClockProvider.overrideWithValue(() => _today),
-      premiumEntitlementProvider.overrideWithValue(true),
+      premiumEntitlementProvider.overrideWithValue(entitled),
     ],
   );
   final widget = UncontrolledProviderScope(
@@ -205,4 +209,52 @@ void main() {
     );
     expect(find.textContaining('lighter guidance'), findsWidgets);
   });
+
+  testWidgets(
+    'renders nothing without premiumEntitlementProvider, even for a Plan '
+    'that is already active with a real stage-explanation cue to show '
+    '(Batch A correction) — Plan state is seeded directly here, not via '
+    'activatePlan(), since that mutator is itself now gated the same way',
+    (tester) async {
+      final (widget, container) = await _wrap(
+        entitled: false,
+        storedPrefs: {
+          plansStateKey: jsonEncode({
+            'schemaVersion': plansStateSchemaVersion,
+            'activePlanId': PlanId.moreEnergyPath.name,
+            'progress': {
+              for (final id in PlanId.values)
+                id.name: {
+                  'planId': id.name,
+                  'contentVersion': planContentVersion,
+                  'cycleId': '${id.name}_cycle_1',
+                  'cycleStartedAt': _today.toIso8601String(),
+                  'forwardCursor': 0,
+                  'lastEncounteredStageId': null,
+                  'pendingRevisit': false,
+                  'status': PlanCycleStatus.inProgress.name,
+                  'cycleHistory': <Object?>[],
+                  'lastAdvancedCircleId': null,
+                },
+            },
+          }),
+        },
+        childBuilder: (_) =>
+            const CoachCueBanner(planId: PlanId.moreEnergyPath),
+      );
+      addTearDown(container.dispose);
+      // Confirms the seeded state really would produce a cue under normal
+      // (entitled) conditions — this test's absence of Text below is
+      // therefore this widget's own guard, not an absent cue.
+      expect(
+        container.read(coachCueProvider(PlanId.moreEnergyPath)),
+        isNotNull,
+      );
+
+      await tester.pumpWidget(widget);
+
+      expect(find.byType(CoachCueBanner), findsOneWidget);
+      expect(find.byType(Text), findsNothing);
+    },
+  );
 }

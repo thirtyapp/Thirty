@@ -97,7 +97,17 @@ class PlanNotifier extends Notifier<PlansState> {
   /// no-op if [planId] is already active. Never itself produces a new
   /// day's activity — see `recommendation_provider.dart`'s `chooseIntention`
   /// guard, which this method never calls.
+  ///
+  /// A no-op without [premiumEntitlementProvider] — starting or switching
+  /// which Plan is active is new paid orchestration (frozen architecture
+  /// §18: "new paid Plan orchestration... pause when entitlement is not
+  /// valid"), the same rule [resolveSessionFor] already enforces for actual
+  /// daily resolution. This only gates *starting* new orchestration —
+  /// [deactivatePlan] stays ungated, since clearing an already-active Plan
+  /// reveals no paid content and lets a lapsed user tidy local state
+  /// without needing to repurchase first.
   void activatePlan(PlanId planId) {
+    if (!ref.read(premiumEntitlementProvider)) return;
     if (state.activePlanId == planId) return;
     state = state.copyWith(activePlanId: planId);
     unawaited(_persist(state));
@@ -120,7 +130,12 @@ class PlanNotifier extends Notifier<PlansState> {
   /// unresolved matching Circle (frozen architecture §9). A no-op if no
   /// Plan is active, if it has never encountered a stage yet, or if a
   /// revisit is already queued.
+  ///
+  /// A no-op without [premiumEntitlementProvider] — queuing a revisit is a
+  /// Coach application type (frozen architecture §18), same gate as
+  /// [activatePlan].
   void queueRevisit() {
+    if (!ref.read(premiumEntitlementProvider)) return;
     final planId = state.activePlanId;
     if (planId == null) return;
     final progress = state.progress[planId]!;
@@ -151,7 +166,13 @@ class PlanNotifier extends Notifier<PlansState> {
 
   /// Clears a queued revisit before it applies to any Circle — the user
   /// may always change their mind (frozen architecture §9).
+  ///
+  /// A no-op without [premiumEntitlementProvider], for the same reason as
+  /// [queueRevisit] — there is nothing to clear that could have been
+  /// queued in the first place once that gate is in place, but this stays
+  /// explicit rather than relying on that invariant.
   void clearQueuedRevisit() {
+    if (!ref.read(premiumEntitlementProvider)) return;
     final planId = state.activePlanId;
     if (planId == null) return;
     final progress = state.progress[planId]!;
@@ -172,7 +193,12 @@ class PlanNotifier extends Notifier<PlansState> {
   /// other setter in this class). Never touches today's already-resolved
   /// `Recommendation` — only a later [resolveSessionFor] call reads the new
   /// value, to seed a *future* Session's initial treatment.
+  ///
+  /// A no-op without [premiumEntitlementProvider] — this is a Coach
+  /// application type (frozen architecture §18), same gate as
+  /// [activatePlan].
   void setLighterDefaultForPlan(PlanId planId, bool value) {
+    if (!ref.read(premiumEntitlementProvider)) return;
     final progress = state.progress[planId]!;
     if (progress.lighterDefault == value) return;
     _updateProgress(planId, progress.copyWith(lighterDefault: value));
@@ -194,7 +220,11 @@ class PlanNotifier extends Notifier<PlansState> {
   /// finished cycle to [PlanProgress.cycleHistory] (never discarded),
   /// generates a new `cycleId`, and resets [PlanProgress.forwardCursor] to
   /// 0. A no-op while the current cycle is still in progress.
+  ///
+  /// A no-op without [premiumEntitlementProvider] — starting a new cycle is
+  /// new paid orchestration, same gate as [activatePlan].
   void repeatCycle(PlanId planId) {
+    if (!ref.read(premiumEntitlementProvider)) return;
     final progress = state.progress[planId]!;
     if (progress.status != PlanCycleStatus.completed) return;
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/analytics/analytics_event_type.dart';
 import '../../../../core/analytics/analytics_service.dart';
+import '../../../../core/premium/premium_access.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../home/application/recommendation_provider.dart';
@@ -40,6 +41,16 @@ class CoachCueBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Frozen architecture §18: "contextual applications... pause when
+    // entitlement is not valid" — a Coach cue is a computed suggestion, not
+    // stored user data, so unlike a Plan's saved stage position it has
+    // nothing to preserve; it simply stops being offered. This is checked
+    // before reading `coachCueProvider` at all, so an unentitled render
+    // never even computes a cue, on either of this widget's two call sites
+    // (`plan_session_panel.dart`'s Today panel and `plan_path_page.dart`'s
+    // per-Plan card).
+    if (!ref.watch(premiumEntitlementProvider)) return const SizedBox.shrink();
+
     final cue = ref.watch(coachCueProvider(planId));
 
     // Exposure telemetry only — never evidence the user read, understood,
