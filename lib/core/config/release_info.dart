@@ -88,6 +88,35 @@
 /// `SupabaseAnalyticsService` on the new `supabaseAvailableProvider` so it
 /// never attempts to touch an uninitialized client in the first place.
 ///
+/// "THIRTY — STEP 1 / FOUR-DESTINATION NAVIGATION SHELL + REMINDER
+/// RETURN-RITUAL AMENDMENT" (`1.7.0+10`): the build under which the
+/// Batch A Premium entitlement boundary correction (`activatePlan` and
+/// its four sibling `PlanNotifier` mutation methods, `InsightNotifier
+/// .refreshIfDue`/`applyCurrent`, and `CoachCueBanner` all gated on
+/// `premiumEntitlementProvider`; `PlanPathPage`/`InsightCard` branch on
+/// entitlement into a calm Free preview rather than a route-level
+/// redirect) and the Batch B/C four-destination primary navigation shell
+/// (`StatefulShellRoute.indexedStack`: Today | Plans | Insights |
+/// Journal, `InsightsPage` hosting the relocated `InsightCard`, a
+/// matching Settings AppBar icon on Plans/Insights/Journal, and a
+/// `ThirtyButton` label-overflow fix found during the shell's own
+/// small-screen/text-scale verification) shipped, alongside the §48
+/// Reminder Return-Ritual Amendment (`THIRTY V1 PRODUCTIZATION +
+/// COMMERCIAL REVIEW.md` §48): the reminder invitation's copy changed to
+/// reflect its recommended-ritual framing, and `ReminderNotifier
+/// ._rescheduleIfNeeded` now re-checks live OS permission on every call
+/// rather than a possibly-stale cached value, closing a startup race
+/// that could wrongly cancel an already-armed reminder. Live reminder
+/// delivery — specifically, a real physical non-delivery observed on the
+/// `1.7.0+9` Internal Testing build — remains UNRESOLVED: the
+/// investigation found the app-side scheduling/suppression logic correct
+/// (verified against `flutter_local_notifications`' own native Android
+/// source) but could not establish a proven root cause; an OS/OEM
+/// background-alarm restriction (Samsung battery management, or Doze
+/// deferral of the deliberately inexact alarm) remains an unconfirmed
+/// hypothesis pending physical retest on this build. Do not treat this
+/// build as proof reminder delivery is fixed.
+///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the
 /// frozen evaluation boundary the post-fix measurement protocol depends
@@ -102,5 +131,5 @@ class ReleaseInfo {
   const ReleaseInfo._();
 
   /// Keep in sync with `pubspec.yaml`'s `version:` field.
-  static const String appVersion = '1.7.0+9';
+  static const String appVersion = '1.7.0+10';
 }
