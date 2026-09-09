@@ -60,9 +60,23 @@ class ThirtyButton extends StatelessWidget {
           Icon(icon, size: 20, color: foregroundColor),
           const SizedBox(width: AppSpacing.s),
         ],
-        Text(
-          label,
-          style: theme.textTheme.labelLarge?.copyWith(color: foregroundColor),
+        // `Flexible` (not a plain `Text`) — Batch C found this Row
+        // overflowing on a small-width button (e.g. two side by side in
+        // `circle_history_page.dart`) combined with a longer label or a
+        // large accessibility text scale: a non-flex child in a `Row` is
+        // measured at its unconstrained preferred width regardless of
+        // available space. `Flexible` lets it shrink and ellipsize instead
+        // — normal-width buttons render identically, since this only
+        // engages when the label genuinely does not fit.
+        Flexible(
+          child: Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: foregroundColor,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
         ),
       ],
     );

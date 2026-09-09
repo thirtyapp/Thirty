@@ -175,6 +175,65 @@ void main() {
     },
   );
 
+  testWidgets(
+    'popping Settings returns to the exact tab that opened it, not Today '
+    '— standard push/pop, unchanged from before the shell (§3)',
+    (tester) async {
+      await pumpApp(tester);
+
+      await tester.tap(navDestination('Insights'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsPage), findsOneWidget);
+
+      Navigator.of(tester.element(find.byType(SettingsPage))).pop();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(InsightsPage), findsOneWidget);
+      expect(find.byType(SettingsPage), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'no destination overflows on a small-screen device width, across all '
+    'four tabs (§3 — functional small-screen requirement)',
+    (tester) async {
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
+
+      await pumpApp(tester);
+      expect(tester.takeException(), isNull);
+
+      for (final label in ['Today', 'Plans', 'Insights', 'Journal']) {
+        await tester.tap(navDestination(label));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: '$label overflowed');
+      }
+    },
+  );
+
+  testWidgets(
+    'no destination overflows at a large accessibility text scale, across '
+    'all four tabs (§3 — text-scaling discipline)',
+    (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await pumpApp(tester);
+      expect(tester.takeException(), isNull);
+
+      for (final label in ['Today', 'Plans', 'Insights', 'Journal']) {
+        await tester.tap(navDestination(label));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: '$label overflowed');
+      }
+    },
+  );
+
   test('the shell branches map to exactly the contracted four paths, in '
       'order', () {
     final routes = buildAppRoutes(includeDevPreview: false);
