@@ -6,27 +6,39 @@ import '../../../core/premium/premium_access.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../application/insight_provider.dart';
+import 'widgets/circle_history_calendar.dart';
 import 'widgets/insight_card.dart';
 
-/// THIRTY's Insights destination — Batch B navigation shell
+/// THIRTY's Insights destination — founder IA correction ("Today | Plans
+/// | Insights | You" supersedes the previous "...| Journal") on top of
+/// the Batch B navigation shell
 /// (`THIRTY_STEP1_FINAL_IA_AND_IMPLEMENTATION_CONTRACT_2026-09-09.md`
 /// §2/§6.B).
 ///
-/// Hosts [InsightCard] — moved here verbatim from
-/// `../../plans/presentation/plan_path_page.dart`, not duplicated. Its own
-/// entitlement branching (Batch A: retained observation/evidence stay
-/// readable; only the "Apply" action gates on [premiumEntitlementProvider])
-/// is unchanged by this move.
+/// Two clearly separated responsibilities, top to bottom:
+///
+/// 1. **Shared personal history — FREE, entitlement-independent.**
+///    [CircleHistoryCalendar] presents the existing local Circle journal
+///    as a calm calendar — this is what replaced the retired primary
+///    Journal tab; the underlying `/history` route and its data still
+///    exist (see `../../home/presentation/circle_history_page.dart`),
+///    just no longer as a bottom-nav destination.
+/// 2. **Insight interpretation/application — PREMIUM**, unchanged from
+///    before: [InsightCard], moved here verbatim from
+///    `../../plans/presentation/plan_path_page.dart` in Batch B, not
+///    duplicated. Its own entitlement branching (Batch A: retained
+///    observation/evidence stay readable; only the "Apply" action gates
+///    on [premiumEntitlementProvider]) is unaffected by this page's
+///    layout change.
 ///
 /// [InsightCard] itself renders nothing when [currentInsightProvider] is
-/// `null` — correct when it was one card among several on "Your path", but
-/// this destination cannot be a blank screen. [build] fills that gap with
-/// the minimal truthful text the contract's §4 Insights row already
-/// specifies: a calm explanatory preview + `/premium` CTA when unentitled
-/// (no snapshot has ever existed, or none does yet), or — when entitled —
-/// a plain "not enough evidence yet" line, with no CTA, since there is
-/// nothing to unlock. Neither branch invents a new Insight family, engine,
-/// or fabricated data; both are presentation-only.
+/// `null` — [build] fills that gap with the minimal truthful text the
+/// contract's §4 Insights row already specifies: a calm explanatory
+/// preview + `/premium` CTA when unentitled (no snapshot has ever
+/// existed, or none does yet), or — when entitled — a plain "not enough
+/// evidence yet" line, with no CTA. Neither branch invents a new Insight
+/// family, engine, or fabricated data; both are presentation-only, same
+/// as the calendar above them.
 class InsightsPage extends ConsumerStatefulWidget {
   const InsightsPage({super.key});
 
@@ -56,24 +68,30 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
   Widget build(BuildContext context) {
     final hasCurrentInsight = ref.watch(currentInsightProvider) != null;
     final isEntitled = ref.watch(premiumEntitlementProvider);
+    final textTheme = Theme.of(context).textTheme;
 
+    // No Settings icon here — founder IA correction: once "You" is a
+    // persistent primary destination, every branch's own Settings
+    // shortcut becomes a redundant entry point (see `app_shell.dart`).
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Insights'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
-            onPressed: () => context.push('/settings'),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Insights')),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.page),
-          child: hasCurrentInsight
-              ? const InsightCard()
-              : _InsightsEmptyState(isEntitled: isEntitled),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Your history', style: textTheme.titleMedium),
+              const SizedBox(height: AppSpacing.s),
+              const CircleHistoryCalendar(),
+              const SizedBox(height: AppSpacing.section),
+              const Divider(),
+              const SizedBox(height: AppSpacing.s),
+              hasCurrentInsight
+                  ? const InsightCard()
+                  : _InsightsEmptyState(isEntitled: isEntitled),
+            ],
+          ),
         ),
       ),
     );

@@ -41,6 +41,12 @@ import '../domain/plan_state.dart';
 /// `InsightCard` moved out to its own destination
 /// (`../../insights/presentation/insights_page.dart`) in Batch B — it is
 /// no longer rendered here.
+///
+/// **Founder IA correction:** the AppBar title changed from the legacy
+/// "Your path" presentation wording to "Plans", matching the bottom-nav
+/// tab label it has always been — and the Batch B Settings shortcut icon
+/// is gone, since "You" is now a persistent bottom-nav destination and a
+/// duplicate shortcut here would be redundant.
 class PlanPathPage extends ConsumerWidget {
   const PlanPathPage({super.key});
 
@@ -50,16 +56,7 @@ class PlanPathPage extends ConsumerWidget {
     final isEntitled = ref.watch(premiumEntitlementProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Your path'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
-            onPressed: () => context.push('/settings'),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Plans')),
       body: SafeArea(
         child: Column(
           children: [

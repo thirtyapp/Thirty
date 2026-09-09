@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -42,8 +41,9 @@ void main() {
   );
 
   testWidgets(
-    'tapping the history icon on the root route opens /history '
-    '(CircleHistoryPage) — ADR-013 §6',
+    '/history remains reachable as a secondary/compatibility route — no '
+    'longer linked from any primary-nav element since the founder IA '
+    'correction retired Journal as a bottom-nav destination',
     (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
@@ -56,7 +56,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.history));
+      appRouter.go('/history');
       await tester.pumpAndSettle();
 
       expect(find.byType(CircleHistoryPage), findsOneWidget);

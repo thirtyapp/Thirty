@@ -61,12 +61,13 @@ void main() {
   );
 
   testWidgets(
-    'the history icon is reachable from every state this page can be in '
-    '(ADR-013 §6) — see app_router_test.dart for where tapping it actually '
-    'navigates',
+    'shows no AppBar action icons in any state — founder IA correction: '
+    'Plans, Insights (history\'s new home) and You are all persistent '
+    'bottom-nav destinations, so a duplicate AppBar shortcut here would '
+    'be redundant',
     (WidgetTester tester) async {
       await tester.pumpWidget(await _wrap());
-      expect(find.byIcon(Icons.history), findsOneWidget);
+      expect(find.byType(IconButton), findsNothing);
 
       await tester.pumpWidget(
         await _wrap(
@@ -77,7 +78,7 @@ void main() {
           },
         ),
       );
-      expect(find.byIcon(Icons.history), findsOneWidget);
+      expect(find.byType(IconButton), findsNothing);
     },
   );
 
@@ -119,19 +120,15 @@ void main() {
   );
 
   testWidgets(
-    'the Plans ("Your path") icon is absent by default (no production '
-    'entitlement — Batch 2A access seam)',
+    'the Plans icon is absent regardless of entitlement — Plans is now a '
+    'bottom-nav destination reachable from the shell, not an AppBar '
+    'shortcut on Today (founder IA correction)',
     (WidgetTester tester) async {
       await tester.pumpWidget(await _wrap());
       expect(find.byIcon(Icons.route_outlined), findsNothing);
-    },
-  );
 
-  testWidgets(
-    'the Plans icon appears only when entitled',
-    (WidgetTester tester) async {
       await tester.pumpWidget(await _wrap(entitled: true));
-      expect(find.byIcon(Icons.route_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.route_outlined), findsNothing);
     },
   );
 }

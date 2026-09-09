@@ -45,22 +45,30 @@ void main() {
     expect(find.byType(PremiumOfferPage), findsOneWidget);
   });
 
-  testWidgets('the home screen\'s Settings icon opens SettingsPage — '
-      'reachable regardless of entitlement, unlike the Plans icon',
-      (tester) async {
-    await pumpApp(tester);
-    // `appRouter` is a shared singleton across this test file (matching
-    // `app_router_test.dart`'s own established pattern) — explicitly
-    // return to the root route rather than assuming a previous test left
-    // it there.
-    appRouter.go('/');
-    await tester.pumpAndSettle();
+  testWidgets(
+    'the "You" bottom-nav destination opens SettingsPage — reachable '
+    'regardless of entitlement (founder IA correction: "You" replaced '
+    'the old AppBar Settings icon as the access path)',
+    (tester) async {
+      await pumpApp(tester);
+      // `appRouter` is a shared singleton across this test file (matching
+      // `app_router_test.dart`'s own established pattern) — explicitly
+      // return to the root route rather than assuming a previous test left
+      // it there.
+      appRouter.go('/');
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
-    await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.text('You'),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.byType(SettingsPage), findsOneWidget);
-  });
+      expect(find.byType(SettingsPage), findsOneWidget);
+    },
+  );
 
   testWidgets('tapping "Upgrade to Premium" in Settings opens the offer '
       'page', (tester) async {

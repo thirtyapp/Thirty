@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../core/premium/premium_access.dart';
 import '../../plans/presentation/widgets/plan_session_panel.dart';
 import '../../premium/presentation/widgets/premium_offer_invitation_card.dart';
 import '../../reminder/presentation/widgets/reminder_invitation_card.dart';
@@ -32,28 +30,14 @@ import 'widgets/daily_intention_prompt.dart';
 /// prompt-priority order: reflection, then reminder invitation, then
 /// Premium invitation, never stacked (Step 5 local closure).
 ///
-/// The AppBar's history icon opens `CircleHistoryPage` (ADR-013 §6) — the
-/// one entry point into the user's own recorded Circle history, reachable
-/// from every state this page can be in. A second AppBar icon opens
-/// `PlanPathPage` (Batch 2A), but only when [premiumEntitlementProvider] is
-/// `true` — see `../../../core/premium/premium_access.dart`'s own doc
-/// comment for why this is the chosen access seam, now backed by verified
-/// RevenueCat entitlement state (Step 5,
-/// `docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`). A third
-/// AppBar icon always opens Settings (`../../settings/presentation/settings_page.dart`),
-/// regardless of entitlement.
-///
-/// Since Batch B, `/plans` and `/history` are branch roots of the primary
-/// navigation shell (`../../../core/routing/app_shell.dart`) — reachable
-/// identically from the bottom nav. These two AppBar icons stay (Today's
-/// own widget tree is otherwise unchanged, per the navigation contract's
-/// explicit "None" for this page), but now navigate with `context.go`
-/// instead of `context.push`: pushing a location that resolves inside a
-/// `StatefulShellRoute` branch, from a different branch's own Navigator,
-/// is the fragile case go_router's own docs warn against — `go` is the
-/// correct, supported way to switch branches by path, and preserves each
-/// branch's own back-stack (§3) rather than adding a redundant push entry
-/// on top of it.
+/// **Founder IA correction:** the AppBar's former history/Plans/Settings
+/// shortcut icons are gone — all three destinations they pointed at
+/// (Journal's history now inside Insights' calendar, Plans, and "You")
+/// are primary bottom-nav destinations of `../../../core/routing/app_shell.dart`,
+/// always one tap away regardless of which screen is showing; retaining
+/// a duplicate AppBar shortcut here would just be a second, redundant
+/// path to the same place. Today's own widget tree is otherwise
+/// unchanged by this correction.
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
@@ -61,30 +45,9 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hasRecommendation =
         ref.watch(recommendationProvider).recommendation != null;
-    final isEntitled = ref.watch(premiumEntitlementProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('THIRTY'),
-        actions: [
-          if (isEntitled)
-            IconButton(
-              icon: const Icon(Icons.route_outlined),
-              tooltip: 'Your path',
-              onPressed: () => context.go('/plans'),
-            ),
-          IconButton(
-            icon: const Icon(Icons.history),
-            tooltip: 'Your Circle history',
-            onPressed: () => context.go('/history'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
-            onPressed: () => context.push('/settings'),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('THIRTY')),
       body: SafeArea(
         child: hasRecommendation
             ? const Column(

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,19 +10,22 @@ import 'package:thirty/core/app/thirty_app.dart';
 import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
-import 'package:thirty/features/home/presentation/circle_history_page.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/presentation/circle_record_detail_page.dart';
 import 'package:thirty/features/home/presentation/home_page.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
 import 'package:thirty/features/insights/presentation/insights_page.dart';
+import 'package:thirty/features/insights/presentation/widgets/circle_history_calendar.dart';
 import 'package:thirty/features/plans/presentation/plan_path_page.dart';
+import 'package:thirty/features/premium/presentation/premium_offer_page.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
 
-/// Batch B navigation shell coverage
-/// (`THIRTY_STEP1_FINAL_IA_AND_IMPLEMENTATION_CONTRACT_2026-09-09.md`
-/// §2/§3/§6.B) — the four-destination `StatefulShellRoute.indexedStack`
-/// added around the existing routes. Follows `app_router_test.dart`'s own
-/// established pattern: the real `appRouter`/`ThirtyApp`, no fakes.
+/// Navigation shell coverage for the founder-approved primary IA:
+/// **Today | Plans | Insights | You** (supersedes the earlier Batch B
+/// "...| Journal"). Follows `app_router_test.dart`'s own established
+/// pattern: the real `appRouter`/`ThirtyApp`, no fakes.
 ///
 /// `appRouter` is a shared singleton across every `testWidgets` in this
 /// process (matching `premium_billing_navigation_test.dart`'s own noted
@@ -62,7 +67,9 @@ void main() {
     expect(navDestination('Today'), findsOneWidget);
     expect(navDestination('Plans'), findsOneWidget);
     expect(navDestination('Insights'), findsOneWidget);
-    expect(navDestination('Journal'), findsOneWidget);
+    expect(navDestination('You'), findsOneWidget);
+    // Journal is no longer a primary destination (founder IA correction).
+    expect(navDestination('Journal'), findsNothing);
 
     await tester.tap(navDestination('Plans'));
     await tester.pumpAndSettle();
@@ -72,9 +79,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(InsightsPage), findsOneWidget);
 
-    await tester.tap(navDestination('Journal'));
+    await tester.tap(navDestination('You'));
     await tester.pumpAndSettle();
-    expect(find.byType(CircleHistoryPage), findsOneWidget);
+    expect(find.byType(SettingsPage), findsOneWidget);
 
     await tester.tap(navDestination('Today'));
     await tester.pumpAndSettle();
@@ -94,27 +101,36 @@ void main() {
   });
 
   testWidgets(
-    'Settings is reachable via a matching AppBar icon on Plans, Insights '
-    'and Journal — not a 5th bottom-nav tab',
+    'direct navigation to /settings shows the "You" destination with '
+    'its own tab selected',
     (tester) async {
       await pumpApp(tester);
 
-      for (final label in ['Plans', 'Insights', 'Journal']) {
+      appRouter.go('/settings');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SettingsPage), findsOneWidget);
+      expect(find.text('You'), findsWidgets);
+      final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+      expect(navBar.selectedIndex, 3);
+    },
+  );
+
+  testWidgets(
+    'no branch keeps a redundant Settings AppBar shortcut now that "You" '
+    'is a persistent primary destination',
+    (tester) async {
+      await pumpApp(tester);
+
+      for (final label in ['Today', 'Plans', 'Insights']) {
         await tester.tap(navDestination(label));
         await tester.pumpAndSettle();
-
-        await tester.tap(find.byIcon(Icons.settings_outlined));
-        await tester.pumpAndSettle();
-        expect(find.byType(SettingsPage), findsOneWidget);
-
-        // Pop back to the branch that opened it (standard push/pop) before
-        // moving to the next destination.
-        final navigatorContext = tester.element(find.byType(SettingsPage));
-        Navigator.of(navigatorContext).pop();
-        await tester.pumpAndSettle();
+        expect(
+          find.byIcon(Icons.settings_outlined),
+          findsNothing,
+          reason: '$label still shows a Settings icon',
+        );
       }
-
-      expect(navDestination('Today'), findsOneWidget);
     },
   );
 
@@ -144,9 +160,9 @@ void main() {
   );
 
   testWidgets(
-    'a Free (unentitled) user still finds Plans and Insights via the '
-    'bottom nav — Batch A\'s content-level preview, not a hidden '
-    'destination, is what gates paid content',
+    'a Free (unentitled) user still finds Plans and the Insights '
+    'interpretation preview via the bottom nav — Batch A\'s content-level '
+    'preview, not a hidden destination, is what gates paid content',
     (tester) async {
       await pumpApp(tester, entitled: false);
 
@@ -164,35 +180,97 @@ void main() {
   );
 
   testWidgets(
-    'Journal is unaffected by entitlement, reached via the bottom nav',
+    'Insights\' shared history calendar is unaffected by entitlement, '
+    'reached via the bottom nav',
     (tester) async {
       await pumpApp(tester, entitled: false);
-
-      await tester.tap(navDestination('Journal'));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(CircleHistoryPage), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'popping Settings returns to the exact tab that opened it, not Today '
-    '— standard push/pop, unchanged from before the shell (§3)',
-    (tester) async {
-      await pumpApp(tester);
 
       await tester.tap(navDestination('Insights'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.settings_outlined));
-      await tester.pumpAndSettle();
-      expect(find.byType(SettingsPage), findsOneWidget);
+      expect(find.byType(CircleHistoryCalendar), findsOneWidget);
+    },
+  );
 
-      Navigator.of(tester.element(find.byType(SettingsPage))).pop();
+  testWidgets(
+    'You is reachable and shows Premium/reminder/data controls '
+    'regardless of entitlement',
+    (tester) async {
+      await pumpApp(tester, entitled: false);
+
+      await tester.tap(navDestination('You'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SettingsPage), findsOneWidget);
+      expect(find.text('Upgrade to Premium'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'You → Premium → Back → You — standard push/pop, matching the '
+    'contract\'s unchanged Settings/Premium return behavior',
+    (tester) async {
+      await pumpApp(tester);
+
+      await tester.tap(navDestination('You'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Upgrade to Premium'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PremiumOfferPage), findsOneWidget);
+
+      Navigator.of(tester.element(find.byType(PremiumOfferPage))).pop();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SettingsPage), findsOneWidget);
+      expect(find.byType(PremiumOfferPage), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'tapping a recorded date on the calendar opens that record\'s detail, '
+    'and Back returns to the same Insights state',
+    (tester) async {
+      final today = DateTime.now();
+      final localDate =
+          '${today.year.toString().padLeft(4, '0')}-'
+          '${today.month.toString().padLeft(2, '0')}-'
+          '${today.day.toString().padLeft(2, '0')}';
+
+      await pumpApp(
+        tester,
+        storedPrefs: {
+          circleJournalKey: jsonEncode({
+            'schemaVersion': circleJournalSchemaVersion,
+            'entries': [
+              {
+                'schemaVersion': circleJournalSchemaVersion,
+                'circleId': localDate,
+                'localDate': localDate,
+                'direction': Intention.moreEnergy.name,
+                'activityId': ActivityId.thirtyMinuteWalk.name,
+                'catalogVersion': catalogVersion,
+                'shownAt': today.toIso8601String(),
+              },
+            ],
+          }),
+        },
+      );
+
+      await tester.tap(navDestination('Insights'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CircleHistoryCalendar), findsOneWidget);
+
+      await tester.tap(find.text(today.day.toString()).first);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CircleRecordDetailPage), findsOneWidget);
+      expect(find.textContaining(localDate), findsWidgets);
+
+      Navigator.of(tester.element(find.byType(CircleRecordDetailPage))).pop();
       await tester.pumpAndSettle();
 
       expect(find.byType(InsightsPage), findsOneWidget);
-      expect(find.byType(SettingsPage), findsNothing);
     },
   );
 
@@ -208,7 +286,7 @@ void main() {
       await pumpApp(tester);
       expect(tester.takeException(), isNull);
 
-      for (final label in ['Today', 'Plans', 'Insights', 'Journal']) {
+      for (final label in ['Today', 'Plans', 'Insights', 'You']) {
         await tester.tap(navDestination(label));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: '$label overflowed');
@@ -226,7 +304,7 @@ void main() {
       await pumpApp(tester);
       expect(tester.takeException(), isNull);
 
-      for (final label in ['Today', 'Plans', 'Insights', 'Journal']) {
+      for (final label in ['Today', 'Plans', 'Insights', 'You']) {
         await tester.tap(navDestination(label));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: '$label overflowed');
@@ -242,6 +320,19 @@ void main() {
         .map((branch) => (branch.routes.single as GoRoute).path)
         .toList();
 
-    expect(branchRootPaths, ['/', '/plans', '/insights', '/history']);
+    expect(branchRootPaths, ['/', '/plans', '/insights', '/settings']);
   });
+
+  test(
+    '/history and /history/:date remain registered as top-level routes, '
+    'outside the shell — secondary/compatibility surfaces, not a fifth '
+    'destination',
+    () {
+      final routes = buildAppRoutes(includeDevPreview: false);
+      final topLevelPaths = routes.whereType<GoRoute>().map((r) => r.path);
+
+      expect(topLevelPaths, contains('/history'));
+      expect(topLevelPaths, contains('/history/:date'));
+    },
+  );
 }

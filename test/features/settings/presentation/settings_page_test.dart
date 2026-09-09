@@ -225,28 +225,27 @@ void main() {
     );
   });
 
-  testWidgets('links to Your Circle history for existing data controls', (
-    tester,
-  ) async {
-    final gateway = _FakeEntitlementGateway();
-    final (widget, container) = await _wrap(gateway: gateway);
-    addTearDown(container.dispose);
+  testWidgets(
+    'exposes inline export/delete data controls under "Your data" — '
+    'founder IA correction: these live directly on "You" now, not behind '
+    'a link to the retired primary Journal tab',
+    (tester) async {
+      final gateway = _FakeEntitlementGateway();
+      final (widget, container) = await _wrap(gateway: gateway);
+      addTearDown(container.dispose);
 
-    await tester.pumpWidget(widget);
-    await tester.pumpAndSettle();
-    // The Settings list has grown past the default test viewport + cache
-    // extent since Appearance/Analytics were added — scroll to bring this
-    // card into the mounted range before asserting on it.
-    await tester.scrollUntilVisible(
-      find.text('Your Circle history — view, export or delete'),
-      200,
-    );
+      await tester.pumpWidget(widget);
+      await tester.pumpAndSettle();
+      // The Settings list has grown past the default test viewport + cache
+      // extent since Appearance/Analytics were added — scroll to bring this
+      // card into the mounted range before asserting on it.
+      await tester.scrollUntilVisible(find.text('Your data'), 200);
 
-    expect(
-      find.text('Your Circle history — view, export or delete'),
-      findsOneWidget,
-    );
-  });
+      expect(find.text('Your data'), findsOneWidget);
+      expect(find.text('Copy as text'), findsOneWidget);
+      expect(find.text('Delete all'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'exposes the real System/Light/Dark theme control, reflecting and '

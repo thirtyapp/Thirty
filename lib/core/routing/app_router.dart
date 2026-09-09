@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/home/presentation/circle_history_page.dart';
+import '../../features/home/presentation/circle_record_detail_page.dart';
 import '../../features/home/presentation/home_page.dart';
 import '../../features/insights/presentation/insights_page.dart';
 import '../../features/plans/presentation/plan_path_page.dart';
@@ -20,12 +21,21 @@ import 'app_shell.dart';
 /// exercised from a test; asserting on [includeDevPreview] instead lets
 /// the gating logic itself be checked without one.
 ///
-/// Batch B (`THIRTY_STEP1_FINAL_IA_AND_IMPLEMENTATION_CONTRACT_2026-09-09.md`
-/// §2) replaces the previous flat route list with a
-/// `StatefulShellRoute.indexedStack` of 4 branches — Today | Plans |
-/// Insights | Journal — wrapped by [AppShell]'s bottom `NavigationBar`.
-/// `/settings` and `/premium` stay top-level siblings, pushed from any
-/// branch, exactly as before. Each branch keeps its own independent
+/// Batch B introduced a `StatefulShellRoute.indexedStack` of 4 branches —
+/// originally Today | Plans | Insights | Journal. The founder's IA
+/// correction ("Today | Plans | Insights | You" supersedes that) replaces
+/// the `/history` branch with `/settings` (presented as "You" —
+/// `../../features/settings/presentation/settings_page.dart`): Journal
+/// is no longer a primary destination, its shared history now presents
+/// inside Insights as a date-Circle calendar
+/// (`../../features/insights/presentation/widgets/circle_history_calendar.dart`),
+/// and `/settings` moves from a top-level pushed route into the shell
+/// itself. `/history` and the new `/history/:date` record-detail route
+/// stay registered as top-level, unlinked-from-primary-nav routes —
+/// "may remain... for compatibility, export/delete, or record detail"
+/// — never a second bottom-nav-equivalent destination. `/premium` stays
+/// a top-level sibling, pushed from "You" exactly as it was pushed from
+/// Settings before. Each shell branch keeps its own independent
 /// Navigator, so switching tabs never disposes another branch's state.
 @visibleForTesting
 List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
@@ -51,6 +61,9 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
             ),
           ],
         ),
+        // Hosts the Free/shared history calendar unconditionally, plus
+        // the existing Premium Insight interpretation surface — see
+        // `InsightsPage`'s own doc comment for the exact split.
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -59,19 +72,39 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
             ),
           ],
         ),
+        // "You" — a calm personal-control hub, not an account. Reuses
+        // the existing `SettingsPage` verbatim (its own AppBar title is
+        // "You"); no new settings system, no login, no profile.
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/history',
-              builder: (context, state) => const CircleHistoryPage(),
+              path: '/settings',
+              builder: (context, state) => const SettingsPage(),
             ),
           ],
         ),
       ],
     ),
+    // Compatibility/secondary surface only, since the founder IA
+    // correction: no longer linked from any primary-nav element (Today's
+    // old history icon and Settings' old history link are both gone —
+    // see `home_page.dart` and `settings_page.dart`'s own doc comments).
+    // Still the one place local export/delete/full-list access lives for
+    // anything that needs it directly.
     GoRoute(
-      path: '/settings',
-      builder: (context, state) => const SettingsPage(),
+      path: '/history',
+      builder: (context, state) => const CircleHistoryPage(),
+    ),
+    // One recorded local date's read-only detail — reached by tapping a
+    // marked date on `CircleHistoryCalendar`. `:date` is a plain
+    // `YYYY-MM-DD` local-date string (`core/utils/date_key.dart`'s
+    // `dateKey` format), never containing a `/`, so it is always exactly
+    // one path segment.
+    GoRoute(
+      path: '/history/:date',
+      builder: (context, state) => CircleRecordDetailPage(
+        localDate: state.pathParameters['date']!,
+      ),
     ),
     GoRoute(
       path: '/premium',

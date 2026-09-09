@@ -11,12 +11,25 @@ import '../../../core/providers/theme_mode_provider.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
+import '../../home/presentation/widgets/journal_data_controls.dart';
 import '../../reminder/application/reminder_provider.dart';
 
-/// THIRTY's Settings surface — Step 5
+/// THIRTY's "You" destination — Step 5
 /// (`docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`,
 /// reconciled against the parent `THIRTY V1 PRODUCTIZATION + COMMERCIAL
-/// REVIEW.md` §9/§32's actual V1 Settings minimum).
+/// REVIEW.md` §9/§32's actual V1 Settings minimum), retitled and
+/// promoted to the fourth primary bottom-nav destination by the founder's
+/// later IA correction ("Today | Plans | Insights | You").
+///
+/// **"You" is "my THIRTY experience and data," not "my account."** No
+/// login, sign-in/out, avatar, demographic profile, cloud journal, or new
+/// backend is introduced here — this class (`SettingsPage`, kept as the
+/// existing name for continuity — see `core/routing/app_router.dart`) is
+/// reused verbatim, presentation changes only. Premium continues to work
+/// through the existing Google Play / managed-entitlement identity alone;
+/// that identity and this page's local THIRTY data remain entirely
+/// separate (restoring Premium entitlement never restores or implies
+/// restoring local journal/Plan data, and vice versa).
 ///
 /// Exposes exactly the controls that authority both requires *and* this
 /// app can truthfully back today:
@@ -33,7 +46,9 @@ import '../../reminder/application/reminder_provider.dart';
 /// - the local reminder's on/off state, permission state and one time
 ///   (`ReminderNotifier` — parent §27/§28), reusing the same
 ///   `showTimePicker` flow as `ReminderInvitationCard`;
-/// - the existing Circle-history data controls (export/delete).
+/// - the existing Circle-history data controls (export/delete,
+///   [JournalDataControls] — inline here since the IA correction, rather
+///   than a link out to `/history`'s full list).
 ///
 /// Deliberately **not** included, because no authoritative value exists
 /// anywhere in this repository to back it truthfully — fabricating
@@ -89,7 +104,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final status = ref.watch(entitlementStatusProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: const Text('You')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.page),
@@ -165,26 +180,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             const SizedBox(height: AppSpacing.m),
             Text('Your data', style: textTheme.titleMedium),
             const SizedBox(height: AppSpacing.s),
-            ThirtyCard(
-              // Since Batch B, `/history` is the Journal branch root of
-              // the primary navigation shell — `go`, not `push`, is the
-              // correct way to reach a shell branch from a route (like
-              // Settings) that lives outside it; see
-              // `../../home/presentation/home_page.dart`'s own doc comment
-              // for why.
-              onTap: () => context.go('/history'),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Your Circle history — view, export or delete',
-                      style: textTheme.bodyMedium,
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right),
-                ],
-              ),
-            ),
+            const JournalDataControls(),
           ],
         ),
       ),
