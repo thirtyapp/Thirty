@@ -117,6 +117,21 @@
 /// hypothesis pending physical retest on this build. Do not treat this
 /// build as proof reminder delivery is fixed.
 ///
+/// `1.7.0+11`: an Internal Testing candidate only — no product, navigation,
+/// reminder, billing, or design surface changed from `1.7.0+10`. Prepared
+/// to physically verify the founder-corrected four-destination IA (Today |
+/// Plans | Insights | You) and the shared Free Circle-history calendar
+/// inside Insights on a real device. Separately, the `1.7.0+10` build has
+/// now physically proven same-day local reminder delivery with THIRTY
+/// fully closed, same-day delivery with THIRTY backgrounded and another
+/// app active, and next-day delivery without opening THIRTY before
+/// delivery (an 18:00 schedule delivered at 18:07); exact-minute delivery
+/// remains intentionally not promised, and the earlier isolated 22:10 miss
+/// remains unexplained but has not reproduced across these subsequent
+/// tests. No reminder code, Android scheduling mode, notification
+/// permission, or battery-configuration change was made on the strength of
+/// this evidence.
+///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the
 /// frozen evaluation boundary the post-fix measurement protocol depends
@@ -131,5 +146,5 @@ class ReleaseInfo {
   const ReleaseInfo._();
 
   /// Keep in sync with `pubspec.yaml`'s `version:` field.
-  static const String appVersion = '1.7.0+10';
+  static const String appVersion = '1.7.0+11';
 }
