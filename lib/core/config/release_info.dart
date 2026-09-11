@@ -142,6 +142,38 @@
 /// see that commit's own message for the root cause), plus a modest
 /// recorded-date ring-stroke-width increase (1.5 → 2) on a real device.
 ///
+/// **STEP 1 — CLOSED, physically verified PASS on `1.7.0+12`** (release-
+/// candidate HEAD `bd14730`, live-refresh fix ancestor `925d276`; full
+/// regression 620/620, analyzer clean). On the founder's Samsung: primary
+/// navigation (Today | Plans | Insights | You) and the Today → Plans →
+/// Insights → You → Today cycle both work; the Insights calendar renders
+/// correctly and an existing recorded date still opens its correct record
+/// detail, with Back returning correctly; "You" carries the expected
+/// personal-control surfaces; pre-existing journal data survived the
+/// update; Circle state survives tab switching; and — the specific defect
+/// this candidate was built to prove fixed — a newly closed Circle now
+/// appears in Insights immediately, with no app restart, confirming the
+/// `925d276` indexedStack/calendar live-refresh correction. The recorded-
+/// date ring is visually accepted as shipped in both Light and Dark mode;
+/// the founder explicitly decided no further ring-weight change is needed,
+/// and the current calendar presentation is accepted for Step 1. This
+/// closes the founder-corrected four-destination IA + shared Free
+/// Circle-history calendar verification opened by `1.7.0+11`.
+///
+/// **Next bounded batch (queued, not started): Circle-first Home + First
+/// Breath + beauty/interactions.** Approved boundaries carried forward into
+/// that batch's own scoping: First Breath follows the existing World
+/// System sequence; no heartbeat/scale animation of the THIRTY wordmark; no
+/// haptic during First Breath; reduced-motion behavior must be
+/// near-immediate; Home should become Circle-first; the pre-choice action
+/// must not be called "Start Circle" (working copy may be "Begin today's
+/// Circle", final copy resolved inside that batch); the actual "Start
+/// Circle" lifecycle transition remains what fires after THIRTY assigns
+/// the concrete activity, unchanged; no change to Free/Premium entitlement
+/// boundaries; no runtime AI; no account requirement; no
+/// reminder/billing/backend changes; no broader redesign outside the
+/// approved Home/First Breath/interaction scope.
+///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the
 /// frozen evaluation boundary the post-fix measurement protocol depends
