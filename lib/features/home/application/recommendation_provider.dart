@@ -967,6 +967,14 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           revisitUsed: planAssignment?.isRevisit,
           treatmentSource: planAssignment?.treatmentSource.name,
         );
+    // A plain repository mutation does not itself notify Riverpod
+    // watchers — invalidate so an already-mounted reactive reader (e.g.
+    // the Insights Circle-history calendar kept alive off-screen by
+    // `StatefulShellRoute.indexedStack`) picks up this write instead of
+    // staying stale until something else happens to rebuild it. Mirrors
+    // the same invalidate-after-write `journal_data_controls.dart`
+    // already does after `clearAll()`.
+    if (ref.mounted) ref.invalidate(circleJournalRepositoryProvider);
   }
 
   /// Persists [state]'s lifecycle and optional attempt/usefulness responses
@@ -1070,6 +1078,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         ? null
         : recommendation.isPlanRevisit;
 
+    var journalChanged = false;
     switch (state.status) {
       case RecommendationStatus.started:
         await journal.recordStarted(
@@ -1086,6 +1095,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           revisitUsed: revisitUsed,
           treatmentSource: treatmentSourceName,
         );
+        journalChanged = true;
       case RecommendationStatus.closed:
         await journal.recordClosed(
           circleId: circleId,
@@ -1101,6 +1111,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           revisitUsed: revisitUsed,
           treatmentSource: treatmentSourceName,
         );
+        journalChanged = true;
       case RecommendationStatus.notStarted:
         break;
     }
@@ -1121,6 +1132,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         revisitUsed: revisitUsed,
         treatmentSource: treatmentSourceName,
       );
+      journalChanged = true;
     }
     if (usefulnessResponse != null) {
       await journal.recordUsefulness(
@@ -1138,6 +1150,16 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         revisitUsed: revisitUsed,
         treatmentSource: treatmentSourceName,
       );
+      journalChanged = true;
+    }
+
+    // See [_persistChoice]'s matching comment: a plain repository
+    // mutation never notifies its own Riverpod watchers, so an
+    // already-mounted reactive reader (e.g. the Insights Circle-history
+    // calendar kept alive off-screen by `StatefulShellRoute.indexedStack`)
+    // must be told to look again.
+    if (journalChanged && ref.mounted) {
+      ref.invalidate(circleJournalRepositoryProvider);
     }
   }
 }

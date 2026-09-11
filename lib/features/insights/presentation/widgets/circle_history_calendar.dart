@@ -36,6 +36,14 @@ const _monthNames = [
 /// displayed month, and never calls anything that could start, close, or
 /// advance a Circle or Plan.
 ///
+/// Live refresh: `recommendation_provider.dart` invalidates
+/// [circleJournalRepositoryProvider] after every journal-mutating write
+/// (matching `journal_data_controls.dart`'s existing clearAll path), so
+/// this widget's `ref.watch` below picks up a just-closed Circle even
+/// while kept alive off-screen by `StatefulShellRoute.indexedStack` — no
+/// polling, no forced route recreation, and [_displayedMonth] is untouched
+/// by that rebuild.
+///
 /// A recorded date shows a calm ring around its number (the "Circle"
 /// visual echo) and opens `/history/<date>` (a single record's read-only
 /// detail) when tapped. An empty date is plain, non-interactive text —
@@ -193,7 +201,7 @@ class _CalendarCell extends StatelessWidget {
             ? DecoratedBox(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: colors.primary, width: 1.5),
+                  border: Border.all(color: colors.primary, width: 2),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(4),

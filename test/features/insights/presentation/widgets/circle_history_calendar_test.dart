@@ -12,6 +12,7 @@ import 'package:thirty/core/routing/app_router.dart';
 import 'package:thirty/core/theme/app_theme.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/insights/presentation/widgets/circle_history_calendar.dart';
 
 final _today = DateTime(2026, 9, 15);
@@ -262,5 +263,99 @@ void main() {
     final routes = buildAppRoutes(includeDevPreview: false);
     final topLevelPaths = routes.whereType<GoRoute>().map((r) => r.path);
     expect(topLevelPaths, contains('/history/:date'));
+  });
+
+  group('live refresh after a Circle is closed', () {
+    testWidgets(
+      'an already-mounted calendar shows today\'s date as soon as the '
+      'Circle it was watching gets closed — no manual refresh, no app '
+      'restart, and the same widget instance (no route/app rebuild)',
+      (tester) async {
+        final (widget, container) = await _wrap();
+        addTearDown(container.dispose);
+        final handle = tester.ensureSemantics();
+
+        await tester.pumpWidget(widget);
+        expect(
+          find.bySemanticsLabel('2026-09-15, no record'),
+          findsOneWidget,
+        );
+        final calendarElementBefore = tester.element(
+          find.byType(CircleHistoryCalendar),
+        );
+
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy);
+        await tester.pumpAndSettle();
+        container.read(recommendationProvider.notifier).start();
+        await tester.pumpAndSettle();
+        container.read(recommendationProvider.notifier).close();
+        await tester.pumpAndSettle();
+
+        expect(
+          find.bySemanticsLabel('2026-09-15, Circle recorded'),
+          findsOneWidget,
+        );
+        // Same widget/Element — the fix is a reactive rebuild, not a
+        // forced route/subtree recreation.
+        expect(
+          tester.element(find.byType(CircleHistoryCalendar)),
+          same(calendarElementBefore),
+        );
+        handle.dispose();
+      },
+    );
+
+    testWidgets(
+      'no duplicate journal record is created by the refresh path — '
+      'exactly one entry remains for today after close()',
+      (tester) async {
+        final (widget, container) = await _wrap();
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(widget);
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy);
+        await tester.pumpAndSettle();
+        container.read(recommendationProvider.notifier).start();
+        await tester.pumpAndSettle();
+        container.read(recommendationProvider.notifier).close();
+        await tester.pumpAndSettle();
+
+        expect(
+          container.read(circleJournalRepositoryProvider).readAll(),
+          hasLength(1),
+        );
+      },
+    );
+
+    testWidgets(
+      'closing today\'s Circle after the visible month was navigated away '
+      'does not reset the displayed month back to the current one',
+      (tester) async {
+        final (widget, container) = await _wrap();
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(widget);
+        await tester.tap(find.byIcon(Icons.chevron_left));
+        await tester.pump();
+        expect(find.text('August 2026'), findsOneWidget);
+
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy);
+        await tester.pumpAndSettle();
+        container.read(recommendationProvider.notifier).start();
+        await tester.pumpAndSettle();
+        container.read(recommendationProvider.notifier).close();
+        await tester.pumpAndSettle();
+
+        // The journal write reactively refreshed the record marks, but
+        // never touched the user's own month-navigation choice.
+        expect(find.text('August 2026'), findsOneWidget);
+      },
+    );
   });
 }
