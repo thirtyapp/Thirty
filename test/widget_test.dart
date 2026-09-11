@@ -8,7 +8,7 @@ import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/providers/theme_mode_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
-import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
+import 'package:thirty/features/home/presentation/widgets/circle_ready_prompt.dart';
 
 Future<Widget> _wrap() async {
   SharedPreferences.setMockInitialValues({});
@@ -27,8 +27,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(find.byType(DailyIntentionPrompt), findsOneWidget);
+    expect(find.byType(CircleReadyPrompt), findsOneWidget);
 
+    await tester.ensureVisible(find.text("Begin today's Circle"));
+    await tester.tap(find.text("Begin today's Circle"));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('More Energy'));
     await tester.pumpAndSettle();
 

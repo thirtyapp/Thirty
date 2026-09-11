@@ -9,13 +9,15 @@ import 'package:thirty/core/routing/app_router.dart';
 import 'package:thirty/core/world_rendering/quiet_trail_hero_asset_view.dart';
 import 'package:thirty/features/home/presentation/circle_history_page.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
+import 'package:thirty/features/home/presentation/widgets/circle_ready_prompt.dart';
 import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
 import 'package:thirty/features/plans/presentation/plan_path_page.dart';
 
 void main() {
   testWidgets(
-    'the root route shows HomePage, starting with the Daily Context '
-    'Question and moving to the Circle Hero once an intention is chosen',
+    'the root route shows HomePage, starting with the Circle-first Ready '
+    'state, then the Daily Context Question, and moving to the Circle '
+    'Hero once an intention is chosen',
     (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
@@ -28,9 +30,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(DailyIntentionPrompt), findsOneWidget);
+      expect(find.byType(CircleReadyPrompt), findsOneWidget);
+      expect(find.byType(DailyIntentionPrompt), findsNothing);
       expect(find.byType(CircleHero), findsNothing);
       expect(find.text('THIRTY — Design System'), findsNothing);
+
+      await tester.ensureVisible(find.text("Begin today's Circle"));
+      await tester.tap(find.text("Begin today's Circle"));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DailyIntentionPrompt), findsOneWidget);
 
       await tester.tap(find.text('More Energy'));
       await tester.pumpAndSettle();

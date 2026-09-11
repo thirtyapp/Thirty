@@ -10,6 +10,7 @@ import 'package:thirty/core/theme/app_theme.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/presentation/home_page.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
+import 'package:thirty/features/home/presentation/widgets/circle_ready_prompt.dart';
 import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
 
 final _today = DateTime(2026, 8, 2);
@@ -33,11 +34,14 @@ Future<Widget> _wrap({
 
 void main() {
   testWidgets(
-    'shows the Daily Context Question when today has no recommendation yet',
+    'shows the Circle-first Ready state, not the direction chooser, when '
+    'today has no recommendation yet',
     (WidgetTester tester) async {
       await tester.pumpWidget(await _wrap());
 
-      expect(find.byType(DailyIntentionPrompt), findsOneWidget);
+      expect(find.byType(CircleReadyPrompt), findsOneWidget);
+      expect(find.text("Begin today's Circle"), findsOneWidget);
+      expect(find.byType(DailyIntentionPrompt), findsNothing);
       expect(find.byType(CircleHero), findsNothing);
     },
   );
@@ -129,6 +133,33 @@ void main() {
 
       await tester.pumpWidget(await _wrap(entitled: true));
       expect(find.byIcon(Icons.route_outlined), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'a new local day returns to the Circle-first Ready state even though '
+    'yesterday\'s Circle was closed — no "missed day" state, just a fresh '
+    'day (Playbook Ch.1 §7-§8)',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        await _wrap(
+          storedPrefs: {
+            recommendationDayKey: '2026-08-01',
+            recommendationIntentionKey: 'moreEnergy',
+            recommendationActivityIdKey: 'thirtyMinuteWalk',
+            recommendationStatusKey: 'closed',
+            recommendationStartedAtKey: DateTime(
+              2026,
+              8,
+              1,
+            ).toIso8601String(),
+            recommendationClosedAtKey: DateTime(2026, 8, 1).toIso8601String(),
+          },
+        ),
+      );
+
+      expect(find.byType(CircleReadyPrompt), findsOneWidget);
+      expect(find.byType(CircleHero), findsNothing);
     },
   );
 }

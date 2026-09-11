@@ -15,6 +15,7 @@ import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/presentation/circle_record_detail_page.dart';
 import 'package:thirty/features/home/presentation/home_page.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
+import 'package:thirty/features/home/presentation/widgets/circle_ready_prompt.dart';
 import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
 import 'package:thirty/features/insights/presentation/insights_page.dart';
 import 'package:thirty/features/insights/presentation/widgets/circle_history_calendar.dart';
@@ -140,6 +141,10 @@ void main() {
     (tester) async {
       await pumpApp(tester);
 
+      expect(find.byType(CircleReadyPrompt), findsOneWidget);
+      await tester.ensureVisible(find.text("Begin today's Circle"));
+      await tester.tap(find.text("Begin today's Circle"));
+      await tester.pumpAndSettle();
       expect(find.byType(DailyIntentionPrompt), findsOneWidget);
       await tester.tap(find.text('More Energy'));
       await tester.pumpAndSettle();
