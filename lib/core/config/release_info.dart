@@ -132,6 +132,16 @@
 /// permission, or battery-configuration change was made on the strength of
 /// this evidence.
 ///
+/// `1.7.0+12`: an Internal Testing candidate only — no product, navigation,
+/// reminder, billing, or design surface changed from `1.7.0+11`. Prepared to
+/// physically verify the targeted Step 1 fix committed at `925d276`: live
+/// refresh of the Insights Circle-history calendar after a Circle is closed
+/// (an already-mounted calendar, kept alive off-screen by
+/// `StatefulShellRoute.indexedStack`, now reactively picks up the newly
+/// closed Circle's journal record instead of requiring a full app restart —
+/// see that commit's own message for the root cause), plus a modest
+/// recorded-date ring-stroke-width increase (1.5 → 2) on a real device.
+///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the
 /// frozen evaluation boundary the post-fix measurement protocol depends
@@ -146,5 +156,5 @@ class ReleaseInfo {
   const ReleaseInfo._();
 
   /// Keep in sync with `pubspec.yaml`'s `version:` field.
-  static const String appVersion = '1.7.0+11';
+  static const String appVersion = '1.7.0+12';
 }
