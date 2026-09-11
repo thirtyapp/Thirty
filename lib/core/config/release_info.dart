@@ -160,19 +160,19 @@
 /// closes the founder-corrected four-destination IA + shared Free
 /// Circle-history calendar verification opened by `1.7.0+11`.
 ///
-/// **Next bounded batch (queued, not started): Circle-first Home + First
-/// Breath + beauty/interactions.** Approved boundaries carried forward into
-/// that batch's own scoping: First Breath follows the existing World
-/// System sequence; no heartbeat/scale animation of the THIRTY wordmark; no
-/// haptic during First Breath; reduced-motion behavior must be
-/// near-immediate; Home should become Circle-first; the pre-choice action
-/// must not be called "Start Circle" (working copy may be "Begin today's
-/// Circle", final copy resolved inside that batch); the actual "Start
-/// Circle" lifecycle transition remains what fires after THIRTY assigns
-/// the concrete activity, unchanged; no change to Free/Premium entitlement
-/// boundaries; no runtime AI; no account requirement; no
-/// reminder/billing/backend changes; no broader redesign outside the
-/// approved Home/First Breath/interaction scope.
+/// `1.7.0+13`: an Internal Testing candidate only — no product, navigation,
+/// reminder, billing, or lifecycle surface changed from `1.7.0+12` beyond
+/// what shipped at commit `5f0b42d`: the Circle-first Home Ready state
+/// (`CircleReadyPrompt`) now precedes the Daily Context Question — a
+/// closed Circle and `Begin today's Circle`, revealing the existing three
+/// directions inline once tapped — before THIRTY assigns a concrete
+/// activity and the existing, unchanged First Breath ritual plays.
+/// `RecommendationProvider`, the journal, reminder suppression, Plan
+/// advancement, and entitlement behavior are all unchanged. Prepared to
+/// physically verify this Golden Home + First Breath + beauty/interactions
+/// batch on a real device — full regression 630/630 (up from the prior
+/// verified baseline of 620/620: 10 new test cases, 4 existing tests
+/// updated in place for the new Ready-state flow), analyzer clean.
 ///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the
@@ -188,5 +188,5 @@ class ReleaseInfo {
   const ReleaseInfo._();
 
   /// Keep in sync with `pubspec.yaml`'s `version:` field.
-  static const String appVersion = '1.7.0+12';
+  static const String appVersion = '1.7.0+13';
 }
