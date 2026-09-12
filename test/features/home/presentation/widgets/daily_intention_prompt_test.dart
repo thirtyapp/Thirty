@@ -8,16 +8,10 @@ import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/theme/app_theme.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
-import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
 
 final _today = DateTime(2026, 8, 2);
-
-const _introText =
-    'Choose a direction. THIRTY gives you one activity to do '
-    'offline, in about thirty minutes. Tomorrow brings a new '
-    'Circle.';
 
 Future<(Widget, ProviderContainer)> _wrap({
   Map<String, Object> prefs = const {},
@@ -140,88 +134,20 @@ void main() {
     },
   );
 
-  group('first-use onboarding explanation (Step 5 reconciliation)', () {
-    testWidgets(
-      'shows the explanation above the daily question on a genuinely '
-      'first use, with all three directions still immediately reachable',
-      (tester) async {
-        final (widget, container) = await _wrap();
-        addTearDown(container.dispose);
-        await tester.pumpWidget(widget);
-
-        expect(find.text(_introText), findsOneWidget);
-        expect(find.text('What would help most today?'), findsOneWidget);
-        expect(find.text('More Energy'), findsOneWidget);
-        expect(find.text('Clearer Head'), findsOneWidget);
-        expect(find.text('Gentler Pace'), findsOneWidget);
-      },
-    );
-
-    testWidgets('never shows again once a direction has actually been '
-        'chosen', (tester) async {
+  testWidgets(
+    'shows only the question and the three choices — no explanatory '
+    'paragraph — matching the restrained question/choice rhythm of the '
+    'post-Circle feedback UI (emulator polish)',
+    (tester) async {
       final (widget, container) = await _wrap();
       addTearDown(container.dispose);
       await tester.pumpWidget(widget);
-      expect(find.text(_introText), findsOneWidget);
-
-      await tester.tap(find.text('More Energy'));
-      await tester.pump();
 
       expect(
-        container
-            .read(sharedPreferencesProvider)
-            .getBool(onboardingIntroShownKey),
-        isTrue,
+        find.textContaining('THIRTY gives you one activity'),
+        findsNothing,
       );
-    });
-
-    testWidgets('never shows once already marked shown', (tester) async {
-      final (widget, container) = await _wrap(
-        prefs: {onboardingIntroShownKey: true},
-      );
-      addTearDown(container.dispose);
-      await tester.pumpWidget(widget);
-
-      expect(find.text(_introText), findsNothing);
-      expect(find.text('What would help most today?'), findsOneWidget);
-    });
-
-    testWidgets(
-      'never shows for an install that already has prior journal history '
-      '— an upgraded pre-onboarding user is never told this is their '
-      'first use',
-      (tester) async {
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        final container = ProviderContainer(
-          overrides: [
-            sharedPreferencesProvider.overrideWithValue(prefs),
-            nowProvider.overrideWithValue(_today),
-          ],
-        );
-        addTearDown(container.dispose);
-        await container
-            .read(circleJournalRepositoryProvider)
-            .recordShown(
-              circleId: 'circle_2026-07-01',
-              localDate: '2026-07-01',
-              direction: Intention.moreEnergy,
-              activityId: ActivityId.thirtyMinuteWalk,
-              shownAt: DateTime(2026, 7, 1),
-            );
-
-        await tester.pumpWidget(
-          UncontrolledProviderScope(
-            container: container,
-            child: MaterialApp(
-              theme: AppTheme.light,
-              home: const Scaffold(body: DailyIntentionPrompt()),
-            ),
-          ),
-        );
-
-        expect(find.text(_introText), findsNothing);
-      },
-    );
-  });
+      expect(find.byType(Text), findsNWidgets(4));
+    },
+  );
 }

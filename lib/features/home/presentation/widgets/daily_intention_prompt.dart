@@ -1,42 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../application/activity_catalog.dart';
-import '../../application/circle_journal.dart';
 import '../../application/recommendation_provider.dart';
-
-/// SharedPreferences key recording that THIRTY's one first-use explanation
-/// has already been shown — Step 5 onboarding reconciliation (`THIRTY V1
-/// PRODUCTIZATION + COMMERCIAL REVIEW.md` §28). Set the moment the user
-/// actually chooses their first direction, never merely on render — an
-/// app closed before a first choice should still explain itself next
-/// time (frozen "no long opening every time the app returns" is about
-/// the First Breath ritual, not this one-time explanatory line).
-const onboardingIntroShownKey = 'onboarding_intro_shown_v1';
-
-/// Whether [DailyIntentionPrompt] should render its one-time first-use
-/// explanation above the daily question.
-///
-/// `false` once already shown. Also `false` for an install that already
-/// has any journal history — an existing user upgrading from a
-/// pre-onboarding build has already learned the mechanic and must never
-/// see a "first use" explanation addressed to a new user (and this also
-/// marks the flag so the check is a single read thereafter).
-final showOnboardingIntroProvider = Provider<bool>((ref) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  if (prefs.getBool(onboardingIntroShownKey) ?? false) return false;
-
-  final hasPriorHistory = ref
-      .watch(circleJournalRepositoryProvider)
-      .readAll()
-      .isNotEmpty;
-  return !hasPriorHistory;
-});
 
 /// THIRTY's Daily Context Question — Recommendation MVP v0
 /// (`docs/product/recommendation-mvp-v0.md`): "What would help most
@@ -61,6 +29,16 @@ final showOnboardingIntroProvider = Provider<bool>((ref) {
 /// its own visible line, since a compact choice — not a description — is
 /// the point.
 ///
+/// **Emulator polish:** this question used to be preceded by a one-time
+/// first-use explanatory paragraph ("Choose a direction. THIRTY gives you
+/// one activity to do offline..." — Step 5 onboarding reconciliation). The
+/// founder asked for this state to use the same restrained question/choice
+/// rhythm as the post-Circle feedback UI, which never precedes its own
+/// questions with explanatory copy — so that paragraph (and the
+/// SharedPreferences flag/provider that gated it) is removed outright
+/// rather than left unused; the state this widget renders is now always
+/// exactly the question and the three choices, on every use.
+///
 /// Deliberately has no [SingleChildScrollView] or outer padding of its
 /// own: `circle_ready_prompt.dart` is this widget's only mount point, and
 /// it already provides both, as one shared scrollable/padded shell together
@@ -73,25 +51,11 @@ class DailyIntentionPrompt extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
-    final colors = Theme.of(context).extension<AppColors>()!;
-    final showIntro = ref.watch(showOnboardingIntroProvider);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (showIntro) ...[
-          Text(
-            'Choose a direction. THIRTY gives you one activity to do '
-            'offline, in about thirty minutes. Tomorrow brings a new '
-            'Circle.',
-            style: textTheme.bodyMedium?.copyWith(
-              color: colors.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.m),
-        ],
         Text(
           'What would help most today?',
           style: textTheme.titleSmall,
@@ -113,15 +77,7 @@ class _IntentionOption extends ConsumerWidget {
 
   final Intention intention;
 
-  /// Chooses [intention] and — the first time this is ever called —
-  /// permanently marks the first-use explanation as shown
-  /// ([onboardingIntroShownKey]), so it never appears again once the user
-  /// has actually completed their first choice.
   void _choose(WidgetRef ref) {
-    final prefs = ref.read(sharedPreferencesProvider);
-    if (!(prefs.getBool(onboardingIntroShownKey) ?? false)) {
-      unawaited(prefs.setBool(onboardingIntroShownKey, true));
-    }
     ref.read(recommendationProvider.notifier).chooseIntention(intention);
   }
 

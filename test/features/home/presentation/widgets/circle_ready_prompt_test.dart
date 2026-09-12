@@ -69,7 +69,8 @@ void main() {
     });
 
     testWidgets(
-      'tapping Begin today\'s Circle reveals the three directions inline',
+      'tapping Begin today\'s Circle reveals only the compact question and '
+      'three choices — no explanatory paragraph (emulator polish)',
       (tester) async {
         final (widget, container) = await _wrap();
         addTearDown(container.dispose);
@@ -84,6 +85,10 @@ void main() {
         expect(find.text('More Energy'), findsOneWidget);
         expect(find.text('Clearer Head'), findsOneWidget);
         expect(find.text('Gentler Pace'), findsOneWidget);
+        expect(
+          find.textContaining('THIRTY gives you one activity'),
+          findsNothing,
+        );
       },
     );
 
