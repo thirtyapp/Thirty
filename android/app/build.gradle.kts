@@ -63,6 +63,25 @@ fun resolveSecret(envVarName: String, propertyName: String): String {
     return fromFile
 }
 
+// Whether this Gradle invocation was actually asked for a release-signed
+// artifact — `assembleRelease`, `bundleRelease`, `installRelease`, etc. all
+// contain "Release" in their task name; Flutter always invokes one of
+// these specific task names for `flutter run`/`flutter build`, driven by
+// `--debug`/`--release`, never a bare aggregate task like `assemble` that
+// might pull a release task in transitively without saying so on the
+// command line.
+//
+// This has to be checked here, synchronously against the raw task names
+// Gradle was invoked with — not deferred to something like
+// `gradle.taskGraph.whenReady`, which fires only once the full task graph
+// is resolved: the Android Gradle Plugin reads `SigningConfig` properties
+// during this module's own configuration, well before that point, and
+// throws ("It is too late to set storeFilePath") if they're written any
+// later.
+val isReleaseTaskRequested = gradle.startParameter.taskNames.any {
+    it.contains("Release", ignoreCase = true)
+}
+
 android {
     namespace = "com.thirty.app.thirty"
     compileSdk = playTargetSdk
@@ -87,10 +106,26 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(requireKeystoreProperty("storeFile"))
-            storePassword = resolveSecret("THIRTY_KEYSTORE_PASSWORD", "storePassword")
-            keyAlias = requireKeystoreProperty("keyAlias")
-            keyPassword = resolveSecret("THIRTY_KEY_PASSWORD", "keyPassword")
+            // Resolving/validating the THIRTY upload signing secrets used
+            // to run unconditionally here, which Gradle evaluates for
+            // every invocation touching this module — `assembleDebug`
+            // (and therefore plain `flutter run`) included, not just an
+            // actual release build. That made a debug build hard-fail
+            // whenever the release secrets weren't set, even though debug
+            // signing never uses them (see `isReleaseTaskRequested`'s own
+            // doc comment for why this is gated on it rather than left
+            // unconditional, and why that check has to live where it does).
+            //
+            // When no release task was requested, this signing config is
+            // simply left with no storeFile/passwords set — inert, since
+            // `buildTypes.debug` never references it and no release
+            // variant is being packaged in this invocation to read it.
+            if (isReleaseTaskRequested) {
+                storeFile = file(requireKeystoreProperty("storeFile"))
+                storePassword = resolveSecret("THIRTY_KEYSTORE_PASSWORD", "storePassword")
+                keyAlias = requireKeystoreProperty("keyAlias")
+                keyPassword = resolveSecret("THIRTY_KEY_PASSWORD", "keyPassword")
+            }
         }
     }
 
@@ -101,6 +136,9 @@ android {
             // not silently ship a debug-signed artifact.
             signingConfig = signingConfigs.getByName("release")
         }
+        // `debug` is left untouched, so it keeps AGP's own automatic debug
+        // signing config (the normal ~/.android/debug.keystore) — it never
+        // reads from `signingConfigs.release` at all.
     }
 }
 
