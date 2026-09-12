@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/theme/app_theme.dart';
+import 'package:thirty/core/widgets/thirty_progress_circle.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_ready_prompt.dart';
 import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
@@ -119,6 +120,46 @@ void main() {
       },
     );
 
+    testWidgets(
+      'the Circle stays mounted and geometrically stable while Begin '
+      "today's Circle reveals the direction choices beneath it — the "
+      'exact continuity correction this batch makes: physical '
+      'verification of 1.7.0+13 found the whole Circle composition '
+      'disappearing behind full-screen direction cards instead',
+      (tester) async {
+        final (widget, container) = await _wrap();
+        addTearDown(container.dispose);
+        await tester.pumpWidget(widget);
+
+        expect(find.byType(ThirtyProgressCircle), findsOneWidget);
+        final circleElement = tester.element(
+          find.byType(ThirtyProgressCircle),
+        );
+        final rectBefore = tester.getRect(find.byType(ThirtyProgressCircle));
+
+        await tester.ensureVisible(find.text("Begin today's Circle"));
+        await tester.tap(find.text("Begin today's Circle"));
+        await tester.pumpAndSettle();
+
+        // Still exactly one Circle — the direction chooser was revealed
+        // alongside it, not after removing and re-adding it — and it is
+        // the very same Element, i.e. never unmounted/remounted, not just
+        // a new one that happens to look the same.
+        expect(find.byType(ThirtyProgressCircle), findsOneWidget);
+        expect(
+          tester.element(find.byType(ThirtyProgressCircle)),
+          same(circleElement),
+        );
+        expect(
+          tester.getRect(find.byType(ThirtyProgressCircle)),
+          rectBefore,
+          reason:
+              'the Circle must not move or resize when the direction '
+              'choices appear beneath it',
+        );
+      },
+    );
+
     testWidgets('choosing a direction after Begin today\'s Circle still '
         'assigns exactly one recommendation via the existing mechanism', (
       tester,
@@ -130,6 +171,11 @@ void main() {
       await tester.ensureVisible(find.text("Begin today's Circle"));
       await tester.tap(find.text("Begin today's Circle"));
       await tester.pumpAndSettle();
+      // The Circle now stays mounted above the direction choices (the
+      // continuity correction itself), so — unlike before, when the
+      // direction chooser had the whole viewport to itself — this option
+      // can start below the fold and needs scrolling into view first.
+      await tester.ensureVisible(find.text('Clearer Head'));
       await tester.tap(find.text('Clearer Head'));
       await tester.pump();
 

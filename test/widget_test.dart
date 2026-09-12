@@ -32,6 +32,7 @@ void main() {
     await tester.ensureVisible(find.text("Begin today's Circle"));
     await tester.tap(find.text("Begin today's Circle"));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('More Energy'));
     await tester.tap(find.text('More Energy'));
     await tester.pumpAndSettle();
 

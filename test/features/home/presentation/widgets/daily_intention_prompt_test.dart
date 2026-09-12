@@ -73,26 +73,28 @@ void main() {
     (tester) async {
       final (widget, container) = await _wrap();
       addTearDown(container.dispose);
+      final handle = tester.ensureSemantics();
       await tester.pumpWidget(widget);
 
-      // Several Semantics ancestors sit above the Text (this widget's own
-      // explicit node, ExcludeSemantics's internal one, and ambient ones
-      // from MaterialApp/Scaffold) — find the one that actually carries
-      // `button: true`, this widget's own.
+      // The underlying ThirtyButton contributes its own `button: true`
+      // Semantics node too (label-only, no meaning) — but this widget's
+      // ExcludeSemantics wrapper drops that inner node from the real
+      // semantics tree, so only this widget's own combined-label node
+      // remains there. Reading the actual runtime semantics tree (not
+      // walking Semantics widgets in the widget tree, which would still
+      // see both) is what correctly reflects what an assistive technology
+      // is exposed to.
       final semantics = tester
-          .widgetList<Semantics>(
-            find.ancestor(
-              of: find.text('More Energy'),
-              matching: find.byType(Semantics),
-            ),
-          )
-          .firstWhere((widget) => widget.properties.button == true);
+          .getSemantics(find.text('More Energy'))
+          .getSemanticsData();
 
-      expect(semantics.properties.button, isTrue);
+      expect(semantics.flagsCollection.isButton, isTrue);
       expect(
-        semantics.properties.label,
+        semantics.label,
         'More Energy. ${intentionMeaning(Intention.moreEnergy)}',
       );
+
+      handle.dispose();
     },
   );
 

@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/thirty_card.dart';
+import '../../../../core/widgets/thirty_button.dart';
 import '../../application/activity_catalog.dart';
 import '../../application/circle_journal.dart';
 import '../../application/recommendation_provider.dart';
@@ -40,15 +40,33 @@ final showOnboardingIntroProvider = Provider<bool>((ref) {
 
 /// THIRTY's Daily Context Question — Recommendation MVP v0
 /// (`docs/product/recommendation-mvp-v0.md`): "What would help most
-/// today?", shown instead of the Circle Hero whenever today's recommendation
-/// doesn't exist yet (`home_page.dart` decides between the two on
-/// `recommendationProvider`'s [RecommendationState.recommendation]).
+/// today?", revealed beneath the still-mounted closed Circle once the user
+/// taps `Begin today's Circle` (`circle_ready_prompt.dart` — Golden Home
+/// continuity correction). Tapping one calls
+/// [RecommendationNotifier.chooseIntention], which fixes today's
+/// recommendation; this widget has nothing left to do afterward — `HomePage`
+/// swaps the whole Ready composition out for `CircleHero`
+/// (circle_hero.dart) on the next build, which then plays The First Breath.
 ///
 /// Exactly the three [Intention] values, in the same fixed order every day —
-/// no inference, no additional questions. Tapping one calls
-/// [RecommendationNotifier.chooseIntention], which fixes today's
-/// recommendation; this widget has nothing left to do afterward; `HomePage`
-/// swaps it out for `CircleHero` (circle_hero.dart) on the next build.
+/// no inference, no additional questions. Presented as compact, discrete
+/// choices — the same visual language as THIRTY's post-Circle feedback
+/// questions (`action_report_prompt.dart`'s "Did you try this activity?"):
+/// a calm, centered question followed by a stack of secondary
+/// [ThirtyButton]s — deliberately not the larger, descriptive
+/// [ThirtyCard] treatment this widget used before the correction, which
+/// read as an activity catalogue rather than three quick directions. Each
+/// option's fuller meaning (`intentionMeaning`) still reaches assistive
+/// technology through its [Semantics] label below; it is no longer shown as
+/// its own visible line, since a compact choice — not a description — is
+/// the point.
+///
+/// Deliberately has no [SingleChildScrollView] or outer padding of its
+/// own: `circle_ready_prompt.dart` is this widget's only mount point, and
+/// it already provides both, as one shared scrollable/padded shell together
+/// with the Circle above this question — the same shell, not a second one,
+/// is what keeps the Circle from ever needing to reflow when this content
+/// appears.
 class DailyIntentionPrompt extends ConsumerWidget {
   const DailyIntentionPrompt({super.key});
 
@@ -58,50 +76,42 @@ class DailyIntentionPrompt extends ConsumerWidget {
     final colors = Theme.of(context).extension<AppColors>()!;
     final showIntro = ref.watch(showOnboardingIntroProvider);
 
-    // A plain `Column` centered in the available height overflowed once
-    // Batch B's persistent bottom `NavigationBar` (`../../../../core/routing/app_shell.dart`)
-    // reduced how much vertical space Today's body has, on small screens —
-    // `SingleChildScrollView` is the minimal fix: content still reads the
-    // same, it just scrolls instead of asserting when it doesn't fit.
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.page),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (showIntro) ...[
-            Text(
-              'Choose a direction. THIRTY gives you one activity to do '
-              'offline, in about thirty minutes. Tomorrow brings a new '
-              'Circle.',
-              style: textTheme.bodyMedium?.copyWith(
-                color: colors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.m),
-          ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showIntro) ...[
           Text(
-            'What would help most today?',
-            style: textTheme.headlineSmall,
+            'Choose a direction. THIRTY gives you one activity to do '
+            'offline, in about thirty minutes. Tomorrow brings a new '
+            'Circle.',
+            style: textTheme.bodyMedium?.copyWith(
+              color: colors.textSecondary,
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppSpacing.section),
-          for (final intention in Intention.values) ...[
-            _IntentionOption(intention: intention, colors: colors),
-            if (intention != Intention.values.last)
-              const SizedBox(height: AppSpacing.m),
-          ],
+          const SizedBox(height: AppSpacing.m),
         ],
-      ),
+        Text(
+          'What would help most today?',
+          style: textTheme.titleSmall,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.s),
+        for (final intention in Intention.values) ...[
+          _IntentionOption(intention: intention),
+          if (intention != Intention.values.last)
+            const SizedBox(height: AppSpacing.xs),
+        ],
+      ],
     );
   }
 }
 
 class _IntentionOption extends ConsumerWidget {
-  const _IntentionOption({required this.intention, required this.colors});
+  const _IntentionOption({required this.intention});
 
   final Intention intention;
-  final AppColors colors;
 
   /// Chooses [intention] and — the first time this is ever called —
   /// permanently marks the first-use explanation as shown
@@ -117,38 +127,30 @@ class _IntentionOption extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final textTheme = Theme.of(context).textTheme;
     final label = intentionLabel(intention);
     final meaning = intentionMeaning(intention);
 
     // ADR-013 §9 — a bare `button: true` + `label` semantics node carries
     // no actual action for an assistive technology to invoke: TalkBack
     // would announce this as a button but a double-tap would do nothing,
-    // since ExcludeSemantics removes ThirtyCard's own gesture-derived
+    // since ExcludeSemantics removes ThirtyButton's own gesture-derived
     // semantics from the tree entirely. `onTap` here is what gives this
     // node a real SemanticsAction.tap an assistive technology can invoke —
     // see daily_intention_prompt_test.dart's explicit
-    // `performAction(..., SemanticsAction.tap)` regression test.
+    // `performAction(..., SemanticsAction.tap)` regression test. The
+    // combined "label. meaning" text is kept as this node's semantics
+    // label even though only [label] is shown visually below — an
+    // assistive-technology user still gets the fuller context a sighted
+    // user reads from the surrounding daily question and the label alone.
     return Semantics(
       button: true,
       label: '$label. $meaning',
       onTap: () => _choose(ref),
       child: ExcludeSemantics(
-        child: ThirtyCard(
-          onTap: () => _choose(ref),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: textTheme.titleMedium),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                meaning,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colors.textSecondary,
-                ),
-              ),
-            ],
-          ),
+        child: ThirtyButton(
+          label: label,
+          variant: ThirtyButtonVariant.secondary,
+          onPressed: () => _choose(ref),
         ),
       ),
     );

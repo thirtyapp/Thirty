@@ -146,6 +146,7 @@ void main() {
       await tester.tap(find.text("Begin today's Circle"));
       await tester.pumpAndSettle();
       expect(find.byType(DailyIntentionPrompt), findsOneWidget);
+      await tester.ensureVisible(find.text('More Energy'));
       await tester.tap(find.text('More Energy'));
       await tester.pumpAndSettle();
       expect(find.byType(CircleHero), findsOneWidget);

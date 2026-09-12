@@ -7,6 +7,7 @@ import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/theme/app_theme.dart';
+import 'package:thirty/core/widgets/thirty_progress_circle.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/presentation/home_page.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
@@ -61,6 +62,61 @@ void main() {
 
       expect(find.byType(CircleHero), findsOneWidget);
       expect(find.byType(DailyIntentionPrompt), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'the Circle occupies the exact same position and size in the Ready '
+    "state and in the Circle Hero's first settled frame once today's "
+    'recommendation exists — the Golden Home continuity correction\'s '
+    'core visual requirement: no jump in horizontal/vertical position, '
+    'diameter, or top spacing across the daily flow',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(await _wrap());
+      final readyRect = tester.getRect(find.byType(ThirtyProgressCircle));
+
+      SharedPreferences.setMockInitialValues({
+        recommendationDayKey: '2026-08-02',
+        recommendationIntentionKey: 'moreEnergy',
+        recommendationActivityIdKey: 'thirtyMinuteWalk',
+      });
+      final prefs = await SharedPreferences.getInstance();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            nowProvider.overrideWithValue(_today),
+            premiumEntitlementProvider.overrideWithValue(false),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light,
+            // Reduced motion settles CircleHero's First Breath ritual
+            // straight to its end state on the very first frame — no
+            // `pumpAndSettle` needed (and none would even be safe here:
+            // the ambient breathing animation that starts once
+            // RecommendationStatus.notStarted's CTA is pressed repeats
+            // forever, which `pumpAndSettle` would never resolve).
+            home: Builder(
+              builder: (context) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(disableAnimations: true),
+                child: const HomePage(),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(CircleHero), findsOneWidget);
+      expect(
+        tester.getRect(find.byType(ThirtyProgressCircle)),
+        readyRect,
+        reason:
+            'the Circle must occupy the exact same position and size in '
+            "the Ready state and in the Circle Hero's first frame",
+      );
     },
   );
 
