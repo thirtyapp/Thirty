@@ -170,6 +170,19 @@ class ReminderNotifier extends Notifier<ReminderState> {
   /// The one place that decides whether THIRTY's reminder should currently
   /// be scheduled, and for when.
   ///
+  /// **Cancels the previously-armed alarm first, unconditionally, before
+  /// anything else** — never "check → compute → eventually cancel/
+  /// reschedule". This method is invoked `unawaited` from a synchronous
+  /// `ref.listen` callback ([build]'s own listener on [recommendationProvider],
+  /// most importantly the Close transition), so the calling code never
+  /// waits for it to finish; if the OS kills this process partway through,
+  /// the safest possible partial outcome is "today's alarm is already
+  /// gone, tomorrow's was never armed" — never "today's stale alarm
+  /// survives because cancellation was still waiting behind a permission
+  /// check". The same fail-closed bias already governs
+  /// [ScheduleOutcome.timezoneUnavailable] elsewhere in this gateway;
+  /// re-arming the next occurrence below remains best-effort.
+  ///
   /// Re-checks the *live* OS permission via [ReminderGateway.hasPermission]
   /// itself, rather than trusting [ReminderState.permissionGranted] —
   /// that field starts at a hardcoded `false` in [build] and is normally
@@ -180,11 +193,14 @@ class ReminderNotifier extends Notifier<ReminderState> {
   /// so a `recommendationProvider` status change landing in that narrow
   /// window would previously see the stale default `false` and wrongly
   /// [ReminderGateway.cancel] an already-armed reminder it had no real
-  /// reason to touch.
+  /// reason to touch — cancelling first, above, is harmless either way,
+  /// since a correct re-arm always follows immediately when one is due.
   Future<void> _rescheduleIfNeeded() async {
     final gateway = ref.read(reminderGatewayProvider);
+
+    await gateway.cancel();
+
     if (!state.enabled) {
-      await gateway.cancel();
       state = state.copyWith(timezoneUnavailable: false);
       return;
     }
@@ -192,7 +208,6 @@ class ReminderNotifier extends Notifier<ReminderState> {
     final granted = await gateway.hasPermission();
     state = state.copyWith(permissionGranted: granted);
     if (!granted) {
-      await gateway.cancel();
       state = state.copyWith(timezoneUnavailable: false);
       return;
     }

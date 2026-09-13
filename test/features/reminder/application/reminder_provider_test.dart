@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,6 +22,19 @@ class _FakeReminderGateway implements ReminderGateway {
   int? lastHour;
   int? lastMinute;
 
+  /// When set, [hasPermission] never resolves — simulating the app
+  /// process dying (or simply never getting scheduled again) partway
+  /// through `_rescheduleIfNeeded()`, strictly *after* its first `await`
+  /// (the unconditional [cancel] call) but *before* anything past it can
+  /// run. Lets a test observe exactly what a same-day-alarm-survives race
+  /// would require: whether [cancel] already completed on its own,
+  /// independent of every later step.
+  Completer<bool>? _hangingPermissionCheck;
+
+  void hangPermissionCheck() {
+    _hangingPermissionCheck = Completer<bool>();
+  }
+
   @override
   Future<void> initialize() async {
     initializeCallCount++;
@@ -32,7 +47,11 @@ class _FakeReminderGateway implements ReminderGateway {
   }
 
   @override
-  Future<bool> hasPermission() async => permissionGranted;
+  Future<bool> hasPermission() {
+    final hanging = _hangingPermissionCheck;
+    if (hanging != null) return hanging.future;
+    return Future.value(permissionGranted);
+  }
 
   @override
   Future<ScheduleOutcome> scheduleDaily({
@@ -306,6 +325,64 @@ void main() {
 
         expect(gateway.lastFirstOccurrence, occurrenceAfterStart);
         expect(gateway.lastFirstOccurrence!.day, _today.day + 1);
+      },
+    );
+
+    test(
+      'Close cancels the same-day alarm before anything else runs — the '
+      'alarm is already gone even if the process never gets past that '
+      'first step (simulated by a permission check that never resolves)',
+      () async {
+        final gateway = _FakeReminderGateway();
+        final container = await _containerWith(gateway: gateway);
+        addTearDown(container.dispose);
+        await container
+            .read(reminderProvider.notifier)
+            .enable(hour: 8, minute: 0);
+        final notifier = container.read(recommendationProvider.notifier);
+        notifier.chooseIntention(Intention.moreEnergy);
+        notifier.start();
+        final cancelledBefore = gateway.cancelCallCount;
+
+        // From this point on, `_rescheduleIfNeeded()` can never progress
+        // past its `hasPermission()` await — modelling the process dying
+        // (or simply never running again) right after Close.
+        gateway.hangPermissionCheck();
+        notifier.close();
+        await Future<void>.delayed(Duration.zero);
+
+        expect(gateway.cancelCallCount, greaterThan(cancelledBefore));
+        // The stuck permission check proves nothing past cancellation
+        // could have run yet — scheduleDaily() was never reached.
+        expect(gateway.scheduleCallCount, 1);
+      },
+    );
+
+    test(
+      'a failed re-arm after a successful cancel fails closed — '
+      "today's alarm is not reintroduced merely because tomorrow's "
+      'reschedule attempt failed',
+      () async {
+        final gateway = _FakeReminderGateway()
+          ..scheduleOutcome = ScheduleOutcome.failed;
+        final container = await _containerWith(gateway: gateway);
+        addTearDown(container.dispose);
+        await container
+            .read(reminderProvider.notifier)
+            .enable(hour: 8, minute: 0);
+        final notifier = container.read(recommendationProvider.notifier);
+        notifier.chooseIntention(Intention.moreEnergy);
+        notifier.start();
+        final cancelledBefore = gateway.cancelCallCount;
+
+        notifier.close();
+        await Future<void>.delayed(Duration.zero);
+
+        // Cancellation happened regardless of the following schedule
+        // attempt's outcome — there is no path that "un-cancels" today's
+        // alarm because tomorrow's re-arm failed.
+        expect(gateway.cancelCallCount, greaterThan(cancelledBefore));
+        expect(gateway.scheduleCallCount, greaterThan(0));
       },
     );
 
