@@ -24,6 +24,15 @@ import 'reminder_gateway.dart';
 /// falls back to [tz.UTC] or any other assumed zone, because a reminder
 /// silently scheduled against the wrong timezone is a truthfulness
 /// defect, not an acceptable degradation.
+///
+/// Scheduling always uses [AndroidScheduleMode.exactAllowWhileIdle] (never
+/// `inexactAllowWhileIdle`) — a physical Samsung SM-S931B reproduced a
+/// correctly `inexactAllowWhileIdle`-scheduled 18:05 reminder twice
+/// actually delivered ~03:48 the next local day, i.e. Doze deferring it
+/// hours past its intended calendar day. [hasExactAlarmAccess] and
+/// [requestExactAlarmAccess] gate this: without granted access,
+/// [scheduleDaily] returns [ScheduleOutcome.exactAlarmAccessDenied] and
+/// schedules nothing — never a silent inexact fallback.
 class LocalNotificationsReminderGateway implements ReminderGateway {
   static const _notificationId = 7301;
   static const _channelId = 'thirty_reminder';
@@ -83,6 +92,35 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
   }
 
   @override
+  Future<bool> hasExactAlarmAccess() async {
+    try {
+      final canSchedule = await _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.canScheduleExactNotifications();
+      return canSchedule ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> requestExactAlarmAccess() async {
+    try {
+      await _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.requestExactAlarmsPermission();
+    } catch (_) {
+      // Never throws — if the platform special-access screen can't be
+      // reached, the caller's next hasExactAlarmAccess() check simply
+      // stays false; nothing here is allowed to crash the app.
+    }
+  }
+
+  @override
   Future<ScheduleOutcome> scheduleDaily({
     required DateTime firstOccurrenceLocal,
     required int hour,
@@ -90,6 +128,16 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
   }) async {
     final location = await _resolveLocalLocation();
     if (location == null) return ScheduleOutcome.timezoneUnavailable;
+
+    // Independently fail closed here — never rely solely on the caller
+    // having already checked this. The reproduced Samsung failure (a
+    // correctly `inexactAllowWhileIdle`-scheduled 18:05 reminder twice
+    // actually delivered ~03:48 the next local day) is exactly why this
+    // gateway must never schedule with an inexact mode as a fallback: with
+    // no exact-alarm access, nothing is scheduled at all.
+    if (!await hasExactAlarmAccess()) {
+      return ScheduleOutcome.exactAlarmAccessDenied;
+    }
 
     try {
       await _plugin.cancel(id: _notificationId);
@@ -117,7 +165,7 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
             priority: Priority.low,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.time,
       );
       return ScheduleOutcome.scheduled;

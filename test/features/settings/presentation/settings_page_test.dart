@@ -18,9 +18,11 @@ import 'package:thirty/features/settings/presentation/settings_page.dart';
 
 class _FakeReminderGateway implements ReminderGateway {
   bool permissionGranted = true;
+  bool exactAlarmAccessGranted = true;
   ScheduleOutcome scheduleOutcome = ScheduleOutcome.scheduled;
   int scheduleCallCount = 0;
   int cancelCallCount = 0;
+  int requestExactAlarmAccessCallCount = 0;
 
   @override
   Future<void> initialize() async {}
@@ -32,11 +34,20 @@ class _FakeReminderGateway implements ReminderGateway {
   Future<bool> hasPermission() async => permissionGranted;
 
   @override
+  Future<bool> hasExactAlarmAccess() async => exactAlarmAccessGranted;
+
+  @override
+  Future<void> requestExactAlarmAccess() async {
+    requestExactAlarmAccessCallCount++;
+  }
+
+  @override
   Future<ScheduleOutcome> scheduleDaily({
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
   }) async {
+    if (!exactAlarmAccessGranted) return ScheduleOutcome.exactAlarmAccessDenied;
     scheduleCallCount++;
     return scheduleOutcome;
   }
@@ -359,6 +370,57 @@ void main() {
     expect(container.read(reminderProvider).enabled, isFalse);
     expect(reminderGateway.cancelCallCount, greaterThan(0));
   });
+
+  testWidgets(
+    'shows a truthful "Android access needed" message with an "Allow '
+    'access" action when notification permission is granted but '
+    'exact-alarm access is not — never silently scheduled inexact',
+    (tester) async {
+      final reminderGateway = _FakeReminderGateway()
+        ..exactAlarmAccessGranted = false;
+      final (widget, container) = await _wrap(
+        gateway: _FakeEntitlementGateway(),
+        reminderGateway: reminderGateway,
+        prefs: {reminderEnabledKey: true},
+      );
+      addTearDown(container.dispose);
+      // Resolves the live notification-permission truth (default `true`
+      // on the fake) from the `build()`-time hardcoded `false` — exactly
+      // like the timezone-unavailable test below.
+      await container.read(reminderProvider.notifier).initialize();
+
+      await tester.pumpWidget(widget);
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+
+      expect(
+        find.textContaining('Android access is needed'),
+        findsOneWidget,
+      );
+      expect(find.text('Allow access'), findsOneWidget);
+      expect(find.text('Change time'), findsNothing);
+      expect(reminderGateway.scheduleCallCount, 0);
+
+      // Tapping shows THIRTY's own calm explanation first — never leaves
+      // the app before that.
+      await tester.tap(find.text('Allow access'));
+      await tester.pumpAndSettle();
+      expect(find.text('Allow Alarms & reminders'), findsOneWidget);
+      expect(reminderGateway.requestExactAlarmAccessCallCount, 0);
+
+      // Confirming from that dialog is what actually invokes the platform
+      // request — and, once access is granted, re-checking live makes the
+      // reminder become active.
+      reminderGateway.exactAlarmAccessGranted = true;
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+
+      expect(reminderGateway.requestExactAlarmAccessCallCount, 1);
+      expect(container.read(reminderProvider).exactAlarmAccessGranted, isTrue);
+      expect(reminderGateway.scheduleCallCount, greaterThan(0));
+      expect(find.textContaining('Reminds you at'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'shows a truthful message when the device timezone cannot be '

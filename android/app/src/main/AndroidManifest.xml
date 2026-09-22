@@ -4,18 +4,32 @@
     <uses-permission android:name="com.android.vending.BILLING" />
     <!-- Step 5 local closure — required by flutter_local_notifications for
          the optional local reminder (frozen architecture §17/parent §27).
-         Deliberately NOT requesting SCHEDULE_EXACT_ALARM/USE_EXACT_ALARM —
-         the reminder is inexact/non-urgent by design
-         (`AndroidScheduleMode.inexactAllowWhileIdle` in
-         `local_notifications_reminder_gateway.dart`), so no exact-alarm
-         special access is ever needed. POST_NOTIFICATIONS/VIBRATE are no
-         longer auto-merged by the plugin from v16 onward and must be
-         declared explicitly; RECEIVE_BOOT_COMPLETED lets the boot receiver
-         below re-arm the reminder after a reboot (Android clears all
-         AlarmManager alarms on reboot). -->
+         POST_NOTIFICATIONS/VIBRATE are no longer auto-merged by the plugin
+         from v16 onward and must be declared explicitly;
+         RECEIVE_BOOT_COMPLETED lets the boot receiver below re-arm the
+         reminder after a reboot (Android clears all AlarmManager alarms on
+         reboot). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Reproduced physical failure (Samsung SM-S931B): a correctly
+         `inexactAllowWhileIdle`-scheduled 18:05 reminder was twice
+         actually delivered around 03:48 the next local day — Doze
+         deferring an inexact alarm far past its intended calendar day,
+         independent of Closed-Circle suppression. SCHEDULE_EXACT_ALARM is
+         the user-granted special access (Android 12+) for a secondary,
+         non-core timed reminder — never USE_EXACT_ALARM, which Google
+         Play reserves for apps whose *core* function is precise timing
+         (alarm clock/calendar/timer); THIRTY is not that. Denied by
+         default on fresh installs targeting Android 13+, so the app must
+         check `AlarmManager.canScheduleExactAlarms()` (via the plugin's
+         `canScheduleExactNotifications()`) and send the user through
+         `ACTION_REQUEST_SCHEDULE_EXACT_ALARM` only after they explicitly
+         enable reminders — see `local_notifications_reminder_gateway.dart`
+         and `reminder_provider.dart`. Without this access, THIRTY fails
+         closed (schedules nothing) rather than reintroducing the
+         proven-bad inexact behavior. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <!-- ADR-013 §7 — THIRTY's Circle journal and recommendation state are
          device-local only, with no account or cloud-sync system (AGENTS.md
          §5). android:allowBackup defaults to true, which would otherwise

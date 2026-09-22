@@ -18,21 +18,23 @@ import '../../home/application/recommendation_provider.dart';
 /// be reopened" — with next-day eligibility restored automatically even
 /// when the app is never launched on that later day.
 ///
-/// [enabled] is the user's own on/off choice; [permissionGranted] and
-/// [timezoneUnavailable] are separate, live platform truths — Settings
-/// shows all three, exactly as the parent authority requires ("Settings
-/// shows the actual permission/schedule state with on/off and one local
-/// time"). A user can want reminders (`enabled == true`) while the OS
-/// permission is denied, or while the device's timezone momentarily
-/// can't be resolved; nothing here nags them about it more than once,
-/// and neither state is ever silently hidden behind a false "it's
-/// working" claim.
+/// [enabled] is the user's own on/off choice; [permissionGranted],
+/// [exactAlarmAccessGranted] and [timezoneUnavailable] are separate, live
+/// platform truths — Settings shows all of them, exactly as the parent
+/// authority requires ("Settings shows the actual permission/schedule
+/// state with on/off and one local time"). A user can want reminders
+/// (`enabled == true`) while the OS notification permission is denied,
+/// while Android's exact-alarm special access hasn't been granted, or
+/// while the device's timezone momentarily can't be resolved; nothing
+/// here nags them about it more than once, and none of these states is
+/// ever silently hidden behind a false "it's working" claim.
 class ReminderState {
   const ReminderState({
     required this.enabled,
     required this.hour,
     required this.minute,
     required this.permissionGranted,
+    this.exactAlarmAccessGranted = false,
     this.timezoneUnavailable = false,
   });
 
@@ -40,6 +42,14 @@ class ReminderState {
   final int hour;
   final int minute;
   final bool permissionGranted;
+
+  /// Whether Android's exact-alarm special access (`SCHEDULE_EXACT_ALARM`)
+  /// is currently granted. `false` until the first live check resolves
+  /// (`ReminderNotifier.initialize`) — see [permissionGranted]'s own
+  /// identical bootstrapping. Without this, THIRTY fails closed: no
+  /// reminder is scheduled, and it is never silently scheduled inexact
+  /// instead (the reproduced Samsung SM-S931B failure this replaces).
+  final bool exactAlarmAccessGranted;
 
   /// `true` only right after a schedule attempt could not resolve the
   /// device's actual local timezone (`ScheduleOutcome.timezoneUnavailable`
@@ -53,6 +63,7 @@ class ReminderState {
     int? hour,
     int? minute,
     bool? permissionGranted,
+    bool? exactAlarmAccessGranted,
     bool? timezoneUnavailable,
   }) {
     return ReminderState(
@@ -60,6 +71,8 @@ class ReminderState {
       hour: hour ?? this.hour,
       minute: minute ?? this.minute,
       permissionGranted: permissionGranted ?? this.permissionGranted,
+      exactAlarmAccessGranted:
+          exactAlarmAccessGranted ?? this.exactAlarmAccessGranted,
       timezoneUnavailable: timezoneUnavailable ?? this.timezoneUnavailable,
     );
   }
@@ -160,6 +173,24 @@ class ReminderNotifier extends Notifier<ReminderState> {
     await _rescheduleIfNeeded();
   }
 
+  /// Sends the user to Android's exact-alarm special-access screen. The
+  /// caller (Settings) must have already shown THIRTY's own calm
+  /// explanation *before* calling this — this method itself performs no
+  /// UI and must only ever run from that explicit user action, never at
+  /// cold launch and never merely because Settings was opened.
+  ///
+  /// The system screen does not hand back a result THIRTY can await, so
+  /// this also re-checks live access immediately afterward (covering an
+  /// OS that resolves synchronously); `ThirtyApp`'s own foreground-resume
+  /// hook (`ReminderNotifier.initialize`) is what reliably catches the
+  /// far more common case of the user returning to THIRTY after leaving
+  /// it to decide in system Settings.
+  Future<void> requestExactAlarmAccess() async {
+    final gateway = ref.read(reminderGatewayProvider);
+    await gateway.requestExactAlarmAccess();
+    await _rescheduleIfNeeded();
+  }
+
   Future<void> _persist() async {
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setBool(reminderEnabledKey, state.enabled);
@@ -212,6 +243,17 @@ class ReminderNotifier extends Notifier<ReminderState> {
       return;
     }
 
+    // Same fail-closed shape as the notification-permission check above:
+    // without live exact-alarm access, nothing is scheduled — never a
+    // silent fallback to inexact scheduling (the reproduced Samsung
+    // SM-S931B failure this whole gate exists to prevent).
+    final exactGranted = await gateway.hasExactAlarmAccess();
+    state = state.copyWith(exactAlarmAccessGranted: exactGranted);
+    if (!exactGranted) {
+      state = state.copyWith(timezoneUnavailable: false);
+      return;
+    }
+
     final now = ref.read(eventClockProvider)();
     final todayResolved =
         ref.read(recommendationProvider).status != RecommendationStatus.notStarted;
@@ -228,6 +270,11 @@ class ReminderNotifier extends Notifier<ReminderState> {
     );
     state = state.copyWith(
       timezoneUnavailable: outcome == ScheduleOutcome.timezoneUnavailable,
+      // Reconciles the rare race where access is revoked between the live
+      // check above and this call — the gateway independently refused to
+      // schedule (`local_notifications_reminder_gateway.dart`'s own
+      // fail-closed check), so state must reflect that truthfully too.
+      exactAlarmAccessGranted: outcome != ScheduleOutcome.exactAlarmAccessDenied,
     );
   }
 }

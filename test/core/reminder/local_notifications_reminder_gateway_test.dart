@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -25,20 +26,34 @@ void _mockTimezoneChannel(String? identifier) {
       });
 }
 
+/// Captures every `zonedSchedule` invocation's raw arguments so a test can
+/// assert on exactly which [AndroidScheduleMode] was actually sent across
+/// the platform channel — the one thing that separates "we changed a Dart
+/// enum" from "the native call genuinely uses exact-while-idle timing".
+final List<Map<dynamic, dynamic>> _zonedScheduleCalls = [];
+
 /// Mocks the `flutter_local_notifications` platform channel with generic
 /// successful responses — this test targets timezone *resolution*
 /// correctness, not the notification plugin's own native behavior (real
 /// delivery/permission-dialog/boot-survival proof requires a real
 /// device — see REAL DEVICE TEST REQUIRED items in the reconciliation
-/// report).
-void _mockNotificationsChannel() {
+/// report). [exactAlarmAccess] controls the mocked response for
+/// `canScheduleExactNotifications` (default: granted).
+void _mockNotificationsChannel({bool exactAlarmAccess = true}) {
+  _zonedScheduleCalls.clear();
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(_notificationsChannel, (call) async {
         switch (call.method) {
           case 'initialize':
           case 'requestNotificationsPermission':
           case 'areNotificationsEnabled':
+          case 'requestExactAlarmsPermission':
             return true;
+          case 'canScheduleExactNotifications':
+            return exactAlarmAccess;
+          case 'zonedSchedule':
+            _zonedScheduleCalls.add(call.arguments as Map<dynamic, dynamic>);
+            return null;
           default:
             return null;
         }
@@ -53,6 +68,15 @@ void main() {
     // which platform channel implementation to resolve — without this,
     // it resolves none on the host OS this test suite actually runs on.
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    // `resolvePlatformSpecificImplementation` also requires
+    // `FlutterLocalNotificationsPlatform.instance` to actually be an
+    // `AndroidFlutterLocalNotificationsPlugin` — normally wired by the
+    // real Android embedding's generated plugin registrant at app
+    // startup, which never runs in a plain `flutter test` (Dart VM, no
+    // platform embedding). Registering it explicitly here is exactly
+    // what that startup path does, and is what lets the mocked method
+    // channel responses above actually reach the gateway under test.
+    AndroidFlutterLocalNotificationsPlugin.registerWith();
   });
 
   tearDown(() {
@@ -185,6 +209,84 @@ void main() {
 
         await expectLater(gateway.requestPermission(), completes);
         await expectLater(gateway.hasPermission(), completes);
+      },
+    );
+
+    test(
+      'hasExactAlarmAccess()/requestExactAlarmAccess() never throw even '
+      'when the platform-specific implementation cannot be resolved in '
+      'this environment (REAL DEVICE TEST REQUIRED to confirm the actual '
+      'ACTION_REQUEST_SCHEDULE_EXACT_ALARM screen and its true/false '
+      'result)',
+      () async {
+        _mockNotificationsChannel();
+        final gateway = LocalNotificationsReminderGateway();
+        await gateway.initialize();
+
+        await expectLater(gateway.hasExactAlarmAccess(), completes);
+        await expectLater(gateway.requestExactAlarmAccess(), completes);
+      },
+    );
+
+    test(
+      'schedules using AndroidScheduleMode.exactAllowWhileIdle when '
+      'exact-alarm access is granted — never inexactAllowWhileIdle (the '
+      'reproduced Samsung SM-S931B ~03:48 late-delivery failure this '
+      'replaces)',
+      () async {
+        _mockTimezoneChannel('Europe/Berlin');
+        _mockNotificationsChannel(exactAlarmAccess: true);
+        final gateway = LocalNotificationsReminderGateway();
+        await gateway.initialize();
+
+        final outcome = await gateway.scheduleDaily(
+          firstOccurrenceLocal: DateTime(2026, 9, 2, 20, 0),
+          hour: 20,
+          minute: 0,
+        );
+
+        expect(outcome, ScheduleOutcome.scheduled);
+        expect(_zonedScheduleCalls, hasLength(1));
+        final platformSpecifics =
+            _zonedScheduleCalls.single['platformSpecifics']
+                as Map<dynamic, dynamic>;
+        expect(platformSpecifics['scheduleMode'], 'exactAllowWhileIdle');
+      },
+    );
+
+    test(
+      'schedules nothing — never a silent inexact fallback — when '
+      'exact-alarm access is not granted',
+      () async {
+        _mockTimezoneChannel('Europe/Berlin');
+        _mockNotificationsChannel(exactAlarmAccess: false);
+        final gateway = LocalNotificationsReminderGateway();
+        await gateway.initialize();
+
+        final outcome = await gateway.scheduleDaily(
+          firstOccurrenceLocal: DateTime(2026, 9, 2, 20, 0),
+          hour: 20,
+          minute: 0,
+        );
+
+        expect(outcome, ScheduleOutcome.exactAlarmAccessDenied);
+        expect(_zonedScheduleCalls, isEmpty);
+      },
+    );
+
+    test(
+      'hasExactAlarmAccess() reflects canScheduleExactNotifications() '
+      'truthfully in both directions',
+      () async {
+        _mockNotificationsChannel(exactAlarmAccess: true);
+        final grantedGateway = LocalNotificationsReminderGateway();
+        await grantedGateway.initialize();
+        expect(await grantedGateway.hasExactAlarmAccess(), isTrue);
+
+        _mockNotificationsChannel(exactAlarmAccess: false);
+        final deniedGateway = LocalNotificationsReminderGateway();
+        await deniedGateway.initialize();
+        expect(await deniedGateway.hasExactAlarmAccess(), isFalse);
       },
     );
   });

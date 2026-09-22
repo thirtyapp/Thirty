@@ -15,6 +15,7 @@ import 'package:thirty/features/reminder/presentation/widgets/reminder_invitatio
 
 class _FakeReminderGateway implements ReminderGateway {
   bool permissionGranted = true;
+  bool exactAlarmAccessGranted = true;
   int scheduleCallCount = 0;
 
   @override
@@ -27,11 +28,18 @@ class _FakeReminderGateway implements ReminderGateway {
   Future<bool> hasPermission() async => permissionGranted;
 
   @override
+  Future<bool> hasExactAlarmAccess() async => exactAlarmAccessGranted;
+
+  @override
+  Future<void> requestExactAlarmAccess() async {}
+
+  @override
   Future<ScheduleOutcome> scheduleDaily({
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
   }) async {
+    if (!exactAlarmAccessGranted) return ScheduleOutcome.exactAlarmAccessDenied;
     scheduleCallCount++;
     return ScheduleOutcome.scheduled;
   }

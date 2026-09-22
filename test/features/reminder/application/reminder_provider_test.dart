@@ -13,9 +13,11 @@ import 'package:thirty/features/reminder/application/reminder_provider.dart';
 
 class _FakeReminderGateway implements ReminderGateway {
   bool permissionGranted = true;
+  bool exactAlarmAccessGranted = true;
   ScheduleOutcome scheduleOutcome = ScheduleOutcome.scheduled;
   int initializeCallCount = 0;
   int requestPermissionCallCount = 0;
+  int requestExactAlarmAccessCallCount = 0;
   int scheduleCallCount = 0;
   int cancelCallCount = 0;
   DateTime? lastFirstOccurrence;
@@ -54,11 +56,24 @@ class _FakeReminderGateway implements ReminderGateway {
   }
 
   @override
+  Future<bool> hasExactAlarmAccess() async => exactAlarmAccessGranted;
+
+  @override
+  Future<void> requestExactAlarmAccess() async {
+    requestExactAlarmAccessCallCount++;
+  }
+
+  @override
   Future<ScheduleOutcome> scheduleDaily({
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
   }) async {
+    // Mirrors the real gateway's own independent fail-closed check
+    // (`local_notifications_reminder_gateway.dart`) — a fake that always
+    // "succeeds" here would hide a provider-side bug that skips its own
+    // live exact-access check.
+    if (!exactAlarmAccessGranted) return ScheduleOutcome.exactAlarmAccessDenied;
     scheduleCallCount++;
     lastFirstOccurrence = firstOccurrenceLocal;
     lastHour = hour;
@@ -139,6 +154,7 @@ void main() {
       expect(state.hour, 20);
       expect(state.minute, 0);
       expect(state.permissionGranted, isFalse);
+      expect(state.exactAlarmAccessGranted, isFalse);
       expect(gateway.initializeCallCount, 0);
       expect(gateway.scheduleCallCount, 0);
     });
@@ -162,9 +178,10 @@ void main() {
     });
 
     test(
-      'initialize() (called at cold launch) never requests permission — '
-      'only checks it — matching "no notification permission at cold '
-      'launch" (parent §27)',
+      'initialize() (called at cold launch) never requests notification '
+      'permission or exact-alarm access — only checks them — matching "no '
+      'permission request at cold launch" (parent §27, extended to '
+      'exact-alarm special access)',
       () async {
         final gateway = _FakeReminderGateway();
         final container = await _containerWith(gateway: gateway);
@@ -173,12 +190,16 @@ void main() {
         await container.read(reminderProvider.notifier).initialize();
 
         expect(gateway.requestPermissionCallCount, 0);
+        expect(gateway.requestExactAlarmAccessCallCount, 0);
       },
     );
 
-    test('enable() requests permission, persists, and schedules when '
-        'granted', () async {
-      final gateway = _FakeReminderGateway()..permissionGranted = true;
+    test('enable() requests permission, persists, and schedules exactly '
+        'once when notification permission and exact-alarm access are '
+        'both granted', () async {
+      final gateway = _FakeReminderGateway()
+        ..permissionGranted = true
+        ..exactAlarmAccessGranted = true;
       final container = await _containerWith(gateway: gateway);
       addTearDown(container.dispose);
 
@@ -191,6 +212,7 @@ void main() {
       expect(state.hour, 8);
       expect(state.minute, 15);
       expect(state.permissionGranted, isTrue);
+      expect(state.exactAlarmAccessGranted, isTrue);
       expect(gateway.scheduleCallCount, 1);
       expect(gateway.lastHour, 8);
       expect(gateway.lastMinute, 15);
@@ -199,8 +221,8 @@ void main() {
       expect(prefs.getBool(reminderEnabledKey), isTrue);
     });
 
-    test('enable() with denied permission still records the user\'s '
-        'choice truthfully, but schedules nothing', () async {
+    test('enable() with denied notification permission still records the '
+        'user\'s choice truthfully, but schedules nothing', () async {
       final gateway = _FakeReminderGateway()..permissionGranted = false;
       final container = await _containerWith(gateway: gateway);
       addTearDown(container.dispose);
@@ -215,6 +237,134 @@ void main() {
       expect(gateway.scheduleCallCount, 0);
       expect(gateway.cancelCallCount, greaterThan(0));
     });
+
+    test(
+      'enable() with notification permission granted but exact-alarm '
+      'access missing schedules nothing — never an inexact fallback',
+      () async {
+        final gateway = _FakeReminderGateway()
+          ..permissionGranted = true
+          ..exactAlarmAccessGranted = false;
+        final container = await _containerWith(gateway: gateway);
+        addTearDown(container.dispose);
+
+        await container
+            .read(reminderProvider.notifier)
+            .enable(hour: 8, minute: 0);
+
+        final state = container.read(reminderProvider);
+        expect(state.enabled, isTrue);
+        expect(state.permissionGranted, isTrue);
+        expect(state.exactAlarmAccessGranted, isFalse);
+        expect(gateway.scheduleCallCount, 0);
+        expect(gateway.cancelCallCount, greaterThan(0));
+      },
+    );
+
+    test(
+      'requestExactAlarmAccess() invokes the platform request exactly '
+      'once and, once access is actually granted, re-checks live and the '
+      'reminder becomes active',
+      () async {
+        final gateway = _FakeReminderGateway()
+          ..permissionGranted = true
+          ..exactAlarmAccessGranted = false;
+        final container = await _containerWith(gateway: gateway);
+        addTearDown(container.dispose);
+        await container
+            .read(reminderProvider.notifier)
+            .enable(hour: 8, minute: 0);
+        expect(container.read(reminderProvider).exactAlarmAccessGranted, isFalse);
+        expect(gateway.scheduleCallCount, 0);
+
+        // Simulates the user granting access on the system screen and
+        // returning to THIRTY.
+        gateway.exactAlarmAccessGranted = true;
+        await container
+            .read(reminderProvider.notifier)
+            .requestExactAlarmAccess();
+
+        expect(gateway.requestExactAlarmAccessCallCount, 1);
+        expect(container.read(reminderProvider).exactAlarmAccessGranted, isTrue);
+        expect(gateway.scheduleCallCount, 1);
+      },
+    );
+
+    test(
+      'user returns from the exact-alarm access screen without granting '
+      'it — the reminder remains inactive/needs access, not scheduled',
+      () async {
+        final gateway = _FakeReminderGateway()
+          ..permissionGranted = true
+          ..exactAlarmAccessGranted = false;
+        final container = await _containerWith(gateway: gateway);
+        addTearDown(container.dispose);
+        await container
+            .read(reminderProvider.notifier)
+            .enable(hour: 8, minute: 0);
+
+        await container
+            .read(reminderProvider.notifier)
+            .requestExactAlarmAccess();
+
+        expect(gateway.requestExactAlarmAccessCallCount, 1);
+        expect(container.read(reminderProvider).exactAlarmAccessGranted, isFalse);
+        expect(gateway.scheduleCallCount, 0);
+      },
+    );
+
+    test(
+      'exact-alarm access revoked later (e.g. from system settings while '
+      'backgrounded) is reconciled without crashing — schedules nothing '
+      'and the state reflects it truthfully',
+      () async {
+        final gateway = _FakeReminderGateway()
+          ..permissionGranted = true
+          ..exactAlarmAccessGranted = true;
+        final container = await _containerWith(gateway: gateway);
+        addTearDown(container.dispose);
+        await container
+            .read(reminderProvider.notifier)
+            .enable(hour: 8, minute: 0);
+        expect(gateway.scheduleCallCount, 1);
+
+        gateway.exactAlarmAccessGranted = false;
+        await container.read(reminderProvider.notifier).refreshPermission();
+
+        final state = container.read(reminderProvider);
+        expect(state.enabled, isTrue);
+        expect(state.exactAlarmAccessGranted, isFalse);
+        // No additional schedule call beyond the original grant — the
+        // revoked re-check returns early before ever reaching
+        // scheduleDaily() again.
+        expect(gateway.scheduleCallCount, 1);
+      },
+    );
+
+    test(
+      'repeatedly reconciling with exact-alarm access still denied never '
+      'triggers the platform request itself — no permission nag loop; '
+      'the request only ever happens from the dedicated explicit user '
+      'action',
+      () async {
+        final gateway = _FakeReminderGateway()
+          ..permissionGranted = true
+          ..exactAlarmAccessGranted = false;
+        final container = await _containerWith(
+          gateway: gateway,
+          prefs: {reminderEnabledKey: true, reminderHourKey: 8, reminderMinuteKey: 0},
+        );
+        addTearDown(container.dispose);
+        final notifier = container.read(reminderProvider.notifier);
+
+        await notifier.initialize();
+        await notifier.refreshPermission();
+        await notifier.refreshPermission();
+
+        expect(gateway.requestExactAlarmAccessCallCount, 0);
+        expect(gateway.scheduleCallCount, 0);
+      },
+    );
 
     test('disable() cancels pending work and persists', () async {
       final gateway = _FakeReminderGateway();

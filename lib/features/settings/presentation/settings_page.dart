@@ -276,6 +276,34 @@ class _ReminderRowState extends ConsumerState<_ReminderRow> {
         .setTime(hour: picked.hour, minute: picked.minute);
   }
 
+  /// Shows THIRTY's one calm explanation for Android's exact-alarm
+  /// special access *before* leaving the app for the system screen —
+  /// never automatically, only from this explicit tap.
+  Future<void> _requestExactAlarmAccess() async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Allow Alarms & reminders'),
+        content: const Text(
+          'Android needs "Alarms & reminders" access so THIRTY can '
+          'deliver your Circle reminder at the time you choose.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Not now'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    if (proceed != true || !mounted) return;
+    await ref.read(reminderProvider.notifier).requestExactAlarmAccess();
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -315,6 +343,9 @@ class _ReminderRowState extends ConsumerState<_ReminderRow> {
                   !state.permissionGranted
                       ? 'Notifications are turned off for THIRTY in '
                             'system settings, so this won\'t fire yet.'
+                      : !state.exactAlarmAccessGranted
+                      ? 'Android access is needed to deliver this reminder '
+                            'reliably.'
                       : state.timezoneUnavailable
                       ? 'Your reminder time is saved, but we couldn\'t '
                             'confirm your device\'s timezone just now, so '
@@ -326,10 +357,16 @@ class _ReminderRowState extends ConsumerState<_ReminderRow> {
                   ),
                 ),
               ),
-              TextButton(
-                onPressed: _pickTimeAndUpdate,
-                child: const Text('Change time'),
-              ),
+              if (state.permissionGranted && !state.exactAlarmAccessGranted)
+                TextButton(
+                  onPressed: _requestExactAlarmAccess,
+                  child: const Text('Allow access'),
+                )
+              else
+                TextButton(
+                  onPressed: _pickTimeAndUpdate,
+                  child: const Text('Change time'),
+                ),
             ],
           ),
         ],
