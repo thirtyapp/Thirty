@@ -174,6 +174,36 @@
 /// verified baseline of 620/620: 10 new test cases, 4 existing tests
 /// updated in place for the new Ready-state flow), analyzer clean.
 ///
+/// `1.7.0+14`: an Internal Testing candidate. Physical verification of
+/// `1.7.0+13` found two defects, both fixed here: the Circle composition
+/// disappeared behind full-screen direction cards instead of staying
+/// mounted through direction choice (`4a0dd13`, Golden Home continuity
+/// correction), and the direction-choice state carried a redundant
+/// explanatory paragraph removed for the final interaction polish
+/// (`ec6b6ed`). Separately, `e8800e2` stopped validating release-signing
+/// secrets for debug builds — unrelated to any product surface. The
+/// reminder transport also changed in this build, in response to
+/// physical evidence gathered on `1.7.0+13`: a correctly
+/// `inexactAllowWhileIdle`-scheduled 18:05 reminder was twice actually
+/// delivered ~03:48 the next local day on the founder's Samsung
+/// SM-S931B — Doze deferring the inexact alarm hours past its intended
+/// calendar day, independent of Closed-Circle suppression. `a44959e`
+/// first hardened the existing transport (cancels the same-day alarm
+/// before any async step, never only after) as an independent
+/// correctness fix; this build then replaces the transport itself,
+/// switching from `AndroidScheduleMode.inexactAllowWhileIdle` to
+/// `exactAllowWhileIdle` via the user-granted `SCHEDULE_EXACT_ALARM`
+/// special access (never `USE_EXACT_ALARM`, reserved by Google Play for
+/// apps whose core function is precise timing) — `flutter_local_
+/// notifications`' own supported exact-scheduling pipeline, not an
+/// app-owned AlarmManager transport. Without granted access, THIRTY now
+/// fails closed (schedules nothing, surfaces "Android access is needed"
+/// in Settings) rather than ever falling back to the proven-bad inexact
+/// mode. Prepared to physically verify both the Golden Home fixes and
+/// the new exact-reminder delivery/permission flow on a real device —
+/// full regression 641/641 (up from the prior verified baseline of
+/// 630/630: 11 new test cases), analyzer clean.
+///
 /// Every analytics event records [appVersion] so future analysis can
 /// always trace a row back to the exact build it happened under — the
 /// frozen evaluation boundary the post-fix measurement protocol depends
@@ -188,5 +218,5 @@ class ReleaseInfo {
   const ReleaseInfo._();
 
   /// Keep in sync with `pubspec.yaml`'s `version:` field.
-  static const String appVersion = '1.7.0+13';
+  static const String appVersion = '1.7.0+14';
 }
