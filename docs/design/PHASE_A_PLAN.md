@@ -1,6 +1,10 @@
 # THIRTY Visual Pass — Phase A Plan (Foundations)
 
-**Status:** Approved (founder decisions D1–D4 recorded below). A1 approved and committed. A2 implemented, awaiting founder review. Next: record-detail accessibility fix, then A3.
+**Status:** Approved (founder decisions D1–D4 recorded below).
+- **A1 complete** — commit `e810188`
+- **A2 complete** — commit `77dfa1f`
+- **Record-detail accessibility fix complete** — commit `750df10` (separate bounded change, not part of A2)
+- **A3 complete** — see the A3 scope refinement below
 **Baseline:** `step5-billing-integration` @ `372dd30` (1.7.0+14).
 **Parent document:** THIRTY Visual Gap Analysis, §6 Phase A.
 **Scope:** design tokens, shared core widgets, and app-wide component themes only. No screen recomposition, no IA or Circle-lifecycle change — Home composition is Phase B.
@@ -65,6 +69,13 @@ Each step is small, independently reviewable, and gated on `flutter analyze` + f
 - Component themes: `appBarTheme` (cream, no tint/elevation), `navigationBarTheme`, `switchTheme`, `segmentedButtonTheme`, `dividerTheme`; pin `surfaceContainer*` / `secondaryContainer` so seed tones stop leaking.
 - Floating, rounded nav container in `AppShell` — same four destinations, same `goBranch` behavior.
 
+**Scope refinement (deliberate, approved after the A3 inventory and review).**
+- **Implemented:** `AppRadius.xl = 24`; soft two-layer `AppShadows` (blur <= 16, offset <= 4, because history cards sit 8pt apart); `ThirtyCard` radius 24, borderless in light, hairline border in dark; `ThirtyButton` pill shape only; `appBarTheme`, `navigationBarTheme`, `switchTheme` (unselected outline/thumb >= 3:1 against the surface), `dividerTheme`; generated `surfaceContainer*` / `surfaceTint` / `outlineVariant` pinned to THIRTY surfaces.
+- **AppBar:** the exact page background at rest *and* while content scrolls under it; no surface tint, no scrolled-under elevation or tonal change. Any deliberate scrolled-state separation is an A4/Phase C decision after visual review.
+- **Floating nav:** a dedicated `FloatingNavSurface` is the single owner of the bar's color, 24pt radius and shadow; the `NavigationBar` inside is transparent and anti-alias clipped to the same shape; no border in either mode. (A first version reused `ThirtyCard`, whose dark border sat under the bar's rectangular Material surface and vanished at the corners.) 16pt side / 8pt bottom margins, chosen so all four labels fit at 360pt + 200% text.
+- **Kept at 48pt / no trailing icon:** the 56pt Home primary button and trailing arrow move to Phase B, as does the Circle `halo` shadow (no unused tokens) and Home header/wordmark.
+- **Not in A3:** accent/selection containers (`secondaryContainer`, `primaryContainer`, `tertiaryContainer`) — the selected nav pill, Appearance segment and time-picker accents are A4. No `segmentedButtonTheme` was needed for A3.
+
 ### A4 · Light palette — `app_colors.dart`, `DESIGN_SYSTEM.md`
 - New tokens: `surfaceMuted`, `divider`, `ringTrack`, `ringProgress` (Circle color role, wired as `ThirtyProgressCircle` defaults with no visual change at first).
 - Tune `background` / `border` / `secondary` toward the vision within the existing sage/stone family (D3). Re-verify every AA pair in `DESIGN_SYSTEM.md` §4.
@@ -72,6 +83,7 @@ Each step is small, independently reviewable, and gated on `flutter analyze` + f
 ### A5 · Dark parity + ratification QA — `app_colors.dart`, `app_shadows.dart`, `DESIGN_SYSTEM.md` §3
 - Mirror all new tokens; a raised-surface step so cards/nav separate by tone rather than invisible shadow.
 - Bounded light/dark QA across showcase + all destinations; contrast pass. On pass, `DESIGN_SYSTEM.md` §3 moves from "proposal" to ratified (D4).
+- **Review item from A3:** in dark mode `ThirtyCard` keeps a hairline border while `FloatingNavSurface` has none (separation by tone only). Decide one consistent dark-surface separation rule — likely together with the raised-surface step. Also revisit the time-picker dial, which reads `surfaceContainerHighest` (Mist Sage, `#525A49` in dark) and became heavier than before.
 
 ## 4. Out of scope for Phase A
 

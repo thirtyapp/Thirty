@@ -92,8 +92,11 @@ class ThirtyButton extends StatelessWidget {
           height: 48,
           child: Material(
             color: backgroundColor,
+            // Fully rounded (founder decision D2, Phase A3). Height stays
+            // 48 for every button; a larger hero size is a Phase B
+            // composition decision, not a foundation default.
             shape: RoundedRectangleBorder(
-              borderRadius: AppRadius.small,
+              borderRadius: AppRadius.pill,
               side: borderSide,
             ),
             clipBehavior: Clip.antiAlias,

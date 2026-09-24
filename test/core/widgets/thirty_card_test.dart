@@ -55,4 +55,72 @@ void main() {
       expect(find.byType(InkWell), findsNothing);
     });
   });
+
+  group('ThirtyCard — Phase A3 surface language', () {
+    Future<void> pumpCard(WidgetTester tester, ThemeData theme) {
+      return tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: const Scaffold(body: ThirtyCard(child: Text('Content'))),
+        ),
+      );
+    }
+
+    // ThirtyCard builds an outer shadow Container and an inner content
+    // Container, in that order.
+    BoxDecoration decorationAt(WidgetTester tester, int index) {
+      final container = tester.widget<Container>(
+        find
+            .descendant(
+              of: find.byType(ThirtyCard),
+              matching: find.byType(Container),
+            )
+            .at(index),
+      );
+      return container.decoration! as BoxDecoration;
+    }
+
+    testWidgets('light: radius 24, soft two-layer shadow, borderless', (
+      tester,
+    ) async {
+      await pumpCard(tester, AppTheme.light);
+
+      final outer = decorationAt(tester, 0);
+      final inner = decorationAt(tester, 1);
+      expect(outer.borderRadius, AppRadius.xl);
+      expect(outer.boxShadow, AppShadows.light);
+      expect(AppShadows.light, hasLength(2));
+      expect(inner.border, isNull);
+      expect(
+        tester
+            .widget<ClipRRect>(
+              find.descendant(
+                of: find.byType(ThirtyCard),
+                matching: find.byType(ClipRRect),
+              ),
+            )
+            .borderRadius,
+        AppRadius.xl,
+      );
+    });
+
+    testWidgets('dark: radius 24, dark shadow, hairline border kept', (
+      tester,
+    ) async {
+      await pumpCard(tester, AppTheme.dark);
+
+      final outer = decorationAt(tester, 0);
+      final inner = decorationAt(tester, 1);
+      expect(outer.borderRadius, AppRadius.xl);
+      expect(outer.boxShadow, AppShadows.dark);
+      expect(inner.border, Border.all(color: AppColors.dark.border));
+    });
+
+    test('shadows stay short so history cards 8pt apart do not bleed', () {
+      for (final shadow in [...AppShadows.light, ...AppShadows.dark]) {
+        expect(shadow.blurRadius, lessThanOrEqualTo(16));
+        expect(shadow.offset.dy, lessThanOrEqualTo(4));
+      }
+    });
+  });
 }

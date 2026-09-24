@@ -196,4 +196,37 @@ void main() {
       },
     );
   });
+
+  group('ThirtyButton — Phase A3 pill shape', () {
+    for (final variant in ThirtyButtonVariant.values) {
+      for (final enabled in [true, false]) {
+        testWidgets('${variant.name}, enabled: $enabled — fully rounded, '
+            'still 48pt tall', (tester) async {
+          await tester.pumpWidget(
+            _wrap(
+              Center(
+                child: ThirtyButton(
+                  label: 'Start',
+                  variant: variant,
+                  onPressed: enabled ? () {} : null,
+                ),
+              ),
+            ),
+          );
+
+          final material = tester.widget<Material>(
+            find
+                .descendant(
+                  of: find.byType(ThirtyButton),
+                  matching: find.byType(Material),
+                )
+                .first,
+          );
+          final shape = material.shape! as RoundedRectangleBorder;
+          expect(shape.borderRadius, AppRadius.pill);
+          expect(tester.getSize(find.byType(ThirtyButton)).height, 48);
+        });
+      }
+    }
+  });
 }

@@ -301,6 +301,45 @@ void main() {
   );
 
   testWidgets(
+    'Phase A3 floating nav: at 360pt width and 200% text no tab overflows, '
+    'and all four labels stay visible and unchanged',
+    (tester) async {
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      tester.view.physicalSize = const Size(360, 740);
+      tester.view.devicePixelRatio = 1.0;
+      tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await pumpApp(tester);
+      expect(tester.takeException(), isNull);
+
+      final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+      expect(
+        navBar.destinations
+            .cast<NavigationDestination>()
+            .map((destination) => destination.label),
+        ['Today', 'Plans', 'Insights', 'You'],
+      );
+      expect(navBar.labelBehavior, isNot(NavigationDestinationLabelBehavior.alwaysHide));
+
+      for (final (index, label) in ['Today', 'Plans', 'Insights', 'You'].indexed) {
+        await tester.tap(navDestination(label));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: '$label overflowed');
+        expect(
+          tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+          index,
+        );
+        for (final other in ['Today', 'Plans', 'Insights', 'You']) {
+          expect(navDestination(other).hitTestable(), findsOneWidget,
+              reason: '$other label hidden while on $label');
+        }
+      }
+    },
+  );
+
+  testWidgets(
     'no destination overflows at a large accessibility text scale, across '
     'all four tabs (§3 — text-scaling discipline)',
     (tester) async {
