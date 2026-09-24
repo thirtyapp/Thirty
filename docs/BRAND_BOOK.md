@@ -181,6 +181,7 @@ Typografie bij THIRTY is stil, leesbaar en zelfverzekerd — het lettertype schr
 - Ruime regelafstand boven compacte tekstblokken — leesbaarheid weegt zwaarder dan het "passend maken" van tekst.
 - Cijfers (tijd, voortgang, minuten) krijgen visuele nadruk waar relevant — zij zijn vaak de belangrijkste informatie op het scherm.
 - Geen decoratieve of grillige lettertypen; typografie ondersteunt rust, ze claimt geen aandacht voor zichzelf.
+- **Eén gedocumenteerde uitzondering: het editoriale moment.** Newsreader (Regular) is toegestaan voor maximaal **één** editorial-display-moment per scherm, uitsluitend voor het hero-moment van dat scherm (nu: de intentie van de dag in de Circle-hero). Nooit voor functionele informatie, labels, metadata, knoppen of navigatie — die blijven Inter. Implementatie: `AppTypography.editorialDisplay` in `lib/core/theme/app_typography.dart`. Deze uitzondering verbreedt het serif-gebruik niet; elke uitbreiding is een expliciete merkbeslissing.
 
 ## 15. Components
 

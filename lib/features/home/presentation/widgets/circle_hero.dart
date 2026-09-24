@@ -551,11 +551,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     // editorial-serif moment (AppTypography.editorialDisplay) — see that
     // method's own doc comment for why the role, not this content, owns
     // the name.
-    final eyebrowStyle = textTheme.labelLarge?.copyWith(
-      fontSize: 13,
-      height: 1.25,
-      letterSpacing: 0.5,
-    );
+    final eyebrowStyle = textTheme.labelSmall;
     final intentStyle = AppTypography.editorialDisplay(colors);
 
     return LayoutBuilder(
