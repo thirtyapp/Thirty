@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -39,13 +41,45 @@ class CircleRecordDetailPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(localDate)),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.page),
-          child: entry == null
-              ? _NoLongerAvailable(localDate: localDate)
-              : CircleJournalEntryCard(entry: entry),
-        ),
+        child: entry == null
+            ? Padding(
+                padding: const EdgeInsets.all(AppSpacing.page),
+                child: _NoLongerAvailable(localDate: localDate),
+              )
+            : _ScrollableRecord(entry: entry),
       ),
+    );
+  }
+}
+
+/// The record card, scrollable once it is taller than the screen (large
+/// accessibility text on a small phone overflowed by hundreds of pixels
+/// when this was a plain [Padding]). The `minHeight` keeps the card's
+/// existing treatment at normal sizes: it still fills the available
+/// height, exactly as it did unscrolled, and only grows past it — and
+/// starts scrolling — when its content genuinely needs more room.
+class _ScrollableRecord extends StatelessWidget {
+  const _ScrollableRecord({required this.entry});
+
+  final CircleJournalEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.page),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: math.max(
+                0,
+                constraints.maxHeight - AppSpacing.page * 2,
+              ),
+            ),
+            child: CircleJournalEntryCard(entry: entry),
+          ),
+        );
+      },
     );
   }
 }
