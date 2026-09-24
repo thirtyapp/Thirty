@@ -17,6 +17,12 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.success,
     required this.warning,
     required this.error,
+    required this.selection,
+    required this.surfaceMuted,
+    required this.divider,
+    required this.ringTrack,
+    required this.ringProgress,
+    required this.errorText,
   });
 
   final Color primary;
@@ -30,6 +36,35 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color success;
   final Color warning;
   final Color error;
+
+  // Phase A4 roles (docs/design/PHASE_A_PLAN.md). Each is either a state
+  // color or an implementation/accessibility color — none is a new brand
+  // color, and Mist Sage (`secondary`) is deliberately left unchanged
+  // because the Quiet Trail illustration also paints with it.
+
+  /// Soft selected-state background: the nav pill and a selected segment.
+  /// Never the only cue — each also has a filled icon or a checkmark — so
+  /// it stays calm rather than being forced to 3:1 against the surface.
+  final Color selection;
+
+  /// A quiet fill *inside* a surface (e.g. the time picker's unselected
+  /// fields and dial). Not the A5 raised-surface step.
+  final Color surfaceMuted;
+
+  /// Decorative hairline separation; softer than [border].
+  final Color divider;
+
+  /// The Circle's own track color (Playbook Ch.3 §3 — the Circle should not
+  /// borrow another element's tokens). Clears 3:1 against [ringProgress].
+  final Color ringTrack;
+
+  /// The Circle's own progress color.
+  final Color ringProgress;
+
+  /// [error] tuned for text: the brand red is ~3.5:1 on white, so text uses
+  /// this darker (light) / lighter (dark) value to clear WCAG AA 4.5:1.
+  /// [error] itself stays the status/fill color.
+  final Color errorText;
 
   // Circle Sage, deepened ~17% from the reference brand value (#7C8B6D) so
   // it clears WCAG AA 4.5:1 when THIRTY's outline button reuses this token
@@ -46,6 +81,12 @@ class AppColors extends ThemeExtension<AppColors> {
     success: Color(0xFF48C774),
     warning: Color(0xFFF4B740),
     error: Color(0xFFE55A5A),
+    selection: Color(0xFFDCE4D5),
+    surfaceMuted: Color(0xFFF2F1EC),
+    divider: Color(0xFFE6E4DE),
+    ringTrack: Color(0xFFE4E3DC),
+    ringProgress: Color(0xFF67735A),
+    errorText: Color(0xFFB3403C),
   );
 
   // Circle Sage, lightened ~8% from the reference brand value so it clears
@@ -65,6 +106,12 @@ class AppColors extends ThemeExtension<AppColors> {
     success: Color(0xFF48C774),
     warning: Color(0xFFF4B740),
     error: Color(0xFFE55A5A),
+    selection: Color(0xFF525A49),
+    surfaceMuted: Color(0xFF2B2E27),
+    divider: Color(0xFF34372F),
+    ringTrack: Color(0xFF33362F),
+    ringProgress: Color(0xFF869676),
+    errorText: Color(0xFFF07B74),
   );
 
   @override
@@ -80,6 +127,12 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? success,
     Color? warning,
     Color? error,
+    Color? selection,
+    Color? surfaceMuted,
+    Color? divider,
+    Color? ringTrack,
+    Color? ringProgress,
+    Color? errorText,
   }) {
     return AppColors(
       primary: primary ?? this.primary,
@@ -93,6 +146,12 @@ class AppColors extends ThemeExtension<AppColors> {
       success: success ?? this.success,
       warning: warning ?? this.warning,
       error: error ?? this.error,
+      selection: selection ?? this.selection,
+      surfaceMuted: surfaceMuted ?? this.surfaceMuted,
+      divider: divider ?? this.divider,
+      ringTrack: ringTrack ?? this.ringTrack,
+      ringProgress: ringProgress ?? this.ringProgress,
+      errorText: errorText ?? this.errorText,
     );
   }
 
@@ -111,6 +170,12 @@ class AppColors extends ThemeExtension<AppColors> {
       success: Color.lerp(success, other.success, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
       error: Color.lerp(error, other.error, t)!,
+      selection: Color.lerp(selection, other.selection, t)!,
+      surfaceMuted: Color.lerp(surfaceMuted, other.surfaceMuted, t)!,
+      divider: Color.lerp(divider, other.divider, t)!,
+      ringTrack: Color.lerp(ringTrack, other.ringTrack, t)!,
+      ringProgress: Color.lerp(ringProgress, other.ringProgress, t)!,
+      errorText: Color.lerp(errorText, other.errorText, t)!,
     );
   }
 }

@@ -4,7 +4,8 @@
 - **A1 complete** — commit `e810188`
 - **A2 complete** — commit `77dfa1f`
 - **Record-detail accessibility fix complete** — commit `750df10` (separate bounded change, not part of A2)
-- **A3 complete** — see the A3 scope refinement below
+- **A3 complete** — commit `a425d24` (see the A3 scope refinement below)
+- **A4 implemented, awaiting founder review** (uncommitted)
 **Baseline:** `step5-billing-integration` @ `372dd30` (1.7.0+14).
 **Parent document:** THIRTY Visual Gap Analysis, §6 Phase A.
 **Scope:** design tokens, shared core widgets, and app-wide component themes only. No screen recomposition, no IA or Circle-lifecycle change — Home composition is Phase B.
@@ -80,10 +81,26 @@ Each step is small, independently reviewable, and gated on `flutter analyze` + f
 - New tokens: `surfaceMuted`, `divider`, `ringTrack`, `ringProgress` (Circle color role, wired as `ThirtyProgressCircle` defaults with no visual change at first).
 - Tune `background` / `border` / `secondary` toward the vision within the existing sage/stone family (D3). Re-verify every AA pair in `DESIGN_SYSTEM.md` §4.
 
+**Scope refinement (deliberate, approved after the A4 inventory).**
+- **No brand values changed.** Mist Sage (`secondary`) stays because the illustration paints with it; `background` / `border` stay. The earlier "tune toward the vision" bullet is dropped.
+- **Six new roles** (state/implementation, not brand): `selection`, `surfaceMuted`, `divider`, `ringTrack`, `ringProgress`, `errorText` — values and contrast in `docs/DESIGN_SYSTEM.md` §2.9.
+- **Material accent slots pinned** so no generated lime/teal remains (`primary/secondary/tertiaryContainer`, `tertiary`, `onSurfaceVariant`, `inverseSurface`, `inversePrimary`); **explicit time-picker theme** with the strong `primary` fill, since it signals the active field by color alone.
+- **Soft nav pill** (`selection`), not a forced 3:1 pill; the filled icon and label carry selection too.
+- **One Home line:** the Close Circle destructive `TextButton` uses `errorText` (color only, no layout).
+- **Deferred:** Home's lifecycle ring colors → Phase B; raised dark surface and dark border consistency → A5; AppBar scrolled-under separation → Phase C.
+
 ### A5 · Dark parity + ratification QA — `app_colors.dart`, `app_shadows.dart`, `DESIGN_SYSTEM.md` §3
 - Mirror all new tokens; a raised-surface step so cards/nav separate by tone rather than invisible shadow.
 - Bounded light/dark QA across showcase + all destinations; contrast pass. On pass, `DESIGN_SYSTEM.md` §3 moves from "proposal" to ratified (D4).
 - **Review item from A3:** in dark mode `ThirtyCard` keeps a hairline border while `FloatingNavSurface` has none (separation by tone only). Decide one consistent dark-surface separation rule — likely together with the raised-surface step. Also revisit the time-picker dial, which reads `surfaceContainerHighest` (Mist Sage, `#525A49` in dark) and became heavier than before.
+
+## 3b. Recorded for Phase C (not Phase A)
+
+Commercial decisions for the **You** screen, already made; to be implemented in the Phase C You pass, not in Phase A:
+- The Premium / Become Premium surface moves to the **top** of You.
+- Working launch price: **€4.99/month**, shown from the live store offering (not hard-coded).
+- **Restore Purchases** moves lower, within the Premium/billing area.
+- **Delete all** remains last.
 
 ## 4. Out of scope for Phase A
 

@@ -335,6 +335,34 @@ void main() {
       expect(find.text('Start Circle'), findsNothing);
     });
 
+    testWidgets('the destructive action in the Close Circle confirmation uses '
+        'the AA errorText role, not the brand error fill color', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(await _wrap());
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Start Circle'));
+      await tester.tap(find.text('Start Circle'));
+      await tester.pump();
+
+      await tester.tap(find.byType(ThirtyButton));
+      await tester.pump();
+
+      final closeAction = tester.widget<TextButton>(
+        find.ancestor(
+          of: find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.text('Close Circle'),
+          ),
+          matching: find.byType(TextButton),
+        ),
+      );
+      expect(
+        closeAction.style!.foregroundColor!.resolve({}),
+        AppColors.light.errorText,
+      );
+    });
+
     testWidgets('centers the Circle, illustration and text column on the same '
         'horizontal axis as the screen', (WidgetTester tester) async {
       await tester.pumpWidget(await _wrap());

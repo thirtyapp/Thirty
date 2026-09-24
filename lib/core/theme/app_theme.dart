@@ -52,7 +52,23 @@ class AppTheme {
           surfaceContainerHigh: colors.surface,
           surfaceContainerHighest: colors.secondary,
           surfaceTint: Colors.transparent,
-          outlineVariant: colors.border,
+          outlineVariant: colors.divider,
+          // Accent/selection slots pinned too (Phase A4). Left to
+          // `fromSeed` they generated the lime (primaryContainer,
+          // secondaryContainer) and teal (tertiary*) seen in the Appearance
+          // selector and the time picker.
+          primaryContainer: colors.selection,
+          onPrimaryContainer: colors.textPrimary,
+          secondaryContainer: colors.selection,
+          onSecondaryContainer: colors.textPrimary,
+          tertiary: colors.primary,
+          onTertiary: onPrimary,
+          tertiaryContainer: colors.selection,
+          onTertiaryContainer: colors.textPrimary,
+          onSurfaceVariant: colors.textSecondary,
+          inverseSurface: colors.textPrimary,
+          onInverseSurface: colors.background,
+          inversePrimary: _inversePrimary(brightness),
         );
 
     return ThemeData(
@@ -70,8 +86,52 @@ class AppTheme {
       switchTheme: _switchTheme(colors, onPrimary),
       // Material 3's Divider ignores ThemeData.dividerColor and reads
       // outlineVariant by default; set it explicitly.
-      dividerTheme: DividerThemeData(color: colors.border, thickness: 1),
+      dividerTheme: DividerThemeData(color: colors.divider, thickness: 1),
+      timePickerTheme: _timePickerTheme(colors, onPrimary),
       extensions: [colors],
+    );
+  }
+
+  /// SnackBar/tooltip accent on [ColorScheme.inverseSurface] (textPrimary):
+  /// the opposite palette's sage, darkened in dark mode so it clears 4.5:1
+  /// on the light inverse surface.
+  static Color _inversePrimary(Brightness brightness) {
+    return brightness == Brightness.light
+        ? AppColors.dark.primary
+        : const Color(0xFF56614A);
+  }
+
+  /// The time picker signals which field is active by color alone, so —
+  /// unlike the nav pill or a segment — its selected state uses the strong
+  /// [AppColors.primary] fill, which clears 3:1 against the unselected
+  /// [AppColors.surfaceMuted] fields (4.45:1 light, 4.36:1 dark).
+  static TimePickerThemeData _timePickerTheme(
+    AppColors colors,
+    Color onPrimary,
+  ) {
+    Color selectedOr(Set<WidgetState> states, Color selected, Color other) =>
+        states.contains(WidgetState.selected) ? selected : other;
+    return TimePickerThemeData(
+      backgroundColor: colors.surface,
+      hourMinuteColor: WidgetStateColor.resolveWith(
+        (states) => selectedOr(states, colors.primary, colors.surfaceMuted),
+      ),
+      hourMinuteTextColor: WidgetStateColor.resolveWith(
+        (states) => selectedOr(states, onPrimary, colors.textPrimary),
+      ),
+      dayPeriodColor: WidgetStateColor.resolveWith(
+        (states) => selectedOr(states, colors.primary, Colors.transparent),
+      ),
+      dayPeriodTextColor: WidgetStateColor.resolveWith(
+        (states) => selectedOr(states, onPrimary, colors.textSecondary),
+      ),
+      dayPeriodBorderSide: BorderSide(color: colors.border),
+      dialBackgroundColor: colors.surfaceMuted,
+      dialHandColor: colors.primary,
+      dialTextColor: WidgetStateColor.resolveWith(
+        (states) => selectedOr(states, onPrimary, colors.textPrimary),
+      ),
+      entryModeIconColor: colors.textSecondary,
     );
   }
 
@@ -95,7 +155,7 @@ class AppTheme {
   /// surrounding `FloatingNavSurface` (in `app_shell.dart`) is the single
   /// owner of the bar's color, rounded shape and shadow, so the bar itself
   /// must never paint its own rectangle. Selection is carried by the
-  /// filled icon, the label color and the quiet Mist Sage indicator
+  /// filled icon, the label color and the soft `selection` indicator
   /// together — never by the indicator alone.
   static NavigationBarThemeData _navigationBarTheme(AppColors colors) {
     return NavigationBarThemeData(
@@ -104,7 +164,7 @@ class AppTheme {
       shadowColor: Colors.transparent,
       elevation: 0,
       height: 68,
-      indicatorColor: colors.secondary,
+      indicatorColor: colors.selection,
       iconTheme: WidgetStateProperty.resolveWith(
         (states) => IconThemeData(
           color: states.contains(WidgetState.selected)

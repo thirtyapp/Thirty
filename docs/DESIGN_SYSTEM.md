@@ -132,6 +132,32 @@ Warm Stone itself is not used at full strength as a token value — its role in 
 
 `#48C774` / `#F4B740` / `#E55A5A` — **unchanged**, both modes. See §5 for why these are explicitly out of scope for this pass.
 
+### 2.9 Phase A4 state and implementation roles
+
+Added in Phase A4 (`docs/design/PHASE_A_PLAN.md`). **None of these is a new brand color** — each is a state color or an implementation/accessibility color inside the existing sage/stone family (decision D3: no warm/gold accent). Mist Sage (`secondary`) is deliberately **unchanged**: the Quiet Trail illustration (`quiet_trail_hero_view.dart`, `horizon_illustration.dart`) paints with it, so retuning it would repaint the artwork.
+
+| Token | Light | Dark | Kind | Used by |
+|---|---|---|---|---|
+| `selection` | `#DCE4D5` | `#525A49` | State | Nav indicator; selected `SegmentedButton` segment (via `secondaryContainer`). Never the only cue — a filled icon or checkmark always accompanies it — so it stays soft rather than being forced to 3:1 against the surface (a 3:1 light pill would be ≈`#8A9380`). |
+| `surfaceMuted` | `#F2F1EC` | `#2B2E27` | Implementation | A quiet fill inside a surface: the time picker's unselected fields and dial. Not the A5 raised-surface step. |
+| `divider` | `#E6E4DE` | `#34372F` | Decorative | `DividerTheme`, `outlineVariant`. Decorative separation — no contrast requirement. |
+| `ringTrack` | `#E4E3DC` | `#33362F` | Circle graphic | `ThirtyProgressCircle` default track. Dark fixes the previous 2.78:1 arc/track contrast. |
+| `ringProgress` | `#67735A` | `#869676` | Circle state | `ThirtyProgressCircle` default arc (= `primary` today, named so the Circle no longer borrows another element's token — Playbook Ch.3 §3). Home's own lifecycle ring colors are a Phase B migration. |
+| `errorText` | `#B3403C` | `#F07B74` | Accessibility | Red text (destructive `TextButton`). The brand `error` `#E55A5A` is 3.53:1 (light) / 4.45:1 (dark) as text; it stays the status/fill color. |
+
+Material's generated accent slots are pinned to these roles in `app_theme.dart`: `primaryContainer`/`secondaryContainer`/`tertiaryContainer` → `selection` (on-colors → `textPrimary`), `tertiary` → `primary`, `onSurfaceVariant` → `textSecondary`, `inverseSurface` → `textPrimary` (on → `background`), `inversePrimary` → `#869676` light / `#56614A` dark. The time picker signals its active field by color alone, so it is themed explicitly with the strong `primary` fill for selected hour/minute/AM-PM.
+
+| Pair (WCAG) | Light | Dark | Required |
+|---|---|---|---|
+| Nav/segment selected label on `selection` | 12.2:1 | 6.39:1 | 4.5:1 |
+| Time picker selected field (`primary`) vs unselected (`surfaceMuted`) | 4.45:1 | 4.36:1 | 3:1 |
+| Time picker selected digits (on-primary on `primary`) | 5.03:1 | 6.64:1 | 4.5:1 |
+| Time picker unselected digits / dial numbers on `surfaceMuted` | 14.07:1 | 12.23:1 | 4.5:1 |
+| Time picker AM/PM selected (`primary`) vs dialog surface | 5.03:1 | 4.97:1 | 3:1 |
+| `errorText` on surface | 5.65:1 | 5.83:1 | 4.5:1 |
+| `ringProgress` vs `ringTrack` | 3.91:1 | 3.88:1 | 3:1 |
+| SnackBar action (`inversePrimary`) on `inverseSurface` | 5.03:1 | 5.81:1 | 4.5:1 |
+
 ---
 
 ## 3. Dark mode: a proposed extension, not an official spec

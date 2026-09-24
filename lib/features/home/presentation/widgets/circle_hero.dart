@@ -402,7 +402,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(foregroundColor: colors.error),
+            style: TextButton.styleFrom(foregroundColor: colors.errorText),
             child: const Text('Close Circle'),
           ),
         ],

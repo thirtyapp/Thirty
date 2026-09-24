@@ -46,19 +46,18 @@ class ThirtyProgressCircle extends StatelessWidget {
   /// generic component guess at, or hardcode, caller-specific wording.
   final String? semanticValue;
 
-  /// Defaults to the theme's primary color.
+  /// Defaults to the Circle's own [AppColors.ringProgress].
   final Color? progressColor;
 
-  /// Defaults to a subtle, low-opacity variant of the theme's border color.
+  /// Defaults to the Circle's own [AppColors.ringTrack].
   final Color? trackColor;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
     final clampedProgress = progress.clamp(0.0, 1.0);
-    final resolvedProgressColor = progressColor ?? colors.primary;
-    final resolvedTrackColor =
-        trackColor ?? colors.border.withValues(alpha: 0.6);
+    final resolvedProgressColor = progressColor ?? colors.ringProgress;
+    final resolvedTrackColor = trackColor ?? colors.ringTrack;
 
     return Semantics(
       label: semanticLabel ?? 'Voortgang',

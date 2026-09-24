@@ -122,7 +122,7 @@ void main() {
         expect(scheme.surfaceContainerHigh, colors.surface);
         expect(scheme.surfaceContainerHighest, colors.secondary);
         expect(scheme.surfaceTint, Colors.transparent);
-        expect(scheme.outlineVariant, colors.border);
+        expect(scheme.outlineVariant, colors.divider);
       });
 
       test('$mode: the nav bar paints no surface of its own (the floating '
@@ -131,7 +131,7 @@ void main() {
         expect(nav.backgroundColor, Colors.transparent);
         expect(nav.elevation, 0);
         expect(nav.surfaceTintColor, Colors.transparent);
-        expect(nav.indicatorColor, colors.secondary);
+        expect(nav.indicatorColor, colors.selection);
       });
 
       test('$mode: an unselected switch clears 3:1 non-text contrast '
@@ -148,9 +148,9 @@ void main() {
         );
       });
 
-      test('$mode: dividers use the border token, not the generated '
+      test('$mode: dividers use the divider token, not the generated '
           'outlineVariant', () {
-        expect(theme.dividerTheme.color, colors.border);
+        expect(theme.dividerTheme.color, colors.divider);
       });
     }
   });
