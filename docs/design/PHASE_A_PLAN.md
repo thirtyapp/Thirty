@@ -5,7 +5,8 @@
 - **A2 complete** — commit `77dfa1f`
 - **Record-detail accessibility fix complete** — commit `750df10` (separate bounded change, not part of A2)
 - **A3 complete** — commit `a425d24` (see the A3 scope refinement below)
-- **A4 implemented, awaiting founder review** (uncommitted)
+- **A4 complete** — commit `38b00b7` (see the A4 scope refinement below)
+- **A5 in inventory/review** (no code changes yet)
 **Baseline:** `step5-billing-integration` @ `372dd30` (1.7.0+14).
 **Parent document:** THIRTY Visual Gap Analysis, §6 Phase A.
 **Scope:** design tokens, shared core widgets, and app-wide component themes only. No screen recomposition, no IA or Circle-lifecycle change — Home composition is Phase B.
@@ -88,6 +89,9 @@ Each step is small, independently reviewable, and gated on `flutter analyze` + f
 - **Soft nav pill** (`selection`), not a forced 3:1 pill; the filled icon and label carry selection too.
 - **One Home line:** the Close Circle destructive `TextButton` uses `errorText` (color only, no layout).
 - **Deferred:** Home's lifecycle ring colors → Phase B; raised dark surface and dark border consistency → A5; AppBar scrolled-under separation → Phase C.
+- **Follow-ups recorded at A4 approval:**
+  - **Phase C:** rounded / floating SnackBar (shape and behavior; A4 only pinned its colors via `inverseSurface` / `inversePrimary`).
+  - **Phase B (Home composition):** the started-state Home ring reads faint with the new `ringTrack` / `ringProgress` at low progress — resolve with the hero/ring composition, not by retuning the tokens in Phase A.
 
 ### A5 · Dark parity + ratification QA — `app_colors.dart`, `app_shadows.dart`, `DESIGN_SYSTEM.md` §3
 - Mirror all new tokens; a raised-surface step so cards/nav separate by tone rather than invisible shadow.
