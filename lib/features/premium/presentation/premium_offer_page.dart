@@ -107,6 +107,7 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
             ),
             const SizedBox(height: AppSpacing.m),
             ThirtyCard(
+              padding: const EdgeInsets.all(AppSpacing.featuredCard),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [

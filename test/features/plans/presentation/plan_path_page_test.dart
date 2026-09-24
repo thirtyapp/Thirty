@@ -8,12 +8,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
-import 'package:thirty/core/theme/app_theme.dart';
+import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/features/plans/application/plan_provider.dart';
 import 'package:thirty/features/plans/domain/plan_catalog.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
 import 'package:thirty/features/plans/domain/plan_state.dart';
 import 'package:thirty/features/plans/presentation/plan_path_page.dart';
+import 'package:thirty/core/widgets/thirty_card.dart';
 
 final _today = DateTime(2026, 8, 2);
 
@@ -277,5 +278,24 @@ void main() {
         expect(find.text('Pause this plan'), findsNothing);
       },
     );
+  });
+
+  group('Phase A2 — Plan cards are featured cards', () {
+    for (final entitled in [true, false]) {
+      testWidgets('entitled: $entitled — every Plan card uses featuredCard '
+          'padding', (tester) async {
+        final (widget, container) = await _wrap(entitled: entitled);
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(widget);
+        await tester.pumpAndSettle();
+
+        final cards = tester.widgetList<ThirtyCard>(find.byType(ThirtyCard));
+        expect(cards, isNotEmpty);
+        for (final card in cards) {
+          expect(card.padding, const EdgeInsets.all(AppSpacing.featuredCard));
+        }
+      });
+    }
   });
 }

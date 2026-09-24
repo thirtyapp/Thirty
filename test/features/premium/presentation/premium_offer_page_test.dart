@@ -5,8 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:thirty/core/premium/entitlement_gateway.dart';
 import 'package:thirty/core/premium/entitlement_status.dart';
 import 'package:thirty/core/premium/premium_access.dart';
-import 'package:thirty/core/theme/app_theme.dart';
+import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/features/premium/presentation/premium_offer_page.dart';
+import 'package:thirty/core/widgets/thirty_card.dart';
 
 class _FakeEntitlementGateway implements EntitlementGateway {
   _FakeEntitlementGateway({this.initialStatus = EntitlementStatus.inactive});
@@ -186,5 +187,20 @@ void main() {
 
     expect(find.textContaining('Free remains complete'), findsOneWidget);
     expect(find.textContaining('not backed up to the cloud'), findsOneWidget);
+  });
+
+  testWidgets('Phase A2 — the Premium offer card uses featuredCard padding', (
+    tester,
+  ) async {
+    final (widget, container) = await _wrap(gateway: _FakeEntitlementGateway());
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<ThirtyCard>(find.byType(ThirtyCard)).padding,
+      const EdgeInsets.all(AppSpacing.featuredCard),
+    );
   });
 }

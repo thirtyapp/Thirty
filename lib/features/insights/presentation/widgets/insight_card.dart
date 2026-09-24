@@ -95,6 +95,7 @@ class InsightCard extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s),
       child: ThirtyCard(
+        padding: const EdgeInsets.all(AppSpacing.featuredCard),
         child: Semantics(
           container: true,
           liveRegion: true,

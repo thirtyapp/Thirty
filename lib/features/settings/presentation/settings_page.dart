@@ -112,6 +112,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             Text('Premium', style: textTheme.titleMedium),
             const SizedBox(height: AppSpacing.s),
             ThirtyCard(
+              padding: const EdgeInsets.all(AppSpacing.featuredCard),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

@@ -12,9 +12,10 @@ import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/providers/theme_mode_provider.dart';
 import 'package:thirty/core/reminder/reminder_gateway.dart';
-import 'package:thirty/core/theme/app_theme.dart';
+import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/features/reminder/application/reminder_provider.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
+import 'package:thirty/core/widgets/thirty_card.dart';
 
 class _FakeReminderGateway implements ReminderGateway {
   bool permissionGranted = true;
@@ -447,4 +448,22 @@ void main() {
       expect(find.textContaining('Reminds you at'), findsNothing);
     },
   );
+
+  testWidgets('Phase A2 — only the Premium card is featured; control rows '
+      'keep the compact default padding', (tester) async {
+    final (widget, container) = await _wrap(gateway: _FakeEntitlementGateway());
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+
+    final cards = tester
+        .widgetList<ThirtyCard>(find.byType(ThirtyCard, skipOffstage: false))
+        .toList();
+    expect(cards.first.padding, const EdgeInsets.all(AppSpacing.featuredCard));
+    expect(cards.length, greaterThan(1));
+    for (final row in cards.skip(1)) {
+      expect(row.padding, isNull);
+    }
+  });
 }

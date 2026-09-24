@@ -120,6 +120,7 @@ class _PlanCard extends ConsumerWidget {
     final hasEverStarted = progress.lastEncounteredStageId != null;
 
     return ThirtyCard(
+      padding: const EdgeInsets.all(AppSpacing.featuredCard),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -227,6 +228,7 @@ class _PlanPreviewCard extends StatelessWidget {
     final isCompleted = progress.status == PlanCycleStatus.completed;
 
     return ThirtyCard(
+      padding: const EdgeInsets.all(AppSpacing.featuredCard),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

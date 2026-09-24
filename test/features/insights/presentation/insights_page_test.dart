@@ -6,12 +6,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
-import 'package:thirty/core/theme/app_theme.dart';
+import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/features/insights/application/insight_provider.dart';
 import 'package:thirty/features/insights/presentation/insights_page.dart';
 import 'package:thirty/features/insights/presentation/widgets/insight_card.dart';
 import 'package:thirty/features/plans/application/plan_provider.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
+import 'package:thirty/core/widgets/thirty_card.dart';
 
 final _today = DateTime(2026, 8, 2);
 
@@ -139,5 +140,31 @@ void main() {
         expect(find.text('Open Premium'), findsOneWidget);
       },
     );
+  });
+
+  testWidgets('Phase A2 — the Insight card uses featuredCard padding', (
+    tester,
+  ) async {
+    final (widget, container) = await _wrap();
+    addTearDown(container.dispose);
+    final notifier = container.read(planProvider.notifier);
+    notifier.activatePlan(PlanId.gentlerPacePath);
+    notifier.advanceCursorForCircle(
+      PlanId.gentlerPacePath,
+      'circle-0',
+      isRevisit: false,
+    );
+    notifier.activatePlan(PlanId.moreEnergyPath);
+
+    await tester.pumpWidget(widget);
+    await tester.pump();
+
+    final card = tester.widget<ThirtyCard>(
+      find.descendant(
+        of: find.byType(InsightCard),
+        matching: find.byType(ThirtyCard),
+      ),
+    );
+    expect(card.padding, const EdgeInsets.all(AppSpacing.featuredCard));
   });
 }

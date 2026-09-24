@@ -11,6 +11,7 @@ import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/premium/application/premium_offer_provider.dart';
 import 'package:thirty/features/premium/presentation/widgets/premium_offer_invitation_card.dart';
 import 'package:thirty/features/reminder/application/reminder_invitation_provider.dart';
+import 'package:thirty/core/widgets/thirty_card.dart';
 
 Future<(Widget, ProviderContainer)> _wrap({bool entitled = false}) async {
   // Pre-mark the reminder invitation as already shown — this file tests
@@ -107,5 +108,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('THIRTY Premium'), findsNothing);
+  });
+
+  testWidgets('Phase A2 — stays compact: it shares height with the Home '
+      'hero, so it keeps the default card padding', (tester) async {
+    final (widget, container) = await _wrap();
+    addTearDown(container.dispose);
+    await _closeCircle(container, '2026-09-01');
+    await _closeCircle(container, '2026-09-02');
+
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<ThirtyCard>(find.byType(ThirtyCard)).padding, isNull);
   });
 }

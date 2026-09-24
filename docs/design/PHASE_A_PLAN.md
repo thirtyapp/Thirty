@@ -1,6 +1,6 @@
 # THIRTY Visual Pass — Phase A Plan (Foundations)
 
-**Status:** Approved (founder decisions D1–D4 recorded below). A1 approved. A2 inventory in progress (read-only).
+**Status:** Approved (founder decisions D1–D4 recorded below). A1 approved and committed. A2 implemented, awaiting founder review. Next: record-detail accessibility fix, then A3.
 **Baseline:** `step5-billing-integration` @ `372dd30` (1.7.0+14).
 **Parent document:** THIRTY Visual Gap Analysis, §6 Phase A.
 **Scope:** design tokens, shared core widgets, and app-wide component themes only. No screen recomposition, no IA or Circle-lifecycle change — Home composition is Phase B.
@@ -48,6 +48,14 @@ Each step is small, independently reviewable, and gated on `flutter analyze` + f
 ### A2 · Spacing — `app_spacing.dart`
 - Inventory all `AppSpacing.card` / `AppSpacing.section` call sites first (guardrail).
 - Add `xxxl = 64` and a `heroGap` role. Roomier card padding / section rhythm is introduced as **new semantic tokens** where compact surfaces would otherwise grow unintentionally.
+
+**Scope refinement (deliberate, approved after the A2 inventory).**
+- The inventory found `AppSpacing.card` has a single consumer — `ThirtyCard`'s default padding — used by all 12 card call sites with no overrides. A global 16 → 24 would have enlarged compact surfaces: the two Home-stack invitation cards (which share fixed height with the Circle hero), the journal entry card, and You's three control-row cards.
+- **`AppSpacing.card`, `.section` and `.page` keep their values.** `section`'s product consumers are Home hero composition (Phase B); `page` also sizes the Circle (`maxWidth - page * 2`).
+- **One opt-in token added: `AppSpacing.featuredCard = l` (24)**, named as a sibling of the existing role-noun `card` token. Applied only to the five audited featured/standalone cards: Plan card, free-preview Plan card, Premium offer card, Insight card, Premium card in You. Home-stack cards, control rows, journal cards and showcase cards are unchanged.
+- **`xxxl` and `heroGap` are deferred to Phase B**, where the hero composition consumes them — no unused tokens.
+- You's group rhythm (currently `m` between groups) is a Phase C You-pass concern. Known consequence to resolve there: the featured Premium card's content now sits 8pt further in than the compact control-row cards directly beneath it.
+- The pre-existing record-detail overflow at 200% text (found by the inventory) is handled as a **separate bounded accessibility change after A2, before A3** — not inside A2.
 
 ### A3 · Surfaces — `app_radius.dart`, `app_shadows.dart`, `thirty_card.dart`, `thirty_button.dart`, `app_shell.dart`, `app_theme.dart`
 - Inventory radius call sites first (guardrail). Add `xl = 24` (cards, nav container); button shape = pill (D2).
