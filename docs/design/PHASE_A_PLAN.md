@@ -6,7 +6,7 @@
 - **Record-detail accessibility fix complete** — commit `750df10` (separate bounded change, not part of A2)
 - **A3 complete** — commit `a425d24` (see the A3 scope refinement below)
 - **A4 complete** — commit `38b00b7` (see the A4 scope refinement below)
-- **A5 complete** — dark palette ratified (D4); see the A5 scope refinement below
+- **A5 complete** — commit `6ea5fe3` — dark palette ratified (D4); see the A5 scope refinement below
 - **Phase A complete and ratified.**
 **Baseline:** `step5-billing-integration` @ `372dd30` (1.7.0+14).
 **Parent document:** THIRTY Visual Gap Analysis, §6 Phase A.
