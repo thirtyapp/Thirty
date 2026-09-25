@@ -8,6 +8,7 @@ import '../../../../core/premium/premium_access.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_card.dart';
+import '../../../../core/widgets/thirty_text_action.dart';
 import '../../../home/application/activity_catalog.dart'
     show Intention, intentionLabel;
 import '../../../plans/application/plan_provider.dart';
@@ -34,8 +35,6 @@ class InsightCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final insight = ref.watch(currentInsightProvider);
-
     // Exposure/invalidation telemetry only — never evidence the user read,
     // understood, or acted on it (ADR-010 applies here exactly as it does
     // to `coachCueShown`). Fired at most once per distinct observation
@@ -66,7 +65,13 @@ class InsightCard extends ConsumerWidget {
       }
     });
 
-    if (insight == null) return const SizedBox.shrink();
+    // What to show: the current Insight or — once a pattern's evidence has
+    // aged out of the 28-day window — the same observation as a dated,
+    // read-only earlier Insight (never "recent", never actionable).
+    final displayed = ref.watch(displayedInsightProvider);
+    if (displayed == null) return const SizedBox.shrink();
+    final insight = displayed.insight;
+    final isCurrent = displayed.isCurrent;
 
     final plansState = ref.watch(planProvider);
     final progress = plansState.progress[insight.targetPlanId];
@@ -77,7 +82,20 @@ class InsightCard extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
 
-    final observation = _observationText(insight, plan, progress, direction);
+    final observation = _observationText(
+      insight,
+      plan,
+      progress,
+      direction,
+      isCurrent: isCurrent,
+    );
+    final observedAt = insight.observedAt;
+    final dateLine = observedAt == null
+        ? null
+        : isCurrent
+        ? 'Observed on ${MaterialLocalizations.of(context).formatShortDate(observedAt)}'
+        : 'An earlier Insight from '
+              '${MaterialLocalizations.of(context).formatShortDate(observedAt)}';
     final evidence = _evidenceText(insight);
     final applicationLabel = _applicationLabel(insight, progress);
 
@@ -114,15 +132,35 @@ class InsightCard extends ConsumerWidget {
                   ),
                 ),
               ],
-              const SizedBox(height: AppSpacing.s),
-              ThirtyButton(
-                label: isEntitled
-                    ? applicationLabel
-                    : 'Open Premium to apply this',
-                variant: ThirtyButtonVariant.secondary,
-                onPressed: isEntitled
-                    ? () => ref.read(insightProvider.notifier).applyCurrent()
-                    : () => context.push('/premium'),
+              if (dateLine != null) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  dateLine,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ],
+              // Only a current Insight is actionable; an earlier one is
+              // read-only history.
+              if (isCurrent) ...[
+                const SizedBox(height: AppSpacing.s),
+                ThirtyButton(
+                  label: isEntitled
+                      ? applicationLabel
+                      : 'Open Premium to apply this',
+                  variant: ThirtyButtonVariant.secondary,
+                  onPressed: isEntitled
+                      ? () => ref.read(insightProvider.notifier).applyCurrent()
+                      : () => context.push('/premium'),
+                ),
+              ],
+              // Hides this exact observation without changing any Plan or
+              // Coach state; only a genuinely new observation shows again.
+              ThirtyTextAction(
+                label: 'Dismiss',
+                onPressed: () =>
+                    ref.read(insightProvider.notifier).dismissLatest(),
               ),
             ],
           ),
@@ -139,12 +177,17 @@ class InsightCard extends ConsumerWidget {
         previous.evidenceCount == next.evidenceCount;
   }
 
+  /// [isCurrent] `false` (an earlier Insight whose evidence has aged out)
+  /// drops "recent" / "recently" — those records are no longer recent.
   static String _observationText(
     Insight insight,
     PlanDefinition plan,
     PlanProgress progress,
-    Intention direction,
-  ) {
+    Intention direction, {
+    required bool isCurrent,
+  }) {
+    final recent = isCurrent ? 'recent ' : '';
+    final recently = isCurrent ? ' recently' : '';
     final directionName = intentionLabel(direction);
     final isCompleted = progress.status == PlanCycleStatus.completed;
     final placeClause = isCompleted
@@ -156,13 +199,13 @@ class InsightCard extends ConsumerWidget {
       case InsightFamily.directionPathContinuity:
         if (insight.isPatternClaim) {
           return '$directionName was your direction on '
-              '${insight.evidenceCount} recent visits. Its Plan $placeClause.';
+              '${insight.evidenceCount} ${recent}visits. Its Plan $placeClause.';
         }
         return '$directionName\'s Plan $placeClause.';
 
       case InsightFamily.chosenPacing:
         return 'You chose lighter guidance on ${insight.evidenceCount} '
-            'recent Plan Circles.'
+            '${recent}Plan Circles.'
             '${_usefulnessSentence(insight)}';
 
       case InsightFamily.deliberateRevisits:
@@ -173,7 +216,7 @@ class InsightCard extends ConsumerWidget {
             ? 'stage ${stageIndex + 1} of ${plan.stages.length}'
             : 'a stage';
         return 'You deliberately revisited $stageLabel of ${plan.name} '
-            '${insight.evidenceCount} times recently.'
+            '${insight.evidenceCount} times$recently.'
             '${_usefulnessSentence(insight)}';
     }
   }

@@ -255,6 +255,34 @@ Insight? _evaluateDeliberateRevisits(
   );
 }
 
+/// Whether an observation's supporting evidence still lies inside the
+/// current [insightEvaluationWindowDays] window at [now] — i.e. its newest
+/// evidence date is not older than the window's start (the same window
+/// [evaluateInsight] reads). An observation with no evidence dates (the
+/// plain current-place fact) has no evidence to age out.
+///
+/// A pattern observation whose evidence has aged out is no longer current
+/// and never "recent" (frozen architecture §9 / §21: "never display old
+/// evidence as current"); its retained snapshot stays readable as a dated
+/// earlier Insight, but is never actionable.
+bool insightEvidenceIsCurrent(List<String> evidenceDateKeys, DateTime now) {
+  if (evidenceDateKeys.isEmpty) return true;
+  DateTime? newest;
+  for (final key in evidenceDateKeys) {
+    final date = _parseLocalDate(key);
+    if (date != null && (newest == null || date.isAfter(newest))) {
+      newest = date;
+    }
+  }
+  if (newest == null) return false;
+  final windowStart = DateTime(
+    now.year,
+    now.month,
+    now.day,
+  ).subtract(const Duration(days: insightEvaluationWindowDays));
+  return !newest.isBefore(windowStart);
+}
+
 // ---------------------------------------------------------------------------
 // Shared evidence helpers
 // ---------------------------------------------------------------------------

@@ -97,9 +97,22 @@ class InsightNotifier extends Notifier<InsightsState> {
       final latest = snapshots.isEmpty ? null : snapshots.last;
       final isSameObservation =
           latest != null && latest.describesSameObservationAs(candidate);
+      InsightSnapshot? appended;
       if (!isSameObservation) {
-        final snapshot = InsightSnapshot.fromInsight(candidate, generatedAt: now);
-        snapshots = [...snapshots, snapshot];
+        // A genuinely new observation — shown even if an earlier one was
+        // dismissed.
+        appended = InsightSnapshot.fromInsight(candidate, generatedAt: now);
+      } else if (!latest.hasSameEvidenceDatesAs(candidate)) {
+        // The same observation re-found on the current window's evidence
+        // dates: re-dated so it is not withdrawn as aged-out while still
+        // true — but not a new observation, so a dismissal carries over.
+        appended = InsightSnapshot.fromInsight(
+          candidate,
+          generatedAt: now,
+        ).copyWith(dismissed: latest.dismissed);
+      }
+      if (appended != null) {
+        snapshots = [...snapshots, appended];
         if (snapshots.length > insightSnapshotMaxCount) {
           snapshots = snapshots.sublist(
             snapshots.length - insightSnapshotMaxCount,
@@ -130,7 +143,7 @@ class InsightNotifier extends Notifier<InsightsState> {
     if (state.snapshots.isEmpty) return;
     final latest = state.snapshots.last;
     final plansState = ref.read(planProvider);
-    final live = liveInsightView(latest, plansState);
+    final live = liveInsightView(latest, plansState, ref.read(nowProvider));
     if (live == null) {
       ref
           .read(analyticsServiceProvider)
@@ -164,6 +177,23 @@ class InsightNotifier extends Notifier<InsightsState> {
             'application_type': live.applicationType.name,
           },
         );
+  }
+
+  /// Dismisses the displayed observation — the latest snapshot — for good:
+  /// it is no longer shown (current or earlier), and only a genuinely new
+  /// observation appears again. Changes no Plan or Coach state, is not a
+  /// paid action, and keeps the snapshot as retained history.
+  void dismissLatest() {
+    if (state.snapshots.isEmpty) return;
+    final latest = state.snapshots.last;
+    if (latest.dismissed) return;
+    state = state.copyWith(
+      snapshots: [
+        ...state.snapshots.sublist(0, state.snapshots.length - 1),
+        latest.copyWith(dismissed: true),
+      ],
+    );
+    unawaited(_persist(state));
   }
 
   /// Permanently clears all retained Insight state — called when the user
@@ -242,8 +272,28 @@ final currentInsightProvider = Provider<Insight?>((ref) {
   if (snapshots.isEmpty) return null;
   final latest = snapshots.last;
   final plansState = ref.watch(planProvider);
-  return liveInsightView(latest, plansState);
+  return liveInsightView(latest, plansState, ref.watch(nowProvider));
 });
+
+/// What the Insights surface shows: the current (actionable) Insight, or —
+/// when the latest pattern observation's evidence has aged out of the
+/// current window — that observation as a dated, read-only earlier
+/// Insight (`isCurrent: false`, never actionable). `null` when there is
+/// nothing to show, including a dismissed observation.
+final displayedInsightProvider =
+    Provider<({Insight insight, bool isCurrent})?>((ref) {
+      final current = ref.watch(currentInsightProvider);
+      if (current != null) return (insight: current, isCurrent: true);
+
+      final snapshots = ref.watch(insightProvider).snapshots;
+      if (snapshots.isEmpty) return null;
+      final earlier = earlierInsightView(
+        snapshots.last,
+        ref.watch(planProvider),
+        ref.watch(nowProvider),
+      );
+      return earlier == null ? null : (insight: earlier, isCurrent: false);
+    });
 
 /// Reconstructs [snapshot] as a live [Insight] against [plansState], or
 /// `null` if its application is no longer valid right now.
@@ -259,12 +309,23 @@ final currentInsightProvider = Provider<Insight?>((ref) {
 ///   application must refer to the *currently* permitted last-encountered
 ///   stage).
 ///
+/// Also withdrawn: a dismissed snapshot, and a pattern observation whose
+/// supporting evidence has aged out of the current window at [now]
+/// ([insightEvidenceIsCurrent]) — see [earlierInsightView] for how the
+/// latter stays readable.
+///
 /// A snapshot recorded under an old [InsightSnapshot.ruleVersion] is
 /// treated as no-longer-current (never displayed, never applied) — it
 /// remains readable, retained history, but only a fresh assessment under
 /// the current rules may become the displayed Insight again.
-Insight? liveInsightView(InsightSnapshot snapshot, PlansState plansState) {
+Insight? liveInsightView(
+  InsightSnapshot snapshot,
+  PlansState plansState,
+  DateTime now,
+) {
   if (snapshot.ruleVersion != insightRuleVersion) return null;
+  if (snapshot.dismissed) return null;
+  if (!insightEvidenceIsCurrent(snapshot.evidenceDateKeys, now)) return null;
 
   final progress = plansState.progress[snapshot.targetPlanId];
   if (progress == null) return null;
@@ -293,5 +354,35 @@ Insight? liveInsightView(InsightSnapshot snapshot, PlansState plansState) {
     evidenceDateKeys: snapshot.evidenceDateKeys,
     usefulnessNumerator: snapshot.usefulnessNumerator,
     usefulnessDenominator: snapshot.usefulnessDenominator,
+    observedAt: snapshot.generatedAt,
+  );
+}
+
+/// [snapshot] as a read-only *earlier* Insight: a pattern observation whose
+/// evidence has aged out of the current window at [now]. `null` for
+/// anything else (a current observation, a plain current-place fact, a
+/// dismissed or old-rule-version snapshot). Never actionable — for Free and
+/// Premium alike it stays readable, dated history.
+Insight? earlierInsightView(
+  InsightSnapshot snapshot,
+  PlansState plansState,
+  DateTime now,
+) {
+  if (snapshot.ruleVersion != insightRuleVersion) return null;
+  if (snapshot.dismissed || !snapshot.isPatternClaim) return null;
+  if (insightEvidenceIsCurrent(snapshot.evidenceDateKeys, now)) return null;
+  if (plansState.progress[snapshot.targetPlanId] == null) return null;
+
+  return Insight(
+    family: snapshot.family,
+    applicationType: snapshot.applicationType,
+    targetPlanId: snapshot.targetPlanId,
+    targetStageId: snapshot.targetStageId,
+    isPatternClaim: snapshot.isPatternClaim,
+    evidenceCount: snapshot.evidenceCount,
+    evidenceDateKeys: snapshot.evidenceDateKeys,
+    usefulnessNumerator: snapshot.usefulnessNumerator,
+    usefulnessDenominator: snapshot.usefulnessDenominator,
+    observedAt: snapshot.generatedAt,
   );
 }

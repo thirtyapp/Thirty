@@ -62,6 +62,7 @@ class InsightSnapshot {
     this.evidenceDateKeys = const [],
     this.usefulnessNumerator,
     this.usefulnessDenominator,
+    this.dismissed = false,
   });
 
   /// Builds the snapshot that records [insight] as it was assessed at
@@ -101,6 +102,46 @@ class InsightSnapshot {
   final int ruleVersion;
   final int templateVersion;
 
+  /// Whether the user dismissed this exact observation. A dismissed
+  /// snapshot is never displayed; it stays retained history, and only a
+  /// genuinely new observation (a new snapshot) is shown again. Optional,
+  /// backward-compatible metadata: snapshots stored before it existed read
+  /// as not dismissed.
+  final bool dismissed;
+
+  /// This snapshot with [dismissed] replaced — everything else, including
+  /// its identity and [generatedAt], unchanged.
+  InsightSnapshot copyWith({bool? dismissed}) {
+    return InsightSnapshot(
+      id: id,
+      family: family,
+      applicationType: applicationType,
+      targetPlanId: targetPlanId,
+      targetStageId: targetStageId,
+      isPatternClaim: isPatternClaim,
+      evidenceCount: evidenceCount,
+      evidenceDateKeys: evidenceDateKeys,
+      usefulnessNumerator: usefulnessNumerator,
+      usefulnessDenominator: usefulnessDenominator,
+      generatedAt: generatedAt,
+      ruleVersion: ruleVersion,
+      templateVersion: templateVersion,
+      dismissed: dismissed ?? this.dismissed,
+    );
+  }
+
+  /// Whether [insight] rests on exactly the same evidence dates. The same
+  /// observation can be re-found on newer dates as older records age out
+  /// and new ones arrive.
+  bool hasSameEvidenceDatesAs(Insight insight) {
+    final other = insight.evidenceDateKeys;
+    if (other.length != evidenceDateKeys.length) return false;
+    for (var i = 0; i < other.length; i++) {
+      if (other[i] != evidenceDateKeys[i]) return false;
+    }
+    return true;
+  }
+
   /// Whether this snapshot's [family]/[targetPlanId]/[targetStageId]/
   /// [evidenceCount]/[isPatternClaim] describe the same observation as
   /// [insight] — used to decide whether a new assessment is actually a
@@ -128,6 +169,7 @@ class InsightSnapshot {
     'generatedAt': generatedAt.toIso8601String(),
     'ruleVersion': ruleVersion,
     'templateVersion': templateVersion,
+    'dismissed': dismissed,
   };
 
   /// Parses one snapshot, or `null` if any required field is missing or
@@ -185,6 +227,7 @@ class InsightSnapshot {
       generatedAt: generatedAt,
       ruleVersion: ruleVersion,
       templateVersion: templateVersion,
+      dismissed: json['dismissed'] == true,
     );
   }
 }

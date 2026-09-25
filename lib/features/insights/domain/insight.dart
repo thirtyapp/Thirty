@@ -47,6 +47,7 @@ class Insight {
     this.evidenceDateKeys = const [],
     this.usefulnessNumerator,
     this.usefulnessDenominator,
+    this.observedAt,
   }) : assert(
          family != InsightFamily.deliberateRevisits || targetStageId != null,
          'A deliberate-revisits Insight must name the revisited stage.',
@@ -88,4 +89,9 @@ class Insight {
   /// Of [usefulnessDenominator], how many were reported useful (very or
   /// somewhat) — `null` exactly when [usefulnessDenominator] is `null`.
   final int? usefulnessNumerator;
+
+  /// When this observation was made — its retained snapshot's
+  /// `generatedAt`. `null` for a freshly evaluated, not-yet-retained
+  /// [Insight] (the engine's own output).
+  final DateTime? observedAt;
 }

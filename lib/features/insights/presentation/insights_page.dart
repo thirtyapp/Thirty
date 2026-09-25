@@ -66,7 +66,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final hasCurrentInsight = ref.watch(currentInsightProvider) != null;
+    // The current Insight, or a dated earlier one whose evidence aged out.
+    final hasCurrentInsight = ref.watch(displayedInsightProvider) != null;
     final isEntitled = ref.watch(premiumEntitlementProvider);
     final textTheme = Theme.of(context).textTheme;
 
