@@ -72,13 +72,21 @@ class EntitlementNotifier extends Notifier<EntitlementStatus> {
   /// call returned." By the time this method returns, [state] already
   /// reflects that confirmation; a caller never needs to guess when a
   /// background stream event will land.
+  ///
+  /// Success is only reported once that re-resolved state is actually
+  /// [EntitlementStatus.active]; otherwise the purchase is still
+  /// [PurchaseOutcome.confirming]. A [PurchaseOutcome.pending] payment
+  /// leaves [state] untouched — the entitlement arrives later through
+  /// [EntitlementGateway.statusUpdates], which [initialize] listens to.
   Future<PurchaseOutcome> purchaseMonthly() async {
     final gateway = ref.read(entitlementGatewayProvider);
     final outcome = await gateway.purchaseMonthly();
-    if (outcome == PurchaseOutcome.purchased) {
-      state = await gateway.initialize();
-    }
-    return outcome;
+    if (outcome != PurchaseOutcome.purchased) return outcome;
+
+    state = await gateway.initialize();
+    return state == EntitlementStatus.active
+        ? PurchaseOutcome.purchased
+        : PurchaseOutcome.confirming;
   }
 
   /// Restores previously purchased entitlements. Idempotent — a repeated

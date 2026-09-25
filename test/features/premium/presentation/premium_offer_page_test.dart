@@ -157,6 +157,54 @@ void main() {
     expect(container.read(premiumEntitlementProvider), isFalse);
   });
 
+  testWidgets('a pending Google Play payment is explained, never shown as '
+      'success or as an error', (tester) async {
+    final gateway = _FakeEntitlementGateway()
+      ..purchaseOutcome = PurchaseOutcome.pending;
+    final (widget, container) = await _wrap(gateway: gateway);
+    addTearDown(container.dispose);
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Subscribe'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Your payment is pending with Google Play. Premium unlocks when it '
+        'completes.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('You now have Premium.'), findsNothing);
+    expect(find.textContaining('wrong'), findsNothing);
+    expect(container.read(premiumEntitlementProvider), isFalse);
+  });
+
+  testWidgets('a purchase whose entitlement is not yet active is shown as '
+      'confirming, never as success', (tester) async {
+    final gateway = _FakeEntitlementGateway()
+      ..purchaseOutcome = PurchaseOutcome.purchased
+      ..statusAfterPurchase = EntitlementStatus.inactive;
+    final (widget, container) = await _wrap(gateway: gateway);
+    addTearDown(container.dispose);
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Subscribe'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Your purchase is being confirmed. Premium unlocks as soon as '
+        'Google Play confirms it.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('You now have Premium.'), findsNothing);
+    expect(container.read(premiumEntitlementProvider), isFalse);
+  });
+
   testWidgets('a provider error is reported without implying success', (
     tester,
   ) async {

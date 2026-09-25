@@ -54,6 +54,12 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
           'Premium isn’t available to purchase right now.',
         PurchaseOutcome.error =>
           'Something went wrong. Please try again in a moment.',
+        PurchaseOutcome.pending =>
+          'Your payment is pending with Google Play. Premium unlocks when '
+              'it completes.',
+        PurchaseOutcome.confirming =>
+          'Your purchase is being confirmed. Premium unlocks as soon as '
+              'Google Play confirms it.',
       };
     });
   }

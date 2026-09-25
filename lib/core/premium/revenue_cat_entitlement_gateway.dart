@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:purchases_flutter/purchases_flutter.dart';
 
@@ -96,17 +97,36 @@ class RevenueCatEntitlementGateway implements EntitlementGateway {
       // Authoritative confirmation comes from the CustomerInfo RevenueCat
       // returns with the purchase result, not from the call merely
       // returning (frozen architecture §11).
-      _statusController.add(_statusFor(result.customerInfo));
-      return PurchaseOutcome.purchased;
+      final status = _statusFor(result.customerInfo);
+      _statusController.add(status);
+      return outcomeForPurchasedStatus(status);
     } on PlatformException catch (e) {
-      final code = PurchasesErrorHelper.getErrorCode(e);
-      return code == PurchasesErrorCode.purchaseCancelledError
-          ? PurchaseOutcome.userCancelled
-          : PurchaseOutcome.error;
+      return outcomeForPurchaseError(PurchasesErrorHelper.getErrorCode(e));
     } catch (_) {
       return PurchaseOutcome.error;
     }
   }
+
+  /// A completed store purchase only counts as [PurchaseOutcome.purchased]
+  /// once the entitlement it returned is active; otherwise it is still
+  /// [PurchaseOutcome.confirming].
+  @visibleForTesting
+  static PurchaseOutcome outcomeForPurchasedStatus(EntitlementStatus status) =>
+      status == EntitlementStatus.active
+      ? PurchaseOutcome.purchased
+      : PurchaseOutcome.confirming;
+
+  /// Maps a RevenueCat purchase error: a closed sheet is an ordinary
+  /// cancellation, a pending Google Play payment is [PurchaseOutcome.pending]
+  /// (never an error), anything else is [PurchaseOutcome.error].
+  @visibleForTesting
+  static PurchaseOutcome outcomeForPurchaseError(PurchasesErrorCode code) =>
+      switch (code) {
+        PurchasesErrorCode.purchaseCancelledError =>
+          PurchaseOutcome.userCancelled,
+        PurchasesErrorCode.paymentPendingError => PurchaseOutcome.pending,
+        _ => PurchaseOutcome.error,
+      };
 
   @override
   Future<RestoreOutcome> restore() async {

@@ -69,6 +69,18 @@ enum PurchaseOutcome {
 
   /// The store/provider reported an error other than user cancellation.
   error,
+
+  /// The store accepted the payment but it is still pending (e.g. a
+  /// Google Play "slow" payment method). Nothing is unlocked yet; the
+  /// entitlement arrives later through `EntitlementGateway.statusUpdates`.
+  /// Not an error, and never presented as one.
+  pending,
+
+  /// The store reported the purchase as complete, but the entitlement is
+  /// not (yet) confirmed active. Success is never claimed until it is —
+  /// frozen architecture §11: purchase success means authoritative
+  /// entitlement confirmation.
+  confirming,
 }
 
 /// The result of one restore attempt —
