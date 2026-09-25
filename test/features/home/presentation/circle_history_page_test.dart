@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
+import 'package:thirty/core/theme/app_colors.dart';
 import 'package:thirty/core/theme/app_theme.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
@@ -163,6 +164,42 @@ void main() {
 
       expect(journal.readAll(), isEmpty);
       expect(find.textContaining('Nothing recorded yet'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Delete permanently uses the AA errorText role, matching the Close '
+    'Circle destructive action (A5)',
+    (tester) async {
+      final (widget, prefs) = await _wrap();
+      await CircleJournalRepository(prefs).recordShown(
+        circleId: '2026-08-02',
+        localDate: '2026-08-02',
+        direction: Intention.moreEnergy,
+        activityId: ActivityId.thirtyMinuteWalk,
+        shownAt: DateTime(2026, 8, 2, 9),
+      );
+
+      await tester.pumpWidget(widget);
+      await tester.tap(find.text('Delete all'));
+      await tester.pumpAndSettle();
+
+      final deleteAction = tester.widget<TextButton>(
+        find.widgetWithText(TextButton, 'Delete permanently'),
+      );
+      expect(
+        deleteAction.style!.foregroundColor!.resolve({}),
+        AppColors.light.errorText,
+      );
+      // The safe choice stays in the default, non-destructive color.
+      expect(
+        tester
+            .widget<TextButton>(
+              find.widgetWithText(TextButton, 'Keep my history'),
+            )
+            .style,
+        isNull,
+      );
     },
   );
 

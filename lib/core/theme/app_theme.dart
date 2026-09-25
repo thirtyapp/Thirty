@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
+import 'app_radius.dart';
 import 'app_typography.dart';
 
 /// Builds THIRTY's first-class light and dark [ThemeData]. Dark mode is a
@@ -87,6 +88,11 @@ class AppTheme {
       // Material 3's Divider ignores ThemeData.dividerColor and reads
       // outlineVariant by default; set it explicitly.
       dividerTheme: DividerThemeData(color: colors.divider, thickness: 1),
+      // Dialogs share the 24pt card/nav radius (Phase A5) instead of
+      // Material 3's 28pt; typography, spacing and actions are untouched.
+      dialogTheme: const DialogThemeData(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.xl),
+      ),
       timePickerTheme: _timePickerTheme(colors, onPrimary),
       extensions: [colors],
     );
@@ -113,6 +119,9 @@ class AppTheme {
         states.contains(WidgetState.selected) ? selected : other;
     return TimePickerThemeData(
       backgroundColor: colors.surface,
+      // The picker's own dialog shape ignores DialogThemeData; pin it to
+      // the same 24pt radius as every other dialog (Phase A5).
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.xl),
       hourMinuteColor: WidgetStateColor.resolveWith(
         (states) => selectedOr(states, colors.primary, colors.surfaceMuted),
       ),

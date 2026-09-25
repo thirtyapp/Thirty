@@ -68,6 +68,15 @@ void main() {
 
     // ThirtyCard builds an outer shadow Container and an inner content
     // Container, in that order.
+    Container innerContainer(WidgetTester tester) => tester.widget<Container>(
+      find
+          .descendant(
+            of: find.byType(ThirtyCard),
+            matching: find.byType(Container),
+          )
+          .at(1),
+    );
+
     BoxDecoration decorationAt(WidgetTester tester, int index) {
       final container = tester.widget<Container>(
         find
@@ -86,11 +95,11 @@ void main() {
       await pumpCard(tester, AppTheme.light);
 
       final outer = decorationAt(tester, 0);
-      final inner = decorationAt(tester, 1);
       expect(outer.borderRadius, AppRadius.xl);
       expect(outer.boxShadow, AppShadows.light);
       expect(AppShadows.light, hasLength(2));
-      expect(inner.border, isNull);
+      expect(outer.border, isNull);
+      expect(innerContainer(tester).decoration, isNull);
       expect(
         tester
             .widget<ClipRRect>(
@@ -104,16 +113,27 @@ void main() {
       );
     });
 
-    testWidgets('dark: radius 24, dark shadow, hairline border kept', (
+    testWidgets('dark: radius 24, dark shadow, borderless like light (A5)', (
       tester,
     ) async {
       await pumpCard(tester, AppTheme.dark);
 
       final outer = decorationAt(tester, 0);
-      final inner = decorationAt(tester, 1);
       expect(outer.borderRadius, AppRadius.xl);
       expect(outer.boxShadow, AppShadows.dark);
-      expect(inner.border, Border.all(color: AppColors.dark.border));
+      expect(outer.border, isNull);
+      expect(innerContainer(tester).decoration, isNull);
+      expect(
+        tester
+            .widget<Material>(
+              find.descendant(
+                of: find.byType(ThirtyCard),
+                matching: find.byType(Material),
+              ),
+            )
+            .color,
+        AppColors.dark.surface,
+      );
     });
 
     test('shadows stay short so history cards 8pt apart do not bleed', () {

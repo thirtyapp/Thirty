@@ -65,6 +65,7 @@ class JournalDataControls extends ConsumerWidget {
     CircleJournalRepository journal,
     WidgetRef ref,
   ) async {
+    final colors = Theme.of(context).extension<AppColors>()!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -81,6 +82,7 @@ class JournalDataControls extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(foregroundColor: colors.errorText),
             child: const Text('Delete permanently'),
           ),
         ],

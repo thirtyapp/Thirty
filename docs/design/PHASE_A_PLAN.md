@@ -1,12 +1,13 @@
 # THIRTY Visual Pass — Phase A Plan (Foundations)
 
-**Status:** Approved (founder decisions D1–D4 recorded below).
+**Status:** Complete and ratified (founder decisions D1–D4 recorded below).
 - **A1 complete** — commit `e810188`
 - **A2 complete** — commit `77dfa1f`
 - **Record-detail accessibility fix complete** — commit `750df10` (separate bounded change, not part of A2)
 - **A3 complete** — commit `a425d24` (see the A3 scope refinement below)
 - **A4 complete** — commit `38b00b7` (see the A4 scope refinement below)
-- **A5 in inventory/review** (no code changes yet)
+- **A5 complete** — dark palette ratified (D4); see the A5 scope refinement below
+- **Phase A complete and ratified.**
 **Baseline:** `step5-billing-integration` @ `372dd30` (1.7.0+14).
 **Parent document:** THIRTY Visual Gap Analysis, §6 Phase A.
 **Scope:** design tokens, shared core widgets, and app-wide component themes only. No screen recomposition, no IA or Circle-lifecycle change — Home composition is Phase B.
@@ -94,9 +95,19 @@ Each step is small, independently reviewable, and gated on `flutter analyze` + f
   - **Phase B (Home composition):** the started-state Home ring reads faint with the new `ringTrack` / `ringProgress` at low progress — resolve with the hero/ring composition, not by retuning the tokens in Phase A.
 
 ### A5 · Dark parity + ratification QA — `app_colors.dart`, `app_shadows.dart`, `DESIGN_SYSTEM.md` §3
-- Mirror all new tokens; a raised-surface step so cards/nav separate by tone rather than invisible shadow.
+- Mirror all new tokens; ~~a raised-surface step so cards/nav separate by tone rather than invisible shadow~~ (dropped — see the scope refinement below).
 - Bounded light/dark QA across showcase + all destinations; contrast pass. On pass, `DESIGN_SYSTEM.md` §3 moves from "proposal" to ratified (D4).
 - **Review item from A3:** in dark mode `ThirtyCard` keeps a hairline border while `FloatingNavSurface` has none (separation by tone only). Decide one consistent dark-surface separation rule — likely together with the raised-surface step. Also revisit the time-picker dial, which reads `surfaceContainerHighest` (Mist Sage, `#525A49` in dark) and became heavier than before.
+
+**Scope refinement (deliberate, approved after the A5 inventory).**
+- **One dark-surface separation rule: borderless.** `ThirtyCard` drops its dark-mode hairline border, so cards and `FloatingNavSurface` both separate by the `background` → `surface` tonal step (1.16:1) in dark and by shadow in light. Radius 24, padding and both shadow sets are unchanged (only the `AppShadows.dark` comment was updated).
+- **No raised-dark-surface token.** The proposed raised step is removed from the plan; the existing dark palette is ratified as-is in `DESIGN_SYSTEM.md` §3, with §4.4 documenting cards as borderless in both modes. Ratified after a dark-mode visual review on the Pixel 7 emulator: borderless cards separate clearly from the page on Plans and You, the floating nav on every destination, and the 24pt dialog reads correctly with a consistent `errorText` destructive action. A physical OLED phone check is kept as a **pre-release sanity check**, not a Phase A blocker.
+- **Destructive-action consistency:** the journal "Delete permanently" action uses `errorText`, matching A4's Close Circle action (color only, no layout).
+- **Dialog shape parity:** `DialogThemeData` and `TimePickerThemeData` shape set to `AppRadius.xl` (24pt, down from Material's 28pt) to match cards and nav. Dialog typography, spacing and action layout are unchanged.
+- **Time-picker dial:** already reads `surfaceMuted` via the A4 time-picker theme (not `surfaceContainerHighest`), so the review item is closed with no further change.
+- **Deferred:**
+  - **Phase B:** Home hero / ring / composition.
+  - **Phase C:** floating / rounded SnackBar; AppBar scrolled-under separation; You at 200% text (System segment, Upgrade to Premium); Plans at 200% text (floating Premium button overlap).
 
 ## 3b. Recorded for Phase C (not Phase A)
 

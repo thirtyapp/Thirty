@@ -17,7 +17,9 @@ class AppShadows {
   ];
 
   // Shadows barely read on a near-black page, so dark-mode separation is
-  // carried mainly by ThirtyCard's hairline border; these only add depth.
+  // carried mainly by the tonal step from `background` to `surface` (cards
+  // and the floating nav are borderless in both modes); these only add
+  // depth.
   static const List<BoxShadow> dark = [
     BoxShadow(color: Color(0x33000000), blurRadius: 16, offset: Offset(0, 4)),
     BoxShadow(color: Color(0x1A000000), blurRadius: 2, offset: Offset(0, 1)),
