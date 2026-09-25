@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +10,7 @@ import '../../../../core/widgets/thirty_progress_circle.dart';
 import '../../../../core/world_rendering/quiet_trail_hero_asset_view.dart';
 import '../../application/first_breath_provider.dart';
 import '../../application/recommendation_provider.dart';
+import 'home_circle_metrics.dart';
 
 /// THIRTY's first true emotional experience: the Circle Hero.
 ///
@@ -129,45 +128,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         400, // _buttonPhase
   );
 
-  // The Circle is sized off the available width, not a fixed constant, so
-  // it stays the screen's dominant object on both small and large phones.
-  // 88% is an intentionally oversized, near-edge-to-edge scale — this is
-  // the product's hero object, not a widget sized to sit comfortably in a
-  // grid. _circleMaxSize is a ceiling for large screens; the safe-width
-  // check in build() is what actually guarantees the Circle is never
-  // clipped, by capping it below the page's horizontal margins too.
-  static const _circleWidthFraction = 0.88;
-  static const _circleMinSize = 260.0;
-  static const _circleMaxSize = 440.0;
-
-  // The one source of truth for the Home Circle's ring thickness — passed
-  // explicitly to [ThirtyProgressCircle] below rather than left to its
-  // default, because the illustration's and wordmark's inset sizes
-  // (build()) are both derived from this same value. Relying on the
-  // default in one place while duplicating the number elsewhere would let
-  // them silently drift apart.
-  static const _circleStrokeWidth = 10.0;
-
-  // The wordmark's own width, as a fraction of the Circle's usable
-  // interior (`circleSize - strokeWidth * 2`) — reproduces the visually
-  // validated scale matrix from `docs/brand/THIRTY_WORDMARK.md` §6 (236px
-  // interior → ~138px wordmark, 416px interior → ~243px wordmark).
-  // [ThirtyWordmarkView] guards its own aspect ratio internally, so only
-  // the width needs to be given here.
-  static const _wordmarkWidthFraction = 0.585;
-
-  // The text column beneath the Circle reads as its caption, not as an
-  // independent block — so its max width is derived from the Circle's own
-  // size rather than from the screen, and stays narrower than the Circle.
-  static const _textColumnWidthFraction = 0.85;
-
-  // The CTA is a bound compositional choice for this one screen, not a
-  // property of ThirtyButton itself: deliberately narrower than the text
-  // column above it (intermediate/intentional width) — wider than
-  // content-sized so it reads as the recommendation's compositional
-  // close, but clearly short of the column's own width so it never
-  // becomes a banner competing with the Circle.
-  static const _buttonWidthFraction = 0.70;
+  // Circle sizing, stroke width and outer padding live in
+  // HomeCircleMetrics (home_circle_metrics.dart), shared with
+  // circle_ready_prompt.dart so the Circle never jumps across the daily
+  // flow.
 
   late final AnimationController _controller;
   late final Animation<double> _wordmarkOpacity;
@@ -556,27 +520,18 @@ class _CircleHeroState extends ConsumerState<CircleHero>
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // The Circle must never be clipped: cap it below the width that's
-        // actually left after the page's horizontal margins, regardless of
-        // how large `_circleMaxSize` allows it to be on a wide screen.
-        final safeMaxSize = math.max(
-          _circleMinSize,
-          math.min(_circleMaxSize, constraints.maxWidth - AppSpacing.page * 2),
-        );
-        final circleSize = (constraints.maxWidth * _circleWidthFraction)
-            .clamp(_circleMinSize, safeMaxSize)
-            .toDouble();
-        final textMaxWidth = circleSize * _textColumnWidthFraction;
-        final buttonWidth = textMaxWidth * _buttonWidthFraction;
+        final metrics = HomeCircleMetrics.forWidth(constraints.maxWidth);
+        final circleSize = metrics.circleSize;
+        final textMaxWidth = metrics.textMaxWidth;
+        final buttonWidth = metrics.buttonWidth;
         // Inset so the illustration's circular edge sits at the ring's
         // inner edge, never under the stroke itself — the ring keeps
         // painting after the illustration (ThirtyProgressCircle's Stack
         // order is unchanged), so staying inside its inner boundary is
         // what keeps the two from visually overlapping. The wordmark
         // shares this same interior region, never the Circle's outer size.
-        final circleInteriorSize = circleSize - (_circleStrokeWidth * 2);
-        final illustrationSize = circleInteriorSize;
-        final wordmarkWidth = circleInteriorSize * _wordmarkWidthFraction;
+        final illustrationSize = metrics.interiorSize;
+        final wordmarkWidth = metrics.wordmarkWidth;
         // The Circle's own lifecycle color (Premium Pass 02C Experiment 5 —
         // "Vanishing First Breath + Clean READY": device review rejected
         // Experiment 4 Revised's neutral ghost track as reading like a UI
@@ -643,77 +598,77 @@ class _CircleHeroState extends ConsumerState<CircleHero>
               // HomePage) already keeps the Circle clear of the status bar
               // — and any leftover space on a short screen lands below the
               // button instead of being split above the Circle too.
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.page,
-                AppSpacing.m,
-                AppSpacing.page,
-                AppSpacing.xl,
-              ),
+              padding: HomeCircleMetrics.padding,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  AnimatedBuilder(
-                    // Merged, not just _circleProgress: _circleProgress
-                    // itself only ever ticks once (during First Breath's
-                    // opening) and is permanently settled afterward, but
-                    // this builder must still rebuild on every breathing
-                    // tick for as long as today's Circle is started.
-                    animation: Listenable.merge([_circleProgress, _breathAlpha]),
-                    builder: (context, child) {
-                      return ThirtyProgressCircle(
-                        progress: _circleProgress.value,
-                        size: circleSize,
-                        strokeWidth: _circleStrokeWidth,
-                        // The Circle "breathes" — an ambient, wholly
-                        // secondary alpha modulation of this already-
-                        // visible ring, never the ring's progress/geometry
-                        // — while today's Circle is started (Playbook's
-                        // Ambient Motion category: "exists to create life
-                        // rather than attract attention"). See
-                        // _syncBreathing for exactly when this moves.
-                        trackColor: baseTrackColor.withValues(
-                          alpha: baseTrackColor.a * _breathAlpha.value,
-                        ),
-                        // See circleProgressColor's own doc comment: sage,
-                        // painting the closed-then-vanishing First Breath
-                        // Circle — only ever visible during First Breath's
-                        // own opening sweep.
-                        progressColor: circleProgressColor,
-                        semanticLabel: "Today's Circle",
-                        // Today's Circle is always announced by its
-                        // lifecycle meaning here, never as a percentage —
-                        // an empty Circle is potential, never a shortfall
-                        // (Playbook Ch.2 §3). "0%" would frame it as the
-                        // opposite of what it means, in any of the three
-                        // states above.
-                        semanticValue: circleSemanticValue,
-                        child: child,
-                      );
-                    },
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // The wordmark is decorative only
-                        // (ThirtyWordmarkView already wraps itself in
-                        // ExcludeSemantics) — the Circle above is the
-                        // ritual's only semantics owner.
-                        FadeTransition(
-                          opacity: _wordmarkOpacity,
-                          child: SizedBox(
-                            width: wordmarkWidth,
-                            child: const ThirtyWordmarkView(),
+                  // The static halo sits outside the AnimatedBuilder: it
+                  // has no part in First Breath's timeline or breathing.
+                  HomeCircleHalo(
+                    size: circleSize,
+                    child: AnimatedBuilder(
+                      // Merged, not just _circleProgress: _circleProgress
+                      // itself only ever ticks once (during First Breath's
+                      // opening) and is permanently settled afterward, but
+                      // this builder must still rebuild on every breathing
+                      // tick for as long as today's Circle is started.
+                      animation: Listenable.merge([_circleProgress, _breathAlpha]),
+                      builder: (context, child) {
+                        return ThirtyProgressCircle(
+                          progress: _circleProgress.value,
+                          size: circleSize,
+                          strokeWidth: HomeCircleMetrics.strokeWidth,
+                          // The Circle "breathes" — an ambient, wholly
+                          // secondary alpha modulation of this already-
+                          // visible ring, never the ring's progress/geometry
+                          // — while today's Circle is started (Playbook's
+                          // Ambient Motion category: "exists to create life
+                          // rather than attract attention"). See
+                          // _syncBreathing for exactly when this moves.
+                          trackColor: baseTrackColor.withValues(
+                            alpha: baseTrackColor.a * _breathAlpha.value,
                           ),
-                        ),
-                        FadeTransition(
-                          opacity: _illustrationOpacity,
-                          child: ExcludeSemantics(
-                            child: _worldIllustrationFor(
-                              recommendation.category,
-                              illustrationSize,
+                          // See circleProgressColor's own doc comment: sage,
+                          // painting the closed-then-vanishing First Breath
+                          // Circle — only ever visible during First Breath's
+                          // own opening sweep.
+                          progressColor: circleProgressColor,
+                          semanticLabel: "Today's Circle",
+                          // Today's Circle is always announced by its
+                          // lifecycle meaning here, never as a percentage —
+                          // an empty Circle is potential, never a shortfall
+                          // (Playbook Ch.2 §3). "0%" would frame it as the
+                          // opposite of what it means, in any of the three
+                          // states above.
+                          semanticValue: circleSemanticValue,
+                          child: child,
+                        );
+                      },
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // The wordmark is decorative only
+                          // (ThirtyWordmarkView already wraps itself in
+                          // ExcludeSemantics) — the Circle above is the
+                          // ritual's only semantics owner.
+                          FadeTransition(
+                            opacity: _wordmarkOpacity,
+                            child: SizedBox(
+                              width: wordmarkWidth,
+                              child: const ThirtyWordmarkView(),
                             ),
                           ),
-                        ),
-                      ],
+                          FadeTransition(
+                            opacity: _illustrationOpacity,
+                            child: ExcludeSemantics(
+                              child: _worldIllustrationFor(
+                                recommendation.category,
+                                illustrationSize,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.l),
@@ -838,6 +793,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                               ),
                               child: ThirtyButton(
                                 label: ctaLabel,
+                                size: ThirtyButtonSize.hero,
                                 onPressed: onCtaPressed,
                               ),
                             ),

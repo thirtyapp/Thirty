@@ -24,4 +24,19 @@ class AppShadows {
     BoxShadow(color: Color(0x33000000), blurRadius: 16, offset: Offset(0, 4)),
     BoxShadow(color: Color(0x1A000000), blurRadius: 2, offset: Offset(0, 1)),
   ];
+
+  // The Home Circle's halo (Phase B1, consumed by `HomeCircleHalo`): a
+  // wide, very soft lift for one large, isolated object — deliberately
+  // broader than the card shadows above, which must stay short because
+  // cards sit close together. Nothing sits within the halo's reach but the
+  // Circle's own caption, 24pt below.
+  static const List<BoxShadow> haloLight = [
+    BoxShadow(color: Color(0x12000000), blurRadius: 48, offset: Offset(0, 16)),
+    BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
+  ];
+
+  static const List<BoxShadow> haloDark = [
+    BoxShadow(color: Color(0x40000000), blurRadius: 48, offset: Offset(0, 16)),
+    BoxShadow(color: Color(0x26000000), blurRadius: 4, offset: Offset(0, 1)),
+  ];
 }

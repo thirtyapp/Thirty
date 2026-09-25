@@ -229,4 +229,41 @@ void main() {
       }
     }
   });
+
+  group('ThirtyButton — Phase B1 hero size', () {
+    testWidgets('hero is 56pt tall and still fully rounded', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          Center(
+            child: ThirtyButton(
+              label: 'Start Circle',
+              size: ThirtyButtonSize.hero,
+              onPressed: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.getSize(find.byType(ThirtyButton)).height, 56);
+      final material = tester.widget<Material>(
+        find
+            .descendant(
+              of: find.byType(ThirtyButton),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      expect(
+        (material.shape! as RoundedRectangleBorder).borderRadius,
+        AppRadius.pill,
+      );
+    });
+
+    test('regular (48pt) stays the default size', () {
+      expect(
+        ThirtyButton(label: 'x', onPressed: () {}).size,
+        ThirtyButtonSize.regular,
+      );
+    });
+  });
 }

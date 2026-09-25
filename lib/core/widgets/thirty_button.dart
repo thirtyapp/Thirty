@@ -5,6 +5,11 @@ import '../theme/design_tokens.dart';
 /// The two button styles THIRTY allows: one primary action, one secondary.
 enum ThirtyButtonVariant { primary, secondary }
 
+/// Button heights. [regular] (48pt) is every button's default; [hero]
+/// (56pt) is opt-in and reserved for a screen's one main CTA — in Phase B,
+/// only Home's lifecycle CTA.
+enum ThirtyButtonSize { regular, hero }
+
 /// THIRTY's single button component, covering both variants and the
 /// enabled, disabled and loading states.
 class ThirtyButton extends StatelessWidget {
@@ -14,6 +19,7 @@ class ThirtyButton extends StatelessWidget {
     this.variant = ThirtyButtonVariant.primary,
     this.isLoading = false,
     this.icon,
+    this.size = ThirtyButtonSize.regular,
     super.key,
   });
 
@@ -24,6 +30,7 @@ class ThirtyButton extends StatelessWidget {
   final ThirtyButtonVariant variant;
   final bool isLoading;
   final IconData? icon;
+  final ThirtyButtonSize size;
 
   bool get _isEnabled => onPressed != null && !isLoading;
 
@@ -89,12 +96,14 @@ class ThirtyButton extends StatelessWidget {
       onTap: _isEnabled ? onPressed : null,
       child: ExcludeSemantics(
         child: SizedBox(
-          height: 48,
+          height: switch (size) {
+            ThirtyButtonSize.regular => 48,
+            ThirtyButtonSize.hero => 56,
+          },
           child: Material(
             color: backgroundColor,
-            // Fully rounded (founder decision D2, Phase A3). Height stays
-            // 48 for every button; a larger hero size is a Phase B
-            // composition decision, not a foundation default.
+            // Fully rounded (founder decision D2, Phase A3) at either
+            // height.
             shape: RoundedRectangleBorder(
               borderRadius: AppRadius.pill,
               side: borderSide,

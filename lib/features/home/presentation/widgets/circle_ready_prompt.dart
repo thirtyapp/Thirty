@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/branding/thirty_wordmark_view.dart';
@@ -7,6 +5,7 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_progress_circle.dart';
 import 'daily_intention_prompt.dart';
+import 'home_circle_metrics.dart';
 
 /// The Circle-first Home state shown before today's direction has been
 /// chosen — Golden Home Batch.
@@ -31,14 +30,10 @@ import 'daily_intention_prompt.dart';
 /// versus the existing [DailyIntentionPrompt] question — cross-fades via
 /// [AnimatedSwitcher]. The Circle itself is never inside that switcher's
 /// subtree, so it is never rebuilt, removed, or reinserted by this
-/// transition; both the Circle's `ThirtyProgressCircle` sizing (fractions
-/// below) and this shell's own outer padding
-/// (`EdgeInsets.fromLTRB(AppSpacing.page, AppSpacing.m, AppSpacing.page,
-/// AppSpacing.xl)`) are copied verbatim from `circle_hero.dart`, so the
+/// transition; both the Circle's sizing and this shell's own outer padding
+/// come from [HomeCircleMetrics], shared with `circle_hero.dart`, so the
 /// Circle also does not visibly move or resize when this whole composition
-/// later gives way to The First Breath once `CircleHero` mounts — the two
-/// are deliberately kept in visual lockstep even though they're separate
-/// widgets with no shared base class.
+/// later gives way to The First Breath once `CircleHero` mounts.
 ///
 /// Tapping `Begin today's Circle` reveals the existing
 /// [DailyIntentionPrompt] — the same three fixed options, the same
@@ -57,16 +52,6 @@ class CircleReadyPrompt extends StatefulWidget {
 }
 
 class _CircleReadyPromptState extends State<CircleReadyPrompt> {
-  // Sizing fractions/constants copied verbatim from `circle_hero.dart`'s
-  // own — see this class's doc comment for why they must stay identical.
-  static const _circleWidthFraction = 0.88;
-  static const _circleMinSize = 260.0;
-  static const _circleMaxSize = 440.0;
-  static const _circleStrokeWidth = 10.0;
-  static const _wordmarkWidthFraction = 0.585;
-  static const _textColumnWidthFraction = 0.85;
-  static const _buttonWidthFraction = 0.70;
-
   bool _showDirections = false;
 
   void _beginTodaysCircle() {
@@ -80,25 +65,10 @@ class _CircleReadyPromptState extends State<CircleReadyPrompt> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final safeMaxSize = math.max(
-          _circleMinSize,
-          math.min(_circleMaxSize, constraints.maxWidth - AppSpacing.page * 2),
-        );
-        final circleSize = (constraints.maxWidth * _circleWidthFraction)
-            .clamp(_circleMinSize, safeMaxSize)
-            .toDouble();
-        final circleInteriorSize = circleSize - (_circleStrokeWidth * 2);
-        final wordmarkWidth = circleInteriorSize * _wordmarkWidthFraction;
-        final textMaxWidth = circleSize * _textColumnWidthFraction;
-        final buttonWidth = textMaxWidth * _buttonWidthFraction;
+        final metrics = HomeCircleMetrics.forWidth(constraints.maxWidth);
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.page,
-            AppSpacing.m,
-            AppSpacing.page,
-            AppSpacing.xl,
-          ),
+          padding: HomeCircleMetrics.padding,
           // SingleChildScrollView gives its child loose (not full-width)
           // horizontal constraints, so without this the Column below would
           // shrink-wrap to its widest child (the Circle) and sit flush at
@@ -122,22 +92,25 @@ class _CircleReadyPromptState extends State<CircleReadyPrompt> {
                 // progressColor; nothing is there to see behind it.
                 // Mounted once, outside the AnimatedSwitcher below — see
                 // this class's doc comment.
-                ThirtyProgressCircle(
-                  progress: 1.0,
-                  size: circleSize,
-                  strokeWidth: _circleStrokeWidth,
-                  trackColor: Colors.transparent,
-                  progressColor: colors.primary,
-                  semanticLabel: "Today's Circle",
-                  semanticValue: 'Not started yet.',
-                  child: SizedBox(
-                    width: wordmarkWidth,
-                    child: const ThirtyWordmarkView(),
+                HomeCircleHalo(
+                  size: metrics.circleSize,
+                  child: ThirtyProgressCircle(
+                    progress: 1.0,
+                    size: metrics.circleSize,
+                    strokeWidth: HomeCircleMetrics.strokeWidth,
+                    trackColor: Colors.transparent,
+                    progressColor: colors.primary,
+                    semanticLabel: "Today's Circle",
+                    semanticValue: 'Not started yet.',
+                    child: SizedBox(
+                      width: metrics.wordmarkWidth,
+                      child: const ThirtyWordmarkView(),
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.section),
                 ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: textMaxWidth),
+                  constraints: BoxConstraints(maxWidth: metrics.textMaxWidth),
                   child: AnimatedSwitcher(
                     duration: reducedMotion
                         ? Duration.zero
@@ -152,10 +125,14 @@ class _CircleReadyPromptState extends State<CircleReadyPrompt> {
                             key: const ValueKey('circleReady.cta'),
                             child: ConstrainedBox(
                               constraints: BoxConstraints(
-                                minWidth: buttonWidth,
+                                minWidth: metrics.buttonWidth,
                               ),
+                              // Presentation-only — no trailing arrow; the
+                              // arrow belongs to Start Circle, the actual
+                              // lifecycle transition (Phase B decision).
                               child: ThirtyButton(
                                 label: "Begin today's Circle",
+                                size: ThirtyButtonSize.hero,
                                 onPressed: _beginTodaysCircle,
                               ),
                             ),

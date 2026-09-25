@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/branding/thirty_wordmark_view.dart';
 import '../../plans/presentation/widgets/plan_session_panel.dart';
 import '../../premium/presentation/widgets/premium_offer_invitation_card.dart';
 import '../../reminder/presentation/widgets/reminder_invitation_card.dart';
+import '../application/first_breath_provider.dart';
 import '../application/recommendation_provider.dart';
 import 'widgets/action_report_prompt.dart';
 import 'widgets/circle_hero.dart';
@@ -45,13 +47,46 @@ import 'widgets/circle_ready_prompt.dart';
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
+  // Roughly the footprint of the former "THIRTY" text title, so the header
+  // stays a quiet signature rather than a second hero.
+  static const _headerWordmarkWidth = 96.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasRecommendation =
         ref.watch(recommendationProvider).recommendation != null;
+    // Phase B1 — the header wordmark never duplicates the in-Circle one.
+    // It stays hidden in Ready (the Circle holds the wordmark) and
+    // throughout The First Breath (whose own wordmark beat plays inside the
+    // Circle), and appears only once the ritual has settled into the
+    // assigned Home state. `firstBreathProvider` turns false exactly then
+    // — on the ritual's completion, or at once when it was already played
+    // today or skipped for reduced motion — so this reads the ritual's
+    // outcome without touching its timeline.
+    final showHeaderWordmark =
+        hasRecommendation && !ref.watch(firstBreathProvider);
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('THIRTY')),
+      appBar: AppBar(
+        // Always laid out, only faded: the AppBar's height and the Circle's
+        // position never change when the wordmark appears.
+        title: AnimatedOpacity(
+          opacity: showHeaderWordmark ? 1 : 0,
+          duration: reducedMotion
+              ? Duration.zero
+              : const Duration(milliseconds: 400),
+          curve: Curves.easeOut,
+          child: Semantics(
+            header: true,
+            label: 'THIRTY',
+            child: const SizedBox(
+              width: _headerWordmarkWidth,
+              child: ThirtyWordmarkView(),
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: hasRecommendation
             ? const Column(
