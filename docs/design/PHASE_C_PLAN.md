@@ -3,7 +3,8 @@
 **Status:** In progress.
 - **Button large-text foundation** — commit `56e8601` (ThirtyButton: 48/56pt minimum height, up to two label lines, tighter side inset at ≥ 130% text)
 - **Reminder invitation actions** — commit `a43de44` (side by side when both labels fit, stacked when they would truncate; `ThirtyButton.labelFits`)
-- **C1 · You** — complete (see below; commit recorded in the next plan update)
+- **C1 · You** — complete, commit `3c3aa02` (see below)
+- **C2 · Premium offer page** — inventory / planning
 
 **Foundation:** Phase A and Phase B are complete and ratified (`PHASE_A_PLAN.md`, `PHASE_B_PLAN.md`).
 
