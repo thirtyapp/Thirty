@@ -259,6 +259,33 @@ void main() {
       );
     });
 
+    testWidgets('trailingIcon renders after the label and stays out of '
+        'semantics', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          Center(
+            child: ThirtyButton(
+              label: 'Start Circle',
+              size: ThirtyButtonSize.hero,
+              trailingIcon: Icons.arrow_forward_rounded,
+              onPressed: () {},
+            ),
+          ),
+        ),
+      );
+
+      final icon = find.byIcon(Icons.arrow_forward_rounded);
+      expect(icon, findsOneWidget);
+      expect(
+        tester.getCenter(icon).dx,
+        greaterThan(tester.getCenter(find.text('Start Circle')).dx),
+      );
+      expect(
+        tester.getSemantics(find.byType(ThirtyButton)).label,
+        'Start Circle',
+      );
+    });
+
     test('regular (48pt) stays the default size', () {
       expect(
         ThirtyButton(label: 'x', onPressed: () {}).size,

@@ -108,7 +108,7 @@ class _CircleReadyPromptState extends State<CircleReadyPrompt> {
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.section),
+                const SizedBox(height: HomeCircleMetrics.circleToContentGap),
                 ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: metrics.textMaxWidth),
                   child: AnimatedSwitcher(
@@ -123,9 +123,11 @@ class _CircleReadyPromptState extends State<CircleReadyPrompt> {
                           )
                         : Center(
                             key: const ValueKey('circleReady.cta'),
+                            // Phase B2: fills the bounded content column,
+                            // the same width as Circle Hero's CTA.
                             child: ConstrainedBox(
                               constraints: BoxConstraints(
-                                minWidth: metrics.buttonWidth,
+                                minWidth: metrics.textMaxWidth,
                               ),
                               // Presentation-only — no trailing arrow; the
                               // arrow belongs to Start Circle, the actual

@@ -1,8 +1,9 @@
 # THIRTY Visual Pass — Phase B Plan (Home composition)
 
 **Status:** Approved (founder decisions B-D1–B-D4 below).
-- **B1 implemented** (uncommitted; pending review)
-- B2, B3 not started
+- **B1 complete** — commit `d15a9e1`
+- **B2 complete** — see the B2 scope refinement below
+- B3 not started
 
 **Baseline:** `step5-billing-integration` after Phase A (A5 `6ea5fe3`, plan `09f2b0e`).
 **Foundation:** Phase A tokens and components (`docs/design/PHASE_A_PLAN.md`) are the ratified foundation.
@@ -45,6 +46,14 @@ No navigation, billing, Plans, Insights or You changes.
 - Started-ring 22% alpha re-check in context (B-D3).
 - New elements join existing First Breath phases only; no new controllers; total timeline unchanged.
 
+**B2 scope refinement (founder-frozen, implemented).**
+- **CTA width:** Begin / Start / Close fill the bounded content column (`textMaxWidth`, 85% of the Circle), never the screen; 56pt. `minWidth`, so a label that genuinely needs more room at large text grows instead of overflowing. The 70% `buttonWidth` metric is removed.
+- **Arrow:** `ThirtyButton.trailingIcon` (decorative; the label alone carries semantics). `Icons.arrow_forward_rounded` on Start Circle only; Begin and Close stay text-only. Start stays inside the reveal-gated `IgnorePointer`.
+- **Arrow placement (review correction):** the arrow is pinned to the button's trailing edge, with an equal empty slot (icon + gap, 28pt) reserved on the leading edge, so the label stays optically centered on the button and the Circle axis. Both slots are laid out, not overlaid: at 200% text the label ellipsizes inside its own space and never collides with the arrow. `IntrinsicWidth` keeps the trailing-icon button's sizing identical to every other button (content width, or the column width the Home CTA asks for).
+- **Text rhythm** (Home-local constants on `HomeCircleMetrics`, existing spacing tokens): Circle → content 32 (was 24 in Circle Hero; now equal to Ready's 32), eyebrow → hero line 8 (unchanged), hero line → activity 16 (was 4), activity → support 8 (unchanged), support → CTA 32 (unchanged). No global `heroGap`/`xxxl` token was needed.
+- **Circle** size/position unchanged; First Breath timeline unchanged (6500ms, pinned by test).
+- **Started-ring re-check (B-D3):** in context the 22% ring reads as a soft sage-grey band on the light halo disc and a quiet sage band in dark; the Close Circle CTA carries the state. Not a readability problem — alpha unchanged.
+
 ### B3 · Below-hero composition and hardening
 - `HomePage` becomes the single, **non-lazy** scroll owner (hero + reflection + Plan panel + invitations), so a card never shrinks the hero. Non-lazy is required: both invitation cards persist their "shown" flag from a post-frame callback during build.
 - QA matrix: 320×568 / 360×640 / 412×915 × 100% / 200% text × light / dark × every Home state.
@@ -57,5 +66,7 @@ No navigation, billing, Plans, Insights or You changes.
 ## 5. Tests protecting the lifecycle
 
 Existing (must stay green, assertions not weakened): `home_page_test` (incl. Ready → Circle Hero rect parity), `circle_ready_prompt_test`, `circle_hero_test`, `recommendation_provider_test`, `first_breath_provider_test`, `action_report_prompt_test`, `premium_offer_invitation_card_test`.
+
+Added in B2 (`home_page_b2_test`, `thirty_button_test`): Circle rect identical across Ready → Directions → assigned on one tap-driven `HomePage`; hero CTAs 56pt and exactly the content-column width (360 / 412pt); only the hero CTA is 56pt; Start alone has the arrow (decorative for semantics); Start label centered on the button and Circle axis with the arrow in the trailing slot; no label/arrow overlap at 320pt and 360pt at 200% text; Start inside the reveal-gated `IgnorePointer` and still the real Start transition; First Breath total 6500ms; text-rhythm gaps; no overflow at 320×568 and 360×640 at 200% text for Ready (+ Directions), assigned, started and closed.
 
 Added in B1 (`home_page_b1_test`, `thirty_button_test`): metrics values; halo rect = Circle rect in Ready and Circle Hero, light and dark; steady not-started track still transparent; 56pt only on the Home lifecycle CTA, direction choices 48pt, no icon on Begin; 56pt CTA still gated by the First Breath reveal; header hidden in Ready (incl. after Begin), hidden throughout First Breath, shown once settled / at once when already played / instantly under reduced motion; revealing the header never moves the Circle.

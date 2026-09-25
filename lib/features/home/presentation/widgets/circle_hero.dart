@@ -471,6 +471,9 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     // than a disabled, ambiguous dead end (Batch 1, Phase C).
     final String? ctaLabel;
     final VoidCallback? onCtaPressed;
+    // Phase B-D4: only Start Circle — the actual lifecycle transition —
+    // carries a forward arrow; Close Circle is not a step forward.
+    final IconData? ctaTrailingIcon;
     // The Circle's own semantics.value shares this same switch — one
     // status maps to exactly one CTA state *and* one announced meaning,
     // so both are decided in the same place rather than duplicating the
@@ -479,6 +482,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     switch (recommendationState.status) {
       case RecommendationStatus.notStarted:
         ctaLabel = 'Start Circle';
+        ctaTrailingIcon = Icons.arrow_forward_rounded;
         circleSemanticValue = 'Ready to begin.';
         // A single, soft haptic confirms the one moment THIRTY's product
         // principles reserve it for — "a decision has been made"
@@ -497,6 +501,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         };
       case RecommendationStatus.started:
         ctaLabel = 'Close Circle';
+        ctaTrailingIcon = null;
         circleSemanticValue = 'Circle in progress.';
         // Batch 1, Phase B: no longer closes directly on tap — see
         // _confirmCloseCircle's own doc comment for the confirmation this
@@ -504,6 +509,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         onCtaPressed = () => _confirmCloseCircle(context);
       case RecommendationStatus.closed:
         ctaLabel = null;
+        ctaTrailingIcon = null;
         circleSemanticValue = 'Circle closed.';
         onCtaPressed = null;
     }
@@ -523,7 +529,6 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         final metrics = HomeCircleMetrics.forWidth(constraints.maxWidth);
         final circleSize = metrics.circleSize;
         final textMaxWidth = metrics.textMaxWidth;
-        final buttonWidth = metrics.buttonWidth;
         // Inset so the illustration's circular edge sits at the ring's
         // inner edge, never under the stroke itself — the ring keeps
         // painting after the illustration (ThirtyProgressCircle's Stack
@@ -671,7 +676,9 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.l),
+                  const SizedBox(
+                    height: HomeCircleMetrics.circleToContentGap,
+                  ),
                   // The heading and the recommendation share one readable
                   // column beneath the Circle — capped narrower than the
                   // Circle itself so the activity title and description
@@ -689,7 +696,9 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.s),
+                        const SizedBox(
+                          height: HomeCircleMetrics.eyebrowToHeroGap,
+                        ),
                         // Intent fades in as its own beat; activity and its
                         // explanation are one semantic group and always
                         // fade in together under a single animation.
@@ -701,7 +710,9 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xs),
+                        const SizedBox(
+                          height: HomeCircleMetrics.heroToActivityGap,
+                        ),
                         FadeTransition(
                           opacity: _activityWhyOpacity,
                           child: Column(
@@ -712,7 +723,9 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                                 style: textTheme.titleMedium,
                                 textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: AppSpacing.s),
+                              const SizedBox(
+                                height: HomeCircleMetrics.activityToSupportGap,
+                              ),
                               Text(
                                 recommendation.why,
                                 style: textTheme.bodyMedium?.copyWith(
@@ -726,7 +739,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.section),
+                  const SizedBox(height: HomeCircleMetrics.contentToCtaGap),
                   // FadeTransition alone only controls painting and
                   // semantics inclusion — it never gates hit-testing, so
                   // without this wrapper the button could already be
@@ -780,20 +793,19 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                                 ],
                               ),
                             )
-                          // minWidth, not a fixed width: at the smallest
-                          // screens the intentional 0.70 width is narrower
-                          // than "Start Circle"/"Close Circle" need, which
-                          // overflows under a fixed SizedBox — minWidth
-                          // keeps the intentional width whenever content
-                          // fits it, and only yields to the label when it
-                          // doesn't.
+                          // Phase B2: fills the bounded content column
+                          // (never the screen). minWidth, not a fixed
+                          // width, so a label that genuinely needs more
+                          // room (large text) can still grow rather than
+                          // overflow.
                           : ConstrainedBox(
                               constraints: BoxConstraints(
-                                minWidth: buttonWidth,
+                                minWidth: textMaxWidth,
                               ),
                               child: ThirtyButton(
                                 label: ctaLabel,
                                 size: ThirtyButtonSize.hero,
+                                trailingIcon: ctaTrailingIcon,
                                 onPressed: onCtaPressed,
                               ),
                             ),

@@ -14,7 +14,6 @@ class HomeCircleMetrics {
   const HomeCircleMetrics._({
     required this.circleSize,
     required this.textMaxWidth,
-    required this.buttonWidth,
   });
 
   /// Derives every size from the width actually available to the Home
@@ -30,11 +29,9 @@ class HomeCircleMetrics {
     final circleSize = (maxWidth * _circleWidthFraction)
         .clamp(_circleMinSize, safeMaxSize)
         .toDouble();
-    final textMaxWidth = circleSize * _textColumnWidthFraction;
     return HomeCircleMetrics._(
       circleSize: circleSize,
-      textMaxWidth: textMaxWidth,
-      buttonWidth: textMaxWidth * _buttonWidthFraction,
+      textMaxWidth: circleSize * _textColumnWidthFraction,
     );
   }
 
@@ -57,13 +54,29 @@ class HomeCircleMetrics {
   // The text column beneath the Circle reads as its caption, not as an
   // independent block — so its max width is derived from the Circle's own
   // size rather than from the screen, and stays narrower than the Circle.
+  // Since Phase B2 the hero CTA fills this same column (never the screen).
   static const _textColumnWidthFraction = 0.85;
 
-  // The CTA is deliberately narrower than the text column above it — wide
-  // enough to read as the recommendation's compositional close, clearly
-  // short of the column so it never becomes a banner competing with the
-  // Circle.
-  static const _buttonWidthFraction = 0.70;
+  // Phase B2 — the Home content column's vertical rhythm, shared so Ready
+  // and Circle Hero place their first element at the same distance from
+  // the Circle. Eyebrow and hero line stay tight (one heading); the hero
+  // line and the activity group get clear air; the CTA closes the column.
+
+  /// Circle → first element beneath it (Begin CTA / directions in Ready,
+  /// the eyebrow in Circle Hero).
+  static const circleToContentGap = AppSpacing.section;
+
+  /// Eyebrow ("Today's Circle") → editorial hero line (intent).
+  static const eyebrowToHeroGap = AppSpacing.s;
+
+  /// Hero line (intent) → activity title.
+  static const heroToActivityGap = AppSpacing.m;
+
+  /// Activity title → its supporting "why" text.
+  static const activityToSupportGap = AppSpacing.s;
+
+  /// Supporting text → the hero CTA (or the closed-state message).
+  static const contentToCtaGap = AppSpacing.section;
 
   /// The one source of truth for the Home Circle's ring thickness. The
   /// illustration's and wordmark's inset sizes are both derived from it.
@@ -81,8 +94,8 @@ class HomeCircleMetrics {
   );
 
   final double circleSize;
+  /// The bounded Home content column: the text and the hero CTA share it.
   final double textMaxWidth;
-  final double buttonWidth;
 
   /// The region inside the ring's stroke. The illustration and the
   /// wordmark are sized off this, never off the Circle's outer size.

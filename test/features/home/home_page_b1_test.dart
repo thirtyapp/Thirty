@@ -81,7 +81,6 @@ void main() {
       final m = HomeCircleMetrics.forWidth(360);
       expect(m.interiorSize, 312 - HomeCircleMetrics.strokeWidth * 2);
       expect(m.textMaxWidth, closeTo(312 * 0.85, 1e-9));
-      expect(m.buttonWidth, closeTo(312 * 0.85 * 0.70, 1e-9));
     });
   });
 
