@@ -77,20 +77,38 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Insights')),
       body: SafeArea(
+        // Horizontal page insets are applied per section: the calendar sets
+        // its own (it may narrow them to keep 48pt day targets), everything
+        // else keeps the page's 24pt.
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.page),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.page),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Your history', style: textTheme.titleMedium),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.page,
+                ),
+                child: Text('Your history', style: textTheme.titleMedium),
+              ),
               const SizedBox(height: AppSpacing.s),
               const CircleHistoryCalendar(),
               const SizedBox(height: AppSpacing.section),
-              const Divider(),
-              const SizedBox(height: AppSpacing.s),
-              hasCurrentInsight
-                  ? const InsightCard()
-                  : _InsightsEmptyState(isEntitled: isEntitled),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.page,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Divider(),
+                    const SizedBox(height: AppSpacing.s),
+                    hasCurrentInsight
+                        ? const InsightCard()
+                        : _InsightsEmptyState(isEntitled: isEntitled),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

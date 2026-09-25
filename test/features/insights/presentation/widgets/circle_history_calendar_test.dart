@@ -58,6 +58,12 @@ Future<(Widget, ProviderContainer)> _wrap({
   return (widget, container);
 }
 
+/// The spoken date the calendar announces — the same localized full date
+/// (`MaterialLocalizations.formatFullDate`) the widget uses, never the
+/// machine date key.
+String _spoken(String dateKey) =>
+    const DefaultMaterialLocalizations().formatFullDate(DateTime.parse(dateKey));
+
 String _journalWith(List<String> localDates) => jsonEncode({
   'schemaVersion': circleJournalSchemaVersion,
   'entries': [
@@ -100,11 +106,11 @@ void main() {
       await tester.pumpWidget(widget);
 
       expect(
-        find.bySemanticsLabel('2026-09-05, Circle recorded'),
+        find.bySemanticsLabel('${_spoken('2026-09-05')}, Circle recorded'),
         findsOneWidget,
       );
       expect(
-        find.bySemanticsLabel('2026-09-06, no record'),
+        find.bySemanticsLabel('${_spoken('2026-09-06')}, no Circle recorded'),
         findsOneWidget,
       );
       handle.dispose();
@@ -138,7 +144,7 @@ void main() {
       '2026-09-10',
       '2026-09-15',
     ]) {
-      expect(find.bySemanticsLabel('$date, Circle recorded'), findsOneWidget);
+      expect(find.bySemanticsLabel('${_spoken(date)}, Circle recorded'), findsOneWidget);
     }
     handle.dispose();
   });
@@ -177,7 +183,7 @@ void main() {
       await tester.pump();
       expect(find.text('August 2026'), findsOneWidget);
       expect(
-        find.bySemanticsLabel('2026-08-20, Circle recorded'),
+        find.bySemanticsLabel('${_spoken('2026-08-20')}, Circle recorded'),
         findsOneWidget,
       );
 
@@ -204,7 +210,7 @@ void main() {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(widgetA);
       expect(
-        find.bySemanticsLabel('2026-09-12, Circle recorded'),
+        find.bySemanticsLabel('${_spoken('2026-09-12')}, Circle recorded'),
         findsOneWidget,
       );
       final prefs = containerA.read(sharedPreferencesProvider);
@@ -219,7 +225,7 @@ void main() {
       await tester.pumpWidget(widgetB);
 
       expect(
-        find.bySemanticsLabel('2026-09-12, Circle recorded'),
+        find.bySemanticsLabel('${_spoken('2026-09-12')}, Circle recorded'),
         findsOneWidget,
       );
       handle.dispose();
@@ -277,7 +283,7 @@ void main() {
 
         await tester.pumpWidget(widget);
         expect(
-          find.bySemanticsLabel('2026-09-15, no record'),
+          find.bySemanticsLabel('${_spoken('2026-09-15')}, no Circle recorded'),
           findsOneWidget,
         );
         final calendarElementBefore = tester.element(
@@ -294,7 +300,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(
-          find.bySemanticsLabel('2026-09-15, Circle recorded'),
+          find.bySemanticsLabel('${_spoken('2026-09-15')}, Circle recorded'),
           findsOneWidget,
         );
         // Same widget/Element — the fix is a reactive rebuild, not a
