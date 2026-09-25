@@ -6,7 +6,7 @@
 - **C1 · You** — complete, commit `3c3aa02` (see below)
 - **Pending / confirmed-only purchases** — commit `18b68fe` (`PurchaseOutcome.pending` / `confirming`; success only once the entitlement is active)
 - **C2 · Premium offer page** — complete, commit `526083e` (see below)
-- **C3 · Plans** — inventory / planning
+- **C3 · Plans** — complete (see below; commit recorded in the next plan update)
 
 **Foundation:** Phase A and Phase B are complete and ratified (`PHASE_A_PLAN.md`, `PHASE_B_PLAN.md`).
 
@@ -67,4 +67,20 @@
 **Accessibility:** real-font 200% matrix at 320 / 360pt, light / dark, every state (incl. a long `US$ 4.99` price): nothing truncated or overflowing; CTA ≥ 56pt.
 
 **Deferred (not in C2):** trials, annual pricing, urgency, testimonials, sticky CTA, comparison tables; paywall analytics; iOS / App Store wording.
+
+## C3 · Plans
+
+**Preserved:** one active Plan; three saved positions; five stages; matching-direction session behaviour; other directions stay Free; same-day assignment frozen; closing advances guidance once without proving completion; Premium expiry keeps user state; no streak or guilt framing. No Plan, entitlement, cursor, revisit, cycle or recommendation logic changed.
+
+**Changes:**
+- **Free:** the pinned "Open Premium" bar (which sliced the card behind it at 200%) is replaced by an in-list card *after* the three previews: **THIRTY Premium** / **Guided Plans are part of THIRTY Premium.** / **Become Premium** (full width).
+- **Premium cards:** one full-width main action per card (Activate / Resume / Repeat this cycle); Activate / Resume is **secondary** on other Plans while one is active. Management (Queue a revisit of the last stage / Clear queued revisit / Pause this plan) is a quiet `ThirtyTextAction` — full copy kept, never truncated.
+- **Active marker:** a small tinted tag (`selection`), still announced as "Active plan".
+- **Coach:** shortcuts are quiet `ThirtyTextAction`s (full copy); on Plans the sentence is left-aligned and the revisit shortcut is suppressed where the card already offers the same revisit; Home keeps its centred presentation, both shortcuts and unchanged semantics / state (regression-covered at 200%). The Home shortcuts' change from outlined buttons to centred text actions is accepted as a calmer secondary-action treatment.
+- **Rhythm:** 16pt between Plan cards.
+- **New shared component:** `lib/core/widgets/thirty_text_action.dart` (48pt target, wraps freely, primary colour). C1/C2's Restore / Not now / Done are not migrated in C3.
+
+**Accessibility:** real-font 200% matrix at 320 / 360pt, light / dark, for Free, Free with a saved position, none active, active, revisit queued, completed, Coach with both shortcuts, and Home's Coach banner — nothing truncated or overflowing, the Free upsell reachable by scroll. Against pre-C3 code the same matrix fails (pinned bar, truncated revisit / Coach labels).
+
+**Deferred:** ordering the active Plan first; Insights' "Open Premium to apply this"; a Plan detail / stage list; Home Plan session panel beyond the shared Coach text actions; AppBar scrolled-under separation.
 

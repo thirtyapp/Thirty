@@ -194,7 +194,9 @@ void main() {
       await tester.tap(navDestination('Plans'));
       await tester.pumpAndSettle();
       expect(find.byType(PlanPathPage), findsOneWidget);
-      expect(find.text('Open Premium'), findsOneWidget);
+      // Phase C3: the in-list Premium card after the three previews.
+      await tester.scrollUntilVisible(find.text('Become Premium'), 200);
+      expect(find.text('Become Premium'), findsOneWidget);
       expect(find.text('Activate'), findsNothing);
 
       await tester.tap(navDestination('Insights'));

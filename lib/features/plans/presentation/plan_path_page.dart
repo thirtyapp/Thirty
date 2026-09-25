@@ -6,6 +6,7 @@ import '../../../core/premium/premium_access.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
+import '../../../core/widgets/thirty_text_action.dart';
 import '../../coach/presentation/widgets/coach_cue_banner.dart';
 import '../application/plan_provider.dart';
 import '../domain/plan_catalog.dart';
@@ -38,6 +39,13 @@ import '../domain/plan_state.dart';
 /// never a route-level redirect to `/premium` and never an automatic
 /// paywall on open.
 ///
+/// **Phase C3:** the Free upsell is no longer a bar pinned under the list
+/// (it sliced the card behind it at large text) — it is a compact
+/// [_PremiumCard] *after* the three previews, so the Plans come first and
+/// the offer is clear without being louder than them. On the entitled
+/// list each card has one full-width main action (primary only when no
+/// Plan is active), and management actions are quiet [ThirtyTextAction]s.
+///
 /// `InsightCard` moved out to its own destination
 /// (`../../insights/presentation/insights_page.dart`) in Batch B — it is
 /// no longer rendered here.
@@ -58,41 +66,25 @@ class PlanPathPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Plans')),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(AppSpacing.page),
-                itemCount: PlanId.values.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(height: AppSpacing.s),
-                itemBuilder: (context, index) {
-                  final planId = PlanId.values[index];
-                  final progress = plansState.progress[planId]!;
-                  return isEntitled
-                      ? _PlanCard(
-                          planId: planId,
-                          isActive: plansState.activePlanId == planId,
-                          progress: progress,
-                        )
-                      : _PlanPreviewCard(planId: planId, progress: progress);
-                },
-              ),
-            ),
-            if (!isEntitled)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.page,
-                  0,
-                  AppSpacing.page,
-                  AppSpacing.page,
-                ),
-                child: ThirtyButton(
-                  label: 'Open Premium',
-                  onPressed: () => context.push('/premium'),
-                ),
-              ),
-          ],
+        child: ListView.separated(
+          padding: const EdgeInsets.all(AppSpacing.page),
+          itemCount: PlanId.values.length + (isEntitled ? 0 : 1),
+          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.m),
+          itemBuilder: (context, index) {
+            if (index == PlanId.values.length) return const _PremiumCard();
+            final planId = PlanId.values[index];
+            final progress = plansState.progress[planId]!;
+            return isEntitled
+                ? _PlanCard(
+                    planId: planId,
+                    isActive: plansState.activePlanId == planId,
+                    anotherPlanIsActive:
+                        plansState.activePlanId != null &&
+                        plansState.activePlanId != planId,
+                    progress: progress,
+                  )
+                : _PlanPreviewCard(planId: planId, progress: progress);
+          },
         ),
       ),
     );
@@ -103,11 +95,15 @@ class _PlanCard extends ConsumerWidget {
   const _PlanCard({
     required this.planId,
     required this.isActive,
+    required this.anotherPlanIsActive,
     required this.progress,
   });
 
   final PlanId planId;
   final bool isActive;
+
+  /// While one Plan is active, switching to another is a secondary choice.
+  final bool anotherPlanIsActive;
   final PlanProgress progress;
 
   @override
@@ -118,6 +114,10 @@ class _PlanCard extends ConsumerWidget {
     final colors = Theme.of(context).extension<AppColors>()!;
     final isCompleted = progress.status == PlanCycleStatus.completed;
     final hasEverStarted = progress.lastEncounteredStageId != null;
+    // The card's own revisit action (queue / clear): an active, started,
+    // unfinished cycle. The Coach banner's identical shortcut is then
+    // suppressed, so the same action is never offered twice.
+    final cardOffersRevisit = isActive && hasEverStarted && !isCompleted;
 
     return ThirtyCard(
       padding: const EdgeInsets.all(AppSpacing.featuredCard),
@@ -127,16 +127,10 @@ class _PlanCard extends ConsumerWidget {
           Row(
             children: [
               Expanded(child: Text(plan.name, style: textTheme.titleMedium)),
-              if (isActive)
-                Semantics(
-                  label: 'Active plan',
-                  child: Text(
-                    'Active',
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colors.primary,
-                    ),
-                  ),
-                ),
+              if (isActive) ...[
+                const SizedBox(width: AppSpacing.s),
+                const _ActiveTag(),
+              ],
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -163,38 +157,87 @@ class _PlanCard extends ConsumerWidget {
           ],
           if (isActive) ...[
             const SizedBox(height: AppSpacing.xs),
-            CoachCueBanner(planId: planId),
+            CoachCueBanner(
+              planId: planId,
+              centered: false,
+              suppressRevisitShortcut: cardOffersRevisit,
+            ),
           ],
-          const SizedBox(height: AppSpacing.s),
-          if (!isActive)
-            ThirtyButton(
-              label: hasEverStarted ? 'Resume' : 'Activate',
-              onPressed: () => notifier.activatePlan(planId),
-            )
-          else ...[
-            if (isCompleted)
-              ThirtyButton(
-                label: 'Repeat this cycle',
-                onPressed: () => notifier.repeatCycle(planId),
-              )
-            else if (hasEverStarted)
-              ThirtyButton(
+          // One full-width main action per card.
+          if (!isActive) ...[
+            const SizedBox(height: AppSpacing.m),
+            SizedBox(
+              width: double.infinity,
+              child: ThirtyButton(
+                label: hasEverStarted ? 'Resume' : 'Activate',
+                variant: anotherPlanIsActive
+                    ? ThirtyButtonVariant.secondary
+                    : ThirtyButtonVariant.primary,
+                onPressed: () => notifier.activatePlan(planId),
+              ),
+            ),
+          ] else ...[
+            if (isCompleted) ...[
+              const SizedBox(height: AppSpacing.m),
+              SizedBox(
+                width: double.infinity,
+                child: ThirtyButton(
+                  label: 'Repeat this cycle',
+                  onPressed: () => notifier.repeatCycle(planId),
+                ),
+              ),
+            ],
+            // Management: quiet text actions.
+            const SizedBox(height: AppSpacing.xs),
+            if (cardOffersRevisit)
+              ThirtyTextAction(
                 label: progress.pendingRevisit
                     ? 'Clear queued revisit'
                     : 'Queue a revisit of the last stage',
-                variant: ThirtyButtonVariant.secondary,
                 onPressed: progress.pendingRevisit
                     ? notifier.clearQueuedRevisit
                     : notifier.queueRevisit,
               ),
-            const SizedBox(height: AppSpacing.xs),
-            ThirtyButton(
+            ThirtyTextAction(
               label: 'Pause this plan',
-              variant: ThirtyButtonVariant.secondary,
               onPressed: notifier.deactivatePlan,
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// The active Plan's marker: a small tinted tag (the `selection` role),
+/// announced as "Active plan".
+class _ActiveTag extends StatelessWidget {
+  const _ActiveTag();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return Semantics(
+      label: 'Active plan',
+      child: ExcludeSemantics(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.selection,
+            borderRadius: AppRadius.pill,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.s,
+              vertical: AppSpacing.xs,
+            ),
+            child: Text(
+              'Active',
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(color: colors.textPrimary),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -248,6 +291,40 @@ class _PlanPreviewCard extends StatelessWidget {
               style: textTheme.bodySmall,
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// The Free upsell, in the list after the three previews (Phase C3) —
+/// You's Premium-card language, compact.
+class _PremiumCard extends StatelessWidget {
+  const _PremiumCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return ThirtyCard(
+      padding: const EdgeInsets.all(AppSpacing.featuredCard),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('THIRTY Premium', style: textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Guided Plans are part of THIRTY Premium.',
+            style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          SizedBox(
+            width: double.infinity,
+            child: ThirtyButton(
+              label: 'Become Premium',
+              onPressed: () => context.push('/premium'),
+            ),
+          ),
         ],
       ),
     );

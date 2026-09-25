@@ -204,7 +204,7 @@ void main() {
   group('Batch A — unentitled Free preview', () {
     testWidgets(
       'shows each Plan\'s name and purpose, no interactive controls, and '
-      'an Open Premium action',
+      'a Become Premium action (Phase C3 copy)',
       (tester) async {
         final (widget, container) = await _wrap(entitled: false);
         addTearDown(container.dispose);
@@ -218,7 +218,9 @@ void main() {
         expect(find.text('Resume'), findsNothing);
         expect(find.text('Pause this plan'), findsNothing);
         expect(find.text('Queue a revisit of the last stage'), findsNothing);
-        expect(find.text('Open Premium'), findsOneWidget);
+        await tester.scrollUntilVisible(find.text('Become Premium'), 200);
+        expect(find.text('Become Premium'), findsOneWidget);
+        expect(find.text('Open Premium'), findsNothing);
       },
     );
 

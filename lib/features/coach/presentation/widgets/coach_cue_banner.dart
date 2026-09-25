@@ -5,7 +5,7 @@ import '../../../../core/analytics/analytics_event_type.dart';
 import '../../../../core/analytics/analytics_service.dart';
 import '../../../../core/premium/premium_access.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/thirty_button.dart';
+import '../../../../core/widgets/thirty_text_action.dart';
 import '../../../home/application/recommendation_provider.dart';
 import '../../../plans/application/plan_provider.dart';
 import '../../../plans/domain/plan_ids.dart';
@@ -29,15 +29,26 @@ import '../../application/coach_provider.dart';
 /// "Your path" surface (`../../../plans/presentation/plan_path_page.dart`)
 /// does not suppress it, since that surface shows no stage rationale of
 /// its own.
+///
+/// Phase C3: the shortcuts are quiet [ThirtyTextAction]s (never truncated
+/// at large text, never competing with a card's main action). [centered]
+/// keeps Home's centred panel presentation; Plans passes `false` to align
+/// with its left-aligned cards. [suppressRevisitShortcut] hides the
+/// revisit shortcut where the host already exposes the same revisit
+/// action (the Plans card), so it is never offered twice.
 class CoachCueBanner extends ConsumerWidget {
   const CoachCueBanner({
     required this.planId,
     this.suppressStageExplanation = false,
+    this.centered = true,
+    this.suppressRevisitShortcut = false,
     super.key,
   });
 
   final PlanId planId;
   final bool suppressStageExplanation;
+  final bool centered;
+  final bool suppressRevisitShortcut;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -84,6 +95,7 @@ class CoachCueBanner extends ConsumerWidget {
 
     final progress = ref.watch(planProvider).progress[planId];
     final showRevisitButton =
+        !suppressRevisitShortcut &&
         cue.offersRevisitAction &&
         progress != null &&
         !progress.pendingRevisit &&
@@ -102,32 +114,23 @@ class CoachCueBanner extends ConsumerWidget {
             Text(
               cue.message,
               style: textTheme.bodySmall,
-              textAlign: TextAlign.center,
+              textAlign: centered ? TextAlign.center : TextAlign.start,
             ),
-            if (showLighterButton || showRevisitButton) ...[
-              const SizedBox(height: AppSpacing.xs),
-              // Stacked, not side-by-side: both labels are full sentences,
-              // and a shared-width Row overflows well before reaching the
-              // large-text accessibility setting this control must still
-              // support.
-              if (showLighterButton)
-                ThirtyButton(
-                  label: 'Try lighter guidance today',
-                  variant: ThirtyButtonVariant.secondary,
-                  onPressed: () => ref
-                      .read(recommendationProvider.notifier)
-                      .setPlanTreatment(PlanTreatment.lighter),
-                ),
-              if (showLighterButton && showRevisitButton)
-                const SizedBox(height: AppSpacing.xs),
-              if (showRevisitButton)
-                ThirtyButton(
-                  label: 'Queue a one-off revisit',
-                  variant: ThirtyButtonVariant.secondary,
-                  onPressed: () =>
-                      ref.read(planProvider.notifier).queueRevisit(),
-                ),
-            ],
+            // Stacked, not side-by-side: both labels are full sentences.
+            if (showLighterButton)
+              ThirtyTextAction(
+                label: 'Try lighter guidance today',
+                centered: centered,
+                onPressed: () => ref
+                    .read(recommendationProvider.notifier)
+                    .setPlanTreatment(PlanTreatment.lighter),
+              ),
+            if (showRevisitButton)
+              ThirtyTextAction(
+                label: 'Queue a one-off revisit',
+                centered: centered,
+                onPressed: () => ref.read(planProvider.notifier).queueRevisit(),
+              ),
           ],
         ),
       ),
