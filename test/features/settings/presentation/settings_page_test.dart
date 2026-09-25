@@ -109,6 +109,12 @@ Future<(Widget, ProviderContainer)> _wrap({
   return (widget, container);
 }
 
+/// The Switch inside one of You's keyed Preferences rows.
+Finder _switchIn(String rowKey) => find.descendant(
+  of: find.byKey(ValueKey(rowKey)),
+  matching: find.byType(Switch),
+);
+
 void main() {
   testWidgets('shows "Premium is active" and a manage-subscription button '
       'when a real managementURL is available', (tester) async {
@@ -144,8 +150,8 @@ void main() {
     expect(find.text('Manage subscription'), findsNothing);
   });
 
-  testWidgets('shows "Premium is not active" and an Upgrade entry when '
-      'inactive', (tester) async {
+  testWidgets('shows the THIRTY Premium card with a "Become Premium" entry '
+      'when inactive (Phase C1 copy)', (tester) async {
     final gateway = _FakeEntitlementGateway(
       initialStatus: EntitlementStatus.inactive,
     );
@@ -155,8 +161,8 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    expect(find.text('Premium is not active'), findsOneWidget);
-    expect(find.text('Upgrade to Premium'), findsOneWidget);
+    expect(find.text('THIRTY Premium'), findsOneWidget);
+    expect(find.text('Become Premium'), findsOneWidget);
     expect(find.text('Manage subscription'), findsNothing);
   });
 
@@ -297,7 +303,9 @@ void main() {
       expect(container.read(analyticsConsentProvider), isFalse);
       expect(find.text('Share anonymous usage data'), findsOneWidget);
 
-      await tester.tap(find.byType(Switch));
+      await tester.ensureVisible(_switchIn('you.analytics'));
+      await tester.pumpAndSettle();
+      await tester.tap(_switchIn('you.analytics'));
       await tester.pumpAndSettle();
 
       expect(container.read(analyticsConsentProvider), isTrue);
@@ -320,7 +328,7 @@ void main() {
 
       expect(container.read(reminderProvider).enabled, isFalse);
 
-      await tester.tap(find.byType(Switch).last);
+      await tester.tap(_switchIn('you.reminder'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
@@ -365,7 +373,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
 
-    await tester.tap(find.byType(Switch).last);
+    await tester.tap(_switchIn('you.reminder'));
     await tester.pumpAndSettle();
 
     expect(container.read(reminderProvider).enabled, isFalse);
@@ -449,8 +457,8 @@ void main() {
     },
   );
 
-  testWidgets('Phase A2 — only the Premium card is featured; control rows '
-      'keep the compact default padding', (tester) async {
+  testWidgets('Phase C1 — Premium card and grouped rows share one content '
+      'inset (the 8pt mismatch A2 recorded is gone)', (tester) async {
     final (widget, container) = await _wrap(gateway: _FakeEntitlementGateway());
     addTearDown(container.dispose);
 
@@ -461,9 +469,15 @@ void main() {
         .widgetList<ThirtyCard>(find.byType(ThirtyCard, skipOffstage: false))
         .toList();
     expect(cards.first.padding, const EdgeInsets.all(AppSpacing.featuredCard));
-    expect(cards.length, greaterThan(1));
-    for (final row in cards.skip(1)) {
-      expect(row.padding, isNull);
+    for (final group in cards.skip(1)) {
+      expect(
+        (group.padding! as EdgeInsets).left,
+        AppSpacing.featuredCard,
+      );
     }
+    expect(
+      tester.getTopLeft(find.text('THIRTY Premium')).dx,
+      tester.getTopLeft(find.text('Daily reminder')).dx,
+    );
   });
 }

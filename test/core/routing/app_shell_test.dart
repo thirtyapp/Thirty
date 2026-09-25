@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:thirty/core/app/thirty_app.dart';
+import 'package:thirty/core/premium/entitlement_status.dart';
 import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
@@ -32,6 +33,19 @@ import 'package:thirty/features/settings/presentation/settings_page.dart';
 /// process (matching `premium_billing_navigation_test.dart`'s own noted
 /// gotcha) — every test below explicitly returns to `/` first rather than
 /// assuming a previous test left it there.
+/// A settled entitlement status (as `main.dart`'s startup `initialize()`
+/// would leave it). Since Phase C1, You shows no acquisition CTA while the
+/// status is still being checked, so tests that follow the "Become
+/// Premium" path need a known free state.
+class _SettledEntitlement extends EntitlementNotifier {
+  _SettledEntitlement(this._status);
+
+  final EntitlementStatus _status;
+
+  @override
+  EntitlementStatus build() => _status;
+}
+
 void main() {
   Future<void> pumpApp(
     WidgetTester tester, {
@@ -46,6 +60,11 @@ void main() {
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
           premiumEntitlementProvider.overrideWithValue(entitled),
+          entitlementStatusProvider.overrideWith(
+            () => _SettledEntitlement(
+              entitled ? EntitlementStatus.active : EntitlementStatus.inactive,
+            ),
+          ),
         ],
         child: const ThirtyApp(),
       ),
@@ -208,7 +227,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SettingsPage), findsOneWidget);
-      expect(find.text('Upgrade to Premium'), findsOneWidget);
+      expect(find.text('Become Premium'), findsOneWidget);
     },
   );
 
@@ -216,12 +235,12 @@ void main() {
     'You → Premium → Back → You — standard push/pop, matching the '
     'contract\'s unchanged Settings/Premium return behavior',
     (tester) async {
-      await pumpApp(tester);
+      await pumpApp(tester, entitled: false);
 
       await tester.tap(navDestination('You'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Upgrade to Premium'));
+      await tester.tap(find.text('Become Premium'));
       await tester.pumpAndSettle();
       expect(find.byType(PremiumOfferPage), findsOneWidget);
 

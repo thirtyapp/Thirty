@@ -94,9 +94,9 @@ enum RestoreOutcome {
 ///
 /// [localizedPrice] is exactly what the store returns for the configured
 /// monthly package (e.g. `StoreProduct.priceString`) — never a hardcoded
-/// literal. The €3.99/month figure named in the frozen architecture is a
-/// working hypothesis to verify the configured product against, not a
-/// value this app is ever allowed to display in place of the real one.
+/// literal. Any working launch price named in product documents is only a
+/// value to verify the configured store product against, never a value
+/// this app is allowed to display in place of the real one.
 class MonthlyOffer {
   const MonthlyOffer({required this.localizedPrice});
 

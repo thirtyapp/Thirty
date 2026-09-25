@@ -36,7 +36,7 @@ class JournalDataControls extends ConsumerWidget {
               label: 'Copy as text',
               variant: ThirtyButtonVariant.secondary,
               onPressed: hasEntries
-                  ? () => _exportToClipboard(context, journal)
+                  ? () => exportToClipboard(context, journal)
                   : null,
             ),
           ),
@@ -46,7 +46,7 @@ class JournalDataControls extends ConsumerWidget {
               label: 'Delete all',
               variant: ThirtyButtonVariant.secondary,
               onPressed: hasEntries
-                  ? () => _confirmClear(context, journal, ref)
+                  ? () => confirmAndClear(context, journal, ref)
                   : null,
             ),
           ),
@@ -55,7 +55,11 @@ class JournalDataControls extends ConsumerWidget {
     );
   }
 
-  static Future<void> _exportToClipboard(
+  /// Copies the journal as text and confirms with a SnackBar. Shared with
+  /// You's own "Your data" rows (`settings_page.dart`), which present the
+  /// same actions stacked; this widget's own side-by-side layout (Circle
+  /// history) is unchanged.
+  static Future<void> exportToClipboard(
     BuildContext context,
     CircleJournalRepository journal,
   ) async {
@@ -66,7 +70,9 @@ class JournalDataControls extends ConsumerWidget {
     );
   }
 
-  static Future<void> _confirmClear(
+  /// Asks for explicit confirmation, then deletes every recorded Circle and
+  /// any Insight derived from them. Shared with You's "Your data" rows.
+  static Future<void> confirmAndClear(
     BuildContext context,
     CircleJournalRepository journal,
     WidgetRef ref,

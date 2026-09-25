@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/premium/entitlement_gateway.dart';
 import '../../../core/premium/entitlement_status.dart';
 import '../../../core/premium/premium_access.dart';
+import '../../../core/premium/premium_offer_providers.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
@@ -32,16 +32,9 @@ class PremiumOfferPage extends ConsumerStatefulWidget {
 }
 
 class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
-  late Future<MonthlyOffer?> _offerFuture;
   bool _isPurchasing = false;
   bool _isRestoring = false;
   String? _message;
-
-  @override
-  void initState() {
-    super.initState();
-    _offerFuture = ref.read(entitlementGatewayProvider).monthlyOffer();
-  }
 
   Future<void> _purchase() async {
     setState(() {
@@ -124,11 +117,13 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
                 style: textTheme.bodyMedium?.copyWith(color: colors.primary),
               )
             else ...[
-              FutureBuilder<MonthlyOffer?>(
-                future: _offerFuture,
-                builder: (context, snapshot) {
-                  final offer = snapshot.data;
-                  if (snapshot.connectionState != ConnectionState.done) {
+              // The shared live store offer (premium_offer_providers.dart),
+              // the same one You's Premium card shows.
+              Builder(
+                builder: (context) {
+                  final offerState = ref.watch(monthlyOfferProvider);
+                  final offer = offerState.value;
+                  if (offerState.isLoading) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: AppSpacing.s),
                       child: Center(child: CircularProgressIndicator()),
