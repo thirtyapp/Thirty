@@ -50,14 +50,44 @@ class ThirtyButton extends StatelessWidget {
   /// From this text scale up, the label gets the tighter side inset.
   static const _largeTextScale = 1.3;
 
+  /// The label's side inset: 24pt, tightened to 16pt at large
+  /// accessibility text so a label has the width to fit in two lines.
+  static double _horizontalInset(BuildContext context) =>
+      MediaQuery.textScalerOf(context).scale(1) >= _largeTextScale
+      ? AppSpacing.m
+      : AppSpacing.l;
+
+  /// Whether [label] fits a plain (icon-less) button of [buttonWidth]
+  /// without being ellipsized — i.e. in at most two lines, measured with
+  /// exactly the style, inset and text scale this button renders with.
+  /// Lets a caller choose a layout (e.g. side-by-side vs stacked) that
+  /// never truncates.
+  static bool labelFits(
+    BuildContext context,
+    String label, {
+    required double buttonWidth,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: Theme.of(context).textTheme.labelLarge,
+      ),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: _maxLabelLines,
+    )..layout(maxWidth: buttonWidth - _horizontalInset(context) * 2);
+    final fits = !painter.didExceedMaxLines;
+    painter.dispose();
+    return fits;
+  }
+
   bool get _isEnabled => onPressed != null && !isLoading;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
-    final isLargeText =
-        MediaQuery.textScalerOf(context).scale(1) >= _largeTextScale;
+    final horizontalInset = _horizontalInset(context);
     final isPrimary = variant == ThirtyButtonVariant.primary;
 
     final Color backgroundColor;
@@ -208,7 +238,7 @@ class ThirtyButton extends StatelessWidget {
             // a label has the width to fit in two lines; at ordinary sizes
             // it is unchanged.
             padding: EdgeInsets.symmetric(
-              horizontal: isLargeText ? AppSpacing.m : AppSpacing.l,
+              horizontal: horizontalInset,
               vertical: AppSpacing.s,
             ),
             child: Stack(

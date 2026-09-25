@@ -92,34 +92,79 @@ class _ReminderInvitationCardState
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.s),
-            // Paired buttons share one height: if large text wraps one label onto
-            // a second line, both grow together (IntrinsicHeight + stretch). At
-            // ordinary text sizes both stay exactly 48pt.
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: ThirtyButton(
-                      label: 'Choose a time',
-                      onPressed: _chooseTime,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.s),
-                  Expanded(
-                    child: ThirtyButton(
-                      label: 'Not now',
-                      variant: ThirtyButtonVariant.secondary,
-                      onPressed: _dismiss,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _Actions(onChooseTime: _chooseTime, onNotNow: _dismiss),
           ],
         ),
       ),
     );
     return ViewportVisibility(onVisible: _markShown, child: card);
+  }
+}
+
+/// "Choose a time" and "Not now", side by side whenever both labels fit
+/// their half-width button without truncation (every ordinary text size
+/// on phone widths), and stacked — same order, full width — when large
+/// accessibility text would otherwise cut one off.
+class _Actions extends StatelessWidget {
+  const _Actions({required this.onChooseTime, required this.onNotNow});
+
+  final VoidCallback onChooseTime;
+  final VoidCallback onNotNow;
+
+  static const _chooseTimeLabel = 'Choose a time';
+  static const _notNowLabel = 'Not now';
+
+  @override
+  Widget build(BuildContext context) {
+    final chooseTime = ThirtyButton(
+      label: _chooseTimeLabel,
+      onPressed: onChooseTime,
+    );
+    final notNow = ThirtyButton(
+      label: _notNowLabel,
+      variant: ThirtyButtonVariant.secondary,
+      onPressed: onNotNow,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final halfWidth = (constraints.maxWidth - AppSpacing.s) / 2;
+        final sideBySide =
+            ThirtyButton.labelFits(
+              context,
+              _chooseTimeLabel,
+              buttonWidth: halfWidth,
+            ) &&
+            ThirtyButton.labelFits(
+              context,
+              _notNowLabel,
+              buttonWidth: halfWidth,
+            );
+
+        if (!sideBySide) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              chooseTime,
+              const SizedBox(height: AppSpacing.s),
+              notNow,
+            ],
+          );
+        }
+        // Paired buttons share one height: if large text wraps one label
+        // onto a second line, both grow together (IntrinsicHeight +
+        // stretch). At ordinary text sizes both stay exactly 48pt.
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: chooseTime),
+              const SizedBox(width: AppSpacing.s),
+              Expanded(child: notNow),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
