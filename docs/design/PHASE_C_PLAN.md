@@ -5,7 +5,8 @@
 - **Reminder invitation actions** — commit `a43de44` (side by side when both labels fit, stacked when they would truncate; `ThirtyButton.labelFits`)
 - **C1 · You** — complete, commit `3c3aa02` (see below)
 - **Pending / confirmed-only purchases** — commit `18b68fe` (`PurchaseOutcome.pending` / `confirming`; success only once the entitlement is active)
-- **C2 · Premium offer page** — complete (see below; commit recorded in the next plan update)
+- **C2 · Premium offer page** — complete, commit `526083e` (see below)
+- **C3 · Plans** — inventory / planning
 
 **Foundation:** Phase A and Phase B are complete and ratified (`PHASE_A_PLAN.md`, `PHASE_B_PLAN.md`).
 
