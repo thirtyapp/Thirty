@@ -26,9 +26,9 @@ import 'widgets/circle_ready_prompt.dart';
 ///
 /// Once today's Circle is closed, [ActionReportPrompt] (ADR-013 §4) renders
 /// beneath [CircleHero] — a separate widget, deliberately not folded into
-/// `circle_hero.dart` itself, so this batch's functional addition stays
-/// independent of that file's own in-progress visual work (see ADR-013
-/// §10). [PlanSessionPanel] (Batch 2A) renders below that, and only when
+/// `circle_hero.dart` itself (see ADR-013 §10); since Phase B3 it is passed
+/// in as part of CircleHero's `footer`, so it scrolls with the hero as one
+/// document rather than taking height from it. [PlanSessionPanel] (Batch 2A) renders below that, and only when
 /// today's Circle is Plan-resolved. Below that, at most one of
 /// `ReminderInvitationCard` or `PremiumOfferInvitationCard` ever renders
 /// — each is internally gated on the other (and both on
@@ -88,10 +88,15 @@ class HomePage extends ConsumerWidget {
         ),
       ),
       body: SafeArea(
+        // Phase B3 — one vertical scroll owner per state: CircleHero's own
+        // scroll view carries the hero *and* every card below it, so a card
+        // extends the page instead of shrinking the hero. Ready has no
+        // below-hero cards and keeps its own scroll. Swapping Ready for
+        // CircleHero mounts a fresh scroll view, so The First Breath always
+        // starts with the Circle at its normal position.
         child: hasRecommendation
-            ? const Column(
-                children: [
-                  Expanded(child: CircleHero()),
+            ? const CircleHero(
+                footer: [
                   ActionReportPrompt(),
                   PlanSessionPanel(),
                   ReminderInvitationCard(),

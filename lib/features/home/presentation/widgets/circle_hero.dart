@@ -77,7 +77,12 @@ import 'home_circle_metrics.dart';
 /// today on the first open of the day — it removes movement and waiting,
 /// never meaning or access (`docs/motion/MOTION_LANGUAGE.md` §11).
 class CircleHero extends ConsumerStatefulWidget {
-  const CircleHero({super.key});
+  const CircleHero({this.footer = const [], super.key});
+
+  /// Home content that follows the hero in the same scroll (Phase B3):
+  /// reflection, Plan session, reminder / Premium invitations. Each item
+  /// owns its own padding and visibility; the hero never resizes for them.
+  final List<Widget> footer;
 
   @override
   ConsumerState<CircleHero> createState() => _CircleHeroState();
@@ -581,18 +586,17 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         // own painter skips the progress arc entirely once progress <= 0).
         final circleProgressColor = colors.primary;
 
-        return SingleChildScrollView(
-          // SingleChildScrollView gives its child loose (not full-width)
-          // horizontal constraints, so without this the Column below would
-          // shrink-wrap to its widest child (the Circle) and the whole
-          // block would render flush against the left edge of the screen
-          // instead of centered — this SizedBox forces it back to the full
-          // available width so the Column's own horizontal centering
-          // (crossAxisAlignment.center, its default) actually has the full
-          // width to center within. This affects only the horizontal axis;
-          // it does not reintroduce the vertical viewport-centering that
-          // was deliberately removed below.
-          child: SizedBox(
+        // SingleChildScrollView gives its child loose (not full-width)
+        // horizontal constraints, so without this the Column below would
+        // shrink-wrap to its widest child (the Circle) and the whole block
+        // would render flush against the left edge of the screen instead of
+        // centered — this SizedBox forces it back to the full available
+        // width so the Column's own horizontal centering
+        // (crossAxisAlignment.center, its default) actually has the full
+        // width to center within. This affects only the horizontal axis; it
+        // does not reintroduce the vertical viewport-centering that was
+        // deliberately removed below.
+        final hero = SizedBox(
             width: double.infinity,
             child: Padding(
               // Anchored toward the top, not centered in the viewport: a
@@ -814,6 +818,18 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                 ],
               ),
             ),
+          );
+
+        // Phase B3 — the one vertical scroll owner for Home's body once a
+        // recommendation exists: the hero and every card below it
+        // ([footer]) are one document. A card never shrinks the hero; it
+        // extends the page and is reached by scrolling. Non-lazy on
+        // purpose: the invitation cards persist their "shown" flags from
+        // their first build, exactly as before.
+        return SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [hero, ...widget.footer],
           ),
         );
       },

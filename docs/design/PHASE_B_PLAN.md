@@ -2,8 +2,8 @@
 
 **Status:** Approved (founder decisions B-D1–B-D4 below).
 - **B1 complete** — commit `d15a9e1`
-- **B2 complete** — see the B2 scope refinement below
-- B3 not started
+- **B2 complete** — commit `695f7fb` (see the B2 scope refinement below)
+- **B3 in progress** (single-scroll composition)
 
 **Baseline:** `step5-billing-integration` after Phase A (A5 `6ea5fe3`, plan `09f2b0e`).
 **Foundation:** Phase A tokens and components (`docs/design/PHASE_A_PLAN.md`) are the ratified foundation.
@@ -57,6 +57,12 @@ No navigation, billing, Plans, Insights or You changes.
 ### B3 · Below-hero composition and hardening
 - `HomePage` becomes the single, **non-lazy** scroll owner (hero + reflection + Plan panel + invitations), so a card never shrinks the hero. Non-lazy is required: both invitation cards persist their "shown" flag from a post-frame callback during build.
 - QA matrix: 320×568 / 360×640 / 412×915 × 100% / 200% text × light / dark × every Home state.
+
+**B3 as implemented (pending review).**
+- **Scroll architecture:** one vertical scroll owner per state. `CircleHero`'s existing `SingleChildScrollView` now holds `Column[hero, ...footer]`; `HomePage` passes `ActionReportPrompt`, `PlanSessionPanel`, `ReminderInvitationCard`, `PremiumOfferInvitationCard` as that `footer` (same order, same widgets). Ready (no below-hero cards) keeps `CircleReadyPrompt`'s own scroll. The Ready → Circle Hero swap mounts a fresh scroll view, so First Breath always starts with the Circle at its normal position. No nested scrollables; still non-lazy, so the invitation "shown" flags are written on first build exactly as before.
+- **Not changed:** copy, lifecycle, recommendation logic, persistence, First Breath, Circle geometry, CTA styling, ring colours, card widgets and their gating. Existing test harnesses unchanged (`CircleHero()` without a footer is the pre-B3 widget).
+- **Fixed by B3:** before, the cards were laid out beneath an `Expanded` hero outside its scroll, so a card took height from the hero and, at 320×568 / 200% text with the reminder invitation, the page overflowed.
+- **Found, pre-existing, not changed:** (1) on device the reminder invitation writes its "shown" flag on first build and can then disappear within the same session when its eligibility provider recomputes at startup — reproduced identically on the pre-B3 build; (2) the Premium invitation's fixed "Learn more" label only overflows under flutter_test's square-glyph font, not with real Inter (verified with real fonts loaded).
 
 ## 4. Deferred
 
