@@ -122,7 +122,8 @@ void main() {
     expect(find.text('Not now'), findsOneWidget);
   });
 
-  testWidgets('marks itself shown once rendered', (tester) async {
+  testWidgets('marks itself shown once meaningfully visible, not merely '
+      'rendered (founder decision after B3)', (tester) async {
     final (widget, container) = await _wrap(gateway: _FakeReminderGateway());
     addTearDown(container.dispose);
     await _closeCircle(container, '2026-09-01');
@@ -131,6 +132,10 @@ void main() {
     await tester.pumpAndSettle();
 
     final prefs = container.read(sharedPreferencesProvider);
+    // Rendered and on screen, but not yet for the visibility dwell.
+    expect(prefs.getBool(reminderInvitationShownKey), isNull);
+
+    await tester.pump(const Duration(seconds: 1));
     expect(prefs.getBool(reminderInvitationShownKey), isTrue);
   });
 

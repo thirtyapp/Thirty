@@ -5,6 +5,8 @@ import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_card.dart';
+import '../../../../core/widgets/viewport_visibility.dart';
+import '../../../home/application/home_invitation_slot.dart';
 import '../../application/reminder_invitation_provider.dart';
 import '../../application/reminder_provider.dart';
 
@@ -20,10 +22,15 @@ import '../../application/reminder_provider.dart';
 /// Renders nothing unless [showReminderInvitationProvider] is `true`. A
 /// plain inline card — never a dialog, never a permission prompt by
 /// itself (the OS permission is requested only after the user taps
-/// "Choose a time" and actually picks one). Marks itself shown (so it
-/// never appears again, regardless of the outcome) the first time it
-/// actually renders — mirroring `PremiumOfferInvitationCard`'s own
-/// established pattern for the same "single... invitation" semantics.
+/// "Choose a time" and actually picks one).
+///
+/// Invitation semantics (`home_invitation_slot.dart`): the first render
+/// claims this session's invitation slot, so the card stays until "Not
+/// now", a chosen time, or reminders being enabled — no provider refresh
+/// can remove it or hand its place to Premium. The persisted "shown" flag
+/// is written only once the card has been meaningfully visible
+/// ([ViewportVisibility]); a card that only rendered below the fold may
+/// appear again in a later session. Mirrors `PremiumOfferInvitationCard`.
 class ReminderInvitationCard extends ConsumerStatefulWidget {
   const ReminderInvitationCard({super.key});
 
@@ -34,9 +41,15 @@ class ReminderInvitationCard extends ConsumerStatefulWidget {
 
 class _ReminderInvitationCardState
     extends ConsumerState<ReminderInvitationCard> {
-  bool _dismissed = false;
+  void _dismiss() => ref
+      .read(homeInvitationSlotProvider.notifier)
+      .close(HomeInvitation.reminder);
 
-  void _dismiss() => setState(() => _dismissed = true);
+  void _markShown() {
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (prefs.getBool(reminderInvitationShownKey) ?? false) return;
+    prefs.setBool(reminderInvitationShownKey, true);
+  }
 
   Future<void> _chooseTime() async {
     final now = TimeOfDay.now();
@@ -50,18 +63,19 @@ class _ReminderInvitationCardState
 
   @override
   Widget build(BuildContext context) {
-    final shouldShow = !_dismissed && ref.watch(showReminderInvitationProvider);
+    final shouldShow = ref.watch(showReminderInvitationProvider);
     if (!shouldShow) return const SizedBox.shrink();
 
+    // Selected for this session: claim the invitation slot (idempotent).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref
-          .read(sharedPreferencesProvider)
-          .setBool(reminderInvitationShownKey, true);
+          .read(homeInvitationSlotProvider.notifier)
+          .claim(HomeInvitation.reminder);
     });
 
     final textTheme = Theme.of(context).textTheme;
-    return Padding(
+    final card = Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.page,
         0,
@@ -100,5 +114,6 @@ class _ReminderInvitationCardState
         ),
       ),
     );
+    return ViewportVisibility(onVisible: _markShown, child: card);
   }
 }

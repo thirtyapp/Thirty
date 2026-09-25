@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/premium/premium_access.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../../home/application/circle_journal.dart';
+import '../../home/application/home_invitation_slot.dart';
 import '../../home/presentation/widgets/action_report_prompt.dart';
 import '../../reminder/application/reminder_invitation_provider.dart';
 
@@ -23,12 +24,21 @@ const premiumOfferInvitationShownKey = 'premium_offer_invitation_shown_v1';
 /// V1 PRODUCTIZATION + COMMERCIAL REVIEW.md` §28): reflection first, then
 /// an eligible reminder invitation, then Premium — "an eligible Premium
 /// invitation waits until neither is being presented" — never stacked on
-/// the same screen. Recomputed on every read from the journal's actual
+/// the same screen — and, via `home_invitation_slot.dart`, never both in one
+/// session. Recomputed on every read from the journal's actual
 /// current contents — this app has no separate cached counter to drift
 /// out of sync with it.
 final showPremiumOfferInvitationProvider = Provider<bool>((ref) {
   if (ref.watch(premiumEntitlementProvider)) return false;
   if (ref.watch(reflectionPendingProvider)) return false;
+
+  // Session stability (see home_invitation_slot.dart): once the Premium
+  // invitation owns this session's slot it stays until closed; once the
+  // reminder invitation owns it, Premium waits for a later session.
+  final slot = ref.watch(homeInvitationSlotProvider);
+  if (slot.owner == HomeInvitation.premium) return !slot.closed;
+  if (slot.owner != null) return false;
+
   if (ref.watch(showReminderInvitationProvider)) return false;
 
   final prefs = ref.watch(sharedPreferencesProvider);

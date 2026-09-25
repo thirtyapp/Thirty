@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_card.dart';
+import '../../../../core/widgets/viewport_visibility.dart';
+import '../../../home/application/home_invitation_slot.dart';
 import '../../application/premium_offer_provider.dart';
 
 /// THIRTY's one quiet Premium invitation — frozen architecture §26.
@@ -13,10 +15,14 @@ import '../../application/premium_offer_provider.dart';
 /// A plain inline card, never a dialog/interstitial/snackbar — it never
 /// interrupts an active Circle and never stacks with the action-report or
 /// Plan-session surfaces already on this screen (frozen architecture §12).
-/// Marks itself shown (so it never appears again, regardless of whether
-/// the user opens the offer) the first time it actually renders — see
-/// [premiumOfferInvitationShownKey]'s own doc comment for why this is
-/// deliberately a one-time event, not a dismiss-to-hide banner.
+/// A one-time event, not a dismiss-to-hide banner (see
+/// [premiumOfferInvitationShownKey]). Invitation semantics
+/// (`home_invitation_slot.dart`): the first render claims this session's
+/// invitation slot, so the card stays for the session (until entitlement)
+/// and no refresh can remove it; the persisted "shown" flag is written
+/// only once it has been meaningfully visible ([ViewportVisibility]), so
+/// a card that only rendered below the fold may appear in a later
+/// session.
 class PremiumOfferInvitationCard extends ConsumerStatefulWidget {
   const PremiumOfferInvitationCard({super.key});
 
@@ -27,20 +33,27 @@ class PremiumOfferInvitationCard extends ConsumerStatefulWidget {
 
 class _PremiumOfferInvitationCardState
     extends ConsumerState<PremiumOfferInvitationCard> {
+  void _markShown() {
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (prefs.getBool(premiumOfferInvitationShownKey) ?? false) return;
+    prefs.setBool(premiumOfferInvitationShownKey, true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final shouldShow = ref.watch(showPremiumOfferInvitationProvider);
     if (!shouldShow) return const SizedBox.shrink();
 
+    // Selected for this session: claim the invitation slot (idempotent).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref
-          .read(sharedPreferencesProvider)
-          .setBool(premiumOfferInvitationShownKey, true);
+          .read(homeInvitationSlotProvider.notifier)
+          .claim(HomeInvitation.premium);
     });
 
     final textTheme = Theme.of(context).textTheme;
-    return Padding(
+    final card = Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.page,
         0,
@@ -68,5 +81,6 @@ class _PremiumOfferInvitationCardState
         ),
       ),
     );
+    return ViewportVisibility(onVisible: _markShown, child: card);
   }
 }

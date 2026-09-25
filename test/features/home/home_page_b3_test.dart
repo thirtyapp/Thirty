@@ -99,7 +99,11 @@ Future<(Widget, SharedPreferences)> _wrap({
   SharedPreferences.setMockInitialValues(storedPrefs);
   final prefs = await SharedPreferences.getInstance();
   if (seedJournal != null) await seedJournal(prefs);
+  // A fresh scope (and container) per call: a test that pumps several
+  // states in sequence must not carry one state's session invitation slot
+  // into the next.
   final widget = ProviderScope(
+    key: UniqueKey(),
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
       nowProvider.overrideWithValue(_today),
@@ -293,8 +297,8 @@ void main() {
   });
 
   group('Invitation "shown" flags', () {
-    testWidgets('reminder: written on the first build even while the card is '
-        'still below the fold (non-lazy)', (tester) async {
+    testWidgets('reminder: rendered below the fold on the first build, but '
+        'not marked shown until it has been visible', (tester) async {
       _setSurface(tester, const Size(320, 568));
       final (widget, prefs) = await _wrap(
         storedPrefs: _chosen,
@@ -310,12 +314,15 @@ void main() {
         tester.getRect(find.text('Not now')).top,
         greaterThan(viewport.bottom),
       );
-      expect(prefs.getBool(reminderInvitationShownKey), isTrue);
+      // Founder decision after B3: rendering below the fold does not
+      // consume the one-time invitation.
+      await tester.pump(const Duration(seconds: 2));
+      expect(prefs.getBool(reminderInvitationShownKey), isNull);
       expect(prefs.getBool(premiumOfferInvitationShownKey), isNull);
     });
 
-    testWidgets('Premium: written on the first build, reminder flag '
-        'untouched', (tester) async {
+    testWidgets('Premium: not marked shown while below the fold; reminder '
+        'flag untouched', (tester) async {
       _setSurface(tester, const Size(320, 568));
       final (widget, prefs) = await _wrap(
         storedPrefs: {..._closedReflected, reminderInvitationShownKey: true},
@@ -324,7 +331,8 @@ void main() {
       await tester.pumpWidget(widget);
       await tester.pump();
 
-      expect(prefs.getBool(premiumOfferInvitationShownKey), isTrue);
+      await tester.pump(const Duration(seconds: 2));
+      expect(prefs.getBool(premiumOfferInvitationShownKey), isNull);
       expect(prefs.getBool(reminderInvitationShownKey), isTrue);
     });
 

@@ -83,8 +83,10 @@ void main() {
     expect(find.text('Learn more'), findsOneWidget);
   });
 
-  testWidgets('marks itself shown once rendered, so a rebuild never shows '
-      'it again in the same session', (tester) async {
+  testWidgets('marks itself shown once meaningfully visible, not merely '
+      'rendered, and stays for the session (founder decision after B3)', (
+    tester,
+  ) async {
     final (widget, container) = await _wrap();
     addTearDown(container.dispose);
     await _closeCircle(container, '2026-09-01');
@@ -95,7 +97,14 @@ void main() {
     expect(find.textContaining('THIRTY Premium'), findsOneWidget);
 
     final prefs = container.read(sharedPreferencesProvider);
+    expect(prefs.getBool(premiumOfferInvitationShownKey), isNull);
+
+    await tester.pump(const Duration(seconds: 1));
     expect(prefs.getBool(premiumOfferInvitationShownKey), isTrue);
+    // Written, but the session's own invitation is not removed by it.
+    container.invalidate(circleJournalRepositoryProvider);
+    await tester.pump();
+    expect(find.textContaining('THIRTY Premium'), findsOneWidget);
   });
 
   testWidgets('never renders while already entitled', (tester) async {
