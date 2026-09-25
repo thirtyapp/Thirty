@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../../../core/reminder/reminder_gateway.dart';
+import '../../home/application/home_invitation_slot.dart';
 import '../../home/application/recommendation_provider.dart';
 
 /// THIRTY's one local reminder — Step 5 local closure
@@ -143,6 +144,11 @@ class ReminderNotifier extends Notifier<ReminderState> {
       minute: minute,
       permissionGranted: granted,
     );
+    // Enabling reminders ends the reminder invitation for the rest of this
+    // app session — disabling again later in the session never brings it
+    // back (session state only; `reminder_invitation_shown_v1` keeps its
+    // "was meaningfully visible" meaning).
+    ref.read(homeInvitationSlotProvider.notifier).closeReminderForSession();
     await _persist();
     await _rescheduleIfNeeded();
   }

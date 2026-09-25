@@ -15,7 +15,8 @@ enum HomeInvitation { reminder, premium }
 ///   renders claims the slot and keeps it for the rest of the session,
 ///   so an unrelated provider refresh can never remove it or hand its
 ///   place to the other invitation. Only a real terminating condition
-///   ("Not now", a chosen reminder time, reminders enabled, Premium
+///   ("Not now", a chosen reminder time, reminders enabled — which closes
+///   the reminder invitation for the rest of the session — Premium
 ///   entitlement) hides it.
 /// - **persisted shown** — the existing `*_shown_v1` flag is written only
 ///   once the card has been meaningfully visible (`ViewportVisibility`),
@@ -34,6 +35,17 @@ class HomeInvitationSlotNotifier extends Notifier<HomeInvitationSlot> {
   void claim(HomeInvitation invitation) {
     if (state.owner != null) return;
     state = (owner: invitation, closed: false);
+  }
+
+  /// Reminders were enabled: the reminder invitation is over for the rest
+  /// of this session, whether or not it had been presented yet. If it
+  /// owns the slot it closes; if nothing owns the slot yet, the reminder
+  /// takes it already closed, so neither a later "disable" nor Premium can
+  /// reopen it this session. A Premium invitation that already owns the
+  /// slot is left alone.
+  void closeReminderForSession() {
+    if (state.owner == HomeInvitation.premium) return;
+    state = (owner: HomeInvitation.reminder, closed: true);
   }
 
   /// Closes [invitation] for the rest of the session if it owns the slot.

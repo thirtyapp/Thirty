@@ -293,6 +293,68 @@ void main() {
     });
   });
 
+  group('Reminders enabled mid-session', () {
+    testWidgets('active invitation → reminders enabled → closed → reminders '
+        'disabled → stays closed for the rest of the session, and Premium '
+        'does not take the slot', (tester) async {
+      final prefs = await _prefs(
+        _chosen,
+        // Two closed days: Premium would otherwise be eligible.
+        closedDays: const ['2026-07-31', '2026-08-01'],
+      );
+      final container = await _session(tester, prefs, size: const Size(320, 568));
+      expect(find.text(_reminderCopy), findsOneWidget);
+      // Still below the fold: never persisted as shown.
+      expect(prefs.getBool(reminderInvitationShownKey), isNull);
+
+      final reminders = container.read(reminderProvider.notifier);
+      await reminders.enable(hour: 8, minute: 0);
+      await tester.pump();
+      expect(find.text(_reminderCopy), findsNothing);
+
+      await reminders.disable();
+      await tester.pump();
+      container.invalidate(circleJournalRepositoryProvider);
+      await tester.pump(const Duration(seconds: 2));
+
+      expect(find.text(_reminderCopy), findsNothing);
+      expect(find.text(_premiumCopy), findsNothing);
+      expect(container.read(homeInvitationSlotProvider), (
+        owner: HomeInvitation.reminder,
+        closed: true,
+      ));
+      // Session-only: the persisted flag keeps its meaning (never visible).
+      expect(prefs.getBool(reminderInvitationShownKey), isNull);
+      expect(prefs.getBool(premiumOfferInvitationShownKey), isNull);
+
+      // A later session evaluates the normal rules again.
+      await _endSession(tester, container);
+      await _session(tester, prefs);
+      expect(find.text(_reminderCopy), findsOneWidget);
+    });
+
+    testWidgets('enabled before any invitation was presented: disabling later '
+        'in the session does not bring the reminder invitation up', (
+      tester,
+    ) async {
+      final prefs = await _prefs(
+        _closedPendingReflection,
+        closedDays: const ['2026-07-31', '2026-08-01'],
+      );
+      final container = await _session(tester, prefs);
+      expect(container.read(homeInvitationSlotProvider).owner, isNull);
+
+      final reminders = container.read(reminderProvider.notifier);
+      await reminders.enable(hour: 8, minute: 0);
+      await reminders.disable();
+      await _answerNotToday(tester);
+      await tester.pump(const Duration(seconds: 2));
+
+      expect(find.text(_reminderCopy), findsNothing);
+      expect(find.text(_premiumCopy), findsNothing);
+    });
+  });
+
   group('Across sessions', () {
     testWidgets('app closed before it was ever visible: the next session may '
         'show it again', (tester) async {
