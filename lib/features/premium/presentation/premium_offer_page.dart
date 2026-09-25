@@ -7,23 +7,32 @@ import '../../../core/premium/premium_offer_providers.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
+import 'widgets/manage_subscription.dart';
+import 'widgets/premium_restore_footer.dart';
 
 /// THIRTY's one Premium offer surface — Step 5
-/// (`docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`).
+/// (`docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`), recomposed
+/// in Phase C2 to match the You funnel ("THIRTY Premium" → "Become
+/// Premium").
 ///
-/// Reachable from Settings' "Upgrade to Premium" row and from the quiet,
-/// single, non-modal invitation on the home screen after a user's second
-/// closed Circle on a distinct date (`home_offer_invitation.dart`, frozen
-/// architecture §26). There is no other entry point — no interstitial, no
-/// forced paywall on Free Circle launch (frozen architecture §12).
+/// Reachable from You's Premium card, Plans' and Insights' Premium entry
+/// points, and the quiet, single, non-modal Home invitation after a
+/// second closed Circle on a distinct date (frozen architecture §26). No
+/// interstitial, no forced paywall on Free Circle launch (§12).
 ///
-/// States the actual paid contract truthfully: Plans + Coach + Insights,
-/// the real localized monthly price returned by the store (never a
-/// hardcoded figure), automatic monthly renewal, that Free remains
-/// available either way, how management/cancellation works, restore, and
-/// that THIRTY's personal history is device-local, not cloud-synced.
-/// Never mentions Atmosphere, AI, trials, annual pricing or scarcity
-/// language (frozen architecture §11/§12).
+/// Answers, in order and without clutter: what you get (the value card:
+/// Plans, Coach and Insights — the actual V1 Premium value), what it costs
+/// (the store's own localized monthly price, never a hardcoded figure),
+/// that it renews monthly until cancelled (the disclosure directly under
+/// the price), that Free stays complete (next to the quiet "Not now"
+/// exit), and how to restore or cancel (the shared restore footer and the
+/// cancel line). One monthly auto-renewing subscription only — no trial,
+/// annual price, urgency, testimonial or comparison (frozen architecture
+/// §11/§12).
+///
+/// Purchase success is only claimed once the entitlement is confirmed
+/// active; a pending Google Play payment and a still-confirming purchase
+/// are explained, never shown as success or as an error.
 class PremiumOfferPage extends ConsumerStatefulWidget {
   const PremiumOfferPage({super.key});
 
@@ -33,7 +42,6 @@ class PremiumOfferPage extends ConsumerStatefulWidget {
 
 class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
   bool _isPurchasing = false;
-  bool _isRestoring = false;
   String? _message;
 
   Future<void> _purchase() async {
@@ -64,31 +72,14 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
     });
   }
 
-  Future<void> _restore() async {
-    setState(() {
-      _isRestoring = true;
-      _message = null;
-    });
-    final outcome = await ref.read(entitlementStatusProvider.notifier).restore();
-    if (!mounted) return;
-    setState(() {
-      _isRestoring = false;
-      _message = switch (outcome) {
-        RestoreOutcome.restored => 'Your Premium access has been restored.',
-        RestoreOutcome.notFound => 'No previous purchase was found to restore.',
-        RestoreOutcome.unavailable =>
-          'Restore isn’t available right now. Please try again later.',
-        RestoreOutcome.error =>
-          'Something went wrong restoring your purchase. Please try again.',
-      };
-    });
-  }
+  void _leave() => Navigator.of(context).maybePop();
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
-    final isEntitled = ref.watch(premiumEntitlementProvider);
+    final status = ref.watch(entitlementStatusProvider);
+    final quiet = textTheme.bodySmall?.copyWith(color: colors.textSecondary);
 
     return Scaffold(
       appBar: AppBar(title: const Text('THIRTY Premium')),
@@ -97,100 +88,40 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
           padding: const EdgeInsets.all(AppSpacing.page),
           children: [
             Text('Plans, Coach and Insights', style: textTheme.titleLarge),
-            const SizedBox(height: AppSpacing.s),
-            Text(
-              'A guided path that remembers your place, helps you adjust '
-              'its pace, and uses your own recorded choices to make the '
-              'next step easier to work with.',
-              style: textTheme.bodyMedium,
-            ),
             const SizedBox(height: AppSpacing.m),
-            ThirtyCard(
-              padding: const EdgeInsets.all(AppSpacing.featuredCard),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  _OfferPoint(text: 'Three guided Circle Plans that remember your place'),
-                  _OfferPoint(text: 'Circle Coach: contextual pacing and gentle resumption'),
-                  _OfferPoint(text: 'Circle Insights: what your own choices tell you'),
-                ],
+            const _ValueCard(),
+            const SizedBox(height: AppSpacing.l),
+            switch (status) {
+              EntitlementStatus.initializing => const _StatusNote(
+                label: 'Checking your Premium status…',
               ),
-            ),
-            const SizedBox(height: AppSpacing.m),
-            if (isEntitled)
-              Text(
-                'You already have Premium.',
-                style: textTheme.bodyMedium?.copyWith(color: colors.primary),
-              )
-            else ...[
-              // The shared live store offer (premium_offer_providers.dart),
-              // the same one You's Premium card shows.
-              Builder(
-                builder: (context) {
-                  final offerState = ref.watch(monthlyOfferProvider);
-                  final offer = offerState.value;
-                  if (offerState.isLoading) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: AppSpacing.s),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  if (offer == null) {
-                    return Text(
-                      'Premium is temporarily unavailable. Please try '
-                      'again later.',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colors.textSecondary,
-                      ),
-                    );
-                  }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${offer.localizedPrice} / month, billed automatically '
-                        'until cancelled.',
-                        style: textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: AppSpacing.s),
-                      ThirtyButton(
-                        label: 'Subscribe',
-                        isLoading: _isPurchasing,
-                        onPressed: _isPurchasing ? null : _purchase,
-                      ),
-                    ],
-                  );
-                },
+              EntitlementStatus.unavailable => const _StatusNote(
+                label: 'Premium status is temporarily unavailable',
+                description:
+                    'This does not affect your saved records. Please try '
+                    'again later.',
               ),
-              const SizedBox(height: AppSpacing.s),
-              ThirtyButton(
-                label: 'Restore purchases',
-                variant: ThirtyButtonVariant.secondary,
-                isLoading: _isRestoring,
-                onPressed: _isRestoring ? null : _restore,
+              EntitlementStatus.active => _ActiveBlock(onDone: _leave),
+              EntitlementStatus.inactive => _PurchaseBlock(
+                isPurchasing: _isPurchasing,
+                onPurchase: _purchase,
+                onNotNow: _leave,
               ),
-            ],
+            },
             if (_message != null) ...[
-              const SizedBox(height: AppSpacing.s),
+              const SizedBox(height: AppSpacing.m),
               Semantics(
                 liveRegion: true,
-                child: Text(
-                  _message!,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
+                child: Text(_message!, style: textTheme.bodyMedium),
               ),
             ],
-            const SizedBox(height: AppSpacing.m),
+            const SizedBox(height: AppSpacing.l),
+            PremiumRestoreFooter(horizontalInset: 0, enabled: !_isPurchasing),
+            const SizedBox(height: AppSpacing.s),
             Text(
-              'Free remains complete either way. You can cancel anytime '
-              'through Google Play; access continues until the current '
-              'paid period ends. Your Circle history stays on this '
-              'device only — it is not backed up to the cloud, so '
-              'restoring a purchase recovers Premium access but not a '
-              'lost device’s history.',
-              style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+              'You can cancel anytime in Google Play. Premium stays active '
+              'until the end of your current billing period.',
+              style: quiet,
             ),
           ],
         ),
@@ -199,16 +130,194 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
   }
 }
 
-class _OfferPoint extends StatelessWidget {
-  const _OfferPoint({required this.text});
+/// What you get: Premium V1's three actual features.
+class _ValueCard extends StatelessWidget {
+  const _ValueCard();
 
-  final String text;
+  static const _points = [
+    ('Circle Plans', 'three guided Plans that remember your place'),
+    ('Circle Coach', 'contextual pacing and gentle resumption'),
+    ('Circle Insights', 'what your own choices tell you'),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return ThirtyCard(
+      padding: const EdgeInsets.all(AppSpacing.featuredCard),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final (i, (name, line)) in _points.indexed) ...[
+            if (i > 0) const SizedBox(height: AppSpacing.m),
+            // Its own semantics node: one screen-reader stop per point.
+            Semantics(
+              container: true,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Decorative: each point reads as one sentence.
+                  ExcludeSemantics(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Icon(
+                        Icons.check_circle_outline,
+                        size: 20,
+                        color: colors.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.s),
+                  Expanded(
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: name,
+                            style: textTheme.titleSmall?.copyWith(
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                          TextSpan(text: ': $line'),
+                        ],
+                      ),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Free user: price, disclosure, the one CTA, and the quiet exit.
+class _PurchaseBlock extends ConsumerWidget {
+  const _PurchaseBlock({
+    required this.isPurchasing,
+    required this.onPurchase,
+    required this.onNotNow,
+  });
+
+  final bool isPurchasing;
+  final VoidCallback onPurchase;
+  final VoidCallback onNotNow;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final quiet = textTheme.bodySmall?.copyWith(color: colors.textSecondary);
+    final offerState = ref.watch(monthlyOfferProvider);
+    final offer = offerState.value;
+    final loading = offerState.isLoading;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (loading)
+          Semantics(
+            liveRegion: true,
+            child: Text('Checking the current price…', style: quiet),
+          )
+        else if (offer == null)
+          Text('Pricing isn’t available right now.', style: quiet)
+        else ...[
+          Text('${offer.localizedPrice} / month', style: textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Billed monthly. Renews automatically until you cancel.',
+            style: quiet,
+          ),
+        ],
+        if (loading || offer != null) ...[
+          const SizedBox(height: AppSpacing.m),
+          ThirtyButton(
+            label: 'Become Premium',
+            size: ThirtyButtonSize.hero,
+            isLoading: isPurchasing,
+            // No purchase before the store has returned a real price.
+            onPressed: offer == null || isPurchasing ? null : onPurchase,
+          ),
+        ],
+        const SizedBox(height: AppSpacing.xs),
+        TextButton(
+          onPressed: isPurchasing ? null : onNotNow,
+          style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
+          child: const Text('Not now'),
+        ),
+        Text('Free stays complete.', style: quiet, textAlign: TextAlign.center),
+      ],
+    );
+  }
+}
+
+/// Active subscriber: status and management — no price, no acquisition.
+class _ActiveBlock extends StatelessWidget {
+  const _ActiveBlock({required this.onDone});
+
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Premium is active',
+          style: textTheme.bodyLarge?.copyWith(color: colors.primary),
+        ),
+        const SizedBox(height: AppSpacing.s),
+        const ManageSubscription(),
+        const SizedBox(height: AppSpacing.xs),
+        TextButton(
+          onPressed: onDone,
+          style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
+          child: const Text('Done'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Checking / unavailable: a truthful status line, no purchase.
+class _StatusNote extends StatelessWidget {
+  const _StatusNote({required this.label, this.description});
+
+  final String label;
+  final String? description;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return Semantics(
+      label: description == null ? label : '$label. $description',
+      child: ExcludeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: textTheme.bodyLarge),
+            if (description != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                description!,
+                style: textTheme.bodySmall?.copyWith(
+                  color: colors.textSecondary,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

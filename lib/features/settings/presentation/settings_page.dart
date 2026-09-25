@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/design_tokens.dart';
-import 'widgets/you_billing_footer.dart';
+import '../../premium/presentation/widgets/premium_restore_footer.dart';
 import 'widgets/you_data_card.dart';
 import 'widgets/you_preferences_card.dart';
 import 'widgets/you_premium_card.dart';
@@ -51,7 +51,7 @@ import 'widgets/you_premium_card.dart';
 /// Premium card first ([YouPremiumCard] — live store price, never a
 /// hardcoded one; no acquisition CTA while the entitlement is unknown or
 /// unavailable), the quiet billing footer with "Restore purchases"
-/// ([YouBillingFooter]), then "Preferences" as one grouped card
+/// ([PremiumRestoreFooter], shared with the offer page), then "Preferences" as one grouped card
 /// ([YouPreferencesCard]: reminder, appearance, analytics), and "Your
 /// data" last ([YouDataCard]), with "Delete all" as the final row.
 ///
@@ -74,7 +74,7 @@ class SettingsPage extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.page),
           children: [
             const YouPremiumCard(),
-            const YouBillingFooter(),
+            const PremiumRestoreFooter(),
             const SizedBox(height: AppSpacing.l),
             Text('Preferences', style: textTheme.titleMedium),
             const SizedBox(height: AppSpacing.s),

@@ -86,11 +86,12 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
+    expect(find.text('€3.99 / month'), findsOneWidget);
     expect(
-      find.textContaining('€3.99 / month, billed automatically'),
+      find.text('Billed monthly. Renews automatically until you cancel.'),
       findsOneWidget,
     );
-    expect(find.text('Subscribe'), findsOneWidget);
+    expect(find.text('Become Premium'), findsOneWidget);
   });
 
   testWidgets('shows a quiet unavailable state and no purchase button when '
@@ -102,15 +103,12 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    expect(
-      find.textContaining('Premium is temporarily unavailable'),
-      findsOneWidget,
-    );
-    expect(find.text('Subscribe'), findsNothing);
+    expect(find.text('Pricing isn’t available right now.'), findsOneWidget);
+    expect(find.text('Become Premium'), findsNothing);
   });
 
-  testWidgets('already-entitled users see confirmation, not a purchase '
-      'button', (tester) async {
+  testWidgets('already-entitled users see their active status, not a '
+      'purchase button (Phase C2 copy)', (tester) async {
     final gateway = _FakeEntitlementGateway(
       initialStatus: EntitlementStatus.active,
     );
@@ -120,8 +118,9 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    expect(find.text('You already have Premium.'), findsOneWidget);
-    expect(find.text('Subscribe'), findsNothing);
+    expect(find.text('Premium is active'), findsOneWidget);
+    expect(find.text('Become Premium'), findsNothing);
+    expect(find.textContaining('/ month'), findsNothing);
   });
 
   testWidgets('a successful purchase reports confirmation and updates '
@@ -134,7 +133,8 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Subscribe'));
+    await tester.ensureVisible(find.text('Become Premium'));
+    await tester.tap(find.text('Become Premium'));
     await tester.pumpAndSettle();
 
     expect(find.text('You now have Premium.'), findsOneWidget);
@@ -150,7 +150,8 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Subscribe'));
+    await tester.ensureVisible(find.text('Become Premium'));
+    await tester.tap(find.text('Become Premium'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('wrong'), findsNothing);
@@ -166,7 +167,8 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Subscribe'));
+    await tester.ensureVisible(find.text('Become Premium'));
+    await tester.tap(find.text('Become Premium'));
     await tester.pumpAndSettle();
 
     expect(
@@ -191,7 +193,8 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Subscribe'));
+    await tester.ensureVisible(find.text('Become Premium'));
+    await tester.tap(find.text('Become Premium'));
     await tester.pumpAndSettle();
 
     expect(
@@ -215,7 +218,8 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Subscribe'));
+    await tester.ensureVisible(find.text('Become Premium'));
+    await tester.tap(find.text('Become Premium'));
     await tester.pumpAndSettle();
 
     expect(
@@ -225,16 +229,19 @@ void main() {
     expect(container.read(premiumEntitlementProvider), isFalse);
   });
 
-  testWidgets('mentions Free remains available and that history is '
-      'device-local, not cloud-synced', (tester) async {
+  testWidgets('says Free stays complete and that history stays on this '
+      'device (Phase C2 copy)', (tester) async {
     final (widget, container) = await _wrap(gateway: _FakeEntitlementGateway());
     addTearDown(container.dispose);
 
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Free remains complete'), findsOneWidget);
-    expect(find.textContaining('not backed up to the cloud'), findsOneWidget);
+    expect(find.text('Free stays complete.'), findsOneWidget);
+    expect(
+      find.textContaining('Your Circle history stays on this device'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Phase A2 — the Premium offer card uses featuredCard padding', (

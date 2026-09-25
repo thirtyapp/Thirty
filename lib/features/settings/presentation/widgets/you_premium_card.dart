@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/premium/entitlement_status.dart';
 import '../../../../core/premium/premium_access.dart';
@@ -9,6 +8,7 @@ import '../../../../core/premium/premium_offer_providers.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_card.dart';
+import '../../../premium/presentation/widgets/manage_subscription.dart';
 
 /// You's Premium card — the top of You (Phase C1, approved commercial
 /// hierarchy). One card, four billing states:
@@ -62,7 +62,7 @@ class YouPremiumCard extends ConsumerWidget {
             EntitlementStatus.active => const [
               _StatusText(label: 'Premium is active', emphasis: true),
               SizedBox(height: AppSpacing.s),
-              _ManageSubscription(),
+              ManageSubscription(),
             ],
             EntitlementStatus.unavailable => const [
               _StatusText(
@@ -99,40 +99,6 @@ class _LivePrice extends ConsumerWidget {
       );
     }
     return Text('${offer.localizedPrice} / month', style: textTheme.bodyLarge);
-  }
-}
-
-class _ManageSubscription extends ConsumerWidget {
-  const _ManageSubscription();
-
-  Future<void> _open(String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri == null) return;
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final textTheme = Theme.of(context).textTheme;
-    final colors = Theme.of(context).extension<AppColors>()!;
-    final urlState = ref.watch(subscriptionManagementUrlProvider);
-    if (urlState.isLoading) return const SizedBox.shrink();
-
-    final url = urlState.value;
-    if (url == null) {
-      return Text(
-        'Manage or cancel this subscription from the Google Play Store app.',
-        style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
-      );
-    }
-    return SizedBox(
-      width: double.infinity,
-      child: ThirtyButton(
-        label: 'Manage subscription',
-        variant: ThirtyButtonVariant.secondary,
-        onPressed: () => _open(url),
-      ),
-    );
   }
 }
 

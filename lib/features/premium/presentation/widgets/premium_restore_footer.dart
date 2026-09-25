@@ -5,22 +5,34 @@ import '../../../../core/premium/entitlement_status.dart';
 import '../../../../core/premium/premium_access.dart';
 import '../../../../core/theme/design_tokens.dart';
 
-/// The quiet billing footer under You's Premium card (Phase C1): "Restore
-/// purchases" lower in the billing area, with the reminder that restoring
-/// is about Premium access only — THIRTY has no account, and Circle
-/// history lives on this device alone.
+/// The quiet billing footer shared by You (under its Premium card, Phase
+/// C1) and the Premium offer page (Phase C2): "Restore purchases" with the
+/// reminder that restoring is about Premium access only — THIRTY has no
+/// account, and Circle history lives on this device alone.
 ///
 /// Restores through [EntitlementNotifier.restore], so a successful restore
-/// updates the Premium card straight away. Hidden while the entitlement
+/// updates entitlement state straight away. Hidden while the entitlement
 /// state is still being checked.
-class YouBillingFooter extends ConsumerStatefulWidget {
-  const YouBillingFooter({super.key});
+class PremiumRestoreFooter extends ConsumerStatefulWidget {
+  const PremiumRestoreFooter({
+    this.horizontalInset = AppSpacing.featuredCard,
+    this.enabled = true,
+    super.key,
+  });
+
+  /// Side inset: You aligns the footer with its Premium card's content;
+  /// the offer page aligns it with the page itself.
+  final double horizontalInset;
+
+  /// `false` disables Restore (e.g. while a purchase is in flight).
+  final bool enabled;
 
   @override
-  ConsumerState<YouBillingFooter> createState() => _YouBillingFooterState();
+  ConsumerState<PremiumRestoreFooter> createState() =>
+      _PremiumRestoreFooterState();
 }
 
-class _YouBillingFooterState extends ConsumerState<YouBillingFooter> {
+class _PremiumRestoreFooterState extends ConsumerState<PremiumRestoreFooter> {
   bool _isRestoring = false;
   String? _message;
 
@@ -56,18 +68,17 @@ class _YouBillingFooterState extends ConsumerState<YouBillingFooter> {
     final quiet = textTheme.bodySmall?.copyWith(color: colors.textSecondary);
 
     return Padding(
-      // Aligned with the Premium card's content above it.
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.featuredCard,
+      padding: EdgeInsets.fromLTRB(
+        widget.horizontalInset,
         AppSpacing.xs,
-        AppSpacing.featuredCard,
+        widget.horizontalInset,
         0,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextButton(
-            onPressed: _isRestoring ? null : _restore,
+            onPressed: _isRestoring || !widget.enabled ? null : _restore,
             style: TextButton.styleFrom(
               padding: EdgeInsets.zero,
               minimumSize: const Size(0, 48),
