@@ -1,9 +1,12 @@
 # THIRTY Visual Pass — Phase B Plan (Home composition)
 
-**Status:** Approved (founder decisions B-D1–B-D4 below).
+**Status:** **Complete and ratified** (founder decisions B-D1–B-D4 below).
 - **B1 complete** — commit `d15a9e1`
 - **B2 complete** — commit `695f7fb` (see the B2 scope refinement below)
 - **B3 complete** — commit `8d260a8` (see "B3 as implemented" below)
+- **Invitation contract fix** — commit `a8a9ca5` (session-stable invitations; persisted "shown" only once meaningfully visible)
+- **Reminder session-close fix** — commit `08bf3be` (enabling reminders closes the reminder invitation for the rest of the session)
+- **Phase B complete and ratified.** Non-blocking follow-ups in §6.
 
 **Baseline:** `step5-billing-integration` after Phase A (A5 `6ea5fe3`, plan `09f2b0e`).
 **Foundation:** Phase A tokens and components (`docs/design/PHASE_A_PLAN.md`) are the ratified foundation.
@@ -79,3 +82,12 @@ Existing (must stay green, assertions not weakened): `home_page_test` (incl. Rea
 Added in B2 (`home_page_b2_test`, `thirty_button_test`): Circle rect identical across Ready → Directions → assigned on one tap-driven `HomePage`; hero CTAs 56pt and exactly the content-column width (360 / 412pt); only the hero CTA is 56pt; Start alone has the arrow (decorative for semantics); Start label centered on the button and Circle axis with the arrow in the trailing slot; no label/arrow overlap at 320pt and 360pt at 200% text; Start inside the reveal-gated `IgnorePointer` and still the real Start transition; First Breath total 6500ms; text-rhythm gaps; no overflow at 320×568 and 360×640 at 200% text for Ready (+ Directions), assigned, started and closed.
 
 Added in B1 (`home_page_b1_test`, `thirty_button_test`): metrics values; halo rect = Circle rect in Ready and Circle Hero, light and dark; steady not-started track still transparent; 56pt only on the Home lifecycle CTA, direction choices 48pt, no icon on Begin; 56pt CTA still gated by the First Breath reveal; header hidden in Ready (incl. after Begin), hidden throughout First Breath, shown once settled / at once when already played / instantly under reduced motion; revealing the header never moves the Circle.
+
+## 6. Phase B closure — non-blocking follow-ups
+
+| Item | Disposition |
+|---|---|
+| **Reflection below the fold** (B3: the reflection question now peeks below the fold on a Pixel 7 and its answers need a scroll) | **Accepted for now.** Revisit only during later Home polish if real use shows its discoverability is too low. |
+| **AppBar scrolled-under hard edge** (content cuts off against the page-coloured AppBar while scrolling) | **Phase C**, as part of the existing AppBar scrolled-under separation item. |
+| **Started-state ring alpha 22%** (B-D3) | **Reviewed and retained** — re-checked in the completed B2 composition, light and dark. |
+| **Crafted Circle work** (uncommitted in the `main` checkout) | **Remains parked** (B-D1). Requires a separate reconciliation audit against the Phase A/B Home implementation before any future Circle-geometry merge. |
