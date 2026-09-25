@@ -92,23 +92,29 @@ class _ReminderInvitationCardState
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.s),
-            Row(
-              children: [
-                Expanded(
-                  child: ThirtyButton(
-                    label: 'Choose a time',
-                    onPressed: _chooseTime,
+            // Paired buttons share one height: if large text wraps one label onto
+            // a second line, both grow together (IntrinsicHeight + stretch). At
+            // ordinary text sizes both stay exactly 48pt.
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: ThirtyButton(
+                      label: 'Choose a time',
+                      onPressed: _chooseTime,
+                    ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.s),
-                Expanded(
-                  child: ThirtyButton(
-                    label: 'Not now',
-                    variant: ThirtyButtonVariant.secondary,
-                    onPressed: _dismiss,
+                  const SizedBox(width: AppSpacing.s),
+                  Expanded(
+                    child: ThirtyButton(
+                      label: 'Not now',
+                      variant: ThirtyButtonVariant.secondary,
+                      onPressed: _dismiss,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

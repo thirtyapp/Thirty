@@ -39,9 +39,16 @@ class ThirtyButton extends StatelessWidget {
 
   static const _trailingIconSize = 20.0;
 
+  /// Large accessibility text wraps a label onto a second line before it
+  /// is ever ellipsized.
+  static const _maxLabelLines = 2;
+
   /// Room for the trailing icon plus its gap to the label; reserved on
   /// both sides so the label stays centered.
   static const _trailingSlotWidth = _trailingIconSize + AppSpacing.s;
+
+  /// From this text scale up, the label gets the tighter side inset.
+  static const _largeTextScale = 1.3;
 
   bool get _isEnabled => onPressed != null && !isLoading;
 
@@ -49,6 +56,8 @@ class ThirtyButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
+    final isLargeText =
+        MediaQuery.textScalerOf(context).scale(1) >= _largeTextScale;
     final isPrimary = variant == ThirtyButtonVariant.primary;
 
     final Color backgroundColor;
@@ -83,17 +92,21 @@ class ThirtyButton extends StatelessWidget {
         // `circle_history_page.dart`) combined with a longer label or a
         // large accessibility text scale: a non-flex child in a `Row` is
         // measured at its unconstrained preferred width regardless of
-        // available space. `Flexible` lets it shrink and ellipsize instead
-        // — normal-width buttons render identically, since this only
-        // engages when the label genuinely does not fit.
+        // available space. `Flexible` lets it shrink instead — normal-width
+        // buttons render identically, since this only engages when the
+        // label genuinely does not fit. Since the large-text foundation
+        // pass it first wraps to a second line (the button grows past its
+        // minimum height), and only a label that needs more than two lines
+        // ellipsizes.
         Flexible(
           child: Text(
             label,
             style: theme.textTheme.labelLarge?.copyWith(
               color: foregroundColor,
             ),
+            textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
-            maxLines: 1,
+            maxLines: _maxLabelLines,
           ),
         ),
       ],
@@ -110,11 +123,15 @@ class ThirtyButton extends StatelessWidget {
         : Row(
             children: [
               const SizedBox(width: _trailingSlotWidth),
-              Expanded(child: Center(child: labelRow)),
+              // heightFactor: 1 — size to the label, never stretch to the
+              // parent's height (the button's height is a minimum now, so
+              // a bounded parent would otherwise make it that tall).
+              Expanded(child: Center(heightFactor: 1, child: labelRow)),
               SizedBox(
                 width: _trailingSlotWidth,
                 child: Align(
                   alignment: AlignmentDirectional.centerEnd,
+                  heightFactor: 1,
                   child: Icon(
                     trailingIcon,
                     size: _trailingIconSize,
@@ -125,11 +142,17 @@ class ThirtyButton extends StatelessWidget {
             ],
           );
 
-    final button = SizedBox(
-      height: switch (size) {
-        ThirtyButtonSize.regular => 48,
-        ThirtyButtonSize.hero => 56,
-      },
+    // A minimum, not a fixed, height: at ordinary text sizes every button
+    // is exactly 48pt (56pt hero) because its one-line content is shorter;
+    // at large accessibility text a label that needs a second line grows
+    // the button instead of being cut off.
+    final button = ConstrainedBox(
+      constraints: BoxConstraints(
+        minHeight: switch (size) {
+          ThirtyButtonSize.regular => 48,
+          ThirtyButtonSize.hero => 56,
+        },
+      ),
       child: Material(
         color: backgroundColor,
         // Fully rounded (founder decision D2, Phase A3) at either
@@ -178,7 +201,16 @@ class ThirtyButton extends StatelessWidget {
             };
           }),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+            // The vertical inset only matters once a label wraps: it keeps
+            // two lines clear of the pill's rounded ends. A one-line label
+            // stays well inside the minimum height either way. At large
+            // accessibility text the side inset tightens from 24 to 16 so
+            // a label has the width to fit in two lines; at ordinary sizes
+            // it is unchanged.
+            padding: EdgeInsets.symmetric(
+              horizontal: isLargeText ? AppSpacing.m : AppSpacing.l,
+              vertical: AppSpacing.s,
+            ),
             child: Stack(
               alignment: Alignment.center,
               children: [

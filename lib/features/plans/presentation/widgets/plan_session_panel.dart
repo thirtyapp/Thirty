@@ -89,30 +89,36 @@ class PlanSessionPanel extends ConsumerWidget {
             const SizedBox(height: AppSpacing.s),
             Text(guidance, textAlign: TextAlign.center),
             const SizedBox(height: AppSpacing.s),
-            Row(
-              children: [
-                Expanded(
-                  child: ThirtyButton(
-                    label: 'Standard',
-                    variant: treatment == PlanTreatment.standard
-                        ? ThirtyButtonVariant.primary
-                        : ThirtyButtonVariant.secondary,
-                    onPressed: () =>
-                        notifier.setPlanTreatment(PlanTreatment.standard),
+            // Paired buttons share one height: if large text wraps one label onto
+            // a second line, both grow together (IntrinsicHeight + stretch). At
+            // ordinary text sizes both stay exactly 48pt.
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: ThirtyButton(
+                      label: 'Standard',
+                      variant: treatment == PlanTreatment.standard
+                          ? ThirtyButtonVariant.primary
+                          : ThirtyButtonVariant.secondary,
+                      onPressed: () =>
+                          notifier.setPlanTreatment(PlanTreatment.standard),
+                    ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: ThirtyButton(
-                    label: 'Lighter',
-                    variant: treatment == PlanTreatment.lighter
-                        ? ThirtyButtonVariant.primary
-                        : ThirtyButtonVariant.secondary,
-                    onPressed: () =>
-                        notifier.setPlanTreatment(PlanTreatment.lighter),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: ThirtyButton(
+                      label: 'Lighter',
+                      variant: treatment == PlanTreatment.lighter
+                          ? ThirtyButtonVariant.primary
+                          : ThirtyButtonVariant.secondary,
+                      onPressed: () =>
+                          notifier.setPlanTreatment(PlanTreatment.lighter),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: AppSpacing.s),
             // Batch 2B (ADR-015 §7, application type #1): the persistent

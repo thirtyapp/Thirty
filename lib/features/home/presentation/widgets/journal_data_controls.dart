@@ -24,28 +24,34 @@ class JournalDataControls extends ConsumerWidget {
     final journal = ref.watch(circleJournalRepositoryProvider);
     final hasEntries = journal.readAll().isNotEmpty;
 
-    return Row(
-      children: [
-        Expanded(
-          child: ThirtyButton(
-            label: 'Copy as text',
-            variant: ThirtyButtonVariant.secondary,
-            onPressed: hasEntries
-                ? () => _exportToClipboard(context, journal)
-                : null,
+    // Paired buttons share one height: if large text wraps one label onto
+    // a second line, both grow together (IntrinsicHeight + stretch). At
+    // ordinary text sizes both stay exactly 48pt.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: ThirtyButton(
+              label: 'Copy as text',
+              variant: ThirtyButtonVariant.secondary,
+              onPressed: hasEntries
+                  ? () => _exportToClipboard(context, journal)
+                  : null,
+            ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.s),
-        Expanded(
-          child: ThirtyButton(
-            label: 'Delete all',
-            variant: ThirtyButtonVariant.secondary,
-            onPressed: hasEntries
-                ? () => _confirmClear(context, journal, ref)
-                : null,
+          const SizedBox(width: AppSpacing.s),
+          Expanded(
+            child: ThirtyButton(
+              label: 'Delete all',
+              variant: ThirtyButtonVariant.secondary,
+              onPressed: hasEntries
+                  ? () => _confirmClear(context, journal, ref)
+                  : null,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
