@@ -31,7 +31,12 @@ import '../../domain/insight_family.dart';
 /// Placed once, at the top of `../../../plans/presentation/plan_path_page.dart`
 /// ("Your path") — never a separate top-level destination.
 class InsightCard extends ConsumerWidget {
-  const InsightCard({super.key});
+  const InsightCard({this.onApplied, super.key});
+
+  /// Called after the application was actually made (never for a no-op
+  /// against [InsightNotifier.applyCurrent]'s own recheck), so the page can
+  /// confirm it once this card withdraws.
+  final VoidCallback? onApplied;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -89,14 +94,17 @@ class InsightCard extends ConsumerWidget {
       direction,
       isCurrent: isCurrent,
     );
+    final localizations = MaterialLocalizations.of(context);
     final observedAt = insight.observedAt;
-    final dateLine = observedAt == null
+    final observedOn = observedAt == null
+        ? null
+        : _keepTogether(localizations.formatShortDate(observedAt));
+    final dateLine = observedOn == null
         ? null
         : isCurrent
-        ? 'Observed on ${MaterialLocalizations.of(context).formatShortDate(observedAt)}'
-        : 'An earlier Insight from '
-              '${MaterialLocalizations.of(context).formatShortDate(observedAt)}';
-    final evidence = _evidenceText(insight);
+        ? 'Observed on $observedOn'
+        : 'An earlier Insight from $observedOn';
+    final evidence = _evidenceText(insight, localizations);
     final applicationLabel = _applicationLabel(insight, progress);
 
     // Frozen architecture §18/§38.3: a retained observation stays readable
@@ -110,60 +118,81 @@ class InsightCard extends ConsumerWidget {
     // `InsightNotifier.applyCurrent()`'s own matching entitlement guard.
     final isEntitled = ref.watch(premiumEntitlementProvider);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.s),
-      child: ThirtyCard(
-        padding: const EdgeInsets.all(AppSpacing.featuredCard),
-        child: Semantics(
-          container: true,
-          liveRegion: true,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Insight', style: textTheme.labelSmall),
+    // Phase C4: the page's "Insights" heading names this section, so the
+    // card no longer repeats an "Insight" eyebrow.
+    return ThirtyCard(
+      padding: const EdgeInsets.all(AppSpacing.featuredCard),
+      child: Semantics(
+        container: true,
+        liveRegion: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // The observation leads in the primary body colour; evidence and
+            // date stay muted metadata.
+            Text(
+              observation,
+              style: textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            if (evidence != null) ...[
               const SizedBox(height: AppSpacing.xs),
-              Text(observation, style: textTheme.bodyMedium),
-              if (evidence != null) ...[
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  evidence,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colors.textSecondary,
-                  ),
+              Text(
+                evidence,
+                semanticsLabel: _spokenForm(evidence),
+                style: textTheme.bodySmall?.copyWith(
+                  color: colors.textSecondary,
                 ),
-              ],
-              if (dateLine != null) ...[
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  dateLine,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
-              ],
-              // Only a current Insight is actionable; an earlier one is
-              // read-only history.
-              if (isCurrent) ...[
-                const SizedBox(height: AppSpacing.s),
-                ThirtyButton(
-                  label: isEntitled
-                      ? applicationLabel
-                      : 'Open Premium to apply this',
-                  variant: ThirtyButtonVariant.secondary,
-                  onPressed: isEntitled
-                      ? () => ref.read(insightProvider.notifier).applyCurrent()
-                      : () => context.push('/premium'),
-                ),
-              ],
-              // Hides this exact observation without changing any Plan or
-              // Coach state; only a genuinely new observation shows again.
-              ThirtyTextAction(
-                label: 'Dismiss',
-                onPressed: () =>
-                    ref.read(insightProvider.notifier).dismissLatest(),
               ),
             ],
-          ),
+            if (dateLine != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                dateLine,
+                semanticsLabel: _spokenForm(dateLine),
+                style: textTheme.bodySmall?.copyWith(
+                  color: colors.textSecondary,
+                ),
+              ),
+            ],
+            // Only a current Insight is actionable; an earlier one is
+            // read-only history. Premium: the one bounded application is
+            // the card's full-width main action. Free: the observation is
+            // the user's own and stays fully readable — only applying it
+            // is paid, offered as a quiet route, never a second button.
+            if (isCurrent && isEntitled) ...[
+              const SizedBox(height: AppSpacing.m),
+              SizedBox(
+                width: double.infinity,
+                child: ThirtyButton(
+                  label: applicationLabel,
+                  // Never ellipsized: at large text the label that names
+                  // the exact change wraps to as many lines as it needs.
+                  maxLabelLines: null,
+                  onPressed: () {
+                    if (ref.read(insightProvider.notifier).applyCurrent()) {
+                      onApplied?.call();
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+            ] else if (isCurrent) ...[
+              const SizedBox(height: AppSpacing.xs),
+              ThirtyTextAction(
+                label: 'Become Premium to apply this',
+                onPressed: () => context.push('/premium'),
+              ),
+            ],
+            // Hides this exact observation without changing any Plan or
+            // Coach state; only a genuinely new observation shows again.
+            ThirtyTextAction(
+              label: 'Dismiss',
+              onPressed: () =>
+                  ref.read(insightProvider.notifier).dismissLatest(),
+            ),
+          ],
         ),
       ),
     );
@@ -229,7 +258,10 @@ class InsightCard extends ConsumerWidget {
         '$numerator time${numerator == 1 ? '' : 's'}.';
   }
 
-  static String? _evidenceText(Insight insight) {
+  static String? _evidenceText(
+    Insight insight,
+    MaterialLocalizations localizations,
+  ) {
     if (!insight.isPatternClaim || insight.evidenceDateKeys.isEmpty) {
       return null;
     }
@@ -238,11 +270,27 @@ class InsightCard extends ConsumerWidget {
         : insight.family == InsightFamily.chosenPacing
         ? 'choices'
         : 'visits';
-    final first = insight.evidenceDateKeys.first;
-    final last = insight.evidenceDateKeys.last;
+    // Localized dates, never the stored `YYYY-MM-DD` keys.
+    String spoken(String key) {
+      final date = DateTime.tryParse(key);
+      return date == null
+          ? key
+          : _keepTogether(localizations.formatShortDate(date));
+    }
+
+    final first = spoken(insight.evidenceDateKeys.first);
+    final last = spoken(insight.evidenceDateKeys.last);
     return 'Based on ${insight.evidenceCount} recorded $noun between '
         '$first and $last.';
   }
+
+  /// A localized date that never splits across lines: its spaces become
+  /// non-breaking, so the line wraps before or after the whole date.
+  static String _keepTogether(String date) => date.replaceAll(' ', ' ');
+
+  /// [text] as spoken — ordinary spaces, exactly as before the dates were
+  /// kept together.
+  static String _spokenForm(String text) => text.replaceAll(' ', ' ');
 
   static String _applicationLabel(Insight insight, PlanProgress progress) {
     switch (insight.applicationType) {

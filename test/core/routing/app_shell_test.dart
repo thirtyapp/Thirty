@@ -202,7 +202,8 @@ void main() {
       await tester.tap(navDestination('Insights'));
       await tester.pumpAndSettle();
       expect(find.byType(InsightsPage), findsOneWidget);
-      expect(find.text('Open Premium'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Become Premium'), 200);
+      expect(find.text('Become Premium'), findsOneWidget);
     },
   );
 

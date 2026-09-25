@@ -117,6 +117,12 @@ Future<void> _seedLighterChoices(
   }
 }
 
+/// A [Text] by its spoken form — the date inside is shown with
+/// non-breaking spaces, so it never splits across lines.
+Finder _spokenText(String spoken) => find.byWidgetPredicate(
+  (widget) => widget is Text && widget.semanticsLabel == spoken,
+);
+
 void main() {
   group('Evidence age', () {
     test('the frozen window: newest evidence on the window start is still '
@@ -368,7 +374,7 @@ void main() {
         'application, and Dismiss', (tester) async {
       await pumpCard(tester, now: _fresh);
 
-      expect(find.text('Observed on Sep 6, 2026'), findsOneWidget);
+      expect(_spokenText('Observed on Sep 6, 2026'), findsOneWidget);
       expect(find.textContaining('5 recent visits'), findsOneWidget);
       expect(find.widgetWithText(ThirtyButton, 'Activate this Plan'), findsOneWidget);
       expect(find.text('Dismiss'), findsOneWidget);
@@ -379,7 +385,7 @@ void main() {
       for (final entitled in [true, false]) {
         await pumpCard(tester, now: _agedOut, entitled: entitled);
 
-        expect(find.text('An earlier Insight from Sep 6, 2026'), findsOneWidget);
+        expect(_spokenText('An earlier Insight from Sep 6, 2026'), findsOneWidget);
         expect(find.textContaining('recent'), findsNothing);
         expect(find.textContaining('5 visits'), findsOneWidget);
         expect(find.byType(ThirtyButton), findsNothing);

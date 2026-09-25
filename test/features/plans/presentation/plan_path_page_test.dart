@@ -9,6 +9,7 @@ import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/theme/design_tokens.dart';
+import 'package:thirty/features/insights/presentation/widgets/insight_card.dart';
 import 'package:thirty/features/plans/application/plan_provider.dart';
 import 'package:thirty/features/plans/domain/plan_catalog.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
@@ -197,7 +198,7 @@ void main() {
 
       await tester.pumpWidget(widget);
 
-      expect(find.text('Insight'), findsNothing);
+      expect(find.byType(InsightCard), findsNothing);
     },
   );
 

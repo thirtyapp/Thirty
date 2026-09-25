@@ -7,7 +7,9 @@
 - **Pending / confirmed-only purchases** — commit `18b68fe` (`PurchaseOutcome.pending` / `confirming`; success only once the entitlement is active)
 - **C2 · Premium offer page** — complete, commit `526083e` (see below)
 - **C3 · Plans** — complete, commit `30f01c6` (see below)
-- **C4 · Insights** — inventory / planning
+- **Insights contract correction** — commit `14637c3` (aged-out evidence withdrawn to a dated, read-only earlier Insight; "Observed on {date}"; Dismiss stored in the existing snapshot blob)
+- **Circle History calendar accessibility** — commit `8461bba` (48×48pt date targets; 7-column grid from 336pt with the calendar's own inset narrowing to 12pt, a recorded-date list below that; numbers at the user's text size; spoken localized dates)
+- **C4 · Insights** — complete (see below)
 
 **Foundation:** Phase A and Phase B are complete and ratified (`PHASE_A_PLAN.md`, `PHASE_B_PLAN.md`).
 
@@ -85,3 +87,25 @@
 
 **Deferred:** ordering the active Plan first; Insights' "Open Premium to apply this"; a Plan detail / stage list; Home Plan session panel beyond the shared Coach text actions; AppBar scrolled-under separation.
 
+## C4 · Insights
+
+**Preserved:** the Insight engine, thresholds, weekly reassessment cadence, dismissal semantics, stale-evidence rules and Plan / Coach application logic (`14637c3`), and the calendar's behaviour (`8461bba`). The only application-layer change: `InsightNotifier.applyCurrent()` returns whether the existing bounded application actually happened, so the page can confirm it truthfully.
+
+**Hierarchy:** **Your history** + calendar first; then a second section under its own **Insights** heading (32pt section spacing, no divider), showing exactly one of the states below. Headings are semantic headers on the page's 24pt left edge.
+
+| State | Shows |
+|---|---|
+| Premium · current Insight | observation (primary body colour) → muted evidence ("Based on … between {date} and {date}.") and "Observed on {date}" → the one application as the full-width primary `ThirtyButton`, naming its change → quiet **Dismiss** |
+| Just applied | **Applied. Your Plan is updated.** (card, live region) instead of the empty state, until a new Insight appears; page state only, never persisted |
+| Free · retained current Insight | same readable observation / evidence / date (never a locked look) → quiet **Become Premium to apply this** (`/premium`) → **Dismiss**; no Premium card beneath |
+| Earlier (aged-out) Insight | "An earlier Insight from {date}", no "recent", no application, no Premium CTA — Free and Premium alike |
+| Premium · no Insight | **Nothing to show yet. Pattern Insights need at least 5 relevant Circle records across 3 different days, spanning at least 14 days.** (numbers from the engine constants); no sales CTA |
+| Free · no Insight | compact left-aligned card: **THIRTY Premium** / **Premium can turn patterns in your recorded Circles into one clear next step for your Plan.** / full-width **Become Premium** |
+
+**Other changes:** the card's "Insight" eyebrow is dropped (the section heading names it); visible dates are localized short dates (evidence previously showed raw `YYYY-MM-DD` keys), kept on one line with non-breaking spaces while the spoken form keeps ordinary spaces.
+
+**ThirtyButton:** new optional `maxLabelLines` (default **2**, unchanged everywhere). Only the Insight application passes `null`, because no wording of the longer applications fits two lines at 200% ("Use lighter guidance as this Plan's default" needs 4 at 320pt). Labels rendering in 1–2 lines keep the pill; once a label actually renders in 3+ lines the button uses the card's 24pt radius (`AppRadius.xl`) instead of an oval. Buttons with the 2-line limit are laid out exactly as before; a trailing-icon button keeps the 2-line limit (asserted).
+
+**Accessibility:** real-font matrix at 320 / 360pt × 200%, light / dark: Free / no Insight, Free / retained Insight (every family), Premium / no Insight, Premium / current Insight (every family, incl. the plain current-place fact), just applied, dismissed, earlier aged-out (Free and Premium) — nothing truncated or overflowing, Premium application full width, one sales surface at most, Dismiss ≥ 48pt, observation readable Free. Component tests cover the pill / 24pt switch, the unchanged default, semantics and loading size. Against the pre-C4 presentation 52 of the 60 matrix cases fail.
+
+**Kept as is:** the 48pt targets (and resulting gap) between "Become Premium to apply this" and "Dismiss".

@@ -138,9 +138,12 @@ class InsightNotifier extends Notifier<InsightsState> {
   /// own switch below delegates to, so this check is a defense-in-depth
   /// duplicate of theirs, not a new rule; it also skips firing this
   /// method's own analytics for an attempt that can never actually apply.
-  void applyCurrent() {
-    if (!ref.read(premiumEntitlementProvider)) return;
-    if (state.snapshots.isEmpty) return;
+  ///
+  /// Returns whether the application was made, so the surface can confirm
+  /// it truthfully.
+  bool applyCurrent() {
+    if (!ref.read(premiumEntitlementProvider)) return false;
+    if (state.snapshots.isEmpty) return false;
     final latest = state.snapshots.last;
     final plansState = ref.read(planProvider);
     final live = liveInsightView(latest, plansState, ref.read(nowProvider));
@@ -154,7 +157,7 @@ class InsightNotifier extends Notifier<InsightsState> {
               'plan_id': latest.targetPlanId.name,
             },
           );
-      return;
+      return false;
     }
 
     final notifier = ref.read(planProvider.notifier);
@@ -177,6 +180,7 @@ class InsightNotifier extends Notifier<InsightsState> {
             'application_type': live.applicationType.name,
           },
         );
+    return true;
   }
 
   /// Dismisses the displayed observation — the latest snapshot — for good:

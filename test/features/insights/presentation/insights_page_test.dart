@@ -117,27 +117,36 @@ void main() {
         await tester.pumpWidget(widget);
 
         expect(
-          find.textContaining('Insights turns your recorded choices'),
+          find.text(
+            'Nothing to show yet. Pattern Insights need at least 5 relevant '
+            'Circle records across 3 different days, spanning at least 14 '
+            'days.',
+          ),
           findsOneWidget,
         );
-        expect(find.text('Open Premium'), findsNothing);
+        expect(find.text('Become Premium'), findsNothing);
+        expect(find.text('THIRTY Premium'), findsNothing);
       },
     );
 
     testWidgets(
-      'unentitled with no retained snapshot shows the calm Free preview '
-      'and an Open Premium CTA',
+      'unentitled with no retained snapshot shows the compact THIRTY '
+      'Premium card',
       (tester) async {
         final (widget, container) = await _wrap(entitled: false);
         addTearDown(container.dispose);
 
         await tester.pumpWidget(widget);
 
+        expect(find.text('THIRTY Premium'), findsOneWidget);
         expect(
-          find.textContaining('Insights turns your recorded choices'),
+          find.text(
+            'Premium can turn patterns in your recorded Circles into one '
+            'clear next step for your Plan.',
+          ),
           findsOneWidget,
         );
-        expect(find.text('Open Premium'), findsOneWidget);
+        expect(find.text('Become Premium'), findsOneWidget);
       },
     );
   });

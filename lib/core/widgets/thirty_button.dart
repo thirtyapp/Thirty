@@ -21,8 +21,12 @@ class ThirtyButton extends StatelessWidget {
     this.icon,
     this.trailingIcon,
     this.size = ThirtyButtonSize.regular,
+    this.maxLabelLines = _maxLabelLines,
     super.key,
-  });
+  }) : assert(
+         trailingIcon == null || maxLabelLines == _maxLabelLines,
+         'A trailing-icon button keeps the two-line label limit.',
+       );
 
   final String label;
 
@@ -36,6 +40,15 @@ class ThirtyButton extends StatelessWidget {
   /// alone carries the button's semantics.
   final IconData? trailingIcon;
   final ThirtyButtonSize size;
+
+  /// How many lines the label may wrap to before it is ellipsized — two by
+  /// default. `null` never ellipsizes: for a full-width action whose label
+  /// must stay complete (it names the exact change it makes) even where
+  /// large text needs three or more lines (Phase C4, Insight application).
+  /// Once the label actually renders in three or more lines, the pill gives
+  /// way to the card's 24pt corner radius ([AppRadius.xl]) — a fully
+  /// rounded shape that tall would read as an oval and crowd the text.
+  final int? maxLabelLines;
 
   static const _trailingIconSize = 20.0;
 
@@ -82,6 +95,23 @@ class ThirtyButton extends StatelessWidget {
   }
 
   bool get _isEnabled => onPressed != null && !isLoading;
+
+  /// How many lines [label] renders in at [labelWidth], with exactly the
+  /// style and text scale the label uses (capped at [maxLabelLines]).
+  int _labelLineCount(BuildContext context, double labelWidth) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: Theme.of(context).textTheme.labelLarge,
+      ),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: maxLabelLines,
+    )..layout(maxWidth: labelWidth);
+    final lines = painter.computeLineMetrics().length;
+    painter.dispose();
+    return lines;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,8 +165,10 @@ class ThirtyButton extends StatelessWidget {
               color: foregroundColor,
             ),
             textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            maxLines: _maxLabelLines,
+            // Only with a line cap: an ellipsis without one would hold the
+            // label to a single line.
+            overflow: maxLabelLines == null ? null : TextOverflow.ellipsis,
+            maxLines: maxLabelLines,
           ),
         ),
       ],
@@ -176,7 +208,7 @@ class ThirtyButton extends StatelessWidget {
     // is exactly 48pt (56pt hero) because its one-line content is shorter;
     // at large accessibility text a label that needs a second line grows
     // the button instead of being cut off.
-    final button = ConstrainedBox(
+    Widget buttonWith(BorderRadius radius) => ConstrainedBox(
       constraints: BoxConstraints(
         minHeight: switch (size) {
           ThirtyButtonSize.regular => 48,
@@ -188,7 +220,7 @@ class ThirtyButton extends StatelessWidget {
         // Fully rounded (founder decision D2, Phase A3) at either
         // height.
         shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.pill,
+          borderRadius: radius,
           side: borderSide,
         ),
         clipBehavior: Clip.antiAlias,
@@ -269,6 +301,25 @@ class ThirtyButton extends StatelessWidget {
         ),
       ),
     );
+
+    // Only a button allowed past two lines can need the taller shape; every
+    // other button is laid out exactly as before, with no LayoutBuilder.
+    final maxLines = maxLabelLines;
+    final button = maxLines != null && maxLines <= _maxLabelLines
+        ? buttonWith(AppRadius.pill)
+        : LayoutBuilder(
+            builder: (context, constraints) {
+              final lines = _labelLineCount(
+                context,
+                constraints.maxWidth -
+                    horizontalInset * 2 -
+                    (icon == null ? 0 : 20 + AppSpacing.s),
+              );
+              return buttonWith(
+                lines > _maxLabelLines ? AppRadius.xl : AppRadius.pill,
+              );
+            },
+          );
 
     return Semantics(
       button: true,

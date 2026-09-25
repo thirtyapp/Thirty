@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/premium/premium_access.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
+import '../../../core/widgets/thirty_card.dart';
 import '../application/insight_provider.dart';
+import '../domain/insight_engine.dart'
+    show insightMinDistinctDates, insightMinRecordCount, insightMinSpanDays;
 import 'widgets/circle_history_calendar.dart';
 import 'widgets/insight_card.dart';
 
@@ -31,14 +34,13 @@ import 'widgets/insight_card.dart';
 ///    on [premiumEntitlementProvider]) is unaffected by this page's
 ///    layout change.
 ///
-/// [InsightCard] itself renders nothing when [currentInsightProvider] is
-/// `null` — [build] fills that gap with the minimal truthful text the
-/// contract's §4 Insights row already specifies: a calm explanatory
-/// preview + `/premium` CTA when unentitled (no snapshot has ever
-/// existed, or none does yet), or — when entitled — a plain "not enough
-/// evidence yet" line, with no CTA. Neither branch invents a new Insight
-/// family, engine, or fabricated data; both are presentation-only, same
-/// as the calendar above them.
+/// Phase C4: the second section, under its own "Insights" heading, shows
+/// exactly one of — the [InsightCard] (current or earlier); the
+/// "Applied. Your Plan is updated." confirmation once this page applied
+/// one; for Premium, a plain "nothing to show yet" line naming the
+/// pattern thresholds, with no CTA; for Free, one compact THIRTY Premium
+/// card. None of them invents a new Insight family, engine, or fabricated
+/// data; all are presentation-only, same as the calendar above them.
 class InsightsPage extends ConsumerStatefulWidget {
   const InsightsPage({super.key});
 
@@ -64,12 +66,30 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
     });
   }
 
+  /// Set once this page's Insight application was actually made: the
+  /// applied Insight withdraws (it no longer describes an open next step),
+  /// and this confirmation takes its place instead of the empty state —
+  /// until a new Insight is shown. Presentation only, never persisted.
+  bool _justApplied = false;
+
   @override
   Widget build(BuildContext context) {
     // The current Insight, or a dated earlier one whose evidence aged out.
-    final hasCurrentInsight = ref.watch(displayedInsightProvider) != null;
+    final hasDisplayedInsight = ref.watch(displayedInsightProvider) != null;
     final isEntitled = ref.watch(premiumEntitlementProvider);
-    final textTheme = Theme.of(context).textTheme;
+
+    final Widget insights;
+    if (hasDisplayedInsight) {
+      insights = InsightCard(
+        onApplied: () => setState(() => _justApplied = true),
+      );
+    } else if (_justApplied) {
+      insights = const _AppliedConfirmation();
+    } else if (isEntitled) {
+      insights = const _NothingToShowYet();
+    } else {
+      insights = const _InsightsPremiumCard();
+    }
 
     // No Settings icon here — founder IA correction: once "You" is a
     // persistent primary destination, every branch's own Settings
@@ -85,29 +105,19 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.page,
-                ),
-                child: Text('Your history', style: textTheme.titleMedium),
-              ),
+              const _SectionHeading('Your history'),
               const SizedBox(height: AppSpacing.s),
               const CircleHistoryCalendar(),
+              // Phase C4: two sections separated by the section rhythm and
+              // their own headings — no divider.
               const SizedBox(height: AppSpacing.section),
+              const _SectionHeading('Insights'),
+              const SizedBox(height: AppSpacing.m),
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.page,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Divider(),
-                    const SizedBox(height: AppSpacing.s),
-                    hasCurrentInsight
-                        ? const InsightCard()
-                        : _InsightsEmptyState(isEntitled: isEntitled),
-                  ],
-                ),
+                child: insights,
               ),
             ],
           ),
@@ -117,36 +127,94 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
   }
 }
 
-class _InsightsEmptyState extends StatelessWidget {
-  const _InsightsEmptyState({required this.isEntitled});
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading(this.title);
 
-  final bool isEntitled;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+      child: Semantics(
+        header: true,
+        child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+      ),
+    );
+  }
+}
+
+/// The already-approved confirmation after an Insight's application.
+class _AppliedConfirmation extends StatelessWidget {
+  const _AppliedConfirmation();
+
+  @override
+  Widget build(BuildContext context) {
+    return ThirtyCard(
+      padding: const EdgeInsets.all(AppSpacing.featuredCard),
+      child: Semantics(
+        liveRegion: true,
+        child: Text(
+          'Applied. Your Plan is updated.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+    );
+  }
+}
+
+/// Premium, nothing to show: the truthful reason, no sales CTA. Names the
+/// thresholds only for *pattern* Insights — a current-place Insight needs
+/// no count.
+class _NothingToShowYet extends StatelessWidget {
+  const _NothingToShowYet();
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
-    final textTheme = Theme.of(context).textTheme;
+    return Text(
+      'Nothing to show yet. Pattern Insights need at least '
+      '$insightMinRecordCount relevant Circle records across '
+      '$insightMinDistinctDates different days, spanning at least '
+      '$insightMinSpanDays days.',
+      style: Theme.of(
+        context,
+      ).textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
+    );
+  }
+}
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          isEntitled
-              ? 'Nothing to show yet. Insights turns your recorded choices '
-                    'into guidance once a clear pattern exists.'
-              : 'Insights turns your recorded choices into guidance.',
-          textAlign: TextAlign.center,
-          style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
-        ),
-        if (!isEntitled) ...[
+/// Free, no Insight: the compact Premium card in the Plans/You language
+/// (Phase C3's in-list card) — below the user's own, free History.
+class _InsightsPremiumCard extends StatelessWidget {
+  const _InsightsPremiumCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return ThirtyCard(
+      padding: const EdgeInsets.all(AppSpacing.featuredCard),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('THIRTY Premium', style: textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Premium can turn patterns in your recorded Circles into one '
+            'clear next step for your Plan.',
+            style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
+          ),
           const SizedBox(height: AppSpacing.m),
-          ThirtyButton(
-            label: 'Open Premium',
-            onPressed: () => context.push('/premium'),
+          SizedBox(
+            width: double.infinity,
+            child: ThirtyButton(
+              label: 'Become Premium',
+              onPressed: () => context.push('/premium'),
+            ),
           ),
         ],
-      ],
+      ),
     );
   }
 }

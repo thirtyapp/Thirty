@@ -62,7 +62,7 @@ void main() {
     await tester.pumpWidget(widget);
 
     expect(find.byType(InsightCard), findsOneWidget);
-    expect(find.text('Insight'), findsNothing);
+    expect(find.text('Dismiss'), findsNothing);
   });
 
   testWidgets(
@@ -173,7 +173,7 @@ void main() {
         container.read(planProvider).progress[PlanId.clearerHeadPath]!.lighterDefault,
         isTrue,
       );
-      expect(find.text('Insight'), findsNothing);
+      expect(find.text('Dismiss'), findsNothing);
     },
   );
 
@@ -205,7 +205,7 @@ void main() {
         await tester.pumpWidget(widget);
 
         expect(find.byType(InsightCard), findsOneWidget);
-        expect(find.text('Insight'), findsNothing);
+        expect(find.text('Dismiss'), findsNothing);
       },
     );
 
@@ -276,7 +276,7 @@ void main() {
         // existing Premium offer, never a button that would silently
         // no-op against `InsightNotifier.applyCurrent()`'s own guard.
         expect(find.text('Resume this Plan'), findsNothing);
-        expect(find.text('Open Premium to apply this'), findsOneWidget);
+        expect(find.text('Become Premium to apply this'), findsOneWidget);
       },
     );
   });
