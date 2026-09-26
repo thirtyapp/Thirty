@@ -6,6 +6,7 @@ import '../../../../core/activity_category.dart';
 import '../../../../core/branding/thirty_wordmark_view.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
+import '../../../../core/widgets/thirty_confirm_dialog.dart';
 import '../../../../core/widgets/thirty_progress_circle.dart';
 import '../../../../core/world_rendering/quiet_trail_hero_asset_view.dart';
 import '../../application/first_breath_provider.dart';
@@ -358,23 +359,14 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   /// to [RecommendationNotifier.close] — an accidental dismiss can never
   /// silently close the Circle.
   Future<void> _confirmCloseCircle(BuildContext context) async {
-    final colors = Theme.of(context).extension<AppColors>()!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text("Close today's Circle?"),
-        content: const Text("You won't be able to reopen it until tomorrow."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Keep Circle open'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(foregroundColor: colors.errorText),
-            child: const Text('Close Circle'),
-          ),
-        ],
+      builder: (_) => const ThirtyConfirmDialog(
+        title: "Close today's Circle?",
+        body: "You won't be able to reopen it until tomorrow.",
+        cancelLabel: 'Keep Circle open',
+        confirmLabel: 'Close Circle',
+        destructive: true,
       ),
     );
 

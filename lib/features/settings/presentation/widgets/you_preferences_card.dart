@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/analytics/analytics_consent.dart';
 import '../../../../core/providers/theme_mode_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/thirty_confirm_dialog.dart';
 import '../../../reminder/application/reminder_provider.dart';
 import 'theme_mode_choice.dart';
 import 'you_group_card.dart';
@@ -134,22 +135,13 @@ class _ReminderRowState extends ConsumerState<_ReminderRow> {
   Future<void> _requestExactAlarmAccess() async {
     final proceed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Allow Alarms & reminders'),
-        content: const Text(
-          'Android needs "Alarms & reminders" access so THIRTY can '
-          'deliver your Circle reminder at the time you choose.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Not now'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Continue'),
-          ),
-        ],
+      builder: (_) => const ThirtyConfirmDialog(
+        title: 'Allow Alarms & reminders',
+        body:
+            'Android needs "Alarms & reminders" access so THIRTY can '
+            'deliver your Circle reminder at the time you choose.',
+        cancelLabel: 'Not now',
+        confirmLabel: 'Continue',
       ),
     );
     if (proceed != true || !mounted) return;

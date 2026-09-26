@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
+import '../../../../core/widgets/thirty_confirm_dialog.dart';
 import '../../../insights/application/insight_provider.dart';
 import '../../application/circle_journal.dart';
 
@@ -77,27 +78,17 @@ class JournalDataControls extends ConsumerWidget {
     CircleJournalRepository journal,
     WidgetRef ref,
   ) async {
-    final colors = Theme.of(context).extension<AppColors>()!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete your Circle history?'),
-        content: const Text(
-          'This permanently deletes every recorded Circle on this device. '
-          'It cannot be undone, and nothing is stored anywhere else to '
-          'restore it from.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Keep my history'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(foregroundColor: colors.errorText),
-            child: const Text('Delete permanently'),
-          ),
-        ],
+      builder: (_) => const ThirtyConfirmDialog(
+        title: 'Delete your Circle history?',
+        body:
+            'This permanently deletes every recorded Circle on this device. '
+            'It cannot be undone, and nothing is stored anywhere else to '
+            'restore it from.',
+        cancelLabel: 'Keep my history',
+        confirmLabel: 'Delete permanently',
+        destructive: true,
       ),
     );
     if (confirmed != true) return;
