@@ -58,26 +58,21 @@ class HomeCircleMetrics {
   // Since Phase B2 the hero CTA fills this same column (never the screen).
   static const _textColumnWidthFraction = 0.85;
 
-  // Phase B2 — the Home content column's vertical rhythm, shared so Ready
-  // and Circle Hero place their first element at the same distance from
-  // the Circle. Eyebrow and hero line stay tight (one heading); the hero
-  // line and the activity group get clear air; the CTA closes the column.
+  // The Home content's vertical rhythm, shared so Ready and Circle Hero
+  // place their first element at the same distance from the Circle.
 
   /// Circle → first element beneath it (Begin CTA / directions in Ready,
-  /// the eyebrow in Circle Hero).
+  /// the greeting in Circle Hero).
   static const circleToContentGap = AppSpacing.section;
 
-  /// Eyebrow ("Today's Circle") → editorial hero line (intent).
-  static const eyebrowToHeroGap = AppSpacing.s;
+  /// Phase D1 — greeting → its subline.
+  static const greetingToSublineGap = AppSpacing.s;
 
-  /// Hero line (intent) → activity title.
-  static const heroToActivityGap = AppSpacing.m;
+  /// Phase D1 — greeting block → the Today card.
+  static const greetingToCardGap = AppSpacing.l;
 
-  /// Activity title → its supporting "why" text.
-  static const activityToSupportGap = AppSpacing.s;
-
-  /// Supporting text → the hero CTA (or the closed-state message).
-  static const contentToCtaGap = AppSpacing.section;
+  /// Phase D1 — the Today card → the CTA (or the closed-state message).
+  static const cardToCtaGap = AppSpacing.m;
 
   /// Phase D1 ring (Design vision): a thin ring inset inside the halo
   /// disc, a sage dot marking the arc's leading end, and a small band of

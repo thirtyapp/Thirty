@@ -16,6 +16,7 @@ import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/horizon_illustration.dart';
+import 'package:thirty/features/home/presentation/widgets/today_card.dart';
 
 final _today = DateTime(2026, 8, 2);
 
@@ -23,6 +24,10 @@ final _today = DateTime(2026, 8, 2);
 /// after [_today], so a Circle restored as started at [_today] has run 12
 /// of its 30 minutes, and one started by a tap starts at exactly 0.
 final _clockNow = _today.add(const Duration(minutes: 12));
+
+/// Phase D1: the heading beat is the time-of-day greeting ([_today] is
+/// midnight, so "Good evening").
+final _greeting = homeGreeting(_today);
 
 /// Today's recommendation already chosen — the shape almost every test
 /// below needs, since CircleHero itself assumes a non-null recommendation
@@ -268,7 +273,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(_circleProgress(tester), 0.0);
-      expect(find.text("Today's Circle"), findsOneWidget);
+      expect(find.text(_greeting), findsOneWidget);
       expect(find.text('More Energy'), findsOneWidget);
       expect(find.text('30-minute walk'), findsOneWidget);
       expect(find.text('Start Circle'), findsOneWidget);
@@ -335,8 +340,10 @@ void main() {
       );
     });
 
-    testWidgets('centers the Circle, illustration and text column on the same '
-        'horizontal axis as the screen', (WidgetTester tester) async {
+    testWidgets('centers the Circle, illustration, greeting and Today card '
+        'on the same horizontal axis as the screen', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(await _wrap());
       await tester.pumpAndSettle();
 
@@ -347,13 +354,13 @@ void main() {
       final illustrationCenterX = tester
           .getCenter(find.byType(QuietTrailHeroAssetView))
           .dx;
-      final headingCenterX = tester.getCenter(find.text("Today's Circle")).dx;
-      final activityCenterX = tester.getCenter(find.text('30-minute walk')).dx;
+      final headingCenterX = tester.getCenter(find.text(_greeting)).dx;
+      final cardCenterX = tester.getCenter(find.byType(TodayCard)).dx;
 
       expect(circleCenterX, closeTo(screenCenterX, 0.5));
       expect(illustrationCenterX, closeTo(screenCenterX, 0.5));
       expect(headingCenterX, closeTo(screenCenterX, 0.5));
-      expect(activityCenterX, closeTo(screenCenterX, 0.5));
+      expect(cardCenterX, closeTo(screenCenterX, 0.5));
     });
 
     testWidgets(
@@ -388,7 +395,7 @@ void main() {
         await tester.pump();
 
         expect(_circleProgress(tester), 0.0);
-        expect(find.text("Today's Circle"), findsOneWidget);
+        expect(find.text(_greeting), findsOneWidget);
         expect(find.text('Start Circle'), findsOneWidget);
       },
     );
@@ -549,7 +556,7 @@ void main() {
               .widget<FadeTransition>(
                 find
                     .ancestor(
-                      of: find.text("Today's Circle"),
+                      of: find.text(_greeting),
                       matching: find.byType(FadeTransition),
                     )
                     .first,
@@ -636,7 +643,7 @@ void main() {
 
           expect(_wordmarkFadeTransition(tester).opacity.value, 0.0);
           expect(_circleProgress(tester), 0.0);
-          expect(find.text("Today's Circle"), findsOneWidget);
+          expect(find.text(_greeting), findsOneWidget);
           expect(find.text('Start Circle'), findsOneWidget);
         },
       );
@@ -650,7 +657,7 @@ void main() {
 
           expect(_wordmarkFadeTransition(tester).opacity.value, 0.0);
           expect(_circleProgress(tester), 0.0);
-          expect(find.text("Today's Circle"), findsOneWidget);
+          expect(find.text(_greeting), findsOneWidget);
           expect(find.text('Start Circle'), findsOneWidget);
 
           await tester.ensureVisible(find.text('Start Circle'));

@@ -14,6 +14,7 @@ import 'package:thirty/features/home/presentation/home_page.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
 import 'package:thirty/features/home/presentation/widgets/home_circle_metrics.dart';
+import 'package:thirty/features/home/presentation/widgets/today_card.dart';
 
 /// Phase B2 — hero CTA width/arrow and the Home text-column rhythm, on the
 /// real `HomePage` composition. Lifecycle behavior stays covered by the
@@ -115,8 +116,9 @@ void main() {
     // the 231pt column, and the CTA's minWidth lets it grow rather than
     // overflow — by design.
     for (final width in [360.0, 412.0]) {
-      testWidgets('${width.toInt()}pt: Begin, Start and Close are 56pt and '
-          'exactly the bounded content column wide', (tester) async {
+      testWidgets('${width.toInt()}pt: Begin, Start and Close are 56pt; '
+          'Begin fills the bounded column, Start and Close the full content '
+          'width (Phase D1)', (tester) async {
         _setSurface(tester, Size(width, 915));
         final column = HomeCircleMetrics.forWidth(width).textMaxWidth;
         expect(column, lessThan(width - AppSpacing.page * 2 + 1e-9));
@@ -131,21 +133,8 @@ void main() {
         );
         await tester.pumpWidget(notStarted);
         await tester.pump();
-        // Start reserves a mirrored slot for its arrow, so under the test
-        // font's wide glyphs its content can exceed the column at 360pt;
-        // the CTA's minWidth then lets it grow instead of clipping. It is
-        // exactly the column whenever its content fits.
-        final startIntrinsic = tester
-            .renderObject<RenderBox>(_cta('Start Circle'))
-            .getMaxIntrinsicWidth(56);
-        expect(
-          tester.getSize(_cta('Start Circle')),
-          Size(startIntrinsic > column ? startIntrinsic : column, 56),
-        );
-        expect(
-          tester.getSize(_cta('Start Circle')).width,
-          lessThanOrEqualTo(width - AppSpacing.page * 2),
-        );
+        final content = width - AppSpacing.page * 2;
+        expect(tester.getSize(_cta('Start Circle')), Size(content, 56));
 
         final (started, _) = await _wrap(
           storedPrefs: _started,
@@ -153,7 +142,7 @@ void main() {
         );
         await tester.pumpWidget(started);
         await tester.pump();
-        expect(tester.getSize(_cta('Close Circle')), Size(column, 56));
+        expect(tester.getSize(_cta('Close Circle')), Size(content, 56));
       });
     }
 
@@ -327,14 +316,14 @@ void main() {
       await tester.pumpWidget(assigned);
       await tester.pump();
       final heroGap =
-          tester.getTopLeft(find.text("Today's Circle")).dy -
+          tester.getTopLeft(find.text(homeGreeting(_today))).dy -
           tester.getBottomLeft(find.byType(HomeCircleHalo)).dy;
 
       expect(readyGap, HomeCircleMetrics.circleToContentGap);
       expect(heroGap, HomeCircleMetrics.circleToContentGap);
     });
 
-    testWidgets('eyebrow, hero line, activity, support and CTA follow the '
+    testWidgets('Phase D1: greeting, subline, Today card and CTA follow the '
         'Home rhythm', (tester) async {
       final (widget, _) = await _wrap(
         storedPrefs: _chosen,
@@ -346,17 +335,17 @@ void main() {
       double gap(Finder above, Finder below) =>
           tester.getTopLeft(below).dy - tester.getBottomLeft(above).dy;
 
-      final recommendation = ProviderScope.containerOf(
-        tester.element(find.byType(HomePage)),
-      ).read(recommendationProvider).recommendation!;
-      final eyebrow = find.text("Today's Circle");
-      final intent = find.text(recommendation.intent);
-      final activity = find.text(recommendation.activity);
-      final why = find.text(recommendation.why);
-      expect(gap(eyebrow, intent), HomeCircleMetrics.eyebrowToHeroGap);
-      expect(gap(intent, activity), HomeCircleMetrics.heroToActivityGap);
-      expect(gap(activity, why), HomeCircleMetrics.activityToSupportGap);
-      expect(gap(why, _cta('Start Circle')), HomeCircleMetrics.contentToCtaGap);
+      final greeting = find.text(homeGreeting(_today));
+      final subline = find.text(homeGreetingSubline);
+      final card = find.byType(TodayCard);
+      expect(gap(greeting, subline), HomeCircleMetrics.greetingToSublineGap);
+      expect(gap(subline, card), HomeCircleMetrics.greetingToCardGap);
+      expect(gap(card, _cta('Start Circle')), HomeCircleMetrics.cardToCtaGap);
+      // The card spans the page's content width, like the CTA.
+      expect(
+        tester.getSize(card).width,
+        tester.getSize(_cta('Start Circle')).width,
+      );
     });
   });
 

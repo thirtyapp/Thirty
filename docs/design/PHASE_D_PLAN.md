@@ -2,7 +2,8 @@
 
 **Status:** In progress.
 - **D1a · Home header** — complete, commit `dc81884` (see below)
-- **D1b · Circle ring and timer** — complete (see below)
+- **D1b · Circle ring and timer** — complete, commit `7cac0cf` (see below)
+- **D1c · Greeting, Today card, CTA** — complete (see below)
 
 **Foundation:** Phases A–C are complete and ratified (`PHASE_A_PLAN.md`, `PHASE_B_PLAN.md`, `PHASE_C_PLAN.md`).
 
@@ -40,3 +41,11 @@ The founder supplied `Design vision.png` (Home, today's Circle assigned) with th
 - **Removed:** the ambient breathing of the started Circle (its rule is overridden by the timer; see the founder decisions).
 - **Semantics:** started now announces "Circle in progress. N of 30 minutes." so the timer is never visual-only; not started / closed are unchanged.
 - **Tests:** `circle_hero_test.dart`'s old "Circle color lifecycle" group (transparent ready track, breathing) is replaced by the D1 ring group (colours and dot in every state, First Breath sweep, 12 / 15 / 45-minute progress and semantics, closed duration, the ticker never blocking `pumpAndSettle`); thumb painter tests; B1 / B2 geometry updated to the inset ring.
+
+## D1c · Greeting, Today card, full-width CTA
+
+- **Greeting** (`homeGreeting`, `today_card.dart`): "Good morning" 05:00–11:59, "Good afternoon" 12:00–17:59, "Good evening" otherwise; Newsreader 34pt, centred, a semantic header. The subline "Ready to close today's Circle?" shows while the Circle is not yet closed; closed keeps "Done for today / Your next Circle opens tomorrow." in the CTA's place. It replaces the "Today's Circle" eyebrow as First Breath's heading beat.
+- **`TodayCard`**: full content width, left-aligned, 24pt padding — "TODAY" eyebrow (read as "Today"), the direction in the editorial serif, a 40pt Mist Sage chip with the activity's category icon (walking → walk, general wellness → leaf) beside the activity in sage, a divider, and the reason. A slice of Quiet Trail (the tree on its hill) fades in at the card's right edge; it is decorative and shown only below 130% text on a card ≥ 300pt wide, so large text is never squeezed. Reveal order is unchanged: card + direction with the intent beat, then activity + reason.
+- **CTA**: Start / Close Circle span the full content width (the card's width). Ready's "Begin today's Circle" stays in its bounded column — Ready is outside the mockup.
+- **Rhythm:** Circle → greeting 32pt, greeting → subline 8pt, subline → card 24pt, card → CTA 16pt. The pre-D1 column constants (eyebrow / hero / activity / support / CTA gaps) are removed.
+- **Tests:** greeting boundaries, header semantics and subline per state; card alignment, icon and divider; art at 100% without overlapping the text; 320 / 360pt × 200% × light / dark × assigned / started / closed — text only, nothing truncated, full-width card and ≥ 56pt CTA. B2 / hero tests updated from the eyebrow / centred column to the greeting / card.

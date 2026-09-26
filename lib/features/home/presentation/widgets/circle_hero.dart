@@ -14,6 +14,7 @@ import '../../../../core/world_rendering/quiet_trail_hero_asset_view.dart';
 import '../../application/first_breath_provider.dart';
 import '../../application/recommendation_provider.dart';
 import 'home_circle_metrics.dart';
+import 'today_card.dart';
 
 /// THIRTY's first true emotional experience: the Circle Hero.
 ///
@@ -468,15 +469,11 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         onCtaPressed = null;
     }
 
-    // The recommendation column's three text moments read as one composed
-    // block, not three independent widgets. "Why" and activity need no
-    // entry here: bodyMedium and titleMedium already are their targets
-    // (see their call sites below). Intent alone carries this screen's one
-    // editorial-serif moment (AppTypography.editorialDisplay) — see that
-    // method's own doc comment for why the role, not this content, owns
-    // the name.
-    final eyebrowStyle = textTheme.labelSmall;
-    final intentStyle = AppTypography.editorialDisplay(colors);
+    // The greeting is this screen's display-serif moment; the Today card
+    // carries the direction in the editorial serif itself.
+    final greetingStyle = AppTypography.editorialDisplay(
+      colors,
+    ).copyWith(fontSize: 34, height: 1.15);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -567,67 +564,51 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                   const SizedBox(
                     height: HomeCircleMetrics.circleToContentGap,
                   ),
-                  // The heading and the recommendation share one readable
-                  // column beneath the Circle — capped narrower than the
-                  // Circle itself so the activity title and description
-                  // never stretch wider than the object they're captioning.
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: textMaxWidth),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FadeTransition(
-                          opacity: _headingOpacity,
-                          child: Text(
-                            "Today's Circle",
-                            style: eyebrowStyle,
-                            textAlign: TextAlign.center,
+                  // Phase D1 (Design vision): a centred greeting, then the
+                  // left-aligned Today card and a full-width CTA across the
+                  // page's content width.
+                  FadeTransition(
+                    opacity: _headingOpacity,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: textMaxWidth),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Semantics(
+                            header: true,
+                            child: Text(
+                              homeGreeting(ref.watch(nowProvider)),
+                              style: greetingStyle,
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                        ),
-                        const SizedBox(
-                          height: HomeCircleMetrics.eyebrowToHeroGap,
-                        ),
-                        // Intent fades in as its own beat; activity and its
-                        // explanation are one semantic group and always
-                        // fade in together under a single animation.
-                        FadeTransition(
-                          opacity: _intentOpacity,
-                          child: Text(
-                            recommendation.intent,
-                            style: intentStyle,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        const SizedBox(
-                          height: HomeCircleMetrics.heroToActivityGap,
-                        ),
-                        FadeTransition(
-                          opacity: _activityWhyOpacity,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                recommendation.activity,
-                                style: textTheme.titleMedium,
-                                textAlign: TextAlign.center,
+                          if (recommendationState.status !=
+                              RecommendationStatus.closed) ...[
+                            const SizedBox(
+                              height: HomeCircleMetrics.greetingToSublineGap,
+                            ),
+                            Text(
+                              homeGreetingSubline,
+                              style: textTheme.bodyLarge?.copyWith(
+                                color: colors.textSecondary,
                               ),
-                              const SizedBox(
-                                height: HomeCircleMetrics.activityToSupportGap,
-                              ),
-                              Text(
-                                recommendation.why,
-                                style: textTheme.bodyMedium?.copyWith(
-                                  color: colors.textSecondary,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: HomeCircleMetrics.contentToCtaGap),
+                  const SizedBox(height: HomeCircleMetrics.greetingToCardGap),
+                  TodayCard(
+                    intent: recommendation.intent,
+                    activity: recommendation.activity,
+                    why: recommendation.why,
+                    category: recommendation.category,
+                    intentOpacity: _intentOpacity,
+                    detailOpacity: _activityWhyOpacity,
+                  ),
+                  const SizedBox(height: HomeCircleMetrics.cardToCtaGap),
                   // FadeTransition alone only controls painting and
                   // semantics inclusion — it never gates hit-testing, so
                   // without this wrapper the button could already be
@@ -681,15 +662,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                                 ],
                               ),
                             )
-                          // Phase B2: fills the bounded content column
-                          // (never the screen). minWidth, not a fixed
-                          // width, so a label that genuinely needs more
-                          // room (large text) can still grow rather than
-                          // overflow.
-                          : ConstrainedBox(
-                              constraints: BoxConstraints(
-                                minWidth: textMaxWidth,
-                              ),
+                          // Phase D1: the full content width, like the
+                          // Today card above it.
+                          : SizedBox(
+                              width: double.infinity,
                               child: ThirtyButton(
                                 label: ctaLabel,
                                 size: ThirtyButtonSize.hero,

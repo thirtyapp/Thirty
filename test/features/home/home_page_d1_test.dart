@@ -15,11 +15,15 @@ import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/presentation/home_page.dart';
+import 'package:thirty/core/activity_category.dart';
+import 'package:thirty/core/widgets/thirty_button.dart';
 import 'package:thirty/features/home/presentation/widgets/home_header.dart';
+import 'package:thirty/features/home/presentation/widgets/today_card.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
 
 /// Phase D1 — Home visual pass (Design vision.png), with the app's real
-/// fonts: the header lockup and profile button.
+/// fonts: the header lockup and profile button (D1a), and the greeting,
+/// Today card and full-width CTA (D1c).
 
 final _today = DateTime(2026, 8, 2);
 
@@ -29,6 +33,19 @@ const _assigned = <String, Object>{
   recommendationIntentionKey: 'moreEnergy',
   recommendationActivityIdKey: 'thirtyMinuteWalk',
   firstBreathLastPlayedDateKey: '2026-08-02',
+};
+
+const _started = <String, Object>{
+  ..._assigned,
+  recommendationStatusKey: 'started',
+  recommendationStartedAtKey: '2026-08-02T00:00:00.000',
+};
+
+const _closed = <String, Object>{
+  ..._assigned,
+  recommendationStatusKey: 'closed',
+  recommendationStartedAtKey: '2026-08-02T00:00:00.000',
+  recommendationClosedAtKey: '2026-08-02T00:25:00.000',
 };
 
 Future<void> _loadFont(String family, List<String> files) async {
@@ -59,6 +76,9 @@ Future<void> _pumpHome(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
         nowProvider.overrideWithValue(_today),
+        eventClockProvider.overrideWithValue(
+          () => _today.add(const Duration(minutes: 10)),
+        ),
       ],
       child: MaterialApp(
         theme: theme ?? AppTheme.light,
@@ -187,5 +207,139 @@ void main() {
       tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
       3,
     );
+  });
+
+  group('Greeting', () {
+    test('changes with the time of day', () {
+      for (final (hour, greeting) in [
+        (0, 'Good evening'),
+        (4, 'Good evening'),
+        (5, 'Good morning'),
+        (11, 'Good morning'),
+        (12, 'Good afternoon'),
+        (17, 'Good afternoon'),
+        (18, 'Good evening'),
+        (23, 'Good evening'),
+      ]) {
+        expect(
+          homeGreeting(DateTime(2026, 8, 2, hour, 30)),
+          greeting,
+          reason: '$hour:30',
+        );
+      }
+    });
+
+    testWidgets('is a header; the subline shows until the Circle is '
+        'closed', (tester) async {
+      final semantics = tester.ensureSemantics();
+      for (final (prefs, subline) in [
+        (_assigned, true),
+        (_started, true),
+        (_closed, false),
+      ]) {
+        await _pumpHome(tester, storedPrefs: prefs);
+        expect(
+          tester.getSemantics(find.text(homeGreeting(_today))),
+          matchesSemantics(label: homeGreeting(_today), isHeader: true),
+        );
+        expect(
+          find.text(homeGreetingSubline),
+          subline ? findsOneWidget : findsNothing,
+        );
+      }
+      semantics.dispose();
+    });
+  });
+
+  group('Today card', () {
+    testWidgets('left-aligned: TODAY, the direction, the activity with its '
+        'icon, a divider and the reason', (tester) async {
+      await _pumpHome(tester);
+      final card = tester.getRect(find.byType(TodayCard));
+      expect(card.left, AppSpacing.page);
+      expect(card.right, 360 - AppSpacing.page);
+      for (final text in ['TODAY', 'More Energy', '30-minute walk']) {
+        expect(
+          tester.getTopLeft(find.text(text)).dx,
+          greaterThanOrEqualTo(card.left + AppSpacing.featuredCard - 0.5),
+          reason: text,
+        );
+      }
+      expect(
+        tester.getTopLeft(find.text('TODAY')).dx,
+        card.left + AppSpacing.featuredCard,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(TodayCard),
+          matching: find.byIcon(TodayCard.iconFor(ActivityCategory.walking)),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(TodayCard),
+          matching: find.byType(Divider),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the World slice shows at ordinary text and never overlaps '
+        'the text', (tester) async {
+      await _pumpHome(tester);
+      final art = find.descendant(
+        of: find.byType(TodayCard),
+        matching: find.byType(Image),
+      );
+      expect(art, findsOneWidget);
+      final artLeft = tester.getRect(art).left;
+      final why = tester.getRect(
+        find.textContaining('For more energy'),
+      );
+      // The art fades in from its left edge; the text column ends where
+      // the fade has barely begun.
+      expect(why.right, lessThanOrEqualTo(artLeft + AppSpacing.xl + 0.5));
+    });
+
+    for (final (width, height) in [(320.0, 640.0), (360.0, 740.0)]) {
+      for (final dark in [false, true]) {
+        for (final (state, prefs) in [
+          ('assigned', _assigned),
+          ('started', _started),
+          ('closed', _closed),
+        ]) {
+          testWidgets('${width.toInt()}pt, 200%, ${dark ? 'dark' : 'light'}, '
+              '$state: text only, nothing truncated, full-width CTA', (
+            tester,
+          ) async {
+            await _pumpHome(
+              tester,
+              storedPrefs: prefs,
+              width: width,
+              height: height,
+              textScale: 2,
+              theme: dark ? AppTheme.dark : AppTheme.light,
+            );
+            expect(tester.takeException(), isNull);
+            expect(_truncated(tester), isEmpty);
+            expect(
+              find.descendant(
+                of: find.byType(TodayCard),
+                matching: find.byType(Image),
+              ),
+              findsNothing,
+            );
+            final card = tester.getRect(find.byType(TodayCard));
+            expect(card.width, width - AppSpacing.page * 2);
+            if (state != 'closed') {
+              final cta = tester.getRect(find.byType(ThirtyButton));
+              expect(cta.width, width - AppSpacing.page * 2);
+              expect(cta.height, greaterThanOrEqualTo(56));
+            }
+          });
+        }
+      }
+    }
   });
 }
