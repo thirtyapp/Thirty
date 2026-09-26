@@ -1,6 +1,6 @@
 # THIRTY Visual Pass — Phase C Plan (screen passes)
 
-**Status:** In progress.
+**Status:** Complete (see *Phase C closure* at the end).
 - **Button large-text foundation** — commit `56e8601` (ThirtyButton: 48/56pt minimum height, up to two label lines, tighter side inset at ≥ 130% text)
 - **Reminder invitation actions** — commit `a43de44` (side by side when both labels fit, stacked when they would truncate; `ThirtyButton.labelFits`)
 - **C1 · You** — complete, commit `3c3aa02` (see below)
@@ -10,9 +10,9 @@
 - **Insights contract correction** — commit `14637c3` (aged-out evidence withdrawn to a dated, read-only earlier Insight; "Observed on {date}"; Dismiss stored in the existing snapshot blob)
 - **Circle History calendar accessibility** — commit `8461bba` (48×48pt date targets; 7-column grid from 336pt with the calendar's own inset narrowing to 12pt, a recorded-date list below that; numbers at the user's text size; spoken localized dates)
 - **C4 · Insights** — complete, commit `184bdd7` (see below)
-- **C5a · Dialog accessibility** — commit `7583d15` (see C5 below)
-- **C5b · SnackBar polish** — commit `279016d`
-- **C5c · AppBar scrolled edge** — complete, in the commit that records this entry
+- **C5a · Dialog accessibility** — complete, commit `7583d15` (see C5 below)
+- **C5b · SnackBar polish** — complete, commit `279016d`
+- **C5c · AppBar scrolled edge** — complete, commit `79c3e28`
 
 **Foundation:** Phase A and Phase B are complete and ratified (`PHASE_A_PLAN.md`, `PHASE_B_PLAN.md`).
 
@@ -131,3 +131,25 @@
 **Accessibility:** real-font tests — dialogs at 320 / 360pt × 200% × light / dark for all three (laid out in full, body end reachable, no mid-word breaks, actions ≥ 48pt and on screen, 8pt stacked spacing, 16pt inset); SnackBar in the real app at 320 / 360pt × 200% × light / dark on You (with the nav) and Circle history (no nav): position, no overlap, no truncation.
 
 **Still deferred:** dialog title size (`headlineSmall`, fine at 100%); the time picker at 200% (Material's own layout, themed in A5); support contact and privacy link (no authoritative source).
+
+## Phase C closure
+
+**Status:** Phase C is complete. C1 `3c3aa02` · C2 `526083e` · C3 `30f01c6` · C4 `184bdd7` · C5a `7583d15` · C5b `279016d` · C5c `79c3e28`, plus the supporting commits listed at the top.
+
+**Summary:**
+- **You:** a clear hierarchy (Premium card → restore footer → Preferences → Your data), every billing state shown truthfully, the live store price only, and grouped preferences sharing the Premium card's content inset.
+- **Premium offer:** a calm page with the approved copy: Plans, Coach and Insights, the live price with the renewal disclosure, one Become Premium action, Not now, "Free stays complete." and the shared restore footer. A purchase shows success only once Google Play confirms it.
+- **Plans:** one full-width main action per card, quiet text actions for management, an in-list Free upsell instead of the pinned bar, and Coach shortcuts that are never truncated.
+- **Insights:** history and calendar first, then a separate Insights section showing exactly one state. A Free user can still read a retained Insight, the Premium action names the change it makes, "Applied" is confirmed truthfully, and dates are localized.
+- **Shared accessibility / polish:** ThirtyButton's large-text foundation (and a 24pt radius for labels of three or more lines); ThirtyTextAction; 48pt calendar date targets; ThirtyConfirmDialog, readable at 200% text; floating rounded SnackBars; ThirtyAppBar's scrolled-under edge. Every screen was checked with real fonts at 320 / 360pt, 200% text, light and dark.
+
+**Final regression status:** 1120 tests passing; `flutter analyze` clean.
+
+**Accepted deferred items (carried forward, not Phase C work):**
+- Circle History's raw `YYYY-MM-DD` record dates.
+- Home's AppBar stays intentionally unchanged (no `ThirtyAppBar`; the fading wordmark header is accepted Home composition).
+- The spacing between Restore purchases and its explanation is accepted as is (the 48pt target stays).
+- Support contact and privacy links wait for an authoritative source.
+- Premium Atmosphere / World monetization ideas stay post-launch, outside V1.
+- No new screen-specific redesigns.
+- Also carried forward from earlier sections: dialog title size; the time picker at 200% text; ordering the active Plan first; a Plan detail / stage list; trials, annual pricing and paywall analytics; iOS / App Store wording.
