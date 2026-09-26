@@ -126,5 +126,74 @@ void main() {
         throwsAssertionError,
       );
     });
+
+    group('thumb (Phase D1)', () {
+      Finder painter() => find.descendant(
+        of: find.byType(ThirtyProgressCircle),
+        matching: find.byType(CustomPaint),
+      );
+
+      testWidgets('marks the arc\'s leading end in the progress colour', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _wrap(
+            const Center(
+              child: ThirtyProgressCircle(
+                progress: 0.25,
+                size: 100,
+                strokeWidth: 10,
+                thumbDiameter: 14,
+                progressColor: Color(0xFF00FF00),
+              ),
+            ),
+          ),
+        );
+        // Radius 45; a quarter turn from the top lands at 3 o'clock.
+        expect(
+          painter(),
+          paints
+            ..circle()
+            ..arc(color: const Color(0xFF00FF00))
+            ..circle(x: 95, y: 50, radius: 7, color: const Color(0xFF00FF00)),
+        );
+      });
+
+      testWidgets('sits at the top when progress is 0', (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            const Center(
+              child: ThirtyProgressCircle(
+                progress: 0,
+                size: 100,
+                strokeWidth: 10,
+                thumbDiameter: 14,
+              ),
+            ),
+          ),
+        );
+        expect(
+          painter(),
+          paints
+            ..circle()
+            ..circle(x: 50, y: 5, radius: 7),
+        );
+      });
+
+      testWidgets('is off by default', (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            const Center(
+              child: ThirtyProgressCircle(
+                progress: 0,
+                size: 100,
+                strokeWidth: 10,
+              ),
+            ),
+          ),
+        );
+        expect(painter(), paintsExactlyCountTimes(#drawCircle, 1));
+      });
+    });
   });
 }

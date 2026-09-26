@@ -79,7 +79,11 @@ void main() {
       // 412: 362.56 fits inside 364.
       expect(HomeCircleMetrics.forWidth(412).circleSize, closeTo(362.56, 1e-9));
       final m = HomeCircleMetrics.forWidth(360);
-      expect(m.interiorSize, 312 - HomeCircleMetrics.strokeWidth * 2);
+      // Phase D1: the wordmark keeps its pre-D1 reference interior; the
+      // ring sits 8pt inside the halo and the illustration inside it.
+      expect(m.interiorSize, 312 - 20);
+      expect(m.ringSize, 312 - 16);
+      expect(m.illustrationSize, 312 - 36);
       expect(m.textMaxWidth, closeTo(312 * 0.85, 1e-9));
     });
   });
@@ -89,8 +93,8 @@ void main() {
       ('light', AppTheme.light, AppShadows.haloLight),
       ('dark', AppTheme.dark, AppShadows.haloDark),
     ]) {
-      testWidgets('$name: Ready and Circle Hero share the same halo, exactly '
-          'the Circle\'s own rect', (tester) async {
+      testWidgets('$name: Ready and Circle Hero share the same halo, with '
+          'the D1 ring inset 8pt inside it', (tester) async {
         for (final prefs in [const <String, Object>{}, _chosen]) {
           await tester.pumpWidget(
             await _wrap(
@@ -104,8 +108,8 @@ void main() {
           final halo = find.byType(HomeCircleHalo);
           expect(halo, findsOneWidget);
           expect(
-            tester.getRect(halo),
             tester.getRect(find.byType(ThirtyProgressCircle)),
+            tester.getRect(halo).deflate(HomeCircleMetrics.ringInset),
           );
           final decoration =
               tester
@@ -127,8 +131,8 @@ void main() {
       });
     }
 
-    testWidgets('the steady not-started track stays transparent — the halo '
-        'adds presence without reintroducing a ring', (tester) async {
+    testWidgets('Phase D1: the not-started Circle shows the soft track with '
+        'an empty arc', (tester) async {
       await tester.pumpWidget(
         await _wrap(storedPrefs: _chosen, disableAnimations: true),
       );
@@ -137,7 +141,7 @@ void main() {
       final circle = tester.widget<ThirtyProgressCircle>(
         find.byType(ThirtyProgressCircle),
       );
-      expect(circle.trackColor, Colors.transparent);
+      expect(circle.trackColor, AppColors.light.ringTrack);
       expect(circle.progress, 0.0);
     });
   });

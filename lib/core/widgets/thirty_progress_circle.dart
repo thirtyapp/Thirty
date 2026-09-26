@@ -20,6 +20,7 @@ class ThirtyProgressCircle extends StatelessWidget {
     this.semanticValue,
     this.progressColor,
     this.trackColor,
+    this.thumbDiameter,
     super.key,
   }) : assert(size > 0, 'size must be greater than 0'),
        assert(strokeWidth > 0, 'strokeWidth must be greater than 0'),
@@ -52,6 +53,10 @@ class ThirtyProgressCircle extends StatelessWidget {
   /// Defaults to the Circle's own [AppColors.ringTrack].
   final Color? trackColor;
 
+  /// When set, a dot of this diameter in the progress colour marks the
+  /// arc's leading end (at the top when progress is 0). Off by default.
+  final double? thumbDiameter;
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
@@ -75,6 +80,7 @@ class ThirtyProgressCircle extends StatelessWidget {
                 strokeWidth: strokeWidth,
                 progressColor: resolvedProgressColor,
                 trackColor: resolvedTrackColor,
+                thumbDiameter: thumbDiameter,
               ),
             ),
             ?child,
@@ -91,12 +97,14 @@ class _ProgressCirclePainter extends CustomPainter {
     required this.strokeWidth,
     required this.progressColor,
     required this.trackColor,
+    this.thumbDiameter,
   });
 
   final double progress;
   final double strokeWidth;
   final Color progressColor;
   final Color trackColor;
+  final double? thumbDiameter;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -112,27 +120,32 @@ class _ProgressCirclePainter extends CustomPainter {
 
     canvas.drawCircle(center, radius, trackPaint);
 
-    if (progress <= 0) {
-      return;
-    }
-
     final progressPaint = Paint()
       ..color = progressColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
 
+    const startAngle = -math.pi / 2;
+    final sweepAngle = 2 * math.pi * progress;
     if (progress >= 1) {
       // A round-capped arc swept through a full 2π overlaps its own start
       // and end caps, producing a visible seam/thickened spot. A plain
       // circle avoids that entirely once progress is complete.
       canvas.drawCircle(center, radius, progressPaint);
-      return;
+    } else if (progress > 0) {
+      canvas.drawArc(rect, startAngle, sweepAngle, false, progressPaint);
     }
 
-    const startAngle = -math.pi / 2;
-    final sweepAngle = 2 * math.pi * progress;
-    canvas.drawArc(rect, startAngle, sweepAngle, false, progressPaint);
+    final thumb = thumbDiameter;
+    if (thumb != null) {
+      final angle = startAngle + sweepAngle;
+      canvas.drawCircle(
+        center + Offset(math.cos(angle), math.sin(angle)) * radius,
+        thumb / 2,
+        Paint()..color = progressColor,
+      );
+    }
   }
 
   @override
@@ -140,6 +153,7 @@ class _ProgressCirclePainter extends CustomPainter {
     return oldDelegate.progress != progress ||
         oldDelegate.strokeWidth != strokeWidth ||
         oldDelegate.progressColor != progressColor ||
-        oldDelegate.trackColor != trackColor;
+        oldDelegate.trackColor != trackColor ||
+        oldDelegate.thumbDiameter != thumbDiameter;
   }
 }

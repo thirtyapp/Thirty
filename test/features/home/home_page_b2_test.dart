@@ -318,7 +318,7 @@ void main() {
       await tester.pumpWidget(ready);
       final readyGap =
           tester.getTopLeft(_cta("Begin today's Circle")).dy -
-          tester.getBottomLeft(find.byType(ThirtyProgressCircle)).dy;
+          tester.getBottomLeft(find.byType(HomeCircleHalo)).dy;
 
       final (assigned, _) = await _wrap(
         storedPrefs: _chosen,
@@ -328,7 +328,7 @@ void main() {
       await tester.pump();
       final heroGap =
           tester.getTopLeft(find.text("Today's Circle")).dy -
-          tester.getBottomLeft(find.byType(ThirtyProgressCircle)).dy;
+          tester.getBottomLeft(find.byType(HomeCircleHalo)).dy;
 
       expect(readyGap, HomeCircleMetrics.circleToContentGap);
       expect(heroGap, HomeCircleMetrics.circleToContentGap);

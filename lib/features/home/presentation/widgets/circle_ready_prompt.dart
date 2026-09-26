@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/branding/thirty_wordmark_view.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
-import '../../../../core/widgets/thirty_progress_circle.dart';
 import 'daily_intention_prompt.dart';
 import 'home_circle_metrics.dart';
 
@@ -92,20 +91,17 @@ class _CircleReadyPromptState extends State<CircleReadyPrompt> {
                 // progressColor; nothing is there to see behind it.
                 // Mounted once, outside the AnimatedSwitcher below — see
                 // this class's doc comment.
-                HomeCircleHalo(
-                  size: metrics.circleSize,
-                  child: ThirtyProgressCircle(
-                    progress: 1.0,
-                    size: metrics.circleSize,
-                    strokeWidth: HomeCircleMetrics.strokeWidth,
-                    trackColor: Colors.transparent,
-                    progressColor: colors.primary,
-                    semanticLabel: "Today's Circle",
-                    semanticValue: 'Not started yet.',
-                    child: SizedBox(
-                      width: metrics.wordmarkWidth,
-                      child: const ThirtyWordmarkView(),
-                    ),
+                HomeCircle(
+                  metrics: metrics,
+                  progress: 1.0,
+                  trackColor: Colors.transparent,
+                  progressColor: colors.primary,
+                  semanticValue: 'Not started yet.',
+                  // A closed Circle has no leading end to mark.
+                  showThumb: false,
+                  child: SizedBox(
+                    width: metrics.wordmarkWidth,
+                    child: const ThirtyWordmarkView(),
                   ),
                 ),
                 const SizedBox(height: HomeCircleMetrics.circleToContentGap),

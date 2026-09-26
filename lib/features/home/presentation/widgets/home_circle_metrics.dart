@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/thirty_progress_circle.dart';
 
 /// The Home Circle's shared geometry — the single source of truth for both
 /// `circle_ready_prompt.dart` (Ready) and `circle_hero.dart` (assigned /
@@ -78,9 +79,18 @@ class HomeCircleMetrics {
   /// Supporting text → the hero CTA (or the closed-state message).
   static const contentToCtaGap = AppSpacing.section;
 
-  /// The one source of truth for the Home Circle's ring thickness. The
-  /// illustration's and wordmark's inset sizes are both derived from it.
-  static const strokeWidth = 10.0;
+  /// Phase D1 ring (Design vision): a thin ring inset inside the halo
+  /// disc, a sage dot marking the arc's leading end, and a small band of
+  /// the halo's surface between the ring and the illustration.
+  static const ringInset = 8.0;
+  static const ringStrokeWidth = 6.0;
+  static const thumbDiameter = 14.0;
+  static const _illustrationGap = 4.0;
+
+  /// The wordmark's reference interior (the pre-D1 ring's inner edge): the
+  /// validated wordmark scale in `docs/brand/THIRTY_WORDMARK.md` §6 is
+  /// kept exactly, independent of the D1 ring.
+  static const _wordmarkInset = 10.0;
 
   /// The Home composition's outer padding, shared by both widgets so the
   /// Circle's top edge sits at the same place in every state. Anchored
@@ -97,11 +107,62 @@ class HomeCircleMetrics {
   /// The bounded Home content column: the text and the hero CTA share it.
   final double textMaxWidth;
 
-  /// The region inside the ring's stroke. The illustration and the
-  /// wordmark are sized off this, never off the Circle's outer size.
-  double get interiorSize => circleSize - strokeWidth * 2;
+  /// The ring's own outer size, inset inside the halo disc.
+  double get ringSize => circleSize - ringInset * 2;
+
+  /// The World illustration's size: inside the ring, with a small band of
+  /// the halo's surface around it.
+  double get illustrationSize =>
+      circleSize - (ringInset + ringStrokeWidth + _illustrationGap) * 2;
+
+  /// The wordmark's reference interior, never the Circle's outer size.
+  double get interiorSize => circleSize - _wordmarkInset * 2;
 
   double get wordmarkWidth => interiorSize * _wordmarkWidthFraction;
+}
+
+/// The Home Circle (Phase D1), shared by Ready and the assigned states so
+/// it never jumps: the [HomeCircleHalo] disc with a thin ring inset inside
+/// it and, when [showThumb], a sage dot at the arc's leading end.
+class HomeCircle extends StatelessWidget {
+  const HomeCircle({
+    required this.metrics,
+    required this.progress,
+    required this.progressColor,
+    required this.trackColor,
+    required this.semanticValue,
+    this.showThumb = true,
+    this.child,
+    super.key,
+  });
+
+  final HomeCircleMetrics metrics;
+  final double progress;
+  final Color progressColor;
+  final Color trackColor;
+  final String semanticValue;
+  final bool showThumb;
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    return HomeCircleHalo(
+      size: metrics.circleSize,
+      child: Center(
+        child: ThirtyProgressCircle(
+          progress: progress,
+          size: metrics.ringSize,
+          strokeWidth: HomeCircleMetrics.ringStrokeWidth,
+          progressColor: progressColor,
+          trackColor: trackColor,
+          thumbDiameter: showThumb ? HomeCircleMetrics.thumbDiameter : null,
+          semanticLabel: "Today's Circle",
+          semanticValue: semanticValue,
+          child: child,
+        ),
+      ),
+    );
+  }
 }
 
 /// The Circle's halo (Phase B1): a `surface`-toned disc exactly the

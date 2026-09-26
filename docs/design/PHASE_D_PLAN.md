@@ -1,7 +1,8 @@
 # THIRTY Visual Pass — Phase D Plan (Home visual pass)
 
 **Status:** In progress.
-- **D1a · Home header** — complete (see below)
+- **D1a · Home header** — complete, commit `dc81884` (see below)
+- **D1b · Circle ring and timer** — complete (see below)
 
 **Foundation:** Phases A–C are complete and ratified (`PHASE_A_PLAN.md`, `PHASE_B_PLAN.md`, `PHASE_C_PLAN.md`).
 
@@ -30,3 +31,12 @@ The founder supplied `Design vision.png` (Home, today's Circle assigned) with th
 - **Profile button** (`HomeProfileButton`): 48pt `surface` circle with the card shadow and a person icon; "Open You" button semantics; `go('/settings')`, so the You tab is selected exactly as from the nav. Visible in every Home state, including Ready.
 - The whole Home composition moves down 16pt (56 → 72pt header) in every state, so the Circle still never jumps between states.
 - **Tests:** `home_page_d1_test.dart` — semantics, gutter alignment, 48pt target in Ready, 320 / 360pt × 200% × light / dark fit, and the tap opening You in the real router.
+
+## D1b · Circle ring and timer
+
+- **Shared `HomeCircle`** (`home_circle_metrics.dart`), used by Ready and every assigned state so the Circle never jumps: the halo disc, a 6pt ring inset 8pt inside it, a 4pt band of halo surface, then the illustration (`circleSize − 36`). The wordmark keeps its validated pre-D1 scale (`interiorSize = circleSize − 20`).
+- **`ThirtyProgressCircle.thumbDiameter`** (optional, off by default): a 14pt dot in the progress colour at the arc's leading end — at the top when progress is 0.
+- **States:** Ready keeps the closed sage Circle with the wordmark (no dot). Assigned: soft `ringTrack` + sage arc + dot. Not started: empty arc, dot at the top (First Breath still opens the Circle from closed to empty). Started: the arc is `(now − startedAt) / 30 min`, full from 30 minutes on, repainted once a second (`eventClockProvider`). Closed: the arc keeps the time the Circle actually ran (`closedAt − startedAt`).
+- **Removed:** the ambient breathing of the started Circle (its rule is overridden by the timer; see the founder decisions).
+- **Semantics:** started now announces "Circle in progress. N of 30 minutes." so the timer is never visual-only; not started / closed are unchanged.
+- **Tests:** `circle_hero_test.dart`'s old "Circle color lifecycle" group (transparent ready track, breathing) is replaced by the D1 ring group (colours and dot in every state, First Breath sweep, 12 / 15 / 45-minute progress and semantics, closed duration, the ticker never blocking `pumpAndSettle`); thumb painter tests; B1 / B2 geometry updated to the inset ring.
