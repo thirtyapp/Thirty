@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/thirty_card.dart';
 import '../../../../core/widgets/viewport_visibility.dart';
 import '../../../home/application/home_invitation_slot.dart';
 import '../../application/premium_offer_provider.dart';
@@ -12,7 +11,7 @@ import '../../application/premium_offer_provider.dart';
 /// THIRTY's one quiet Premium invitation — frozen architecture §26.
 ///
 /// Renders nothing unless [showPremiumOfferInvitationProvider] is `true`.
-/// A plain inline card, never a dialog/interstitial/snackbar — it never
+/// A plain inline row (a card before Phase D1), never a dialog/interstitial/snackbar — it never
 /// interrupts an active Circle and never stacks with the action-report or
 /// Plan-session surfaces already on this screen (frozen architecture §12).
 /// A one-time event, not a dismiss-to-hide banner (see
@@ -53,31 +52,67 @@ class _PremiumOfferInvitationCardState
     });
 
     final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    // Phase D1 (Design vision): a flat "Later today" row — icon chip,
+    // copy, chevron — on the page itself rather than a card. The chevron
+    // is read as "Learn more", so the row still says where it leads.
     final card = Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.page,
+        AppSpacing.page - AppSpacing.s,
         0,
-        AppSpacing.page,
+        AppSpacing.page - AppSpacing.s,
         AppSpacing.page,
       ),
-      child: ThirtyCard(
-        onTap: () => context.push('/premium'),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                'THIRTY Premium adds guided Plans, Coach and Insights.',
-                style: textTheme.bodyMedium,
+      child: MergeSemantics(
+        child: Semantics(
+          button: true,
+          child: InkWell(
+            onTap: () => context.push('/premium'),
+            borderRadius: AppRadius.large,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 64),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.s,
+                  vertical: AppSpacing.s,
+                ),
+                child: Row(
+                  children: [
+                    ExcludeSemantics(
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colors.surfaceMuted,
+                        ),
+                        child: Icon(
+                          Icons.auto_awesome_outlined,
+                          size: 22,
+                          color: colors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.m),
+                    Expanded(
+                      child: Text(
+                        'THIRTY Premium adds guided Plans, Coach and Insights.',
+                        style: textTheme.bodyLarge,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.s),
+                    Semantics(
+                      label: 'Learn more',
+                      child: Icon(
+                        Icons.chevron_right_rounded,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(width: AppSpacing.s),
-            Text(
-              'Learn more',
-              style: textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).extension<AppColors>()!.primary,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

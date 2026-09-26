@@ -80,7 +80,23 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('THIRTY Premium'), findsOneWidget);
-    expect(find.text('Learn more'), findsOneWidget);
+    // Phase D1: one button, its chevron read as "Learn more".
+    final row = find.bySemanticsLabel(
+      RegExp(r'^THIRTY Premium adds guided Plans, Coach and Insights\.\s+'
+          r'Learn more$'),
+    );
+    expect(row, findsOneWidget);
+    expect(
+      tester.getSemantics(row),
+      matchesSemantics(
+        isButton: true,
+        hasTapAction: true,
+        isFocusable: true,
+        hasFocusAction: true,
+        label: 'THIRTY Premium adds guided Plans, Coach and Insights.\n'
+            'Learn more',
+      ),
+    );
   });
 
   testWidgets('marks itself shown once meaningfully visible, not merely '
@@ -119,8 +135,8 @@ void main() {
     expect(find.textContaining('THIRTY Premium'), findsNothing);
   });
 
-  testWidgets('Phase A2 — stays compact: it shares height with the Home '
-      'hero, so it keeps the default card padding', (tester) async {
+  testWidgets('Phase D1 — a flat "Later today" row: icon chip, copy and '
+      'chevron, at least 64pt tall, no card', (tester) async {
     final (widget, container) = await _wrap();
     addTearDown(container.dispose);
     await _closeCircle(container, '2026-09-01');
@@ -129,6 +145,12 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    expect(tester.widget<ThirtyCard>(find.byType(ThirtyCard)).padding, isNull);
+    expect(find.byType(ThirtyCard), findsNothing);
+    expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
+    expect(
+      tester.getSize(find.byType(InkWell)).height,
+      greaterThanOrEqualTo(64),
+    );
   });
 }

@@ -18,6 +18,7 @@ import 'package:thirty/features/home/presentation/home_page.dart';
 import 'package:thirty/core/activity_category.dart';
 import 'package:thirty/core/widgets/thirty_button.dart';
 import 'package:thirty/features/home/presentation/widgets/home_header.dart';
+import 'package:thirty/features/home/presentation/widgets/later_today_label.dart';
 import 'package:thirty/features/home/presentation/widgets/today_card.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
 
@@ -341,5 +342,40 @@ void main() {
         }
       }
     }
+  });
+
+  group('Later today', () {
+    testWidgets("hidden while nothing follows today's Circle", (tester) async {
+      await _pumpHome(tester);
+      expect(find.byType(LaterTodayLabel), findsOneWidget);
+      expect(find.text('LATER TODAY'), findsNothing);
+    });
+
+    testWidgets('once closed, heads the reflection as a "Later today" '
+        'header, below the CTA area', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await _pumpHome(tester, storedPrefs: _closed);
+      await tester.scrollUntilVisible(
+        find.text('Did you try this activity?'),
+        200,
+      );
+      await tester.pumpAndSettle();
+      final label = find.text('LATER TODAY');
+      expect(label, findsOneWidget);
+      expect(
+        tester.getSemantics(label),
+        matchesSemantics(label: 'Later today', isHeader: true),
+      );
+      expect(
+        tester.getTopLeft(label).dy,
+        lessThan(tester.getTopLeft(find.text('Did you try this activity?')).dy),
+      );
+      expect(
+        tester.getTopLeft(label).dy,
+        greaterThan(tester.getBottomLeft(find.text('Done for today')).dy),
+      );
+      expect(tester.getTopLeft(label).dx, AppSpacing.page);
+      semantics.dispose();
+    });
   });
 }

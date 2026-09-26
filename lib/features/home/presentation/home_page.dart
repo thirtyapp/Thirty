@@ -11,6 +11,7 @@ import 'widgets/action_report_prompt.dart';
 import 'widgets/circle_hero.dart';
 import 'widgets/circle_ready_prompt.dart';
 import 'widgets/home_header.dart';
+import 'widgets/later_today_label.dart';
 
 /// THIRTY's product entry screen.
 ///
@@ -29,8 +30,10 @@ import 'widgets/home_header.dart';
 /// beneath [CircleHero] — a separate widget, deliberately not folded into
 /// `circle_hero.dart` itself (see ADR-013 §10); since Phase B3 it is passed
 /// in as part of CircleHero's `footer`, so it scrolls with the hero as one
-/// document rather than taking height from it. [PlanSessionPanel] (Batch 2A) renders below that, and only when
-/// today's Circle is Plan-resolved. Below that, at most one of
+/// document rather than taking height from it. Since Phase D1,
+/// [PlanSessionPanel] (Batch 2A, only when today's Circle is
+/// Plan-resolved) comes first, then a "LATER TODAY" label heading the
+/// reflection and, below it, at most one of
 /// `ReminderInvitationCard` or `PremiumOfferInvitationCard` ever renders
 /// — each is internally gated on the other (and both on
 /// `ActionReportPrompt`'s own pending state) to enforce the parent V1
@@ -99,9 +102,13 @@ class HomePage extends ConsumerWidget {
         // starts with the Circle at its normal position.
         child: hasRecommendation
             ? const CircleHero(
+                // Phase D1: today's Plan guidance first, then the
+                // follow-ups under "LATER TODAY" (reflection, then the
+                // reminder or Premium invitation — priority unchanged).
                 footer: [
-                  ActionReportPrompt(),
                   PlanSessionPanel(),
+                  LaterTodayLabel(),
+                  ActionReportPrompt(),
                   ReminderInvitationCard(),
                   PremiumOfferInvitationCard(),
                 ],

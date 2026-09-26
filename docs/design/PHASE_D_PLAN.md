@@ -3,7 +3,8 @@
 **Status:** In progress.
 - **D1a · Home header** — complete, commit `dc81884` (see below)
 - **D1b · Circle ring and timer** — complete, commit `7cac0cf` (see below)
-- **D1c · Greeting, Today card, CTA** — complete (see below)
+- **D1c · Greeting, Today card, CTA** — complete, commit `5f26dfd` (see below)
+- **D1d · Later today** — complete (see below)
 
 **Foundation:** Phases A–C are complete and ratified (`PHASE_A_PLAN.md`, `PHASE_B_PLAN.md`, `PHASE_C_PLAN.md`).
 
@@ -49,3 +50,11 @@ The founder supplied `Design vision.png` (Home, today's Circle assigned) with th
 - **CTA**: Start / Close Circle span the full content width (the card's width). Ready's "Begin today's Circle" stays in its bounded column — Ready is outside the mockup.
 - **Rhythm:** Circle → greeting 32pt, greeting → subline 8pt, subline → card 24pt, card → CTA 16pt. The pre-D1 column constants (eyebrow / hero / activity / support / CTA gaps) are removed.
 - **Tests:** greeting boundaries, header semantics and subline per state; card alignment, icon and divider; art at 100% without overlapping the text; 320 / 360pt × 200% × light / dark × assigned / started / closed — text only, nothing truncated, full-width card and ≥ 56pt CTA. B2 / hero tests updated from the eyebrow / centred column to the greeting / card.
+
+## D1d · Later today
+
+- **Order under the CTA:** `PlanSessionPanel` (today's Plan guidance) first, then **LATER TODAY**, then the reflection (`ActionReportPrompt`), then the reminder or Premium invitation. The V1 prompt priority (reflection → reminder → Premium, never stacked) is unchanged.
+- **`LaterTodayLabel`:** labelSmall, 1.5 letter-spacing, `textSecondary`, on the page gutter; a semantic header read as "Later today"; shown only while the reflection, the reminder invitation or the Premium invitation is actually showing (their existing providers), so it never labels an empty section.
+- **Premium invitation → flat row** (mockup style): a 44pt `surfaceMuted` chip with a sparkle icon, the unchanged copy, and a chevron read as "Learn more"; no card, ≥ 64pt tall, one merged button that opens `/premium`. No lock icon (C4). Its shown / slot semantics are unchanged.
+- **Not changed:** the reflection, reminder and Plan session surfaces keep their own accepted presentation (answer-in-place, no destination page, so they can't be chevron rows).
+- **Tests:** label hidden with nothing pending, shown as a header above the reflection and below "Done for today"; the Premium row's merged button semantics, icons, height and no card.
