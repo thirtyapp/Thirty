@@ -166,8 +166,8 @@ class AppTheme {
   /// Every AppBar sits on the page itself: the exact page background at
   /// rest and while content scrolls under it, with no surface tint and no
   /// scrolled-under elevation or tonal change. This removes the white
-  /// (light) / lighter (dark) band all nine AppBars had. A deliberate
-  /// scrolled-state separation, if any, is an A4/Phase C decision.
+  /// (light) / lighter (dark) band all nine AppBars had. The scrolled-under
+  /// separation is only a 1pt edge, drawn by `ThirtyAppBar` (Phase C5).
   static AppBarTheme _appBarTheme(AppColors colors) {
     return AppBarTheme(
       backgroundColor: colors.background,

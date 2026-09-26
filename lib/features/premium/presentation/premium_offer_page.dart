@@ -5,6 +5,7 @@ import '../../../core/premium/entitlement_status.dart';
 import '../../../core/premium/premium_access.dart';
 import '../../../core/premium/premium_offer_providers.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../../core/widgets/thirty_app_bar.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
 import 'widgets/manage_subscription.dart';
@@ -82,7 +83,7 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
     final quiet = textTheme.bodySmall?.copyWith(color: colors.textSecondary);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('THIRTY Premium')),
+      appBar: const ThirtyAppBar(title: Text('THIRTY Premium')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.page),

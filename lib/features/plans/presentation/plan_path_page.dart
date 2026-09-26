@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/premium/premium_access.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../../core/widgets/thirty_app_bar.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
 import '../../../core/widgets/thirty_text_action.dart';
@@ -64,7 +65,7 @@ class PlanPathPage extends ConsumerWidget {
     final isEntitled = ref.watch(premiumEntitlementProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Plans')),
+      appBar: const ThirtyAppBar(title: Text('Plans')),
       body: SafeArea(
         child: ListView.separated(
           padding: const EdgeInsets.all(AppSpacing.page),

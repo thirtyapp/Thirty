@@ -10,6 +10,9 @@
 - **Insights contract correction** — commit `14637c3` (aged-out evidence withdrawn to a dated, read-only earlier Insight; "Observed on {date}"; Dismiss stored in the existing snapshot blob)
 - **Circle History calendar accessibility** — commit `8461bba` (48×48pt date targets; 7-column grid from 336pt with the calendar's own inset narrowing to 12pt, a recorded-date list below that; numbers at the user's text size; spoken localized dates)
 - **C4 · Insights** — complete, commit `184bdd7` (see below)
+- **C5a · Dialog accessibility** — commit `7583d15` (see C5 below)
+- **C5b · SnackBar polish** — commit `279016d`
+- **C5c · AppBar scrolled edge** — complete, in the commit that records this entry
 
 **Foundation:** Phase A and Phase B are complete and ratified (`PHASE_A_PLAN.md`, `PHASE_B_PLAN.md`).
 
@@ -109,3 +112,22 @@
 **Accessibility:** real-font matrix at 320 / 360pt × 200%, light / dark: Free / no Insight, Free / retained Insight (every family), Premium / no Insight, Premium / current Insight (every family, incl. the plain current-place fact), just applied, dismissed, earlier aged-out (Free and Premium) — nothing truncated or overflowing, Premium application full width, one sales surface at most, Dismiss ≥ 48pt, observation readable Free. Component tests cover the pill / 24pt switch, the unchanged default, semantics and loading size. Against the pre-C4 presentation 52 of the 60 matrix cases fail.
 
 **Kept as is:** the 48pt targets (and resulting gap) between "Become Premium to apply this" and "Dismiss".
+
+## C5 · Shared polish
+
+**Scope:** only shared presentation deferred from C1–C4. No screen composition, copy, product logic or billing behaviour changed.
+
+**C5a — confirmation dialogs (`ThirtyConfirmDialog`, `lib/core/widgets/`).** The audit found the only blocking defect: at 320pt / 200% text the dialog bodies were silently clipped with no scroll (the Delete-history warning showed "This permanently", 92 of 462pt; Alarms & reminders 176 of 378pt), and labels broke mid-word ("permanentl / y", "reminder / s"). The shared dialog is still an `AlertDialog`: `scrollable: true` (title and body scroll, actions stay below); at text scale ≥ 130% the side inset narrows from 40 to 16pt and stacked actions get 8pt between them; destructive confirm uses `errorText`; cancel → `false`, confirm → `true`, barrier / back → `null`. At ordinary text the geometry is identical to before (tested against the pre-C5 dialog), which is why the 8pt stacked spacing applies only at large text — the Delete dialog already stacks its actions at 360pt / 100%. Migrated: Delete history (`journal_data_controls.dart`), Close Circle (`circle_hero.dart`, dialog builder only), Alarms & reminders (`you_preferences_card.dart`).
+
+**C5b — SnackBars (theme only).** Floating, `AppRadius.xl`, 16pt side / 8pt bottom margins (aligned with the floating nav and 8pt above it; 8pt above the screen edge where there is no nav, e.g. Circle history), elevation 0, inverseSurface colours kept. Copy, 4s duration, action behaviour and live region unchanged. The only call site is "Copy as text".
+
+**C5c — AppBar scrolled edge (`ThirtyAppBar`, `lib/core/widgets/`).** A 1pt bottom edge in `divider` while the page's own vertical scroll view (depth 0) is scrolled away from its top; none at the top; no elevation, tint or background change; horizontal and nested scrolling never trigger it; the AppBar's height never changes. Used on You (Settings), Plans, Insights, Premium offer, Circle history and Circle record detail.
+
+**Decisions recorded:**
+- **Restore explanation spacing accepted as is.** Measured on You: the "Restore purchases" label sits 19pt below the Premium card and 15pt above its explanation, so it still reads as one pair; the 48pt target stays (same decision as C4's Become Premium / Dismiss).
+- **Home's AppBar is intentionally excluded** from `ThirtyAppBar`: its fading wordmark header is accepted Home composition.
+- **Circle history's raw `YYYY-MM-DD` record dates remain deferred** (Insights' dates were localized in C4; Circle history is screen-specific, not shared polish).
+
+**Accessibility:** real-font tests — dialogs at 320 / 360pt × 200% × light / dark for all three (laid out in full, body end reachable, no mid-word breaks, actions ≥ 48pt and on screen, 8pt stacked spacing, 16pt inset); SnackBar in the real app at 320 / 360pt × 200% × light / dark on You (with the nav) and Circle history (no nav): position, no overlap, no truncation.
+
+**Still deferred:** dialog title size (`headlineSmall`, fine at 100%); the time picker at 200% (Material's own layout, themed in A5); support contact and privacy link (no authoritative source).

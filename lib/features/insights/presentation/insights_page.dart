@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/premium/premium_access.dart';
 import '../../../core/theme/design_tokens.dart';
+import '../../../core/widgets/thirty_app_bar.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
 import '../application/insight_provider.dart';
@@ -95,7 +96,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
     // persistent primary destination, every branch's own Settings
     // shortcut becomes a redundant entry point (see `app_shell.dart`).
     return Scaffold(
-      appBar: AppBar(title: const Text('Insights')),
+      appBar: const ThirtyAppBar(title: Text('Insights')),
       body: SafeArea(
         // Horizontal page insets are applied per section: the calendar sets
         // its own (it may narrow them to keep 48pt day targets), everything

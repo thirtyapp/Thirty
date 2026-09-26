@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/design_tokens.dart';
+import '../../../core/widgets/thirty_app_bar.dart';
 import '../../premium/presentation/widgets/premium_restore_footer.dart';
 import 'widgets/you_data_card.dart';
 import 'widgets/you_preferences_card.dart';
@@ -68,7 +69,7 @@ class SettingsPage extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('You')),
+      appBar: const ThirtyAppBar(title: Text('You')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.page),

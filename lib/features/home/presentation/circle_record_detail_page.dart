@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/design_tokens.dart';
+import '../../../core/widgets/thirty_app_bar.dart';
 import '../application/circle_journal.dart';
 import 'widgets/circle_journal_entry_card.dart';
 
@@ -39,7 +40,7 @@ class CircleRecordDetailPage extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(localDate)),
+      appBar: ThirtyAppBar(title: Text(localDate)),
       body: SafeArea(
         child: entry == null
             ? Padding(

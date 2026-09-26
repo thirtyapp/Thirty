@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/design_tokens.dart';
+import '../../../core/widgets/thirty_app_bar.dart';
 import '../application/circle_journal.dart';
 import 'widgets/circle_journal_entry_card.dart';
 import 'widgets/journal_data_controls.dart';
@@ -35,7 +36,7 @@ class CircleHistoryPage extends ConsumerWidget {
     final entries = journal.readAll().reversed.toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Your Circle history')),
+      appBar: const ThirtyAppBar(title: Text('Your Circle history')),
       body: SafeArea(
         child: Column(
           children: [
