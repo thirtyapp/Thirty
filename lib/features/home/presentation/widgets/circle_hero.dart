@@ -5,7 +5,7 @@ import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/activity_category.dart';
-import '../../../../core/branding/thirty_wordmark_view.dart';
+import '../../../../core/branding/thirty_brand_lockup.dart';
 import '../../../../core/providers/clock_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
@@ -544,9 +544,13 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                         // ritual's only semantics owner.
                         FadeTransition(
                           opacity: _wordmarkOpacity,
-                          child: SizedBox(
-                            width: wordmarkWidth,
-                            child: const ThirtyWordmarkView(),
+                          // Phase D1: the wordmark with the tagline
+                          // beneath it, fading as one lockup.
+                          child: ExcludeSemantics(
+                            child: ThirtyBrandLockup(
+                              wordmarkWidth: wordmarkWidth,
+                              centered: true,
+                            ),
                           ),
                         ),
                         FadeTransition(

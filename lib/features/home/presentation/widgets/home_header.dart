@@ -1,53 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/branding/thirty_wordmark_view.dart';
+import '../../../../core/branding/thirty_brand_lockup.dart';
 import '../../../../core/theme/design_tokens.dart';
 
-/// Home's brand lockup (Phase D1): the THIRTY wordmark with the tagline
-/// beneath it, top-left in Home's header.
-///
-/// A logotype, so it keeps one fixed size at every text scale (WCAG 1.4.4
-/// exempts text that is part of a logo) — that is what lets Home's header
-/// keep a fixed height. The wordmark is announced as the header "THIRTY";
-/// the tagline is read as ordinary text after it.
+/// Home's brand lockup (Phase D1): the shared [ThirtyBrandLockup] at
+/// 96pt, top-left in Home's header, announced as the header "THIRTY" with
+/// the tagline read after it. Fixed size at every text scale, which is
+/// what lets Home's header keep a fixed height.
 class HomeBrandLockup extends StatelessWidget {
   const HomeBrandLockup({super.key});
 
   static const wordmarkWidth = 96.0;
-  static const tagline = 'A brighter you in small steps';
+  static const tagline = ThirtyBrandLockup.tagline;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<AppColors>()!;
-    return MediaQuery.withNoTextScaling(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Semantics(
-            header: true,
-            label: 'THIRTY',
-            child: const SizedBox(
-              width: wordmarkWidth,
-              child: ThirtyWordmarkView(),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'A BRIGHTER YOU\nIN SMALL STEPS',
-            semanticsLabel: tagline,
-            style: TextStyle(
-              fontFamily: AppTypography.fontFamily,
-              fontSize: 9.5,
-              height: 1.5,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 2.2,
-              color: colors.textSecondary,
-            ),
-          ),
-        ],
-      ),
+    return const ThirtyBrandLockup(
+      wordmarkWidth: wordmarkWidth,
+      headerLabel: 'THIRTY',
     );
   }
 }

@@ -8,6 +8,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:thirty/core/app/thirty_app.dart';
+import 'package:thirty/features/home/presentation/widgets/home_circle_metrics.dart';
+import 'package:thirty/core/widgets/thirty_progress_circle.dart';
+import 'package:thirty/core/branding/thirty_brand_lockup.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
@@ -433,5 +436,107 @@ void main() {
         1,
       );
     });
+  });
+
+  group('Tagline inside the Circle', () {
+    Finder circleLockup() => find.descendant(
+      of: find.byType(ThirtyProgressCircle),
+      matching: find.byType(ThirtyBrandLockup),
+    );
+
+    testWidgets('Ready: the wordmark with the tagline, centred, decorative '
+        '(the Circle owns the semantics)', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await _pumpHome(tester, storedPrefs: const {});
+      expect(circleLockup(), findsOneWidget);
+      expect(tester.widget<ThirtyBrandLockup>(circleLockup()).centered, isTrue);
+      expect(
+        find.descendant(
+          of: circleLockup(),
+          matching: find.text('A BRIGHTER YOU\nIN SMALL STEPS'),
+        ),
+        findsOneWidget,
+      );
+      // Only the Circle's own "Today's Circle" node — the lockup inside it
+      // adds no semantics of its own.
+      expect(find.bySemanticsLabel(ThirtyBrandLockup.tagline), findsNothing);
+      expect(find.bySemanticsLabel('THIRTY'), findsNothing);
+      final lockup = tester.getRect(circleLockup());
+      final circle = tester.getRect(find.byType(ThirtyProgressCircle));
+      expect(lockup.center.dx, closeTo(circle.center.dx, 0.5));
+      expect(lockup.center.dy, closeTo(circle.center.dy, 0.5));
+      semantics.dispose();
+    });
+
+    testWidgets('First Breath: the tagline fades in and out with the '
+        'wordmark as one lockup', (tester) async {
+      tester.view.physicalSize = const Size(360, 740);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      SharedPreferences.setMockInitialValues({
+        recommendationDayKey: '2026-08-02',
+        recommendationIntentionKey: 'moreEnergy',
+        recommendationActivityIdKey: 'thirtyMinuteWalk',
+      });
+      final prefs = await SharedPreferences.getInstance();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            nowProvider.overrideWithValue(_today),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: const HomePage(),
+          ),
+        ),
+      );
+      double lockupOpacity() => tester
+          .widget<FadeTransition>(
+            find
+                .ancestor(
+                  of: circleLockup(),
+                  matching: find.byType(FadeTransition),
+                )
+                .first,
+          )
+          .opacity
+          .value;
+
+      expect(circleLockup(), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(lockupOpacity(), 1);
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(lockupOpacity(), 0);
+      await tester.pumpAndSettle();
+    });
+
+    for (final width in [320.0, 360.0, 412.0]) {
+      testWidgets('${width.toInt()}pt: the lockup fits inside the ring', (
+        tester,
+      ) async {
+        await _pumpHome(
+          tester,
+          storedPrefs: const {},
+          width: width,
+          height: 800,
+          textScale: 2,
+        );
+        expect(tester.takeException(), isNull);
+        final lockup = tester.getRect(circleLockup());
+        final circle = tester.getRect(find.byType(ThirtyProgressCircle));
+        // Every corner of the lockup lies inside the ring's inner edge.
+        final inner =
+            circle.width / 2 - HomeCircleMetrics.ringStrokeWidth;
+        for (final corner in [
+          lockup.topLeft,
+          lockup.topRight,
+          lockup.bottomLeft,
+          lockup.bottomRight,
+        ]) {
+          expect((corner - circle.center).distance, lessThan(inner));
+        }
+      });
+    }
   });
 }

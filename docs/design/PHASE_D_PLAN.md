@@ -5,7 +5,8 @@
 - **D1b · Circle ring and timer** — complete, commit `7cac0cf` (see below)
 - **D1c · Greeting, Today card, CTA** — complete, commit `5f26dfd` (see below)
 - **D1d · Later today** — complete, commit `4cab9a1` (see below)
-- **D1e · Bottom nav** — complete (see below)
+- **D1e · Bottom nav** — complete, commit `917c9d6` (see below)
+- **D1f · Tagline in the Circle** — complete (see below)
 
 **Foundation:** Phases A–C are complete and ratified (`PHASE_A_PLAN.md`, `PHASE_B_PLAN.md`, `PHASE_C_PLAN.md`).
 
@@ -66,6 +67,13 @@ The founder supplied `Design vision.png` (Home, today's Circle assigned) with th
 - **Today's icon is a ring** (`TodayRingIcon`, `app_shell.dart`) — the Circle — in the nav's icon colour, 3.5pt when selected, 2pt otherwise. Plans / Insights / You keep their outlined / filled Material icons. Still the approved 4 tabs; labels, order and behaviour unchanged.
 - **Dark-mode fix to D1c's card art:** the Quiet Trail painting is on light paper, so on the dark card it fades in over a longer distance (0 → 90%) at 45% opacity, reading as a soft misty scene rather than a bright panel. Light mode is unchanged.
 - **Tests:** theme tests updated (no pill, sage 600 selected label, AA contrast for both labels); ring width and colour per selection in the real router.
+
+## D1f · Tagline inside the Circle
+
+- **Founder decision:** "A BRIGHTER YOU / IN SMALL STEPS" also appears beneath the wordmark inside the Circle — in the still Ready Circle and in First Breath's wordmark beat. This amends `THIRTY_WORDMARK.md` §2 ("the wordmark, unaccompanied"), which now records the amendment.
+- **Shared `ThirtyBrandLockup`** (`lib/core/branding/`): the wordmark + tagline, start-aligned in the header (`HomeBrandLockup`, 96pt, header "THIRTY") and centred inside the Circle (at the validated in-Circle wordmark width). The tagline grows with the wordmark but stays about as wide as it (0.075 × wordmark width), never below the header's 9.5pt; letter spacing and gap follow the font size. Fixed size at every text scale (logotype).
+- **Inside the Circle** the lockup is decorative (`ExcludeSemantics`); the Circle keeps its "Today's Circle" semantics. In First Breath it sits in the wordmark's `FadeTransition`, so it appears, holds and fades exactly with the wordmark, before the Circle opens.
+- **Tests:** Ready lockup centred in the Circle and excluded from semantics; the First Breath fade (visible at 700ms, gone at 1400ms); the lockup inside the ring at 320 / 360 / 412pt.
 
 ## D1 · Deferred
 

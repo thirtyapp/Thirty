@@ -70,6 +70,8 @@ Where this document is silent, the Playbook, Brand Book, World System, Motion La
 
 This is a narrower decision than "the wordmark exists" — it is specifically that the First Breath brand moment is the wordmark, unaccompanied, and nothing else.
 
+**Amendment (Phase D1, founder decision, 2026-09-26):** the wordmark is now accompanied by one line of text — the in-app tagline *"A BRIGHTER YOU / IN SMALL STEPS"* ([BRAND_BOOK.md §21](../BRAND_BOOK.md#21-writing-guidelines)) — centred beneath it, both in the still Ready Circle and in First Breath's wordmark beat, where it fades in, holds and fades out together with the wordmark as one lockup (`ThirtyBrandLockup`). It is plain text in the Inter UI face (`textSecondary`, letter-spaced capitals, about as wide as the wordmark), not part of the wordmark asset, which is unchanged. Everything else in this section still holds: no symbol, no plate, badge or frame, no background asset, no baked-in atmosphere. See `docs/design/PHASE_D_PLAN.md` (D1f).
+
 ## 3. Typographic Direction
 
 This section decides direction, not a typeface. No final font is selected here (§12).

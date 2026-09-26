@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/branding/thirty_wordmark_view.dart';
+import '../../../../core/branding/thirty_brand_lockup.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import 'daily_intention_prompt.dart';
@@ -99,9 +99,14 @@ class _CircleReadyPromptState extends State<CircleReadyPrompt> {
                   semanticValue: 'Not started yet.',
                   // A closed Circle has no leading end to mark.
                   showThumb: false,
-                  child: SizedBox(
-                    width: metrics.wordmarkWidth,
-                    child: const ThirtyWordmarkView(),
+                  // Phase D1: the wordmark with the tagline beneath it
+                  // (founder decision; THIRTY_WORDMARK.md §2 amended).
+                  // Decorative — the Circle owns this moment's semantics.
+                  child: ExcludeSemantics(
+                    child: ThirtyBrandLockup(
+                      wordmarkWidth: metrics.wordmarkWidth,
+                      centered: true,
+                    ),
                   ),
                 ),
                 const SizedBox(height: HomeCircleMetrics.circleToContentGap),
