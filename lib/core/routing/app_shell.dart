@@ -68,9 +68,11 @@ class AppShell extends StatelessWidget {
               selectedIndex: navigationShell.currentIndex,
               onDestinationSelected: _onDestinationSelected,
               destinations: const [
+                // Phase D1: Today is the Circle itself — a ring, thicker
+                // when selected.
                 NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home),
+                  icon: TodayRingIcon(),
+                  selectedIcon: TodayRingIcon(selected: true),
                   label: 'Today',
                 ),
                 NavigationDestination(
@@ -131,6 +133,37 @@ class FloatingNavSurface extends StatelessWidget {
         borderRadius: AppRadius.xl,
         clipBehavior: Clip.antiAlias,
         child: child,
+      ),
+    );
+  }
+}
+
+/// Today's nav icon (Phase D1, Design vision): a ring — the Circle — in
+/// the nav's own icon colour, with a thicker stroke when selected, so
+/// selection never rests on colour alone.
+class TodayRingIcon extends StatelessWidget {
+  const TodayRingIcon({this.selected = false, super.key});
+
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final iconTheme = IconTheme.of(context);
+    final size = iconTheme.size ?? 24;
+    return SizedBox.square(
+      dimension: size,
+      child: Center(
+        child: Container(
+          width: size - 4,
+          height: size - 4,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: iconTheme.color ?? const Color(0xFF000000),
+              width: selected ? 3.5 : 2,
+            ),
+          ),
+        ),
       ),
     );
   }

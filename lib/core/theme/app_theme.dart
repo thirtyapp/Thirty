@@ -182,9 +182,10 @@ class AppTheme {
   /// The bar inside the floating bottom nav. Transparent on purpose: the
   /// surrounding `FloatingNavSurface` (in `app_shell.dart`) is the single
   /// owner of the bar's color, rounded shape and shadow, so the bar itself
-  /// must never paint its own rectangle. Selection is carried by the
-  /// filled icon, the label color and the soft `selection` indicator
-  /// together — never by the indicator alone.
+  /// must never paint its own rectangle. Phase D1 (Design vision): no
+  /// indicator pill — selection is carried by the filled icon (or Today's
+  /// thicker ring), the sage colour and the heavier label together, never
+  /// by colour alone.
   static NavigationBarThemeData _navigationBarTheme(AppColors colors) {
     return NavigationBarThemeData(
       backgroundColor: Colors.transparent,
@@ -192,11 +193,11 @@ class AppTheme {
       shadowColor: Colors.transparent,
       elevation: 0,
       height: 68,
-      indicatorColor: colors.selection,
+      indicatorColor: Colors.transparent,
       iconTheme: WidgetStateProperty.resolveWith(
         (states) => IconThemeData(
           color: states.contains(WidgetState.selected)
-              ? colors.textPrimary
+              ? colors.primary
               : colors.textSecondary,
         ),
       ),
@@ -206,9 +207,11 @@ class AppTheme {
           fontSize: 12,
           height: 1.33,
           letterSpacing: 0,
-          fontWeight: FontWeight.w500,
+          fontWeight: states.contains(WidgetState.selected)
+              ? FontWeight.w600
+              : FontWeight.w500,
           color: states.contains(WidgetState.selected)
-              ? colors.textPrimary
+              ? colors.primary
               : colors.textSecondary,
         ),
       ),

@@ -170,23 +170,29 @@ class TodayCard extends StatelessWidget {
 }
 
 /// A slice of the Quiet Trail World (the tree on its hill), fading in from
-/// the card's surface on its left. Decorative only.
+/// the card's surface on its left. Decorative only. The painting is on
+/// light paper, so on the dark card it fades in over a longer distance and
+/// stays dimmed, never reading as a bright panel.
 class _TodayArt extends StatelessWidget {
   const _TodayArt();
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return ExcludeSemantics(
-      child: ShaderMask(
-        blendMode: BlendMode.dstIn,
-        shaderCallback: (bounds) => const LinearGradient(
-          colors: [Color(0x00000000), Color(0xFF000000)],
-          stops: [0.0, 0.45],
-        ).createShader(bounds),
-        child: Image.asset(
-          'assets/worlds/quiet_trail/quiet_trail_hero_master_v1.png',
-          fit: BoxFit.cover,
-          alignment: const Alignment(0.55, 0.35),
+      child: Opacity(
+        opacity: dark ? 0.45 : 1,
+        child: ShaderMask(
+          blendMode: BlendMode.dstIn,
+          shaderCallback: (bounds) => LinearGradient(
+            colors: const [Color(0x00000000), Color(0xFF000000)],
+            stops: dark ? const [0.0, 0.9] : const [0.0, 0.45],
+          ).createShader(bounds),
+          child: Image.asset(
+            'assets/worlds/quiet_trail/quiet_trail_hero_master_v1.png',
+            fit: BoxFit.cover,
+            alignment: const Alignment(0.55, 0.35),
+          ),
         ),
       ),
     );

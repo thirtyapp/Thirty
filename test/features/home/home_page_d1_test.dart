@@ -11,6 +11,7 @@ import 'package:thirty/core/app/thirty_app.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
+import 'package:thirty/core/routing/app_shell.dart';
 import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
@@ -376,6 +377,61 @@ void main() {
       );
       expect(tester.getTopLeft(label).dx, AppSpacing.page);
       semantics.dispose();
+    });
+  });
+
+  group('Bottom nav', () {
+    testWidgets('Today is a ring, thicker when selected; selection is sage '
+        'with no pill', (tester) async {
+      tester.view.physicalSize = const Size(360, 740);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      SharedPreferences.setMockInitialValues(_assigned);
+      final prefs = await SharedPreferences.getInstance();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            nowProvider.overrideWithValue(_today),
+          ],
+          child: const ThirtyApp(),
+        ),
+      );
+      appRouter.go('/');
+      await tester.pumpAndSettle();
+      addTearDown(() => appRouter.go('/'));
+
+      double ringWidth() {
+        final ring = tester.widget<Container>(
+          find.descendant(
+            of: find.byType(TodayRingIcon),
+            matching: find.byType(Container),
+          ),
+        );
+        final border = (ring.decoration! as BoxDecoration).border! as Border;
+        return border.top.width;
+      }
+
+      expect(find.byType(TodayRingIcon), findsOneWidget);
+      expect(ringWidth(), 3.5);
+      final todayRing = tester.widget<Container>(
+        find.descendant(
+          of: find.byType(TodayRingIcon),
+          matching: find.byType(Container),
+        ),
+      );
+      expect(
+        ((todayRing.decoration! as BoxDecoration).border! as Border).top.color,
+        AppColors.light.primary,
+      );
+
+      await tester.tap(find.text('Plans'));
+      await tester.pumpAndSettle();
+      expect(ringWidth(), 2);
+      expect(
+        tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+        1,
+      );
     });
   });
 }

@@ -1,10 +1,11 @@
 # THIRTY Visual Pass — Phase D Plan (Home visual pass)
 
-**Status:** In progress.
+**Status:** D1 complete.
 - **D1a · Home header** — complete, commit `dc81884` (see below)
 - **D1b · Circle ring and timer** — complete, commit `7cac0cf` (see below)
 - **D1c · Greeting, Today card, CTA** — complete, commit `5f26dfd` (see below)
-- **D1d · Later today** — complete (see below)
+- **D1d · Later today** — complete, commit `4cab9a1` (see below)
+- **D1e · Bottom nav** — complete (see below)
 
 **Foundation:** Phases A–C are complete and ratified (`PHASE_A_PLAN.md`, `PHASE_B_PLAN.md`, `PHASE_C_PLAN.md`).
 
@@ -58,3 +59,17 @@ The founder supplied `Design vision.png` (Home, today's Circle assigned) with th
 - **Premium invitation → flat row** (mockup style): a 44pt `surfaceMuted` chip with a sparkle icon, the unchanged copy, and a chevron read as "Learn more"; no card, ≥ 64pt tall, one merged button that opens `/premium`. No lock icon (C4). Its shown / slot semantics are unchanged.
 - **Not changed:** the reflection, reminder and Plan session surfaces keep their own accepted presentation (answer-in-place, no destination page, so they can't be chevron rows).
 - **Tests:** label hidden with nothing pending, shown as a header above the reflection and below "Done for today"; the Premium row's merged button semantics, icons, height and no card.
+
+## D1e · Bottom nav (every screen)
+
+- **No indicator pill** (`indicatorColor` transparent). Selection = sage (`primary`) icon and label, label weight 600 (unselected 500, `textSecondary`), plus the filled icon — never colour alone. Both label colours clear 4.5:1 on the nav surface in light and dark.
+- **Today's icon is a ring** (`TodayRingIcon`, `app_shell.dart`) — the Circle — in the nav's icon colour, 3.5pt when selected, 2pt otherwise. Plans / Insights / You keep their outlined / filled Material icons. Still the approved 4 tabs; labels, order and behaviour unchanged.
+- **Dark-mode fix to D1c's card art:** the Quiet Trail painting is on light paper, so on the dark card it fades in over a longer distance (0 → 90%) at 45% opacity, reading as a soft misty scene rather than a bright panel. Light mode is unchanged.
+- **Tests:** theme tests updated (no pill, sage 600 selected label, AA contrast for both labels); ring width and colour per selection in the real router.
+
+## D1 · Deferred
+
+- New illustration (the mockup's green lakeside scene with a walking figure) — Quiet Trail is reused in the Circle and the card.
+- Ready ("Begin today's Circle") keeps its pre-D1 layout; it isn't part of the mockup.
+- The reflection, reminder invitation and Plan session panel keep their accepted presentation.
+- A card shadow on the CTA (the mockup's soft button shadow) — `ThirtyButton` stays flat.

@@ -103,22 +103,26 @@ void main() {
         );
       });
 
-      test('nav pill and selected segment use the soft selection role, '
-          'with AA text on it', () {
-        expect(theme.navigationBarTheme.indicatorColor, colors.selection);
+      test('Phase D1 nav: no pill; the selected label is sage and the '
+          'unselected label textSecondary, both AA on the nav surface; the '
+          'selected segment keeps the soft selection role', () {
+        expect(theme.navigationBarTheme.indicatorColor, Colors.transparent);
         expect(theme.colorScheme.secondaryContainer, colors.selection);
-        final selectedLabel = theme.navigationBarTheme.labelTextStyle!
-            .resolve({WidgetState.selected})!
-            .color!;
-        final unselectedLabel = theme.navigationBarTheme.labelTextStyle!
-            .resolve({})!
-            .color!;
+        final selected = theme.navigationBarTheme.labelTextStyle!.resolve({
+          WidgetState.selected,
+        })!;
+        final unselected = theme.navigationBarTheme.labelTextStyle!.resolve(
+          {},
+        )!;
+        expect(selected.color, colors.primary);
+        expect(selected.fontWeight, FontWeight.w600);
+        expect(unselected.fontWeight, FontWeight.w500);
         expect(
-          _contrast(selectedLabel, colors.selection),
+          _contrast(selected.color!, colors.surface),
           greaterThanOrEqualTo(4.5),
         );
         expect(
-          _contrast(unselectedLabel, colors.surface),
+          _contrast(unselected.color!, colors.surface),
           greaterThanOrEqualTo(4.5),
         );
         expect(

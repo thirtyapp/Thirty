@@ -126,12 +126,12 @@ void main() {
       });
 
       test('$mode: the nav bar paints no surface of its own (the floating '
-          'container owns it) and keeps a quiet indicator', () {
+          'container owns it) and, since Phase D1, no indicator pill', () {
         final nav = theme.navigationBarTheme;
         expect(nav.backgroundColor, Colors.transparent);
         expect(nav.elevation, 0);
         expect(nav.surfaceTintColor, Colors.transparent);
-        expect(nav.indicatorColor, colors.selection);
+        expect(nav.indicatorColor, Colors.transparent);
       });
 
       test('$mode: an unselected switch clears 3:1 non-text contrast '
