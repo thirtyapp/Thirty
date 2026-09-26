@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'app_radius.dart';
+import 'app_spacing.dart';
 import 'app_typography.dart';
 
 /// Builds THIRTY's first-class light and dark [ThemeData]. Dark mode is a
@@ -94,6 +95,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: AppRadius.xl),
       ),
       timePickerTheme: _timePickerTheme(colors, onPrimary),
+      snackBarTheme: _snackBarTheme,
       extensions: [colors],
     );
   }
@@ -106,6 +108,23 @@ class AppTheme {
         ? AppColors.dark.primary
         : const Color(0xFF56614A);
   }
+
+  /// SnackBars float (Phase C5) instead of spanning the screen as a square
+  /// band on top of the floating bottom nav: the nav's 16pt side margins,
+  /// 8pt above whatever sits below (the nav, or the screen edge), and the
+  /// same 24pt radius as cards and the nav. No Material shadow; colours
+  /// stay Material's inverseSurface / onInverseSurface.
+  static const _snackBarTheme = SnackBarThemeData(
+    behavior: SnackBarBehavior.floating,
+    shape: RoundedRectangleBorder(borderRadius: AppRadius.xl),
+    insetPadding: EdgeInsets.fromLTRB(
+      AppSpacing.m,
+      0,
+      AppSpacing.m,
+      AppSpacing.s,
+    ),
+    elevation: 0,
+  );
 
   /// The time picker signals which field is active by color alone, so —
   /// unlike the nav pill or a segment — its selected state uses the strong
