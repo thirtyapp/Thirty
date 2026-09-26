@@ -244,6 +244,7 @@ THIRTY spreekt zoals de personality die in sectie 7 is beschreven: kalm, deskund
 - Vermijd jargon, afkortingen en technische termen in gebruikersgerichte tekst.
 - Gebruik de primaire slogan **"Your healthiest 30 minutes."** consistent in Engelstalige merkuitingen (app store, marketing, onboarding-afsluiting).
 - De secundaire slogan **"Small steps. Big change."** mag ondersteunend worden gebruikt — bijvoorbeeld bij motivatiemomenten of voortgangsbevestigingen — maar vervangt nooit de primaire slogan in hoofdcommunicatie.
+- De in-app tagline **"A brighter you in small steps"** staat onder het THIRTY-woordmerk in de header van Today (Phase D1, `docs/design/PHASE_D_PLAN.md`). Het is een ondersteunende regel in de geest van de secundaire slogan; de primaire slogan blijft ongewijzigd.
 - Geen schuldgevoel-taal: vermijd woorden als "gefaald", "gemist", "achterstand". Gebruik in plaats daarvan taal die vooruitkijkt: "morgen", "volgende cirkel", "opnieuw beginnen".
 - Interpunctie is rustig: geen overmatig gebruik van uitroeptekens, hoofdletters of emoji-stapelingen.
 - Één taalregister door de hele app: als de onboarding informeel is, is een foutmelding dat ook.

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/branding/thirty_wordmark_view.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../plans/presentation/widgets/plan_session_panel.dart';
 import '../../premium/presentation/widgets/premium_offer_invitation_card.dart';
 import '../../reminder/presentation/widgets/reminder_invitation_card.dart';
@@ -10,6 +10,7 @@ import '../application/recommendation_provider.dart';
 import 'widgets/action_report_prompt.dart';
 import 'widgets/circle_hero.dart';
 import 'widgets/circle_ready_prompt.dart';
+import 'widgets/home_header.dart';
 
 /// THIRTY's product entry screen.
 ///
@@ -47,9 +48,9 @@ import 'widgets/circle_ready_prompt.dart';
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
-  // Roughly the footprint of the former "THIRTY" text title, so the header
-  // stays a quiet signature rather than a second hero.
-  static const _headerWordmarkWidth = 96.0;
+  /// Tall enough for the fixed-size brand lockup (wordmark + two-line
+  /// tagline) and the 48pt profile button.
+  static const _headerHeight = 72.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,23 +70,25 @@ class HomePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: _headerHeight,
+        titleSpacing: AppSpacing.page,
         // Always laid out, only faded: the AppBar's height and the Circle's
-        // position never change when the wordmark appears.
+        // position never change when the lockup appears.
         title: AnimatedOpacity(
           opacity: showHeaderWordmark ? 1 : 0,
           duration: reducedMotion
               ? Duration.zero
               : const Duration(milliseconds: 400),
           curve: Curves.easeOut,
-          child: Semantics(
-            header: true,
-            label: 'THIRTY',
-            child: const SizedBox(
-              width: _headerWordmarkWidth,
-              child: ThirtyWordmarkView(),
-            ),
-          ),
+          child: const HomeBrandLockup(),
         ),
+        // Phase D1 — a round shortcut to You, visible in every Home state.
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: AppSpacing.page),
+            child: HomeProfileButton(),
+          ),
+        ],
       ),
       body: SafeArea(
         // Phase B3 — one vertical scroll owner per state: CircleHero's own
