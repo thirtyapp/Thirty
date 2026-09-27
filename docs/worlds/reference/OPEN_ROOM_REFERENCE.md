@@ -64,7 +64,7 @@ These anchors must remain recognisable in every Scene and every Daypart:
 
 ## 3. Daypart direction
 
-- **Morning (05:00–11:59):** low sun, long soft shafts of light across the floor, cool walls, a warm light patch.
+- **Morning (05:00–11:59):** broad, diffuse morning window light from the left, forming a soft elongated light field on the floor; cool walls, a warm light patch. Window-bar shadows may be suggested faintly but are never graphic, dramatic or high-contrast.
 - **Day (12:00–17:59):** a shorter, steeper light patch; the room evenly lit and at its brightest.
 - **Evening (18:00–04:59):** the windows turn deep blue, with a faint moon or simply dark sky. A single warm floor lamp becomes the dominant light and takes over the pool of light on the floor, so the focal point is preserved. No sunset. Credible at 18:00, 02:00 and 04:59.
 

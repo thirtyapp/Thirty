@@ -36,7 +36,7 @@ The chair and the lamp stay constant across all three Scenes; what distinguishes
 
 **Emotional job:** sink into one thing.
 
-**Hero composition:** the armchair in three-quarter view, an open book resting face-down on the armrest, the lamp above it, the small window at the side.
+**Hero composition:** the armchair in three-quarter view, an open book resting naturally on the armrest or adjacent side table, with no legible text and without implying a specific absent occupant; the lamp above it, the small window at the side.
 
 **Card companion composition:** the armrest with the open book in the lamplight.
 
@@ -97,7 +97,7 @@ In evening artwork, the edges of the room must dissolve to transparency rather t
 
 ## 6. Hero ↔ Card continuity
 
-Shared: the lamp and its light direction, the Scene object, the chair or desk surface, the palette and the Daypart. The Card may omit the shelf and the window.
+Shared: the direction of the scene light — morning and day use the window direction with the lamp off; evening uses the lamp as the dominant light — the Scene object, the chair or desk surface, the palette and the Daypart. The Card may omit the shelf and the window.
 
 ---
 
