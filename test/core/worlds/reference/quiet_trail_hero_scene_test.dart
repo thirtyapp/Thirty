@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:thirty/core/activity_category.dart';
+import 'package:thirty/core/worlds/catalog/quiet_trail.dart';
 import 'package:thirty/core/worlds/place.dart';
 import 'package:thirty/core/worlds/reference/quiet_trail_hero_scene.dart';
-import 'package:thirty/core/worlds/reference/quiet_trail_world.dart';
 import 'package:thirty/core/worlds/world.dart';
 
 World _worldWith({
@@ -75,7 +75,6 @@ void main() {
 
     test('rejects a World for a different Place', () {
       const otherPlace = Place(
-        category: ActivityCategory.walking,
         name: 'Forest Path',
         emotion: 'Invitation',
         primaryActivity: 'Walking',

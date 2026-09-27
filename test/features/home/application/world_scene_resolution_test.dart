@@ -1,0 +1,191 @@
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:thirty/core/activity_category.dart';
+import 'package:thirty/core/worlds/catalog/garden_window.dart';
+import 'package:thirty/core/worlds/catalog/open_room.dart';
+import 'package:thirty/core/worlds/catalog/quiet_trail.dart';
+import 'package:thirty/core/worlds/catalog/reading_nook.dart';
+import 'package:thirty/core/worlds/catalog/still_lake.dart';
+import 'package:thirty/core/worlds/place.dart';
+import 'package:thirty/core/worlds/registered_worlds.dart';
+import 'package:thirty/core/worlds/world.dart';
+import 'package:thirty/core/worlds/world_definition.dart';
+import 'package:thirty/core/worlds/world_registry.dart';
+import 'package:thirty/core/worlds/world_scene_policy.dart';
+import 'package:thirty/core/worlds/world_scene_role.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/world_scene_resolution.dart';
+
+final _morning = DateTime(2026, 9, 27, 8);
+final _day = DateTime(2026, 9, 27, 14);
+final _night = DateTime(2026, 9, 27, 2);
+
+const _forestPathId = WorldId('forest_path');
+const _forestPathWalk = WorldSceneId(_forestPathId, 'walk');
+
+/// Test-only second walking World: proves a new World can serve an
+/// existing role without any ActivityDefinition changing.
+const _forestPathWorld = WorldDefinition(
+  id: _forestPathId,
+  place: Place(
+    name: 'Forest Path',
+    emotion: 'Shelter',
+    primaryActivity: 'Walking',
+    dominantShape: 'A path under a canopy',
+    heroFocus: 'Tall trees',
+    cardFocus: 'Tall trees',
+    primaryLight: 'Dappled light',
+    movement: 'Leaves drifting',
+    growthElements: [],
+  ),
+  allowedCategories: {ActivityCategory.walking},
+  scenes: [
+    WorldSceneDescriptor(id: _forestPathWalk, role: WorldSceneRole.walk),
+  ],
+);
+
+void main() {
+  group('resolveWorldScene — V1', () {
+    test('every activity resolves at every daypart, to a World that allows '
+        'its category', () {
+      for (final activityId in ActivityId.values) {
+        for (final now in [_morning, _day, _night]) {
+          final resolved = resolveWorldScene(activityId, now);
+          final world = worldRegistry.world(resolved.worldId);
+
+          expect(
+            world.allowedCategories,
+            contains(activityCategory(activityId)),
+            reason: activityId.name,
+          );
+          expect(resolved.sceneId.world, resolved.worldId);
+          expect(resolved.role, activityWorldRole(activityId));
+          expect(resolved.place, world.place);
+        }
+      }
+    });
+
+    test('the same activity keeps its World and Scene; only the Daypart '
+        'changes', () {
+      final morning = resolveWorldScene(ActivityId.quietReading, _morning);
+      final day = resolveWorldScene(ActivityId.quietReading, _day);
+      final night = resolveWorldScene(ActivityId.quietReading, _night);
+
+      for (final resolved in [morning, day, night]) {
+        expect(resolved.worldId, readingNookId);
+        expect(resolved.sceneId, ReadingNookScenes.read);
+      }
+      expect(morning.daypart, Daypart.morning);
+      expect(day.daypart, Daypart.afternoon);
+      expect(night.daypart, Daypart.evening);
+    });
+
+    test('activities with different roles resolve to their own Scenes', () {
+      expect(
+        resolveWorldScene(ActivityId.easyWalk, _morning).sceneId,
+        QuietTrailScenes.walk,
+      );
+      expect(
+        resolveWorldScene(ActivityId.restfulBreathingPause, _morning).sceneId,
+        StillLakeScenes.breathe,
+      );
+      expect(
+        resolveWorldScene(ActivityId.moveToMusic, _morning).sceneId,
+        OpenRoomScenes.move,
+      );
+      expect(
+        resolveWorldScene(ActivityId.smallComfortRitual, _morning).sceneId,
+        GardenWindowScenes.comfort,
+      );
+    });
+
+    test('equal inputs give equal snapshots', () {
+      expect(
+        resolveWorldScene(ActivityId.easyWalk, _morning),
+        resolveWorldScene(ActivityId.easyWalk, _morning),
+      );
+    });
+  });
+
+  group('resolveWorldScene — expandability', () {
+    test('a second walking World plugs in with only a registration and a '
+        'policy change — easyWalk now resolves to forest_path.walk', () {
+      final registry = WorldRegistry([quietTrailWorld, _forestPathWorld]);
+      final policy = DefaultWorldScenePolicy(registry, const {
+        WorldSceneRole.walk: _forestPathWalk,
+      });
+
+      final resolved = resolveWorldScene(
+        ActivityId.easyWalk,
+        _morning,
+        policy: policy,
+      );
+
+      expect(resolved.worldId, _forestPathId);
+      expect(resolved.sceneId, _forestPathWalk);
+      // The activity's own definition is untouched.
+      expect(activityWorldRole(ActivityId.easyWalk), WorldSceneRole.walk);
+      expect(activityCategory(ActivityId.easyWalk), ActivityCategory.walking);
+    });
+
+    test('Quiet Trail keeps resolving while Forest Path is merely '
+        'registered', () {
+      final registry = WorldRegistry([quietTrailWorld, _forestPathWorld]);
+      final policy = DefaultWorldScenePolicy(registry, const {
+        WorldSceneRole.walk: QuietTrailScenes.walk,
+      });
+
+      expect(
+        resolveWorldScene(
+          ActivityId.easyWalk,
+          _morning,
+          policy: policy,
+        ).worldId,
+        quietTrailId,
+      );
+    });
+  });
+
+  group('resolveWorldScene — failures', () {
+    test('a role with no default throws', () {
+      final policy = DefaultWorldScenePolicy(
+        WorldRegistry([quietTrailWorld]),
+        const {WorldSceneRole.walk: QuietTrailScenes.walk},
+      );
+
+      expect(
+        () => resolveWorldScene(
+          ActivityId.quietReading,
+          _morning,
+          policy: policy,
+        ),
+        throwsStateError,
+      );
+    });
+
+    test('a World that does not allow the activity\'s category throws', () {
+      // A walk Scene in a World serving only stillness: easyWalk (walking)
+      // must not be shown there.
+      const stillWalkId = WorldId('still_walk');
+      const stillWalk = WorldSceneId(stillWalkId, 'walk');
+      final registry = WorldRegistry([
+        const WorldDefinition(
+          id: stillWalkId,
+          place: stillLake,
+          allowedCategories: {ActivityCategory.stillness},
+          scenes: [
+            WorldSceneDescriptor(id: stillWalk, role: WorldSceneRole.walk),
+          ],
+        ),
+      ]);
+      final policy = DefaultWorldScenePolicy(registry, const {
+        WorldSceneRole.walk: stillWalk,
+      });
+
+      expect(
+        () => resolveWorldScene(ActivityId.easyWalk, _morning, policy: policy),
+        throwsStateError,
+      );
+    });
+  });
+}

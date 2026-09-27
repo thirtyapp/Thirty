@@ -5,7 +5,6 @@ import 'package:thirty/core/worlds/place.dart';
 import 'package:thirty/core/worlds/world.dart';
 
 const _quietTrail = Place(
-  category: ActivityCategory.walking,
   name: 'Quiet Trail',
   emotion: 'Invitation',
   primaryActivity: 'Walking',

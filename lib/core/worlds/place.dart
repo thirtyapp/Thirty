@@ -1,5 +1,3 @@
-import '../activity_category.dart';
-
 /// A World's stable visual and emotional identity — "the one thing about a
 /// World that never changes, regardless of season, time, weather, or the
 /// user's history with it" (WORLD_SYSTEM.md §3, "Place").
@@ -12,9 +10,13 @@ import '../activity_category.dart';
 /// with the design system's single source of truth for colour
 /// (DESIGN_SYSTEM.md) — actual rendering reads colour from the active
 /// THIRTY theme (`AppColors`) at render time instead.
+///
+/// A Place is a structural value object: two Places are equal only when
+/// every DNA field is equal. It is never a World's identity — that is the
+/// `WorldId` of the owning `WorldDefinition`, which also owns the
+/// categories the World may show (WORLD_SYSTEM.md §3, "Identity").
 class Place {
   const Place({
-    required this.category,
     required this.name,
     required this.emotion,
     required this.primaryActivity,
@@ -25,11 +27,6 @@ class Place {
     required this.movement,
     required this.growthElements,
   });
-
-  /// The [ActivityCategory] this Place belongs to. WORLD_SYSTEM.md §3
-  /// anticipates a single Category eventually offering more than one
-  /// Place.
-  final ActivityCategory category;
 
   /// Describes a place or a feeling — never a season, time of day, weather
   /// condition, progress state or subscription tier (WORLD_SYSTEM.md §4,
@@ -51,8 +48,8 @@ class Place {
   /// (WORLD_SYSTEM.md §5.A).
   final String heroFocus;
 
-  /// What the Activity Card expression keeps, once the Hero scene is
-  /// reduced to line art (WORLD_SYSTEM.md §5.B).
+  /// What the Activity Card expression keeps — a separately authored,
+  /// simplified watercolor companion (WORLD_SYSTEM.md §5.B).
   final String cardFocus;
 
   final String primaryLight;
@@ -69,8 +66,35 @@ class Place {
 
   @override
   bool operator ==(Object other) =>
-      other is Place && other.category == category && other.name == name;
+      other is Place &&
+      other.name == name &&
+      other.emotion == emotion &&
+      other.primaryActivity == primaryActivity &&
+      other.dominantShape == dominantShape &&
+      other.heroFocus == heroFocus &&
+      other.cardFocus == cardFocus &&
+      other.primaryLight == primaryLight &&
+      other.movement == movement &&
+      _listEquals(other.growthElements, growthElements);
 
   @override
-  int get hashCode => Object.hash(category, name);
+  int get hashCode => Object.hash(
+    name,
+    emotion,
+    primaryActivity,
+    dominantShape,
+    heroFocus,
+    cardFocus,
+    primaryLight,
+    movement,
+    Object.hashAll(growthElements),
+  );
+}
+
+bool _listEquals(List<String> a, List<String> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
 }

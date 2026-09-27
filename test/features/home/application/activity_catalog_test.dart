@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:thirty/core/activity_category.dart';
+import 'package:thirty/core/worlds/registered_worlds.dart';
+import 'package:thirty/core/worlds/world_scene_role.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 
 // Forbidden phrase patterns from docs/product/recommendation-mvp-v0.md's
@@ -131,22 +133,111 @@ void main() {
       }
     });
 
-    test(
-      'only genuinely walking activities resolve to ActivityCategory.walking',
-      () {
-        const walkingActivities = {
-          ActivityId.thirtyMinuteWalk,
-          ActivityId.phoneFreeWalk,
-          ActivityId.easyWalk,
-        };
-        for (final activityId in ActivityId.values) {
-          final expected = walkingActivities.contains(activityId)
-              ? ActivityCategory.walking
-              : ActivityCategory.generalWellness;
-          expect(activityCategory(activityId), expected);
-        }
-      },
-    );
+    test('every activity has its approved World category and Scene role '
+        '(WORLD_SYSTEM.md §16; ADR-018)', () {
+      const expected = {
+        ActivityId.thirtyMinuteWalk: (
+          ActivityCategory.walking,
+          WorldSceneRole.walk,
+        ),
+        ActivityId.moveToMusic: (
+          ActivityCategory.movement,
+          WorldSceneRole.move,
+        ),
+        ActivityId.phoneFreeWalk: (
+          ActivityCategory.walking,
+          WorldSceneRole.walk,
+        ),
+        ActivityId.writeItDown: (
+          ActivityCategory.quietFocus,
+          WorldSceneRole.write,
+        ),
+        ActivityId.quietReading: (
+          ActivityCategory.quietFocus,
+          WorldSceneRole.read,
+        ),
+        ActivityId.easyWalk: (ActivityCategory.walking, WorldSceneRole.walk),
+        ActivityId.quietMusicBreak: (
+          ActivityCategory.quietFocus,
+          WorldSceneRole.listen,
+        ),
+        ActivityId.briskStepBurst: (
+          ActivityCategory.walking,
+          WorldSceneRole.walk,
+        ),
+        ActivityId.energisingStretchFlow: (
+          ActivityCategory.movement,
+          WorldSceneRole.stretch,
+        ),
+        ActivityId.activeMovementSnack: (
+          ActivityCategory.movement,
+          WorldSceneRole.move,
+        ),
+        ActivityId.energisingBreathReset: (
+          ActivityCategory.stillness,
+          WorldSceneRole.breathe,
+        ),
+        ActivityId.activeHouseholdTask: (
+          ActivityCategory.homeCare,
+          WorldSceneRole.tend,
+        ),
+        ActivityId.tidyOneSurface: (
+          ActivityCategory.homeCare,
+          WorldSceneRole.tend,
+        ),
+        ActivityId.singleTaskFocus: (
+          ActivityCategory.quietFocus,
+          WorldSceneRole.write,
+        ),
+        ActivityId.quietAudioFocus: (
+          ActivityCategory.quietFocus,
+          WorldSceneRole.listen,
+        ),
+        ActivityId.focusedBreathingCount: (
+          ActivityCategory.stillness,
+          WorldSceneRole.breathe,
+        ),
+        ActivityId.restfulBreathingPause: (
+          ActivityCategory.stillness,
+          WorldSceneRole.breathe,
+        ),
+        ActivityId.gentleStretchPause: (
+          ActivityCategory.movement,
+          WorldSceneRole.stretch,
+        ),
+        ActivityId.quietSittingOutside: (
+          ActivityCategory.stillness,
+          WorldSceneRole.breathe,
+        ),
+        ActivityId.smallComfortRitual: (
+          ActivityCategory.homeCare,
+          WorldSceneRole.comfort,
+        ),
+        ActivityId.unhurriedTidyPause: (
+          ActivityCategory.homeCare,
+          WorldSceneRole.tend,
+        ),
+      };
+
+      expect(expected.keys.toSet(), ActivityId.values.toSet());
+      for (final activityId in ActivityId.values) {
+        expect(
+          (activityCategory(activityId), activityWorldRole(activityId)),
+          expected[activityId],
+          reason: activityId.name,
+        );
+      }
+    });
+
+    test('every role an activity uses has a V1 default Scene', () {
+      for (final activityId in ActivityId.values) {
+        expect(
+          () => v1ScenePolicy.sceneFor(activityWorldRole(activityId)),
+          returnsNormally,
+          reason: activityId.name,
+        );
+      }
+    });
 
     test(
       'every (intention, activityId) pair reachable from a pool has why-copy',

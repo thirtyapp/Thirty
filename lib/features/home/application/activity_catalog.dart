@@ -1,4 +1,5 @@
 import '../../../core/activity_category.dart';
+import '../../../core/worlds/world_scene_role.dart';
 
 /// The desired direction the user picks via the Daily Context Question
 /// ("What would help most today?") — Recommendation MVP v0
@@ -178,6 +179,7 @@ class ActivityDefinition {
     required this.pacingNote,
     required this.family,
     required this.category,
+    required this.worldRole,
   });
 
   /// [activityLabel]'s value — intention-independent.
@@ -210,10 +212,16 @@ class ActivityDefinition {
   /// cross-direction diversity guard (both ADR-013) are checked against.
   final ActivitySemanticFamily family;
 
-  /// [activityCategory]'s value — the World-rendering axis. See
-  /// [ActivityCategory]'s own doc comment for why only genuinely
-  /// walking-based activities resolve to [ActivityCategory.walking].
+  /// [activityCategory]'s value — the internal World-compatibility
+  /// family (see [ActivityCategory]). Not a direction, pool or selection
+  /// signal.
   final ActivityCategory category;
+
+  /// [activityWorldRole]'s value — the visual need this activity has. It
+  /// names no World: the V1 Scene policy picks the concrete Scene
+  /// (`registered_worlds.dart`), so a new World can serve this role
+  /// without this definition changing.
+  final WorldSceneRole worldRole;
 }
 
 /// The single source of truth for every [ActivityId]'s reviewed content —
@@ -234,6 +242,7 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     pacingNote: 'There\'s no pace or distance to hit. Stop when it feels done.',
     family: ActivitySemanticFamily.walking,
     category: ActivityCategory.walking,
+    worldRole: WorldSceneRole.walk,
   ),
   ActivityId.moveToMusic: ActivityDefinition(
     title: 'Move to music',
@@ -246,7 +255,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
         'No steps to learn and no one watching. Stop whenever you\'ve had '
         'enough.',
     family: ActivitySemanticFamily.musicMovement,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.movement,
+    worldRole: WorldSceneRole.move,
   ),
   ActivityId.phoneFreeWalk: ActivityDefinition(
     title: 'Phone-free walk',
@@ -260,6 +270,7 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     pacingNote: 'Turn back whenever you\'re ready; there\'s no route to finish.',
     family: ActivitySemanticFamily.walking,
     category: ActivityCategory.walking,
+    worldRole: WorldSceneRole.walk,
   ),
   ActivityId.writeItDown: ActivityDefinition(
     title: 'Write it down',
@@ -277,7 +288,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
         'There\'s no length to hit or list to finish. Stop when your head '
         'feels clearer.',
     family: ActivitySemanticFamily.reflectiveWriting,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.quietFocus,
+    worldRole: WorldSceneRole.write,
   ),
   ActivityId.quietReading: ActivityDefinition(
     title: 'Quiet reading',
@@ -290,7 +302,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
         'at hand.',
     pacingNote: 'No page count to reach. Put it down whenever you\'re ready.',
     family: ActivitySemanticFamily.quietReading,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.quietFocus,
+    worldRole: WorldSceneRole.read,
   ),
   ActivityId.easyWalk: ActivityDefinition(
     title: 'Easy walk',
@@ -304,6 +317,7 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     pacingNote: 'Slower is fine. Turn back whenever you want to.',
     family: ActivitySemanticFamily.walking,
     category: ActivityCategory.walking,
+    worldRole: WorldSceneRole.walk,
   ),
   ActivityId.quietMusicBreak: ActivityDefinition(
     title: 'Quiet music break',
@@ -314,7 +328,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'A phone, speaker, or anything that plays quiet music.',
     pacingNote: 'No goal attached. Stop the moment it\'s no longer helping.',
     family: ActivitySemanticFamily.quietListening,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.quietFocus,
+    worldRole: WorldSceneRole.listen,
   ),
   ActivityId.briskStepBurst: ActivityDefinition(
     title: 'Brisk stairs or a slope',
@@ -326,7 +341,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'Stairs or a slope, and shoes you can move in.',
     pacingNote: 'Go at whatever pace you can keep up. Slow down or rest any time.',
     family: ActivitySemanticFamily.stepMovement,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.walking,
+    worldRole: WorldSceneRole.walk,
   ),
   ActivityId.energisingStretchFlow: ActivityDefinition(
     title: 'Energising stretch flow',
@@ -340,7 +356,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
         'There\'s no sequence to complete correctly. Repeat what helps, '
         'skip what doesn\'t.',
     family: ActivitySemanticFamily.stretchMobility,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.movement,
+    worldRole: WorldSceneRole.stretch,
   ),
   ActivityId.activeMovementSnack: ActivityDefinition(
     title: 'Active movement snack',
@@ -353,7 +370,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'None — a clear patch of floor, and a wall if you choose wall push-ups.',
     pacingNote: 'No rep count to hit. Do a little, rest, do a little more.',
     family: ActivitySemanticFamily.bodyweightMovement,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.movement,
+    worldRole: WorldSceneRole.move,
   ),
   ActivityId.energisingBreathReset: ActivityDefinition(
     title: 'Standing breath reset',
@@ -365,7 +383,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'None.',
     pacingNote: 'Breathe at whatever pace feels comfortable. Stop the moment it doesn\'t.',
     family: ActivitySemanticFamily.breathingEnergizer,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.stillness,
+    worldRole: WorldSceneRole.breathe,
   ),
   ActivityId.activeHouseholdTask: ActivityDefinition(
     title: 'One active household task',
@@ -378,7 +397,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'Whatever the chosen task needs — nothing more than that.',
     pacingNote: 'Pick a task you can stop partway through without it mattering.',
     family: ActivitySemanticFamily.activeChore,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.homeCare,
+    worldRole: WorldSceneRole.tend,
   ),
   ActivityId.tidyOneSurface: ActivityDefinition(
     title: 'Tidy one surface',
@@ -389,7 +409,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'None.',
     pacingNote: 'One surface is the whole task. Stop even if it isn\'t perfect.',
     family: ActivitySemanticFamily.tidyReset,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.homeCare,
+    worldRole: WorldSceneRole.tend,
   ),
   ActivityId.singleTaskFocus: ActivityDefinition(
     title: 'One task, full attention',
@@ -400,7 +421,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'Whatever that one task itself needs.',
     pacingNote: 'Only one task. If your attention drifts, just come back to the same one.',
     family: ActivitySemanticFamily.singleFocusTask,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.quietFocus,
+    worldRole: WorldSceneRole.write,
   ),
   ActivityId.quietAudioFocus: ActivityDefinition(
     title: 'One quiet recording, phone face down',
@@ -412,7 +434,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'A phone, speaker, or headphones.',
     pacingNote: 'No need to finish the recording. Stop whenever you want to.',
     family: ActivitySemanticFamily.quietListening,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.quietFocus,
+    worldRole: WorldSceneRole.listen,
   ),
   ActivityId.focusedBreathingCount: ActivityDefinition(
     title: 'Counted breathing pause',
@@ -423,7 +446,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'None.',
     pacingNote: 'Losing count is normal — just start again. Stop whenever you\'re ready.',
     family: ActivitySemanticFamily.breathingStillness,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.stillness,
+    worldRole: WorldSceneRole.breathe,
   ),
   ActivityId.restfulBreathingPause: ActivityDefinition(
     title: 'Slow breathing pause',
@@ -434,7 +458,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'None.',
     pacingNote: 'No pattern to follow. Stop the moment you feel ready to.',
     family: ActivitySemanticFamily.breathingStillness,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.stillness,
+    worldRole: WorldSceneRole.breathe,
   ),
   ActivityId.gentleStretchPause: ActivityDefinition(
     title: 'Gentle stretch pause',
@@ -445,7 +470,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'None.',
     pacingNote: 'No stretch to force and no sequence to finish. Stop anytime.',
     family: ActivitySemanticFamily.stretchMobility,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.movement,
+    worldRole: WorldSceneRole.stretch,
   ),
   ActivityId.quietSittingOutside: ActivityDefinition(
     title: 'Sitting outside, unhurried',
@@ -458,7 +484,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
         'No destination and nothing to observe on purpose. Come back in '
         'whenever you\'re ready.',
     family: ActivitySemanticFamily.natureSit,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.stillness,
+    worldRole: WorldSceneRole.breathe,
   ),
   ActivityId.smallComfortRitual: ActivityDefinition(
     title: 'A slow warm drink',
@@ -469,7 +496,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'Whatever you\'d use to make a warm drink.',
     pacingNote: 'No pace to keep. Finish whenever you\'re done, sooner or later.',
     family: ActivitySemanticFamily.comfortRitual,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.homeCare,
+    worldRole: WorldSceneRole.comfort,
   ),
   ActivityId.unhurriedTidyPause: ActivityDefinition(
     title: 'Tend to one small thing',
@@ -480,7 +508,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     preparation: 'Whatever that one small thing needs.',
     pacingNote: 'It doesn\'t need to be finished. Stop whenever you\'re ready.',
     family: ActivitySemanticFamily.tidyReset,
-    category: ActivityCategory.generalWellness,
+    category: ActivityCategory.homeCare,
+    worldRole: WorldSceneRole.tend,
   ),
 };
 
@@ -488,17 +517,13 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
 /// [whyCopyFor].
 String activityLabel(ActivityId activityId) => activityCatalog[activityId]!.title;
 
-/// [activityId]'s [ActivityCategory], for illustration purposes only.
-///
-/// Only genuinely walking-based activities resolve to
-/// [ActivityCategory.walking] — every other V1 activity resolves to
-/// [ActivityCategory.generalWellness], a neutral category with no approved
-/// Place of its own yet (see that enum's own doc comment). This mapping
-/// exists so `Recommendation.category` stays a truthful description of the
-/// activity, even though, currently, every category renders the same
-/// illustration in `circle_hero.dart`.
+/// [activityId]'s [ActivityCategory] — see [ActivityDefinition.category].
 ActivityCategory activityCategory(ActivityId activityId) =>
     activityCatalog[activityId]!.category;
+
+/// [activityId]'s [WorldSceneRole] — see [ActivityDefinition.worldRole].
+WorldSceneRole activityWorldRole(ActivityId activityId) =>
+    activityCatalog[activityId]!.worldRole;
 
 /// [activityId]'s [ActivitySemanticFamily] — see [ActivityDefinition.family].
 ActivitySemanticFamily activityFamily(ActivityId activityId) =>

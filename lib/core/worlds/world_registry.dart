@@ -1,75 +1,72 @@
-import '../activity_category.dart';
-import 'place.dart';
-import 'world.dart';
+import 'world_definition.dart';
 
-/// The lookup between a [ActivityCategory] and the [Place]s available for it
-/// (WORLD_SYSTEM.md §3: "A recommendation Category is not itself a World —
-/// it is the axis that determines which Place options are available").
+/// Every registered [WorldDefinition], validated once at construction
+/// (WORLD_SYSTEM.md §17, "Modular ownership").
 ///
-/// This mechanism is generic over any Category → Places mapping; it never
-/// hardcodes which Places exist for which Category. Category-specific data
-/// (for example, Walking → Quiet Trail) is supplied by whoever constructs
-/// a [WorldRegistry], not by this class — see
-/// `reference/quiet_trail_world.dart` for THIRTY's first, Walking-only
-/// registry.
+/// The registry knows Worlds and their Scenes only — it never maps a
+/// category to a Place. Which Scene serves an activity is decided by a
+/// selection policy (`world_scene_policy.dart`); whether that Scene's World
+/// may show the activity is checked against
+/// [WorldDefinition.allowedCategories].
+///
+/// Throws an [ArgumentError] for duplicate World IDs, duplicate Scene IDs
+/// (within or across Worlds), malformed IDs, a Scene whose ID names a
+/// different World than its owner, or a World with no categories or no
+/// Scenes.
 class WorldRegistry {
-  const WorldRegistry(this._placesByCategory);
+  WorldRegistry(List<WorldDefinition> worlds) {
+    for (final world in worlds) {
+      _checkIdPart(world.id.value, 'World ID');
+      if (_worlds.containsKey(world.id)) {
+        throw ArgumentError('Duplicate World ID "${world.id}".');
+      }
+      if (world.allowedCategories.isEmpty) {
+        throw ArgumentError('World "${world.id}" allows no category.');
+      }
+      if (world.scenes.isEmpty) {
+        throw ArgumentError('World "${world.id}" has no Scene.');
+      }
+      _worlds[world.id] = world;
 
-  final Map<ActivityCategory, List<Place>> _placesByCategory;
-
-  /// Every [Place] registered for [category], in no particular order.
-  /// Empty if no Place has been registered for it yet.
-  List<Place> placesFor(ActivityCategory category) =>
-      List.unmodifiable(_placesByCategory[category] ?? const []);
-
-  /// The Place a recommendation in [category] resolves to when none is
-  /// explicitly chosen. WORLD_SYSTEM.md §3 anticipates a Category
-  /// eventually offering more than one Place; until that is designed, the
-  /// first registered Place is the only — and therefore the primary —
-  /// choice.
-  ///
-  /// Throws a [StateError] if no Place is registered for [category].
-  Place primaryPlaceFor(ActivityCategory category) {
-    final places = placesFor(category);
-    if (places.isEmpty) {
-      throw StateError('No Place is registered for $category.');
+      for (final scene in world.scenes) {
+        _checkIdPart(scene.id.world.value, 'World part of Scene ID');
+        _checkIdPart(scene.id.name, 'Scene name');
+        if (scene.id.world != world.id) {
+          throw ArgumentError(
+            'Scene "${scene.id}" is registered under World "${world.id}".',
+          );
+        }
+        if (_scenes.containsKey(scene.id)) {
+          throw ArgumentError('Duplicate Scene ID "${scene.id}".');
+        }
+        _scenes[scene.id] = scene;
+      }
     }
-    return places.first;
   }
-}
 
-/// Composes a [World] from its seven independent dimensions
-/// (WORLD_SYSTEM.md, "World Lifecycle"). That diagram describes a
-/// conceptual order of composition — Category, then Season, then Daypart,
-/// then Weather Mood, then Personal Growth, then Premium Atmosphere — not
-/// an implementation pipeline; this composer exists only to give that
-/// conceptual order one canonical entry point, so nothing constructing a
-/// [World] has to re-decide which dimension resolves before another.
-class WorldComposer {
-  const WorldComposer(this.registry);
+  final Map<WorldId, WorldDefinition> _worlds = {};
+  final Map<WorldSceneId, WorldSceneDescriptor> _scenes = {};
 
-  final WorldRegistry registry;
+  static final _idPart = RegExp(r'^[a-z][a-z0-9_]*$');
 
-  /// Builds the [World] for [category] at the given moment. [place]
-  /// overrides [WorldRegistry.primaryPlaceFor] for the future case where a
-  /// Category offers more than one Place.
-  World compose({
-    required ActivityCategory category,
-    required Season season,
-    required Daypart daypart,
-    required WeatherMood weatherMood,
-    required PersonalGrowth personalGrowth,
-    required PremiumAtmosphere premiumAtmosphere,
-    Place? place,
-  }) {
-    return World(
-      category: category,
-      place: place ?? registry.primaryPlaceFor(category),
-      season: season,
-      daypart: daypart,
-      weatherMood: weatherMood,
-      personalGrowth: personalGrowth,
-      premiumAtmosphere: premiumAtmosphere,
-    );
+  static void _checkIdPart(String value, String label) {
+    if (!_idPart.hasMatch(value)) {
+      throw ArgumentError('Malformed $label "$value".');
+    }
   }
+
+  Iterable<WorldDefinition> get worlds => _worlds.values;
+
+  Iterable<WorldSceneDescriptor> get scenes => _scenes.values;
+
+  /// Whether [id] is a registered Scene.
+  bool hasScene(WorldSceneId id) => _scenes.containsKey(id);
+
+  /// The registered World for [id]. Throws a [StateError] if unknown.
+  WorldDefinition world(WorldId id) =>
+      _worlds[id] ?? (throw StateError('Unknown World "$id".'));
+
+  /// The registered Scene for [id]. Throws a [StateError] if unknown.
+  WorldSceneDescriptor scene(WorldSceneId id) =>
+      _scenes[id] ?? (throw StateError('Unknown Scene "$id".'));
 }

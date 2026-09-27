@@ -1,56 +1,45 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:thirty/core/activity_category.dart';
 import 'package:thirty/core/worlds/place.dart';
 
-const _samplePlace = Place(
-  category: ActivityCategory.walking,
-  name: 'Quiet Trail',
-  emotion: 'Invitation',
-  primaryActivity: 'Walking',
-  dominantShape: 'Winding path through rolling hills',
-  heroFocus: 'One organic tree on a distant hill',
-  cardFocus: 'Same tree, same path, same horizon',
-  primaryLight: 'Diffuse morning light',
-  movement: 'Minimal — a few birds, subtle atmospheric drift',
-  growthElements: ['Flowers appearing along the path'],
-);
+Place _place({
+  String name = 'Quiet Trail',
+  String emotion = 'Invitation',
+  String cardFocus = 'Same tree, same path, same horizon',
+  List<String> growthElements = const ['Flowers appearing along the path'],
+}) {
+  return Place(
+    name: name,
+    emotion: emotion,
+    primaryActivity: 'Walking',
+    dominantShape: 'Winding path through rolling hills',
+    heroFocus: 'One organic tree on a distant hill',
+    cardFocus: cardFocus,
+    primaryLight: 'Diffuse morning light',
+    movement: 'Minimal — a few birds, subtle atmospheric drift',
+    growthElements: growthElements,
+  );
+}
 
 void main() {
   group('Place', () {
-    test('is equal to another Place with the same category and name', () {
-      const other = Place(
-        category: ActivityCategory.walking,
-        name: 'Quiet Trail',
-        emotion: 'A different emotion string entirely',
-        primaryActivity: 'Walking',
-        dominantShape: 'A different shape',
-        heroFocus: 'A different focus',
-        cardFocus: 'A different focus',
-        primaryLight: 'A different light',
-        movement: 'A different movement',
-        growthElements: [],
-      );
+    test('is equal to a Place with identical DNA', () {
+      final a = _place(growthElements: ['Flowers appearing along the path']);
+      final b = _place(growthElements: ['Flowers appearing along the path']);
 
-      expect(_samplePlace, other);
-      expect(_samplePlace.hashCode, other.hashCode);
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
     });
 
-    test('is not equal to a Place with a different name', () {
-      const other = Place(
-        category: ActivityCategory.walking,
-        name: 'Still Lake',
-        emotion: 'Invitation',
-        primaryActivity: 'Walking',
-        dominantShape: 'Winding path through rolling hills',
-        heroFocus: 'One organic tree on a distant hill',
-        cardFocus: 'Same tree, same path, same horizon',
-        primaryLight: 'Diffuse morning light',
-        movement: 'Minimal — a few birds, subtle atmospheric drift',
-        growthElements: ['Flowers appearing along the path'],
-      );
+    test('is not equal when only the name differs', () {
+      expect(_place(), isNot(_place(name: 'Still Lake')));
+    });
 
-      expect(_samplePlace, isNot(other));
+    test('is not equal when any other DNA field differs — the display name '
+        'is not an identity key', () {
+      expect(_place(), isNot(_place(emotion: 'Stillness')));
+      expect(_place(), isNot(_place(cardFocus: 'A different focus')));
+      expect(_place(), isNot(_place(growthElements: const [])));
     });
   });
 }

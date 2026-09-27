@@ -83,7 +83,9 @@ class PremiumAtmosphere {
 /// nothing itself — WORLD_SYSTEM.md §5 defines the four visual expressions
 /// a World can conceptually be rendered through (Hero, Activity Card,
 /// Session, Completion); no concrete presentation contract for them exists
-/// yet. See `world_registry.dart` for how a World is composed.
+/// yet. Which World and Scene an activity is shown in is resolved by
+/// `world_scene_resolution.dart` from the registered `WorldDefinition`s
+/// (`registered_worlds.dart`).
 class World {
   const World({
     required this.category,

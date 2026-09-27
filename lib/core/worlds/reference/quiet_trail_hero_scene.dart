@@ -1,5 +1,5 @@
 import '../world.dart';
-import 'quiet_trail_world.dart';
+import '../catalog/quiet_trail.dart';
 
 /// The semantic warmth of a Hero scene's light — not a colour value.
 /// Actual colour is resolved by a renderer from the active THIRTY theme at

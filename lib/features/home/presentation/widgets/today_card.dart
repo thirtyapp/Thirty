@@ -54,7 +54,10 @@ class TodayCard extends StatelessWidget {
 
   static IconData iconFor(ActivityCategory category) => switch (category) {
     ActivityCategory.walking => Icons.directions_walk_rounded,
-    ActivityCategory.generalWellness => Icons.spa_outlined,
+    ActivityCategory.stillness ||
+    ActivityCategory.movement ||
+    ActivityCategory.quietFocus ||
+    ActivityCategory.homeCare => Icons.spa_outlined,
   };
 
   @override

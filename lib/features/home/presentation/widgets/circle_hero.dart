@@ -705,20 +705,18 @@ class _CircleHeroState extends ConsumerState<CircleHero>
 /// [size] — the one place `circle_hero.dart` maps a recommendation's
 /// [ActivityCategory] to a World's illustration widget.
 ///
-/// An exhaustive switch, not a registry — a future category left unhandled
-/// here fails to compile instead of silently falling through to the wrong
-/// illustration. [ActivityCategory.walking] has an approved Place (Quiet
-/// Trail); [ActivityCategory.generalWellness] deliberately renders the
-/// exact same illustration in Recommendation MVP v0
-/// (`docs/product/recommendation-mvp-v0.md`) — it has no Place of its own
-/// yet (see that enum value's own doc comment), and no new World/Place is
-/// introduced by that milestone. Both cases are listed explicitly, not
-/// merged behind a default, so a future third category still fails to
-/// compile until it's deliberately handled here too.
+/// Temporary compatibility (World-art step A1): every category still
+/// renders the approved Quiet Trail master, exactly as before, until Home
+/// integration (step C) renders the resolved World Scene instead
+/// (`world_scene_resolution.dart`). An exhaustive switch, not a default, so
+/// a future category still fails to compile until it's handled here.
 Widget _worldIllustrationFor(ActivityCategory category, double size) {
   return switch (category) {
     ActivityCategory.walking ||
-    ActivityCategory.generalWellness => SizedBox(
+    ActivityCategory.stillness ||
+    ActivityCategory.movement ||
+    ActivityCategory.quietFocus ||
+    ActivityCategory.homeCare => SizedBox(
       width: size,
       height: size,
       child: const QuietTrailHeroAssetView(),
