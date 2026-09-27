@@ -23,8 +23,8 @@ const readingNook = Place(
       'small window',
   heroFocus: 'The armchair beneath the lamp',
   cardFocus:
-      'The chair\'s arm or a side surface under lamplight, as a simplified '
-      'watercolor companion',
+      'The chair arm or side surface, lit by the scene\'s current light, as a '
+      'simplified watercolor companion',
   primaryLight:
       'Soft side light from a small window, with a warm lamp as secondary '
       'light',

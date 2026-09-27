@@ -38,7 +38,7 @@ The chair and the lamp stay constant across all three Scenes; what distinguishes
 
 **Hero composition:** the armchair in three-quarter view, an open book resting naturally on the armrest or adjacent side table, with no legible text and without implying a specific absent occupant; the lamp above it, the small window at the side.
 
-**Card companion composition:** the armrest with the open book in the lamplight.
+**Card companion composition:** the armrest with the open book, lit by the scene's current light.
 
 **Mandatory anchors:** the chair, the book, the lamp.
 
@@ -54,7 +54,7 @@ The chair and the lamp stay constant across all three Scenes; what distinguishes
 
 **Hero composition:** a small writing desk tucked into the alcove under the window, with an open notebook, a pencil and the lamp over the desk. The chair or the shelf stays visible at the edge so the Scene reads unmistakably as the Nook.
 
-**Card companion composition:** the notebook and pencil on the edge of the desk, under the lamp.
+**Card companion composition:** the notebook and pencil on the desk edge, under the scene's current light.
 
 **Mandatory anchors:** the desk surface with the open notebook, the lamp; in the Hero, the chair or the shelf.
 
@@ -70,7 +70,7 @@ The chair and the lamp stay constant across all three Scenes; what distinguishes
 
 **Hero composition:** the armchair, with headphones resting on the armrest or a small, plain radio on the side table; the lamp and the window.
 
-**Card companion composition:** the side table with the radio or headphones, in the lamplight.
+**Card companion composition:** the side table with the radio or headphones, lit by the scene's current light.
 
 **Mandatory anchors:** the chair, the lamp, the listening object.
 

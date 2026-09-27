@@ -757,7 +757,7 @@ World ID `reading_nook` · serves `quietFocus` · Scenes `reading_nook.read` (ro
 | Primary Colours | Warm Stone, Cream, Circle Sage (armchair fabric); illustration-only pigment: restrained warm lamp glow |
 | Dominant Shape | An enclosed alcove: a rounded chair back framed by a shelf and a small window |
 | Hero Focus | The armchair beneath the lamp |
-| Card Focus | The chair's arm or a side surface under lamplight, as a simplified watercolor companion |
+| Card Focus | The chair arm or side surface, lit by the scene's current light, as a simplified watercolor companion |
 | Primary Light | Soft side light from a small window, with a warm lamp as secondary light (base state) |
 | Movement | Almost none — a curtain edge, the lamp's faint warmth; never game-like |
 | Growth Elements | A second stack of books, a trailing shelf plant growing longer, a knitted throw appearing on the chair |
