@@ -65,3 +65,4 @@ Een ADR (Architecture/Product Decision Record) legt één specifieke, vaak onomk
 - [ADR-015 — V1 Productization Batch 2B / Minimum Circle Coach](adr/ADR-015-v1-batch-2b-circle-coach.md)
 - [ADR-016 — V1 Productization Batch 2C / Minimum Circle Insights](adr/ADR-016-v1-batch-2c-circle-insights.md)
 - [ADR-017 — V1 Step 5 / RevenueCat Billing Integration](adr/ADR-017-v1-step5-revenuecat-billing.md)
+- [ADR-018 — V1 World Art / Scene Roles, Five Worlds, Static Daypart Artwork](adr/ADR-018-v1-world-art-scene-roles-and-daypart.md)

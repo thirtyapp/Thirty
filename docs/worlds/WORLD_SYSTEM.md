@@ -1,7 +1,7 @@
 # THIRTY World System
 
-**Version:** v1.0.2
-**Status:** Approved v1.0.2
+**Version:** v1.1.0
+**Status:** Approved v1.1.0
 
 ## Purpose
 
@@ -152,7 +152,7 @@ World
 
 **Premium Atmosphere.** Optional richer motion, light, sound and detail layered on the same World (see §12).
 
-These dimensions must remain independently composable. A World is the product of all seven at once, not a separate asset drawn for every combination — this is what allows THIRTY to feel infinitely varied while remaining, underneath, a small and disciplined system.
+These dimensions must remain independently composable. A World is the product of all seven at once, not a separate asset drawn for every combination — this is what allows THIRTY to feel infinitely varied while remaining, underneath, a small and disciplined system. As a bounded V1 exception, static artwork is authored per Scene × Daypart × expression (§10); Season, Weather Mood, Personal Growth and Premium Atmosphere are not authored per combination.
 
 **Category vs. Place.** A recommendation Category is not itself a World — it is the axis that determines which Place options are available. A single Category may eventually contain multiple Worlds:
 
@@ -167,6 +167,14 @@ The Place is the long-term visual identity a user comes to recognise. The Catego
 
 **Design rule:** *One recommendation category may contain multiple Worlds.*
 
+**Category is a compatibility axis, not a lookup.** A World declares which Categories it serves; a Category may be served by many Worlds, and a World may serve more than one Category. No Category permanently resolves to exactly one Place.
+
+**Scene.** A Scene is an authored visual composition within a Place, selected from the assigned activity before temporary World dimensions such as Daypart are applied. It is a subordinate facet of its Place — not a Place, not a World-state dimension, and not independently varying: it changes only when the assigned activity changes. A Scene never alters its Place's identity, anchors or palette, and several related activities may deliberately share one Scene. Every Scene belongs to exactly one World and is identified as `<world>.<scene>` (for example `still_lake.breathe`).
+
+**Scene Role.** An activity does not name a World. It names the *visual need* it has — its Scene Role (walk, breathe, move, stretch, read, write, listen, tend, comfort). A World implements roles through its Scenes, and a selection policy chooses which concrete Scene serves a role. In V1 that policy is deliberately trivial and deterministic: each role has exactly one approved default Scene. A future World may implement an existing role (for example a Forest Path `walk` Scene) without any change to the activities that use that role; how the policy would then choose between compatible Scenes is future scope, and must remain deterministic within one local day.
+
+**Identity.** A World is identified by its World ID (for example `quiet_trail`), never by its display name. The Place records the World's descriptive DNA; it is not the World's identity key.
+
 ---
 
 ## World Lifecycle
@@ -176,7 +184,9 @@ A rendered World is composed by applying each dimension from this section in a f
 ```
 Recommendation
       ↓
-World selected
+Scene Role (from the assigned activity)
+      ↓
+World and Scene selected (Category compatibility checked)
       ↓
 Season applied
       ↓
@@ -191,7 +201,7 @@ Premium Atmosphere applied
 Rendered World
 ```
 
-These layers remain conceptually independent — each can vary without requiring the others to change, and none of them alters the World's stable identity. This section describes the order in which a World is composed, not an implementation pipeline; how it is actually rendered is a decision for a future implementation task (§17).
+These layers remain conceptually independent — each can vary without requiring the others to change, and none of them alters the World's stable identity. Scene Role and Scene selection are not layers in this sense: they are fixed by the assigned activity before any temporary dimension is applied (§3). This section describes the order in which a World is composed, not an implementation pipeline; how it is actually rendered is a decision for a future implementation task (§17).
 
 ---
 
@@ -236,16 +246,20 @@ One World has four main expressions. Each has its own purpose; none repeats anot
 
 **Purpose:** Concrete context.
 
-- simplified line-art interpretation;
-- the same world, not the same image reduced;
-- thin lines;
-- minimal tint;
-- decorative and quiet;
-- reminds the user of the Circle without repeating it.
+- a separately authored watercolor companion;
+- the same World, Scene and Daypart as the Circle Hero it accompanies;
+- shares the Hero's recognisable scene anchors, palette and lighting direction/atmosphere, but may omit or simplify secondary objects;
+- simplified relative to the Hero;
+- soft, transparent/feathered integration into the card surface;
+- never a scaled-down or blindly cropped Hero;
+- never allowed to compromise text readability;
+- decorative and quiet.
 
 **Formal rule:**
 
 > "The Card should remind you of the Circle, not repeat it."
+
+*Superseded in v1.1.0:* the earlier line-art / thin-lines / minimal-tint Card rule. The Card is now a watercolor expression; see §10a for the shared Hero ↔ Card continuity rules.
 
 ### C. Circle Session World
 
@@ -410,6 +424,63 @@ A World should adapt to when the user opens THIRTY.
 
 Do not make the adaptation literal or noisy. The World should feel contextually appropriate without becoming a weather app — the goal is an atmosphere the user senses, not a data readout they parse.
 
+### Daypart boundaries
+
+Daypart is resolved from the device's local time:
+
+| Daypart | Local time | Artwork suffix |
+|---|---|---|
+| Morning | 05:00–11:59 | `morning` |
+| Afternoon | 12:00–17:59 | `day` |
+| Evening | 18:00–04:59 | `evening` |
+
+Evening therefore also represents night hours. Evening artwork uses calm low light and a dusk-to-night atmosphere rather than a visible sunset: no sun disc, no orange horizon band. A moon or very restrained stars are permitted. Every evening artwork must remain credible at 18:00, at 02:00 and at 04:59.
+
+### Delivery decision (v1.1.0)
+
+Static daypart artwork is included in the shared, pre-release visual pass and is Free/shared. This lifts the earlier delivery deferral for static daypart artwork only (recorded against the frozen Premium contract in [ADR-018](../product/adr/ADR-018-v1-world-art-scene-roles-and-daypart.md)). Season, Weather Mood and Personal Growth rendering remain deferred. Premium Atmosphere remains post-launch.
+
+### Stability
+
+The Daypart is resolved into one stable presentation snapshot shared by every visible expression of the World. It never changes during First Breath or any other running ritual transition. It may be re-resolved on a later stable Home entry or resume; if visible artwork then changes while Home is present, it crossfades with restraint — never a hard cut.
+
+---
+
+## 10a. Shared World Art Rules (V1)
+
+These rules apply to every V1 World and every future World unless an explicit amendment says otherwise. Each World's reference document applies them concretely.
+
+**No depicted or implied occupant.** §2 applies to interiors as much as to landscapes. Ordinary single scene objects — one book, one chair, one cup, one radio — are allowed. Avoid portraits and photographs, clothing or body traces (garments or shoes arranged as if worn), paired place settings, reflections that could show a figure, and any arrangement that implies a specific absent person.
+
+**Never in any World:** screens, phones or laptops; clocks or any visible time; legible text, including book spines and notes; brands or logos; symbolic graphics such as music notes or sound waves; fitness equipment or any performance aesthetic; the Circle ring, progress track, marker, halo or any other UI — those are rendered by the app, never baked into artwork.
+
+**One primary focus.** Every Scene has one primary visual focus; everything else supports it (Illustration Language §7).
+
+**One dominant light source.** Every evening Scene has one clearly dominant light source — the moon outdoors, a lamp indoors. A faint moon may coexist with an indoor lamp, provided the lamp remains clearly dominant. Mid-tones stay intact so the scene never reads as ominous darkness.
+
+**Palette.** Every World is painted from the brand palette — Circle Sage, Mist Sage, Warm Stone, Cream — and the paper white of the watercolor ground. A World may add at most one approved illustration-only pigment. The approved V1 pigments are: a restrained grey-blue water wash (Still Lake); a restrained warm lamp glow (Reading Nook, and Open Room where a lamp appears); a muted terracotta for the pot (Garden Window). These are illustration pigments only: they create no new `AppColors`, no UI tokens, no hard-coded UI colour values, and no expansion of the brand palette ([DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md) remains the only source of UI colour).
+
+**World-exclusive motifs.** To keep Worlds distinguishable at a glance, these motifs belong to one World only:
+
+| Motif | World |
+|---|---|
+| A tree on a hill with a winding path | Quiet Trail |
+| Open water and reflections | Still Lake |
+| An empty floor under tall windows; windows showing only sky | Open Room |
+| Armchair, reading lamp, bookshelf, books | Reading Nook |
+| A garden seen through a window; cups and drinks; the table | Garden Window |
+
+**Hero ↔ Card continuity.** The Hero and the Card of one Scene always share the World, the Scene, the Daypart, the Scene's mandatory anchors, the palette, and the lighting direction and atmosphere. The Card may move to a closer vantage showing one or two anchors, omit optional objects and background layers (at most two depth layers), reduce detail, and carry its visual weight to the right with a feathered left edge so it never competes with text. The Card may not introduce objects the Hero does not contain, change the light direction or the Daypart, or be a crop or scaled copy of the Hero file.
+
+**Dark-theme compatibility.** There are no separate dark-theme assets. Instead:
+
+1. Card artwork is painted on a transparent ground with feathered alpha that dissolves through a broad wash. No paper colour is baked into transparent areas, and alpha is exported correctly (premultiplied) so no light fringes appear.
+2. The app renders one shared, theme-aware "paper" backing behind every Card artwork: near-invisible Cream warmth on the light card surface; a low-opacity warm paper tone lifted from the dark surface in dark mode, so feathered edges dissolve into paper rather than near-black. The same backing serves every Scene; no asset receives its own treatment.
+3. No artwork uses pure black; the darkest value stays around a deep Warm Stone. Every artwork, evening included, keeps one clearly light mass (moon, lamp pool, light patch, cup) that stays legible on the dark surface.
+4. Every Card artwork is reviewed on both the light and the dark card surface, at 1× and 3×, and in the 200% text layout.
+
+If this still fails for an artwork, separate dark-theme artwork requires a new, explicit decision.
+
 ---
 
 ## 11. Personal Growth
@@ -564,9 +635,11 @@ The first fully defined reference World.
 - same tree;
 - same path;
 - same horizon;
-- simplified into elegant line art;
+- a separately authored, simplified watercolor companion (§5B);
 - much less detail;
-- one restrained accent colour.
+- soft, feathered edges into the card surface.
+
+**V1 identity and Scene:** World ID `quiet_trail`; serves the `walking` Category; one V1 Scene, `quiet_trail.walk` (role `walk`) — the canonical trail view, with one stretch of path rising gently. Full artistic direction: [QUIET_TRAIL_REFERENCE.md](reference/QUIET_TRAIL_REFERENCE.md).
 
 **Session expression:**
 
@@ -607,24 +680,108 @@ Every World should eventually have a compact identity profile — a single refer
 | Primary Colours | Circle Sage, Mist Sage, Warm Stone, Cream |
 | Dominant Shape | Winding path through rolling hills |
 | Hero Focus | One organic tree on a distant hill, path winding toward it |
-| Card Focus | Same tree, same path, same horizon, simplified to line art |
+| Card Focus | Same tree, same path, same horizon, as a simplified watercolor companion |
 | Primary Light | Diffuse morning light, soft sunrise atmosphere |
 | Movement | Minimal — a few birds, subtle atmospheric drift; never game-like |
 | Growth Elements | Flowers appearing along the path, the tree becoming fuller, a bench appearing over time |
 
-This is the only World DNA profile defined in v1.0 — no additional Worlds are introduced here (see §16).
+v1.0 defined only this profile. v1.1.0 adds the four further V1 World DNA profiles in §16.
 
 ---
 
-## 16. Future Reference Worlds
+## 16. V1 Worlds and Future Reference Worlds
 
-Brief placeholders only — not full specifications. Walking (§15) is the only fully defined reference World in v1.0.
+v1.0 listed Still Lake, Reading Nook and "Open Room or Open Meadow" as placeholders only. v1.1.0 approves five V1 Worlds — Quiet Trail (§15) and the four below — as the first content pack of an expandable system, not a closed set. Each World's full artistic direction (Place identity, Scene definitions, Daypart direction, dark-theme notes, differentiation, Hero ↔ Card continuity) lives in its reference document; this section records only its identity, compatibility and Scenes.
 
-**Meditation:** Still Lake
+### V1 roles and default Scenes
 
-**Reading:** Reading Nook
+Each activity names a Scene Role (§3). In V1, each role has one approved default Scene:
 
-**Stretching:** Open Room or Open Meadow — final naming unresolved.
+| Scene Role | Default Scene | World | World serves Category |
+|---|---|---|---|
+| walk | `quiet_trail.walk` | Quiet Trail | walking |
+| breathe | `still_lake.breathe` | Still Lake | stillness |
+| move | `open_room.move` | Open Room | movement |
+| stretch | `open_room.stretch` | Open Room | movement |
+| read | `reading_nook.read` | Reading Nook | quietFocus |
+| write | `reading_nook.write` | Reading Nook | quietFocus |
+| listen | `reading_nook.listen` | Reading Nook | quietFocus |
+| tend | `garden_window.tend` | Garden Window | homeCare |
+| comfort | `garden_window.comfort` | Garden Window | homeCare |
+
+These Categories are internal activity/World compatibility categories only; they do not change the three user-facing directions or recommendation selection. That each V1 Category is served by one World, and each role has one default, is a fact of this content pack — not a rule of the system.
+
+### Still Lake
+
+World ID `still_lake` · serves `stillness` · Scene `still_lake.breathe` (role `breathe`) · [STILL_LAKE_REFERENCE.md](reference/STILL_LAKE_REFERENCE.md)
+
+| Field | Value |
+|---|---|
+| Name | Still Lake |
+| Emotion | Stillness |
+| Primary Activity | Breathing and still pause |
+| Primary Colours | Mist Sage, Cream, Warm Stone, Circle Sage (reeds); illustration-only pigment: restrained grey-blue water wash |
+| Dominant Shape | A long, level horizontal: still water meeting a low, flat far shore |
+| Hero Focus | One flat shore rock at the water's edge, off-centre, with the still surface stretching past it |
+| Card Focus | The shore rock and a band of still water, as a simplified watercolor companion |
+| Primary Light | Soft, even light reflected off the water, mist lifting (base state) |
+| Movement | Almost none — a single slow ripple ring, a drifting band of mist; never game-like |
+| Growth Elements | Water lilies appearing near the shore, the reed cluster filling out, a small wooden jetty appearing over time |
+
+### Open Room
+
+World ID `open_room` · serves `movement` · Scenes `open_room.move` (role `move`), `open_room.stretch` (role `stretch`) · [OPEN_ROOM_REFERENCE.md](reference/OPEN_ROOM_REFERENCE.md)
+
+| Field | Value |
+|---|---|
+| Name | Open Room |
+| Emotion | Freedom — room to move |
+| Primary Activity | Stretching and free movement |
+| Primary Colours | Cream, Warm Stone (floor), Mist Sage (walls and shadow), Circle Sage (one plant); illustration-only pigment where a lamp appears: restrained warm lamp glow |
+| Dominant Shape | A large, open rectangle of bare floor under tall windows |
+| Hero Focus | The pool of light lying on the empty floor |
+| Card Focus | A pane of light on the floorboards, as a simplified watercolor companion |
+| Primary Light | Broad daylight through tall windows (base state) |
+| Movement | A curtain edge barely lifting, dust drifting in the light; never game-like |
+| Growth Elements | The corner plant growing taller, a second rug, a low shelf gaining a few objects over time |
+
+### Reading Nook
+
+World ID `reading_nook` · serves `quietFocus` · Scenes `reading_nook.read` (role `read`), `reading_nook.write` (role `write`), `reading_nook.listen` (role `listen`) · [READING_NOOK_REFERENCE.md](reference/READING_NOOK_REFERENCE.md)
+
+| Field | Value |
+|---|---|
+| Name | Reading Nook |
+| Emotion | Absorption |
+| Primary Activity | Reading, writing, single-task focus and quiet listening |
+| Primary Colours | Warm Stone, Cream, Circle Sage (armchair fabric); illustration-only pigment: restrained warm lamp glow |
+| Dominant Shape | An enclosed alcove: a rounded chair back framed by a shelf and a small window |
+| Hero Focus | The armchair beneath the lamp |
+| Card Focus | The chair's arm or a side surface under lamplight, as a simplified watercolor companion |
+| Primary Light | Soft side light from a small window, with a warm lamp as secondary light (base state) |
+| Movement | Almost none — a curtain edge, the lamp's faint warmth; never game-like |
+| Growth Elements | A second stack of books, a trailing shelf plant growing longer, a knitted throw appearing on the chair |
+
+### Garden Window
+
+World ID `garden_window` · serves `homeCare` · Scenes `garden_window.tend` (role `tend`), `garden_window.comfort` (role `comfort`) · [GARDEN_WINDOW_REFERENCE.md](reference/GARDEN_WINDOW_REFERENCE.md)
+
+| Field | Value |
+|---|---|
+| Name | Garden Window |
+| Emotion | Care |
+| Primary Activity | Tending, tidying and small comfort rituals |
+| Primary Colours | Cream, Warm Stone (wooden table), Circle Sage and Mist Sage (garden); illustration-only pigment: muted terracotta (the pot) |
+| Dominant Shape | A window frame opening from a calm table onto a small garden |
+| Hero Focus | The terracotta potted plant on the sill, against the garden |
+| Card Focus | Sill, plant and table edge, as a simplified watercolor companion |
+| Primary Light | Daylight falling through the garden window across the table (base state) |
+| Movement | Leaves stirring outside, steam from a cup; never game-like |
+| Growth Elements | A herb pot appearing on the sill, the garden filling with flowers, a climbing plant framing the window over time |
+
+### Future reference Worlds
+
+**Open Meadow** remains a future reference only; Open Room is the V1 movement World. Further Worlds — including additional Worlds for an existing Category, such as Forest Path or Coastal Walk for walking (§3) — are added through their own DNA, reference document, Scenes and explicit registration, without changing existing Worlds or activities.
 
 ---
 
@@ -636,6 +793,7 @@ Future implementation should separate:
 
 - Category;
 - Place;
+- Scene Role and Scene (an authored facet of a World, selected from the assigned activity; validated against the Categories its World serves);
 - Season;
 - Daypart;
 - Weather Mood;
@@ -643,6 +801,8 @@ Future implementation should separate:
 - Premium Atmosphere.
 
 The Home screen must not hardcode Walking visuals. Illustration selection must derive from the current recommendation and World configuration, not from a fixed reference to one category's illustration — the same principle already established for the recommendation-to-illustration lookup, extended here to cover every additional dimension in §3.
+
+**Modular ownership (v1.1.0).** An activity names only its Scene Role. Each World is self-contained: it owns its World ID, its Place (DNA), the Categories it serves, and its Scenes, each of which implements exactly one Scene Role. A selection policy maps a role to a concrete Scene; in V1 it holds one approved default per role. Adding a World therefore means adding its definition, Scenes, reference document and assets, and registering it — never editing existing Worlds, the activities that use a role, or the generic rendering. Adding a Place remains an explicit registration decision; a Scene never introduces a World that has not been registered, and never serves a Category its World does not declare.
 
 ---
 
@@ -668,7 +828,7 @@ This document does not yet define:
 - exact milestone numbers;
 - exact location or weather data sources;
 - GPS use;
-- final illustration assets;
+- final illustration assets beyond the V1 Scene × Daypart artwork pack (§10, §16);
 - final animation durations;
 - audio catalogue;
 - all recommendation categories;
@@ -712,6 +872,17 @@ None of those documents is modified by this one. Where a future decision in any 
 ---
 
 ## Version History
+
+### v1.1.0 — 2026-09-27
+
+- §3: Category is recorded as a compatibility axis, not a one-to-one Place lookup. Introduces the Scene (an authored visual composition within a Place, selected from the assigned activity; explicitly not a World-state dimension), the Scene Role (the activity's visual need), the `<world>.<scene>` Scene identity, and World identity by World ID rather than display name. Records the bounded V1 exception of static artwork per Scene × Daypart × expression.
+- World Lifecycle: adds Scene Role and World/Scene selection ahead of the temporary dimensions.
+- §5B, §15, World DNA: the Card expression becomes a separately authored watercolor companion; the line-art / thin-lines / minimal-tint rule is superseded. The formal rule "The Card should remind you of the Circle, not repeat it" is unchanged.
+- §10: adds the Daypart boundaries (05:00–11:59, 12:00–17:59, 18:00–04:59), the evening/night direction, the delivery decision for static daypart artwork (reconciled against the frozen Premium contract in ADR-018) and the stability rule.
+- New §10a: shared V1 art rules — no depicted or implied occupant, universal exclusions, one dominant light source, approved illustration-only pigments, World-exclusive motifs, Hero ↔ Card continuity, dark-theme compatibility without separate dark assets.
+- §16: approves Still Lake, Open Room, Reading Nook and Garden Window as V1 Worlds alongside Quiet Trail, with World DNA, World IDs, served Categories, Scenes and the V1 role → default Scene table; Open Meadow remains a future reference.
+- §17: records modular World ownership. §18: narrows the illustration-asset non-goal.
+- Season, Weather Mood and Personal Growth rendering remain deferred; Premium Atmosphere remains post-launch. No other section changed.
 
 ### v1.0.2 — 2026-08-06
 

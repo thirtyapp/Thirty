@@ -1,7 +1,7 @@
 # THIRTY Illustration Language
 
-**Version:** v1.0
-**Status:** Approved v1.0
+**Version:** v1.0.1
+**Status:** Approved v1.0.1
 
 ## Purpose
 
@@ -101,7 +101,7 @@ The line should feel drawn rather than constructed. A line drawn by hand thicken
 
 This is the same distinction World System §6 already draws between the Circle Hero World and the interface elements around it, and the reason [Brand Book §19, Iconography](../BRAND_BOOK.md#19-iconography)'s "line-based, thin icons with consistent strokewidth" describe a *different* register than this one: an icon's job is to be recognised instantly and identically every time, so its line must be uniform. A World's job is to be felt as a place, so its line must carry the small variation a hand leaves behind. The two should never be confused for each other — an icon that looks hand-drawn has failed at being an icon; a World that looks like an icon has failed at being a World.
 
-This quality of line does not disappear when a World is reduced. World System §5B's Activity Card Companion calls for "thin lines" and "much less detail" than the Circle Hero version — but the *character* of the line, fine and drawn rather than mechanical, carries across both. Economy changes how much is drawn. It never changes how it's drawn.
+This quality of line does not disappear when a World is reduced. World System §5B's Activity Card Companion is a simplified, separately authored watercolor expression with much less detail than the Circle Hero — but the *character* of the line, fine and drawn rather than mechanical, carries across both. Economy changes how much is drawn. It never changes how it's drawn.
 
 ---
 
@@ -262,7 +262,7 @@ None of these are refused because they cannot be executed well. They are refused
 
 ## 10. Consistency Across Worlds
 
-Quiet Trail. Still Lake. Reading Nook. Open Meadow.
+Quiet Trail. Still Lake. Open Room. Reading Nook. Garden Window.
 
 All should clearly feel illustrated by the same hand.
 
@@ -272,7 +272,7 @@ This is the illustration-level expression of a rule the World System already hol
 
 In practice, that means every principle in this document — the fine, hand-drawn line of §3, the muted palette and soft wash of §4–§5, the coherent-scene discipline of §6, the asymmetric, quiet composition of §7, the discovered detail of §8 — applies identically regardless of which Place is being illustrated. What changes between Worlds is *what* is drawn: a lake and reeds instead of a hill and a tree, a window and a chair instead of an open path. What never changes is *how* it is drawn.
 
-Note that, of the four Worlds named above, only Quiet Trail (World System §15) currently has an approved World DNA and reference composition. Still Lake, Reading Nook, and Open Meadow remain placeholders per World System §16 — Open Meadow's own name is explicitly unresolved there, offered alongside "Open Room" pending a final decision. This document sets the artistic language those Worlds will be checked against once they are defined; it does not itself define them.
+All five Worlds named above are approved V1 Worlds ([World System v1.1.0 §15–§16](../worlds/WORLD_SYSTEM.md#16-v1-worlds-and-future-reference-worlds)), each with its own World DNA and reference document; Open Room is the V1 movement World, and Open Meadow remains a future reference only. Quiet Trail alone has an approved master illustration so far. This document sets the artistic language every one of them is checked against; it does not itself define them.
 
 ---
 
@@ -325,6 +325,11 @@ Those belong to a future implementation task or ADR, checked against this docume
 
 ## Version History
 
+### v1.0.1 — 2026-09-27
+
+- Reconciles §3 and §10 with [World System v1.1.0](../worlds/WORLD_SYSTEM.md): the Activity Card Companion is now a separately authored watercolor expression (no longer "thin lines"), and the Worlds named in §10 are the five approved V1 Worlds — Quiet Trail, Still Lake, Open Room, Reading Nook and Garden Window. Open Meadow remains a future reference.
+- No artistic principle changed.
+
 ### v1.0
 
 - Initial approved version.
@@ -350,4 +355,4 @@ Implementation work must follow this document rather than redefine it.
 
 ---
 
-*This is v1.0 of the THIRTY Illustration Language, in Approved status. It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), [WORLD_SYSTEM.md](../worlds/WORLD_SYSTEM.md), and [MOTION_LANGUAGE.md](../motion/MOTION_LANGUAGE.md), and contradicts none of them. Future modifications require an explicit design decision or ADR, per [Playbook GOVERNANCE.md](../playbook/GOVERNANCE.md).*
+*This is v1.0.1 of the THIRTY Illustration Language, in Approved status. It builds on the [THIRTY Playbook](../playbook/README.md), [BRAND_BOOK.md](../BRAND_BOOK.md), [DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md), [WORLD_SYSTEM.md](../worlds/WORLD_SYSTEM.md), and [MOTION_LANGUAGE.md](../motion/MOTION_LANGUAGE.md), and contradicts none of them. Future modifications require an explicit design decision or ADR, per [Playbook GOVERNANCE.md](../playbook/GOVERNANCE.md).*

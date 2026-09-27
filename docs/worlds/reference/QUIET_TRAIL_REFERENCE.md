@@ -20,9 +20,11 @@ This document does not sit above [WORLD_SYSTEM.md](../WORLD_SYSTEM.md) or [ILLUS
 
 Where this document names a specific detail neither source states outright — for example, treating diffuse morning light as the reference daypart, or spring as the reference season — that detail is drawn directly from an existing, approved fact (the World DNA table's "Primary Light: Diffuse morning light, soft sunrise atmosphere"; [World System §9](../WORLD_SYSTEM.md#9-seasons)'s spring description of Quiet Trail, which already pairs "morning moisture" with fresh growth) rather than invented. It is called out explicitly wherever it occurs, so it can be told apart from settled World System fact.
 
-This document describes the **Circle Hero World** expression specifically ([World System §5A](../WORLD_SYSTEM.md#5-visual-levels)) — the richest, most atmospheric presentation of Quiet Trail. The Activity Card Companion, Circle Session, and Completion expressions ([World System §5B–D](../WORLD_SYSTEM.md#5-visual-levels)) are derived from this same reference by simplification or subtle change, exactly as those sections already govern; they are not redefined here.
+This document describes the **Circle Hero World** expression specifically ([World System §5A](../WORLD_SYSTEM.md#5-visual-levels)) — the richest, most atmospheric presentation of Quiet Trail. The Activity Card Companion, Circle Session, and Completion expressions ([World System §5B–D](../WORLD_SYSTEM.md#5-visual-levels)) are derived from this same reference by simplification or subtle change, exactly as those sections already govern; they are not redefined here. The Card Companion is a separately authored watercolor expression ([World System v1.1.0 §5B](../WORLD_SYSTEM.md#5-visual-levels)), not a line-art reduction.
 
 This reference also describes Quiet Trail's **base state** — before any Season, Daypart, Weather Mood, Personal Growth, or Premium Atmosphere layer is applied, per the [World Lifecycle](../WORLD_SYSTEM.md#world-lifecycle). It does not include Personal Growth elements (the bench, the fuller tree, flowers along the path) because those are earned, cumulative additions ([World System §11](../WORLD_SYSTEM.md#11-personal-growth)), not part of the anchor identity every user's Quiet Trail begins from.
+
+Its morning light (§1, §7) describes that base state only. Quiet Trail's V1 Scene (`quiet_trail.walk`, role `walk`) and its morning / day / evening variants are governed by [World System §3, §10 and §10a](../WORLD_SYSTEM.md#10-daypart-and-weather-mood) (v1.1.0). Every variant must still pass §1–§4 and the §10 Review Checklist of this document: the tree remains the primary focus, the path the secondary focus, and the scene one continuous place. The evening variant uses calm low light and a dusk-to-night atmosphere — no visible sunset — and must remain credible from 18:00 through 04:59.
 
 Where this document is silent, WORLD_SYSTEM.md, ILLUSTRATION_LANGUAGE.md, MOTION_LANGUAGE.md, DESIGN_SYSTEM.md, and the Playbook govern.
 
@@ -272,6 +274,8 @@ This asset is the approved visual source for the Quiet Trail Circle Hero — the
 `lib/core/world_rendering/quiet_trail_hero_view.dart` — the procedural `CustomPainter` this reference also governs — remains available as a fallback and technical reference. It is not the artistic source of truth; the approved master asset above is.
 
 Home integration is outside the scope of this approval. It remains a separate, future decision.
+
+The master remains the approved Hero reference for `quiet_trail.walk` in the morning. The V1 Scene × Daypart artwork pack ([World System v1.1.0 §10](../WORLD_SYSTEM.md#10-daypart-and-weather-mood)) is a separate artistic deliverable requiring its own explicit Product Design approval; it does not modify this master.
 
 ---
 
