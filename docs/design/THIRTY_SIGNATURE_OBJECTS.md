@@ -1,8 +1,8 @@
 # THIRTY Signature Objects
 
-**Version:** v0.1
+**Version:** v0.2
 **Status:** FUTURE EXPLORATION / NON-BINDING
-**Date:** 2026-09-29
+**Date:** 2026-09-29 (updated 2026-10-01: `garden_window.tend` observations)
 **Owner:** THIRTY Product Design
 
 ## Purpose of this document
@@ -10,6 +10,8 @@
 Some props that already appear in the approved THIRTY World artwork could, over time, become recurring and recognisable *THIRTY objects*: first inside the Worlds, later perhaps as optional, user-chosen variants, and much later perhaps as real physical things.
 
 This document records that idea carefully enough to guide future artwork, personalization, merchandise exploration, brand review and product review. It **decides nothing**. It is not a V1 requirement, not a Premium entitlement, not a paid Atmosphere feature, not a commerce or physical-product commitment, not a personalization promise and not a retention or reward mechanic.
+
+**Related:** [THIRTY_FUTURE_RITUAL_PRODUCTS_AND_MERCHANDISE.md](../strategy/THIRTY_FUTURE_RITUAL_PRODUCTS_AND_MERCHANDISE.md) explores the *commercial* side of these objects: ritual products versus merchandise, the Garden Window `tend` basket, and an adult coloring ritual book. This document keeps the *visual and object* inventory and its design hypotheses. Both are FUTURE EXPLORATION / NON-BINDING, and neither creates V1, Premium or roadmap scope.
 
 ### How to read this document
 
@@ -81,10 +83,10 @@ A corollary: the World does not exist to display objects. If a Scene would feel 
 
 ### 3.1 Scope and method
 
-- **Source:** the approved artwork under `artwork/worlds/` in this working tree. ADR-018 scopes 54 production artworks (9 Scenes × {Hero, Card} × {morning, day, evening}); 48 are present, covering 8 of the 9 Scenes. See the file inventory below.
+- **Source:** the approved artwork under `artwork/worlds/` in this working tree. ADR-018 scopes 54 production artworks (9 Scenes × {Hero, Card} × {morning, day, evening}). The v0.1 audit (2026-09-29) covered the 48 then present, across 8 of the 9 Scenes. All 54 are now present: `garden_window.tend` was authored and approved on 2026-09-30, and its six files were added to this audit on 2026-10-01. See the file inventory below.
 - **Method:** every production file was inspected visually, as per-Scene contact sheets (Hero and Card × three dayparts) and as full-resolution detail crops of every portable object named below. Nothing was inferred from filenames alone. No artwork was modified; inspection copies were made outside the repository.
 - **Excluded:** `_exploration/still_lake/still_lake_breathe_hero_sunset_exploration_v1.png` (moved and renamed from `still_lake/…_v1.png.png` on 2026-09-29) — an exploration, not a production daypart asset (it shows a sunset, which [World System §10](../worlds/WORLD_SYSTEM.md#10-daypart-and-weather-mood) excludes from evening artwork). It contains no portable objects.
-- **Not auditable:** `garden_window.tend` has no artwork present. The basket, folded cloth and watering can named in the [Garden Window reference](../worlds/reference/GARDEN_WINDOW_REFERENCE.md) are therefore **hypothetical** for the purposes of this document.
+- **`garden_window.tend` (added 2026-10-01):** all six files (Hero and Card × three dayparts) were inspected visually, using the runtime WebPs under `assets/worlds/garden_window/tend/`, which were converted from these masters without edits ([reconciliation §12](WORLD_ART_ASSET_FREEZE_RECONCILIATION_2026-09-29.md#12-step-b--production-integration-2026-09-30)). The basket, folded cloth and watering can named in the [Garden Window reference](../worlds/reference/GARDEN_WINDOW_REFERENCE.md) are now **observed**. In v0.1 they were hypothetical.
 
 **File inventory [OBSERVED]:**
 
@@ -98,9 +100,9 @@ A corollary: the World does not exist to display objects. If a Scene would feel 
 | Reading Nook | `reading_nook.write` | `reading_nook_write_*` | 6 |
 | Reading Nook | `reading_nook.listen` | `reading_nook_listen_*` | 6 |
 | Garden Window | `garden_window.comfort` | `garden_window_comfort_*` | 6 |
-| Garden Window | `garden_window.tend` | — | 0 (not yet authored) |
+| Garden Window | `garden_window.tend` | `garden_window_tend_*` | 6 (authored and approved 2026-09-30) |
 
-48 production files in total; with the exploration, 49 files. "6/6" below means the object is present in all three Hero and all three Card dayparts of that Scene.
+54 production files in total; with the exploration, 55 files. "6/6" below means the object is present in all three Hero and all three Card dayparts of that Scene.
 
 ### 3.2 A. Environment identity — not merchandise
 
@@ -132,11 +134,17 @@ Consistency counts are Hero + Card across three dayparts for the Scene(s) named.
 | Reading Nook | listen | **Headphones** — cream/tan over-ear, soft wood-toned accents; on the armrest (Heroes) or seat (Cards) | Activity cue | 6/6, stable | Scene-defining | Medium | Low | Weak | Electronics: high manufacturing and quality bar, strong existing brands, easily read as tech product placement. Function cue must stay primary. |
 | Reading Nook | listen | **Small round speaker** — pale blue-grey puck on the side table | Secondary cue | Heroes only (3/6) | Incidental | Low | None | Weak | Can read as a smart speaker; the reference permits "a small, plain radio" and forbids "speakers with lights". Should remain incidental. |
 | Garden Window | comfort | **Mug** — cream, lightly speckled, with a warm drink, on a round wooden coaster | Primary activity cue; reference-mandated anchor ("the cup") | 6/6, stable | **Scene-defining** | High within Garden Window | Medium (glaze colourway) | Plausible | Reference expects visible steam; none is clearly visible at inspected scale. "Branded mug" is the most clichéd merchandise form — the design, not a mark, would have to carry it. |
-| Garden Window | comfort | **Throw** — sage-green knitted, fringed, over the window-seat end (reads blue-grey in evening light) | Comfort, warmth | 6/6, stable | Scene-supporting | Medium–High | High (colourway, knit) | Plausible | Sits within the brand's Sage family, unlike Reading Nook's blue throw. Two different throws across two Worlds: the *category* recurs, the *object* does not (yet). |
+| Garden Window | comfort, tend | **Throw** — sage-green knitted, fringed, over the window-seat end (reads blue-grey in evening light); in `tend`, over the window seat (Heroes) or beside the basket (Cards) | Comfort, warmth | 12/12 (`comfort` 6/6, `tend` 6/6), stable | Scene-supporting | Medium–High | High (colourway, knit) | Plausible | Sits within the brand's Sage family, unlike Reading Nook's blue throw. Two different throws across two Worlds: the *category* recurs, the *object* does not (yet). Within Garden Window, the same throw now recurs across both Scenes. |
 | Garden Window | comfort | **Cushions** — cream, sage, peach knit | Comfort | 6/6 | Incidental | Low–Medium | Medium | Weak | Decorative. |
 | Garden Window | comfort | **Coaster** — round, wooden | Detail under the mug | 6/6 | Incidental | Low | Low | Weak | — |
 | Garden Window | comfort | **Pouf** — woven, round | Foreground mass | Heroes only (3/6) | Incidental | Low | Low | Weak | Furniture. |
 | Garden Window | comfort | **Lantern** — small, on the wall shelf | Evening light accent | Evening Hero and Card only | Incidental | None | None | Weak | Daypart detail. |
+| Garden Window | tend | **Utility basket / caddy** — rectangular, soft-sided, woven in a sage/straw tone, with tan leather tab handles fixed by small metal rivets; holds the other tending objects | Primary activity cue; the focal object of all three Cards; on the floor at the left in the Heroes | 6/6, stable | **Scene-defining** | Medium–High | Medium (weave colourway) | Plausible | The reference lists "a small wicker basket" as *optional* and places it on the table; the approved art makes it the Scene's clearest cue and places it on the floor or step. Commercial view: [Future Ritual Products §3](../strategy/THIRTY_FUTURE_RITUAL_PRODUCTS_AND_MERCHANDISE.md#3-garden-window-tend--utility-basket--caddy) (hypothesis only). |
+| Garden Window | tend | **Watering can** — small, sage-green, long spout, leather-wrapped handle; stands inside the basket | Activity cue | 6/6, stable | Scene-supporting | Medium | Low | Plausible (niche) | Reference-optional. Reads as tending without any text or brand. |
+| Garden Window | tend | **Folded cloth** — cream, draped over the basket edge; sage stripes in the day Hero and all three Cards, a sage/cream check in the morning and evening Heroes | Domestic detail | 6/6 present; pattern varies Hero ↔ Card | Incidental-to-supporting | Low | Low | Weak alone | Reference-optional. Identity not stable (stripe vs check). |
+| Garden Window | tend | **Hand tool and small potted plant** — wooden-handled hand tool; small pot of daisies or greenery, both inside the basket | Supporting detail | 6/6 | Incidental | Low | None | Weak | — |
+| Garden Window | tend | **Mug** — cream with a green leaf pattern, on the right-hand shelf | Domestic detail | Heroes only (3/6) | Incidental | Low | Low | — | Cups belong to Garden Window under §10a; no conflict. |
+| Garden Window | tend | **Books** — one open book on the window seat; a closed stack on the round stool-table | Domestic detail | Heroes only (3/6) | Incidental | None | None | — | Books are a Reading Nook-exclusive motif under §10a. Recorded as a divergence (§3.4 item 10), not resolved here. |
 | Open Room / Reading Nook / Garden Window | several | **Plant pots** — white stone, white ceramic, cream, woven basket, terracotta | Environment and life | Recur across three Worlds, but a different pot almost every time | Environmental | Low | Low | Weak | Environment, not a signature object. The Garden Window terracotta pot is a reference focal point and approved pigment, but in the approved art it sits secondary at the window edge. |
 | Quiet Trail | walk | *(none)* | — | — | — | — | — | — | Legitimately object-free. The environment is the whole identity. |
 | Still Lake | breathe | *(none)* | — | — | — | — | — | — | Legitimately object-free. The reference forbids towels, mats and cushions here. The jetty (Cards) is environment, not a portable object. |
@@ -153,7 +161,8 @@ Recorded because they affect which objects can be treated as stable. **This docu
 6. **Hero ↔ Card object continuity.** Still Lake Cards introduce a jetty and shore stones absent from the Heroes (§10a: the Card may not introduce objects the Hero does not contain); the jetty is also a listed Growth Element. Open Room's Hero and Card show different plants.
 7. **Open water beyond Still Lake.** Open Room, Reading Nook and Quiet Trail artwork show lakes, although §10a lists open water as Still Lake-exclusive and the Open Room reference says its windows show "only sky".
 8. **Reference status lag.** All four newer reference documents still read "master artwork pending", while approved artwork now exists.
-9. **Asset housekeeping (organizational only).** At the time of this audit, Reading Nook filenames used `reading/writing/listening` while Scene IDs use `read/write/listen`, and the Still Lake exploration file had a doubled `.png.png` extension; both were normalized by filename only on 2026-09-29 (see [WORLD_ART_ASSET_FREEZE_RECONCILIATION_2026-09-29.md](WORLD_ART_ASSET_FREEZE_RECONCILIATION_2026-09-29.md)). Dimensions vary (for example `open_room_move_hero_evening_v1.png` is 1402×1122 while its siblings are 1254×1254; Garden Window Heroes are about 720 px and carry a baked rounded paper frame the other Heroes do not). The `artwork/` directory is currently untracked in git.
+9. **Asset housekeeping (organizational only).** At the time of this audit, Reading Nook filenames used `reading/writing/listening` while Scene IDs use `read/write/listen`, and the Still Lake exploration file had a doubled `.png.png` extension; both were normalized by filename only on 2026-09-29 (see [WORLD_ART_ASSET_FREEZE_RECONCILIATION_2026-09-29.md](WORLD_ART_ASSET_FREEZE_RECONCILIATION_2026-09-29.md)). Dimensions vary (for example `open_room_move_hero_evening_v1.png` is 1402×1122 while its siblings are 1254×1254; Garden Window `comfort` Heroes are about 720 px and carry a baked rounded paper frame the other Heroes do not, while the `tend` Heroes are 1536×1024). The `artwork/` directory is currently untracked in git.
+10. **Books in Garden Window `tend` (added 2026-10-01).** All three `tend` Heroes show an open book on the window seat and a closed stack of books on the round stool-table. [§10a](../worlds/WORLD_SYSTEM.md#10a-shared-world-art-rules-v1) lists "armchair, reading lamp, bookshelf, books" as Reading Nook-exclusive. The `tend` Cards show no books. This is **observed, non-blocking and awaiting founder review**. It is not resolved here: the artwork, World System §10a and Reading Nook's exclusivity are all unchanged.
 
 ---
 
@@ -175,12 +184,14 @@ A descriptive maturity model. **It is not a release roadmap.** Moving up a level
 |---|---|---|
 | Open Room mat | **1**, closest to 2 | Stable across 6/6 but appears in one Scene only. |
 | Reading Nook throw | **1** | Stable across 18/18 and three Scenes, but its pattern changes Hero ↔ Card and its colour is off-palette. |
-| Garden Window throw | **1** | Stable across 6/6; one Scene; different object from the Reading Nook throw. |
+| Garden Window throw | **1** | Stable across 12/12 and both Garden Window Scenes (since 2026-10-01); one World; different object from the Reading Nook throw. Its level was not re-assessed in the 2026-10-01 sync. |
+| Garden Window basket / caddy | **1** | Stable 6/6 and Scene-defining, but one Scene only. |
+| Garden Window watering can | **1** | Stable 6/6; one Scene. |
 | Garden Window mug | **1** | Stable 6/6; its cross-World recurrence (Reading Nook) is in conflict with §10a. |
 | Reading Nook notebook + pen | **1** (pen: 0–1) | Notebook form differs Hero ↔ Card. |
 | Reading Nook headphones | **1** | Stable; one Scene. |
 | Open Room bottle | **1** | Stable; one Scene; reference question open. |
-| Reading Nook book, cushions; Open Room towel; Garden Window cushions, coaster, pouf, lantern; speaker; plant pots | **0** | Incidental by role. |
+| Reading Nook book, cushions; Open Room towel; Garden Window cushions, coaster, pouf, lantern; `tend` cloth, hand tool, mug and books; speaker; plant pots | **0** | Incidental by role. |
 
 **No object is at Level 3 or 4.** Nothing in this document promotes one.
 
@@ -234,7 +245,7 @@ Candidates are drawn only from §3. No new props are proposed.
 
 **Garden Window — `comfort`.** The **mug** is the Scene's defining activity cue and a natural Level 1 object. The sage **knitted throw** is palette-true and a strong recurring-textile candidate.
 
-**Garden Window — `tend`.** Not yet authored. Its reference objects (basket, folded cloth, watering can) are hypothetical here and should be judged only once approved artwork exists.
+**Garden Window — `tend`.** Authored and approved on 2026-09-30, and added to this audit on 2026-10-01. The woven **basket / caddy** is the Scene's clearest activity cue and its most distinctive object. The **watering can** supports the cue. The **folded cloth** stays incidental while its pattern varies. The sage **knitted throw** is shared with `comfort`. That an object appears here does not make it a Signature Object (§4). The books in the Heroes are an open divergence (§3.4 item 10).
 
 ---
 
@@ -324,6 +335,8 @@ Classifications are for *later exploration only*. None is approved as a product.
 | Bookmark | **Not observed** in any artwork | — | Medium | Medium | — | Straightforward | **Weak candidate — hypothetical only** |
 
 Environmental anchors (tree, rock, jetty, armchair, lamp, window seat, plant pots, furniture) are excluded from merchandise classification by design.
+
+The `tend` objects (§3.3) arrived after this table was written and are not classified here. Their commercial view is explored only as a hypothesis, along with ritual products in general, in [THIRTY_FUTURE_RITUAL_PRODUCTS_AND_MERCHANDISE.md](../strategy/THIRTY_FUTURE_RITUAL_PRODUCTS_AND_MERCHANDISE.md). No product is approved there or here.
 
 ---
 
@@ -430,10 +443,18 @@ Making any part of this binding would require **separate, explicit decisions**, 
 6. Is the `read` activity cue in the Reading Nook Heroes sufficient, given the near-identical `read` and `write` Hero compositions?
 7. Should the reference documents' "master artwork pending" status be updated now that approved artwork exists?
 8. Should the asset housekeeping items in §3.4 item 9 be tidied in a separate, purely organizational task?
+9. **Founder review:** should the open book and closed books in the Garden Window `tend` Heroes stay, given that §10a makes books Reading Nook-exclusive (§3.4 item 10)? Non-blocking; unresolved.
 
 ---
 
 ## Version history
+
+### v0.2 — 2026-10-01
+
+- Synchronized the audit with the delivered `garden_window.tend` artwork (authored and approved 2026-09-30): file inventory 54/54; `tend` objects observed (basket / caddy, watering can, folded cloth, hand tool, mug, books); the sage throw recorded across both Garden Window Scenes; the Garden Window Hero dimension note corrected to `comfort` only.
+- Recorded the books in the `tend` Heroes as divergence §3.4 item 10 and open question 9, for founder review. Not resolved.
+- Added a cross-reference to [THIRTY_FUTURE_RITUAL_PRODUCTS_AND_MERCHANDISE.md](../strategy/THIRTY_FUTURE_RITUAL_PRODUCTS_AND_MERCHANDISE.md).
+- Status unchanged: FUTURE EXPLORATION / NON-BINDING. No artwork, code, asset, World System, Premium or freeze document changed. No object level was raised above 1.
 
 ### v0.1 — 2026-09-29
 
