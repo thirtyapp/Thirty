@@ -44,7 +44,14 @@ import 'home_circle_metrics.dart';
 /// hasn't chosen a direction yet simply sees the closed Circle again and
 /// taps through, which is the intended daily entry, not a regression.
 class CircleReadyPrompt extends StatefulWidget {
-  const CircleReadyPrompt({super.key});
+  const CircleReadyPrompt({this.header, this.topInset = 0, super.key});
+
+  /// Laid over the top of the scroll content (see [CircleHero.header]).
+  final Widget? header;
+
+  /// Extra room above the Circle, inside the scroll view (see
+  /// [CircleHero.topInset]).
+  final double topInset;
 
   @override
   State<CircleReadyPrompt> createState() => _CircleReadyPromptState();
@@ -66,8 +73,10 @@ class _CircleReadyPromptState extends State<CircleReadyPrompt> {
       builder: (context, constraints) {
         final metrics = HomeCircleMetrics.forWidth(constraints.maxWidth);
 
-        return SingleChildScrollView(
-          padding: HomeCircleMetrics.padding,
+        final content = Padding(
+          padding: HomeCircleMetrics.padding.add(
+            EdgeInsets.only(top: widget.topInset),
+          ),
           // SingleChildScrollView gives its child loose (not full-width)
           // horizontal constraints, so without this the Column below would
           // shrink-wrap to its widest child (the Circle) and sit flush at
@@ -144,6 +153,15 @@ class _CircleReadyPromptState extends State<CircleReadyPrompt> {
                 ),
               ],
             ),
+          ),
+        );
+        return SingleChildScrollView(
+          child: Stack(
+            children: [
+              content,
+              if (widget.header case final header?)
+                Positioned(top: 0, left: 0, right: 0, child: header),
+            ],
           ),
         );
       },

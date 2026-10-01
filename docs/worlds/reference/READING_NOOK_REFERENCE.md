@@ -2,7 +2,7 @@
 
 **World:** Reading Nook · World ID `reading_nook` · serves `quietFocus`
 **Version:** v1.0
-**Status:** Approved direction v1.0 — master artwork pending
+**Status:** Approved direction v1.0 — V1 Scene × Daypart artwork authored and approved for integration (2026-09-29)
 
 ## Purpose
 
@@ -12,7 +12,9 @@ This document defines the artistic direction for Reading Nook, THIRTY's V1 World
 
 This document does not sit above [WORLD_SYSTEM.md](../WORLD_SYSTEM.md) or [ILLUSTRATION_LANGUAGE.md](../../illustration/ILLUSTRATION_LANGUAGE.md). Reading Nook's World DNA, World ID, served Category and Scenes are recorded in [World System §16](../WORLD_SYSTEM.md#16-v1-worlds-and-future-reference-worlds) and are not restated here. The shared V1 art rules in [World System §10a](../WORLD_SYSTEM.md#10a-shared-world-art-rules-v1) apply here in full.
 
-No master illustration exists yet. Every future master and Scene artwork is checked against this document and requires explicit Product Design approval.
+V1 Scene × Daypart artwork for `reading_nook.read`, `reading_nook.write` and `reading_nook.listen` (Hero and Card, morning / day / evening) has been authored and visually approved by the founder for integration (2026-09-29). No separate World master illustration exists. Every future master and Scene artwork is checked against this document and requires explicit Product Design approval.
+
+**Reconciliation note (2026-09-29).** The approved artwork differs from some rules in this document. Those differences are recorded in the [World Art Asset Freeze Reconciliation](../../design/WORLD_ART_ASSET_FREEZE_RECONCILIATION_2026-09-29.md) and are pending founder decision. The design rules below are unchanged; the approval of the artwork does not amend them.
 
 ---
 

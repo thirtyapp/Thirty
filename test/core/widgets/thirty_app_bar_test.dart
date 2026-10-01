@@ -12,6 +12,7 @@ import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/core/widgets/thirty_app_bar.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/presentation/widgets/home_header.dart';
 
 /// Phase C5 — the AppBar's scrolled-under edge: none at the top, a 1pt
 /// divider-coloured bottom edge while the page's vertical scroll view is
@@ -20,7 +21,8 @@ import 'package:thirty/features/home/application/circle_journal.dart';
 /// the six audited screens — never Home.
 
 Material _appBarMaterial(WidgetTester tester) => tester.widget<Material>(
-  find.descendant(of: find.byType(AppBar), matching: find.byType(Material))
+  find
+      .descendant(of: find.byType(AppBar), matching: find.byType(Material))
       .first,
 );
 
@@ -147,10 +149,7 @@ void main() {
           ],
         ),
       );
-      await tester.drag(
-        find.byType(ListView).first,
-        const Offset(0, -60),
-      );
+      await tester.drag(find.byType(ListView).first, const Offset(0, -60));
       await tester.pumpAndSettle();
       expect(_edge(tester), isNot(BorderSide.none));
       await tester.drag(find.byType(ListView).last, const Offset(-300, 0));
@@ -204,12 +203,14 @@ void main() {
       });
     }
 
-    testWidgets('Home keeps its plain AppBar', (tester) async {
+    testWidgets('Home has no pinned bar: its header scrolls with the '
+        'Circle', (tester) async {
       await pumpApp(tester);
       appRouter.go('/');
       await tester.pumpAndSettle();
-      expect(find.byType(AppBar), findsOneWidget);
+      expect(find.byType(AppBar), findsNothing);
       expect(find.byType(ThirtyAppBar), findsNothing);
+      expect(find.byType(HomeHeader), findsOneWidget);
     });
 
     testWidgets('on You, scrolling shows the edge and returning to the top '

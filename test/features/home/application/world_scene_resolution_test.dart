@@ -6,9 +6,11 @@ import 'package:thirty/core/worlds/catalog/open_room.dart';
 import 'package:thirty/core/worlds/catalog/quiet_trail.dart';
 import 'package:thirty/core/worlds/catalog/reading_nook.dart';
 import 'package:thirty/core/worlds/catalog/still_lake.dart';
+import 'package:thirty/core/worlds/daypart.dart';
 import 'package:thirty/core/worlds/place.dart';
 import 'package:thirty/core/worlds/registered_worlds.dart';
 import 'package:thirty/core/worlds/world.dart';
+import 'package:thirty/core/worlds/world_art_manifest.dart';
 import 'package:thirty/core/worlds/world_definition.dart';
 import 'package:thirty/core/worlds/world_registry.dart';
 import 'package:thirty/core/worlds/world_scene_policy.dart';
@@ -187,5 +189,143 @@ void main() {
         throwsStateError,
       );
     });
+  });
+
+  group('resolveWorldArt — V1', () {
+    // One representative activity per registered role.
+    const representatives = {
+      WorldSceneRole.walk: (ActivityId.easyWalk, QuietTrailScenes.walk),
+      WorldSceneRole.breathe: (
+        ActivityId.restfulBreathingPause,
+        StillLakeScenes.breathe,
+      ),
+      WorldSceneRole.move: (ActivityId.moveToMusic, OpenRoomScenes.move),
+      WorldSceneRole.stretch: (
+        ActivityId.gentleStretchPause,
+        OpenRoomScenes.stretch,
+      ),
+      WorldSceneRole.read: (ActivityId.quietReading, ReadingNookScenes.read),
+      WorldSceneRole.write: (ActivityId.writeItDown, ReadingNookScenes.write),
+      WorldSceneRole.listen: (
+        ActivityId.quietMusicBreak,
+        ReadingNookScenes.listen,
+      ),
+      WorldSceneRole.tend: (ActivityId.tidyOneSurface, GardenWindowScenes.tend),
+      WorldSceneRole.comfort: (
+        ActivityId.smallComfortRitual,
+        GardenWindowScenes.comfort,
+      ),
+    };
+
+    test('covers every registered role', () {
+      expect(representatives.keys.toSet(), WorldSceneRole.values.toSet());
+    });
+
+    representatives.forEach((role, expected) {
+      final (activity, sceneId) = expected;
+      test('${activity.name} → ${role.name} → $sceneId → matching Hero and '
+          'Card for each Daypart', () {
+        expect(activityWorldRole(activity), role);
+        final folder = 'assets/worlds/${sceneId.world}/${sceneId.name}';
+        for (final (now, suffix) in [
+          (_morning, 'morning'),
+          (_day, 'day'),
+          (_night, 'evening'),
+        ]) {
+          final art = resolveWorldArt(activity, now);
+          expect(art.scene.role, role);
+          expect(art.scene.sceneId, sceneId);
+          expect(art.scene.daypart, daypartAt(now));
+          expect(art.heroAsset, '$folder/hero_$suffix.webp');
+          expect(art.cardAsset, '$folder/card_$suffix.webp');
+        }
+      });
+    });
+
+    test('every activity resolves to art at the Daypart boundaries', () {
+      for (final activityId in ActivityId.values) {
+        for (final (hour, minute, suffix) in [
+          (4, 59, 'evening'),
+          (5, 0, 'morning'),
+          (11, 59, 'morning'),
+          (12, 0, 'day'),
+          (17, 59, 'day'),
+          (18, 0, 'evening'),
+        ]) {
+          final art = resolveWorldArt(
+            activityId,
+            DateTime(2026, 9, 27, hour, minute),
+          );
+          expect(art.heroAsset, endsWith('/hero_$suffix.webp'));
+          expect(art.cardAsset, endsWith('/card_$suffix.webp'));
+        }
+      }
+    });
+
+    test('equal inputs give equal snapshots', () {
+      expect(
+        resolveWorldArt(ActivityId.tidyOneSurface, _day),
+        resolveWorldArt(ActivityId.tidyOneSurface, _day),
+      );
+    });
+  });
+
+  group('resolveWorldArt — expandability and failures', () {
+    WorldSceneArt artIn(String folder) => WorldSceneArt(
+      heroMorning: '$folder/hero_morning.webp',
+      heroDay: '$folder/hero_day.webp',
+      heroEvening: '$folder/hero_evening.webp',
+      cardMorning: '$folder/card_morning.webp',
+      cardDay: '$folder/card_day.webp',
+      cardEvening: '$folder/card_evening.webp',
+    );
+
+    test('a forest_path.walk Scene serves easyWalk with its own art, with no '
+        'activity change', () {
+      final registry = WorldRegistry([quietTrailWorld, _forestPathWorld]);
+      final policy = DefaultWorldScenePolicy(registry, const {
+        WorldSceneRole.walk: _forestPathWalk,
+      });
+      final manifest = WorldArtManifest(registry, {
+        QuietTrailScenes.walk: artIn('assets/worlds/quiet_trail/walk'),
+        _forestPathWalk: artIn('assets/worlds/forest_path/walk'),
+      });
+
+      final art = resolveWorldArt(
+        ActivityId.easyWalk,
+        _day,
+        policy: policy,
+        manifest: manifest,
+      );
+
+      expect(art.scene.sceneId, _forestPathWalk);
+      expect(art.heroAsset, 'assets/worlds/forest_path/walk/hero_day.webp');
+      expect(art.cardAsset, 'assets/worlds/forest_path/walk/card_day.webp');
+      expect(activityWorldRole(ActivityId.easyWalk), WorldSceneRole.walk);
+    });
+
+    test(
+      'a resolved Scene without art throws — never another Scene\'s art',
+      () {
+        final registry = WorldRegistry([quietTrailWorld, _forestPathWorld]);
+        final policy = DefaultWorldScenePolicy(registry, const {
+          WorldSceneRole.walk: _forestPathWalk,
+        });
+        final manifestWithoutForest = WorldArtManifest(
+          WorldRegistry([quietTrailWorld]),
+          {QuietTrailScenes.walk: artIn('assets/worlds/quiet_trail/walk')},
+        );
+
+        expect(
+          () => resolveWorldArt(
+            ActivityId.easyWalk,
+            _day,
+            policy: policy,
+            manifest: manifestWithoutForest,
+          ),
+          throwsStateError,
+        );
+      },
+    );
   });
 }

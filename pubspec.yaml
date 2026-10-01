@@ -74,7 +74,21 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/worlds/quiet_trail/
+    # The Quiet Trail Hero master, shown only by the debug-only
+    # `/dev/quiet-trail-hero-preview` route. Listed by file so the older
+    # preview PNGs beside it are not bundled.
+    - assets/worlds/quiet_trail/quiet_trail_hero_master_v1.png
+    # World Scene × Daypart artwork (ADR-018; `registered_world_art.dart`).
+    # Folder entries are not recursive, so each Scene is listed.
+    - assets/worlds/quiet_trail/walk/
+    - assets/worlds/still_lake/breathe/
+    - assets/worlds/open_room/move/
+    - assets/worlds/open_room/stretch/
+    - assets/worlds/reading_nook/read/
+    - assets/worlds/reading_nook/write/
+    - assets/worlds/reading_nook/listen/
+    - assets/worlds/garden_window/tend/
+    - assets/worlds/garden_window/comfort/
     - assets/brand/
 
   fonts:

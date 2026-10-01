@@ -4,16 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/activity_category.dart';
 import '../../../../core/branding/thirty_brand_lockup.dart';
 import '../../../../core/providers/clock_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_confirm_dialog.dart';
-import '../../../../core/world_rendering/quiet_trail_hero_asset_view.dart';
+import '../../../../core/world_rendering/world_hero_art_view.dart';
 import '../../application/first_breath_provider.dart';
 import '../../application/recommendation_provider.dart';
+import '../../application/world_scene_resolution.dart';
 import 'home_circle_metrics.dart';
+import 'home_rhythm_column.dart';
 import 'today_card.dart';
 
 /// THIRTY's first true emotional experience: the Circle Hero.
@@ -81,7 +82,21 @@ import 'today_card.dart';
 /// today on the first open of the day — it removes movement and waiting,
 /// never meaning or access (`docs/motion/MOTION_LANGUAGE.md` §11).
 class CircleHero extends ConsumerStatefulWidget {
-  const CircleHero({this.footer = const [], super.key});
+  const CircleHero({
+    this.footer = const [],
+    this.header,
+    this.topInset = 0,
+    super.key,
+  });
+
+  /// Laid over the top of the scroll content (Home's header row), so it
+  /// scrolls away with the Circle instead of being pinned over it.
+  final Widget? header;
+
+  /// Extra room above the Circle, inside the scroll view — so the space
+  /// the Circle's halo shadow falls into scrolls with it and is never cut
+  /// off by the scroll view's top edge.
+  final double topInset;
 
   /// Home content that follows the hero in the same scroll (Phase B3):
   /// reflection, Plan session, reminder / Premium invitations. Each item
@@ -167,6 +182,14 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   // unrelated dependency change (e.g. a theme change) while the ritual is
   // already under way or already settled.
   bool _ritualStarted = false;
+
+  // Today's World artwork, shared by the Circle and the Today card: one
+  // snapshot, so the two can never disagree. It is held through First
+  // Breath — a re-resolution arriving mid-ritual (a resume across a
+  // Daypart boundary) waits in [_pendingArt] until the ritual has settled
+  // (WORLD_SYSTEM.md §10, "Stability").
+  late ResolvedWorldArt _art;
+  ResolvedWorldArt? _pendingArt;
 
   @override
   void initState() {
@@ -288,7 +311,6 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       parent: _controller,
       curve: Interval(buttonStart, buttonEnd, curve: Curves.easeOut),
     );
-
   }
 
   /// Starts/stops  }
@@ -361,6 +383,8 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     if (_ritualStarted) return;
     _ritualStarted = true;
 
+    _art = ref.read(resolvedWorldArtProvider)!;
+
     // Read once: this ritual must not react to its own side effect of
     // marking itself played (see the `whenComplete`/direct call below).
     final shouldPlay = ref.read(firstBreathProvider);
@@ -369,6 +393,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     if (shouldPlay && !reducedMotion) {
       _controller.forward().whenComplete(() {
         if (!mounted) return;
+        if (_pendingArt case final pending?) {
+          setState(() => _art = pending);
+          _pendingArt = null;
+        }
         ref.read(firstBreathProvider.notifier).markPlayedToday();
       });
     } else {
@@ -406,6 +434,20 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     // recommendation_provider.dart), never while CircleHero itself is still
     // on screen.
     final recommendation = recommendationState.recommendation!;
+
+    ref.listen(resolvedWorldArtProvider, (_, next) {
+      if (next == null || next == _art) return;
+      if (_controller.isAnimating) {
+        _pendingArt = next;
+      } else {
+        setState(() => _art = next);
+      }
+    });
+    // A later re-resolution while Home is present crossfades, never cuts
+    // (WORLD_SYSTEM.md §10); reduced motion swaps without movement.
+    final artSwitchDuration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : _illustrationPhase;
 
     _syncTicker(recommendationState.status);
     final timerProgress = _timerProgress(recommendationState);
@@ -498,191 +540,212 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         // does not reintroduce the vertical viewport-centering that was
         // deliberately removed below.
         final hero = SizedBox(
-            width: double.infinity,
-            child: Padding(
-              // Anchored toward the top, not centered in the viewport: a
-              // centered composition leaves equal empty space above and
-              // below, which is exactly what makes the Circle read as
-              // floating mid-page rather than defining the top of the
-              // screen. Top spacing is deliberately small — SafeArea (in
-              // HomePage) already keeps the Circle clear of the status bar
-              // — and any leftover space on a short screen lands below the
-              // button instead of being split above the Circle too.
-              padding: HomeCircleMetrics.padding,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Phase D1 ring: a soft track with a sage dot at the
-                  // arc's leading end. Before Start Circle the arc is First
-                  // Breath's own opening sweep (1.0 → 0.0, then settled at
-                  // 0 with the dot at the top); from Start Circle on it is
-                  // the 30-minute timer.
-                  AnimatedBuilder(
-                    animation: _circleProgress,
-                    builder: (context, child) {
-                      return HomeCircle(
-                        metrics: metrics,
-                        progress:
-                            recommendationState.status ==
-                                RecommendationStatus.notStarted
-                            ? _circleProgress.value
-                            : timerProgress,
-                        trackColor: colors.ringTrack,
-                        progressColor: colors.primary,
-                        // Announced by its lifecycle meaning, never as a
-                        // bare percentage (Playbook Ch.2 §3).
-                        semanticValue: circleSemanticValue,
-                        child: child,
-                      );
-                    },
-                    child: Stack(
-                      alignment: Alignment.center,
+          width: double.infinity,
+          child: Padding(
+            // Anchored toward the top, not centered in the viewport: a
+            // centered composition leaves equal empty space above and
+            // below, which is exactly what makes the Circle read as
+            // floating mid-page rather than defining the top of the
+            // screen. Top spacing is deliberately small — SafeArea (in
+            // HomePage) already keeps the Circle clear of the status bar
+            // — and any leftover space on a short screen lands below the
+            // button instead of being split above the Circle too.
+            padding: HomeCircleMetrics.padding.add(
+              EdgeInsets.only(top: widget.topInset),
+            ),
+            // The hero's own rhythm: normal gaps, tightened only when
+            // Start Circle would otherwise just miss the first screen
+            // (home_rhythm_column.dart). Order is unchanged.
+            child: HomeRhythmColumn(
+              fitHeight: constraints.maxHeight - widget.topInset,
+              minClearance: HomeCircleMetrics.compactGap,
+              gaps: const [
+                (
+                  normal: HomeCircleMetrics.circleToContentGap,
+                  compact: HomeCircleMetrics.compactGap,
+                ),
+                (
+                  normal: HomeCircleMetrics.greetingToCardGap,
+                  compact: HomeCircleMetrics.compactGap,
+                ),
+                (
+                  normal: HomeCircleMetrics.cardToCtaGap,
+                  compact: HomeCircleMetrics.compactGap,
+                ),
+              ],
+              children: [
+                // Phase D1 ring: a soft track with a sage dot at the
+                // arc's leading end. Before Start Circle the arc is First
+                // Breath's own opening sweep (1.0 → 0.0, then settled at
+                // 0 with the dot at the top); from Start Circle on it is
+                // the 30-minute timer.
+                AnimatedBuilder(
+                  animation: _circleProgress,
+                  builder: (context, child) {
+                    return HomeCircle(
+                      metrics: metrics,
+                      progress:
+                          recommendationState.status ==
+                              RecommendationStatus.notStarted
+                          ? _circleProgress.value
+                          : timerProgress,
+                      trackColor: colors.ringTrack,
+                      progressColor: colors.primary,
+                      // Announced by its lifecycle meaning, never as a
+                      // bare percentage (Playbook Ch.2 §3).
+                      semanticValue: circleSemanticValue,
+                      child: child,
+                    );
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // The wordmark is decorative only
+                      // (ThirtyWordmarkView already wraps itself in
+                      // ExcludeSemantics) — the Circle above is the
+                      // ritual's only semantics owner.
+                      FadeTransition(
+                        opacity: _wordmarkOpacity,
+                        // Phase D1: the wordmark with the tagline
+                        // beneath it, fading as one lockup.
+                        child: ExcludeSemantics(
+                          child: ThirtyBrandLockup(
+                            wordmarkWidth: wordmarkWidth,
+                            centered: true,
+                          ),
+                        ),
+                      ),
+                      FadeTransition(
+                        opacity: _illustrationOpacity,
+                        child: AnimatedSwitcher(
+                          duration: artSwitchDuration,
+                          child: SizedBox(
+                            key: ValueKey(_art.heroAsset),
+                            width: illustrationSize,
+                            height: illustrationSize,
+                            child: WorldHeroArtView(
+                              asset: _art.heroAsset,
+                              scale: _art.heroScale,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Phase D1 (Design vision): a centred greeting, then the
+                // left-aligned Today card and a full-width CTA across the
+                // page's content width.
+                FadeTransition(
+                  opacity: _headingOpacity,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: textMaxWidth),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        // The wordmark is decorative only
-                        // (ThirtyWordmarkView already wraps itself in
-                        // ExcludeSemantics) — the Circle above is the
-                        // ritual's only semantics owner.
-                        FadeTransition(
-                          opacity: _wordmarkOpacity,
-                          // Phase D1: the wordmark with the tagline
-                          // beneath it, fading as one lockup.
-                          child: ExcludeSemantics(
-                            child: ThirtyBrandLockup(
-                              wordmarkWidth: wordmarkWidth,
-                              centered: true,
-                            ),
+                        Semantics(
+                          header: true,
+                          child: Text(
+                            homeGreeting(ref.watch(nowProvider)),
+                            style: greetingStyle,
+                            textAlign: TextAlign.center,
                           ),
                         ),
-                        FadeTransition(
-                          opacity: _illustrationOpacity,
-                          child: ExcludeSemantics(
-                            child: _worldIllustrationFor(
-                              recommendation.category,
-                              illustrationSize,
-                            ),
+                        if (recommendationState.status !=
+                            RecommendationStatus.closed) ...[
+                          const SizedBox(
+                            height: HomeCircleMetrics.greetingToSublineGap,
                           ),
-                        ),
+                          Text(
+                            homeGreetingSubline,
+                            style: textTheme.bodyLarge?.copyWith(
+                              color: colors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ],
                     ),
                   ),
-                  const SizedBox(
-                    height: HomeCircleMetrics.circleToContentGap,
-                  ),
-                  // Phase D1 (Design vision): a centred greeting, then the
-                  // left-aligned Today card and a full-width CTA across the
-                  // page's content width.
-                  FadeTransition(
-                    opacity: _headingOpacity,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: textMaxWidth),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Semantics(
-                            header: true,
-                            child: Text(
-                              homeGreeting(ref.watch(nowProvider)),
-                              style: greetingStyle,
-                              textAlign: TextAlign.center,
+                ),
+                TodayCard(
+                  intent: recommendation.intent,
+                  activity: recommendation.activity,
+                  why: recommendation.why,
+                  category: recommendation.category,
+                  cardAsset: _art.cardAsset,
+                  artSwitchDuration: artSwitchDuration,
+                  intentOpacity: _intentOpacity,
+                  detailOpacity: _activityWhyOpacity,
+                ),
+                // FadeTransition alone only controls painting and
+                // semantics inclusion — it never gates hit-testing, so
+                // without this wrapper the button could already be
+                // tapped mid-reveal, before the ritual has actually
+                // offered it. IgnorePointer is rebuilt from
+                // _buttonOpacity's own value on every animation tick
+                // (AnimatedBuilder), so it tracks the existing reveal
+                // exactly rather than a second, separately-timed guess
+                // at when the button is "ready." The button subtree is
+                // supplied as `child` so it isn't rebuilt every frame.
+                AnimatedBuilder(
+                  animation: _buttonOpacity,
+                  builder: (context, child) {
+                    return IgnorePointer(
+                      ignoring: _buttonOpacity.value < 1.0,
+                      child: child,
+                    );
+                  },
+                  child: FadeTransition(
+                    opacity: _buttonOpacity,
+                    // Batch 1, Phase C: once closed there is no CTA at
+                    // all — an explanatory "Done for today" message
+                    // replaces the old disabled "Circle closed" button,
+                    // which testers read as a stuck/broken dead end
+                    // rather than an intentional daily boundary. The
+                    // next-open date is never invented here: "tomorrow"
+                    // is exactly the existing authoritative reset rule
+                    // (recommendation_provider.dart's local-calendar-day
+                    // scoping), not a guessed time of day.
+                    child: ctaLabel == null
+                        ? ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: textMaxWidth),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Done for today',
+                                  style: textTheme.titleMedium,
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  'Your next Circle opens tomorrow.',
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: colors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          )
+                        // Phase D1: the full content width, like the
+                        // Today card above it.
+                        : SizedBox(
+                            width: double.infinity,
+                            child: ThirtyButton(
+                              label: ctaLabel,
+                              size: ThirtyButtonSize.hero,
+                              trailingIcon: ctaTrailingIcon,
+                              onPressed: onCtaPressed,
                             ),
                           ),
-                          if (recommendationState.status !=
-                              RecommendationStatus.closed) ...[
-                            const SizedBox(
-                              height: HomeCircleMetrics.greetingToSublineGap,
-                            ),
-                            Text(
-                              homeGreetingSubline,
-                              style: textTheme.bodyLarge?.copyWith(
-                                color: colors.textSecondary,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
                   ),
-                  const SizedBox(height: HomeCircleMetrics.greetingToCardGap),
-                  TodayCard(
-                    intent: recommendation.intent,
-                    activity: recommendation.activity,
-                    why: recommendation.why,
-                    category: recommendation.category,
-                    intentOpacity: _intentOpacity,
-                    detailOpacity: _activityWhyOpacity,
-                  ),
-                  const SizedBox(height: HomeCircleMetrics.cardToCtaGap),
-                  // FadeTransition alone only controls painting and
-                  // semantics inclusion — it never gates hit-testing, so
-                  // without this wrapper the button could already be
-                  // tapped mid-reveal, before the ritual has actually
-                  // offered it. IgnorePointer is rebuilt from
-                  // _buttonOpacity's own value on every animation tick
-                  // (AnimatedBuilder), so it tracks the existing reveal
-                  // exactly rather than a second, separately-timed guess
-                  // at when the button is "ready." The button subtree is
-                  // supplied as `child` so it isn't rebuilt every frame.
-                  AnimatedBuilder(
-                    animation: _buttonOpacity,
-                    builder: (context, child) {
-                      return IgnorePointer(
-                        ignoring: _buttonOpacity.value < 1.0,
-                        child: child,
-                      );
-                    },
-                    child: FadeTransition(
-                      opacity: _buttonOpacity,
-                      // Batch 1, Phase C: once closed there is no CTA at
-                      // all — an explanatory "Done for today" message
-                      // replaces the old disabled "Circle closed" button,
-                      // which testers read as a stuck/broken dead end
-                      // rather than an intentional daily boundary. The
-                      // next-open date is never invented here: "tomorrow"
-                      // is exactly the existing authoritative reset rule
-                      // (recommendation_provider.dart's local-calendar-day
-                      // scoping), not a guessed time of day.
-                      child: ctaLabel == null
-                          ? ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxWidth: textMaxWidth,
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'Done for today',
-                                    style: textTheme.titleMedium,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Text(
-                                    'Your next Circle opens tomorrow.',
-                                    style: textTheme.bodyMedium?.copyWith(
-                                      color: colors.textSecondary,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            )
-                          // Phase D1: the full content width, like the
-                          // Today card above it.
-                          : SizedBox(
-                              width: double.infinity,
-                              child: ThirtyButton(
-                                label: ctaLabel,
-                                size: ThirtyButtonSize.hero,
-                                trailingIcon: ctaTrailingIcon,
-                                onPressed: onCtaPressed,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
+          ),
+        );
 
         // Phase B3 — the one vertical scroll owner for Home's body once a
         // recommendation exists: the hero and every card below it
@@ -693,33 +756,19 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         return SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [hero, ...widget.footer],
+            children: [
+              Stack(
+                children: [
+                  hero,
+                  if (widget.header case final header?)
+                    Positioned(top: 0, left: 0, right: 0, child: header),
+                ],
+              ),
+              ...widget.footer,
+            ],
           ),
         );
       },
     );
   }
-}
-
-/// The approved World illustration for [category], sized to fill [size] ×
-/// [size] — the one place `circle_hero.dart` maps a recommendation's
-/// [ActivityCategory] to a World's illustration widget.
-///
-/// Temporary compatibility (World-art step A1): every category still
-/// renders the approved Quiet Trail master, exactly as before, until Home
-/// integration (step C) renders the resolved World Scene instead
-/// (`world_scene_resolution.dart`). An exhaustive switch, not a default, so
-/// a future category still fails to compile until it's handled here.
-Widget _worldIllustrationFor(ActivityCategory category, double size) {
-  return switch (category) {
-    ActivityCategory.walking ||
-    ActivityCategory.stillness ||
-    ActivityCategory.movement ||
-    ActivityCategory.quietFocus ||
-    ActivityCategory.homeCare => SizedBox(
-      width: size,
-      height: size,
-      child: const QuietTrailHeroAssetView(),
-    ),
-  };
 }

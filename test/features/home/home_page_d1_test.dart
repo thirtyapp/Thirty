@@ -175,11 +175,11 @@ void main() {
           expect(tester.takeException(), isNull);
           expect(_truncated(tester), isEmpty);
           final lockup = tester.getRect(find.byType(HomeBrandLockup));
-          final appBar = tester.getRect(find.byType(AppBar));
+          final header = tester.getRect(find.byType(HomeHeader));
           final button = tester.getRect(find.byType(HomeProfileButton));
           expect(lockup.width, lessThan(width / 2));
-          expect(lockup.top, greaterThanOrEqualTo(appBar.top));
-          expect(lockup.bottom, lessThanOrEqualTo(appBar.bottom));
+          expect(lockup.top, greaterThanOrEqualTo(header.top));
+          expect(lockup.bottom, lessThanOrEqualTo(header.bottom));
           expect(lockup.overlaps(button), isFalse);
         });
       }
@@ -299,9 +299,7 @@ void main() {
       );
       expect(art, findsOneWidget);
       final artLeft = tester.getRect(art).left;
-      final why = tester.getRect(
-        find.textContaining('For more energy'),
-      );
+      final why = tester.getRect(find.textContaining('For more energy'));
       // The art fades in from its left edge; the text column ends where
       // the fade has barely begun.
       expect(why.right, lessThanOrEqualTo(artLeft + AppSpacing.xl + 0.5));
@@ -485,10 +483,7 @@ void main() {
             sharedPreferencesProvider.overrideWithValue(prefs),
             nowProvider.overrideWithValue(_today),
           ],
-          child: MaterialApp(
-            theme: AppTheme.light,
-            home: const HomePage(),
-          ),
+          child: MaterialApp(theme: AppTheme.light, home: const HomePage()),
         ),
       );
       double lockupOpacity() => tester
@@ -526,8 +521,7 @@ void main() {
         final lockup = tester.getRect(circleLockup());
         final circle = tester.getRect(find.byType(ThirtyProgressCircle));
         // Every corner of the lockup lies inside the ring's inner edge.
-        final inner =
-            circle.width / 2 - HomeCircleMetrics.ringStrokeWidth;
+        final inner = circle.width / 2 - HomeCircleMetrics.ringStrokeWidth;
         for (final corner in [
           lockup.topLeft,
           lockup.topRight,

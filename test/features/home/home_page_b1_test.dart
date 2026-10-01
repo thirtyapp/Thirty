@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +13,7 @@ import 'package:thirty/core/widgets/thirty_progress_circle.dart';
 import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/presentation/home_page.dart';
+import 'package:thirty/features/home/presentation/widgets/home_header.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/home_circle_metrics.dart';
 
@@ -60,7 +63,7 @@ Future<Widget> _wrap({
 double _headerOpacity(WidgetTester tester) => tester
     .widget<AnimatedOpacity>(
       find.descendant(
-        of: find.byType(AppBar),
+        of: find.byType(HomeHeader),
         matching: find.byType(AnimatedOpacity),
       ),
     )
@@ -85,6 +88,18 @@ void main() {
       expect(m.ringSize, 312 - 16);
       expect(m.illustrationSize, 312 - 36);
       expect(m.textMaxWidth, closeTo(312 * 0.85, 1e-9));
+    });
+
+    test('clearDepthBeside: how deep the top curve stays right of x', () {
+      final m = HomeCircleMetrics.forWidth(412); // radius 181.28, center 206
+      expect(m.clearDepthBeside(206, 412), 0);
+      expect(m.clearDepthBeside(0, 412), double.infinity);
+      // At that depth, the curve's left edge is exactly at x.
+      const x = 128.0;
+      final depth = m.clearDepthBeside(x, 412);
+      const r = 181.28;
+      final halfChord = math.sqrt(r * r - (r - depth) * (r - depth));
+      expect(206 - halfChord, closeTo(x, 1e-6));
     });
   });
 
@@ -114,19 +129,18 @@ void main() {
           final decoration =
               tester
                       .widget<DecoratedBox>(
-                        find.descendant(
-                          of: halo,
-                          matching: find.byType(DecoratedBox),
-                        ).first,
+                        find
+                            .descendant(
+                              of: halo,
+                              matching: find.byType(DecoratedBox),
+                            )
+                            .first,
                       )
                       .decoration
                   as BoxDecoration;
           expect(decoration.shape, BoxShape.circle);
           expect(decoration.boxShadow, shadows);
-          expect(
-            decoration.color,
-            theme.extension<AppColors>()!.surface,
-          );
+          expect(decoration.color, theme.extension<AppColors>()!.surface);
         }
       });
     }
@@ -250,7 +264,7 @@ void main() {
         tester
             .widget<AnimatedOpacity>(
               find.descendant(
-                of: find.byType(AppBar),
+                of: find.byType(HomeHeader),
                 matching: find.byType(AnimatedOpacity),
               ),
             )

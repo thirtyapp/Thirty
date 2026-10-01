@@ -1,7 +1,9 @@
 # ADR-018 — V1 World Art / Scene Roles, Five Worlds, Static Daypart Artwork
 
-**Status:** Accepted (documentation and product decision) / implementation
-pending (architecture step A1, artwork pack, Home integration)
+**Status:** Accepted (documentation and product decision) / Implemented
+and validated (architecture step A1; 54/54 artwork pack; manifest,
+completeness tests and Home integration — Step B, 2026-09-30; see
+Implementation status)
 
 ## Context
 
@@ -103,6 +105,27 @@ serves — not a one-to-one Place lookup.
   change), B (artwork manifest and completeness tests), C (Home
   integration and Today card).
 - The frozen Premium document remains byte-identical.
+
+## Implementation status
+
+Recorded 2026-09-30; the decision above is unchanged.
+
+- A1: modular Worlds, Scene Roles, the V1 selection policy and the Daypart
+  resolver (`lib/core/worlds/`).
+- Artwork: 54/54 production assets (9 Scenes × Hero and Card × 3
+  Dayparts), including `garden_window.tend`, derived as WebP from the
+  approved sources under `artwork/worlds/`.
+- B and C were delivered together as Step B: an explicit manifest
+  (`registered_world_art.dart`) validated against the registry, strict
+  completeness tests, one immutable `ResolvedWorldArt` snapshot shared by
+  the Circle Hero and the Today card, held stable through First Breath.
+  The Today card's art presentation is frozen for V1.
+- Validated by `flutter analyze`, the full test suite, and device QA on a
+  Pixel 7 emulator.
+
+Detail, open founder art-direction questions and QA evidence:
+[World Art Asset Freeze Reconciliation](../../design/WORLD_ART_ASSET_FREEZE_RECONCILIATION_2026-09-29.md)
+§11–§13.
 
 ## Related documents
 

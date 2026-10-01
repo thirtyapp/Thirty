@@ -11,9 +11,12 @@ import 'package:thirty/core/theme/app_colors.dart';
 import 'package:thirty/core/theme/app_theme.dart';
 import 'package:thirty/core/widgets/thirty_button.dart';
 import 'package:thirty/core/widgets/thirty_progress_circle.dart';
-import 'package:thirty/core/world_rendering/quiet_trail_hero_asset_view.dart';
+import 'package:thirty/core/worlds/world_scene_role.dart';
+import 'package:thirty/core/world_rendering/world_hero_art_view.dart';
 import 'package:thirty/features/home/application/first_breath_provider.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/application/world_scene_resolution.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/horizon_illustration.dart';
 import 'package:thirty/features/home/presentation/widgets/today_card.dart';
@@ -179,13 +182,17 @@ FadeTransition _wordmarkFadeTransition(WidgetTester tester) {
   );
 }
 
-/// The [FadeTransition] wrapping the World illustration — same nearest-
-/// ancestor reasoning as [_buttonFadeTransition].
+/// The [FadeTransition] revealing the World illustration — the nearest one
+/// above the illustration's crossfade [AnimatedSwitcher], whose own
+/// per-child fades sit below it.
 FadeTransition _illustrationFadeTransition(WidgetTester tester) {
   return tester.widget<FadeTransition>(
     find
         .ancestor(
-          of: find.byType(QuietTrailHeroAssetView),
+          of: find.ancestor(
+            of: find.byType(WorldHeroArtView),
+            matching: find.byType(AnimatedSwitcher),
+          ),
           matching: find.byType(FadeTransition),
         )
         .first,
@@ -352,7 +359,7 @@ void main() {
           .getCenter(find.byType(ThirtyProgressCircle))
           .dx;
       final illustrationCenterX = tester
-          .getCenter(find.byType(QuietTrailHeroAssetView))
+          .getCenter(find.byType(WorldHeroArtView))
           .dx;
       final headingCenterX = tester.getCenter(find.text(_greeting)).dx;
       final cardCenterX = tester.getCenter(find.byType(TodayCard)).dx;
@@ -364,18 +371,20 @@ void main() {
     });
 
     testWidgets(
-      'renders the approved Quiet Trail illustration, inset inside the '
-      'ring',
+      'renders the resolved World Hero — Quiet Trail for a walk — inset '
+      'inside the ring',
       (WidgetTester tester) async {
         await tester.pumpWidget(await _wrap());
         await tester.pumpAndSettle();
 
-        expect(find.byType(QuietTrailHeroAssetView), findsOneWidget);
+        expect(find.byType(WorldHeroArtView), findsOneWidget);
+        expect(
+          _heroAsset(tester),
+          'assets/worlds/quiet_trail/walk/hero_evening.webp',
+        );
         expect(find.byType(HorizonIllustration), findsNothing);
 
-        final illustrationSize = tester.getSize(
-          find.byType(QuietTrailHeroAssetView),
-        );
+        final illustrationSize = tester.getSize(find.byType(WorldHeroArtView));
         final circleSize = tester.getSize(find.byType(ThirtyProgressCircle));
 
         expect(illustrationSize.width, illustrationSize.height);
@@ -878,30 +887,29 @@ void main() {
 
     group('Same-Home Circle lifecycle (Premium Pass 02B Revised '
         'Experiment 1)', () {
-      testWidgets(
-        'closing preserves startedAt and records closedAt',
-        (WidgetTester tester) async {
-          final (widget, container) = await _wrapWithContainer();
-          addTearDown(container.dispose);
+      testWidgets('closing preserves startedAt and records closedAt', (
+        WidgetTester tester,
+      ) async {
+        final (widget, container) = await _wrapWithContainer();
+        addTearDown(container.dispose);
 
-          await tester.pumpWidget(widget);
-          await tester.pumpAndSettle();
+        await tester.pumpWidget(widget);
+        await tester.pumpAndSettle();
 
-          await tester.ensureVisible(find.byType(ThirtyButton));
-          await tester.tap(find.byType(ThirtyButton));
-          await tester.pump();
-          final startedAt = container.read(recommendationProvider).startedAt;
-          expect(startedAt, isNotNull);
-          expect(container.read(recommendationProvider).closedAt, isNull);
+        await tester.ensureVisible(find.byType(ThirtyButton));
+        await tester.tap(find.byType(ThirtyButton));
+        await tester.pump();
+        final startedAt = container.read(recommendationProvider).startedAt;
+        expect(startedAt, isNotNull);
+        expect(container.read(recommendationProvider).closedAt, isNull);
 
-          await _tapAndConfirmClose(tester);
+        await _tapAndConfirmClose(tester);
 
-          final state = container.read(recommendationProvider);
-          expect(state.status, RecommendationStatus.closed);
-          expect(state.startedAt, startedAt);
-          expect(state.closedAt, isNotNull);
-        },
-      );
+        final state = container.read(recommendationProvider);
+        expect(state.status, RecommendationStatus.closed);
+        expect(state.startedAt, startedAt);
+        expect(state.closedAt, isNotNull);
+      });
 
       testWidgets(
         'once closed there is no CTA at all — only the explanatory closed '
@@ -919,10 +927,7 @@ void main() {
           await _tapAndConfirmClose(tester); // Close.
 
           expect(find.text('Done for today'), findsOneWidget);
-          expect(
-            find.text('Your next Circle opens tomorrow.'),
-            findsOneWidget,
-          );
+          expect(find.text('Your next Circle opens tomorrow.'), findsOneWidget);
           expect(find.byType(ThirtyButton), findsNothing);
           expect(find.text('Circle closed'), findsNothing);
 
@@ -971,119 +976,105 @@ void main() {
           await tester.pump();
 
           expect(find.text('Done for today'), findsOneWidget);
-          expect(
-            find.text('Your next Circle opens tomorrow.'),
-            findsOneWidget,
-          );
+          expect(find.text('Your next Circle opens tomorrow.'), findsOneWidget);
           expect(find.byType(ThirtyButton), findsNothing);
           expect(find.text('Circle closed'), findsNothing);
         },
       );
     });
 
-    group(
-      'Circle lifecycle semantics (Premium Pass 02B.1 / 02C Precheck)',
-      () {
-        testWidgets('notStarted announces "Ready to begin."', (
-          WidgetTester tester,
-        ) async {
-          await tester.pumpWidget(await _wrap());
-          await tester.pumpAndSettle();
+    group('Circle lifecycle semantics (Premium Pass 02B.1 / 02C Precheck)', () {
+      testWidgets('notStarted announces "Ready to begin."', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(await _wrap());
+        await tester.pumpAndSettle();
 
-          final semantics = tester.getSemantics(
-            find.byType(ThirtyProgressCircle),
-          );
-          expect(semantics.label, "Today's Circle");
-          expect(semantics.value, 'Ready to begin.');
-        });
-
-        testWidgets('started announces "Circle in progress." with the '
-            'minutes run', (
-          WidgetTester tester,
-        ) async {
-          await tester.pumpWidget(
-            await _wrap(
-              storedPrefs: {
-                firstBreathLastPlayedDateKey: '2026-08-02',
-                recommendationDayKey: '2026-08-02',
-                recommendationStatusKey: 'started',
-                recommendationStartedAtKey: _today.toIso8601String(),
-              },
-            ),
-          );
-          await tester.pump();
-
-          final semantics = tester.getSemantics(
-            find.byType(ThirtyProgressCircle),
-          );
-          expect(semantics.label, "Today's Circle");
-          expect(semantics.value, 'Circle in progress. 12 of 30 minutes.');
-        });
-
-        testWidgets('closed announces "Circle closed."', (
-          WidgetTester tester,
-        ) async {
-          final closedAt = _today.add(const Duration(minutes: 30));
-          await tester.pumpWidget(
-            await _wrap(
-              storedPrefs: {
-                firstBreathLastPlayedDateKey: '2026-08-02',
-                recommendationDayKey: '2026-08-02',
-                recommendationStatusKey: 'closed',
-                recommendationStartedAtKey: _today.toIso8601String(),
-                recommendationClosedAtKey: closedAt.toIso8601String(),
-              },
-            ),
-          );
-          await tester.pump();
-
-          final semantics = tester.getSemantics(
-            find.byType(ThirtyProgressCircle),
-          );
-          expect(semantics.label, "Today's Circle");
-          expect(semantics.value, 'Circle closed.');
-        });
-
-        testWidgets(
-          'a same-day restored started->closed transition updates the '
-          'existing semantics node rather than creating a new one',
-          (WidgetTester tester) async {
-            final (widget, container) = await _wrapWithContainer();
-            addTearDown(container.dispose);
-
-            await tester.pumpWidget(widget);
-            await tester.pumpAndSettle();
-
-            await tester.ensureVisible(find.byType(ThirtyButton));
-            await tester.tap(find.byType(ThirtyButton)); // Start.
-            await tester.pump();
-
-            final startedSemantics = tester.getSemantics(
-              find.byType(ThirtyProgressCircle),
-            );
-            expect(
-              startedSemantics.value,
-              'Circle in progress. 0 of 30 minutes.',
-            );
-            final startedId = startedSemantics.id;
-
-            await _tapAndConfirmClose(tester); // Close.
-
-            final closedSemantics = tester.getSemantics(
-              find.byType(ThirtyProgressCircle),
-            );
-            expect(closedSemantics.value, 'Circle closed.');
-            expect(closedSemantics.id, startedId);
-          },
+        final semantics = tester.getSemantics(
+          find.byType(ThirtyProgressCircle),
         );
-      },
-    );
+        expect(semantics.label, "Today's Circle");
+        expect(semantics.value, 'Ready to begin.');
+      });
+
+      testWidgets('started announces "Circle in progress." with the '
+          'minutes run', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          await _wrap(
+            storedPrefs: {
+              firstBreathLastPlayedDateKey: '2026-08-02',
+              recommendationDayKey: '2026-08-02',
+              recommendationStatusKey: 'started',
+              recommendationStartedAtKey: _today.toIso8601String(),
+            },
+          ),
+        );
+        await tester.pump();
+
+        final semantics = tester.getSemantics(
+          find.byType(ThirtyProgressCircle),
+        );
+        expect(semantics.label, "Today's Circle");
+        expect(semantics.value, 'Circle in progress. 12 of 30 minutes.');
+      });
+
+      testWidgets('closed announces "Circle closed."', (
+        WidgetTester tester,
+      ) async {
+        final closedAt = _today.add(const Duration(minutes: 30));
+        await tester.pumpWidget(
+          await _wrap(
+            storedPrefs: {
+              firstBreathLastPlayedDateKey: '2026-08-02',
+              recommendationDayKey: '2026-08-02',
+              recommendationStatusKey: 'closed',
+              recommendationStartedAtKey: _today.toIso8601String(),
+              recommendationClosedAtKey: closedAt.toIso8601String(),
+            },
+          ),
+        );
+        await tester.pump();
+
+        final semantics = tester.getSemantics(
+          find.byType(ThirtyProgressCircle),
+        );
+        expect(semantics.label, "Today's Circle");
+        expect(semantics.value, 'Circle closed.');
+      });
+
+      testWidgets('a same-day restored started->closed transition updates the '
+          'existing semantics node rather than creating a new one', (
+        WidgetTester tester,
+      ) async {
+        final (widget, container) = await _wrapWithContainer();
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(widget);
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.byType(ThirtyButton));
+        await tester.tap(find.byType(ThirtyButton)); // Start.
+        await tester.pump();
+
+        final startedSemantics = tester.getSemantics(
+          find.byType(ThirtyProgressCircle),
+        );
+        expect(startedSemantics.value, 'Circle in progress. 0 of 30 minutes.');
+        final startedId = startedSemantics.id;
+
+        await _tapAndConfirmClose(tester); // Close.
+
+        final closedSemantics = tester.getSemantics(
+          find.byType(ThirtyProgressCircle),
+        );
+        expect(closedSemantics.value, 'Circle closed.');
+        expect(closedSemantics.id, startedId);
+      });
+    });
 
     group('Phase D1 ring — soft track, sage dot, 30-minute timer', () {
-      ThirtyProgressCircle circleWidget(WidgetTester tester) =>
-          tester.widget<ThirtyProgressCircle>(
-            find.byType(ThirtyProgressCircle),
-          );
+      ThirtyProgressCircle circleWidget(WidgetTester tester) => tester
+          .widget<ThirtyProgressCircle>(find.byType(ThirtyProgressCircle));
 
       Map<String, Object> restored(String status, {Duration? ranFor}) => {
         firstBreathLastPlayedDateKey: '2026-08-02',
@@ -1183,7 +1174,10 @@ void main() {
       ) async {
         await tester.pumpWidget(
           await _wrap(
-            storedPrefs: restored('closed', ranFor: const Duration(minutes: 20)),
+            storedPrefs: restored(
+              'closed',
+              ranFor: const Duration(minutes: 20),
+            ),
           ),
         );
         await tester.pump();
@@ -1207,42 +1201,39 @@ void main() {
     });
 
     group('Batch 1 — Close Circle confirmation (Phase B)', () {
-      testWidgets(
-        'tapping Close Circle shows the confirmation dialog before '
-        'changing any state',
-        (WidgetTester tester) async {
-          final (widget, container) = await _wrapWithContainer();
-          addTearDown(container.dispose);
+      testWidgets('tapping Close Circle shows the confirmation dialog before '
+          'changing any state', (WidgetTester tester) async {
+        final (widget, container) = await _wrapWithContainer();
+        addTearDown(container.dispose);
 
-          await tester.pumpWidget(widget);
-          await tester.pumpAndSettle();
-          await tester.ensureVisible(find.byType(ThirtyButton));
-          await tester.tap(find.byType(ThirtyButton)); // Start.
-          await tester.pump();
+        await tester.pumpWidget(widget);
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.byType(ThirtyButton));
+        await tester.tap(find.byType(ThirtyButton)); // Start.
+        await tester.pump();
 
-          await tester.tap(find.byType(ThirtyButton)); // Opens confirmation.
-          await tester.pump();
+        await tester.tap(find.byType(ThirtyButton)); // Opens confirmation.
+        await tester.pump();
 
-          expect(find.byType(AlertDialog), findsOneWidget);
-          expect(find.text("Close today's Circle?"), findsOneWidget);
-          expect(
-            find.text("You won't be able to reopen it until tomorrow."),
-            findsOneWidget,
-          );
-          expect(find.text('Keep Circle open'), findsOneWidget);
-          expect(
-            find.descendant(
-              of: find.byType(AlertDialog),
-              matching: find.text('Close Circle'),
-            ),
-            findsOneWidget,
-          );
-          // Opening the dialog alone must not have touched canonical state.
-          final state = container.read(recommendationProvider);
-          expect(state.status, RecommendationStatus.started);
-          expect(state.closedAt, isNull);
-        },
-      );
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text("Close today's Circle?"), findsOneWidget);
+        expect(
+          find.text("You won't be able to reopen it until tomorrow."),
+          findsOneWidget,
+        );
+        expect(find.text('Keep Circle open'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.text('Close Circle'),
+          ),
+          findsOneWidget,
+        );
+        // Opening the dialog alone must not have touched canonical state.
+        final state = container.read(recommendationProvider);
+        expect(state.status, RecommendationStatus.started);
+        expect(state.closedAt, isNull);
+      });
 
       testWidgets(
         '"Keep Circle open" leaves the active Circle completely unchanged',
@@ -1305,4 +1296,149 @@ void main() {
       );
     });
   });
+
+  group('World art snapshot', () {
+    Future<(Widget, ProviderContainer)> wrapAt(
+      DateTime Function() now, {
+      ActivityId activity = ActivityId.thirtyMinuteWalk,
+      bool firstBreathPlayed = true,
+    }) async {
+      final intention = Intention.values.firstWhere(
+        (i) => activityPools[i]!.contains(activity),
+      );
+      SharedPreferences.setMockInitialValues({
+        recommendationDayKey: '2026-08-02',
+        recommendationIntentionKey: intention.name,
+        recommendationActivityIdKey: activity.name,
+        if (firstBreathPlayed) firstBreathLastPlayedDateKey: '2026-08-02',
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          nowProvider.overrideWith((ref) => now()),
+          eventClockProvider.overrideWithValue(now),
+        ],
+      );
+      addTearDown(container.dispose);
+      return (
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: const Scaffold(body: CircleHero()),
+          ),
+        ),
+        container,
+      );
+    }
+
+    final afternoon = DateTime(2026, 8, 2, 17, 59);
+    final evening = DateTime(2026, 8, 2, 18);
+
+    for (final role in WorldSceneRole.values) {
+      final activity = ActivityId.values.firstWhere(
+        (a) => activityWorldRole(a) == role,
+      );
+      testWidgets('${role.name}: ${activity.name} shows the Hero and Card of '
+          'one resolved snapshot', (WidgetTester tester) async {
+        final (widget, _) = await wrapAt(() => afternoon, activity: activity);
+        await tester.pumpWidget(widget);
+        await tester.pumpAndSettle();
+
+        final expected = resolveWorldArt(activity, afternoon);
+        expect(_heroAsset(tester), expected.heroAsset);
+        expect(_cardAsset(tester), expected.cardAsset);
+        expect(
+          expected.heroAsset,
+          startsWith(
+            'assets/worlds/${expected.scene.sceneId.world}/'
+            '${expected.scene.sceneId.name}/',
+          ),
+        );
+        expect(expected.heroAsset, endsWith('/hero_day.webp'));
+        expect(expected.cardAsset, endsWith('/card_day.webp'));
+      });
+    }
+
+    testWidgets('holds its Daypart through First Breath, then settles on the '
+        're-resolved one', (WidgetTester tester) async {
+      var now = afternoon;
+      final (widget, container) = await wrapAt(
+        () => now,
+        firstBreathPlayed: false,
+      );
+      await tester.pumpWidget(widget);
+      await tester.pump(const Duration(milliseconds: _breatheEndMs));
+
+      // A resume across 18:00, mid-ritual.
+      now = evening;
+      container.invalidate(nowProvider);
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(_heroAsset(tester), endsWith('walk/hero_day.webp'));
+      expect(_cardAsset(tester), endsWith('walk/card_day.webp'));
+
+      await tester.pumpAndSettle();
+
+      expect(_heroAsset(tester), endsWith('walk/hero_evening.webp'));
+      expect(_cardAsset(tester), endsWith('walk/card_evening.webp'));
+    });
+
+    testWidgets('a re-resolution once settled switches Hero and Card '
+        'together', (WidgetTester tester) async {
+      var now = afternoon;
+      final (widget, container) = await wrapAt(() => now);
+      await tester.pumpWidget(widget);
+      await tester.pumpAndSettle();
+      expect(_heroAsset(tester), endsWith('walk/hero_day.webp'));
+
+      now = evening;
+      container.invalidate(nowProvider);
+      await tester.pumpAndSettle();
+
+      expect(_heroAsset(tester), endsWith('walk/hero_evening.webp'));
+      expect(_cardAsset(tester), endsWith('walk/card_evening.webp'));
+    });
+
+    testWidgets('World art never reaches the semantics tree', (
+      WidgetTester tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      final (widget, _) = await wrapAt(
+        () => afternoon,
+        activity: ActivityId.smallComfortRitual,
+      );
+      await tester.pumpWidget(widget);
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel(RegExp(r'assets/|\.webp')), findsNothing);
+      semantics.dispose();
+    });
+  });
+}
+
+/// The single asset the Circle's Hero shows (the settled child of its
+/// crossfade).
+String _heroAsset(WidgetTester tester) => _assetOf(
+  tester,
+  find.descendant(
+    of: find.byType(WorldHeroArtView),
+    matching: find.byType(Image),
+  ),
+);
+
+/// The single asset the Today card shows.
+String _cardAsset(WidgetTester tester) => _assetOf(
+  tester,
+  find.descendant(of: find.byType(TodayCard), matching: find.byType(Image)),
+);
+
+String _assetOf(WidgetTester tester, Finder images) {
+  final assets = tester
+      .widgetList<Image>(images)
+      .map((image) => (image.image as AssetImage).assetName)
+      .toSet();
+  expect(assets, hasLength(1));
+  return assets.single;
 }

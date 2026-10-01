@@ -1,11 +1,17 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/providers/clock_provider.dart';
 import '../../../core/worlds/daypart.dart';
 import '../../../core/worlds/place.dart';
+import '../../../core/worlds/registered_world_art.dart';
 import '../../../core/worlds/registered_worlds.dart';
 import '../../../core/worlds/world.dart';
+import '../../../core/worlds/world_art_manifest.dart';
 import '../../../core/worlds/world_definition.dart';
 import '../../../core/worlds/world_scene_policy.dart';
 import '../../../core/worlds/world_scene_role.dart';
 import 'activity_catalog.dart';
+import 'recommendation_provider.dart';
 
 /// The World, Scene and Daypart one activity is shown in at one moment —
 /// the single snapshot every visual expression of it must share
@@ -75,3 +81,69 @@ ResolvedWorldScene resolveWorldScene(
     daypart: daypartAt(now),
   );
 }
+
+/// One [ResolvedWorldScene] with the Hero and Card artwork of that same
+/// Scene and Daypart — resolved together, so the Circle Hero and the Today
+/// card can never show different Scenes or Dayparts (WORLD_SYSTEM.md §10a,
+/// "Hero ↔ Card continuity").
+class ResolvedWorldArt {
+  const ResolvedWorldArt({
+    required this.scene,
+    required this.heroAsset,
+    required this.cardAsset,
+    required this.heroScale,
+  });
+
+  final ResolvedWorldScene scene;
+  final String heroAsset;
+  final String cardAsset;
+
+  /// See [WorldSceneArt.heroScale].
+  final double heroScale;
+
+  @override
+  bool operator ==(Object other) =>
+      other is ResolvedWorldArt &&
+      other.scene == scene &&
+      other.heroAsset == heroAsset &&
+      other.cardAsset == cardAsset &&
+      other.heroScale == heroScale;
+
+  @override
+  int get hashCode => Object.hash(scene, heroAsset, cardAsset, heroScale);
+}
+
+/// [resolveWorldScene], then that Scene's Hero and Card for its Daypart
+/// from [manifest] (V1's [v1WorldArtManifest] by default).
+///
+/// Throws a [StateError] where [resolveWorldScene] does, or if the Scene
+/// has no artwork — never falls back to another Scene's artwork.
+ResolvedWorldArt resolveWorldArt(
+  ActivityId activityId,
+  DateTime now, {
+  DefaultWorldScenePolicy? policy,
+  WorldArtManifest? manifest,
+}) {
+  final scene = resolveWorldScene(activityId, now, policy: policy);
+  final art = (manifest ?? v1WorldArtManifest).art(scene.sceneId);
+  return ResolvedWorldArt(
+    scene: scene,
+    heroAsset: art.hero(scene.daypart),
+    cardAsset: art.card(scene.daypart),
+    heroScale: art.heroScale,
+  );
+}
+
+/// Today's World artwork, or `null` before an activity is assigned.
+///
+/// Resolved from [nowProvider] — Home's own moment, which also sets its
+/// greeting and is refreshed only on a foreground resume — so the Daypart
+/// holds steady while Home is open (WORLD_SYSTEM.md §10, "Stability").
+/// `CircleHero` additionally holds its snapshot through First Breath.
+final resolvedWorldArtProvider = Provider<ResolvedWorldArt?>((ref) {
+  final activityId = ref.watch(
+    recommendationProvider.select((state) => state.recommendation?.activityId),
+  );
+  if (activityId == null) return null;
+  return resolveWorldArt(activityId, ref.watch(nowProvider));
+});

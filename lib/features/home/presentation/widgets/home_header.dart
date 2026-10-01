@@ -14,11 +14,73 @@ class HomeBrandLockup extends StatelessWidget {
   static const wordmarkWidth = 96.0;
   static const tagline = ThirtyBrandLockup.tagline;
 
+  /// Small enough that the tagline stays within the wordmark's width, so
+  /// the Circle's top curve can rise beside the lockup (Design vision).
+  static const taglineFontSize = 8.0;
+
+  /// The lockup's fixed box: the wordmark's width, which the tagline never
+  /// exceeds, and room for the wordmark plus the two-line tagline. Fixed so
+  /// Home can place the Circle's top curve beside it.
+  static const width = wordmarkWidth;
+  static const height = 50.0;
+
   @override
   Widget build(BuildContext context) {
-    return const ThirtyBrandLockup(
-      wordmarkWidth: wordmarkWidth,
-      headerLabel: 'THIRTY',
+    // Scale down, never overflow: the box is a hard bound the Circle's
+    // placement relies on, whatever the platform font does to the tagline.
+    return const SizedBox(
+      width: width,
+      height: height,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.topLeft,
+        child: ThirtyBrandLockup(
+          wordmarkWidth: wordmarkWidth,
+          headerLabel: 'THIRTY',
+          taglineFontSize: taglineFontSize,
+        ),
+      ),
+    );
+  }
+}
+
+/// Home's header row (Phase D1): the brand lockup on the left gutter, the
+/// profile button on the right. It sits at the top of Home's scroll view
+/// and scrolls away with the Circle — never pinned over it — so the Circle
+/// can rise beside the lockup (Design vision) and is never covered.
+class HomeHeader extends StatelessWidget {
+  const HomeHeader({required this.showLockup, super.key});
+
+  /// Tall enough for the fixed-size lockup and the 48pt profile button.
+  static const height = 72.0;
+
+  /// The lockup is always laid out, only faded, so the header's height and
+  /// the Circle's position never change when it appears.
+  final bool showLockup;
+
+  @override
+  Widget build(BuildContext context) {
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
+    return SizedBox(
+      height: height,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+        child: Row(
+          children: [
+            AnimatedOpacity(
+              opacity: showLockup ? 1 : 0,
+              duration: reducedMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 400),
+              curve: Curves.easeOut,
+              child: const HomeBrandLockup(),
+            ),
+            const Spacer(),
+            // Phase D1 — a round shortcut to You, visible in every state.
+            const HomeProfileButton(),
+          ],
+        ),
+      ),
     );
   }
 }

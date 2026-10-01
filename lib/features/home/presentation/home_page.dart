@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/design_tokens.dart';
@@ -10,6 +11,7 @@ import '../application/recommendation_provider.dart';
 import 'widgets/action_report_prompt.dart';
 import 'widgets/circle_hero.dart';
 import 'widgets/circle_ready_prompt.dart';
+import 'widgets/home_circle_metrics.dart';
 import 'widgets/home_header.dart';
 import 'widgets/later_today_label.dart';
 
@@ -51,9 +53,8 @@ import 'widgets/later_today_label.dart';
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
-  /// Tall enough for the fixed-size brand lockup (wordmark + two-line
-  /// tagline) and the 48pt profile button.
-  static const _headerHeight = 72.0;
+  /// The least horizontal room between the lockup and the Circle's curve.
+  static const _lockupToCircleGap = AppSpacing.s;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,52 +70,62 @@ class HomePage extends ConsumerWidget {
     // outcome without touching its timeline.
     final showHeaderWordmark =
         hasRecommendation && !ref.watch(firstBreathProvider);
-    final reducedMotion = MediaQuery.disableAnimationsOf(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: _headerHeight,
-        titleSpacing: AppSpacing.page,
-        // Always laid out, only faded: the AppBar's height and the Circle's
-        // position never change when the lockup appears.
-        title: AnimatedOpacity(
-          opacity: showHeaderWordmark ? 1 : 0,
-          duration: reducedMotion
-              ? Duration.zero
-              : const Duration(milliseconds: 400),
-          curve: Curves.easeOut,
-          child: const HomeBrandLockup(),
-        ),
-        // Phase D1 — a round shortcut to You, visible in every Home state.
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: AppSpacing.page),
-            child: HomeProfileButton(),
+    final header = HomeHeader(showLockup: showHeaderWordmark);
+
+    // No pinned AppBar: the header row sits at the top of each state's
+    // scroll view and scrolls away with the Circle, so the Circle can rise
+    // beside the lockup (Design vision) and nothing is ever laid over it.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: Theme.of(context).brightness == Brightness.light
+          ? SystemUiOverlayStyle.dark
+          : SystemUiOverlayStyle.light,
+      child: Scaffold(
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final circleTop = _circleTop(constraints.maxWidth);
+              // Phase B3 — one vertical scroll owner per state:
+              // CircleHero's own scroll view carries the hero *and* every
+              // card below it, so a card extends the page instead of
+              // shrinking the hero. Ready has no below-hero cards and keeps
+              // its own scroll. Swapping Ready for CircleHero mounts a fresh
+              // scroll view, so The First Breath always starts with the
+              // Circle at its normal position.
+              return hasRecommendation
+                  ? CircleHero(
+                      header: header,
+                      topInset: circleTop,
+                      // Phase D1: today's Plan guidance first, then the
+                      // follow-ups under "LATER TODAY" (reflection, then
+                      // the reminder or Premium invitation — priority
+                      // unchanged).
+                      footer: const [
+                        PlanSessionPanel(),
+                        LaterTodayLabel(),
+                        ActionReportPrompt(),
+                        ReminderInvitationCard(),
+                        PremiumOfferInvitationCard(),
+                      ],
+                    )
+                  : CircleReadyPrompt(header: header, topInset: circleTop);
+            },
           ),
-        ],
-      ),
-      body: SafeArea(
-        // Phase B3 — one vertical scroll owner per state: CircleHero's own
-        // scroll view carries the hero *and* every card below it, so a card
-        // extends the page instead of shrinking the hero. Ready has no
-        // below-hero cards and keeps its own scroll. Swapping Ready for
-        // CircleHero mounts a fresh scroll view, so The First Breath always
-        // starts with the Circle at its normal position.
-        child: hasRecommendation
-            ? const CircleHero(
-                // Phase D1: today's Plan guidance first, then the
-                // follow-ups under "LATER TODAY" (reflection, then the
-                // reminder or Premium invitation — priority unchanged).
-                footer: [
-                  PlanSessionPanel(),
-                  LaterTodayLabel(),
-                  ActionReportPrompt(),
-                  ReminderInvitationCard(),
-                  PremiumOfferInvitationCard(),
-                ],
-              )
-            : const CircleReadyPrompt(),
+        ),
       ),
     );
+  }
+
+  /// Where the Circle's top edge sits, below the status bar: as high as
+  /// its curve can rise while staying clear of the header lockup on its
+  /// left, never above the lockup's own top and never below the header.
+  static double _circleTop(double width) {
+    const lockupTop = (HomeHeader.height - HomeBrandLockup.height) / 2;
+    const lockupBottom = lockupTop + HomeBrandLockup.height;
+    final clearDepth = HomeCircleMetrics.forWidth(width).clearDepthBeside(
+      AppSpacing.page + HomeBrandLockup.width + _lockupToCircleGap,
+      width,
+    );
+    return (lockupBottom - clearDepth).clamp(lockupTop, HomeHeader.height);
   }
 }

@@ -20,6 +20,7 @@ class ThirtyBrandLockup extends StatelessWidget {
     required this.wordmarkWidth,
     this.centered = false,
     this.headerLabel,
+    this.taglineFontSize,
     super.key,
   });
 
@@ -31,6 +32,11 @@ class ThirtyBrandLockup extends StatelessWidget {
 
   /// When set, the wordmark is a semantic header with this label.
   final String? headerLabel;
+
+  /// Overrides the tagline's size derived from [wordmarkWidth]; Home's
+  /// header uses it to keep the tagline about as wide as a small wordmark
+  /// (THIRTY_WORDMARK.md, Phase D1 amendment).
+  final double? taglineFontSize;
 
   static const tagline = 'A brighter you in small steps';
 
@@ -45,7 +51,9 @@ class ThirtyBrandLockup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
-    final fontSize = math.max(_minFontSize, wordmarkWidth * _fontSizeRatio);
+    final fontSize =
+        taglineFontSize ??
+        math.max(_minFontSize, wordmarkWidth * _fontSizeRatio);
     return MediaQuery.withNoTextScaling(
       child: Column(
         mainAxisSize: MainAxisSize.min,

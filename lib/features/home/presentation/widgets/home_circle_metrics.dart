@@ -32,7 +32,7 @@ class HomeCircleMetrics {
         .toDouble();
     return HomeCircleMetrics._(
       circleSize: circleSize,
-      textMaxWidth: circleSize * _textColumnWidthFraction,
+      textMaxWidth: safeMaxSize * _textColumnWidthFraction,
     );
   }
 
@@ -40,8 +40,10 @@ class HomeCircleMetrics {
   // it stays the screen's dominant object on both small and large phones.
   // 88% is an intentionally oversized, near-edge-to-edge scale — this is
   // the product's hero object, not a widget sized to sit comfortably in a
-  // grid. _circleMaxSize is a ceiling for large screens; the safe-width
-  // check above is what actually guarantees the Circle is never clipped.
+  // grid. Its top curve still rises beside Home's header lockup (see
+  // [clearDepthBeside]), as in the Design vision. _circleMaxSize is a
+  // ceiling for large screens; the safe-width check above is what actually
+  // guarantees the Circle is never clipped.
   static const _circleWidthFraction = 0.88;
   static const _circleMinSize = 260.0;
   static const _circleMaxSize = 440.0;
@@ -52,9 +54,10 @@ class HomeCircleMetrics {
   // 416px interior → ~243px wordmark).
   static const _wordmarkWidthFraction = 0.585;
 
-  // The text column beneath the Circle reads as its caption, not as an
-  // independent block — so its max width is derived from the Circle's own
-  // size rather than from the screen, and stays narrower than the Circle.
+  // The text column beneath the Circle is a bounded share of the page's
+  // content width (the largest the Circle may be), not of the Circle
+  // itself, so the greeting's subline wraps the same way at any Circle
+  // size.
   // Since Phase B2 the hero CTA fills this same column (never the screen).
   static const _textColumnWidthFraction = 0.85;
 
@@ -63,16 +66,23 @@ class HomeCircleMetrics {
 
   /// Circle → first element beneath it (Begin CTA / directions in Ready,
   /// the greeting in Circle Hero).
-  static const circleToContentGap = AppSpacing.section;
+  static const circleToContentGap = AppSpacing.m;
 
   /// Phase D1 — greeting → its subline.
   static const greetingToSublineGap = AppSpacing.s;
 
   /// Phase D1 — greeting block → the Today card.
-  static const greetingToCardGap = AppSpacing.l;
+  static const greetingToCardGap = AppSpacing.m;
 
   /// Phase D1 — the Today card → the CTA (or the closed-state message).
   static const cardToCtaGap = AppSpacing.m;
+
+  /// Near-fit compact rhythm (Circle Hero only): when the usual gaps would
+  /// leave Start Circle just below the fold, circle → greeting, greeting →
+  /// card and card → CTA each tighten to this, and the CTA keeps at least
+  /// this much room above the fold. Larger overflow keeps the usual gaps
+  /// and scrolls.
+  static const compactGap = AppSpacing.s;
 
   /// Phase D1 ring (Design vision): a thin ring inset inside the halo
   /// disc, a sage dot marking the arc's leading end, and a small band of
@@ -93,12 +103,13 @@ class HomeCircleMetrics {
   /// status bar, and leftover space on a short screen lands below the CTA.
   static const padding = EdgeInsets.fromLTRB(
     AppSpacing.page,
-    AppSpacing.m,
+    0,
     AppSpacing.page,
     AppSpacing.xl,
   );
 
   final double circleSize;
+
   /// The bounded Home content column: the text and the hero CTA share it.
   final double textMaxWidth;
 
@@ -114,6 +125,18 @@ class HomeCircleMetrics {
   double get interiorSize => circleSize - _wordmarkInset * 2;
 
   double get wordmarkWidth => interiorSize * _wordmarkWidthFraction;
+
+  /// How far below its top edge the Circle, centered in [maxWidth], stays
+  /// entirely right of [x] — i.e. how deep the Circle's top may overlap
+  /// something that ends at [x] on its left. Infinite when the Circle
+  /// never reaches that far left.
+  double clearDepthBeside(double x, double maxWidth) {
+    final radius = circleSize / 2;
+    final reach = maxWidth / 2 - x;
+    if (reach >= radius) return double.infinity;
+    if (reach <= 0) return 0;
+    return radius - math.sqrt(radius * radius - reach * reach);
+  }
 }
 
 /// The Home Circle (Phase D1), shared by Ready and the assigned states so
