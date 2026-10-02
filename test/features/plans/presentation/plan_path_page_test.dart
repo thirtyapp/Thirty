@@ -1,42 +1,37 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/theme/design_tokens.dart';
+import 'package:thirty/core/widgets/thirty_card.dart';
 import 'package:thirty/features/insights/presentation/widgets/insight_card.dart';
 import 'package:thirty/features/plans/application/plan_provider.dart';
-import 'package:thirty/features/plans/domain/plan_catalog.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
-import 'package:thirty/features/plans/domain/plan_state.dart';
+import 'package:thirty/features/plans/presentation/plan_detail_page.dart';
 import 'package:thirty/features/plans/presentation/plan_path_page.dart';
-import 'package:thirty/core/widgets/thirty_card.dart';
+import 'package:thirty/features/plans/presentation/widgets/plan_card.dart';
+import 'package:thirty/features/plans/presentation/widgets/plans_header_art.dart';
 
-final _today = DateTime(2026, 8, 2);
+final _today = DateTime(2026, 8, 2, 14);
 
-/// `entitled` defaults to `true` — every pre-existing test below exercises
-/// the full Plan-management experience (activate, revisit, repeat, pause),
-/// which is only ever reachable while entitled now that
-/// `PlanNotifier`'s mutation methods and `PlanPathPage.build()` itself
-/// branch on `premiumEntitlementProvider` (Batch A correction). The
-/// `entitled: false` group below covers the unentitled preview branch this
-/// same correction adds. This still hosts a plain `MaterialApp` (no
-/// `GoRouter`), matching `settings_page_test.dart`'s own convention of
-/// verifying a `context.push`-driven button's presence/label without
-/// tapping it — real end-to-end `/plans` → `/premium` navigation is
-/// covered separately in `app_router_test.dart` against the real app.
-Future<(Widget, ProviderContainer)> _wrap({
+/// The Plans list inside a minimal router with Your Path as its child, so
+/// a card tap really navigates. The list itself never hosts a Plan action
+/// any more — those are covered in `plan_detail_page_test.dart`.
+Future<ProviderContainer> _pump(
+  WidgetTester tester, {
   bool entitled = true,
-  Map<String, Object> storedPrefs = const {},
 }) async {
-  SharedPreferences.setMockInitialValues(storedPrefs);
+  tester.view.physicalSize = const Size(412, 2400);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
-
   final container = ProviderContainer(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
@@ -45,260 +40,192 @@ Future<(Widget, ProviderContainer)> _wrap({
       premiumEntitlementProvider.overrideWithValue(entitled),
     ],
   );
-  final widget = UncontrolledProviderScope(
-    container: container,
-    child: MaterialApp(theme: AppTheme.light, home: const PlanPathPage()),
+  addTearDown(container.dispose);
+  final router = GoRouter(
+    initialLocation: '/plans',
+    routes: [
+      GoRoute(
+        path: '/plans',
+        builder: (_, _) => const PlanPathPage(),
+        routes: [
+          GoRoute(
+            path: ':planId',
+            builder: (_, state) => PlanDetailPage(
+              planId: PlanId.values.byName(state.pathParameters['planId']!),
+            ),
+          ),
+        ],
+      ),
+    ],
   );
-  return (widget, container);
+  addTearDown(router.dispose);
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+    ),
+  );
+  await tester.pumpAndSettle();
+  return container;
 }
 
 void main() {
-  testWidgets('lists all three Plans by name', (tester) async {
-    final (widget, container) = await _wrap();
-    addTearDown(container.dispose);
-    await tester.pumpWidget(widget);
+  testWidgets('lists all three Plans by name, each as a PlanCard', (
+    tester,
+  ) async {
+    await _pump(tester);
 
     expect(find.text('More Energy Path'), findsOneWidget);
     expect(find.text('Clearer Head Path'), findsOneWidget);
     expect(find.text('Gentler Pace Path'), findsOneWidget);
+    expect(find.byType(PlanCard), findsNWidgets(3));
   });
 
-  testWidgets('an inactive, never-started Plan shows Activate', (
+  testWidgets('the header: Your Plans, its supporting line, and the full-'
+      'width art band for the current daypart at its own proportions', (
     tester,
   ) async {
-    final (widget, container) = await _wrap();
-    addTearDown(container.dispose);
-    await tester.pumpWidget(widget);
+    await _pump(tester);
 
-    expect(find.text('Activate'), findsNWidgets(3));
+    expect(find.text(PlanPathPage.title), findsOneWidget);
+    expect(find.text(PlanPathPage.subtitle), findsOneWidget);
+    // 14:00 is the afternoon daypart, whose artwork is named `day`.
+    final image = tester.widget<Image>(
+      find.descendant(
+        of: find.byType(PlansHeaderArt),
+        matching: find.byType(Image),
+      ),
+    );
+    expect(
+      (image.image as AssetImage).assetName,
+      'assets/plans/plans_header_day_v1.webp',
+    );
+    final band = tester.getSize(find.byType(PlansHeaderArt));
+    expect(band.width, 412, reason: 'edge to edge, outside the page inset');
+    expect(
+      band.width / band.height,
+      closeTo(PlansHeaderArt.bandAspectRatio, 0.01),
+    );
+    final fit = tester.widget<Image>(
+      find.descendant(
+        of: find.byType(PlansHeaderArt),
+        matching: find.byType(Image),
+      ),
+    );
+    expect(fit.fit, BoxFit.cover, reason: 'scaled and centred, not stretched');
+    // Between the supporting line and the first Plan card.
+    expect(
+      tester.getTopLeft(find.byType(PlansHeaderArt)).dy,
+      greaterThan(tester.getBottomLeft(find.text(PlanPathPage.subtitle)).dy),
+    );
+    expect(
+      tester.getBottomLeft(find.byType(PlansHeaderArt)).dy,
+      lessThan(tester.getTopLeft(find.byType(PlanCard).first).dy),
+    );
+    // No pinned bar: the header scrolls with the page, like Home.
+    expect(find.byType(AppBar), findsNothing);
   });
 
-  testWidgets('tapping Activate makes that Plan active and shows an '
-      '"Active" label', (tester) async {
-    final (widget, container) = await _wrap();
-    addTearDown(container.dispose);
-    await tester.pumpWidget(widget);
+  testWidgets('the list hosts no Plan action — every action lives on Your '
+      'Path', (tester) async {
+    await _pump(tester);
 
-    await tester.tap(find.text('Activate').first);
-    await tester.pump();
+    for (final label in [
+      'Activate',
+      'Resume',
+      'Repeat this cycle',
+      'Queue a revisit of the last stage',
+      'Pause this plan',
+    ]) {
+      expect(find.text(label), findsNothing, reason: label);
+    }
+  });
 
-    expect(container.read(planProvider).activePlanId, isNotNull);
+  testWidgets('tapping a Plan card opens that Plan\'s Your Path', (
+    tester,
+  ) async {
+    await _pump(tester);
+
+    await tester.tap(find.text('Clearer Head Path'));
+    await tester.pumpAndSettle();
+
+    final detail = tester.widget<PlanDetailPage>(find.byType(PlanDetailPage));
+    expect(detail.planId, PlanId.clearerHeadPath);
+  });
+
+  testWidgets('the active Plan\'s card carries the Active tag', (tester) async {
+    final container = await _pump(tester);
+    container.read(planProvider.notifier).activatePlan(PlanId.gentlerPacePath);
+    await tester.pumpAndSettle();
+
     expect(find.text('Active'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.widgetWithText(PlanCard, 'Gentler Pace Path'),
+        matching: find.byType(PlanActiveTag),
+      ),
+      findsOneWidget,
+    );
   });
 
-  testWidgets(
-    'a completed cycle shows the plain finished-cycle state and a Repeat '
-    'action, never an automatic restart',
-    (tester) async {
-      final (widget, container) = await _wrap();
-      addTearDown(container.dispose);
-      final notifier = container.read(planProvider.notifier);
-      notifier.activatePlan(PlanId.moreEnergyPath);
-      for (var i = 0; i < 5; i++) {
-        notifier.advanceCursorForCircle(
-          PlanId.moreEnergyPath,
-          'circle-$i',
-          isRevisit: false,
-        );
+  testWidgets('each card\'s progress is one spoken position, never colour '
+      'alone', (tester) async {
+    final container = await _pump(tester);
+    final notifier = container.read(planProvider.notifier);
+    notifier.activatePlan(PlanId.moreEnergyPath);
+    notifier.advanceCursorForCircle(
+      PlanId.moreEnergyPath,
+      'circle-0',
+      isRevisit: false,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsLabel('Stage 2 of 5, 1 closed.'), findsOneWidget);
+    expect(find.bySemanticsLabel('5 stages. Not started.'), findsNWidgets(2));
+  });
+
+  testWidgets('no longer hosts InsightCard — it moved to its own Insights '
+      'destination in Batch B (see insights_page_test.dart)', (tester) async {
+    await _pump(tester);
+
+    expect(find.byType(InsightCard), findsNothing);
+  });
+
+  group('Batch A — unentitled Free list', () {
+    testWidgets('shows each Plan\'s name and purpose, no interactive '
+        'controls, and one Become Premium action (Phase C3 copy)', (
+      tester,
+    ) async {
+      await _pump(tester, entitled: false);
+
+      expect(find.text('More Energy Path'), findsOneWidget);
+      expect(find.text('Clearer Head Path'), findsOneWidget);
+      expect(find.text('Gentler Pace Path'), findsOneWidget);
+      expect(find.text('Activate'), findsNothing);
+      expect(find.text('Pause this plan'), findsNothing);
+      expect(find.text('Become Premium'), findsOneWidget);
+      expect(find.text('Open Premium'), findsNothing);
+    });
+
+    testWidgets('the Premium card keeps its featured padding; Plan cards are '
+        'edge-to-edge art cards, like Home\'s Today card', (tester) async {
+      await _pump(tester, entitled: false);
+
+      final premium = tester.widget<ThirtyCard>(
+        find.ancestor(
+          of: find.text('THIRTY Premium'),
+          matching: find.byType(ThirtyCard),
+        ),
+      );
+      expect(premium.padding, const EdgeInsets.all(AppSpacing.featuredCard));
+      for (final card in tester.widgetList<ThirtyCard>(
+        find.descendant(
+          of: find.byType(PlanCard),
+          matching: find.byType(ThirtyCard),
+        ),
+      )) {
+        expect(card.padding, EdgeInsets.zero);
       }
-
-      await tester.pumpWidget(widget);
-
-      expect(find.text('This guided cycle is finished.'), findsOneWidget);
-      expect(find.text('Repeat this cycle'), findsOneWidget);
-      expect(
-        notifier.progressFor(PlanId.moreEnergyPath).status,
-        PlanCycleStatus.completed,
-      );
-    },
-  );
-
-  testWidgets('tapping Repeat this cycle starts a new cycle', (
-    tester,
-  ) async {
-    final (widget, container) = await _wrap();
-    addTearDown(container.dispose);
-    final notifier = container.read(planProvider.notifier);
-    notifier.activatePlan(PlanId.moreEnergyPath);
-    for (var i = 0; i < 5; i++) {
-      notifier.advanceCursorForCircle(
-        PlanId.moreEnergyPath,
-        'circle-$i',
-        isRevisit: false,
-      );
-    }
-    await tester.pumpWidget(widget);
-
-    await tester.tap(find.text('Repeat this cycle'));
-    await tester.pump();
-
-    expect(
-      notifier.progressFor(PlanId.moreEnergyPath).status,
-      PlanCycleStatus.inProgress,
-    );
-    expect(find.text('This guided cycle is finished.'), findsNothing);
-  });
-
-  testWidgets('an active, in-progress Plan with an encountered stage '
-      'offers to queue a revisit', (tester) async {
-    final (widget, container) = await _wrap();
-    addTearDown(container.dispose);
-    final notifier = container.read(planProvider.notifier);
-    notifier.activatePlan(PlanId.moreEnergyPath);
-    notifier.advanceCursorForCircle(
-      PlanId.moreEnergyPath,
-      'circle-0',
-      isRevisit: false,
-    );
-
-    await tester.pumpWidget(widget);
-
-    expect(find.text('Queue a revisit of the last stage'), findsOneWidget);
-
-    await tester.tap(find.text('Queue a revisit of the last stage'));
-    await tester.pump();
-
-    expect(
-      notifier.progressFor(PlanId.moreEnergyPath).pendingRevisit,
-      isTrue,
-    );
-    expect(find.text('Clear queued revisit'), findsOneWidget);
-  });
-
-  testWidgets('Pause this plan deactivates without erasing progress', (
-    tester,
-  ) async {
-    final (widget, container) = await _wrap();
-    addTearDown(container.dispose);
-    final notifier = container.read(planProvider.notifier);
-    notifier.activatePlan(PlanId.moreEnergyPath);
-    notifier.advanceCursorForCircle(
-      PlanId.moreEnergyPath,
-      'circle-0',
-      isRevisit: false,
-    );
-    await tester.pumpWidget(widget);
-
-    await tester.tap(find.text('Pause this plan'));
-    await tester.pump();
-
-    expect(container.read(planProvider).activePlanId, isNull);
-    expect(notifier.progressFor(PlanId.moreEnergyPath).forwardCursor, 1);
-    // Switching away leaves a "Resume" (not "Activate") affordance, since
-    // this Plan has already been started.
-    expect(find.text('Resume'), findsOneWidget);
-  });
-
-  testWidgets(
-    'no longer hosts InsightCard — it moved to its own Insights '
-    'destination in Batch B (see insights_page_test.dart)',
-    (tester) async {
-      final (widget, container) = await _wrap();
-      addTearDown(container.dispose);
-
-      await tester.pumpWidget(widget);
-
-      expect(find.byType(InsightCard), findsNothing);
-    },
-  );
-
-  group('Batch A — unentitled Free preview', () {
-    testWidgets(
-      'shows each Plan\'s name and purpose, no interactive controls, and '
-      'a Become Premium action (Phase C3 copy)',
-      (tester) async {
-        final (widget, container) = await _wrap(entitled: false);
-        addTearDown(container.dispose);
-
-        await tester.pumpWidget(widget);
-
-        expect(find.text('More Energy Path'), findsOneWidget);
-        expect(find.text('Clearer Head Path'), findsOneWidget);
-        expect(find.text('Gentler Pace Path'), findsOneWidget);
-        expect(find.text('Activate'), findsNothing);
-        expect(find.text('Resume'), findsNothing);
-        expect(find.text('Pause this plan'), findsNothing);
-        expect(find.text('Queue a revisit of the last stage'), findsNothing);
-        await tester.scrollUntilVisible(find.text('Become Premium'), 200);
-        expect(find.text('Become Premium'), findsOneWidget);
-        expect(find.text('Open Premium'), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'a direct activatePlan() call while unentitled is a no-op — the '
-      'preview never gains interactive controls',
-      (tester) async {
-        final (widget, container) = await _wrap(entitled: false);
-        addTearDown(container.dispose);
-        container
-            .read(planProvider.notifier)
-            .activatePlan(PlanId.moreEnergyPath);
-
-        await tester.pumpWidget(widget);
-
-        expect(container.read(planProvider).activePlanId, isNull);
-        expect(find.text('Active'), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'a saved position from before entitlement was lost stays visible, '
-      'read-only, in the preview',
-      (tester) async {
-        final (widget, container) = await _wrap(
-          entitled: false,
-          storedPrefs: {
-            plansStateKey: jsonEncode({
-              'schemaVersion': plansStateSchemaVersion,
-              'activePlanId': PlanId.gentlerPacePath.name,
-              'progress': {
-                for (final id in PlanId.values)
-                  id.name: {
-                    'planId': id.name,
-                    'contentVersion': planContentVersion,
-                    'cycleId': '${id.name}_cycle_1',
-                    'cycleStartedAt': _today.toIso8601String(),
-                    'forwardCursor': id == PlanId.gentlerPacePath ? 1 : 0,
-                    'lastEncounteredStageId': id == PlanId.gentlerPacePath
-                        ? stageAt(PlanId.gentlerPacePath, 0).id
-                        : null,
-                    'pendingRevisit': false,
-                    'status': PlanCycleStatus.inProgress.name,
-                    'cycleHistory': <Object?>[],
-                    'lastAdvancedCircleId': null,
-                  },
-              },
-            }),
-          },
-        );
-        addTearDown(container.dispose);
-
-        await tester.pumpWidget(widget);
-
-        expect(find.textContaining('Saved at stage 2 of 5'), findsOneWidget);
-        expect(find.text('Resume'), findsNothing);
-        expect(find.text('Pause this plan'), findsNothing);
-      },
-    );
-  });
-
-  group('Phase A2 — Plan cards are featured cards', () {
-    for (final entitled in [true, false]) {
-      testWidgets('entitled: $entitled — every Plan card uses featuredCard '
-          'padding', (tester) async {
-        final (widget, container) = await _wrap(entitled: entitled);
-        addTearDown(container.dispose);
-
-        await tester.pumpWidget(widget);
-        await tester.pumpAndSettle();
-
-        final cards = tester.widgetList<ThirtyCard>(find.byType(ThirtyCard));
-        expect(cards, isNotEmpty);
-        for (final card in cards) {
-          expect(card.padding, const EdgeInsets.all(AppSpacing.featuredCard));
-        }
-      });
-    }
+    });
   });
 }

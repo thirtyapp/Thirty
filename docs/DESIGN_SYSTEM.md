@@ -158,6 +158,18 @@ Material's generated accent slots are pinned to these roles in `app_theme.dart`:
 | `ringProgress` vs `ringTrack` | 3.91:1 | 3.88:1 | 3:1 |
 | SnackBar action (`inversePrimary`) on `inverseSurface` | 5.03:1 | 5.81:1 | 4.5:1 |
 
+### 2.10 Plans identity tints and marks (V1, frozen)
+
+Founder-approved with the Plans convergence (2026-10-01/02). These are **Plans presentation tokens**, defined in `lib/features/plans/presentation/widgets/plan_identity.dart` and used only by the Plan card and Your Path — **not** new global semantic colors, not fields on `AppColors`, and not brand colors. Each Plan has a tint (`fill` behind its mark) and a mark color (the mark and closed progress nodes), with a light and a dark value, plus one drawn single-weight mark.
+
+| Plan | Tint | Light fill / mark | Dark fill / mark | Mark |
+|---|---|---|---|---|
+| More Energy | Sage (Home's Today chip pair) | `#E9EEE6` / `#67735A` | `#525A49` / `#B4C1A6` | Sprout |
+| Clearer Head | Mist blue-grey | `#E6EBEE` / `#5F7182` | `#47515A` / `#B3C2CE` | Aperture |
+| Gentler Pace | Warm sand | `#F2EBDF` / `#85694A` | `#575043` / `#D6C3A3` | Nested arcs |
+
+The Plans visual treatment — header hierarchy and spacing, the panorama header band and its daypart art, the card family, these identity tints and marks, the five-node progress, and Your Path's structure — is **V1-approved and frozen**: change it only for a real regression or an explicit founder decision.
+
 ---
 
 ## 3. Dark mode: ratified extension of the light palette (Phase A5)

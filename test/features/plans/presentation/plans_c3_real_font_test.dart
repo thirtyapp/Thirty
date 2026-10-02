@@ -18,11 +18,14 @@ import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/plans/application/plan_provider.dart';
 import 'package:thirty/features/plans/domain/plan_catalog.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
+import 'package:thirty/features/plans/presentation/plan_detail_page.dart';
 import 'package:thirty/features/plans/presentation/plan_path_page.dart';
 
-/// Phase C3 — Plans with the app's real fonts loaded: every Plan state
-/// (and Home's Coach banner) at 320 / 360pt and 200% text, light and dark
-/// — nothing truncated, nothing overflowing, the whole list reachable.
+/// Phase C3, extended for the Plans convergence (2026-10-01) — Plans and
+/// Your Path with the app's real fonts loaded (Inter and the Newsreader
+/// serif of their titles): every Plan state, on both pages, and Home's
+/// Coach banner, at 320 / 360pt and 200% text, light and dark — nothing
+/// truncated, nothing overflowing, everything reachable.
 
 final _today = DateTime(2026, 8, 10, 9);
 
@@ -82,6 +85,7 @@ void main() {
       'assets/fonts/Inter-Medium.ttf',
       'assets/fonts/Inter-SemiBold.ttf',
     ]);
+    await _loadFont('Newsreader', ['assets/fonts/Newsreader[opsz,wght].ttf']);
   });
 
   const states = [
@@ -97,114 +101,129 @@ void main() {
 
   for (final width in [320.0, 360.0]) {
     for (final state in states) {
-      for (final (themeName, theme) in [
-        ('light', AppTheme.light),
-        ('dark', AppTheme.dark),
+      for (final page in [
+        'Plans',
+        if (state != 'Home Coach banner') 'Your Path',
       ]) {
-        testWidgets('${width.toInt()}pt, 200%, $state, $themeName: nothing '
-            'truncated or overflowing', (tester) async {
-          tester.view.physicalSize = Size(width, 4000);
-          tester.view.devicePixelRatio = 1.0;
-          addTearDown(tester.view.resetPhysicalSize);
-          addTearDown(tester.view.resetDevicePixelRatio);
+        for (final (themeName, theme) in [
+          ('light', AppTheme.light),
+          ('dark', AppTheme.dark),
+        ]) {
+          testWidgets('${width.toInt()}pt, 200%, $state, '
+              '${state == 'Home Coach banner' ? 'Home' : page}, $themeName: '
+              'nothing truncated or overflowing', (tester) async {
+            tester.view.physicalSize = Size(width, 4000);
+            tester.view.devicePixelRatio = 1.0;
+            addTearDown(tester.view.resetPhysicalSize);
+            addTearDown(tester.view.resetDevicePixelRatio);
 
-          SharedPreferences.setMockInitialValues({});
-          final prefs = await SharedPreferences.getInstance();
-          final free = state.startsWith('free');
-          final container = ProviderContainer(
-            overrides: [
-              sharedPreferencesProvider.overrideWithValue(prefs),
-              nowProvider.overrideWithValue(_today),
-              eventClockProvider.overrideWithValue(() => _today),
-              premiumEntitlementProvider.overrideWithValue(!free),
-            ],
-          );
-          addTearDown(container.dispose);
-          // Plan progress is built while entitled (a saved position a Free
-          // user sees was earned while Premium).
-          final entitled = ProviderContainer(
-            parent: container,
-            overrides: [premiumEntitlementProvider.overrideWithValue(true)],
-          );
-          addTearDown(entitled.dispose);
-          final plans = entitled.read(planProvider.notifier);
-          switch (state) {
-            case 'free with a saved position' || 'active, started':
-              plans.activatePlan(PlanId.moreEnergyPath);
-              plans.advanceCursorForCircle(
-                PlanId.moreEnergyPath,
-                'c0',
-                isRevisit: false,
-              );
-            case 'revisit queued':
-              plans.activatePlan(PlanId.moreEnergyPath);
-              plans.advanceCursorForCircle(
-                PlanId.moreEnergyPath,
-                'c0',
-                isRevisit: false,
-              );
-              plans.queueRevisit();
-            case 'cycle completed':
-              plans.activatePlan(PlanId.moreEnergyPath);
-              for (var i = 0; i < 5; i++) {
+            SharedPreferences.setMockInitialValues({});
+            final prefs = await SharedPreferences.getInstance();
+            final free = state.startsWith('free');
+            final container = ProviderContainer(
+              overrides: [
+                sharedPreferencesProvider.overrideWithValue(prefs),
+                nowProvider.overrideWithValue(_today),
+                eventClockProvider.overrideWithValue(() => _today),
+                premiumEntitlementProvider.overrideWithValue(!free),
+              ],
+            );
+            addTearDown(container.dispose);
+            // Plan progress is built while entitled (a saved position a Free
+            // user sees was earned while Premium).
+            final entitled = ProviderContainer(
+              parent: container,
+              overrides: [premiumEntitlementProvider.overrideWithValue(true)],
+            );
+            addTearDown(entitled.dispose);
+            final plans = entitled.read(planProvider.notifier);
+            switch (state) {
+              case 'free with a saved position' || 'active, started':
+                plans.activatePlan(PlanId.moreEnergyPath);
                 plans.advanceCursorForCircle(
                   PlanId.moreEnergyPath,
-                  'c$i',
+                  'c0',
                   isRevisit: false,
                 );
-              }
-            case 'Coach with both shortcuts' || 'Home Coach banner':
-              await _seedCoachShortcuts(plans, container);
-          }
+              case 'revisit queued':
+                plans.activatePlan(PlanId.moreEnergyPath);
+                plans.advanceCursorForCircle(
+                  PlanId.moreEnergyPath,
+                  'c0',
+                  isRevisit: false,
+                );
+                plans.queueRevisit();
+              case 'cycle completed':
+                plans.activatePlan(PlanId.moreEnergyPath);
+                for (var i = 0; i < 5; i++) {
+                  plans.advanceCursorForCircle(
+                    PlanId.moreEnergyPath,
+                    'c$i',
+                    isRevisit: false,
+                  );
+                }
+              case 'Coach with both shortcuts' || 'Home Coach banner':
+                await _seedCoachShortcuts(plans, container);
+            }
 
-          final isHome = state == 'Home Coach banner';
-          await tester.pumpWidget(
-            UncontrolledProviderScope(
-              container: container,
-              child: MaterialApp(
-                theme: theme,
-                home: Builder(
-                  builder: (context) => MediaQuery(
-                    data: MediaQuery.of(context).copyWith(
-                      textScaler: const TextScaler.linear(2.0),
-                    ),
-                    child: isHome
-                        // Home's Plan session panel width: the page inset.
-                        ? const Scaffold(
-                            body: Padding(
-                              padding: EdgeInsets.all(AppSpacing.page),
-                              child: CoachCueBanner(
-                                planId: PlanId.moreEnergyPath,
+            final isHome = state == 'Home Coach banner';
+            await tester.pumpWidget(
+              UncontrolledProviderScope(
+                container: container,
+                child: MaterialApp(
+                  theme: theme,
+                  home: Builder(
+                    builder: (context) => MediaQuery(
+                      data: MediaQuery.of(
+                        context,
+                      ).copyWith(textScaler: const TextScaler.linear(2.0)),
+                      child: isHome
+                          // Home's Plan session panel width: the page inset.
+                          ? const Scaffold(
+                              body: Padding(
+                                padding: EdgeInsets.all(AppSpacing.page),
+                                child: CoachCueBanner(
+                                  planId: PlanId.moreEnergyPath,
+                                ),
                               ),
-                            ),
-                          )
-                        : const PlanPathPage(),
+                            )
+                          : page == 'Plans'
+                          ? const PlanPathPage()
+                          : const PlanDetailPage(planId: PlanId.moreEnergyPath),
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-          await tester.pump();
-
-          expect(tester.takeException(), isNull);
-          final truncated = [
-            for (final element in find.byType(RichText).evaluate())
-              if ((element.renderObject! as RenderParagraph).didExceedMaxLines)
-                (element.renderObject! as RenderParagraph).text.toPlainText(),
-          ];
-          expect(truncated, isEmpty);
-
-          if (state == 'Coach with both shortcuts' || isHome) {
-            expect(find.text('Try lighter guidance today'), findsOneWidget);
-          }
-          if (free) {
-            await tester.scrollUntilVisible(
-              find.text('Become Premium'),
-              300,
             );
+            await tester.pump();
+
             expect(tester.takeException(), isNull);
-          }
-        });
+            final truncated = [
+              for (final element in find.byType(RichText).evaluate())
+                if ((element.renderObject! as RenderParagraph)
+                    .didExceedMaxLines)
+                  (element.renderObject! as RenderParagraph).text.toPlainText(),
+            ];
+            expect(truncated, isEmpty);
+
+            // The Coach cue lives on Your Path (and Home), not the list.
+            if ((state == 'Coach with both shortcuts' && page == 'Your Path') ||
+                isHome) {
+              // Home's banner-only scaffold has nothing to scroll.
+              if (!isHome) {
+                await tester.scrollUntilVisible(
+                  find.text('Try lighter guidance today'),
+                  300,
+                );
+              }
+              expect(find.text('Try lighter guidance today'), findsOneWidget);
+            }
+            if (free) {
+              await tester.scrollUntilVisible(find.text('Become Premium'), 300);
+              expect(tester.takeException(), isNull);
+            }
+          });
+        }
       }
     }
   }

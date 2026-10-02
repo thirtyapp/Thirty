@@ -89,6 +89,8 @@ flutter:
     - assets/worlds/reading_nook/listen/
     - assets/worlds/garden_window/tend/
     - assets/worlds/garden_window/comfort/
+    # The Plans header band (`plans_header_art.dart`), one per daypart.
+    - assets/plans/
     - assets/brand/
 
   fonts:

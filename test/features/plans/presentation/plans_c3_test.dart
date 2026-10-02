@@ -17,6 +17,7 @@ import 'package:thirty/features/plans/application/plan_provider.dart';
 import 'package:thirty/features/plans/domain/plan_catalog.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
 import 'package:thirty/features/plans/domain/plan_state.dart';
+import 'package:thirty/features/plans/presentation/plan_detail_page.dart';
 import 'package:thirty/features/plans/presentation/plan_path_page.dart';
 
 /// Phase C3 — Plans: in-list Free upsell, action hierarchy, quiet
@@ -42,7 +43,9 @@ Future<ProviderContainer> _container({bool entitled = true}) async {
 Future<void> _pump(
   WidgetTester tester,
   ProviderContainer container, {
-  Widget? child,
+  // Plan actions and the Coach cue live on Your Path since the Plans
+  // convergence (2026-10-01); the Free ordering test pumps the list.
+  Widget child = const PlanDetailPage(planId: PlanId.moreEnergyPath),
 }) async {
   tester.view.physicalSize = const Size(412, 2400);
   tester.view.devicePixelRatio = 1.0;
@@ -52,10 +55,7 @@ Future<void> _pump(
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: MaterialApp(
-        theme: AppTheme.light,
-        home: child ?? const PlanPathPage(),
-      ),
+      child: MaterialApp(theme: AppTheme.light, home: child),
     ),
   );
   await tester.pump();
@@ -114,7 +114,11 @@ void main() {
   group('Free', () {
     testWidgets('the Premium card comes after the three previews, inside '
         'the scroll — no pinned bar', (tester) async {
-      await _pump(tester, await _container(entitled: false));
+      await _pump(
+        tester,
+        await _container(entitled: false),
+        child: const PlanPathPage(),
+      );
 
       final premiumTitle = find.text('THIRTY Premium');
       expect(premiumTitle, findsOneWidget);
@@ -147,28 +151,36 @@ void main() {
   });
 
   group('Action hierarchy', () {
-    testWidgets('no Plan active: every Activate is primary and full width', (
+    // Your Path's page padding is 24 on each side; its actions span it.
+    testWidgets('no Plan active: Activate is primary and full width', (
       tester,
     ) async {
       await _pump(tester, await _container());
 
-      final buttons = tester.widgetList<ThirtyButton>(_button('Activate'));
-      expect(buttons, hasLength(3));
-      for (final button in buttons) {
-        expect(button.variant, ThirtyButtonVariant.primary);
-      }
-      for (final element in _button('Activate').evaluate()) {
-        expect(
-          (element.renderObject! as RenderBox).size.width,
-          412 - 96,
-        );
-      }
+      final button = tester.widget<ThirtyButton>(_button('Activate'));
+      expect(button.variant, ThirtyButtonVariant.primary);
+      expect(tester.getSize(_button('Activate')).width, 412 - 48);
     });
 
-    testWidgets('one Plan active: the others\' Activate is secondary; the '
-        'active card has the tinted tag and quiet management actions', (
+    testWidgets("another Plan active: this Plan's Activate is secondary", (
       tester,
     ) async {
+      final container = await _container();
+      container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+      await _pump(
+        tester,
+        container,
+        child: const PlanDetailPage(planId: PlanId.clearerHeadPath),
+      );
+
+      expect(
+        tester.widget<ThirtyButton>(_button('Activate')).variant,
+        ThirtyButtonVariant.secondary,
+      );
+    });
+
+    testWidgets('the active Plan has the tinted tag and quiet management '
+        'actions', (tester) async {
       final semantics = tester.ensureSemantics();
       final container = await _container();
       final plans = container.read(planProvider.notifier);
@@ -180,11 +192,7 @@ void main() {
       );
       await _pump(tester, container);
 
-      for (final button in tester.widgetList<ThirtyButton>(
-        _button('Activate'),
-      )) {
-        expect(button.variant, ThirtyButtonVariant.secondary);
-      }
+      expect(_button('Activate'), findsNothing);
       expect(find.text('Active'), findsOneWidget);
       expect(find.bySemanticsLabel(RegExp('Active plan')), findsOneWidget);
       expect(
@@ -243,15 +251,15 @@ void main() {
 
       final repeat = tester.widget<ThirtyButton>(_button('Repeat this cycle'));
       expect(repeat.variant, ThirtyButtonVariant.primary);
-      expect(tester.getSize(_button('Repeat this cycle')).width, 412 - 96);
+      expect(tester.getSize(_button('Repeat this cycle')).width, 412 - 48);
       expect(_textAction('Pause this plan'), findsOneWidget);
       expect(find.text('Queue a revisit of the last stage'), findsNothing);
     });
   });
 
   group('Coach on Plans vs Home', () {
-    testWidgets('Plans: left-aligned sentence, quiet lighter shortcut, and '
-        'no duplicate revisit — the card\'s own revisit action stays', (
+    testWidgets('Your Path: left-aligned sentence, quiet lighter shortcut, '
+        "and no duplicate revisit — the page's own revisit action stays", (
       tester,
     ) async {
       final container = await _container();

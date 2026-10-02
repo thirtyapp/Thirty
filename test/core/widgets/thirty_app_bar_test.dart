@@ -189,7 +189,7 @@ void main() {
 
     for (final location in [
       '/settings',
-      '/plans',
+      '/plans/moreEnergyPath',
       '/insights',
       '/premium',
       '/history',
@@ -211,6 +211,16 @@ void main() {
       expect(find.byType(AppBar), findsNothing);
       expect(find.byType(ThirtyAppBar), findsNothing);
       expect(find.byType(HomeHeader), findsOneWidget);
+    });
+
+    testWidgets('Plans has no pinned bar either: like Home, its header '
+        'scrolls with the page (Plans convergence)', (tester) async {
+      await pumpApp(tester);
+      appRouter.go('/plans');
+      await tester.pumpAndSettle();
+      expect(find.byType(AppBar), findsNothing);
+      expect(find.byType(ThirtyAppBar), findsNothing);
+      expect(find.text('Your Plans'), findsOneWidget);
     });
 
     testWidgets('on You, scrolling shows the edge and returning to the top '

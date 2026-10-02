@@ -11,6 +11,9 @@ import 'package:thirty/features/home/presentation/circle_history_page.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_ready_prompt.dart';
 import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
+import 'package:thirty/core/routing/app_shell.dart';
+import 'package:thirty/features/plans/domain/plan_ids.dart';
+import 'package:thirty/features/plans/presentation/plan_detail_page.dart';
 import 'package:thirty/features/plans/presentation/plan_path_page.dart';
 
 void main() {
@@ -91,6 +94,37 @@ void main() {
       appRouter.go('/plans');
       await tester.pumpAndSettle();
 
+      expect(find.byType(PlanPathPage), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    "/plans/:planId opens that Plan's Your Path inside the shell (the "
+    'navigation bar stays); an unknown id returns to Plans',
+    (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      addTearDown(() => appRouter.go('/'));
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: const ThirtyApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      appRouter.go('/plans/clearerHeadPath');
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<PlanDetailPage>(find.byType(PlanDetailPage)).planId,
+        PlanId.clearerHeadPath,
+      );
+      expect(find.byType(AppShell), findsOneWidget);
+
+      appRouter.go('/plans/notAPlan');
+      await tester.pumpAndSettle();
+      expect(find.byType(PlanDetailPage), findsNothing);
       expect(find.byType(PlanPathPage), findsOneWidget);
     },
   );

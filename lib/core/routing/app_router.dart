@@ -6,6 +6,8 @@ import '../../features/home/presentation/circle_history_page.dart';
 import '../../features/home/presentation/circle_record_detail_page.dart';
 import '../../features/home/presentation/home_page.dart';
 import '../../features/insights/presentation/insights_page.dart';
+import '../../features/plans/domain/plan_ids.dart';
+import '../../features/plans/presentation/plan_detail_page.dart';
 import '../../features/plans/presentation/plan_path_page.dart';
 import '../../features/premium/presentation/premium_offer_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
@@ -13,6 +15,11 @@ import '../dev_preview/quiet_trail_hero_preview_page.dart';
 import '../providers/theme_mode_provider.dart';
 import '../showcase/design_system_showcase_page.dart';
 import 'app_shell.dart';
+
+/// The [PlanId] named by a `/plans/:planId` location, or `null` for an
+/// unknown name.
+PlanId? _planIdFrom(GoRouterState state) =>
+    PlanId.values.asNameMap()[state.pathParameters['planId']];
 
 /// The route list `appRouter` is built from. Extracted to a standalone,
 /// `@visibleForTesting` function so the debug-only gating below can be
@@ -58,6 +65,20 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
             GoRoute(
               path: '/plans',
               builder: (context, state) => const PlanPathPage(),
+              routes: [
+                // One Plan's Your Path, inside the Plans branch so the
+                // navigation bar stays and back returns to Plans. Like
+                // `/plans` it is never gated: `PlanDetailPage` itself
+                // shows the Free preview without entitlement. An unknown
+                // id returns to `/plans` rather than guessing a Plan.
+                GoRoute(
+                  path: ':planId',
+                  redirect: (context, state) =>
+                      _planIdFrom(state) == null ? '/plans' : null,
+                  builder: (context, state) =>
+                      PlanDetailPage(planId: _planIdFrom(state)!),
+                ),
+              ],
             ),
           ],
         ),
