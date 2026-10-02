@@ -31,7 +31,8 @@ const _monthNames = [
 ///
 /// Reuses [circleJournalRepositoryProvider] directly — no new history
 /// store, no duplicated records, no computed metric beyond "does a
-/// record exist for this local date." Ordinary month navigation only;
+/// record exist for this local date, and was its Circle closed."
+/// Ordinary month navigation only;
 /// never touches [nowProvider] beyond reading it once for the initial
 /// displayed month, and never calls anything that could start, close, or
 /// advance a Circle or Plan.
@@ -44,11 +45,20 @@ const _monthNames = [
 /// polling, no forced route recreation, and [_displayedMonth] is untouched
 /// by that rebuild.
 ///
-/// A recorded date shows a calm ring around its number (the "Circle"
-/// visual echo) and opens `/history/<date>` (a single record's read-only
-/// detail) when tapped. An empty date is plain, non-interactive text —
-/// no streak, no broken-chain mark, no score, no completion percentage,
-/// no health-progress claim.
+/// Three states per date (founder decision, 2026-10-02):
+/// - **Closed** — the date's Circle was closed in the app
+///   ([CircleJournalEntry.closedAt]): a calm ring around its number (the
+///   "Circle" visual echo). Closing is an app interaction only (ADR-010):
+///   never proof the activity was done, or for how long.
+/// - **Recorded, not closed** — a Circle was shown (or started) but never
+///   closed: a small neutral dot under the number, never the ring.
+/// - **No record** — plain, non-interactive text.
+///
+/// Both recorded states open `/history/<date>` (a single record's
+/// read-only detail) when tapped — the calendar is the in-app way back to
+/// every record, so a record is never hidden for being unclosed. No
+/// streak, no broken-chain mark, no score, no completion percentage, no
+/// health-progress claim.
 ///
 /// **Accessibility (responsive presentation only — same data and
 /// behaviour):** every interactive date is at least a 48×48pt target and
@@ -57,7 +67,9 @@ const _monthNames = [
 /// side inset narrows from the page's 24pt toward 12pt to get there (a
 /// 360pt screen gets exactly 12pt). Narrower than that (e.g. 320pt), the
 /// month's recorded dates are listed instead, one full-width 48pt row
-/// each. Spoken labels are localized, human-readable dates.
+/// each, with the same ring or dot. Spoken labels are localized,
+/// human-readable dates followed by the state: "Circle closed", "Circle
+/// recorded, not closed" or "no Circle recorded".
 ///
 /// Give it the page's full width: it applies its own horizontal inset.
 class CircleHistoryCalendar extends ConsumerStatefulWidget {
@@ -76,6 +88,50 @@ const _minGridInset = 12.0;
 
 /// Minimum interactive target, both presentations.
 const _minTarget = 48.0;
+
+/// What the journal holds for one local date.
+enum _DayRecord { closed, recordedNotClosed }
+
+/// Each recorded local date's state: closed if any of its entries was
+/// closed (there is one entry per date today), otherwise recorded.
+Map<String, _DayRecord> _dayRecords(List<CircleJournalEntry> entries) {
+  final records = <String, _DayRecord>{};
+  for (final entry in entries) {
+    if (entry.closedAt != null) {
+      records[entry.localDate] = _DayRecord.closed;
+    } else {
+      records.putIfAbsent(entry.localDate, () => _DayRecord.recordedNotClosed);
+    }
+  }
+  return records;
+}
+
+String _spokenState(_DayRecord? record) => switch (record) {
+  _DayRecord.closed => 'Circle closed',
+  _DayRecord.recordedNotClosed => 'Circle recorded, not closed',
+  null => 'no Circle recorded',
+};
+
+/// The recorded-but-not-closed marker: a small neutral dot — deliberately
+/// not the ring, and never the primary colour.
+class _UnclosedDot extends StatelessWidget {
+  const _UnclosedDot();
+
+  static const size = 5.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: colors.textSecondary,
+      ),
+    );
+  }
+}
 
 class _CircleHistoryCalendarState
     extends ConsumerState<CircleHistoryCalendar> {
@@ -109,7 +165,7 @@ class _CircleHistoryCalendarState
   @override
   Widget build(BuildContext context) {
     final journal = ref.watch(circleJournalRepositoryProvider);
-    final recordedDates = journal.readAll().map((e) => e.localDate).toSet();
+    final recordedDates = _dayRecords(journal.readAll());
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -191,7 +247,7 @@ class _MonthGrid extends StatelessWidget {
   const _MonthGrid({required this.month, required this.recordedDates});
 
   final DateTime month;
-  final Set<String> recordedDates;
+  final Map<String, _DayRecord> recordedDates;
 
   @override
   Widget build(BuildContext context) {
@@ -255,7 +311,7 @@ class _CalendarCell extends StatelessWidget {
   final int dayNumber;
   final int daysInMonth;
   final DateTime month;
-  final Set<String> recordedDates;
+  final Map<String, _DayRecord> recordedDates;
 
   @override
   Widget build(BuildContext context) {
@@ -265,7 +321,8 @@ class _CalendarCell extends StatelessWidget {
 
     final date = DateTime(month.year, month.month, dayNumber);
     final key = dateKey(date);
-    final hasRecord = recordedDates.contains(key);
+    final record = recordedDates[key];
+    final hasRecord = record != null;
     final colors = Theme.of(context).extension<AppColors>()!;
     final style = Theme.of(
       context,
@@ -287,22 +344,24 @@ class _CalendarCell extends StatelessWidget {
     ].reduce((a, b) => a > b ? a : b);
     painter.dispose();
 
+    // Closed: the ring. Recorded, not closed: a small dot under the
+    // number, inside the same square — so no state moves the layout.
     final ring = SizedBox.square(
       dimension: side,
       child: DecoratedBox(
-        decoration: hasRecord
+        decoration: record == _DayRecord.closed
             ? BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: colors.primary, width: 2),
               )
             : const BoxDecoration(),
-        child: Center(
-          child: Text(
-            '$dayNumber',
-            style: style,
-            maxLines: 1,
-            softWrap: false,
-          ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Text('$dayNumber', style: style, maxLines: 1, softWrap: false),
+            if (record == _DayRecord.recordedNotClosed)
+              const Positioned(bottom: 0, child: _UnclosedDot()),
+          ],
         ),
       ),
     );
@@ -319,9 +378,7 @@ class _CalendarCell extends StatelessWidget {
     // `daily_intention_prompt.dart`'s own established pattern — the node's
     // label is exactly the spoken date below, never merged with the digit.
     return Semantics(
-      label: hasRecord
-          ? '$spokenDate, Circle recorded'
-          : '$spokenDate, no Circle recorded',
+      label: '$spokenDate, ${_spokenState(record)}',
       button: hasRecord,
       onTap: hasRecord ? () => context.push('/history/$key') : null,
       child: ExcludeSemantics(
@@ -336,15 +393,15 @@ class _CalendarCell extends StatelessWidget {
   }
 }
 
-/// The narrow-screen presentation: the displayed month's recorded dates,
-/// one full-width row each (at least 48pt tall), each opening the same
-/// read-only detail as a recorded grid day. Unrecorded dates have nothing
-/// to open, so they are not listed.
+/// The narrow-screen presentation: the displayed month's recorded dates —
+/// closed or not — one full-width row each (at least 48pt tall), each
+/// opening the same read-only detail as a recorded grid day. Unrecorded
+/// dates have nothing to open, so they are not listed.
 class _RecordedDateList extends StatelessWidget {
   const _RecordedDateList({required this.month, required this.recordedDates});
 
   final DateTime month;
-  final Set<String> recordedDates;
+  final Map<String, _DayRecord> recordedDates;
 
   @override
   Widget build(BuildContext context) {
@@ -354,7 +411,7 @@ class _RecordedDateList extends StatelessWidget {
     final dates = [
       for (var day = 1; day <= daysInMonth; day++)
         DateTime(month.year, month.month, day),
-    ].where((date) => recordedDates.contains(dateKey(date))).toList();
+    ].where((date) => recordedDates.containsKey(dateKey(date))).toList();
 
     if (dates.isEmpty) {
       return Padding(
@@ -372,6 +429,7 @@ class _RecordedDateList extends StatelessWidget {
         for (final date in dates)
           _RecordedDateRow(
             date: date,
+            record: recordedDates[dateKey(date)]!,
             label: MaterialLocalizations.of(context).formatFullDate(date),
           ),
       ],
@@ -380,9 +438,14 @@ class _RecordedDateList extends StatelessWidget {
 }
 
 class _RecordedDateRow extends StatelessWidget {
-  const _RecordedDateRow({required this.date, required this.label});
+  const _RecordedDateRow({
+    required this.date,
+    required this.record,
+    required this.label,
+  });
 
   final DateTime date;
+  final _DayRecord record;
   final String label;
 
   @override
@@ -392,7 +455,7 @@ class _RecordedDateRow extends StatelessWidget {
     void open() => context.push('/history/$key');
 
     return Semantics(
-      label: '$label, Circle recorded',
+      label: '$label, ${_spokenState(record)}',
       button: true,
       onTap: open,
       child: ExcludeSemantics(
@@ -404,14 +467,21 @@ class _RecordedDateRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
               child: Row(
                 children: [
-                  // The recorded-date ring, as in the grid.
-                  Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: colors.primary, width: 2),
-                    ),
+                  // The same marker as in the grid: the ring for a closed
+                  // Circle, the small dot for one recorded but not closed.
+                  SizedBox.square(
+                    dimension: 16,
+                    child: record == _DayRecord.closed
+                        ? DecoratedBox(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: colors.primary,
+                                width: 2,
+                              ),
+                            ),
+                          )
+                        : const Center(child: _UnclosedDot()),
                   ),
                   const SizedBox(width: AppSpacing.m),
                   Expanded(

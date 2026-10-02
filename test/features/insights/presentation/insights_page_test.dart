@@ -12,6 +12,7 @@ import 'package:thirty/features/insights/presentation/insights_page.dart';
 import 'package:thirty/features/insights/presentation/widgets/insight_card.dart';
 import 'package:thirty/features/plans/application/plan_provider.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
+import 'package:thirty/features/plans/presentation/widgets/plan_identity.dart';
 import 'package:thirty/core/widgets/thirty_card.dart';
 
 final _today = DateTime(2026, 8, 2);
@@ -83,7 +84,7 @@ void main() {
         await tester.pump();
 
         expect(container.read(insightProvider).lastAssessedAt, isNotNull);
-        expect(find.textContaining('Gentler Pace'), findsOneWidget);
+        expect(find.textContaining("Gentler Pace's Plan"), findsOneWidget);
       },
     );
 
@@ -168,12 +169,17 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pump();
 
-    final card = tester.widget<ThirtyCard>(
-      find.descendant(
-        of: find.byType(InsightCard),
-        matching: find.byType(ThirtyCard),
-      ),
+    // Its first content, the Plan badge, sits on the featuredCard inset.
+    final card = find.descendant(
+      of: find.byType(InsightCard),
+      matching: find.byType(ThirtyCard),
     );
-    expect(card.padding, const EdgeInsets.all(AppSpacing.featuredCard));
+    final badge = find.descendant(
+      of: card,
+      matching: find.byType(PlanIdentityBadge),
+    );
+    final offset = tester.getTopLeft(badge) - tester.getTopLeft(card);
+    expect(offset.dx, AppSpacing.featuredCard);
+    expect(offset.dy, AppSpacing.featuredCard);
   });
 }

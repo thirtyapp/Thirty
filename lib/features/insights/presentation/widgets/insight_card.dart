@@ -15,6 +15,7 @@ import '../../../plans/application/plan_provider.dart';
 import '../../../plans/domain/plan_catalog.dart';
 import '../../../plans/domain/plan_ids.dart';
 import '../../../plans/domain/plan_state.dart';
+import '../../../plans/presentation/widgets/plan_identity.dart';
 import '../../application/insight_provider.dart';
 import '../../domain/insight.dart';
 import '../../domain/insight_family.dart';
@@ -28,10 +29,21 @@ import '../../domain/insight_family.dart';
 /// previously shown application is no longer valid) — silence is the
 /// correct behavior in that case, not an empty-state placeholder.
 ///
-/// Placed once, at the top of `../../../plans/presentation/plan_path_page.dart`
-/// ("Your path") — never a separate top-level destination.
+/// Placed once, first on the Insights destination (`../insights_page.dart`).
+///
+/// Visual North Star convergence (founder decisions, 2026-10-02): the
+/// target Plan's own identity mark and name lead the card, the observation
+/// and its evidence follow, and the one application sits in an inset
+/// [InsightActionPanel] under a "NEXT STEP" eyebrow — still naming its
+/// exact change. No artwork on the card (founder decision, 2026-10-02):
+/// the badge already names the Plan and the page's header band carries the
+/// atmosphere, so the card never reads as a Plan card. No chevron: there is
+/// no Insight detail to open.
 class InsightCard extends ConsumerWidget {
   const InsightCard({this.onApplied, super.key});
+
+  static const _largeTextScale = 1.3;
+  static const _headlineFontSize = 21.0;
 
   /// Called after the application was actually made (never for a no-op
   /// against [InsightNotifier.applyCurrent]'s own recheck), so the page can
@@ -118,72 +130,104 @@ class InsightCard extends ConsumerWidget {
     // `InsightNotifier.applyCurrent()`'s own matching entitlement guard.
     final isEntitled = ref.watch(premiumEntitlementProvider);
 
-    // Phase C4: the page's "Insights" heading names this section, so the
-    // card no longer repeats an "Insight" eyebrow.
+    final largeText =
+        MediaQuery.textScalerOf(context).scale(1) >= _largeTextScale;
+
+    // The target Plan's mark and name, then the observation leading in the
+    // primary body colour; evidence and date stay muted metadata.
+    final observationBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            PlanIdentityBadge(
+              planId: insight.targetPlanId,
+              size: largeText ? 40 : 44,
+            ),
+            const SizedBox(width: AppSpacing.m),
+            Expanded(
+              child: Text(
+                plan.name,
+                style: AppTypography.editorialDisplay(
+                  colors,
+                ).copyWith(fontSize: _headlineFontSize),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.s),
+        Text(
+          observation,
+          style: textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        if (evidence != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            evidence,
+            semanticsLabel: _spokenForm(evidence),
+            style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+          ),
+        ],
+        if (dateLine != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            dateLine,
+            semanticsLabel: _spokenForm(dateLine),
+            style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+          ),
+        ],
+      ],
+    );
+
+    // Only a current Insight is actionable; an earlier one is read-only
+    // history, with no panel. Premium: the one bounded application is the
+    // panel's full-width main action. Free: the observation is the user's
+    // own and stays fully readable — only applying it is paid, offered as
+    // a quiet route, never a second button.
+    final Widget? panelAction = !isCurrent
+        ? null
+        : isEntitled
+        ? SizedBox(
+            width: double.infinity,
+            child: ThirtyButton(
+              label: applicationLabel,
+              // Never ellipsized: at large text the label that names the
+              // exact change wraps to as many lines as it needs.
+              maxLabelLines: null,
+              onPressed: () {
+                if (ref.read(insightProvider.notifier).applyCurrent()) {
+                  onApplied?.call();
+                }
+              },
+            ),
+          )
+        : ThirtyTextAction(
+            label: 'Become Premium to apply this',
+            onPressed: () => context.push('/premium'),
+          );
+
+    // The quiet Dismiss sits closer to the card's lower edge than the
+    // featured 24pt, since its own 48pt target already adds space.
     return ThirtyCard(
-      padding: const EdgeInsets.all(AppSpacing.featuredCard),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.featuredCard,
+        AppSpacing.featuredCard,
+        AppSpacing.featuredCard,
+        AppSpacing.s,
+      ),
       child: Semantics(
         container: true,
         liveRegion: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // The observation leads in the primary body colour; evidence and
-            // date stay muted metadata.
-            Text(
-              observation,
-              style: textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            if (evidence != null) ...[
+            observationBlock,
+            const SizedBox(height: AppSpacing.m),
+            if (panelAction != null) ...[
+              InsightActionPanel(child: panelAction),
               const SizedBox(height: AppSpacing.xs),
-              Text(
-                evidence,
-                semanticsLabel: _spokenForm(evidence),
-                style: textTheme.bodySmall?.copyWith(
-                  color: colors.textSecondary,
-                ),
-              ),
-            ],
-            if (dateLine != null) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                dateLine,
-                semanticsLabel: _spokenForm(dateLine),
-                style: textTheme.bodySmall?.copyWith(
-                  color: colors.textSecondary,
-                ),
-              ),
-            ],
-            // Only a current Insight is actionable; an earlier one is
-            // read-only history. Premium: the one bounded application is
-            // the card's full-width main action. Free: the observation is
-            // the user's own and stays fully readable — only applying it
-            // is paid, offered as a quiet route, never a second button.
-            if (isCurrent && isEntitled) ...[
-              const SizedBox(height: AppSpacing.m),
-              SizedBox(
-                width: double.infinity,
-                child: ThirtyButton(
-                  label: applicationLabel,
-                  // Never ellipsized: at large text the label that names
-                  // the exact change wraps to as many lines as it needs.
-                  maxLabelLines: null,
-                  onPressed: () {
-                    if (ref.read(insightProvider.notifier).applyCurrent()) {
-                      onApplied?.call();
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-            ] else if (isCurrent) ...[
-              const SizedBox(height: AppSpacing.xs),
-              ThirtyTextAction(
-                label: 'Become Premium to apply this',
-                onPressed: () => context.push('/premium'),
-              ),
             ],
             // Hides this exact observation without changing any Plan or
             // Coach state; only a genuinely new observation shows again.
@@ -303,5 +347,82 @@ class InsightCard extends ConsumerWidget {
       case InsightApplicationType.queueRevisit:
         return 'Queue a one-off revisit of this stage';
     }
+  }
+}
+
+/// The inset panel holding an Insight's one next step — the Visual North
+/// Star's integrated action, under a "NEXT STEP" eyebrow (founder
+/// decision, 2026-10-02; never "TRY THIS"). The same quiet inset as Your
+/// Path's current-stage note. [child] is the action itself, which always
+/// names its exact change. Always the card's full inner width, whatever
+/// its action — a quiet text route as much as the full-width button.
+class InsightActionPanel extends StatelessWidget {
+  const InsightActionPanel({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: colors.surfaceMuted,
+        borderRadius: AppRadius.large,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.m),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'NEXT STEP',
+              semanticsLabel: 'Next step',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: colors.textSecondary,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A neutral THIRTY mark for Insights surfaces that are not a personal
+/// Insight (the Premium explainer, the quiet no-Insight states): the Circle
+/// itself, a plain ring, on a quiet disc. Deliberately never a Plan's
+/// identity, so nothing reads as an observation about the user.
+/// Decorative.
+class InsightsNeutralBadge extends StatelessWidget {
+  const InsightsNeutralBadge({this.size = 44, super.key});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return ExcludeSemantics(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: colors.surfaceMuted,
+        ),
+        alignment: Alignment.center,
+        child: Container(
+          width: size * 0.42,
+          height: size * 0.42,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: colors.primary, width: 2),
+          ),
+        ),
+      ),
+    );
   }
 }

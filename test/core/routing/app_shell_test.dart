@@ -289,7 +289,17 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(CircleHistoryCalendar), findsOneWidget);
 
-      await tester.tap(find.text(today.day.toString()).first);
+      // The calendar sits below the Insights header and card: bring the
+      // date into view first.
+      final recordedDate = find
+          .descendant(
+            of: find.byType(CircleHistoryCalendar),
+            matching: find.text(today.day.toString()),
+          )
+          .first;
+      await tester.ensureVisible(recordedDate);
+      await tester.pumpAndSettle();
+      await tester.tap(recordedDate);
       await tester.pumpAndSettle();
 
       expect(find.byType(CircleRecordDetailPage), findsOneWidget);

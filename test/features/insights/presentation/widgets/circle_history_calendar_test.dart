@@ -76,6 +76,9 @@ String _journalWith(List<String> localDates) => jsonEncode({
         'activityId': ActivityId.thirtyMinuteWalk.name,
         'catalogVersion': catalogVersion,
         'shownAt': '${date}T09:00:00.000',
+        // Closed: these tests cover the ring and its detail; the
+        // recorded-but-not-closed state has its own tests.
+        'closedAt': '${date}T09:30:00.000',
       },
   ],
 });
@@ -106,7 +109,7 @@ void main() {
       await tester.pumpWidget(widget);
 
       expect(
-        find.bySemanticsLabel('${_spoken('2026-09-05')}, Circle recorded'),
+        find.bySemanticsLabel('${_spoken('2026-09-05')}, Circle closed'),
         findsOneWidget,
       );
       expect(
@@ -144,7 +147,7 @@ void main() {
       '2026-09-10',
       '2026-09-15',
     ]) {
-      expect(find.bySemanticsLabel('${_spoken(date)}, Circle recorded'), findsOneWidget);
+      expect(find.bySemanticsLabel('${_spoken(date)}, Circle closed'), findsOneWidget);
     }
     handle.dispose();
   });
@@ -183,7 +186,7 @@ void main() {
       await tester.pump();
       expect(find.text('August 2026'), findsOneWidget);
       expect(
-        find.bySemanticsLabel('${_spoken('2026-08-20')}, Circle recorded'),
+        find.bySemanticsLabel('${_spoken('2026-08-20')}, Circle closed'),
         findsOneWidget,
       );
 
@@ -210,7 +213,7 @@ void main() {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(widgetA);
       expect(
-        find.bySemanticsLabel('${_spoken('2026-09-12')}, Circle recorded'),
+        find.bySemanticsLabel('${_spoken('2026-09-12')}, Circle closed'),
         findsOneWidget,
       );
       final prefs = containerA.read(sharedPreferencesProvider);
@@ -225,7 +228,7 @@ void main() {
       await tester.pumpWidget(widgetB);
 
       expect(
-        find.bySemanticsLabel('${_spoken('2026-09-12')}, Circle recorded'),
+        find.bySemanticsLabel('${_spoken('2026-09-12')}, Circle closed'),
         findsOneWidget,
       );
       handle.dispose();
@@ -300,7 +303,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(
-          find.bySemanticsLabel('${_spoken('2026-09-15')}, Circle recorded'),
+          find.bySemanticsLabel('${_spoken('2026-09-15')}, Circle closed'),
           findsOneWidget,
         );
         // Same widget/Element — the fix is a reactive rebuild, not a

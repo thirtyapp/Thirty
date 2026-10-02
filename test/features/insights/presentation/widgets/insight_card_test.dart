@@ -85,7 +85,7 @@ void main() {
 
       await tester.pumpWidget(widget);
 
-      expect(find.textContaining('Gentler Pace'), findsOneWidget);
+      expect(find.textContaining("Gentler Pace's Plan"), findsOneWidget);
       expect(find.textContaining('stage 3 of 5'), findsOneWidget);
       expect(find.text('Resume this Plan'), findsOneWidget);
 
@@ -271,7 +271,7 @@ void main() {
 
         // The observation itself is still readable — this is retained
         // history, not new computation.
-        expect(find.textContaining('Gentler Pace'), findsOneWidget);
+        expect(find.textContaining("Gentler Pace's Plan"), findsOneWidget);
         // But the applying action is gone — replaced with a route to the
         // existing Premium offer, never a button that would silently
         // no-op against `InsightNotifier.applyCurrent()`'s own guard.

@@ -21,12 +21,15 @@ import 'package:thirty/features/insights/domain/insight_snapshot.dart';
 import 'package:thirty/features/insights/presentation/insights_page.dart';
 import 'package:thirty/features/insights/presentation/widgets/circle_history_calendar.dart';
 import 'package:thirty/features/insights/presentation/widgets/insight_card.dart';
+import 'package:thirty/features/insights/presentation/widgets/insights_header_art.dart';
 import 'package:thirty/features/plans/application/plan_provider.dart';
 import 'package:thirty/features/plans/domain/plan_catalog.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
 import 'package:thirty/features/plans/domain/plan_state.dart';
+import 'package:thirty/features/plans/presentation/widgets/plan_identity.dart';
 
-/// Phase C4 — the Insights page's second section, with the app's real
+/// Phase C4, updated for the Visual North Star convergence (Insight
+/// section first, NEXT STEP panel) — the Insights section, with the app's real
 /// fonts at 320 / 360pt, 200% text, light and dark: every Insight / empty
 /// / Premium state renders untruncated, Premium's one application is the
 /// full-width main action, Free's paid route is one quiet text action, and
@@ -37,6 +40,9 @@ final _today = DateTime(2026, 9, 15);
 const _nothingToShow =
     'Nothing to show yet. Pattern Insights need at least 5 relevant Circle '
     'records across 3 different days, spanning at least 14 days.';
+const _nothingNew = 'Nothing new to surface right now.';
+const _historyStillHere =
+    'Your history is still here when you want to look back.';
 const _applied = 'Applied. Your Plan is updated.';
 const _freeRoute = 'Become Premium to apply this';
 
@@ -141,10 +147,15 @@ String _plans() => jsonEncode({
   },
 });
 
-String _journal() => jsonEncode({
+/// Two recorded Circles — under the pattern gate — or, with
+/// [enoughHistory], five across five days spanning 18 days.
+String _journal({bool enoughHistory = false}) => jsonEncode({
   'schemaVersion': circleJournalSchemaVersion,
   'entries': [
-    for (final date in const ['2026-09-08', '2026-09-12'])
+    for (final date
+        in enoughHistory
+            ? _currentEvidence
+            : const ['2026-09-08', '2026-09-12'])
       {
         'schemaVersion': circleJournalSchemaVersion,
         'circleId': date,
@@ -163,6 +174,7 @@ Future<ProviderContainer> _pump(
   required bool entitled,
   _Seed? seed,
   bool agedOut = false,
+  bool enoughHistory = false,
   double textScale = 2.0,
   bool dark = false,
 }) async {
@@ -172,7 +184,7 @@ Future<ProviderContainer> _pump(
   addTearDown(tester.view.resetDevicePixelRatio);
 
   SharedPreferences.setMockInitialValues({
-    circleJournalKey: _journal(),
+    circleJournalKey: _journal(enoughHistory: enoughHistory),
     plansStateKey: _plans(),
     insightSnapshotsKey: jsonEncode({
       'schemaVersion': insightSnapshotsSchemaVersion,
@@ -302,27 +314,29 @@ void main() {
       final tag = '${width.toInt()}pt · 200% · ${dark ? 'dark' : 'light'}';
 
       group(tag, () {
-        testWidgets('page order: Your history, calendar, then Insights', (
+        testWidgets('page order (North Star): Your Insights, the band, the '
+            'Insight section, then Your history and its calendar', (
           tester,
         ) async {
           await _pump(tester, width: width, entitled: false, dark: dark);
 
+          final title = tester.getTopLeft(find.text('Your Insights'));
+          final band = tester.getTopLeft(find.byType(InsightsHeaderArt));
+          final insights = tester.getTopLeft(find.text('THIRTY Premium'));
           final history = tester.getTopLeft(find.text('Your history'));
           final calendar = tester.getTopLeft(
             find.byType(CircleHistoryCalendar),
           );
-          final insights = tester.getTopLeft(
-            find.descendant(
-              of: find.byType(SingleChildScrollView),
-              matching: find.text('Insights'),
-            ),
-          );
+          expect(title.dy, lessThan(band.dy));
+          expect(band.dy, lessThan(insights.dy));
+          expect(insights.dy, lessThan(history.dy));
           expect(history.dy, lessThan(calendar.dy));
-          expect(calendar.dy, lessThan(insights.dy));
-          // Headings sit on the page's 24pt left edge; no divider.
+          // Title and history heading sit on the page's 24pt left edge; no
+          // divider, and no separate "Insights" section heading.
+          expect(title.dx, AppSpacing.page);
           expect(history.dx, AppSpacing.page);
-          expect(insights.dx, AppSpacing.page);
           expect(find.byType(Divider), findsNothing);
+          expect(find.text('Insights'), findsNothing);
           _expectClean(tester);
         });
 
@@ -332,10 +346,12 @@ void main() {
           await _pump(tester, width: width, entitled: false, dark: dark);
 
           expect(find.text('THIRTY Premium'), findsOneWidget);
+          // The neutral badge on the card's 24pt inset, never a Plan's.
           expect(
-            tester.getTopLeft(find.text('THIRTY Premium')).dx,
+            tester.getTopLeft(find.byType(InsightsNeutralBadge)).dx,
             AppSpacing.page + AppSpacing.featuredCard,
           );
+          expect(find.byType(PlanIdentityBadge), findsNothing);
           expect(
             tester.getSize(find.byType(ThirtyButton)).width,
             width - AppSpacing.page * 2 - AppSpacing.featuredCard * 2,
@@ -354,13 +370,36 @@ void main() {
         ) async {
           await _pump(tester, width: width, entitled: true, dark: dark);
 
+          // Two recorded Circles: not enough history yet, so the
+          // thresholds — in a quiet card beside the neutral badge.
           expect(find.text(_nothingToShow), findsOneWidget);
+          expect(find.text(_nothingNew), findsNothing);
           expect(
-            tester.getTopLeft(find.text(_nothingToShow)).dx,
-            AppSpacing.page,
+            tester.getTopLeft(find.byType(InsightsNeutralBadge)).dx,
+            AppSpacing.page + AppSpacing.featuredCard,
           );
+          expect(find.byType(PlanIdentityBadge), findsNothing);
           expect(_salesSurfaces(), 0);
           expect(find.text('THIRTY Premium'), findsNothing);
+          _expectClean(tester);
+        });
+
+        testWidgets('Premium · enough history, no Insight: nothing new '
+            'right now — never the thresholds', (tester) async {
+          await _pump(
+            tester,
+            width: width,
+            entitled: true,
+            enoughHistory: true,
+            dark: dark,
+          );
+
+          expect(find.text(_nothingNew), findsOneWidget);
+          expect(find.text(_historyStillHere), findsOneWidget);
+          expect(find.text(_nothingToShow), findsNothing);
+          expect(find.byType(InsightsNeutralBadge), findsOneWidget);
+          expect(find.byType(PlanIdentityBadge), findsNothing);
+          expect(_salesSurfaces(), 0);
           _expectClean(tester);
         });
 
@@ -382,10 +421,25 @@ void main() {
             expect(action, findsOneWidget);
             final button = tester.widget<ThirtyButton>(action);
             expect(button.variant, ThirtyButtonVariant.primary);
+            // Inside the NEXT STEP panel, at the panel's full inner width.
+            expect(
+              find.ancestor(
+                of: action,
+                matching: find.byType(InsightActionPanel),
+              ),
+              findsOneWidget,
+            );
+            expect(find.text('NEXT STEP'), findsOneWidget);
             expect(
               tester.getSize(action).width,
-              width - AppSpacing.page * 2 - AppSpacing.featuredCard * 2,
+              width -
+                  AppSpacing.page * 2 -
+                  AppSpacing.featuredCard * 2 -
+                  AppSpacing.m * 2,
             );
+            // The target Plan's own identity leads the card.
+            expect(find.byType(PlanIdentityBadge), findsOneWidget);
+            expect(find.byType(InsightsNeutralBadge), findsNothing);
             expect(find.text('Dismiss'), findsOneWidget);
             expect(find.textContaining('Observed on'), findsOneWidget);
             _expectDatesKeptTogether(tester, 'Sep 15, 2026');

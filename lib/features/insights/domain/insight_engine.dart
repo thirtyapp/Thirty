@@ -255,6 +255,16 @@ Insight? _evaluateDeliberateRevisits(
   );
 }
 
+/// Whether the local journal holds enough recent history for a pattern
+/// Insight to be possible at [now]: the same design gate as a pattern
+/// claim, applied to every recorded Circle in the current window.
+///
+/// Presentation only — it decides which truthful "no Insight" line the
+/// Insights page shows (the thresholds, or "nothing new right now"), never
+/// whether an Insight exists; [evaluateInsight] alone decides that.
+bool insightHistoryGateMet(List<CircleJournalEntry> journal, DateTime now) =>
+    _patternGateMet(_withinWindow(journal, now));
+
 /// Whether an observation's supporting evidence still lies inside the
 /// current [insightEvaluationWindowDays] window at [now] — i.e. its newest
 /// evidence date is not older than the window's start (the same window

@@ -45,6 +45,9 @@ String _journalWith(List<String> localDates) => jsonEncode({
         'activityId': ActivityId.thirtyMinuteWalk.name,
         'catalogVersion': catalogVersion,
         'shownAt': '${date}T09:00:00.000',
+        // Closed: these tests cover the ring and its detail; the
+        // recorded-but-not-closed state has its own tests.
+        'closedAt': '${date}T09:30:00.000',
       },
   ],
 });
@@ -202,7 +205,7 @@ void main() {
       await _pump(tester, width: 360, textScale: 1.0);
 
       expect(
-        find.bySemanticsLabel('${_spoken('2026-09-05')}, Circle recorded'),
+        find.bySemanticsLabel('${_spoken('2026-09-05')}, Circle closed'),
         findsOneWidget,
       );
       expect(
@@ -264,7 +267,7 @@ void main() {
       );
 
       expect(
-        find.bySemanticsLabel('${_spoken('2026-09-12')}, Circle recorded'),
+        find.bySemanticsLabel('${_spoken('2026-09-12')}, Circle closed'),
         findsOneWidget,
       );
       await tester.tap(find.byIcon(Icons.chevron_left));
