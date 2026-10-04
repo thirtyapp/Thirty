@@ -35,6 +35,7 @@ class PremiumRestoreFooter extends ConsumerStatefulWidget {
 class _PremiumRestoreFooterState extends ConsumerState<PremiumRestoreFooter> {
   bool _isRestoring = false;
   String? _message;
+  final _messageKey = GlobalKey();
 
   Future<void> _restore() async {
     setState(() {
@@ -53,6 +54,19 @@ class _PremiumRestoreFooterState extends ConsumerState<PremiumRestoreFooter> {
         RestoreOutcome.error =>
           'Something went wrong restoring your purchase. Please try again.',
       };
+    });
+    // Restore is the last section on You, so the result line appears below
+    // the visible page; bring it on screen (the live region announces it
+    // either way).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final messageContext = _messageKey.currentContext;
+      if (messageContext == null) return;
+      Scrollable.ensureVisible(
+        messageContext,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
     });
   }
 
@@ -94,6 +108,7 @@ class _PremiumRestoreFooterState extends ConsumerState<PremiumRestoreFooter> {
           if (_message != null) ...[
             const SizedBox(height: AppSpacing.xs),
             Semantics(
+              key: _messageKey,
               liveRegion: true,
               child: Text(_message!, style: quiet),
             ),

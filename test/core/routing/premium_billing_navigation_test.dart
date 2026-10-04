@@ -96,6 +96,9 @@ void main() {
     appRouter.go('/settings');
     await tester.pumpAndSettle();
 
+    // Below You's header band in the 800×600 test view.
+    await tester.ensureVisible(find.text('Become Premium'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Become Premium'));
     await tester.pumpAndSettle();
 

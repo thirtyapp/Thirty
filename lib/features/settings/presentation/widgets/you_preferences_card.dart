@@ -12,6 +12,10 @@ import 'you_group_card.dart';
 /// You's "Preferences" group (Phase C1): the daily reminder, appearance
 /// and analytics consent as rows of one grouped card. Each row's behaviour
 /// is unchanged from before C1 — only the surface around them changed.
+///
+/// North Star convergence: each row gains a quiet decorative icon and a
+/// title / detail hierarchy, and each switch row is announced as one
+/// control (its label together with its on/off state).
 class YouPreferencesCard extends ConsumerWidget {
   const YouPreferencesCard({super.key});
 
@@ -25,6 +29,7 @@ class YouPreferencesCard extends ConsumerWidget {
         ),
         YouRow(
           key: const ValueKey('you.appearance'),
+          icon: Icons.contrast,
           child: _AppearanceRow(themeMode: ref.watch(themeModeProvider)),
         ),
         const YouRow(
@@ -46,8 +51,8 @@ class _AppearanceRow extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Appearance', style: Theme.of(context).textTheme.bodyMedium),
-        const SizedBox(height: AppSpacing.s),
+        const YouRowTitle('Appearance'),
+        const SizedBox(height: AppSpacing.xs),
         ThemeModeChoice(
           value: themeMode,
           onChanged: (mode) =>
@@ -63,34 +68,40 @@ class _AnalyticsConsentRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final textTheme = Theme.of(context).textTheme;
-    final colors = Theme.of(context).extension<AppColors>()!;
     final consent = ref.watch(analyticsConsentProvider);
 
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Share anonymous usage data', style: textTheme.bodyMedium),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                'Off by default. Helps us understand what to improve. '
-                'Your Circle history is never included.',
-                style: textTheme.bodySmall?.copyWith(
-                  color: colors.textSecondary,
+    return MergeSemantics(
+      child: Row(
+        children: [
+          const Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                YouRowIcon(Icons.query_stats),
+                SizedBox(width: AppSpacing.m),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      YouRowTitle('Share anonymous usage data'),
+                      SizedBox(height: AppSpacing.xs),
+                      YouRowDetail(
+                        'Off by default. Helps us understand what to '
+                        'improve. Your Circle history is never included.',
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        Switch(
-          value: consent,
-          onChanged: (value) =>
-              ref.read(analyticsConsentProvider.notifier).setConsent(value),
-        ),
-      ],
+          Switch(
+            value: consent,
+            onChanged: (value) =>
+                ref.read(analyticsConsentProvider.notifier).setConsent(value),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -161,27 +172,37 @@ class _ReminderRowState extends ConsumerState<_ReminderRow> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text('Daily reminder', style: textTheme.bodyMedium),
-            ),
-            Switch(
-              value: state.enabled,
-              onChanged: (value) async {
-                if (value) {
-                  await _pickTimeAndEnable();
-                } else {
-                  await ref.read(reminderProvider.notifier).disable();
-                }
-              },
-            ),
-          ],
+        MergeSemantics(
+          child: Row(
+            children: [
+              const Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    YouRowIcon(Icons.notifications_none_outlined),
+                    SizedBox(width: AppSpacing.m),
+                    Expanded(child: YouRowTitle('Daily reminder')),
+                  ],
+                ),
+              ),
+              Switch(
+                value: state.enabled,
+                onChanged: (value) async {
+                  if (value) {
+                    await _pickTimeAndEnable();
+                  } else {
+                    await ref.read(reminderProvider.notifier).disable();
+                  }
+                },
+              ),
+            ],
+          ),
         ),
         if (state.enabled) ...[
           const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
+              const SizedBox(width: YouRowIcon.size + AppSpacing.m),
               Expanded(
                 child: Text(
                   !state.permissionGranted

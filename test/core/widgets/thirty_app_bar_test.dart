@@ -188,7 +188,6 @@ void main() {
     tearDown(() => appRouter.go('/'));
 
     for (final location in [
-      '/settings',
       '/plans/moreEnergyPath',
       '/premium',
       '/history',
@@ -232,10 +231,22 @@ void main() {
       expect(find.text('Your Insights'), findsOneWidget);
     });
 
-    testWidgets('on You, scrolling shows the edge and returning to the top '
-        'hides it', (tester) async {
+    testWidgets('You has no pinned bar either: its header scrolls with the '
+        'page (You convergence)', (tester) async {
       await pumpApp(tester);
       appRouter.go('/settings');
+      await tester.pumpAndSettle();
+      expect(find.byType(AppBar), findsNothing);
+      expect(find.byType(ThirtyAppBar), findsNothing);
+      expect(find.text('Your space in THIRTY.'), findsOneWidget);
+    });
+
+    // A real screen that still uses ThirtyAppBar (You did, before its
+    // North Star convergence moved it to a scrolling header).
+    testWidgets('on the Premium offer page, scrolling shows the edge and '
+        'returning to the top hides it', (tester) async {
+      await pumpApp(tester);
+      appRouter.go('/premium');
       await tester.pumpAndSettle();
       expect(_edge(tester), BorderSide.none);
 

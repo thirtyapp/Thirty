@@ -243,6 +243,9 @@ void main() {
       await tester.tap(navDestination('You'));
       await tester.pumpAndSettle();
 
+      // Below You's header band in the 800×600 test view.
+      await tester.ensureVisible(find.text('Become Premium'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Become Premium'));
       await tester.pumpAndSettle();
       expect(find.byType(PremiumOfferPage), findsOneWidget);

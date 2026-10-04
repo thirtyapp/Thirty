@@ -15,6 +15,7 @@ import 'package:thirty/core/reminder/reminder_gateway.dart';
 import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/features/reminder/application/reminder_provider.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
+import 'package:thirty/features/settings/presentation/widgets/you_premium_card.dart';
 import 'package:thirty/core/widgets/thirty_card.dart';
 
 class _FakeReminderGateway implements ReminderGateway {
@@ -193,6 +194,10 @@ void main() {
     addTearDown(container.dispose);
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
+    // Restore is You's last section (North Star order) — scroll to it.
+    await tester.scrollUntilVisible(find.text('Restore purchases'), 200);
+    await tester.ensureVisible(find.text('Restore purchases'));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Restore purchases'));
     await tester.pumpAndSettle();
@@ -211,6 +216,10 @@ void main() {
     final (widget, container) = await _wrap(gateway: gateway);
     addTearDown(container.dispose);
     await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+    // Restore is You's last section (North Star order) — scroll to it.
+    await tester.scrollUntilVisible(find.text('Restore purchases'), 200);
+    await tester.ensureVisible(find.text('Restore purchases'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Restore purchases'));
@@ -231,6 +240,10 @@ void main() {
     addTearDown(container.dispose);
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
+    // Restore is You's last section (North Star order) — scroll to it.
+    await tester.scrollUntilVisible(find.text('Restore purchases'), 200);
+    await tester.ensureVisible(find.text('Restore purchases'));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Restore purchases'));
     await tester.pumpAndSettle();
@@ -244,9 +257,9 @@ void main() {
   });
 
   testWidgets(
-    'exposes inline export/delete data controls under "Your data" — '
-    'founder IA correction: these live directly on "You" now, not behind '
-    'a link to the retired primary Journal tab',
+    'exposes inline export/delete data controls under "Data & '
+    'privacy" — founder IA correction: these live directly on "You" now, '
+    'not behind a link to the retired primary Journal tab',
     (tester) async {
       final gateway = _FakeEntitlementGateway();
       final (widget, container) = await _wrap(gateway: gateway);
@@ -257,11 +270,13 @@ void main() {
       // The Settings list has grown past the default test viewport + cache
       // extent since Appearance/Analytics were added — scroll to bring this
       // card into the mounted range before asserting on it.
-      await tester.scrollUntilVisible(find.text('Your data'), 200);
+      await tester.scrollUntilVisible(find.text('Delete Circle history'), 200);
 
-      expect(find.text('Your data'), findsOneWidget);
+      expect(find.text('Data & privacy'), findsOneWidget);
       expect(find.text('Copy as text'), findsOneWidget);
-      expect(find.text('Delete all'), findsOneWidget);
+      expect(find.text('Delete Circle history'), findsOneWidget);
+      expect(find.text('Your data'), findsNothing);
+      expect(find.text('Delete all'), findsNothing);
     },
   );
 
@@ -281,6 +296,8 @@ void main() {
       expect(find.text('Dark'), findsOneWidget);
       expect(container.read(themeModeProvider), ThemeMode.system);
 
+      await tester.ensureVisible(find.text('Dark'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Dark'));
       await tester.pumpAndSettle();
 
@@ -325,6 +342,10 @@ void main() {
       await tester.pumpWidget(widget);
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+      // The whole row (switch and its action), not just its title, below
+      // the You header band.
+      await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
+      await tester.pumpAndSettle();
 
       expect(container.read(reminderProvider).enabled, isFalse);
 
@@ -353,6 +374,10 @@ void main() {
       await tester.pumpWidget(widget);
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+      // The whole row (switch and its action), not just its title, below
+      // the You header band.
+      await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
+      await tester.pumpAndSettle();
 
       expect(
         find.textContaining('Notifications are turned off for THIRTY'),
@@ -372,6 +397,10 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+    // The whole row (switch and its action), not just its title, below
+    // the You header band.
+    await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
+    await tester.pumpAndSettle();
 
     await tester.tap(_switchIn('you.reminder'));
     await tester.pumpAndSettle();
@@ -401,6 +430,10 @@ void main() {
       await tester.pumpWidget(widget);
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+      // The whole row (switch and its action), not just its title, below
+      // the You header band.
+      await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
+      await tester.pumpAndSettle();
 
       expect(
         find.textContaining('Android access is needed'),
@@ -448,6 +481,10 @@ void main() {
       await tester.pumpWidget(widget);
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+      // The whole row (switch and its action), not just its title, below
+      // the You header band.
+      await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
+      await tester.pumpAndSettle();
 
       expect(
         find.textContaining('we couldn\'t confirm your device\'s timezone'),
@@ -459,6 +496,9 @@ void main() {
 
   testWidgets('Phase C1 — Premium card and grouped rows share one content '
       'inset (the 8pt mismatch A2 recorded is gone)', (tester) async {
+    // North Star: the Premium card's text sits beside its mark, and each
+    // row's beside its icon — so the shared edge is the card content's:
+    // the Premium body line and the rows' leading icons.
     final (widget, container) = await _wrap(gateway: _FakeEntitlementGateway());
     addTearDown(container.dispose);
 
@@ -476,8 +516,8 @@ void main() {
       );
     }
     expect(
-      tester.getTopLeft(find.text('THIRTY Premium')).dx,
-      tester.getTopLeft(find.text('Daily reminder')).dx,
+      tester.getTopLeft(find.text(YouPremiumCard.body)).dx,
+      tester.getTopLeft(find.byIcon(Icons.notifications_none_outlined)).dx,
     );
   });
 }

@@ -16,6 +16,7 @@ import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
+import 'package:thirty/features/settings/presentation/widgets/you_about_card.dart';
 
 /// Phase C1 — You: approved commercial hierarchy and billing-state matrix.
 
@@ -134,8 +135,9 @@ double _top(WidgetTester tester, String text) =>
 
 void main() {
   group('Hierarchy', () {
-    testWidgets('Premium card → billing footer → Preferences → Your data, '
-        'with Delete all as the final row', (tester) async {
+    testWidgets('North Star order: header → Premium card → Preferences → '
+        'Data & privacy → About → Restore purchases, with Restore as the '
+        'last section', (tester) async {
       await _pump(
         tester,
         _FakeEntitlementGateway(
@@ -144,16 +146,22 @@ void main() {
       );
 
       final order = [
+        'You',
+        'Your space in THIRTY.',
         'THIRTY Premium',
         'Become Premium',
-        'Restore purchases',
         'Preferences',
         'Daily reminder',
         'Appearance',
         'Share anonymous usage data',
-        'Your data',
+        'Data & privacy',
         'Copy as text',
-        'Delete all',
+        'Delete Circle history',
+        'About',
+        YouAboutCard.versionLabel,
+        'Restore purchases',
+        'Restores Premium access only. Your Circle history stays on this '
+            'device.',
       ];
       for (var i = 1; i < order.length; i++) {
         expect(
@@ -163,13 +171,24 @@ void main() {
         );
       }
 
-      // Nothing on the page sits below "Delete all".
-      final deleteTop = _top(tester, 'Delete all');
+      // Restore is not directly under the Premium card: Preferences, Data
+      // & privacy and About all sit between them.
+      expect(
+        _top(tester, 'Restore purchases'),
+        greaterThan(_top(tester, YouAboutCard.versionLabel)),
+      );
+
+      // Nothing on the page sits below Restore's explanation.
+      final lastTop = _top(
+        tester,
+        'Restores Premium access only. Your Circle history stays on this '
+        'device.',
+      );
       for (final paragraph in find.byType(RichText).evaluate()) {
         final box = paragraph.renderObject! as RenderBox;
         expect(
           box.localToGlobal(Offset.zero).dy,
-          lessThanOrEqualTo(deleteTop),
+          lessThanOrEqualTo(lastTop),
         );
       }
     });
@@ -178,11 +197,10 @@ void main() {
         tester.widget<Text>(find.text(text)).style!.color!;
     final colors = AppTheme.light.extension<AppColors>()!;
 
-    testWidgets('Delete all uses the errorText role; Copy as text does not', (
-      tester,
-    ) async {
+    testWidgets('Delete Circle history uses the errorText role; Copy as text '
+        'does not', (tester) async {
       await _pump(tester, _FakeEntitlementGateway(), withJournal: true);
-      expect(colorOf(tester, 'Delete all'), colors.errorText);
+      expect(colorOf(tester, 'Delete Circle history'), colors.errorText);
       expect(colorOf(tester, 'Copy as text'), colors.primary);
     });
 
@@ -190,10 +208,13 @@ void main() {
       tester,
     ) async {
       await _pump(tester, _FakeEntitlementGateway());
-      expect(colorOf(tester, 'Delete all'), colors.textSecondary);
+      expect(colorOf(tester, 'Delete Circle history'), colors.textSecondary);
       expect(colorOf(tester, 'Copy as text'), colors.textSecondary);
       expect(
-        tester.getSemantics(find.text('Delete all')).flagsCollection.isEnabled,
+        tester
+            .getSemantics(find.text('Delete Circle history'))
+            .flagsCollection
+            .isEnabled,
         isNot(Tristate.isTrue),
       );
     });

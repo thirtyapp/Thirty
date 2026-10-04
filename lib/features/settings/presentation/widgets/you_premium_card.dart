@@ -23,27 +23,52 @@ import '../../../premium/presentation/widgets/manage_subscription.dart';
 /// The price is only ever the store's own localized string
 /// ([monthlyOfferProvider]); with no offer there is no price, never a
 /// hardcoded one. Purchase itself stays on the `/premium` offer page.
+///
+/// North Star convergence: a quiet Circle mark beside "THIRTY Premium" in
+/// the editorial serif (the Insights Premium card's language), and one
+/// founder-approved line naming what Premium is — never an outcome it
+/// promises. The four states and everything they do are unchanged.
 class YouPremiumCard extends ConsumerWidget {
   const YouPremiumCard({super.key});
+
+  static const body =
+      'Guided Plans, Coach guidance and Insights drawn from your Circles.';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
     final status = ref.watch(entitlementStatusProvider);
+    final largeText = MediaQuery.textScalerOf(context).scale(1) >= 1.3;
 
     return ThirtyCard(
       padding: const EdgeInsets.all(AppSpacing.featuredCard),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('THIRTY Premium', style: textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.xs),
+          Row(
+            children: [
+              _PremiumMark(size: largeText ? 40 : 44),
+              const SizedBox(width: AppSpacing.m),
+              Expanded(
+                child: Semantics(
+                  header: true,
+                  child: Text(
+                    'THIRTY Premium',
+                    style: AppTypography.editorialDisplay(
+                      colors,
+                    ).copyWith(fontSize: 21),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.s),
           Text(
-            'Plans, Coach and Insights',
+            body,
             style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
           ),
-          const SizedBox(height: AppSpacing.m),
+          const SizedBox(height: AppSpacing.l),
           ...switch (status) {
             EntitlementStatus.initializing => const [
               _StatusText(label: 'Checking your Premium status…'),
@@ -74,6 +99,38 @@ class YouPremiumCard extends ConsumerWidget {
             ],
           },
         ],
+      ),
+    );
+  }
+}
+
+/// The card's quiet identity mark: THIRTY's Circle — a sage ring on a muted
+/// disc. Decorative; the headline beside it carries the meaning.
+class _PremiumMark extends StatelessWidget {
+  const _PremiumMark({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return ExcludeSemantics(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: colors.surfaceMuted,
+        ),
+        alignment: Alignment.center,
+        child: Container(
+          width: size * 0.42,
+          height: size * 0.42,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: colors.primary, width: 2),
+          ),
+        ),
       ),
     );
   }

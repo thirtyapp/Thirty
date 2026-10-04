@@ -93,6 +93,8 @@ flutter:
     - assets/plans/
     # The Insights header band (`insights_header_art.dart`), one per daypart.
     - assets/insights/
+    # The You header band (`you_header_art.dart`), one per daypart.
+    - assets/you/
     - assets/brand/
 
   fonts:
