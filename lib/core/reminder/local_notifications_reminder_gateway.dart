@@ -125,6 +125,8 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
+    required String title,
+    required String body,
   }) async {
     final location = await _resolveLocalLocation();
     if (location == null) return ScheduleOutcome.timezoneUnavailable;
@@ -143,8 +145,8 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
       await _plugin.cancel(id: _notificationId);
       await _plugin.zonedSchedule(
         id: _notificationId,
-        title: 'THIRTY',
-        body: 'A moment for your next Circle, if it fits today.',
+        title: title,
+        body: body,
         // The component constructor, not `.from` — this treats
         // year/month/day/hour/minute as wall-clock time *in* [location],
         // which is what makes the daily recurrence DST-correct.

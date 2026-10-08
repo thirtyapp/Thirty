@@ -48,6 +48,8 @@ class _FakeReminderGateway implements ReminderGateway {
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
+    required String title,
+    required String body,
   }) async {
     if (!exactAlarmAccessGranted) return ScheduleOutcome.exactAlarmAccessDenied;
     scheduleCallCount++;
@@ -505,11 +507,22 @@ void main() {
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
+    // The Premium card, wherever it sits (Personal comes first), and every
+    // grouped card around it.
+    final premiumCard = find.descendant(
+      of: find.byType(YouPremiumCard),
+      matching: find.byType(ThirtyCard),
+    );
+    expect(
+      tester.widget<ThirtyCard>(premiumCard).padding,
+      const EdgeInsets.all(AppSpacing.featuredCard),
+    );
     final cards = tester
         .widgetList<ThirtyCard>(find.byType(ThirtyCard, skipOffstage: false))
         .toList();
-    expect(cards.first.padding, const EdgeInsets.all(AppSpacing.featuredCard));
-    for (final group in cards.skip(1)) {
+    final groups = cards.where((card) => card != tester.widget(premiumCard));
+    expect(groups, isNotEmpty);
+    for (final group in groups) {
       expect(
         (group.padding! as EdgeInsets).left,
         AppSpacing.featuredCard,

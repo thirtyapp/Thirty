@@ -17,6 +17,7 @@ import 'package:thirty/core/routing/app_shell.dart';
 import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 /// Phase C5 — SnackBars float with the real app, router and fonts: 8pt
 /// above the floating bottom nav on You and 8pt above the screen edge on
@@ -70,7 +71,7 @@ Future<void> _showCopiedSnackBar(
     ),
   );
 
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
   final prefs = await SharedPreferences.getInstance();
   await CircleJournalRepository(prefs).recordShown(
     circleId: '2026-09-01',

@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../../../core/reminder/reminder_gateway.dart';
+import '../../../core/utils/daypart_greeting.dart';
 import '../../home/application/home_invitation_slot.dart';
 import '../../home/application/recommendation_provider.dart';
+import '../../settings/application/first_name_provider.dart';
 
 /// THIRTY's one local reminder — Step 5 local closure
 /// (`docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`), the
@@ -104,6 +106,15 @@ class ReminderNotifier extends Notifier<ReminderState> {
       if (previous?.status != next.status) {
         unawaited(_rescheduleIfNeeded());
       }
+    });
+
+    // The notification's greeting carries the first name, and a scheduled
+    // notification's content is fixed when it is scheduled — so adding,
+    // changing or removing the name re-establishes the daily reminder
+    // with the same time and settings. With the reminder off this only
+    // cancels (a no-op); it never requests a permission.
+    ref.listen<String?>(firstNameProvider, (previous, next) {
+      if (previous != next) unawaited(_rescheduleIfNeeded());
     });
 
     return ReminderState(
@@ -273,6 +284,12 @@ class ReminderNotifier extends Notifier<ReminderState> {
       firstOccurrenceLocal: firstOccurrence,
       hour: state.hour,
       minute: state.minute,
+      title: reminderNotificationTitle(
+        hour: state.hour,
+        minute: state.minute,
+        firstName: ref.read(firstNameProvider),
+      ),
+      body: reminderNotificationBody,
     );
     state = state.copyWith(
       timezoneUnavailable: outcome == ScheduleOutcome.timezoneUnavailable,
@@ -291,6 +308,21 @@ class ReminderNotifier extends Notifier<ReminderState> {
 /// case tomorrow. Exposed at top level (not a private method) so
 /// `reminder_provider_test.dart` can verify this pure calculation
 /// directly, independent of provider/gateway wiring.
+/// The daily reminder's title: THIRTY's daypart greeting for the time the
+/// reminder fires ([hour]:[minute] — never the moment it was scheduled),
+/// with the first name when there is one: "Good evening, Thomas." or
+/// "Good evening.". The name is the only personal detail a notification
+/// ever shows.
+String reminderNotificationTitle({
+  required int hour,
+  required int minute,
+  String? firstName,
+}) => daypartGreeting(DateTime(2000, 1, 1, hour, minute), firstName: firstName);
+
+/// The daily reminder's body — the same every day, with nothing from the
+/// user's history in it.
+const reminderNotificationBody = "Your Circle is here when you're ready.";
+
 DateTime nextReminderOccurrence(
   DateTime now,
   int hour,

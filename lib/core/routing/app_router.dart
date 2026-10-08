@@ -10,6 +10,8 @@ import '../../features/plans/domain/plan_ids.dart';
 import '../../features/plans/presentation/plan_detail_page.dart';
 import '../../features/plans/presentation/plan_path_page.dart';
 import '../../features/premium/presentation/premium_offer_page.dart';
+import '../../features/settings/application/first_name_provider.dart';
+import '../../features/settings/presentation/first_name_question_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 import '../dev_preview/quiet_trail_hero_preview_page.dart';
 import '../providers/theme_mode_provider.dart';
@@ -127,6 +129,13 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
         localDate: state.pathParameters['date']!,
       ),
     ),
+    // The one first-use question ("What should we call you?") — outside the
+    // shell, so nothing else is reachable until it is resolved; see
+    // [firstUseRedirect].
+    GoRoute(
+      path: firstNameQuestionLocation,
+      builder: (context, state) => const FirstNameQuestionPage(),
+    ),
     GoRoute(
       path: '/premium',
       builder: (context, state) => const PremiumOfferPage(),
@@ -156,6 +165,21 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
   ];
 }
 
+/// Where the first-use name question lives.
+const firstNameQuestionLocation = '/welcome/name';
+
+/// THIRTY's one startup gate: until the first-use name question has been
+/// resolved (a name saved or skipped — [firstNamePromptSeenProvider]),
+/// every location leads to it; once resolved, it is never shown again and
+/// its own location leads to Today. The question replaces the stack rather
+/// than sitting under it, so Back can never return into it.
+@visibleForTesting
+String? firstUseRedirect({required bool promptSeen, required String location}) {
+  final atQuestion = location == firstNameQuestionLocation;
+  if (!promptSeen) return atQuestion ? null : firstNameQuestionLocation;
+  return atQuestion ? '/' : null;
+}
+
 /// Set via `--dart-define=THIRTY_DEBUG_ROUTE=/some/route` to have the app
 /// open directly on a debug-only route on launch — the only practical way
 /// to reach one on a mobile emulator, since this app has no deep-link
@@ -180,4 +204,11 @@ final GoRouter appRouter = GoRouter(
       ? _debugInitialLocation
       : '/',
   routes: buildAppRoutes(includeDevPreview: kDebugMode),
+  redirect: (context, state) => firstUseRedirect(
+    promptSeen: ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(firstNamePromptSeenProvider),
+    location: state.matchedLocation,
+  ),
 );

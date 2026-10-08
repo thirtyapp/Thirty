@@ -9,9 +9,10 @@ import 'package:thirty/core/providers/theme_mode_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_ready_prompt.dart';
+import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 Future<Widget> _wrap() async {
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
   final prefs = await SharedPreferences.getInstance();
 
   return ProviderScope(
@@ -42,7 +43,7 @@ void main() {
   testWidgets('switching ThemeMode via the showcase updates the provider', (
     WidgetTester tester,
   ) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
     final prefs = await SharedPreferences.getInstance();
 
     final container = ProviderContainer(

@@ -13,6 +13,7 @@ import 'package:thirty/core/widgets/thirty_app_bar.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/presentation/widgets/home_header.dart';
+import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 /// Phase C5 — the AppBar's scrolled-under edge: none at the top, a 1pt
 /// divider-coloured bottom edge while the page's vertical scroll view is
@@ -163,7 +164,7 @@ void main() {
       tester.view.physicalSize = const Size(360, 740);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
       final prefs = await SharedPreferences.getInstance();
       await CircleJournalRepository(prefs).recordShown(
         circleId: '2026-09-01',

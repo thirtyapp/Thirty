@@ -38,6 +38,8 @@ class _FakeReminderGateway implements ReminderGateway {
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
+    required String title,
+    required String body,
   }) async => ScheduleOutcome.scheduled;
   @override
   Future<void> cancel() async {}

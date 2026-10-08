@@ -22,6 +22,7 @@ import 'package:thirty/features/insights/presentation/insights_page.dart';
 import 'package:thirty/features/insights/presentation/widgets/circle_history_calendar.dart';
 import 'package:thirty/features/plans/presentation/plan_path_page.dart';
 import 'package:thirty/features/premium/presentation/premium_offer_page.dart';
+import 'package:thirty/features/settings/application/first_name_provider.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
 
 /// Navigation shell coverage for the founder-approved primary IA:
@@ -52,7 +53,10 @@ void main() {
     Map<String, Object> storedPrefs = const {},
     bool entitled = true,
   }) async {
-    SharedPreferences.setMockInitialValues(storedPrefs);
+    SharedPreferences.setMockInitialValues({
+      ...storedPrefs,
+      firstNamePromptSeenKey: true,
+    });
     final prefs = await SharedPreferences.getInstance();
 
     await tester.pumpWidget(

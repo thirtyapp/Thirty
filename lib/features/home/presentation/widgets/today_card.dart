@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/activity_category.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/utils/daypart_greeting.dart';
 import '../../../../core/widgets/thirty_card.dart';
 
-/// Home's time-of-day greeting (Phase D1): morning from 05:00, afternoon
-/// from 12:00, evening from 18:00 until 05:00.
-String homeGreeting(DateTime now) {
-  final hour = now.hour;
-  if (hour >= 5 && hour < 12) return 'Good morning';
-  if (hour >= 12 && hour < 18) return 'Good afternoon';
-  return 'Good evening';
-}
+/// The greeting that opens every Circle (Phase D1): THIRTY's daypart
+/// greeting, with the user's first name when they have given one —
+/// "Good morning, Thomas." or "Good morning." ([daypartGreeting]).
+String homeGreeting(DateTime now, {String? firstName}) =>
+    daypartGreeting(now, firstName: firstName);
 
 /// The line under the greeting while today's Circle is still open.
 const homeGreetingSubline = "Ready to close today's Circle?";

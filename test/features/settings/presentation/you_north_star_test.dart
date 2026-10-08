@@ -32,6 +32,7 @@ import 'package:thirty/features/home/presentation/widgets/home_header.dart'
 import 'package:thirty/features/insights/domain/insight_snapshot.dart';
 import 'package:thirty/features/plans/application/plan_provider.dart';
 import 'package:thirty/features/reminder/application/reminder_provider.dart';
+import 'package:thirty/features/settings/application/first_name_provider.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
 import 'package:thirty/features/settings/presentation/widgets/you_about_card.dart';
 import 'package:thirty/features/settings/presentation/widgets/you_header_art.dart';
@@ -57,6 +58,8 @@ class _FakeReminderGateway implements ReminderGateway {
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
+    required String title,
+    required String body,
   }) async => ScheduleOutcome.scheduled;
   @override
   Future<void> cancel() async {}
@@ -372,7 +375,7 @@ void main() {
       tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
         overrides: [
@@ -634,7 +637,7 @@ void main() {
         tester.platformDispatcher.textScaleFactorTestValue = scale;
         addTearDown(tester.view.reset);
         addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-        SharedPreferences.setMockInitialValues({});
+        SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
         final prefs = await SharedPreferences.getInstance();
         final container = ProviderContainer(
           overrides: [

@@ -9,6 +9,7 @@ import 'package:thirty/core/app/thirty_app.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 /// Records every [track] call instead of reaching Supabase.
 class _RecordingAnalyticsService implements AnalyticsService {
@@ -35,7 +36,7 @@ void main() {
     testWidgets('fires an appOpened event on cold start', (
       WidgetTester tester,
     ) async {
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
       final prefs = await SharedPreferences.getInstance();
       final analytics = _RecordingAnalyticsService();
 
@@ -56,7 +57,7 @@ void main() {
     testWidgets('fires another appOpened event on every foreground resume', (
       WidgetTester tester,
     ) async {
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
       final prefs = await SharedPreferences.getInstance();
       final analytics = _RecordingAnalyticsService();
 
@@ -91,6 +92,7 @@ void main() {
       (WidgetTester tester) async {
         final clock = _MutableClock(DateTime(2026, 8, 1, 9));
         SharedPreferences.setMockInitialValues({
+          firstNamePromptSeenKey: true,
           recommendationDayKey: '2026-08-01',
           recommendationIntentionKey: 'moreEnergy',
           recommendationActivityIdKey: 'thirtyMinuteWalk',

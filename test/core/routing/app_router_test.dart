@@ -15,6 +15,7 @@ import 'package:thirty/core/routing/app_shell.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
 import 'package:thirty/features/plans/presentation/plan_detail_page.dart';
 import 'package:thirty/features/plans/presentation/plan_path_page.dart';
+import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 void main() {
   testWidgets(
@@ -22,7 +23,7 @@ void main() {
     'state, then the Daily Context Question, and moving to the Circle '
     'Hero once an intention is chosen',
     (WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
       final prefs = await SharedPreferences.getInstance();
 
       await tester.pumpWidget(
@@ -58,7 +59,7 @@ void main() {
     'longer linked from any primary-nav element since the founder IA '
     'correction retired Journal as a bottom-nav destination',
     (WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
       final prefs = await SharedPreferences.getInstance();
 
       await tester.pumpWidget(
@@ -80,7 +81,7 @@ void main() {
     'the /plans route shows PlanPathPage, reachable regardless of the '
     'AppBar icon\'s own entitlement gating (Batch 2A)',
     (WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
       final prefs = await SharedPreferences.getInstance();
 
       await tester.pumpWidget(
@@ -102,7 +103,7 @@ void main() {
     "/plans/:planId opens that Plan's Your Path inside the shell (the "
     'navigation bar stays); an unknown id returns to Plans',
     (WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
       final prefs = await SharedPreferences.getInstance();
       addTearDown(() => appRouter.go('/'));
 
@@ -132,7 +133,7 @@ void main() {
   testWidgets('the /showcase route shows the design system showcase', (
     WidgetTester tester,
   ) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
     final prefs = await SharedPreferences.getInstance();
 
     await tester.pumpWidget(
@@ -153,7 +154,7 @@ void main() {
     'the dev-only Quiet Trail Hero preview route shows '
     'QuietTrailHeroAssetView',
     (WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
       final prefs = await SharedPreferences.getInstance();
 
       await tester.pumpWidget(

@@ -21,6 +21,7 @@ import 'package:thirty/features/home/presentation/widgets/today_card.dart';
 import 'package:thirty/features/plans/domain/plan_catalog.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
 import 'package:thirty/features/plans/presentation/widgets/plan_session_panel.dart';
+import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 /// Start Circle vs the floating bottom navigation, on the real app shell
 /// with the real fonts.
@@ -68,7 +69,10 @@ Future<void> _pumpHome(
   tester.platformDispatcher.platformBrightnessTestValue = brightness;
   addTearDown(tester.view.reset);
   addTearDown(tester.platformDispatcher.clearAllTestValues);
-  SharedPreferences.setMockInitialValues(prefs);
+  SharedPreferences.setMockInitialValues({
+    ...prefs,
+    firstNamePromptSeenKey: true,
+  });
   final resolved = await SharedPreferences.getInstance();
   await tester.pumpWidget(
     ProviderScope(

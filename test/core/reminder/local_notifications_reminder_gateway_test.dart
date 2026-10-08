@@ -161,6 +161,8 @@ void main() {
           firstOccurrenceLocal: DateTime(2026, 9, 2, 20, 0),
           hour: 20,
           minute: 0,
+          title: 'Good evening.',
+          body: "Your Circle is here when you're ready.",
         );
 
         // Timezone resolution succeeded — the outcome is never
@@ -184,6 +186,8 @@ void main() {
           firstOccurrenceLocal: DateTime(2026, 9, 2, 20, 0),
           hour: 20,
           minute: 0,
+          title: 'Good evening.',
+          body: "Your Circle is here when you're ready.",
         );
 
         expect(outcome, ScheduleOutcome.timezoneUnavailable);
@@ -243,6 +247,8 @@ void main() {
           firstOccurrenceLocal: DateTime(2026, 9, 2, 20, 0),
           hour: 20,
           minute: 0,
+          title: 'Good evening.',
+          body: "Your Circle is here when you're ready.",
         );
 
         expect(outcome, ScheduleOutcome.scheduled);
@@ -253,6 +259,29 @@ void main() {
         expect(platformSpecifics['scheduleMode'], 'exactAllowWhileIdle');
       },
     );
+
+    test('the notification shows exactly the caller\'s title and body — '
+        'the personal greeting reaches the platform payload', () async {
+      _mockTimezoneChannel('Europe/Berlin');
+      _mockNotificationsChannel(exactAlarmAccess: true);
+      final gateway = LocalNotificationsReminderGateway();
+      await gateway.initialize();
+
+      await gateway.scheduleDaily(
+        firstOccurrenceLocal: DateTime(2026, 9, 3, 8, 0),
+        hour: 8,
+        minute: 0,
+        title: 'Good morning, Thomas.',
+        body: "Your Circle is here when you're ready.",
+      );
+
+      expect(_zonedScheduleCalls, hasLength(1));
+      expect(_zonedScheduleCalls.single['title'], 'Good morning, Thomas.');
+      expect(
+        _zonedScheduleCalls.single['body'],
+        "Your Circle is here when you're ready.",
+      );
+    });
 
     test(
       'schedules nothing — never a silent inexact fallback — when '
@@ -267,6 +296,8 @@ void main() {
           firstOccurrenceLocal: DateTime(2026, 9, 2, 20, 0),
           hour: 20,
           minute: 0,
+          title: 'Good evening.',
+          body: "Your Circle is here when you're ready.",
         );
 
         expect(outcome, ScheduleOutcome.exactAlarmAccessDenied);

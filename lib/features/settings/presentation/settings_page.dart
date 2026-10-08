@@ -9,6 +9,7 @@ import 'widgets/you_about_card.dart';
 import 'widgets/you_data_card.dart';
 import 'widgets/you_group_card.dart';
 import 'widgets/you_header_art.dart';
+import 'widgets/you_personal_card.dart';
 import 'widgets/you_preferences_card.dart';
 import 'widgets/you_premium_card.dart';
 
@@ -53,16 +54,12 @@ import 'widgets/you_premium_card.dart';
 /// header in the Plans / Insights language — the THIRTY wordmark, "You" in
 /// the editorial serif, [subtitle], the You band ([youHeaderArt]) — with no
 /// profile button, since on You it would only open the page it is on. Then
+/// "Personal" ([YouPersonalCard] — the optional first name, local only),
 /// the THIRTY Premium card ([YouPremiumCard]), "Preferences"
 /// ([YouPreferencesCard]), "Data & privacy" ([YouDataCard]), "About"
 /// ([YouAboutCard]) and, last, the quiet "Restore purchases" footer
 /// ([PremiumRestoreFooter]) — reachable in every state it was before, but
 /// never competing with the Premium proposition.
-///
-/// A future personal row (an optional first name, edited here) belongs as
-/// its own one-row [YouGroupCard] between the Premium card and
-/// "Preferences" — the top of the personal content — without reordering
-/// anything else.
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
@@ -117,6 +114,10 @@ class SettingsPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  YouSectionHeading('Personal'),
+                  SizedBox(height: AppSpacing.s),
+                  YouPersonalCard(),
+                  SizedBox(height: AppSpacing.section),
                   YouPremiumCard(),
                   SizedBox(height: AppSpacing.section),
                   YouSectionHeading('Preferences'),

@@ -24,6 +24,7 @@ import 'package:thirty/core/widgets/thirty_button.dart';
 import 'package:thirty/features/home/presentation/widgets/home_header.dart';
 import 'package:thirty/features/home/presentation/widgets/later_today_label.dart';
 import 'package:thirty/features/home/presentation/widgets/today_card.dart';
+import 'package:thirty/features/settings/application/first_name_provider.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
 
 /// Phase D1 — Home visual pass (Design vision.png), with the app's real
@@ -190,7 +191,10 @@ void main() {
     tester.view.physicalSize = const Size(360, 740);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    SharedPreferences.setMockInitialValues(_assigned);
+    SharedPreferences.setMockInitialValues({
+      ..._assigned,
+      firstNamePromptSeenKey: true,
+    });
     final prefs = await SharedPreferences.getInstance();
     await tester.pumpWidget(
       ProviderScope(
@@ -217,19 +221,34 @@ void main() {
   group('Greeting', () {
     test('changes with the time of day', () {
       for (final (hour, greeting) in [
-        (0, 'Good evening'),
-        (4, 'Good evening'),
-        (5, 'Good morning'),
-        (11, 'Good morning'),
-        (12, 'Good afternoon'),
-        (17, 'Good afternoon'),
-        (18, 'Good evening'),
-        (23, 'Good evening'),
+        (0, 'Good evening.'),
+        (4, 'Good evening.'),
+        (5, 'Good morning.'),
+        (11, 'Good morning.'),
+        (12, 'Good afternoon.'),
+        (17, 'Good afternoon.'),
+        (18, 'Good evening.'),
+        (23, 'Good evening.'),
       ]) {
         expect(
           homeGreeting(DateTime(2026, 8, 2, hour, 30)),
           greeting,
           reason: '$hour:30',
+        );
+      }
+      // The exact boundary minutes, on THIRTY's one daypart model.
+      for (final (hour, minute, greeting) in [
+        (4, 59, 'Good evening.'),
+        (5, 0, 'Good morning.'),
+        (11, 59, 'Good morning.'),
+        (12, 0, 'Good afternoon.'),
+        (17, 59, 'Good afternoon.'),
+        (18, 0, 'Good evening.'),
+      ]) {
+        expect(
+          homeGreeting(DateTime(2026, 8, 2, hour, minute)),
+          greeting,
+          reason: '$hour:$minute',
         );
       }
     });
@@ -387,7 +406,10 @@ void main() {
       tester.view.physicalSize = const Size(360, 740);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      SharedPreferences.setMockInitialValues(_assigned);
+      SharedPreferences.setMockInitialValues({
+        ..._assigned,
+        firstNamePromptSeenKey: true,
+      });
       final prefs = await SharedPreferences.getInstance();
       await tester.pumpWidget(
         ProviderScope(

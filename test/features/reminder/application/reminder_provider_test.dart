@@ -68,6 +68,8 @@ class _FakeReminderGateway implements ReminderGateway {
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
+    required String title,
+    required String body,
   }) async {
     // Mirrors the real gateway's own independent fail-closed check
     // (`local_notifications_reminder_gateway.dart`) — a fake that always

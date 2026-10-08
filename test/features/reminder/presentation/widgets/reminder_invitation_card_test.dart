@@ -39,6 +39,8 @@ class _FakeReminderGateway implements ReminderGateway {
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
+    required String title,
+    required String body,
   }) async {
     if (!exactAlarmAccessGranted) return ScheduleOutcome.exactAlarmAccessDenied;
     scheduleCallCount++;

@@ -10,6 +10,7 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_confirm_dialog.dart';
 import '../../../../core/world_rendering/world_hero_art_view.dart';
+import '../../../settings/application/first_name_provider.dart';
 import '../../application/first_breath_provider.dart';
 import '../../application/recommendation_provider.dart';
 import '../../application/world_scene_resolution.dart';
@@ -646,7 +647,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                         Semantics(
                           header: true,
                           child: Text(
-                            homeGreeting(ref.watch(nowProvider)),
+                            homeGreeting(
+                              ref.watch(nowProvider),
+                              firstName: ref.watch(firstNameProvider),
+                            ),
                             style: greetingStyle,
                             textAlign: TextAlign.center,
                           ),

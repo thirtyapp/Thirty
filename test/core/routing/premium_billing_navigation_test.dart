@@ -9,6 +9,7 @@ import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
 import 'package:thirty/features/premium/presentation/premium_offer_page.dart';
+import 'package:thirty/features/settings/application/first_name_provider.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
 
 /// Step 5 (`docs/product/adr/ADR-017-v1-step5-revenuecat-billing.md`) —
@@ -30,7 +31,7 @@ class _SettledEntitlement extends EntitlementNotifier {
 
 void main() {
   Future<void> pumpApp(WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
     final prefs = await SharedPreferences.getInstance();
 
     await tester.pumpWidget(

@@ -82,11 +82,14 @@ abstract class ReminderGateway {
   /// fire; the underlying OS schedule then repeats daily at
   /// [hour]:[minute] — in the device's actual resolved local timezone,
   /// preserving that wall-clock time correctly across DST — from that
-  /// point on.
+  /// point on. [title] and [body] are the notification's whole visible
+  /// content — composed by the caller, never by the gateway.
   Future<ScheduleOutcome> scheduleDaily({
     required DateTime firstOccurrenceLocal,
     required int hour,
     required int minute,
+    required String title,
+    required String body,
   });
 
   /// Cancels THIRTY's scheduled reminder, if any. A no-op if none is
