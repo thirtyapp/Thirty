@@ -1,7 +1,7 @@
 # THIRTY World System
 
-**Version:** v1.1.0
-**Status:** Approved v1.1.0
+**Version:** v1.2.0
+**Status:** Approved v1.2.0
 
 ## Purpose
 
@@ -120,6 +120,15 @@ Do not use:
 **Reason.** The user should imagine themselves inside the scene, not compare themselves with an illustrated person. A depicted body — however abstract — invites a silent comparison (age, fitness, gender presentation) that a place never does. This formalises, for illustration, the same instinct already stated for photography in Brand Book §17: THIRTY favours "moment and feeling... over showing intense effort," and never a "competitive, fitness-influencer aesthetic." It is also a direct expression of the Experience Principle "belonging without comparison" ([Chapter 1 §10](../playbook/01-the-circle-manifesto.md#10-the-emotional-principles)): the user's only meaningful comparison is with their own closed circles, never with a body — real or illustrated — that isn't theirs.
 
 The environment carries the story. A tree, a path, a window, a chair — these can hold an emotional promise without ever inviting the user to measure themselves against anything.
+
+**Scope clarification (v1.2.0, 7 October 2026).** This section governs World artwork and illustrated environments — every Hero, Card and World expression — and remains fully in force for them, including all current V1 World artwork and §10a. It does not govern task-specific instructional guidance. Where an activity cannot be communicated without showing body position or movement (for example yoga, mobility, form-dependent stretching or exercise guidance), a separate guidance layer may use a human demonstrator, provided that it:
+
+- is visually and architecturally separate from the World, never drawn into the World artwork;
+- never becomes the emotional focal point of the World;
+- avoids idealised, competitive or physique-led fitness imagery;
+- is used only under an approved activity or product contract.
+
+This is a clarification of scope, not a relaxation of any World-art rule. See [THIRTY_PRODUCT_FAMILY_STRATEGY.md](../strategy/THIRTY_PRODUCT_FAMILY_STRATEGY.md).
 
 ---
 
@@ -872,6 +881,11 @@ None of those documents is modified by this one. Where a future decision in any 
 ---
 
 ## Version History
+
+### v1.2.0 — 2026-10-07
+
+- §2: adds a founder-approved scope clarification. §2 governs World artwork and illustrated environments and remains fully in force for them, including all current V1 World artwork. A separate, task-specific instructional guidance layer may use a human demonstrator where body position or movement must be shown, under four conditions (separate from the World, never its emotional focal point, no idealised or competitive fitness imagery, approved activity/product contract only).
+- No production World-art rule is loosened; §10a and the existing §2 rule and reasoning are unchanged. No other section changed.
 
 ### v1.1.0 — 2026-09-27
 

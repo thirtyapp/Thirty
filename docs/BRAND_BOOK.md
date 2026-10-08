@@ -279,6 +279,8 @@ Wat niet verandert zonder expliciete, bewuste beslissing:
 - De primaire slogan *"Your healthiest 30 minutes."*
 - De kernwaarden uit sectie 6.
 
+**Productfamilie (founder-richting, 7 oktober 2026).** Een door de founder goedgekeurde langetermijnrichting staat toe dat THIRTY na de lancering een familie van specialistische producten verkent — werktitels zoals THIRTY Fit, THIRTY Meditation en THIRTY Yoga — terwijl THIRTY zelf het flagship- en masterbrand blijft. Deze richting is post-launch en evidence-gated, en breidt de V1-scope niet uit. Elke familie-uitbreiding behoudt The Golden Rule, de Circle-betekenis en de rustige merkgrenzen hierboven. Specialistische bewegingsproducten mogen rustige, instructieve menselijke begeleiding bevatten, zonder competitieve of prestatiegerichte fitness-branding over te nemen. Zie [THIRTY_PRODUCT_FAMILY_STRATEGY.md](strategy/THIRTY_PRODUCT_FAMILY_STRATEGY.md).
+
 Elke merkuitbreiding wordt getoetst aan [The Golden Rule](#1-the-golden-rule): maakt dit THIRTY rustiger, eenvoudiger en menselijker, of alleen groter?
 
 ---
