@@ -31,7 +31,9 @@ Future<Widget> _wrap({
 /// the tests above store it.
 Future<Map<String, Object>> _startedRecordPrefs(String localDate) async {
   SharedPreferences.setMockInitialValues({});
-  final journal = CircleJournalRepository(await SharedPreferences.getInstance());
+  final journal = CircleJournalRepository(
+    await SharedPreferences.getInstance(),
+  );
   final day = DateTime.parse(localDate);
   await journal.recordShown(
     circleId: localDate,
@@ -117,39 +119,36 @@ void main() {
     },
   );
 
-  testWidgets(
-    'accessibility: at 360pt width and 200% text the record never '
-    'overflows and every line stays reachable by scrolling',
-    (tester) async {
-      tester.view.physicalSize = const Size(360, 740);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
+  testWidgets('accessibility: at 360pt width and 200% text the record never '
+      'overflows and every line stays reachable by scrolling', (tester) async {
+    tester.view.physicalSize = const Size(360, 740);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
 
-      final page = await _wrap(
-        storedPrefs: await _startedRecordPrefs('2026-09-05'),
-        localDate: '2026-09-05',
-      );
-      await tester.pumpWidget(
-        Builder(
-          builder: (context) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: const TextScaler.linear(2)),
-            child: page,
-          ),
+    final page = await _wrap(
+      storedPrefs: await _startedRecordPrefs('2026-09-05'),
+      localDate: '2026-09-05',
+    );
+    await tester.pumpWidget(
+      Builder(
+        builder: (context) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(2)),
+          child: page,
         ),
-      );
+      ),
+    );
 
-      expect(tester.takeException(), isNull);
+    expect(tester.takeException(), isNull);
 
-      // The last line of the card — the factual-interaction note — must be
-      // reachable, not clipped off the bottom of the screen.
-      final note = find.textContaining(
-        'never confirms the activity was actually done',
-      );
-      await tester.scrollUntilVisible(note, 200);
-      expect(note.hitTestable(), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    },
-  );
+    // The last line of the card — the factual-interaction note — must be
+    // reachable, not clipped off the bottom of the screen.
+    final note = find.textContaining(
+      'never confirms the activity was actually done',
+    );
+    await tester.scrollUntilVisible(note, 200);
+    expect(note.hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

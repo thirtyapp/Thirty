@@ -92,93 +92,79 @@ void main() {
       expect(container.read(showPremiumOfferInvitationProvider), isFalse);
     });
 
-    test('never true once already marked shown, even if still eligible', () async {
-      final container = await containerWith();
+    test(
+      'never true once already marked shown, even if still eligible',
+      () async {
+        final container = await containerWith();
+        addTearDown(container.dispose);
+        await closeOneCircle(container, '2026-09-01');
+        await closeOneCircle(container, '2026-09-02');
+        await container
+            .read(sharedPreferencesProvider)
+            .setBool(premiumOfferInvitationShownKey, true);
+
+        expect(container.read(showPremiumOfferInvitationProvider), isFalse);
+      },
+    );
+
+    test('never true while a reflection question is pending — prompt-priority '
+        'rule (parent §28): reflection first, Premium invitation waits until '
+        'neither is being presented', () async {
+      final container = await containerWith(
+        extraPrefs: {
+          recommendationDayKey: '2026-09-02',
+          recommendationIntentionKey: 'moreEnergy',
+          recommendationActivityIdKey: 'thirtyMinuteWalk',
+          recommendationStatusKey: 'closed',
+          recommendationStartedAtKey: DateTime(2026, 9, 2).toIso8601String(),
+          recommendationClosedAtKey: DateTime(2026, 9, 2).toIso8601String(),
+        },
+      );
       addTearDown(container.dispose);
       await closeOneCircle(container, '2026-09-01');
       await closeOneCircle(container, '2026-09-02');
-      await container
-          .read(sharedPreferencesProvider)
-          .setBool(premiumOfferInvitationShownKey, true);
 
+      expect(container.read(reflectionPendingProvider), isTrue);
       expect(container.read(showPremiumOfferInvitationProvider), isFalse);
     });
 
-    test(
-      'never true while a reflection question is pending — prompt-priority '
-      'rule (parent §28): reflection first, Premium invitation waits until '
-      'neither is being presented',
-      () async {
-        final container = await containerWith(
-          extraPrefs: {
-            recommendationDayKey: '2026-09-02',
-            recommendationIntentionKey: 'moreEnergy',
-            recommendationActivityIdKey: 'thirtyMinuteWalk',
-            recommendationStatusKey: 'closed',
-            recommendationStartedAtKey: DateTime(
-              2026,
-              9,
-              2,
-            ).toIso8601String(),
-            recommendationClosedAtKey: DateTime(2026, 9, 2).toIso8601String(),
-          },
-        );
-        addTearDown(container.dispose);
-        await closeOneCircle(container, '2026-09-01');
-        await closeOneCircle(container, '2026-09-02');
+    test('becomes true once the pending reflection is answered, still on the '
+        'same visit', () async {
+      final container = await containerWith(
+        extraPrefs: {
+          recommendationDayKey: '2026-09-02',
+          recommendationIntentionKey: 'moreEnergy',
+          recommendationActivityIdKey: 'thirtyMinuteWalk',
+          recommendationStatusKey: 'closed',
+          recommendationStartedAtKey: DateTime(2026, 9, 2).toIso8601String(),
+          recommendationClosedAtKey: DateTime(2026, 9, 2).toIso8601String(),
+        },
+      );
+      addTearDown(container.dispose);
+      await closeOneCircle(container, '2026-09-01');
+      await closeOneCircle(container, '2026-09-02');
+      expect(container.read(showPremiumOfferInvitationProvider), isFalse);
 
-        expect(container.read(reflectionPendingProvider), isTrue);
-        expect(container.read(showPremiumOfferInvitationProvider), isFalse);
-      },
-    );
+      container
+          .read(recommendationProvider.notifier)
+          .reportAttempt(CircleAttemptResponse.notToday);
 
-    test(
-      'becomes true once the pending reflection is answered, still on the '
-      'same visit',
-      () async {
-        final container = await containerWith(
-          extraPrefs: {
-            recommendationDayKey: '2026-09-02',
-            recommendationIntentionKey: 'moreEnergy',
-            recommendationActivityIdKey: 'thirtyMinuteWalk',
-            recommendationStatusKey: 'closed',
-            recommendationStartedAtKey: DateTime(
-              2026,
-              9,
-              2,
-            ).toIso8601String(),
-            recommendationClosedAtKey: DateTime(2026, 9, 2).toIso8601String(),
-          },
-        );
-        addTearDown(container.dispose);
-        await closeOneCircle(container, '2026-09-01');
-        await closeOneCircle(container, '2026-09-02');
-        expect(container.read(showPremiumOfferInvitationProvider), isFalse);
+      expect(container.read(reflectionPendingProvider), isFalse);
+      expect(container.read(showPremiumOfferInvitationProvider), isTrue);
+    });
 
-        container
-            .read(recommendationProvider.notifier)
-            .reportAttempt(CircleAttemptResponse.notToday);
+    test('never true while the reminder invitation is currently eligible — '
+        'prompt-priority rule (parent §28): reminder invitation before '
+        'Premium invitation', () async {
+      final container = await containerWith(
+        extraPrefs: {reminderInvitationShownKey: false},
+      );
+      addTearDown(container.dispose);
+      await closeOneCircle(container, '2026-09-01');
+      await closeOneCircle(container, '2026-09-02');
 
-        expect(container.read(reflectionPendingProvider), isFalse);
-        expect(container.read(showPremiumOfferInvitationProvider), isTrue);
-      },
-    );
-
-    test(
-      'never true while the reminder invitation is currently eligible — '
-      'prompt-priority rule (parent §28): reminder invitation before '
-      'Premium invitation',
-      () async {
-        final container = await containerWith(
-          extraPrefs: {reminderInvitationShownKey: false},
-        );
-        addTearDown(container.dispose);
-        await closeOneCircle(container, '2026-09-01');
-        await closeOneCircle(container, '2026-09-02');
-
-        expect(container.read(showReminderInvitationProvider), isTrue);
-        expect(container.read(showPremiumOfferInvitationProvider), isFalse);
-      },
-    );
+      expect(container.read(showReminderInvitationProvider), isTrue);
+      expect(container.read(showPremiumOfferInvitationProvider), isFalse);
+    });
   });
 }

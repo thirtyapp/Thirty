@@ -6,7 +6,10 @@ import 'package:thirty/core/world_rendering/quiet_trail_hero_view.dart';
 import 'package:thirty/core/worlds/reference/quiet_trail_hero_scene.dart';
 
 Widget _wrap(Widget child) {
-  return MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+  return MaterialApp(
+    theme: AppTheme.light,
+    home: Scaffold(body: child),
+  );
 }
 
 final _baseScene = QuietTrailHeroScene(

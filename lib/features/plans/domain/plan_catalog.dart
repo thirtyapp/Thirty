@@ -391,7 +391,8 @@ const Map<PlanId, PlanDefinition> planCatalog = {
       StageDefinition(
         id: 'gentler_pace_3_apply',
         activityId: ActivityId.quietSittingOutside,
-        purpose: 'Take the same unhurried pace outside, into a different setting.',
+        purpose:
+            'Take the same unhurried pace outside, into a different setting.',
         rationale:
             'This carries the pace established indoors into a new '
             'context, without adding anything to do there.',

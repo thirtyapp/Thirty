@@ -133,8 +133,7 @@ class _UnclosedDot extends StatelessWidget {
   }
 }
 
-class _CircleHistoryCalendarState
-    extends ConsumerState<CircleHistoryCalendar> {
+class _CircleHistoryCalendarState extends ConsumerState<CircleHistoryCalendar> {
   late DateTime _displayedMonth;
 
   @override
@@ -189,10 +188,7 @@ class _CircleHistoryCalendarState
                 onNext: _goToNextMonth,
               ),
               if (useGrid)
-                _MonthGrid(
-                  month: _displayedMonth,
-                  recordedDates: recordedDates,
-                )
+                _MonthGrid(month: _displayedMonth, recordedDates: recordedDates)
               else
                 _RecordedDateList(
                   month: _displayedMonth,
@@ -324,9 +320,7 @@ class _CalendarCell extends StatelessWidget {
     final record = recordedDates[key];
     final hasRecord = record != null;
     final colors = Theme.of(context).extension<AppColors>()!;
-    final style = Theme.of(
-      context,
-    ).textTheme.bodyMedium?.copyWith(height: 1);
+    final style = Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1);
     final spokenDate = MaterialLocalizations.of(context).formatFullDate(date);
 
     // The number at the user's own text size (never shrunk to fit), inside

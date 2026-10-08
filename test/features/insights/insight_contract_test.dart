@@ -77,7 +77,8 @@ Future<ProviderContainer> _container({
       nowProvider.overrideWithValue(now),
       eventClockProvider.overrideWithValue(() => now),
       premiumEntitlementProvider.overrideWithValue(entitled),
-      if (analytics != null) analyticsServiceProvider.overrideWithValue(analytics),
+      if (analytics != null)
+        analyticsServiceProvider.overrideWithValue(analytics),
     ],
   );
 }
@@ -128,8 +129,14 @@ void main() {
     test('the frozen window: newest evidence on the window start is still '
         'current; one day earlier is not', () {
       final now = DateTime(2026, 9, 30); // window starts 2 Sep
-      expect(insightEvidenceIsCurrent(['2026-08-01', '2026-09-02'], now), isTrue);
-      expect(insightEvidenceIsCurrent(['2026-08-01', '2026-09-01'], now), isFalse);
+      expect(
+        insightEvidenceIsCurrent(['2026-08-01', '2026-09-02'], now),
+        isTrue,
+      );
+      expect(
+        insightEvidenceIsCurrent(['2026-08-01', '2026-09-01'], now),
+        isFalse,
+      );
       // A plain current-place fact has no evidence to age out.
       expect(insightEvidenceIsCurrent(const [], now), isTrue);
     });
@@ -137,7 +144,9 @@ void main() {
     test('fresh evidence: the pattern is current and actionable', () async {
       final container = await _container(
         now: _fresh,
-        prefs: {insightSnapshotsKey: _blob([_patternSnapshot()])},
+        prefs: {
+          insightSnapshotsKey: _blob([_patternSnapshot()]),
+        },
       );
       addTearDown(container.dispose);
 
@@ -151,7 +160,9 @@ void main() {
         final container = await _container(
           now: _agedOut,
           entitled: entitled,
-          prefs: {insightSnapshotsKey: _blob([_patternSnapshot()])},
+          prefs: {
+            insightSnapshotsKey: _blob([_patternSnapshot()]),
+          },
         );
         addTearDown(container.dispose);
 
@@ -170,7 +181,9 @@ void main() {
       final container = await _container(
         now: _agedOut,
         analytics: analytics,
-        prefs: {insightSnapshotsKey: _blob([_patternSnapshot()])},
+        prefs: {
+          insightSnapshotsKey: _blob([_patternSnapshot()]),
+        },
       );
       addTearDown(container.dispose);
 
@@ -185,7 +198,9 @@ void main() {
     test('a still-true pattern re-found on newer dates is re-dated, not '
         'withdrawn as aged-out', () async {
       final container = await _container(now: DateTime(2026, 9, 6));
-      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+      container
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.clearerHeadPath);
       await _seedLighterChoices(container, [
         '2026-08-12',
         '2026-08-20',
@@ -220,7 +235,9 @@ void main() {
         'changes no Plan state', () async {
       final container = await _container(
         now: _fresh,
-        prefs: {insightSnapshotsKey: _blob([_patternSnapshot()])},
+        prefs: {
+          insightSnapshotsKey: _blob([_patternSnapshot()]),
+        },
       );
       final planBefore = container.read(planProvider);
       container.read(insightProvider.notifier).dismissLatest();
@@ -228,14 +245,20 @@ void main() {
       expect(container.read(currentInsightProvider), isNull);
       expect(container.read(displayedInsightProvider), isNull);
       expect(container.read(insightProvider).snapshots, hasLength(1));
-      expect(container.read(planProvider).activePlanId, planBefore.activePlanId);
+      expect(
+        container.read(planProvider).activePlanId,
+        planBefore.activePlanId,
+      );
       await Future<void>.delayed(Duration.zero);
       final stored = _persisted(container);
       container.dispose();
 
       final restarted = await _container(now: _fresh, prefs: stored);
       addTearDown(restarted.dispose);
-      expect(restarted.read(insightProvider).snapshots.single.dismissed, isTrue);
+      expect(
+        restarted.read(insightProvider).snapshots.single.dismissed,
+        isTrue,
+      );
       expect(restarted.read(displayedInsightProvider), isNull);
     });
 
@@ -243,7 +266,9 @@ void main() {
         'an aged-out dismissed one is not shown as earlier either', () async {
       final legacy = await _container(
         now: _fresh,
-        prefs: {insightSnapshotsKey: _blob([_patternSnapshot()])},
+        prefs: {
+          insightSnapshotsKey: _blob([_patternSnapshot()]),
+        },
       );
       addTearDown(legacy.dispose);
       expect(legacy.read(insightProvider).snapshots.single.dismissed, isFalse);
@@ -261,7 +286,9 @@ void main() {
     test('a genuinely new observation shows again; re-finding the dismissed '
         'one does not', () async {
       final container = await _container(now: DateTime(2026, 9, 6));
-      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+      container
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.clearerHeadPath);
       const dates = [
         '2026-08-10',
         '2026-08-15',
@@ -297,43 +324,57 @@ void main() {
         'is withdrawn and not shown as earlier', () async {
       final container = await _container(
         now: _fresh,
-        prefs: {insightSnapshotsKey: _blob([_patternSnapshot()])},
+        prefs: {
+          insightSnapshotsKey: _blob([_patternSnapshot()]),
+        },
       );
       addTearDown(container.dispose);
       expect(container.read(currentInsightProvider), isNotNull);
 
-      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+      container
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.clearerHeadPath);
 
       expect(container.read(currentInsightProvider), isNull);
       expect(container.read(displayedInsightProvider), isNull);
     });
 
-    test('journal deletion clears every snapshot, current or earlier', () async {
-      final container = await _container(
-        now: _agedOut,
-        prefs: {insightSnapshotsKey: _blob([_patternSnapshot()])},
-      );
-      addTearDown(container.dispose);
-      expect(container.read(displayedInsightProvider), isNotNull);
+    test(
+      'journal deletion clears every snapshot, current or earlier',
+      () async {
+        final container = await _container(
+          now: _agedOut,
+          prefs: {
+            insightSnapshotsKey: _blob([_patternSnapshot()]),
+          },
+        );
+        addTearDown(container.dispose);
+        expect(container.read(displayedInsightProvider), isNotNull);
 
-      await container.read(insightProvider.notifier).clearAll();
+        await container.read(insightProvider.notifier).clearAll();
 
-      expect(container.read(insightProvider).snapshots, isEmpty);
-      expect(container.read(displayedInsightProvider), isNull);
-    });
+        expect(container.read(insightProvider).snapshots, isEmpty);
+        expect(container.read(displayedInsightProvider), isNull);
+      },
+    );
 
-    test('the current-place fallback (no evidence dates) never ages out', () async {
-      final fact = _patternSnapshot()
-        ..['isPatternClaim'] = false
-        ..['evidenceCount'] = 0
-        ..['evidenceDateKeys'] = <String>[];
-      final container = await _container(
-        now: DateTime(2027, 6, 1),
-        prefs: {insightSnapshotsKey: _blob([fact])},
-      );
-      addTearDown(container.dispose);
-      expect(container.read(displayedInsightProvider)!.isCurrent, isTrue);
-    });
+    test(
+      'the current-place fallback (no evidence dates) never ages out',
+      () async {
+        final fact = _patternSnapshot()
+          ..['isPatternClaim'] = false
+          ..['evidenceCount'] = 0
+          ..['evidenceDateKeys'] = <String>[];
+        final container = await _container(
+          now: DateTime(2027, 6, 1),
+          prefs: {
+            insightSnapshotsKey: _blob([fact]),
+          },
+        );
+        addTearDown(container.dispose);
+        expect(container.read(displayedInsightProvider)!.isCurrent, isTrue);
+      },
+    );
 
     test('thresholds are unchanged', () {
       expect(insightMinRecordCount, 5);
@@ -353,7 +394,9 @@ void main() {
       final container = await _container(
         now: now,
         entitled: entitled,
-        prefs: {insightSnapshotsKey: _blob([_patternSnapshot()])},
+        prefs: {
+          insightSnapshotsKey: _blob([_patternSnapshot()]),
+        },
       );
       addTearDown(container.dispose);
       await tester.pumpWidget(
@@ -376,7 +419,10 @@ void main() {
 
       expect(_spokenText('Observed on Sep 6, 2026'), findsOneWidget);
       expect(find.textContaining('5 recent visits'), findsOneWidget);
-      expect(find.widgetWithText(ThirtyButton, 'Activate this Plan'), findsOneWidget);
+      expect(
+        find.widgetWithText(ThirtyButton, 'Activate this Plan'),
+        findsOneWidget,
+      );
       expect(find.text('Dismiss'), findsOneWidget);
     });
 
@@ -385,7 +431,10 @@ void main() {
       for (final entitled in [true, false]) {
         await pumpCard(tester, now: _agedOut, entitled: entitled);
 
-        expect(_spokenText('An earlier Insight from Sep 6, 2026'), findsOneWidget);
+        expect(
+          _spokenText('An earlier Insight from Sep 6, 2026'),
+          findsOneWidget,
+        );
         expect(find.textContaining('recent'), findsNothing);
         expect(find.textContaining('5 visits'), findsOneWidget);
         expect(find.byType(ThirtyButton), findsNothing);
@@ -400,7 +449,10 @@ void main() {
       await tester.pump();
 
       expect(find.textContaining('Clearer Head'), findsNothing);
-      expect(container.read(insightProvider).snapshots.single.dismissed, isTrue);
+      expect(
+        container.read(insightProvider).snapshots.single.dismissed,
+        isTrue,
+      );
     });
   });
 }

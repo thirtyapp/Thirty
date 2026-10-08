@@ -47,9 +47,8 @@ Future<(Widget, ProviderContainer)> _wrap({
           ),
           GoRoute(
             path: '/history/:date',
-            builder: (context, state) => Scaffold(
-              body: Text('detail:${state.pathParameters['date']}'),
-            ),
+            builder: (context, state) =>
+                Scaffold(body: Text('detail:${state.pathParameters['date']}')),
           ),
         ],
       ),
@@ -61,8 +60,8 @@ Future<(Widget, ProviderContainer)> _wrap({
 /// The spoken date the calendar announces — the same localized full date
 /// (`MaterialLocalizations.formatFullDate`) the widget uses, never the
 /// machine date key.
-String _spoken(String dateKey) =>
-    const DefaultMaterialLocalizations().formatFullDate(DateTime.parse(dateKey));
+String _spoken(String dateKey) => const DefaultMaterialLocalizations()
+    .formatFullDate(DateTime.parse(dateKey));
 
 String _journalWith(List<String> localDates) => jsonEncode({
   'schemaVersion': circleJournalSchemaVersion,
@@ -101,7 +100,9 @@ void main() {
     'leaves every other date in the month unmarked',
     (tester) async {
       final (widget, container) = await _wrap(
-        storedPrefs: {circleJournalKey: _journalWith(['2026-09-05'])},
+        storedPrefs: {
+          circleJournalKey: _journalWith(['2026-09-05']),
+        },
       );
       addTearDown(container.dispose);
       final handle = tester.ensureSemantics();
@@ -147,34 +148,38 @@ void main() {
       '2026-09-10',
       '2026-09-15',
     ]) {
-      expect(find.bySemanticsLabel('${_spoken(date)}, Circle closed'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('${_spoken(date)}, Circle closed'),
+        findsOneWidget,
+      );
     }
     handle.dispose();
   });
 
-  testWidgets(
-    'tapping a recorded date opens its record detail; tapping an '
-    'unrecorded date does nothing',
-    (tester) async {
-      final (widget, container) = await _wrap(
-        storedPrefs: {circleJournalKey: _journalWith(['2026-09-05'])},
-      );
-      addTearDown(container.dispose);
+  testWidgets('tapping a recorded date opens its record detail; tapping an '
+      'unrecorded date does nothing', (tester) async {
+    final (widget, container) = await _wrap(
+      storedPrefs: {
+        circleJournalKey: _journalWith(['2026-09-05']),
+      },
+    );
+    addTearDown(container.dispose);
 
-      await tester.pumpWidget(widget);
-      await tester.tap(find.text('5'));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(widget);
+    await tester.tap(find.text('5'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('detail:2026-09-05'), findsOneWidget);
-    },
-  );
+    expect(find.text('detail:2026-09-05'), findsOneWidget);
+  });
 
   testWidgets(
     'month navigation moves forward and back without altering any daily '
     'Circle state — purely local display state',
     (tester) async {
       final (widget, container) = await _wrap(
-        storedPrefs: {circleJournalKey: _journalWith(['2026-08-20'])},
+        storedPrefs: {
+          circleJournalKey: _journalWith(['2026-08-20']),
+        },
       );
       addTearDown(container.dispose);
       final handle = tester.ensureSemantics();
@@ -208,7 +213,9 @@ void main() {
     'same recorded-date marks from persisted storage',
     (tester) async {
       final (widgetA, containerA) = await _wrap(
-        storedPrefs: {circleJournalKey: _journalWith(['2026-09-12'])},
+        storedPrefs: {
+          circleJournalKey: _journalWith(['2026-09-12']),
+        },
       );
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(widgetA);
@@ -220,9 +227,7 @@ void main() {
       containerA.dispose();
 
       final (widgetB, containerB) = await _wrap(
-        storedPrefs: {
-          circleJournalKey: prefs.getString(circleJournalKey)!,
-        },
+        storedPrefs: {circleJournalKey: prefs.getString(circleJournalKey)!},
       );
       addTearDown(containerB.dispose);
       await tester.pumpWidget(widgetB);
@@ -241,7 +246,9 @@ void main() {
     tester.platformDispatcher.textScaleFactorTestValue = 2.0;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     final (widget, container) = await _wrap(
-      storedPrefs: {circleJournalKey: _journalWith(['2026-09-05'])},
+      storedPrefs: {
+        circleJournalKey: _journalWith(['2026-09-05']),
+      },
     );
     addTearDown(container.dispose);
 
@@ -250,15 +257,15 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('works on a small-screen viewport, no overflow', (
-    tester,
-  ) async {
+  testWidgets('works on a small-screen viewport, no overflow', (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     tester.view.physicalSize = const Size(320, 568);
     tester.view.devicePixelRatio = 1.0;
     final (widget, container) = await _wrap(
-      storedPrefs: {circleJournalKey: _journalWith(['2026-09-05'])},
+      storedPrefs: {
+        circleJournalKey: _journalWith(['2026-09-05']),
+      },
     );
     addTearDown(container.dispose);
 
@@ -316,29 +323,26 @@ void main() {
       },
     );
 
-    testWidgets(
-      'no duplicate journal record is created by the refresh path — '
-      'exactly one entry remains for today after close()',
-      (tester) async {
-        final (widget, container) = await _wrap();
-        addTearDown(container.dispose);
+    testWidgets('no duplicate journal record is created by the refresh path — '
+        'exactly one entry remains for today after close()', (tester) async {
+      final (widget, container) = await _wrap();
+      addTearDown(container.dispose);
 
-        await tester.pumpWidget(widget);
-        container
-            .read(recommendationProvider.notifier)
-            .chooseIntention(Intention.moreEnergy);
-        await tester.pumpAndSettle();
-        container.read(recommendationProvider.notifier).start();
-        await tester.pumpAndSettle();
-        container.read(recommendationProvider.notifier).close();
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(widget);
+      container
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.moreEnergy);
+      await tester.pumpAndSettle();
+      container.read(recommendationProvider.notifier).start();
+      await tester.pumpAndSettle();
+      container.read(recommendationProvider.notifier).close();
+      await tester.pumpAndSettle();
 
-        expect(
-          container.read(circleJournalRepositoryProvider).readAll(),
-          hasLength(1),
-        );
-      },
-    );
+      expect(
+        container.read(circleJournalRepositoryProvider).readAll(),
+        hasLength(1),
+      );
+    });
 
     testWidgets(
       'closing today\'s Circle after the visible month was navigated away '

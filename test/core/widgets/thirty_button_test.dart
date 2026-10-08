@@ -153,10 +153,7 @@ void main() {
         final inkWell = tester.widget<InkWell>(find.byType(InkWell));
 
         expect(inkWell.splashFactory, NoSplash.splashFactory);
-        expect(
-          inkWell.overlayColor?.resolve({WidgetState.pressed}),
-          isNotNull,
-        );
+        expect(inkWell.overlayColor?.resolve({WidgetState.pressed}), isNotNull);
         // Hover/focus stay on InkWell's own defaults — only the pressed
         // state is resolved to a custom color.
         expect(inkWell.overlayColor?.resolve({WidgetState.hovered}), isNull);

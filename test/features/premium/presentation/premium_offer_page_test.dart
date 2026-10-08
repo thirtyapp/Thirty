@@ -50,10 +50,7 @@ Future<(Widget, ProviderContainer)> _wrap({
   await container.read(entitlementStatusProvider.notifier).initialize();
   final widget = UncontrolledProviderScope(
     container: container,
-    child: MaterialApp(
-      theme: AppTheme.light,
-      home: const PremiumOfferPage(),
-    ),
+    child: MaterialApp(theme: AppTheme.light, home: const PremiumOfferPage()),
   );
   return (widget, container);
 }
@@ -222,10 +219,7 @@ void main() {
     await tester.tap(find.text('Become Premium'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.textContaining('Something went wrong'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Something went wrong'), findsOneWidget);
     expect(container.read(premiumEntitlementProvider), isFalse);
   });
 

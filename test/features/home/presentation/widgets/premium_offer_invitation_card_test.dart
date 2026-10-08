@@ -82,8 +82,10 @@ void main() {
     expect(find.textContaining('THIRTY Premium'), findsOneWidget);
     // Phase D1: one button, its chevron read as "Learn more".
     final row = find.bySemanticsLabel(
-      RegExp(r'^THIRTY Premium adds guided Plans, Coach and Insights\.\s+'
-          r'Learn more$'),
+      RegExp(
+        r'^THIRTY Premium adds guided Plans, Coach and Insights\.\s+'
+        r'Learn more$',
+      ),
     );
     expect(row, findsOneWidget);
     expect(
@@ -93,7 +95,8 @@ void main() {
         hasTapAction: true,
         isFocusable: true,
         hasFocusAction: true,
-        label: 'THIRTY Premium adds guided Plans, Coach and Insights.\n'
+        label:
+            'THIRTY Premium adds guided Plans, Coach and Insights.\n'
             'Learn more',
       ),
     );

@@ -13,8 +13,9 @@ import 'package:thirty/core/premium/premium_access.dart';
 /// `plan_provider_test.dart`'s `_RecordingAnalyticsService`) rather than a
 /// shared test-support library.
 class _FakeEntitlementGateway implements EntitlementGateway {
-  _FakeEntitlementGateway({EntitlementStatus initialStatus = EntitlementStatus.inactive})
-    : _current = initialStatus;
+  _FakeEntitlementGateway({
+    EntitlementStatus initialStatus = EntitlementStatus.inactive,
+  }) : _current = initialStatus;
 
   EntitlementStatus _current;
   final _controller = StreamController<EntitlementStatus>.broadcast();
@@ -224,12 +225,26 @@ void main() {
       },
     );
 
-    test(
-      'grace period stays active — Play reports IN_GRACE_PERIOD as '
-      'isActive=true while the payment retry window is open',
-      () async {
+    test('grace period stays active — Play reports IN_GRACE_PERIOD as '
+        'isActive=true while the payment retry window is open', () async {
+      final gateway = _FakeEntitlementGateway(
+        initialStatus: EntitlementStatus.active,
+      );
+      final container = ProviderContainer(
+        overrides: [entitlementGatewayProvider.overrideWithValue(gateway)],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(entitlementStatusProvider.notifier).initialize();
+
+      expect(container.read(premiumEntitlementProvider), isTrue);
+    });
+
+    test('account hold, expiry, revocation and refund all resolve to '
+        'inactive, never crash, never fabricate Premium', () async {
+      for (final _ in [0, 1, 2, 3]) {
         final gateway = _FakeEntitlementGateway(
-          initialStatus: EntitlementStatus.active,
+          initialStatus: EntitlementStatus.inactive,
         );
         final container = ProviderContainer(
           overrides: [entitlementGatewayProvider.overrideWithValue(gateway)],
@@ -238,37 +253,13 @@ void main() {
 
         await container.read(entitlementStatusProvider.notifier).initialize();
 
-        expect(container.read(premiumEntitlementProvider), isTrue);
-      },
-    );
-
-    test(
-      'account hold, expiry, revocation and refund all resolve to '
-      'inactive, never crash, never fabricate Premium',
-      () async {
-        for (final _ in [0, 1, 2, 3]) {
-          final gateway = _FakeEntitlementGateway(
-            initialStatus: EntitlementStatus.inactive,
-          );
-          final container = ProviderContainer(
-            overrides: [
-              entitlementGatewayProvider.overrideWithValue(gateway),
-            ],
-          );
-          addTearDown(container.dispose);
-
-          await container
-              .read(entitlementStatusProvider.notifier)
-              .initialize();
-
-          expect(
-            container.read(entitlementStatusProvider),
-            EntitlementStatus.inactive,
-          );
-          expect(container.read(premiumEntitlementProvider), isFalse);
-        }
-      },
-    );
+        expect(
+          container.read(entitlementStatusProvider),
+          EntitlementStatus.inactive,
+        );
+        expect(container.read(premiumEntitlementProvider), isFalse);
+      }
+    });
 
     test('purchaseMonthly() re-syncs authoritative state from the '
         'gateway, not from the call merely returning', () async {
@@ -345,26 +336,29 @@ void main() {
       );
     });
 
-    test('a provider error stays an error and never changes entitlement', () async {
-      final gateway = _FakeEntitlementGateway(
-        initialStatus: EntitlementStatus.inactive,
-      )..purchaseOutcome = PurchaseOutcome.error;
-      final container = ProviderContainer(
-        overrides: [entitlementGatewayProvider.overrideWithValue(gateway)],
-      );
-      addTearDown(container.dispose);
-      await container.read(entitlementStatusProvider.notifier).initialize();
+    test(
+      'a provider error stays an error and never changes entitlement',
+      () async {
+        final gateway = _FakeEntitlementGateway(
+          initialStatus: EntitlementStatus.inactive,
+        )..purchaseOutcome = PurchaseOutcome.error;
+        final container = ProviderContainer(
+          overrides: [entitlementGatewayProvider.overrideWithValue(gateway)],
+        );
+        addTearDown(container.dispose);
+        await container.read(entitlementStatusProvider.notifier).initialize();
 
-      final outcome = await container
-          .read(entitlementStatusProvider.notifier)
-          .purchaseMonthly();
+        final outcome = await container
+            .read(entitlementStatusProvider.notifier)
+            .purchaseMonthly();
 
-      expect(outcome, PurchaseOutcome.error);
-      expect(
-        container.read(entitlementStatusProvider),
-        EntitlementStatus.inactive,
-      );
-    });
+        expect(outcome, PurchaseOutcome.error);
+        expect(
+          container.read(entitlementStatusProvider),
+          EntitlementStatus.inactive,
+        );
+      },
+    );
 
     test('user-cancelled purchase is an ordinary outcome, not an error, '
         'and never changes entitlement state', () async {

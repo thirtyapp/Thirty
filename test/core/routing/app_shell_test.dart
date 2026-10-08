@@ -124,21 +124,18 @@ void main() {
     expect(navBar.selectedIndex, 2);
   });
 
-  testWidgets(
-    'direct navigation to /settings shows the "You" destination with '
-    'its own tab selected',
-    (tester) async {
-      await pumpApp(tester);
+  testWidgets('direct navigation to /settings shows the "You" destination with '
+      'its own tab selected', (tester) async {
+    await pumpApp(tester);
 
-      appRouter.go('/settings');
-      await tester.pumpAndSettle();
+    appRouter.go('/settings');
+    await tester.pumpAndSettle();
 
-      expect(find.byType(SettingsPage), findsOneWidget);
-      expect(find.text('You'), findsWidgets);
-      final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
-      expect(navBar.selectedIndex, 3);
-    },
-  );
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.text('You'), findsWidgets);
+    final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+    expect(navBar.selectedIndex, 3);
+  });
 
   testWidgets(
     'no branch keeps a redundant Settings AppBar shortcut now that "You" '
@@ -188,28 +185,27 @@ void main() {
     },
   );
 
-  testWidgets(
-    'a Free (unentitled) user still finds Plans and the Insights '
-    'interpretation preview via the bottom nav — Batch A\'s content-level '
-    'preview, not a hidden destination, is what gates paid content',
-    (tester) async {
-      await pumpApp(tester, entitled: false);
+  testWidgets('a Free (unentitled) user still finds Plans and the Insights '
+      'interpretation preview via the bottom nav — Batch A\'s content-level '
+      'preview, not a hidden destination, is what gates paid content', (
+    tester,
+  ) async {
+    await pumpApp(tester, entitled: false);
 
-      await tester.tap(navDestination('Plans'));
-      await tester.pumpAndSettle();
-      expect(find.byType(PlanPathPage), findsOneWidget);
-      // Phase C3: the in-list Premium card after the three previews.
-      await tester.scrollUntilVisible(find.text('Become Premium'), 200);
-      expect(find.text('Become Premium'), findsOneWidget);
-      expect(find.text('Activate'), findsNothing);
+    await tester.tap(navDestination('Plans'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PlanPathPage), findsOneWidget);
+    // Phase C3: the in-list Premium card after the three previews.
+    await tester.scrollUntilVisible(find.text('Become Premium'), 200);
+    expect(find.text('Become Premium'), findsOneWidget);
+    expect(find.text('Activate'), findsNothing);
 
-      await tester.tap(navDestination('Insights'));
-      await tester.pumpAndSettle();
-      expect(find.byType(InsightsPage), findsOneWidget);
-      await tester.scrollUntilVisible(find.text('Become Premium'), 200);
-      expect(find.text('Become Premium'), findsOneWidget);
-    },
-  );
+    await tester.tap(navDestination('Insights'));
+    await tester.pumpAndSettle();
+    expect(find.byType(InsightsPage), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Become Premium'), 200);
+    expect(find.text('Become Premium'), findsOneWidget);
+  });
 
   testWidgets(
     'Insights\' shared history calendar is unaffected by entitlement, '
@@ -224,43 +220,37 @@ void main() {
     },
   );
 
-  testWidgets(
-    'You is reachable and shows Premium/reminder/data controls '
-    'regardless of entitlement',
-    (tester) async {
-      await pumpApp(tester, entitled: false);
+  testWidgets('You is reachable and shows Premium/reminder/data controls '
+      'regardless of entitlement', (tester) async {
+    await pumpApp(tester, entitled: false);
 
-      await tester.tap(navDestination('You'));
-      await tester.pumpAndSettle();
+    await tester.tap(navDestination('You'));
+    await tester.pumpAndSettle();
 
-      expect(find.byType(SettingsPage), findsOneWidget);
-      expect(find.text('Become Premium'), findsOneWidget);
-    },
-  );
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.text('Become Premium'), findsOneWidget);
+  });
 
-  testWidgets(
-    'You → Premium → Back → You — standard push/pop, matching the '
-    'contract\'s unchanged Settings/Premium return behavior',
-    (tester) async {
-      await pumpApp(tester, entitled: false);
+  testWidgets('You → Premium → Back → You — standard push/pop, matching the '
+      'contract\'s unchanged Settings/Premium return behavior', (tester) async {
+    await pumpApp(tester, entitled: false);
 
-      await tester.tap(navDestination('You'));
-      await tester.pumpAndSettle();
+    await tester.tap(navDestination('You'));
+    await tester.pumpAndSettle();
 
-      // Below You's header band in the 800×600 test view.
-      await tester.ensureVisible(find.text('Become Premium'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Become Premium'));
-      await tester.pumpAndSettle();
-      expect(find.byType(PremiumOfferPage), findsOneWidget);
+    // Below You's header band in the 800×600 test view.
+    await tester.ensureVisible(find.text('Become Premium'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Become Premium'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PremiumOfferPage), findsOneWidget);
 
-      Navigator.of(tester.element(find.byType(PremiumOfferPage))).pop();
-      await tester.pumpAndSettle();
+    Navigator.of(tester.element(find.byType(PremiumOfferPage))).pop();
+    await tester.pumpAndSettle();
 
-      expect(find.byType(SettingsPage), findsOneWidget);
-      expect(find.byType(PremiumOfferPage), findsNothing);
-    },
-  );
+    expect(find.byType(SettingsPage), findsOneWidget);
+    expect(find.byType(PremiumOfferPage), findsNothing);
+  });
 
   testWidgets(
     'tapping a recorded date on the calendar opens that record\'s detail, '
@@ -355,24 +345,37 @@ void main() {
 
       final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
       expect(
-        navBar.destinations
-            .cast<NavigationDestination>()
-            .map((destination) => destination.label),
+        navBar.destinations.cast<NavigationDestination>().map(
+          (destination) => destination.label,
+        ),
         ['Today', 'Plans', 'Insights', 'You'],
       );
-      expect(navBar.labelBehavior, isNot(NavigationDestinationLabelBehavior.alwaysHide));
+      expect(
+        navBar.labelBehavior,
+        isNot(NavigationDestinationLabelBehavior.alwaysHide),
+      );
 
-      for (final (index, label) in ['Today', 'Plans', 'Insights', 'You'].indexed) {
+      for (final (index, label) in [
+        'Today',
+        'Plans',
+        'Insights',
+        'You',
+      ].indexed) {
         await tester.tap(navDestination(label));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: '$label overflowed');
         expect(
-          tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+          tester
+              .widget<NavigationBar>(find.byType(NavigationBar))
+              .selectedIndex,
           index,
         );
         for (final other in ['Today', 'Plans', 'Insights', 'You']) {
-          expect(navDestination(other).hitTestable(), findsOneWidget,
-              reason: '$other label hidden while on $label');
+          expect(
+            navDestination(other).hitTestable(),
+            findsOneWidget,
+            reason: '$other label hidden while on $label',
+          );
         }
       }
     },
@@ -407,16 +410,13 @@ void main() {
     expect(branchRootPaths, ['/', '/plans', '/insights', '/settings']);
   });
 
-  test(
-    '/history and /history/:date remain registered as top-level routes, '
-    'outside the shell — secondary/compatibility surfaces, not a fifth '
-    'destination',
-    () {
-      final routes = buildAppRoutes(includeDevPreview: false);
-      final topLevelPaths = routes.whereType<GoRoute>().map((r) => r.path);
+  test('/history and /history/:date remain registered as top-level routes, '
+      'outside the shell — secondary/compatibility surfaces, not a fifth '
+      'destination', () {
+    final routes = buildAppRoutes(includeDevPreview: false);
+    final topLevelPaths = routes.whereType<GoRoute>().map((r) => r.path);
 
-      expect(topLevelPaths, contains('/history'));
-      expect(topLevelPaths, contains('/history/:date'));
-    },
-  );
+    expect(topLevelPaths, contains('/history'));
+    expect(topLevelPaths, contains('/history/:date'));
+  });
 }

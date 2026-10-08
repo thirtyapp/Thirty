@@ -188,10 +188,7 @@ void main() {
       );
       for (final paragraph in find.byType(RichText).evaluate()) {
         final box = paragraph.renderObject! as RenderBox;
-        expect(
-          box.localToGlobal(Offset.zero).dy,
-          lessThanOrEqualTo(lastTop),
-        );
+        expect(box.localToGlobal(Offset.zero).dy, lessThanOrEqualTo(lastTop));
       }
     });
 

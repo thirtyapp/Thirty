@@ -80,7 +80,9 @@ void main() {
     test('assesses and stores a snapshot the first time it is due', () async {
       final container = await _containerWith();
       addTearDown(container.dispose);
-      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+      container
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.clearerHeadPath);
       await _seedDirectLighterChoices(container, PlanId.clearerHeadPath, [
         '2026-08-20',
         '2026-08-23',
@@ -100,7 +102,9 @@ void main() {
     test('does not reassess within the 7-day interval', () async {
       final container = await _containerWith();
       addTearDown(container.dispose);
-      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+      container
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.clearerHeadPath);
       await _seedDirectLighterChoices(container, PlanId.clearerHeadPath, [
         '2026-08-20',
         '2026-08-23',
@@ -122,7 +126,9 @@ void main() {
 
     test('reassesses once the 7-day interval has elapsed', () async {
       final container = await _containerWith();
-      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+      container
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.clearerHeadPath);
       await _seedDirectLighterChoices(container, PlanId.clearerHeadPath, [
         '2026-08-20',
         '2026-08-23',
@@ -158,23 +164,28 @@ void main() {
       expect(state.snapshots, hasLength(1));
     });
 
-    test('no eligible observation advances lastAssessedAt without a snapshot', () async {
-      final container = await _containerWith();
-      addTearDown(container.dispose);
+    test(
+      'no eligible observation advances lastAssessedAt without a snapshot',
+      () async {
+        final container = await _containerWith();
+        addTearDown(container.dispose);
 
-      container.read(insightProvider.notifier).refreshIfDue();
+        container.read(insightProvider.notifier).refreshIfDue();
 
-      final state = container.read(insightProvider);
-      expect(state.lastAssessedAt, _today);
-      expect(state.snapshots, isEmpty);
-    });
+        final state = container.read(insightProvider);
+        expect(state.lastAssessedAt, _today);
+        expect(state.snapshots, isEmpty);
+      },
+    );
   });
 
   group('InsightNotifier — snapshot cap', () {
     test('retains at most 52 snapshots, oldest dropped first', () async {
       final container = await _containerWith();
       addTearDown(container.dispose);
-      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+      container
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.clearerHeadPath);
 
       final notifier = container.read(insightProvider.notifier);
       final journal = container.read(circleJournalRepositoryProvider);
@@ -215,7 +226,9 @@ void main() {
         );
         // Force this call to be due regardless of the 7-day cadence, so
         // this test exercises the cap itself rather than the cadence gate.
-        notifier.state = notifier.state.copyWith(lastAssessedAt: DateTime(2000));
+        notifier.state = notifier.state.copyWith(
+          lastAssessedAt: DateTime(2000),
+        );
         notifier.refreshIfDue();
       }
 
@@ -228,16 +241,19 @@ void main() {
   });
 
   group('InsightNotifier — restore fail-safe', () {
-    test('a corrupt persisted blob restores to empty state, never throws', () async {
-      final container = await _containerWith(
-        storedPrefs: {insightSnapshotsKey: 'not json'},
-      );
-      addTearDown(container.dispose);
+    test(
+      'a corrupt persisted blob restores to empty state, never throws',
+      () async {
+        final container = await _containerWith(
+          storedPrefs: {insightSnapshotsKey: 'not json'},
+        );
+        addTearDown(container.dispose);
 
-      final state = container.read(insightProvider);
-      expect(state.lastAssessedAt, isNull);
-      expect(state.snapshots, isEmpty);
-    });
+        final state = container.read(insightProvider);
+        expect(state.lastAssessedAt, isNull);
+        expect(state.snapshots, isEmpty);
+      },
+    );
 
     test('a single corrupt snapshot is dropped, the rest survive', () async {
       final valid = {
@@ -274,43 +290,15 @@ void main() {
   });
 
   group('InsightNotifier — application recheck / execution', () {
-    test('applying an eligible pacing Insight sets the Plan default and fires analytics', () async {
-      final analytics = _RecordingAnalyticsService();
-      final container = await _containerWith(analytics: analytics);
-      addTearDown(container.dispose);
-      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
-      await _seedDirectLighterChoices(container, PlanId.clearerHeadPath, [
-        '2026-08-20',
-        '2026-08-23',
-        '2026-08-27',
-        '2026-09-01',
-        '2026-09-05',
-      ]);
-      container.read(insightProvider.notifier).refreshIfDue();
-
-      container.read(insightProvider.notifier).applyCurrent();
-
-      expect(
-        container
-            .read(planProvider)
-            .progress[PlanId.clearerHeadPath]!
-            .lighterDefault,
-        isTrue,
-      );
-      expect(
-        analytics.events.any((e) => e.$1 == AnalyticsEventType.insightApplicationAccepted),
-        isTrue,
-      );
-    });
-
     test(
-      'a stale application (state changed since assessment) is withdrawn, '
-      'never executed, and reported as invalidated',
+      'applying an eligible pacing Insight sets the Plan default and fires analytics',
       () async {
         final analytics = _RecordingAnalyticsService();
         final container = await _containerWith(analytics: analytics);
         addTearDown(container.dispose);
-        container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+        container
+            .read(planProvider.notifier)
+            .activatePlan(PlanId.clearerHeadPath);
         await _seedDirectLighterChoices(container, PlanId.clearerHeadPath, [
           '2026-08-20',
           '2026-08-23',
@@ -320,29 +308,63 @@ void main() {
         ]);
         container.read(insightProvider.notifier).refreshIfDue();
 
-        // The lighter default becomes true through some other path before
-        // the user acts on the (now stale) displayed Insight.
-        container
-            .read(planProvider.notifier)
-            .setLighterDefaultForPlan(PlanId.clearerHeadPath, true);
-        analytics.events.clear();
-
         container.read(insightProvider.notifier).applyCurrent();
 
         expect(
-          analytics.events.any(
-            (e) => e.$1 == AnalyticsEventType.insightApplicationInvalidated,
-          ),
+          container
+              .read(planProvider)
+              .progress[PlanId.clearerHeadPath]!
+              .lighterDefault,
           isTrue,
         );
         expect(
           analytics.events.any(
             (e) => e.$1 == AnalyticsEventType.insightApplicationAccepted,
           ),
-          isFalse,
+          isTrue,
         );
       },
     );
+
+    test('a stale application (state changed since assessment) is withdrawn, '
+        'never executed, and reported as invalidated', () async {
+      final analytics = _RecordingAnalyticsService();
+      final container = await _containerWith(analytics: analytics);
+      addTearDown(container.dispose);
+      container
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.clearerHeadPath);
+      await _seedDirectLighterChoices(container, PlanId.clearerHeadPath, [
+        '2026-08-20',
+        '2026-08-23',
+        '2026-08-27',
+        '2026-09-01',
+        '2026-09-05',
+      ]);
+      container.read(insightProvider.notifier).refreshIfDue();
+
+      // The lighter default becomes true through some other path before
+      // the user acts on the (now stale) displayed Insight.
+      container
+          .read(planProvider.notifier)
+          .setLighterDefaultForPlan(PlanId.clearerHeadPath, true);
+      analytics.events.clear();
+
+      container.read(insightProvider.notifier).applyCurrent();
+
+      expect(
+        analytics.events.any(
+          (e) => e.$1 == AnalyticsEventType.insightApplicationInvalidated,
+        ),
+        isTrue,
+      );
+      expect(
+        analytics.events.any(
+          (e) => e.$1 == AnalyticsEventType.insightApplicationAccepted,
+        ),
+        isFalse,
+      );
+    });
 
     test('applying with no snapshots at all is a safe no-op', () async {
       final container = await _containerWith();
@@ -356,7 +378,9 @@ void main() {
     test('wipes lastAssessedAt and every retained snapshot', () async {
       final container = await _containerWith();
       addTearDown(container.dispose);
-      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+      container
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.clearerHeadPath);
       await _seedDirectLighterChoices(container, PlanId.clearerHeadPath, [
         '2026-08-20',
         '2026-08-23',
@@ -380,7 +404,9 @@ void main() {
         'even mid cadence window', () async {
       final container = await _containerWith();
       addTearDown(container.dispose);
-      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+      container
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.clearerHeadPath);
       await _seedDirectLighterChoices(container, PlanId.clearerHeadPath, [
         '2026-08-20',
         '2026-08-23',
@@ -405,7 +431,9 @@ void main() {
         'evidence present', () async {
       final container = await _containerWith(entitled: false);
       addTearDown(container.dispose);
-      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+      container
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.clearerHeadPath);
       await _seedDirectLighterChoices(container, PlanId.clearerHeadPath, [
         '2026-08-20',
         '2026-08-23',

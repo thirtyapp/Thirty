@@ -147,7 +147,8 @@ void main() {
         expect(nav.top - snack.bottom, AppSpacing.s);
         expect(snack.overlaps(nav), isFalse);
         expect(
-          tester.renderObject<RenderParagraph>(find.text(_copied))
+          tester
+              .renderObject<RenderParagraph>(find.text(_copied))
               .didExceedMaxLines,
           isFalse,
         );
@@ -170,7 +171,8 @@ void main() {
         expect(snack.right, width - AppSpacing.m);
         expect(height - snack.bottom, AppSpacing.s);
         expect(
-          tester.renderObject<RenderParagraph>(find.text(_copied))
+          tester
+              .renderObject<RenderParagraph>(find.text(_copied))
               .didExceedMaxLines,
           isFalse,
         );
@@ -204,7 +206,10 @@ void main() {
       // inverseSurface = textPrimary, onInverseSurface = background.
       expect(material.color, colors.textPrimary);
       expect(
-        tester.renderObject<RenderParagraph>(find.text(_copied)).text.style
+        tester
+            .renderObject<RenderParagraph>(find.text(_copied))
+            .text
+            .style
             ?.color,
         colors.background,
       );
@@ -225,7 +230,8 @@ void main() {
       find.ancestor(
         of: find.text(_copied),
         matching: find.byWidgetPredicate(
-          (widget) => widget is Semantics && widget.properties.liveRegion == true,
+          (widget) =>
+              widget is Semantics && widget.properties.liveRegion == true,
         ),
       ),
       findsWidgets,

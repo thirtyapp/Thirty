@@ -43,7 +43,9 @@ Widget _button(
     home: MediaQuery(
       data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
       child: Scaffold(
-        body: Center(child: SizedBox(width: width, child: button)),
+        body: Center(
+          child: SizedBox(width: width, child: button),
+        ),
       ),
     ),
   );
@@ -93,9 +95,7 @@ void main() {
                     label: 'Start Circle',
                     size: size,
                     variant: variant,
-                    trailingIcon: trailing
-                        ? Icons.arrow_forward_rounded
-                        : null,
+                    trailingIcon: trailing ? Icons.arrow_forward_rounded : null,
                     onPressed: () {},
                   ),
                   width: width - AppSpacing.page * 2,
@@ -258,7 +258,10 @@ void main() {
         final label = tester.getRect(find.text('Start Circle'));
         final arrow = tester.getRect(find.byIcon(Icons.arrow_forward_rounded));
         final button = tester.getRect(start);
-        expect(_label(tester, 'Start Circle', start).didExceedMaxLines, isFalse);
+        expect(
+          _label(tester, 'Start Circle', start).didExceedMaxLines,
+          isFalse,
+        );
         expect(label.center.dx, closeTo(button.center.dx, 0.5));
         expect(label.overlaps(arrow), isFalse);
         expect(button.contains(arrow.center), isTrue);

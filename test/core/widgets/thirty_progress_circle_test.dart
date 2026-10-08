@@ -63,9 +63,7 @@ void main() {
     testWidgets('defaults to announcing the rounded percentage', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(
-        _wrap(const ThirtyProgressCircle(progress: 0.0)),
-      );
+      await tester.pumpWidget(_wrap(const ThirtyProgressCircle(progress: 0.0)));
 
       final semantics = tester.getSemantics(find.byType(ThirtyProgressCircle));
       expect(semantics.value, '0%');

@@ -125,45 +125,42 @@ void main() {
       },
     );
 
-    testWidgets(
-      'the Circle stays mounted and geometrically stable while Begin '
-      "today's Circle reveals the direction choices beneath it — the "
-      'exact continuity correction this batch makes: physical '
-      'verification of 1.7.0+13 found the whole Circle composition '
-      'disappearing behind full-screen direction cards instead',
-      (tester) async {
-        final (widget, container) = await _wrap();
-        addTearDown(container.dispose);
-        await tester.pumpWidget(widget);
+    testWidgets('the Circle stays mounted and geometrically stable while Begin '
+        "today's Circle reveals the direction choices beneath it — the "
+        'exact continuity correction this batch makes: physical '
+        'verification of 1.7.0+13 found the whole Circle composition '
+        'disappearing behind full-screen direction cards instead', (
+      tester,
+    ) async {
+      final (widget, container) = await _wrap();
+      addTearDown(container.dispose);
+      await tester.pumpWidget(widget);
 
-        expect(find.byType(ThirtyProgressCircle), findsOneWidget);
-        final circleElement = tester.element(
-          find.byType(ThirtyProgressCircle),
-        );
-        final rectBefore = tester.getRect(find.byType(ThirtyProgressCircle));
+      expect(find.byType(ThirtyProgressCircle), findsOneWidget);
+      final circleElement = tester.element(find.byType(ThirtyProgressCircle));
+      final rectBefore = tester.getRect(find.byType(ThirtyProgressCircle));
 
-        await tester.ensureVisible(find.text("Begin today's Circle"));
-        await tester.tap(find.text("Begin today's Circle"));
-        await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text("Begin today's Circle"));
+      await tester.tap(find.text("Begin today's Circle"));
+      await tester.pumpAndSettle();
 
-        // Still exactly one Circle — the direction chooser was revealed
-        // alongside it, not after removing and re-adding it — and it is
-        // the very same Element, i.e. never unmounted/remounted, not just
-        // a new one that happens to look the same.
-        expect(find.byType(ThirtyProgressCircle), findsOneWidget);
-        expect(
-          tester.element(find.byType(ThirtyProgressCircle)),
-          same(circleElement),
-        );
-        expect(
-          tester.getRect(find.byType(ThirtyProgressCircle)),
-          rectBefore,
-          reason:
-              'the Circle must not move or resize when the direction '
-              'choices appear beneath it',
-        );
-      },
-    );
+      // Still exactly one Circle — the direction chooser was revealed
+      // alongside it, not after removing and re-adding it — and it is
+      // the very same Element, i.e. never unmounted/remounted, not just
+      // a new one that happens to look the same.
+      expect(find.byType(ThirtyProgressCircle), findsOneWidget);
+      expect(
+        tester.element(find.byType(ThirtyProgressCircle)),
+        same(circleElement),
+      );
+      expect(
+        tester.getRect(find.byType(ThirtyProgressCircle)),
+        rectBefore,
+        reason:
+            'the Circle must not move or resize when the direction '
+            'choices appear beneath it',
+      );
+    });
 
     testWidgets('choosing a direction after Begin today\'s Circle still '
         'assigns exactly one recommendation via the existing mechanism', (
@@ -232,35 +229,32 @@ void main() {
       expect(find.byType(DailyIntentionPrompt), findsOneWidget);
     });
 
-    testWidgets(
-      '320x568 combined with 200% text renders with no overflow and '
-      'keeps every action reachable',
-      (tester) async {
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
-        tester.view.physicalSize = const Size(320, 568);
-        tester.view.devicePixelRatio = 1.0;
+    testWidgets('320x568 combined with 200% text renders with no overflow and '
+        'keeps every action reachable', (tester) async {
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
 
-        final (widget, container) = await _wrap(textScale: 2.0);
-        addTearDown(container.dispose);
-        await tester.pumpWidget(widget);
+      final (widget, container) = await _wrap(textScale: 2.0);
+      addTearDown(container.dispose);
+      await tester.pumpWidget(widget);
 
-        expect(tester.takeException(), isNull);
-        await tester.ensureVisible(find.text("Begin today's Circle"));
-        await tester.tap(find.text("Begin today's Circle"));
-        await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.text("Begin today's Circle"));
+      await tester.tap(find.text("Begin today's Circle"));
+      await tester.pumpAndSettle();
 
-        expect(tester.takeException(), isNull);
-        expect(find.byType(DailyIntentionPrompt), findsOneWidget);
-        await tester.ensureVisible(find.text('Clearer Head'));
-        await tester.tap(find.text('Clearer Head'));
-        await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(DailyIntentionPrompt), findsOneWidget);
+      await tester.ensureVisible(find.text('Clearer Head'));
+      await tester.tap(find.text('Clearer Head'));
+      await tester.pump();
 
-        expect(tester.takeException(), isNull);
-        final state = container.read(recommendationProvider);
-        expect(state.recommendation, isNotNull);
-      },
-    );
+      expect(tester.takeException(), isNull);
+      final state = container.read(recommendationProvider);
+      expect(state.recommendation, isNotNull);
+    });
 
     testWidgets('Dark mode renders the Ready state with no overflow', (
       tester,

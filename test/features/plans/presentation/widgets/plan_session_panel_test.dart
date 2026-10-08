@@ -65,8 +65,9 @@ void main() {
     expect(find.text('More Energy Path'), findsNothing);
   });
 
-  testWidgets('shows the Plan name, stage position, purpose and rationale',
-      (tester) async {
+  testWidgets('shows the Plan name, stage position, purpose and rationale', (
+    tester,
+  ) async {
     final (widget, container) = await _wrap(_planResolvedToday());
     addTearDown(container.dispose);
     await tester.pumpWidget(widget);

@@ -112,8 +112,7 @@ void main() {
   testWidgets('offers a bounded "try lighter guidance" and "queue a '
       'revisit" shortcut after a "not today" report on the prior matching '
       'Circle, and tapping the lighter shortcut applies the existing '
-      'setPlanTreatment control without changing the activity',
-      (tester) async {
+      'setPlanTreatment control without changing the activity', (tester) async {
     final priorStage = planDefinitionFor(PlanId.moreEnergyPath).stages[0];
     final (widget, container) = await _wrap(
       childBuilder: (_) => const CoachCueBanner(planId: PlanId.moreEnergyPath),
@@ -123,7 +122,9 @@ void main() {
     container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
     // Advance the real forward cursor so lastEncounteredStageId is set,
     // matching the seeded journal entry below.
-    container.read(planProvider.notifier).advanceCursorForCircle(
+    container
+        .read(planProvider.notifier)
+        .advanceCursorForCircle(
           PlanId.moreEnergyPath,
           '2026-08-09',
           isRevisit: false,
@@ -164,8 +165,10 @@ void main() {
     container
         .read(recommendationProvider.notifier)
         .chooseIntention(Intention.moreEnergy);
-    final activityIdBefore =
-        container.read(recommendationProvider).recommendation!.activityId;
+    final activityIdBefore = container
+        .read(recommendationProvider)
+        .recommendation!
+        .activityId;
 
     await tester.pumpWidget(widget);
 

@@ -167,8 +167,10 @@ void main() {
     ) async {
       final (ready, _) = await _wrap(disableAnimations: true);
       await tester.pumpWidget(ready);
-      expect(tester.widget<ThirtyButton>(_cta("Begin today's Circle"))
-          .trailingIcon, isNull);
+      expect(
+        tester.widget<ThirtyButton>(_cta("Begin today's Circle")).trailingIcon,
+        isNull,
+      );
       expect(find.byIcon(Icons.arrow_forward_rounded), findsNothing);
 
       final (notStarted, _) = await _wrap(
@@ -185,10 +187,7 @@ void main() {
         findsOneWidget,
       );
       // The arrow is decorative: the button still announces its label only.
-      expect(
-        tester.getSemantics(_cta('Start Circle')).label,
-        'Start Circle',
-      );
+      expect(tester.getSemantics(_cta('Start Circle')).label, 'Start Circle');
 
       final (started, _) = await _wrap(
         storedPrefs: _started,
@@ -196,8 +195,10 @@ void main() {
       );
       await tester.pumpWidget(started);
       await tester.pump();
-      expect(tester.widget<ThirtyButton>(_cta('Close Circle')).trailingIcon,
-          isNull);
+      expect(
+        tester.widget<ThirtyButton>(_cta('Close Circle')).trailingIcon,
+        isNull,
+      );
       expect(find.byIcon(Icons.arrow_forward_rounded), findsNothing);
     });
 
@@ -240,9 +241,7 @@ void main() {
         await tester.pump();
         final button = tester.getRect(_cta('Start Circle'));
         final label = tester.getRect(find.text('Start Circle'));
-        final arrow = tester.getRect(
-          find.byIcon(Icons.arrow_forward_rounded),
-        );
+        final arrow = tester.getRect(find.byIcon(Icons.arrow_forward_rounded));
         expect(label.overlaps(arrow), isFalse);
         expect(button.contains(arrow.center), isTrue);
         expect(label.left, greaterThanOrEqualTo(button.left));

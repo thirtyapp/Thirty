@@ -150,27 +150,24 @@ void main() {
     expect(find.text('THIRTY — Design System'), findsOneWidget);
   });
 
-  testWidgets(
-    'the dev-only Quiet Trail Hero preview route shows '
-    'QuietTrailHeroAssetView',
-    (WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
-      final prefs = await SharedPreferences.getInstance();
+  testWidgets('the dev-only Quiet Trail Hero preview route shows '
+      'QuietTrailHeroAssetView', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
+    final prefs = await SharedPreferences.getInstance();
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-          child: const ThirtyApp(),
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: const ThirtyApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      appRouter.go('/dev/quiet-trail-hero-preview');
-      await tester.pumpAndSettle();
+    appRouter.go('/dev/quiet-trail-hero-preview');
+    await tester.pumpAndSettle();
 
-      expect(find.byType(QuietTrailHeroAssetView), findsOneWidget);
-    },
-  );
+    expect(find.byType(QuietTrailHeroAssetView), findsOneWidget);
+  });
 
   group('buildAppRoutes debug gating', () {
     // kDebugMode is a compile-time constant that is always true under
@@ -178,17 +175,17 @@ void main() {
     // directly here — asserting on the same includeDevPreview parameter
     // appRouter is built from is what makes this gating testable at all.
     test('omits the dev preview route when includeDevPreview is false', () {
-      final paths = buildAppRoutes(includeDevPreview: false)
-          .whereType<GoRoute>()
-          .map((route) => route.path);
+      final paths = buildAppRoutes(
+        includeDevPreview: false,
+      ).whereType<GoRoute>().map((route) => route.path);
 
       expect(paths, isNot(contains('/dev/quiet-trail-hero-preview')));
     });
 
     test('includes the dev preview route when includeDevPreview is true', () {
-      final paths = buildAppRoutes(includeDevPreview: true)
-          .whereType<GoRoute>()
-          .map((route) => route.path);
+      final paths = buildAppRoutes(
+        includeDevPreview: true,
+      ).whereType<GoRoute>().map((route) => route.path);
 
       expect(paths, contains('/dev/quiet-trail-hero-preview'));
     });

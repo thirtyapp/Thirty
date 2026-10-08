@@ -9,7 +9,8 @@ import '../../../core/analytics/analytics_service.dart';
 import '../../../core/premium/premium_access.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
-import '../../home/application/activity_catalog.dart' show ActivityId, Intention;
+import '../../home/application/activity_catalog.dart'
+    show ActivityId, Intention;
 import '../domain/plan_catalog.dart';
 import '../domain/plan_ids.dart';
 import '../domain/plan_state.dart';
@@ -113,7 +114,10 @@ class PlanNotifier extends Notifier<PlansState> {
     unawaited(_persist(state));
     ref
         .read(analyticsServiceProvider)
-        .track(AnalyticsEventType.planStarted, metadata: {'plan_id': planId.name});
+        .track(
+          AnalyticsEventType.planStarted,
+          metadata: {'plan_id': planId.name},
+        );
   }
 
   /// Clears the active Plan — daily resolution then always uses the
@@ -361,7 +365,10 @@ class PlanNotifier extends Notifier<PlansState> {
     if (progress.lastAdvancedCircleId == circleId) return;
 
     if (isRevisit) {
-      _updateProgress(planId, progress.copyWith(lastAdvancedCircleId: circleId));
+      _updateProgress(
+        planId,
+        progress.copyWith(lastAdvancedCircleId: circleId),
+      );
       return;
     }
 
@@ -369,7 +376,10 @@ class PlanNotifier extends Notifier<PlansState> {
       // Defensive: a completed plan should never reach here (resolution
       // already refuses to assign anything once completed), but never
       // advance past the catalogue either way.
-      _updateProgress(planId, progress.copyWith(lastAdvancedCircleId: circleId));
+      _updateProgress(
+        planId,
+        progress.copyWith(lastAdvancedCircleId: circleId),
+      );
       return;
     }
 

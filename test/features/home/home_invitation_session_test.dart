@@ -164,8 +164,10 @@ void main() {
 
       expect(find.text(_reminderCopy), findsOneWidget);
       final viewport = tester.getRect(_homeScroll);
-      expect(tester.getRect(find.text(_reminderCopy)).top,
-          greaterThan(viewport.bottom));
+      expect(
+        tester.getRect(find.text(_reminderCopy)).top,
+        greaterThan(viewport.bottom),
+      );
 
       await tester.pump(const Duration(seconds: 5));
       expect(prefs.getBool(reminderInvitationShownKey), isNull);
@@ -214,10 +216,9 @@ void main() {
       // (what every startup / resume `initialize()` produces).
       container.invalidate(circleJournalRepositoryProvider);
       await tester.pump();
-      await container.read(reminderProvider.notifier).setTime(
-        hour: 7,
-        minute: 30,
-      );
+      await container
+          .read(reminderProvider.notifier)
+          .setTime(hour: 7, minute: 30);
       await tester.pump(const Duration(seconds: 1));
 
       expect(find.text(_reminderCopy), findsOneWidget);
@@ -286,10 +287,9 @@ void main() {
       final container = await _session(tester, prefs);
       expect(find.text(_reminderCopy), findsOneWidget);
 
-      await container.read(reminderProvider.notifier).enable(
-        hour: 8,
-        minute: 0,
-      );
+      await container
+          .read(reminderProvider.notifier)
+          .enable(hour: 8, minute: 0);
       await tester.pump();
       expect(find.text(_reminderCopy), findsNothing);
     });
@@ -304,7 +304,11 @@ void main() {
         // Two closed days: Premium would otherwise be eligible.
         closedDays: const ['2026-07-31', '2026-08-01'],
       );
-      final container = await _session(tester, prefs, size: const Size(320, 568));
+      final container = await _session(
+        tester,
+        prefs,
+        size: const Size(320, 568),
+      );
       expect(find.text(_reminderCopy), findsOneWidget);
       // Still below the fold: never persisted as shown.
       expect(prefs.getBool(reminderInvitationShownKey), isNull);
@@ -398,7 +402,10 @@ void main() {
       expect(find.text(_premiumCopy), findsOneWidget);
       await tester.pump(const Duration(seconds: 1));
       expect(prefs.getBool(premiumOfferInvitationShownKey), isTrue);
-      expect(premiumOfferInvitationShownKey, 'premium_offer_invitation_shown_v1');
+      expect(
+        premiumOfferInvitationShownKey,
+        'premium_offer_invitation_shown_v1',
+      );
 
       await _endSession(tester, second);
       await _session(tester, prefs);

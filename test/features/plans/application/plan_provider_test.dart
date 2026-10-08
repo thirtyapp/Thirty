@@ -68,20 +68,22 @@ void main() {
   });
 
   group('activatePlan / deactivatePlan', () {
-    test('activating a Plan sets it active without mutating its progress',
-        () async {
-      final container = await _containerWith();
-      addTearDown(container.dispose);
-      final notifier = container.read(planProvider.notifier);
+    test(
+      'activating a Plan sets it active without mutating its progress',
+      () async {
+        final container = await _containerWith();
+        addTearDown(container.dispose);
+        final notifier = container.read(planProvider.notifier);
 
-      notifier.activatePlan(PlanId.moreEnergyPath);
+        notifier.activatePlan(PlanId.moreEnergyPath);
 
-      expect(container.read(planProvider).activePlanId, PlanId.moreEnergyPath);
-      expect(
-        notifier.progressFor(PlanId.moreEnergyPath).forwardCursor,
-        0,
-      );
-    });
+        expect(
+          container.read(planProvider).activePlanId,
+          PlanId.moreEnergyPath,
+        );
+        expect(notifier.progressFor(PlanId.moreEnergyPath).forwardCursor, 0);
+      },
+    );
 
     test('switching to a different Plan preserves the previous Plan\'s own '
         'saved position', () async {
@@ -156,45 +158,49 @@ void main() {
       );
     });
 
-    test('queueRevisit sets pendingRevisit without touching forwardCursor',
-        () async {
-      final container = await _containerWith();
-      addTearDown(container.dispose);
-      final notifier = container.read(planProvider.notifier);
-      notifier.activatePlan(PlanId.moreEnergyPath);
-      notifier.advanceCursorForCircle(
-        PlanId.moreEnergyPath,
-        'circle-1',
-        isRevisit: false,
-      );
+    test(
+      'queueRevisit sets pendingRevisit without touching forwardCursor',
+      () async {
+        final container = await _containerWith();
+        addTearDown(container.dispose);
+        final notifier = container.read(planProvider.notifier);
+        notifier.activatePlan(PlanId.moreEnergyPath);
+        notifier.advanceCursorForCircle(
+          PlanId.moreEnergyPath,
+          'circle-1',
+          isRevisit: false,
+        );
 
-      notifier.queueRevisit();
+        notifier.queueRevisit();
 
-      final progress = notifier.progressFor(PlanId.moreEnergyPath);
-      expect(progress.pendingRevisit, isTrue);
-      expect(progress.forwardCursor, 1);
-    });
+        final progress = notifier.progressFor(PlanId.moreEnergyPath);
+        expect(progress.pendingRevisit, isTrue);
+        expect(progress.forwardCursor, 1);
+      },
+    );
 
-    test('clearQueuedRevisit clears it before it applies to any Circle',
-        () async {
-      final container = await _containerWith();
-      addTearDown(container.dispose);
-      final notifier = container.read(planProvider.notifier);
-      notifier.activatePlan(PlanId.moreEnergyPath);
-      notifier.advanceCursorForCircle(
-        PlanId.moreEnergyPath,
-        'circle-1',
-        isRevisit: false,
-      );
-      notifier.queueRevisit();
+    test(
+      'clearQueuedRevisit clears it before it applies to any Circle',
+      () async {
+        final container = await _containerWith();
+        addTearDown(container.dispose);
+        final notifier = container.read(planProvider.notifier);
+        notifier.activatePlan(PlanId.moreEnergyPath);
+        notifier.advanceCursorForCircle(
+          PlanId.moreEnergyPath,
+          'circle-1',
+          isRevisit: false,
+        );
+        notifier.queueRevisit();
 
-      notifier.clearQueuedRevisit();
+        notifier.clearQueuedRevisit();
 
-      expect(
-        notifier.progressFor(PlanId.moreEnergyPath).pendingRevisit,
-        isFalse,
-      );
-    });
+        expect(
+          notifier.progressFor(PlanId.moreEnergyPath).pendingRevisit,
+          isFalse,
+        );
+      },
+    );
 
     test('resolveSessionFor consumes the queued revisit and returns the '
         'last encountered stage, without moving forwardCursor', () async {
@@ -253,10 +259,7 @@ void main() {
 
       expect(nextAssignment, isNotNull);
       expect(nextAssignment!.isRevisit, isFalse);
-      expect(
-        nextAssignment.stageId,
-        stageAt(PlanId.moreEnergyPath, 1).id,
-      );
+      expect(nextAssignment.stageId, stageAt(PlanId.moreEnergyPath, 1).id);
     });
 
     test('a stale/invalid lastEncounteredStageId revisit target is '
@@ -331,23 +334,27 @@ void main() {
       expect(notifier.resolveSessionFor(Intention.clearerHead), isNull);
     });
 
-    test('returns the stage at forwardCursor for a fresh matching Plan',
-        () async {
-      final container = await _containerWith();
-      addTearDown(container.dispose);
-      final notifier = container.read(planProvider.notifier);
-      notifier.activatePlan(PlanId.moreEnergyPath);
+    test(
+      'returns the stage at forwardCursor for a fresh matching Plan',
+      () async {
+        final container = await _containerWith();
+        addTearDown(container.dispose);
+        final notifier = container.read(planProvider.notifier);
+        notifier.activatePlan(PlanId.moreEnergyPath);
 
-      final assignment = notifier.resolveSessionFor(Intention.moreEnergy);
+        final assignment = notifier.resolveSessionFor(Intention.moreEnergy);
 
-      expect(assignment, isNotNull);
-      expect(assignment!.stageId, stageAt(PlanId.moreEnergyPath, 0).id);
-      expect(assignment.activityId, stageAt(PlanId.moreEnergyPath, 0).activityId);
-      expect(assignment.isRevisit, isFalse);
-    });
+        expect(assignment, isNotNull);
+        expect(assignment!.stageId, stageAt(PlanId.moreEnergyPath, 0).id);
+        expect(
+          assignment.activityId,
+          stageAt(PlanId.moreEnergyPath, 0).activityId,
+        );
+        expect(assignment.isRevisit, isFalse);
+      },
+    );
 
-    test('fires exactly one planSessionShown event per resolution',
-        () async {
+    test('fires exactly one planSessionShown event per resolution', () async {
       final analytics = _RecordingAnalyticsService();
       final container = await _containerWith(analytics: analytics);
       addTearDown(container.dispose);
@@ -357,8 +364,7 @@ void main() {
       notifier.resolveSessionFor(Intention.moreEnergy);
 
       expect(
-        analytics.events
-            .where((e) => e == AnalyticsEventType.planSessionShown),
+        analytics.events.where((e) => e == AnalyticsEventType.planSessionShown),
         hasLength(1),
       );
     });
@@ -379,7 +385,10 @@ void main() {
 
       final progress = notifier.progressFor(PlanId.moreEnergyPath);
       expect(progress.forwardCursor, 1);
-      expect(progress.lastEncounteredStageId, stageAt(PlanId.moreEnergyPath, 0).id);
+      expect(
+        progress.lastEncounteredStageId,
+        stageAt(PlanId.moreEnergyPath, 0).id,
+      );
     });
 
     test('is idempotent: the same circleId can never advance the cursor '
@@ -444,8 +453,9 @@ void main() {
       expect(progress.status, PlanCycleStatus.completed);
       expect(progress.forwardCursor, 5);
       expect(
-        analytics.events
-            .where((e) => e == AnalyticsEventType.planCycleCompleted),
+        analytics.events.where(
+          (e) => e == AnalyticsEventType.planCycleCompleted,
+        ),
         hasLength(1),
       );
       // No auto-restart: resolveSessionFor now falls through to null.
@@ -454,8 +464,7 @@ void main() {
   });
 
   group('repeatCycle', () {
-    test('is a no-op while the current cycle is still in progress',
-        () async {
+    test('is a no-op while the current cycle is still in progress', () async {
       final container = await _containerWith();
       addTearDown(container.dispose);
       final notifier = container.read(planProvider.notifier);
@@ -528,10 +537,16 @@ void main() {
           premiumEntitlementProvider.overrideWithValue(true),
         ],
       );
-      container1.read(planProvider.notifier).activatePlan(PlanId.gentlerPacePath);
       container1
           .read(planProvider.notifier)
-          .advanceCursorForCircle(PlanId.gentlerPacePath, 'circle-1', isRevisit: false);
+          .activatePlan(PlanId.gentlerPacePath);
+      container1
+          .read(planProvider.notifier)
+          .advanceCursorForCircle(
+            PlanId.gentlerPacePath,
+            'circle-1',
+            isRevisit: false,
+          );
       container1.dispose();
 
       final container2 = ProviderContainer(
@@ -546,10 +561,7 @@ void main() {
 
       final state = container2.read(planProvider);
       expect(state.activePlanId, PlanId.gentlerPacePath);
-      expect(
-        state.progress[PlanId.gentlerPacePath]!.forwardCursor,
-        1,
-      );
+      expect(state.progress[PlanId.gentlerPacePath]!.forwardCursor, 1);
     });
 
     test('a corrupt top-level stored value resets every Plan to fresh, '
@@ -621,35 +633,37 @@ void main() {
       expect(notifier.progressFor(PlanId.clearerHeadPath).forwardCursor, 2);
     });
 
-    test('an invalid persisted activePlanId falls back to no active Plan',
-        () async {
-      final container = await _containerWith(
-        storedPrefs: {
-          plansStateKey: jsonEncode({
-            'schemaVersion': plansStateSchemaVersion,
-            'activePlanId': 'not_a_real_plan_id',
-            'progress': {
-              for (final id in PlanId.values)
-                id.name: {
-                  'planId': id.name,
-                  'contentVersion': planContentVersion,
-                  'cycleId': '${id.name}_cycle_1',
-                  'cycleStartedAt': _today.toIso8601String(),
-                  'forwardCursor': 0,
-                  'lastEncounteredStageId': null,
-                  'pendingRevisit': false,
-                  'status': PlanCycleStatus.inProgress.name,
-                  'cycleHistory': <Object?>[],
-                  'lastAdvancedCircleId': null,
-                },
-            },
-          }),
-        },
-      );
-      addTearDown(container.dispose);
+    test(
+      'an invalid persisted activePlanId falls back to no active Plan',
+      () async {
+        final container = await _containerWith(
+          storedPrefs: {
+            plansStateKey: jsonEncode({
+              'schemaVersion': plansStateSchemaVersion,
+              'activePlanId': 'not_a_real_plan_id',
+              'progress': {
+                for (final id in PlanId.values)
+                  id.name: {
+                    'planId': id.name,
+                    'contentVersion': planContentVersion,
+                    'cycleId': '${id.name}_cycle_1',
+                    'cycleStartedAt': _today.toIso8601String(),
+                    'forwardCursor': 0,
+                    'lastEncounteredStageId': null,
+                    'pendingRevisit': false,
+                    'status': PlanCycleStatus.inProgress.name,
+                    'cycleHistory': <Object?>[],
+                    'lastAdvancedCircleId': null,
+                  },
+              },
+            }),
+          },
+        );
+        addTearDown(container.dispose);
 
-      expect(container.read(planProvider).activePlanId, isNull);
-    });
+        expect(container.read(planProvider).activePlanId, isNull);
+      },
+    );
   });
 
   group('setLighterDefaultForPlan — Batch 2B (ADR-015)', () {
@@ -711,8 +725,9 @@ void main() {
       notifier.setLighterDefaultForPlan(PlanId.moreEnergyPath, true);
 
       expect(
-        analytics.events
-            .where((e) => e == AnalyticsEventType.coachApplicationAccepted),
+        analytics.events.where(
+          (e) => e == AnalyticsEventType.coachApplicationAccepted,
+        ),
         hasLength(1),
       );
     });
@@ -859,8 +874,7 @@ void main() {
       );
     });
 
-    test('setLighterDefaultForPlan is a no-op without entitlement',
-        () async {
+    test('setLighterDefaultForPlan is a no-op without entitlement', () async {
       final container = await _containerWith(entitled: false);
       addTearDown(container.dispose);
       final notifier = container.read(planProvider.notifier);
@@ -905,8 +919,7 @@ void main() {
       );
       addTearDown(container.dispose);
       final notifier = container.read(planProvider.notifier);
-      final cycleIdBefore =
-          notifier.progressFor(PlanId.moreEnergyPath).cycleId;
+      final cycleIdBefore = notifier.progressFor(PlanId.moreEnergyPath).cycleId;
 
       notifier.repeatCycle(PlanId.moreEnergyPath);
 

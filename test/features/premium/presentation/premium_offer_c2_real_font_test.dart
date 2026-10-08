@@ -34,7 +34,9 @@ class _FakeEntitlementGateway implements EntitlementGateway {
   @override
   Future<MonthlyOffer?> monthlyOffer() => switch (offer) {
     // A long localized price string on purpose.
-    _Offer.priced => Future.value(const MonthlyOffer(localizedPrice: r'US$ 4.99')),
+    _Offer.priced => Future.value(
+      const MonthlyOffer(localizedPrice: r'US$ 4.99'),
+    ),
     _Offer.loading => Completer<MonthlyOffer?>().future,
     _Offer.none => Future.value(),
   };
@@ -106,9 +108,9 @@ void main() {
                 theme: theme,
                 home: Builder(
                   builder: (context) => MediaQuery(
-                    data: MediaQuery.of(context).copyWith(
-                      textScaler: const TextScaler.linear(2.0),
-                    ),
+                    data: MediaQuery.of(
+                      context,
+                    ).copyWith(textScaler: const TextScaler.linear(2.0)),
                     child: const PremiumOfferPage(),
                   ),
                 ),
@@ -126,7 +128,8 @@ void main() {
           ];
           expect(truncated, isEmpty);
 
-          if (offer == _Offer.priced && status == EntitlementStatus.inactive &&
+          if (offer == _Offer.priced &&
+              status == EntitlementStatus.inactive &&
               initialize) {
             // The price really rendered — not stuck loading.
             expect(find.text(r'US$ 4.99 / month'), findsOneWidget);

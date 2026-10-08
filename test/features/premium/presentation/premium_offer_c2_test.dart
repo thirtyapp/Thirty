@@ -19,8 +19,7 @@ class _FakeEntitlementGateway implements EntitlementGateway {
     this.status = EntitlementStatus.inactive,
     Future<MonthlyOffer?>? offer,
   }) : offer =
-           offer ??
-           Future.value(const MonthlyOffer(localizedPrice: r'$9.99'));
+           offer ?? Future.value(const MonthlyOffer(localizedPrice: r'$9.99'));
 
   EntitlementStatus status;
   Future<MonthlyOffer?> offer;
@@ -41,8 +40,8 @@ class _FakeEntitlementGateway implements EntitlementGateway {
   Future<MonthlyOffer?> monthlyOffer() => offer;
   @override
   Future<PurchaseOutcome> purchaseMonthly() async {
-    final outcome = await (onPurchase?.call() ??
-        Future.value(PurchaseOutcome.purchased));
+    final outcome =
+        await (onPurchase?.call() ?? Future.value(PurchaseOutcome.purchased));
     if (outcome == PurchaseOutcome.purchased && statusAfterPurchase != null) {
       status = statusAfterPurchase!;
     }
@@ -93,8 +92,7 @@ Future<ProviderContainer> _pump(
   return container;
 }
 
-double _top(WidgetTester tester, Finder finder) =>
-    tester.getTopLeft(finder).dy;
+double _top(WidgetTester tester, Finder finder) => tester.getTopLeft(finder).dy;
 
 Finder get _cta => find.widgetWithText(ThirtyButton, 'Become Premium');
 
@@ -153,7 +151,9 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.bySemanticsLabel('Circle Insights: what your own choices tell you'),
+        find.bySemanticsLabel(
+          'Circle Insights: what your own choices tell you',
+        ),
         findsOneWidget,
       );
       semantics.dispose();
@@ -261,7 +261,8 @@ void main() {
       await tester.pump();
       expect(tester.widget<ThirtyButton>(_cta).isLoading, isTrue);
       expect(
-        tester.widget<TextButton>(find.widgetWithText(TextButton, 'Not now'))
+        tester
+            .widget<TextButton>(find.widgetWithText(TextButton, 'Not now'))
             .onPressed,
         isNull,
       );

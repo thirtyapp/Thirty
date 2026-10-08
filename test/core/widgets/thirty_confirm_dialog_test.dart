@@ -120,10 +120,7 @@ Future<bool? Function()> _open(
 
 RenderParagraph _paragraph(WidgetTester tester, String text) =>
     tester.renderObject<RenderParagraph>(
-      find.descendant(
-        of: find.byType(AlertDialog),
-        matching: find.text(text),
-      ),
+      find.descendant(of: find.byType(AlertDialog), matching: find.text(text)),
     );
 
 /// The paragraph laid out again without any height limit.

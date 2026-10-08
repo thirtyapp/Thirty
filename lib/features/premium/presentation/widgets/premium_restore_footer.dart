@@ -42,7 +42,9 @@ class _PremiumRestoreFooterState extends ConsumerState<PremiumRestoreFooter> {
       _isRestoring = true;
       _message = null;
     });
-    final outcome = await ref.read(entitlementStatusProvider.notifier).restore();
+    final outcome = await ref
+        .read(entitlementStatusProvider.notifier)
+        .restore();
     if (!mounted) return;
     setState(() {
       _isRestoring = false;

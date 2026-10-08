@@ -98,9 +98,7 @@ void main() {
             // forever, which `pumpAndSettle` would never resolve).
             home: Builder(
               builder: (context) => MediaQuery(
-                data: MediaQuery.of(
-                  context,
-                ).copyWith(disableAnimations: true),
+                data: MediaQuery.of(context).copyWith(disableAnimations: true),
                 child: const HomePage(),
               ),
             ),
@@ -159,25 +157,24 @@ void main() {
     },
   );
 
-  testWidgets(
-    'ActionReportPrompt appears once today\'s Circle is closed',
-    (WidgetTester tester) async {
-      await tester.pumpWidget(
-        await _wrap(
-          storedPrefs: {
-            recommendationDayKey: '2026-08-02',
-            recommendationIntentionKey: 'moreEnergy',
-            recommendationActivityIdKey: 'thirtyMinuteWalk',
-            recommendationStatusKey: 'closed',
-            recommendationStartedAtKey: _today.toIso8601String(),
-            recommendationClosedAtKey: _today.toIso8601String(),
-          },
-        ),
-      );
+  testWidgets('ActionReportPrompt appears once today\'s Circle is closed', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      await _wrap(
+        storedPrefs: {
+          recommendationDayKey: '2026-08-02',
+          recommendationIntentionKey: 'moreEnergy',
+          recommendationActivityIdKey: 'thirtyMinuteWalk',
+          recommendationStatusKey: 'closed',
+          recommendationStartedAtKey: _today.toIso8601String(),
+          recommendationClosedAtKey: _today.toIso8601String(),
+        },
+      ),
+    );
 
-      expect(find.text('Did you try this activity?'), findsOneWidget);
-    },
-  );
+    expect(find.text('Did you try this activity?'), findsOneWidget);
+  });
 
   testWidgets(
     'the Plans icon is absent regardless of entitlement — Plans is now a '
@@ -204,11 +201,7 @@ void main() {
             recommendationIntentionKey: 'moreEnergy',
             recommendationActivityIdKey: 'thirtyMinuteWalk',
             recommendationStatusKey: 'closed',
-            recommendationStartedAtKey: DateTime(
-              2026,
-              8,
-              1,
-            ).toIso8601String(),
+            recommendationStartedAtKey: DateTime(2026, 8, 1).toIso8601String(),
             recommendationClosedAtKey: DateTime(2026, 8, 1).toIso8601String(),
           },
         ),

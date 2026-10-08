@@ -114,8 +114,10 @@ class _ViewportVisibilityState extends State<ViewportVisibility> {
     return visible.height >= required;
   }
 
-  static Rect _globalRect(RenderBox box) =>
-      MatrixUtils.transformRect(box.getTransformTo(null), Offset.zero & box.size);
+  static Rect _globalRect(RenderBox box) => MatrixUtils.transformRect(
+    box.getTransformTo(null),
+    Offset.zero & box.size,
+  );
 
   @override
   Widget build(BuildContext context) => widget.child;

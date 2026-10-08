@@ -40,10 +40,9 @@ class QuietTrailHeroPreviewPage extends StatelessWidget {
         child: Center(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final size =
-                  (constraints.maxWidth * _viewportWidthFraction)
-                      .clamp(_viewportMinSize, _viewportMaxSize)
-                      .toDouble();
+              final size = (constraints.maxWidth * _viewportWidthFraction)
+                  .clamp(_viewportMinSize, _viewportMaxSize)
+                  .toDouble();
               return SizedBox(
                 width: size,
                 height: size,

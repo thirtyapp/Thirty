@@ -74,9 +74,7 @@ void main() {
       expect(analytics.events, [AnalyticsEventType.appOpened]);
 
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-      tester.binding.handleAppLifecycleStateChanged(
-        AppLifecycleState.resumed,
-      );
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump();
 
       expect(analytics.events, [
@@ -97,18 +95,8 @@ void main() {
           recommendationIntentionKey: 'moreEnergy',
           recommendationActivityIdKey: 'thirtyMinuteWalk',
           recommendationStatusKey: 'closed',
-          recommendationStartedAtKey: DateTime(
-            2026,
-            8,
-            1,
-            9,
-          ).toIso8601String(),
-          recommendationClosedAtKey: DateTime(
-            2026,
-            8,
-            1,
-            10,
-          ).toIso8601String(),
+          recommendationStartedAtKey: DateTime(2026, 8, 1, 9).toIso8601String(),
+          recommendationClosedAtKey: DateTime(2026, 8, 1, 10).toIso8601String(),
         });
         final prefs = await SharedPreferences.getInstance();
 
@@ -140,9 +128,7 @@ void main() {
         // real-world path this fix targets (backgrounded overnight,
         // reopened the next day without being fully killed).
         clock.value = DateTime(2026, 8, 2, 8);
-        tester.binding.handleAppLifecycleStateChanged(
-          AppLifecycleState.paused,
-        );
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
         tester.binding.handleAppLifecycleStateChanged(
           AppLifecycleState.resumed,
         );

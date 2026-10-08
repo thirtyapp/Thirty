@@ -65,12 +65,7 @@ void main() {
 
     test('every pacing note reads as explicitly self-paced/stoppable, never '
         'a duration or count to hit', () {
-      const forbiddenPacingPhrases = [
-        'must',
-        'have to',
-        'required',
-        'timer',
-      ];
+      const forbiddenPacingPhrases = ['must', 'have to', 'required', 'timer'];
       for (final activityId in activityPools.values.expand((p) => p)) {
         final note = activityPacingNote(activityId).toLowerCase();
         for (final phrase in forbiddenPacingPhrases) {
@@ -433,69 +428,60 @@ void main() {
       }
     });
 
-    test(
-      'excludes candidates sharing the immediately prior family when a '
-      'different-family alternative exists',
-      () {
-        final pool = activityPools[Intention.moreEnergy]!;
-        const dayIndex = 0;
-        final normalCandidate = pool[dayIndex % pool.length];
-        final lastShownFamily = activityFamily(normalCandidate);
+    test('excludes candidates sharing the immediately prior family when a '
+        'different-family alternative exists', () {
+      final pool = activityPools[Intention.moreEnergy]!;
+      const dayIndex = 0;
+      final normalCandidate = pool[dayIndex % pool.length];
+      final lastShownFamily = activityFamily(normalCandidate);
 
+      final result = selectActivityId(
+        intention: Intention.moreEnergy,
+        dayIndex: dayIndex,
+        lastShownFamily: lastShownFamily,
+      );
+
+      expect(result, isNot(normalCandidate));
+      expect(activityFamily(result), isNot(lastShownFamily));
+    });
+
+    test('falls back to the history-filtered pool (ignoring the family guard) '
+        'when every remaining candidate shares the prior family', () {
+      final pool = activityPools[Intention.moreEnergy]!;
+      final onlySurvivor = pool.first;
+      final excludeEverythingElse = pool
+          .where((id) => id != onlySurvivor)
+          .toSet();
+      final lastShownFamily = activityFamily(onlySurvivor);
+
+      for (var dayIndex = 0; dayIndex < 5; dayIndex++) {
         final result = selectActivityId(
           intention: Intention.moreEnergy,
           dayIndex: dayIndex,
+          recentActivityIds: excludeEverythingElse,
           lastShownFamily: lastShownFamily,
         );
+        expect(result, onlySurvivor);
+      }
+    });
 
-        expect(result, isNot(normalCandidate));
-        expect(activityFamily(result), isNot(lastShownFamily));
-      },
-    );
+    test('the per-intention history filter still applies first, independently '
+        'of the family guard', () {
+      final pool = activityPools[Intention.clearerHead]!;
+      const dayIndex = 0;
+      final normalCandidate = pool[dayIndex % pool.length];
 
-    test(
-      'falls back to the history-filtered pool (ignoring the family guard) '
-      'when every remaining candidate shares the prior family',
-      () {
-        final pool = activityPools[Intention.moreEnergy]!;
-        final onlySurvivor = pool.first;
-        final excludeEverythingElse = pool
-            .where((id) => id != onlySurvivor)
-            .toSet();
-        final lastShownFamily = activityFamily(onlySurvivor);
+      final result = selectActivityId(
+        intention: Intention.clearerHead,
+        dayIndex: dayIndex,
+        recentActivityIds: {normalCandidate},
+        // A family that matches nothing in this pool, so only the
+        // history filter is actually exercised by this case.
+        lastShownFamily: null,
+      );
 
-        for (var dayIndex = 0; dayIndex < 5; dayIndex++) {
-          final result = selectActivityId(
-            intention: Intention.moreEnergy,
-            dayIndex: dayIndex,
-            recentActivityIds: excludeEverythingElse,
-            lastShownFamily: lastShownFamily,
-          );
-          expect(result, onlySurvivor);
-        }
-      },
-    );
-
-    test(
-      'the per-intention history filter still applies first, independently '
-      'of the family guard',
-      () {
-        final pool = activityPools[Intention.clearerHead]!;
-        const dayIndex = 0;
-        final normalCandidate = pool[dayIndex % pool.length];
-
-        final result = selectActivityId(
-          intention: Intention.clearerHead,
-          dayIndex: dayIndex,
-          recentActivityIds: {normalCandidate},
-          // A family that matches nothing in this pool, so only the
-          // history filter is actually exercised by this case.
-          lastShownFamily: null,
-        );
-
-        expect(result, isNot(normalCandidate));
-        expect(pool, contains(result));
-      },
-    );
+      expect(result, isNot(normalCandidate));
+      expect(pool, contains(result));
+    });
   });
 }

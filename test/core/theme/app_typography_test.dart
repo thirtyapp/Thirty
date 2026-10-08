@@ -35,7 +35,10 @@ TextStyle _slot(TextTheme theme, String name) => switch (name) {
 /// The TextTheme as a widget actually receives it — after `Theme.of` has
 /// merged Material's localized type geometry underneath THIRTY's styles,
 /// which is exactly where undesigned letterSpacing used to leak in.
-Future<TextTheme> _resolvedTextTheme(WidgetTester tester, ThemeData theme) async {
+Future<TextTheme> _resolvedTextTheme(
+  WidgetTester tester,
+  ThemeData theme,
+) async {
   late TextTheme resolved;
   await tester.pumpWidget(
     MaterialApp(

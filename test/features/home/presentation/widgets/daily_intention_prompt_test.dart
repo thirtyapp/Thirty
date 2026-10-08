@@ -134,20 +134,14 @@ void main() {
     },
   );
 
-  testWidgets(
-    'shows only the question and the three choices — no explanatory '
-    'paragraph — matching the restrained question/choice rhythm of the '
-    'post-Circle feedback UI (emulator polish)',
-    (tester) async {
-      final (widget, container) = await _wrap();
-      addTearDown(container.dispose);
-      await tester.pumpWidget(widget);
+  testWidgets('shows only the question and the three choices — no explanatory '
+      'paragraph — matching the restrained question/choice rhythm of the '
+      'post-Circle feedback UI (emulator polish)', (tester) async {
+    final (widget, container) = await _wrap();
+    addTearDown(container.dispose);
+    await tester.pumpWidget(widget);
 
-      expect(
-        find.textContaining('THIRTY gives you one activity'),
-        findsNothing,
-      );
-      expect(find.byType(Text), findsNWidgets(4));
-    },
-  );
+    expect(find.textContaining('THIRTY gives you one activity'), findsNothing);
+    expect(find.byType(Text), findsNWidgets(4));
+  });
 }

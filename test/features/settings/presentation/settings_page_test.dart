@@ -121,9 +121,10 @@ Finder _switchIn(String rowKey) => find.descendant(
 void main() {
   testWidgets('shows "Premium is active" and a manage-subscription button '
       'when a real managementURL is available', (tester) async {
-    final gateway = _FakeEntitlementGateway(
-      initialStatus: EntitlementStatus.active,
-    )..managementUrlValue = 'https://play.google.com/store/account/subscriptions';
+    final gateway =
+        _FakeEntitlementGateway(initialStatus: EntitlementStatus.active)
+          ..managementUrlValue =
+              'https://play.google.com/store/account/subscriptions';
     final (widget, container) = await _wrap(gateway: gateway);
     addTearDown(container.dispose);
 
@@ -204,10 +205,7 @@ void main() {
     await tester.tap(find.text('Restore purchases'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('Your Premium access has been restored.'),
-      findsOneWidget,
-    );
+    expect(find.text('Your Premium access has been restored.'), findsOneWidget);
   });
 
   testWidgets('restore purchases: no purchase found is reported plainly, '
@@ -258,29 +256,26 @@ void main() {
     );
   });
 
-  testWidgets(
-    'exposes inline export/delete data controls under "Data & '
-    'privacy" — founder IA correction: these live directly on "You" now, '
-    'not behind a link to the retired primary Journal tab',
-    (tester) async {
-      final gateway = _FakeEntitlementGateway();
-      final (widget, container) = await _wrap(gateway: gateway);
-      addTearDown(container.dispose);
+  testWidgets('exposes inline export/delete data controls under "Data & '
+      'privacy" — founder IA correction: these live directly on "You" now, '
+      'not behind a link to the retired primary Journal tab', (tester) async {
+    final gateway = _FakeEntitlementGateway();
+    final (widget, container) = await _wrap(gateway: gateway);
+    addTearDown(container.dispose);
 
-      await tester.pumpWidget(widget);
-      await tester.pumpAndSettle();
-      // The Settings list has grown past the default test viewport + cache
-      // extent since Appearance/Analytics were added — scroll to bring this
-      // card into the mounted range before asserting on it.
-      await tester.scrollUntilVisible(find.text('Delete Circle history'), 200);
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+    // The Settings list has grown past the default test viewport + cache
+    // extent since Appearance/Analytics were added — scroll to bring this
+    // card into the mounted range before asserting on it.
+    await tester.scrollUntilVisible(find.text('Delete Circle history'), 200);
 
-      expect(find.text('Data & privacy'), findsOneWidget);
-      expect(find.text('Copy as text'), findsOneWidget);
-      expect(find.text('Delete Circle history'), findsOneWidget);
-      expect(find.text('Your data'), findsNothing);
-      expect(find.text('Delete all'), findsNothing);
-    },
-  );
+    expect(find.text('Data & privacy'), findsOneWidget);
+    expect(find.text('Copy as text'), findsOneWidget);
+    expect(find.text('Delete Circle history'), findsOneWidget);
+    expect(find.text('Your data'), findsNothing);
+    expect(find.text('Delete all'), findsNothing);
+  });
 
   testWidgets(
     'exposes the real System/Light/Dark theme control, reflecting and '
@@ -331,62 +326,56 @@ void main() {
     },
   );
 
-  testWidgets(
-    'reminder off by default; enabling it opens the time picker and '
-    'requests permission only at that point',
-    (tester) async {
-      final reminderGateway = _FakeReminderGateway();
-      final (widget, container) = await _wrap(
-        gateway: _FakeEntitlementGateway(),
-        reminderGateway: reminderGateway,
-      );
-      addTearDown(container.dispose);
-      await tester.pumpWidget(widget);
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
-      // The whole row (switch and its action), not just its title, below
-      // the You header band.
-      await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
-      await tester.pumpAndSettle();
+  testWidgets('reminder off by default; enabling it opens the time picker and '
+      'requests permission only at that point', (tester) async {
+    final reminderGateway = _FakeReminderGateway();
+    final (widget, container) = await _wrap(
+      gateway: _FakeEntitlementGateway(),
+      reminderGateway: reminderGateway,
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+    // The whole row (switch and its action), not just its title, below
+    // the You header band.
+    await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
+    await tester.pumpAndSettle();
 
-      expect(container.read(reminderProvider).enabled, isFalse);
+    expect(container.read(reminderProvider).enabled, isFalse);
 
-      await tester.tap(_switchIn('you.reminder'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
+    await tester.tap(_switchIn('you.reminder'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
 
-      expect(container.read(reminderProvider).enabled, isTrue);
-      expect(reminderGateway.scheduleCallCount, greaterThan(0));
-    },
-  );
+    expect(container.read(reminderProvider).enabled, isTrue);
+    expect(reminderGateway.scheduleCallCount, greaterThan(0));
+  });
 
-  testWidgets(
-    'shows a truthful message when permission is denied, without a '
-    'repeated permission-request loop',
-    (tester) async {
-      final reminderGateway = _FakeReminderGateway()..permissionGranted = false;
-      final (widget, container) = await _wrap(
-        gateway: _FakeEntitlementGateway(),
-        reminderGateway: reminderGateway,
-        prefs: {reminderEnabledKey: true},
-      );
-      addTearDown(container.dispose);
+  testWidgets('shows a truthful message when permission is denied, without a '
+      'repeated permission-request loop', (tester) async {
+    final reminderGateway = _FakeReminderGateway()..permissionGranted = false;
+    final (widget, container) = await _wrap(
+      gateway: _FakeEntitlementGateway(),
+      reminderGateway: reminderGateway,
+      prefs: {reminderEnabledKey: true},
+    );
+    addTearDown(container.dispose);
 
-      await tester.pumpWidget(widget);
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
-      // The whole row (switch and its action), not just its title, below
-      // the You header band.
-      await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+    // The whole row (switch and its action), not just its title, below
+    // the You header band.
+    await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
+    await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('Notifications are turned off for THIRTY'),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(
+      find.textContaining('Notifications are turned off for THIRTY'),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('disabling the reminder cancels pending work', (tester) async {
     final reminderGateway = _FakeReminderGateway();
@@ -411,90 +400,85 @@ void main() {
     expect(reminderGateway.cancelCallCount, greaterThan(0));
   });
 
-  testWidgets(
-    'shows a truthful "Android access needed" message with an "Allow '
-    'access" action when notification permission is granted but '
-    'exact-alarm access is not — never silently scheduled inexact',
-    (tester) async {
-      final reminderGateway = _FakeReminderGateway()
-        ..exactAlarmAccessGranted = false;
-      final (widget, container) = await _wrap(
-        gateway: _FakeEntitlementGateway(),
-        reminderGateway: reminderGateway,
-        prefs: {reminderEnabledKey: true},
-      );
-      addTearDown(container.dispose);
-      // Resolves the live notification-permission truth (default `true`
-      // on the fake) from the `build()`-time hardcoded `false` — exactly
-      // like the timezone-unavailable test below.
-      await container.read(reminderProvider.notifier).initialize();
+  testWidgets('shows a truthful "Android access needed" message with an "Allow '
+      'access" action when notification permission is granted but '
+      'exact-alarm access is not — never silently scheduled inexact', (
+    tester,
+  ) async {
+    final reminderGateway = _FakeReminderGateway()
+      ..exactAlarmAccessGranted = false;
+    final (widget, container) = await _wrap(
+      gateway: _FakeEntitlementGateway(),
+      reminderGateway: reminderGateway,
+      prefs: {reminderEnabledKey: true},
+    );
+    addTearDown(container.dispose);
+    // Resolves the live notification-permission truth (default `true`
+    // on the fake) from the `build()`-time hardcoded `false` — exactly
+    // like the timezone-unavailable test below.
+    await container.read(reminderProvider.notifier).initialize();
 
-      await tester.pumpWidget(widget);
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
-      // The whole row (switch and its action), not just its title, below
-      // the You header band.
-      await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+    // The whole row (switch and its action), not just its title, below
+    // the You header band.
+    await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
+    await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('Android access is needed'),
-        findsOneWidget,
-      );
-      expect(find.text('Allow access'), findsOneWidget);
-      expect(find.text('Change time'), findsNothing);
-      expect(reminderGateway.scheduleCallCount, 0);
+    expect(find.textContaining('Android access is needed'), findsOneWidget);
+    expect(find.text('Allow access'), findsOneWidget);
+    expect(find.text('Change time'), findsNothing);
+    expect(reminderGateway.scheduleCallCount, 0);
 
-      // Tapping shows THIRTY's own calm explanation first — never leaves
-      // the app before that.
-      await tester.tap(find.text('Allow access'));
-      await tester.pumpAndSettle();
-      expect(find.text('Allow Alarms & reminders'), findsOneWidget);
-      expect(reminderGateway.requestExactAlarmAccessCallCount, 0);
+    // Tapping shows THIRTY's own calm explanation first — never leaves
+    // the app before that.
+    await tester.tap(find.text('Allow access'));
+    await tester.pumpAndSettle();
+    expect(find.text('Allow Alarms & reminders'), findsOneWidget);
+    expect(reminderGateway.requestExactAlarmAccessCallCount, 0);
 
-      // Confirming from that dialog is what actually invokes the platform
-      // request — and, once access is granted, re-checking live makes the
-      // reminder become active.
-      reminderGateway.exactAlarmAccessGranted = true;
-      await tester.tap(find.text('Continue'));
-      await tester.pumpAndSettle();
+    // Confirming from that dialog is what actually invokes the platform
+    // request — and, once access is granted, re-checking live makes the
+    // reminder become active.
+    reminderGateway.exactAlarmAccessGranted = true;
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
 
-      expect(reminderGateway.requestExactAlarmAccessCallCount, 1);
-      expect(container.read(reminderProvider).exactAlarmAccessGranted, isTrue);
-      expect(reminderGateway.scheduleCallCount, greaterThan(0));
-      expect(find.textContaining('Reminds you at'), findsOneWidget);
-    },
-  );
+    expect(reminderGateway.requestExactAlarmAccessCallCount, 1);
+    expect(container.read(reminderProvider).exactAlarmAccessGranted, isTrue);
+    expect(reminderGateway.scheduleCallCount, greaterThan(0));
+    expect(find.textContaining('Reminds you at'), findsOneWidget);
+  });
 
-  testWidgets(
-    'shows a truthful message when the device timezone cannot be '
-    'resolved, without ever claiming the reminder is scheduled',
-    (tester) async {
-      final reminderGateway = _FakeReminderGateway()
-        ..scheduleOutcome = ScheduleOutcome.timezoneUnavailable;
-      final (widget, container) = await _wrap(
-        gateway: _FakeEntitlementGateway(),
-        reminderGateway: reminderGateway,
-        prefs: {reminderEnabledKey: true},
-      );
-      addTearDown(container.dispose);
-      await container.read(reminderProvider.notifier).initialize();
+  testWidgets('shows a truthful message when the device timezone cannot be '
+      'resolved, without ever claiming the reminder is scheduled', (
+    tester,
+  ) async {
+    final reminderGateway = _FakeReminderGateway()
+      ..scheduleOutcome = ScheduleOutcome.timezoneUnavailable;
+    final (widget, container) = await _wrap(
+      gateway: _FakeEntitlementGateway(),
+      reminderGateway: reminderGateway,
+      prefs: {reminderEnabledKey: true},
+    );
+    addTearDown(container.dispose);
+    await container.read(reminderProvider.notifier).initialize();
 
-      await tester.pumpWidget(widget);
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
-      // The whole row (switch and its action), not just its title, below
-      // the You header band.
-      await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Daily reminder'), 200);
+    // The whole row (switch and its action), not just its title, below
+    // the You header band.
+    await tester.ensureVisible(find.byKey(const ValueKey('you.reminder')));
+    await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('we couldn\'t confirm your device\'s timezone'),
-        findsOneWidget,
-      );
-      expect(find.textContaining('Reminds you at'), findsNothing);
-    },
-  );
+    expect(
+      find.textContaining('we couldn\'t confirm your device\'s timezone'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Reminds you at'), findsNothing);
+  });
 
   testWidgets('Phase C1 — Premium card and grouped rows share one content '
       'inset (the 8pt mismatch A2 recorded is gone)', (tester) async {
@@ -523,10 +507,7 @@ void main() {
     final groups = cards.where((card) => card != tester.widget(premiumCard));
     expect(groups, isNotEmpty);
     for (final group in groups) {
-      expect(
-        (group.padding! as EdgeInsets).left,
-        AppSpacing.featuredCard,
-      );
+      expect((group.padding! as EdgeInsets).left, AppSpacing.featuredCard);
     }
     expect(
       tester.getTopLeft(find.text(YouPremiumCard.body)).dx,

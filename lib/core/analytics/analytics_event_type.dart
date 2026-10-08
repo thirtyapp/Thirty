@@ -151,8 +151,7 @@ extension AnalyticsEventTypeWire on AnalyticsEventType {
     AnalyticsEventType.circleClosed => 'circle_closed',
     AnalyticsEventType.recommendationShown => 'recommendation_shown',
     AnalyticsEventType.circleAttemptReported => 'circle_attempt_reported',
-    AnalyticsEventType.circleUsefulnessReported =>
-      'circle_usefulness_reported',
+    AnalyticsEventType.circleUsefulnessReported => 'circle_usefulness_reported',
     AnalyticsEventType.planStarted => 'plan_started',
     AnalyticsEventType.planSessionShown => 'plan_session_shown',
     AnalyticsEventType.planCycleCompleted => 'plan_cycle_completed',

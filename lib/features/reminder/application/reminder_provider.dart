@@ -273,7 +273,8 @@ class ReminderNotifier extends Notifier<ReminderState> {
 
     final now = ref.read(eventClockProvider)();
     final todayResolved =
-        ref.read(recommendationProvider).status != RecommendationStatus.notStarted;
+        ref.read(recommendationProvider).status !=
+        RecommendationStatus.notStarted;
     final firstOccurrence = _nextOccurrence(
       now,
       state.hour,
@@ -297,7 +298,8 @@ class ReminderNotifier extends Notifier<ReminderState> {
       // check above and this call — the gateway independently refused to
       // schedule (`local_notifications_reminder_gateway.dart`'s own
       // fail-closed check), so state must reflect that truthfully too.
-      exactAlarmAccessGranted: outcome != ScheduleOutcome.exactAlarmAccessDenied,
+      exactAlarmAccessGranted:
+          outcome != ScheduleOutcome.exactAlarmAccessDenied,
     );
   }
 }

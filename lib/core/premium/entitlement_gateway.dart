@@ -64,8 +64,7 @@ class UnavailableEntitlementGateway implements EntitlementGateway {
   Stream<EntitlementStatus> get statusUpdates => const Stream.empty();
 
   @override
-  Future<EntitlementStatus> initialize() async =>
-      EntitlementStatus.unavailable;
+  Future<EntitlementStatus> initialize() async => EntitlementStatus.unavailable;
 
   @override
   Future<MonthlyOffer?> monthlyOffer() async => null;

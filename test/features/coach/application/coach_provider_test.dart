@@ -57,7 +57,9 @@ void main() {
     test('no cue for a Plan that is not the active one', () async {
       final container = await _containerWith(now: DateTime(2026, 8, 10, 9));
       addTearDown(container.dispose);
-      container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+      container
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.clearerHeadPath);
 
       expect(container.read(coachCueProvider(PlanId.moreEnergyPath)), isNull);
     });
@@ -88,10 +90,14 @@ void main() {
           .read(recommendationProvider.notifier)
           .chooseIntention(Intention.moreEnergy);
 
-      final recommendation =
-          container.read(recommendationProvider).recommendation!;
+      final recommendation = container
+          .read(recommendationProvider)
+          .recommendation!;
       expect(recommendation.treatmentUsed, PlanTreatment.lighter);
-      expect(recommendation.treatmentSource, PlanTreatmentSource.savedPreference);
+      expect(
+        recommendation.treatmentSource,
+        PlanTreatmentSource.savedPreference,
+      );
 
       final cue = container.read(coachCueProvider(PlanId.moreEnergyPath));
       expect(cue!.family, CoachFamily.lighterPacing);
@@ -112,8 +118,9 @@ void main() {
           .read(recommendationProvider.notifier)
           .setPlanTreatment(PlanTreatment.lighter);
 
-      final recommendation =
-          container.read(recommendationProvider).recommendation!;
+      final recommendation = container
+          .read(recommendationProvider)
+          .recommendation!;
       expect(recommendation.treatmentSource, PlanTreatmentSource.directChoice);
       // The saved Plan-level default is untouched by a same-Session choice.
       expect(
@@ -151,7 +158,9 @@ void main() {
         'resumption cue', () async {
       final day1 = DateTime(2026, 8, 1, 9);
       final container1 = await _containerWith(now: day1);
-      container1.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+      container1
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.moreEnergyPath);
       container1
           .read(recommendationProvider.notifier)
           .chooseIntention(Intention.moreEnergy);
@@ -179,7 +188,9 @@ void main() {
         'the next time this Plan is viewed', () async {
       final day1 = DateTime(2026, 8, 1, 9);
       final container1 = await _containerWith(now: day1);
-      container1.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+      container1
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.moreEnergyPath);
       container1
           .read(recommendationProvider.notifier)
           .chooseIntention(Intention.moreEnergy);
@@ -206,7 +217,9 @@ void main() {
         'actionFeedback (UNKNOWN, not a negative)', () async {
       final day1 = DateTime(2026, 8, 1, 9);
       final container1 = await _containerWith(now: day1);
-      container1.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+      container1
+          .read(planProvider.notifier)
+          .activatePlan(PlanId.moreEnergyPath);
       container1
           .read(recommendationProvider.notifier)
           .chooseIntention(Intention.moreEnergy);

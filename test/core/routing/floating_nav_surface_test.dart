@@ -139,9 +139,7 @@ void main() {
         expect(barMaterial.color, Colors.transparent);
       });
 
-      testWidgets('nothing paints outside the rounded corners', (
-        tester,
-      ) async {
+      testWidgets('nothing paints outside the rounded corners', (tester) async {
         tester.view.physicalSize = const Size(360, 740);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.reset);
@@ -169,7 +167,11 @@ void main() {
         }
 
         // And the bar's own edge, away from the corners, is the surface.
-        final edge = _pixel(bytes, width, Offset(rect.left + 4, rect.center.dy));
+        final edge = _pixel(
+          bytes,
+          width,
+          Offset(rect.left + 4, rect.center.dy),
+        );
         expect(edge, colors.surface);
       });
 

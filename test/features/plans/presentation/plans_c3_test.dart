@@ -195,10 +195,7 @@ void main() {
       expect(_button('Activate'), findsNothing);
       expect(find.text('Active'), findsOneWidget);
       expect(find.bySemanticsLabel(RegExp('Active plan')), findsOneWidget);
-      expect(
-        _textAction('Queue a revisit of the last stage'),
-        findsOneWidget,
-      );
+      expect(_textAction('Queue a revisit of the last stage'), findsOneWidget);
       expect(_textAction('Pause this plan'), findsOneWidget);
       expect(_button('Pause this plan'), findsNothing);
       expect(_button('Queue a revisit of the last stage'), findsNothing);
@@ -268,10 +265,7 @@ void main() {
 
       expect(_textAction('Try lighter guidance today'), findsOneWidget);
       expect(find.text('Queue a one-off revisit'), findsNothing);
-      expect(
-        _textAction('Queue a revisit of the last stage'),
-        findsOneWidget,
-      );
+      expect(_textAction('Queue a revisit of the last stage'), findsOneWidget);
       final banner = find.byType(CoachCueBanner);
       final sentence = tester.widget<Text>(
         find.descendant(of: banner, matching: find.byType(Text)).first,
@@ -314,8 +308,10 @@ void main() {
         'Queue a one-off revisit',
       ]) {
         expect(_textAction(label), findsOneWidget);
-        expect(tester.widget<ThirtyTextAction>(_textAction(label)).centered,
-            isTrue);
+        expect(
+          tester.widget<ThirtyTextAction>(_textAction(label)).centered,
+          isTrue,
+        );
       }
 
       await tester.tap(find.text('Queue a one-off revisit'));

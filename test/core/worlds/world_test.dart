@@ -69,7 +69,10 @@ void main() {
     });
 
     test('changing one dimension makes Worlds unequal', () {
-      expect(_world(season: Season.spring), isNot(_world(season: Season.autumn)));
+      expect(
+        _world(season: Season.spring),
+        isNot(_world(season: Season.autumn)),
+      );
     });
 
     test('copyWith replaces only the given dimensions', () {

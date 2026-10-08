@@ -43,8 +43,7 @@ void main() {
       expect(cue!.family, CoachFamily.stageExplanation);
     });
 
-    test('uses the upcoming stage when no today-specific context is given',
-        () {
+    test('uses the upcoming stage when no today-specific context is given', () {
       final cue = selectCoachCue(
         plan: _plan,
         progress: _progress(forwardCursor: 2),
@@ -153,7 +152,10 @@ void main() {
     test('a completed cycle produces the cycle-transition cue', () {
       final cue = selectCoachCue(
         plan: _plan,
-        progress: _progress(forwardCursor: 5, status: PlanCycleStatus.completed),
+        progress: _progress(
+          forwardCursor: 5,
+          status: PlanCycleStatus.completed,
+        ),
         now: _now,
       );
 
@@ -164,7 +166,10 @@ void main() {
     test('cycle transition outranks resumption and feedback', () {
       final cue = selectCoachCue(
         plan: _plan,
-        progress: _progress(forwardCursor: 5, status: PlanCycleStatus.completed),
+        progress: _progress(
+          forwardCursor: 5,
+          status: PlanCycleStatus.completed,
+        ),
         lastEncounterAt: _now.subtract(const Duration(days: 30)),
         lastAttempt: CircleAttemptResponse.notToday,
         now: _now,
@@ -311,8 +316,7 @@ void main() {
   });
 
   group('selectCoachCue — priority order with multiple eligible contexts', () {
-    test('exactly one cue results even when several contexts are eligible',
-        () {
+    test('exactly one cue results even when several contexts are eligible', () {
       final cue = selectCoachCue(
         plan: _plan,
         progress: _progress(forwardCursor: 1),

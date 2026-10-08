@@ -408,9 +408,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         final storedAttempt = CircleAttemptResponse.values
             .asNameMap()[prefs.getString(recommendationAttemptResponseKey)];
         final storedUsefulnessRaw = CircleUsefulnessResponse.values
-            .asNameMap()[prefs.getString(
-              recommendationUsefulnessResponseKey,
-            )];
+            .asNameMap()[prefs.getString(recommendationUsefulnessResponseKey)];
         final attemptIsAffirmative =
             storedAttempt == CircleAttemptResponse.yes ||
             storedAttempt == CircleAttemptResponse.aLittle;
@@ -819,7 +817,10 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// without its Plan context. [recommendationTreatmentKey] defaults to
   /// [PlanTreatment.standard] when the Circle is Plan-resolved but no
   /// treatment was ever explicitly persisted.
-  Recommendation? _restoreRecommendation(SharedPreferences prefs, String today) {
+  Recommendation? _restoreRecommendation(
+    SharedPreferences prefs,
+    String today,
+  ) {
     final intention = Intention.values
         .asNameMap()[prefs.getString(recommendationIntentionKey)];
     final activityId = ActivityId.values
@@ -827,7 +828,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     if (intention == null || activityId == null) return null;
     if (!activityPools[intention]!.contains(activityId)) return null;
 
-    final planId = PlanId.values.asNameMap()[prefs.getString(recommendationPlanIdKey)];
+    final planId = PlanId.values
+        .asNameMap()[prefs.getString(recommendationPlanIdKey)];
     final stageId = prefs.getString(recommendationStageIdKey);
     final planCycleId = prefs.getString(recommendationPlanCycleIdKey);
     final planVersion = prefs.getInt(recommendationPlanVersionKey);
@@ -842,14 +844,18 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     }
 
     final isRevisit = prefs.getBool(recommendationIsPlanRevisitKey) ?? false;
-    final treatment = PlanTreatment.values
-            .asNameMap()[prefs.getString(recommendationTreatmentKey)] ??
+    final treatment =
+        PlanTreatment.values.asNameMap()[prefs.getString(
+          recommendationTreatmentKey,
+        )] ??
         PlanTreatment.standard;
     // Batch 2B: absent on any record persisted before this batch shipped —
     // falls back to ordinaryDefault, the same honest "no explicit choice
     // recorded" meaning that state already carries.
-    final treatmentSource = PlanTreatmentSource.values
-            .asNameMap()[prefs.getString(recommendationTreatmentSourceKey)] ??
+    final treatmentSource =
+        PlanTreatmentSource.values.asNameMap()[prefs.getString(
+          recommendationTreatmentSourceKey,
+        )] ??
         PlanTreatmentSource.ordinaryDefault;
 
     return _buildRecommendation(
@@ -913,7 +919,10 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     );
 
     if (planAssignment != null) {
-      await prefs.setString(recommendationPlanIdKey, planAssignment.planId.name);
+      await prefs.setString(
+        recommendationPlanIdKey,
+        planAssignment.planId.name,
+      );
       await prefs.setString(recommendationStageIdKey, planAssignment.stageId);
       await prefs.setString(
         recommendationPlanCycleIdKey,

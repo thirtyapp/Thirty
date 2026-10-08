@@ -99,8 +99,9 @@ Future<void> _pump(
             ),
             GoRoute(
               path: '/history/:date',
-              builder: (context, state) =>
-                  Scaffold(body: Text('detail:${state.pathParameters['date']}')),
+              builder: (context, state) => Scaffold(
+                body: Text('detail:${state.pathParameters['date']}'),
+              ),
             ),
           ],
         ),
@@ -141,9 +142,10 @@ void _expectNoTruncationOrOverflow(WidgetTester tester) {
   expect(tester.takeException(), isNull);
   _expectNavigationTargets(tester);
   final truncated = [
-    for (final element in find
-        .descendant(of: _calendar, matching: find.byType(RichText))
-        .evaluate())
+    for (final element
+        in find
+            .descendant(of: _calendar, matching: find.byType(RichText))
+            .evaluate())
       if ((element.renderObject! as RenderParagraph).didExceedMaxLines)
         (element.renderObject! as RenderParagraph).text.toPlainText(),
   ];
@@ -161,24 +163,27 @@ void main() {
 
   group('Grid mode (360pt and wider)', () {
     for (final (width, scale) in [(360.0, 1.0), (360.0, 2.0), (412.0, 1.0)]) {
-      testWidgets('${width.toInt()}pt at ${(scale * 100).toInt()}%: the 7-column '
-          'grid, every interactive day at least 48×48', (tester) async {
-        await _pump(tester, width: width, textScale: scale);
+      testWidgets(
+        '${width.toInt()}pt at ${(scale * 100).toInt()}%: the 7-column '
+        'grid, every interactive day at least 48×48',
+        (tester) async {
+          await _pump(tester, width: width, textScale: scale);
 
-        // The grid, not the list.
-        expect(find.text('M'), findsOneWidget);
-        final targets = _targets(tester).toList();
-        expect(targets, hasLength(2));
-        for (final target in targets) {
-          expect(target.width, greaterThanOrEqualTo(48));
-          expect(target.height, greaterThanOrEqualTo(48));
-        }
-        if (width == 360) {
-          // The calendar alone narrows its inset to 12pt: 336pt, seven 48s.
-          expect(targets.first.width, closeTo(48, 0.01));
-        }
-        _expectNoTruncationOrOverflow(tester);
-      });
+          // The grid, not the list.
+          expect(find.text('M'), findsOneWidget);
+          final targets = _targets(tester).toList();
+          expect(targets, hasLength(2));
+          for (final target in targets) {
+            expect(target.width, greaterThanOrEqualTo(48));
+            expect(target.height, greaterThanOrEqualTo(48));
+          }
+          if (width == 360) {
+            // The calendar alone narrows its inset to 12pt: 336pt, seven 48s.
+            expect(targets.first.width, closeTo(48, 0.01));
+          }
+          _expectNoTruncationOrOverflow(tester);
+        },
+      );
     }
 
     testWidgets('numbers follow the user\'s text size — never shrunk to fit', (

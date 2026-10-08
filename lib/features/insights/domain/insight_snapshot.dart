@@ -180,7 +180,8 @@ class InsightSnapshot {
   static InsightSnapshot? fromJson(Map<String, Object?> json) {
     final id = json['id'];
     final family = InsightFamily.values.asNameMap()[json['family']];
-    final applicationType = InsightApplicationType.values.asNameMap()[json['applicationType']];
+    final applicationType = InsightApplicationType.values
+        .asNameMap()[json['applicationType']];
     final targetPlanId = PlanId.values.asNameMap()[json['targetPlanId']];
     final generatedAt = DateTime.tryParse('${json['generatedAt']}');
     final ruleVersion = json['ruleVersion'];

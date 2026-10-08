@@ -45,9 +45,7 @@ void main() {
     });
 
     test('restores a previously persisted true value', () async {
-      final container = await containerWith(
-        prefs: {analyticsConsentKey: true},
-      );
+      final container = await containerWith(prefs: {analyticsConsentKey: true});
       addTearDown(container.dispose);
 
       expect(container.read(analyticsConsentProvider), isTrue);
@@ -59,16 +57,19 @@ void main() {
     // real Riverpod Ref tied to the test's own container, wrapping a
     // recorder this test can inspect directly — rather than
     // SupabaseAnalyticsService, which would attempt real network calls.
-    final testGatedProvider = Provider.family<AnalyticsService, _RecordingAnalyticsService>(
-      (ref, inner) => ConsentGatedAnalyticsService(ref, inner),
-    );
+    final testGatedProvider =
+        Provider.family<AnalyticsService, _RecordingAnalyticsService>(
+          (ref, inner) => ConsentGatedAnalyticsService(ref, inner),
+        );
 
     test('transmits nothing before explicit opt-in', () async {
       final container = await containerWith();
       addTearDown(container.dispose);
       final inner = _RecordingAnalyticsService();
 
-      container.read(testGatedProvider(inner)).track(AnalyticsEventType.appOpened);
+      container
+          .read(testGatedProvider(inner))
+          .track(AnalyticsEventType.appOpened);
 
       expect(inner.events, isEmpty);
     });
@@ -79,7 +80,9 @@ void main() {
       final inner = _RecordingAnalyticsService();
       container.read(analyticsConsentProvider.notifier).setConsent(true);
 
-      container.read(testGatedProvider(inner)).track(AnalyticsEventType.appOpened);
+      container
+          .read(testGatedProvider(inner))
+          .track(AnalyticsEventType.appOpened);
 
       expect(inner.events, [AnalyticsEventType.appOpened]);
     });
@@ -99,22 +102,19 @@ void main() {
       expect(inner.events, [AnalyticsEventType.appOpened]);
     });
 
-    test(
-      'analyticsServiceProvider itself is consent-gated end to end — '
-      'every real call site goes through this one provider, and the '
-      'default OFF state never throws even though it never reaches '
-      'Supabase',
-      () async {
-        final container = await containerWith();
-        addTearDown(container.dispose);
+    test('analyticsServiceProvider itself is consent-gated end to end — '
+        'every real call site goes through this one provider, and the '
+        'default OFF state never throws even though it never reaches '
+        'Supabase', () async {
+      final container = await containerWith();
+      addTearDown(container.dispose);
 
-        expect(
-          () => container
-              .read(analyticsServiceProvider)
-              .track(AnalyticsEventType.appOpened),
-          returnsNormally,
-        );
-      },
-    );
+      expect(
+        () => container
+            .read(analyticsServiceProvider)
+            .track(AnalyticsEventType.appOpened),
+        returnsNormally,
+      );
+    });
   });
 }

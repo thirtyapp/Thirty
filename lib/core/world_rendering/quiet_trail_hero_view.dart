@@ -111,21 +111,20 @@ class _QuietTrailHeroPainter extends CustomPainter {
     final warmth = _warmthBlend();
 
     final skyPaint = Paint()
-      ..shader =
-          LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colors.background,
-              Color.lerp(colors.background, colors.secondary, 0.7 * strength)!,
-              Color.lerp(
-                colors.secondary,
-                colors.primary,
-                warmth * strength,
-              )!.withValues(alpha: 0.4 + 0.3 * strength),
-            ],
-            stops: const [0.0, 0.55, 1.0],
-          ).createShader(canvasRect);
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          colors.background,
+          Color.lerp(colors.background, colors.secondary, 0.7 * strength)!,
+          Color.lerp(
+            colors.secondary,
+            colors.primary,
+            warmth * strength,
+          )!.withValues(alpha: 0.4 + 0.3 * strength),
+        ],
+        stops: const [0.0, 0.55, 1.0],
+      ).createShader(canvasRect);
     canvas.drawRect(canvasRect, skyPaint);
 
     if (strength <= 0) return;
@@ -135,11 +134,12 @@ class _QuietTrailHeroPainter extends CustomPainter {
     // QUIET_TRAIL_REFERENCE.md §7: "without a single hard source").
     final glowCenter = Offset(size.width * 0.5, size.height * _horizonY);
     final glowPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [_lightNeutral(0.5 * strength), _lightNeutral(0.0)],
-      ).createShader(
-        Rect.fromCircle(center: glowCenter, radius: size.width * 0.58),
-      );
+      ..shader =
+          RadialGradient(
+            colors: [_lightNeutral(0.5 * strength), _lightNeutral(0.0)],
+          ).createShader(
+            Rect.fromCircle(center: glowCenter, radius: size.width * 0.58),
+          );
     canvas.drawRect(canvasRect, glowPaint);
   }
 

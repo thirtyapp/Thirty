@@ -144,7 +144,8 @@ CoachCue? selectCoachCue({
 
   // Priority 5: ordinary stage explanation — the fallback when no stronger
   // contextual cue applies.
-  final stageId = todayStageId ??
+  final stageId =
+      todayStageId ??
       (progress.forwardCursor <= 4
           ? plan.stages[progress.forwardCursor].id
           : progress.lastEncounteredStageId);

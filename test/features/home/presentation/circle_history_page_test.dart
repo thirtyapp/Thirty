@@ -21,10 +21,7 @@ Future<(Widget, SharedPreferences)> _wrap() async {
 
   final widget = ProviderScope(
     overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-    child: MaterialApp(
-      theme: AppTheme.light,
-      home: const CircleHistoryPage(),
-    ),
+    child: MaterialApp(theme: AppTheme.light, home: const CircleHistoryPage()),
   );
   return (widget, prefs);
 }
@@ -36,10 +33,7 @@ void main() {
     final (widget, _) = await _wrap();
     await tester.pumpWidget(widget);
 
-    expect(
-      find.textContaining('Nothing recorded yet'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Nothing recorded yet'), findsOneWidget);
     // No destructive/export controls are usable with nothing to act on.
     final copyButton = tester.widget<ThirtyButton>(
       find.widgetWithText(ThirtyButton, 'Copy as text'),
@@ -104,10 +98,7 @@ void main() {
 
       await tester.pumpWidget(widget);
 
-      expect(
-        find.textContaining('More Energy Path'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('More Energy Path'), findsOneWidget);
       expect(find.textContaining('stage 1 of 5'), findsOneWidget);
     },
   );
@@ -243,9 +234,7 @@ void main() {
       SystemChannels.platform,
       (call) async {
         if (call.method == 'Clipboard.setData') {
-          copiedTexts.add(
-            (call.arguments as Map)['text'] as String,
-          );
+          copiedTexts.add((call.arguments as Map)['text'] as String);
         }
         return null;
       },

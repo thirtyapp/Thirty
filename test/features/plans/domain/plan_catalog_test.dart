@@ -155,7 +155,10 @@ void main() {
 
   group('planDefinitionFor / stageAt / findStage', () {
     test('planDefinitionFor returns the matching PlanDefinition', () {
-      expect(planDefinitionFor(PlanId.moreEnergyPath).id, PlanId.moreEnergyPath);
+      expect(
+        planDefinitionFor(PlanId.moreEnergyPath).id,
+        PlanId.moreEnergyPath,
+      );
     });
 
     test('stageAt indexes directly into the ordered stage list', () {

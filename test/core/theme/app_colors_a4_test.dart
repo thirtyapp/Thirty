@@ -65,10 +65,7 @@ void main() {
       final mid = AppColors.light.lerp(AppColors.dark, 1);
       expect(mid.selection, AppColors.dark.selection);
       expect(mid.errorText, AppColors.dark.errorText);
-      expect(
-        AppColors.light.copyWith(divider: Colors.red).divider,
-        Colors.red,
-      );
+      expect(AppColors.light.copyWith(divider: Colors.red).divider, Colors.red);
     });
   });
 
@@ -159,7 +156,10 @@ void main() {
           greaterThanOrEqualTo(4.5),
         );
         expect(
-          _contrast(_resolve(tp.dayPeriodTextColor, unselected), colors.surface),
+          _contrast(
+            _resolve(tp.dayPeriodTextColor, unselected),
+            colors.surface,
+          ),
           greaterThanOrEqualTo(4.5),
         );
 

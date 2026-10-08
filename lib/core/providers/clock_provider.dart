@@ -23,6 +23,4 @@ final nowProvider = Provider<DateTime>((ref) => DateTime.now());
 /// snapshot. Intended for event timestamps — e.g.
 /// `RecommendationState.startedAt`/`closedAt` — not for the coarse
 /// calendar-day checks [nowProvider] already correctly serves.
-final eventClockProvider = Provider<DateTime Function()>(
-  (ref) => DateTime.now,
-);
+final eventClockProvider = Provider<DateTime Function()>((ref) => DateTime.now);

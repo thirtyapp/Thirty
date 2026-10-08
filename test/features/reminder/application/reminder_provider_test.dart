@@ -179,22 +179,19 @@ void main() {
       expect(state.minute, 30);
     });
 
-    test(
-      'initialize() (called at cold launch) never requests notification '
-      'permission or exact-alarm access — only checks them — matching "no '
-      'permission request at cold launch" (parent §27, extended to '
-      'exact-alarm special access)',
-      () async {
-        final gateway = _FakeReminderGateway();
-        final container = await _containerWith(gateway: gateway);
-        addTearDown(container.dispose);
+    test('initialize() (called at cold launch) never requests notification '
+        'permission or exact-alarm access — only checks them — matching "no '
+        'permission request at cold launch" (parent §27, extended to '
+        'exact-alarm special access)', () async {
+      final gateway = _FakeReminderGateway();
+      final container = await _containerWith(gateway: gateway);
+      addTearDown(container.dispose);
 
-        await container.read(reminderProvider.notifier).initialize();
+      await container.read(reminderProvider.notifier).initialize();
 
-        expect(gateway.requestPermissionCallCount, 0);
-        expect(gateway.requestExactAlarmAccessCallCount, 0);
-      },
-    );
+      expect(gateway.requestPermissionCallCount, 0);
+      expect(gateway.requestExactAlarmAccessCallCount, 0);
+    });
 
     test('enable() requests permission, persists, and schedules exactly '
         'once when notification permission and exact-alarm access are '
@@ -263,34 +260,29 @@ void main() {
       },
     );
 
-    test(
-      'requestExactAlarmAccess() invokes the platform request exactly '
-      'once and, once access is actually granted, re-checks live and the '
-      'reminder becomes active',
-      () async {
-        final gateway = _FakeReminderGateway()
-          ..permissionGranted = true
-          ..exactAlarmAccessGranted = false;
-        final container = await _containerWith(gateway: gateway);
-        addTearDown(container.dispose);
-        await container
-            .read(reminderProvider.notifier)
-            .enable(hour: 8, minute: 0);
-        expect(container.read(reminderProvider).exactAlarmAccessGranted, isFalse);
-        expect(gateway.scheduleCallCount, 0);
+    test('requestExactAlarmAccess() invokes the platform request exactly '
+        'once and, once access is actually granted, re-checks live and the '
+        'reminder becomes active', () async {
+      final gateway = _FakeReminderGateway()
+        ..permissionGranted = true
+        ..exactAlarmAccessGranted = false;
+      final container = await _containerWith(gateway: gateway);
+      addTearDown(container.dispose);
+      await container
+          .read(reminderProvider.notifier)
+          .enable(hour: 8, minute: 0);
+      expect(container.read(reminderProvider).exactAlarmAccessGranted, isFalse);
+      expect(gateway.scheduleCallCount, 0);
 
-        // Simulates the user granting access on the system screen and
-        // returning to THIRTY.
-        gateway.exactAlarmAccessGranted = true;
-        await container
-            .read(reminderProvider.notifier)
-            .requestExactAlarmAccess();
+      // Simulates the user granting access on the system screen and
+      // returning to THIRTY.
+      gateway.exactAlarmAccessGranted = true;
+      await container.read(reminderProvider.notifier).requestExactAlarmAccess();
 
-        expect(gateway.requestExactAlarmAccessCallCount, 1);
-        expect(container.read(reminderProvider).exactAlarmAccessGranted, isTrue);
-        expect(gateway.scheduleCallCount, 1);
-      },
-    );
+      expect(gateway.requestExactAlarmAccessCallCount, 1);
+      expect(container.read(reminderProvider).exactAlarmAccessGranted, isTrue);
+      expect(gateway.scheduleCallCount, 1);
+    });
 
     test(
       'user returns from the exact-alarm access screen without granting '
@@ -310,63 +302,64 @@ void main() {
             .requestExactAlarmAccess();
 
         expect(gateway.requestExactAlarmAccessCallCount, 1);
-        expect(container.read(reminderProvider).exactAlarmAccessGranted, isFalse);
-        expect(gateway.scheduleCallCount, 0);
-      },
-    );
-
-    test(
-      'exact-alarm access revoked later (e.g. from system settings while '
-      'backgrounded) is reconciled without crashing — schedules nothing '
-      'and the state reflects it truthfully',
-      () async {
-        final gateway = _FakeReminderGateway()
-          ..permissionGranted = true
-          ..exactAlarmAccessGranted = true;
-        final container = await _containerWith(gateway: gateway);
-        addTearDown(container.dispose);
-        await container
-            .read(reminderProvider.notifier)
-            .enable(hour: 8, minute: 0);
-        expect(gateway.scheduleCallCount, 1);
-
-        gateway.exactAlarmAccessGranted = false;
-        await container.read(reminderProvider.notifier).refreshPermission();
-
-        final state = container.read(reminderProvider);
-        expect(state.enabled, isTrue);
-        expect(state.exactAlarmAccessGranted, isFalse);
-        // No additional schedule call beyond the original grant — the
-        // revoked re-check returns early before ever reaching
-        // scheduleDaily() again.
-        expect(gateway.scheduleCallCount, 1);
-      },
-    );
-
-    test(
-      'repeatedly reconciling with exact-alarm access still denied never '
-      'triggers the platform request itself — no permission nag loop; '
-      'the request only ever happens from the dedicated explicit user '
-      'action',
-      () async {
-        final gateway = _FakeReminderGateway()
-          ..permissionGranted = true
-          ..exactAlarmAccessGranted = false;
-        final container = await _containerWith(
-          gateway: gateway,
-          prefs: {reminderEnabledKey: true, reminderHourKey: 8, reminderMinuteKey: 0},
+        expect(
+          container.read(reminderProvider).exactAlarmAccessGranted,
+          isFalse,
         );
-        addTearDown(container.dispose);
-        final notifier = container.read(reminderProvider.notifier);
-
-        await notifier.initialize();
-        await notifier.refreshPermission();
-        await notifier.refreshPermission();
-
-        expect(gateway.requestExactAlarmAccessCallCount, 0);
         expect(gateway.scheduleCallCount, 0);
       },
     );
+
+    test('exact-alarm access revoked later (e.g. from system settings while '
+        'backgrounded) is reconciled without crashing — schedules nothing '
+        'and the state reflects it truthfully', () async {
+      final gateway = _FakeReminderGateway()
+        ..permissionGranted = true
+        ..exactAlarmAccessGranted = true;
+      final container = await _containerWith(gateway: gateway);
+      addTearDown(container.dispose);
+      await container
+          .read(reminderProvider.notifier)
+          .enable(hour: 8, minute: 0);
+      expect(gateway.scheduleCallCount, 1);
+
+      gateway.exactAlarmAccessGranted = false;
+      await container.read(reminderProvider.notifier).refreshPermission();
+
+      final state = container.read(reminderProvider);
+      expect(state.enabled, isTrue);
+      expect(state.exactAlarmAccessGranted, isFalse);
+      // No additional schedule call beyond the original grant — the
+      // revoked re-check returns early before ever reaching
+      // scheduleDaily() again.
+      expect(gateway.scheduleCallCount, 1);
+    });
+
+    test('repeatedly reconciling with exact-alarm access still denied never '
+        'triggers the platform request itself — no permission nag loop; '
+        'the request only ever happens from the dedicated explicit user '
+        'action', () async {
+      final gateway = _FakeReminderGateway()
+        ..permissionGranted = true
+        ..exactAlarmAccessGranted = false;
+      final container = await _containerWith(
+        gateway: gateway,
+        prefs: {
+          reminderEnabledKey: true,
+          reminderHourKey: 8,
+          reminderMinuteKey: 0,
+        },
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(reminderProvider.notifier);
+
+      await notifier.initialize();
+      await notifier.refreshPermission();
+      await notifier.refreshPermission();
+
+      expect(gateway.requestExactAlarmAccessCallCount, 0);
+      expect(gateway.scheduleCallCount, 0);
+    });
 
     test('disable() cancels pending work and persists', () async {
       final gateway = _FakeReminderGateway();
@@ -409,33 +402,30 @@ void main() {
       expect(gateway.scheduleCallCount, 0);
     });
 
-    test(
-      'reschedules automatically when today\'s Circle starts — '
-      'suppressing an unnecessary later reminder the same day',
-      () async {
-        final gateway = _FakeReminderGateway();
-        final container = await _containerWith(gateway: gateway);
-        addTearDown(container.dispose);
-        await container
-            .read(reminderProvider.notifier)
-            .enable(hour: 8, minute: 0);
-        final scheduledBefore = gateway.scheduleCallCount;
+    test('reschedules automatically when today\'s Circle starts — '
+        'suppressing an unnecessary later reminder the same day', () async {
+      final gateway = _FakeReminderGateway();
+      final container = await _containerWith(gateway: gateway);
+      addTearDown(container.dispose);
+      await container
+          .read(reminderProvider.notifier)
+          .enable(hour: 8, minute: 0);
+      final scheduledBefore = gateway.scheduleCallCount;
 
-        container
-            .read(recommendationProvider.notifier)
-            .chooseIntention(Intention.moreEnergy);
-        container.read(recommendationProvider.notifier).start();
-        // `ref.listen`'s callback fires `_rescheduleIfNeeded()`
-        // `unawaited` — let its microtasks (including its own live
-        // `gateway.hasPermission()` re-check) actually run before
-        // asserting on their effect.
-        await Future<void>.delayed(Duration.zero);
+      container
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.moreEnergy);
+      container.read(recommendationProvider.notifier).start();
+      // `ref.listen`'s callback fires `_rescheduleIfNeeded()`
+      // `unawaited` — let its microtasks (including its own live
+      // `gateway.hasPermission()` re-check) actually run before
+      // asserting on their effect.
+      await Future<void>.delayed(Duration.zero);
 
-        expect(gateway.scheduleCallCount, greaterThan(scheduledBefore));
-        // Suppressed today (already started) — next occurrence is tomorrow.
-        expect(gateway.lastFirstOccurrence!.day, _today.day + 1);
-      },
-    );
+      expect(gateway.scheduleCallCount, greaterThan(scheduledBefore));
+      // Suppressed today (already started) — next occurrence is tomorrow.
+      expect(gateway.lastFirstOccurrence!.day, _today.day + 1);
+    });
 
     test('never reschedules on unrelated recommendation changes with the '
         'same status (no redundant work)', () async {
@@ -455,30 +445,27 @@ void main() {
       expect(scheduledAfterChoose, gateway.scheduleCallCount);
     });
 
-    test(
-      'closing today\'s Circle (after starting it) suppresses the same '
-      'day, targeting the same next occurrence as starting alone — '
-      'never pushed further out by the second status change',
-      () async {
-        final gateway = _FakeReminderGateway();
-        final container = await _containerWith(gateway: gateway);
-        addTearDown(container.dispose);
-        await container
-            .read(reminderProvider.notifier)
-            .enable(hour: 8, minute: 0);
-        final notifier = container.read(recommendationProvider.notifier);
-        notifier.chooseIntention(Intention.moreEnergy);
-        notifier.start();
-        await Future<void>.delayed(Duration.zero);
-        final occurrenceAfterStart = gateway.lastFirstOccurrence;
+    test('closing today\'s Circle (after starting it) suppresses the same '
+        'day, targeting the same next occurrence as starting alone — '
+        'never pushed further out by the second status change', () async {
+      final gateway = _FakeReminderGateway();
+      final container = await _containerWith(gateway: gateway);
+      addTearDown(container.dispose);
+      await container
+          .read(reminderProvider.notifier)
+          .enable(hour: 8, minute: 0);
+      final notifier = container.read(recommendationProvider.notifier);
+      notifier.chooseIntention(Intention.moreEnergy);
+      notifier.start();
+      await Future<void>.delayed(Duration.zero);
+      final occurrenceAfterStart = gateway.lastFirstOccurrence;
 
-        notifier.close();
-        await Future<void>.delayed(Duration.zero);
+      notifier.close();
+      await Future<void>.delayed(Duration.zero);
 
-        expect(gateway.lastFirstOccurrence, occurrenceAfterStart);
-        expect(gateway.lastFirstOccurrence!.day, _today.day + 1);
-      },
-    );
+      expect(gateway.lastFirstOccurrence, occurrenceAfterStart);
+      expect(gateway.lastFirstOccurrence!.day, _today.day + 1);
+    });
 
     test(
       'Close cancels the same-day alarm before anything else runs — the '
@@ -510,33 +497,30 @@ void main() {
       },
     );
 
-    test(
-      'a failed re-arm after a successful cancel fails closed — '
-      "today's alarm is not reintroduced merely because tomorrow's "
-      'reschedule attempt failed',
-      () async {
-        final gateway = _FakeReminderGateway()
-          ..scheduleOutcome = ScheduleOutcome.failed;
-        final container = await _containerWith(gateway: gateway);
-        addTearDown(container.dispose);
-        await container
-            .read(reminderProvider.notifier)
-            .enable(hour: 8, minute: 0);
-        final notifier = container.read(recommendationProvider.notifier);
-        notifier.chooseIntention(Intention.moreEnergy);
-        notifier.start();
-        final cancelledBefore = gateway.cancelCallCount;
+    test('a failed re-arm after a successful cancel fails closed — '
+        "today's alarm is not reintroduced merely because tomorrow's "
+        'reschedule attempt failed', () async {
+      final gateway = _FakeReminderGateway()
+        ..scheduleOutcome = ScheduleOutcome.failed;
+      final container = await _containerWith(gateway: gateway);
+      addTearDown(container.dispose);
+      await container
+          .read(reminderProvider.notifier)
+          .enable(hour: 8, minute: 0);
+      final notifier = container.read(recommendationProvider.notifier);
+      notifier.chooseIntention(Intention.moreEnergy);
+      notifier.start();
+      final cancelledBefore = gateway.cancelCallCount;
 
-        notifier.close();
-        await Future<void>.delayed(Duration.zero);
+      notifier.close();
+      await Future<void>.delayed(Duration.zero);
 
-        // Cancellation happened regardless of the following schedule
-        // attempt's outcome — there is no path that "un-cancels" today's
-        // alarm because tomorrow's re-arm failed.
-        expect(gateway.cancelCallCount, greaterThan(cancelledBefore));
-        expect(gateway.scheduleCallCount, greaterThan(0));
-      },
-    );
+      // Cancellation happened regardless of the following schedule
+      // attempt's outcome — there is no path that "un-cancels" today's
+      // alarm because tomorrow's re-arm failed.
+      expect(gateway.cancelCallCount, greaterThan(cancelledBefore));
+      expect(gateway.scheduleCallCount, greaterThan(0));
+    });
 
     test(
       'Day N+1: a stale Day-N started/closed status cannot suppress the '
@@ -629,7 +613,11 @@ void main() {
       final gateway = _FakeReminderGateway()..permissionGranted = false;
       final container = await _containerWith(
         gateway: gateway,
-        prefs: {reminderEnabledKey: true, reminderHourKey: 8, reminderMinuteKey: 0},
+        prefs: {
+          reminderEnabledKey: true,
+          reminderHourKey: 8,
+          reminderMinuteKey: 0,
+        },
       );
       addTearDown(container.dispose);
       gateway.permissionGranted = true;

@@ -35,7 +35,9 @@ class RevenueCatEntitlementGateway implements EntitlementGateway {
   Future<EntitlementStatus> initialize() async {
     try {
       if (!_configured) {
-        await Purchases.configure(PurchasesConfiguration(_config.androidApiKey));
+        await Purchases.configure(
+          PurchasesConfiguration(_config.androidApiKey),
+        );
         Purchases.addCustomerInfoUpdateListener(_onCustomerInfoUpdate);
         _configured = true;
       }

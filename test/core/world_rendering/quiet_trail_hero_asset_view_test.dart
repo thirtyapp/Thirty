@@ -40,9 +40,7 @@ void main() {
       expect(find.byType(ClipOval), findsOneWidget);
     });
 
-    testWidgets('uses the approved master illustration asset', (
-      tester,
-    ) async {
+    testWidgets('uses the approved master illustration asset', (tester) async {
       await tester.pumpWidget(
         _wrap(
           const SizedBox(
@@ -80,9 +78,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final aspectRatio = tester.widget<AspectRatio>(
-        find.byType(AspectRatio),
-      );
+      final aspectRatio = tester.widget<AspectRatio>(find.byType(AspectRatio));
       expect(aspectRatio.aspectRatio, 1);
     });
 

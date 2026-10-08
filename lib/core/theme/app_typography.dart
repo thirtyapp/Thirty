@@ -23,8 +23,7 @@ class AppTypography {
   static const String fontFamily = 'Inter';
 
   static TextTheme textTheme(AppColors colors, Brightness brightness) {
-    final base = ThemeData(brightness: brightness, useMaterial3: true)
-        .textTheme
+    final base = ThemeData(brightness: brightness, useMaterial3: true).textTheme
         .apply(
           fontFamily: fontFamily,
           bodyColor: colors.textPrimary,

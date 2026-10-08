@@ -125,9 +125,8 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
     // one path segment.
     GoRoute(
       path: '/history/:date',
-      builder: (context, state) => CircleRecordDetailPage(
-        localDate: state.pathParameters['date']!,
-      ),
+      builder: (context, state) =>
+          CircleRecordDetailPage(localDate: state.pathParameters['date']!),
     ),
     // The one first-use question ("What should we call you?") — outside the
     // shell, so nothing else is reachable until it is resolved; see

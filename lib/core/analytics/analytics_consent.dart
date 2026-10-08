@@ -36,10 +36,13 @@ class AnalyticsConsentNotifier extends Notifier<bool> {
   void setConsent(bool value) {
     if (state == value) return;
     state = value;
-    unawaited(ref.read(sharedPreferencesProvider).setBool(analyticsConsentKey, value));
+    unawaited(
+      ref.read(sharedPreferencesProvider).setBool(analyticsConsentKey, value),
+    );
   }
 }
 
-final analyticsConsentProvider = NotifierProvider<AnalyticsConsentNotifier, bool>(
-  AnalyticsConsentNotifier.new,
-);
+final analyticsConsentProvider =
+    NotifierProvider<AnalyticsConsentNotifier, bool>(
+      AnalyticsConsentNotifier.new,
+    );

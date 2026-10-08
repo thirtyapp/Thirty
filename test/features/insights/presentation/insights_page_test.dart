@@ -88,68 +88,59 @@ void main() {
       },
     );
 
-    testWidgets(
-      'opening the destination while unentitled never triggers a new '
-      'assessment — refreshIfDue\'s own entitlement guard (Batch A) still '
-      'applies at its new call site',
-      (tester) async {
-        final (widget, container) = await _wrap(entitled: false);
-        addTearDown(container.dispose);
+    testWidgets('opening the destination while unentitled never triggers a new '
+        'assessment — refreshIfDue\'s own entitlement guard (Batch A) still '
+        'applies at its new call site', (tester) async {
+      final (widget, container) = await _wrap(entitled: false);
+      addTearDown(container.dispose);
 
-        await tester.pumpWidget(widget);
-        await tester.pump();
+      await tester.pumpWidget(widget);
+      await tester.pump();
 
-        // If the entitlement guard were missing, `refreshIfDue()` would
-        // have advanced `lastAssessedAt` to `_today` regardless of whether
-        // any candidate Insight was found (see `insight_provider.dart`).
-        expect(container.read(insightProvider).lastAssessedAt, isNull);
-      },
-    );
+      // If the entitlement guard were missing, `refreshIfDue()` would
+      // have advanced `lastAssessedAt` to `_today` regardless of whether
+      // any candidate Insight was found (see `insight_provider.dart`).
+      expect(container.read(insightProvider).lastAssessedAt, isNull);
+    });
   });
 
   group('Batch B — minimal truthful empty state (no fabricated content)', () {
-    testWidgets(
-      'entitled with no eligible evidence yet shows a plain waiting '
-      'message and no Premium CTA',
-      (tester) async {
-        final (widget, container) = await _wrap();
-        addTearDown(container.dispose);
+    testWidgets('entitled with no eligible evidence yet shows a plain waiting '
+        'message and no Premium CTA', (tester) async {
+      final (widget, container) = await _wrap();
+      addTearDown(container.dispose);
 
-        await tester.pumpWidget(widget);
+      await tester.pumpWidget(widget);
 
-        expect(
-          find.text(
-            'Nothing to show yet. Pattern Insights need at least 5 relevant '
-            'Circle records across 3 different days, spanning at least 14 '
-            'days.',
-          ),
-          findsOneWidget,
-        );
-        expect(find.text('Become Premium'), findsNothing);
-        expect(find.text('THIRTY Premium'), findsNothing);
-      },
-    );
+      expect(
+        find.text(
+          'Nothing to show yet. Pattern Insights need at least 5 relevant '
+          'Circle records across 3 different days, spanning at least 14 '
+          'days.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Become Premium'), findsNothing);
+      expect(find.text('THIRTY Premium'), findsNothing);
+    });
 
-    testWidgets(
-      'unentitled with no retained snapshot shows the compact THIRTY '
-      'Premium card',
-      (tester) async {
-        final (widget, container) = await _wrap(entitled: false);
-        addTearDown(container.dispose);
+    testWidgets('unentitled with no retained snapshot shows the compact THIRTY '
+        'Premium card', (tester) async {
+      final (widget, container) = await _wrap(entitled: false);
+      addTearDown(container.dispose);
 
-        await tester.pumpWidget(widget);
+      await tester.pumpWidget(widget);
 
-        expect(find.text('THIRTY Premium'), findsOneWidget);
-        expect(
-          find.text(
-            'Premium can turn patterns in your recorded Circles into one '
-            'clear next step for your Plan.',
-          ),
-          findsOneWidget,
-        );
-        expect(find.text('Become Premium'), findsOneWidget);
-      },
-    );
+      expect(find.text('THIRTY Premium'), findsOneWidget);
+      expect(
+        find.text(
+          'Premium can turn patterns in your recorded Circles into one '
+          'clear next step for your Plan.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Become Premium'), findsOneWidget);
+    });
   });
 
   testWidgets('Phase A2 — the Insight card uses featuredCard padding', (

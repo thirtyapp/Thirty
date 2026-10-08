@@ -25,47 +25,41 @@ void main() {
       return container;
     }
 
-    test(
-      'track() never throws, even when Supabase has not been initialized '
-      '— a dropped analytics event must never affect the product '
-      'experience (ADR-004)',
-      () async {
-        final container = await containerWithConsent();
-        addTearDown(container.dispose);
+    test('track() never throws, even when Supabase has not been initialized '
+        '— a dropped analytics event must never affect the product '
+        'experience (ADR-004)', () async {
+      final container = await containerWithConsent();
+      addTearDown(container.dispose);
 
-        final service = container.read(analyticsServiceProvider);
+      final service = container.read(analyticsServiceProvider);
 
-        expect(
-          () => service.track(AnalyticsEventType.appOpened),
-          returnsNormally,
-        );
+      expect(
+        () => service.track(AnalyticsEventType.appOpened),
+        returnsNormally,
+      );
 
-        // Give the fire-and-forget internal Future a chance to run and
-        // swallow its own failure — an uncaught rejection here would
-        // otherwise surface as a test failure via Zone error reporting.
-        await Future<void>.delayed(Duration.zero);
-      },
-    );
+      // Give the fire-and-forget internal Future a chance to run and
+      // swallow its own failure — an uncaught rejection here would
+      // otherwise surface as a test failure via Zone error reporting.
+      await Future<void>.delayed(Duration.zero);
+    });
 
-    test(
-      'unavailable telemetry is a safe no-op: with '
-      'supabaseAvailableProvider at its default false, track() resolves '
-      'without ever needing Supabase.instance to have been initialized — '
-      'this is a deliberate skip, not a caught crash',
-      () async {
-        final container = await containerWithConsent();
-        addTearDown(container.dispose);
-        expect(container.read(supabaseAvailableProvider), isFalse);
+    test('unavailable telemetry is a safe no-op: with '
+        'supabaseAvailableProvider at its default false, track() resolves '
+        'without ever needing Supabase.instance to have been initialized — '
+        'this is a deliberate skip, not a caught crash', () async {
+      final container = await containerWithConsent();
+      addTearDown(container.dispose);
+      expect(container.read(supabaseAvailableProvider), isFalse);
 
-        final service = container.read(analyticsServiceProvider);
+      final service = container.read(analyticsServiceProvider);
 
-        expect(
-          () => service.track(AnalyticsEventType.appOpened),
-          returnsNormally,
-        );
+      expect(
+        () => service.track(AnalyticsEventType.appOpened),
+        returnsNormally,
+      );
 
-        await Future<void>.delayed(Duration.zero);
-      },
-    );
+      await Future<void>.delayed(Duration.zero);
+    });
   });
 }

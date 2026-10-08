@@ -140,11 +140,10 @@ Finder get _homeScrollables => find.descendant(
 Rect _circleRect(WidgetTester tester) =>
     tester.getRect(find.byType(ThirtyProgressCircle));
 
-bool _visibleCards(WidgetTester tester, Type card) =>
-    find
-        .descendant(of: find.byType(card), matching: find.byType(Padding))
-        .evaluate()
-        .isNotEmpty;
+bool _visibleCards(WidgetTester tester, Type card) => find
+    .descendant(of: find.byType(card), matching: find.byType(Padding))
+    .evaluate()
+    .isNotEmpty;
 
 void main() {
   group('One scroll owner', () {

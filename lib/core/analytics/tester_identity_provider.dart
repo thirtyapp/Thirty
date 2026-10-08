@@ -65,7 +65,9 @@ class TesterIdentityNotifier extends Notifier<TesterIdentity> {
       unawaited(prefs.setString(analyticsTesterIdKey, testerId));
     }
 
-    final storedCohort = cohortFromWireName(prefs.getString(analyticsCohortKey));
+    final storedCohort = cohortFromWireName(
+      prefs.getString(analyticsCohortKey),
+    );
     final Cohort cohort;
     if (storedCohort != null) {
       cohort = storedCohort;
@@ -73,9 +75,7 @@ class TesterIdentityNotifier extends Notifier<TesterIdentity> {
       final hasPriorUsageEvidence =
           prefs.containsKey(recommendationDayKey) ||
           prefs.containsKey(firstBreathLastPlayedDateKey);
-      cohort = hasPriorUsageEvidence
-          ? Cohort.preFix
-          : Cohort.postFixBatch1;
+      cohort = hasPriorUsageEvidence ? Cohort.preFix : Cohort.postFixBatch1;
       unawaited(prefs.setString(analyticsCohortKey, cohort.wireName));
     }
 

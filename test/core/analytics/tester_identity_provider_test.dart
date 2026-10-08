@@ -39,31 +39,25 @@ void main() {
       },
     );
 
-    test(
-      'a device with pre-existing recommendation state is classified '
-      'PRE_FIX — it already used THIRTY before Batch 1',
-      () async {
-        final container = await _containerWith({
-          recommendationDayKey: '2026-08-01',
-        });
-        addTearDown(container.dispose);
+    test('a device with pre-existing recommendation state is classified '
+        'PRE_FIX — it already used THIRTY before Batch 1', () async {
+      final container = await _containerWith({
+        recommendationDayKey: '2026-08-01',
+      });
+      addTearDown(container.dispose);
 
-        expect(container.read(testerIdentityProvider).cohort, Cohort.preFix);
-      },
-    );
+      expect(container.read(testerIdentityProvider).cohort, Cohort.preFix);
+    });
 
-    test(
-      'a device with pre-existing First Breath state alone is also '
-      'classified PRE_FIX',
-      () async {
-        final container = await _containerWith({
-          firstBreathLastPlayedDateKey: '2026-08-01',
-        });
-        addTearDown(container.dispose);
+    test('a device with pre-existing First Breath state alone is also '
+        'classified PRE_FIX', () async {
+      final container = await _containerWith({
+        firstBreathLastPlayedDateKey: '2026-08-01',
+      });
+      addTearDown(container.dispose);
 
-        expect(container.read(testerIdentityProvider).cohort, Cohort.preFix);
-      },
-    );
+      expect(container.read(testerIdentityProvider).cohort, Cohort.preFix);
+    });
 
     test('generates a stable, UUID-v4-shaped pseudonymous tester id', () async {
       final container = await _containerWith({});
@@ -89,31 +83,28 @@ void main() {
       expect(container2.read(testerIdentityProvider).testerId, firstId);
     });
 
-    test(
-      'once a cohort is persisted, it is never re-derived — a later app '
-      'update (new prior-usage evidence appearing) does not silently '
-      'convert an already-classified tester',
-      () async {
-        final container1 = await _containerWith({});
-        final identity1 = container1.read(testerIdentityProvider);
-        expect(identity1.cohort, Cohort.postFixBatch1);
-        final prefs = container1.read(sharedPreferencesProvider);
-        container1.dispose();
+    test('once a cohort is persisted, it is never re-derived — a later app '
+        'update (new prior-usage evidence appearing) does not silently '
+        'convert an already-classified tester', () async {
+      final container1 = await _containerWith({});
+      final identity1 = container1.read(testerIdentityProvider);
+      expect(identity1.cohort, Cohort.postFixBatch1);
+      final prefs = container1.read(sharedPreferencesProvider);
+      container1.dispose();
 
-        // Simulate this same device later accumulating ordinary usage
-        // evidence (it used the app normally after Batch 1) — cohort must
-        // stay exactly what it was first classified as.
-        await prefs.setString(recommendationDayKey, '2026-08-05');
+      // Simulate this same device later accumulating ordinary usage
+      // evidence (it used the app normally after Batch 1) — cohort must
+      // stay exactly what it was first classified as.
+      await prefs.setString(recommendationDayKey, '2026-08-05');
 
-        final container2 = ProviderContainer(
-          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-        );
-        addTearDown(container2.dispose);
+      final container2 = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(container2.dispose);
 
-        final identity2 = container2.read(testerIdentityProvider);
-        expect(identity2.cohort, Cohort.postFixBatch1);
-        expect(identity2.testerId, identity1.testerId);
-      },
-    );
+      final identity2 = container2.read(testerIdentityProvider);
+      expect(identity2.cohort, Cohort.postFixBatch1);
+      expect(identity2.testerId, identity1.testerId);
+    });
   });
 }

@@ -39,7 +39,10 @@ Future<void> _loadFont(String family, List<String> files) async {
   await loader.load();
 }
 
-Future<void> _seedCoachShortcuts(PlanNotifier plans, ProviderContainer c) async {
+Future<void> _seedCoachShortcuts(
+  PlanNotifier plans,
+  ProviderContainer c,
+) async {
   final priorStage = planDefinitionFor(PlanId.moreEnergyPath).stages[0];
   plans.activatePlan(PlanId.moreEnergyPath);
   plans.advanceCursorForCircle(

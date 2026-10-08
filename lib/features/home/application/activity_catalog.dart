@@ -267,7 +267,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
         'Walk for about half an hour with nothing to check and nothing '
         'playing — just you and where you\'re walking.',
     preparation: 'None — just a place you can walk safely without your phone.',
-    pacingNote: 'Turn back whenever you\'re ready; there\'s no route to finish.',
+    pacingNote:
+        'Turn back whenever you\'re ready; there\'s no route to finish.',
     family: ActivitySemanticFamily.walking,
     category: ActivityCategory.walking,
     worldRole: WorldSceneRole.walk,
@@ -293,7 +294,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
   ),
   ActivityId.quietReading: ActivityDefinition(
     title: 'Quiet reading',
-    firstAction: 'Pick up whatever you\'re already reading, or something nearby.',
+    firstAction:
+        'Pick up whatever you\'re already reading, or something nearby.',
     instructions:
         'Read for about half an hour, with notifications out of reach — '
         'one thing to focus on instead of many.',
@@ -321,7 +323,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
   ),
   ActivityId.quietMusicBreak: ActivityDefinition(
     title: 'Quiet music break',
-    firstAction: 'Sit or lie down somewhere comfortable, and put on something quiet.',
+    firstAction:
+        'Sit or lie down somewhere comfortable, and put on something quiet.',
     instructions:
         'Listen for about half an hour, with nothing else to do and '
         'nothing to accomplish.',
@@ -339,7 +342,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
         'a pace that raises your breathing a little — resting between '
         'rounds whenever you need to.',
     preparation: 'Stairs or a slope, and shoes you can move in.',
-    pacingNote: 'Go at whatever pace you can keep up. Slow down or rest any time.',
+    pacingNote:
+        'Go at whatever pace you can keep up. Slow down or rest any time.',
     family: ActivitySemanticFamily.stepMovement,
     category: ActivityCategory.walking,
     worldRole: WorldSceneRole.walk,
@@ -367,7 +371,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     instructions:
         'Repeat that move (or switch between a few) at your own pace for '
         'about half an hour, resting between sets whenever you like.',
-    preparation: 'None — a clear patch of floor, and a wall if you choose wall push-ups.',
+    preparation:
+        'None — a clear patch of floor, and a wall if you choose wall push-ups.',
     pacingNote: 'No rep count to hit. Do a little, rest, do a little more.',
     family: ActivitySemanticFamily.bodyweightMovement,
     category: ActivityCategory.movement,
@@ -375,13 +380,15 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
   ),
   ActivityId.energisingBreathReset: ActivityDefinition(
     title: 'Standing breath reset',
-    firstAction: 'Stand up, roll your shoulders back, and take one deep breath.',
+    firstAction:
+        'Stand up, roll your shoulders back, and take one deep breath.',
     instructions:
         'Spend about half an hour alternating brisk, deliberate breaths '
         'with a straighter posture and a few shoulder rolls — sitting '
         'back down whenever you want.',
     preparation: 'None.',
-    pacingNote: 'Breathe at whatever pace feels comfortable. Stop the moment it doesn\'t.',
+    pacingNote:
+        'Breathe at whatever pace feels comfortable. Stop the moment it doesn\'t.',
     family: ActivitySemanticFamily.breathingEnergizer,
     category: ActivityCategory.stillness,
     worldRole: WorldSceneRole.breathe,
@@ -395,7 +402,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
         'Spend about half an hour on that one task, moving at a pace '
         'that keeps you a little more active than sitting still.',
     preparation: 'Whatever the chosen task needs — nothing more than that.',
-    pacingNote: 'Pick a task you can stop partway through without it mattering.',
+    pacingNote:
+        'Pick a task you can stop partway through without it mattering.',
     family: ActivitySemanticFamily.activeChore,
     category: ActivityCategory.homeCare,
     worldRole: WorldSceneRole.tend,
@@ -407,7 +415,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
         'Spend about half an hour tidying that one surface only — '
         'nothing else in the room.',
     preparation: 'None.',
-    pacingNote: 'One surface is the whole task. Stop even if it isn\'t perfect.',
+    pacingNote:
+        'One surface is the whole task. Stop even if it isn\'t perfect.',
     family: ActivitySemanticFamily.tidyReset,
     category: ActivityCategory.homeCare,
     worldRole: WorldSceneRole.tend,
@@ -419,7 +428,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
         'Give that single task your full attention for about half an '
         'hour, setting other tabs, apps and tasks aside.',
     preparation: 'Whatever that one task itself needs.',
-    pacingNote: 'Only one task. If your attention drifts, just come back to the same one.',
+    pacingNote:
+        'Only one task. If your attention drifts, just come back to the same one.',
     family: ActivitySemanticFamily.singleFocusTask,
     category: ActivityCategory.quietFocus,
     worldRole: WorldSceneRole.write,
@@ -439,12 +449,14 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
   ),
   ActivityId.focusedBreathingCount: ActivityDefinition(
     title: 'Counted breathing pause',
-    firstAction: 'Sit down somewhere quiet and close your eyes if that\'s comfortable.',
+    firstAction:
+        'Sit down somewhere quiet and close your eyes if that\'s comfortable.',
     instructions:
         'For about half an hour, breathe slowly and count each breath, '
         'starting over at ten whenever your attention wanders.',
     preparation: 'None.',
-    pacingNote: 'Losing count is normal — just start again. Stop whenever you\'re ready.',
+    pacingNote:
+        'Losing count is normal — just start again. Stop whenever you\'re ready.',
     family: ActivitySemanticFamily.breathingStillness,
     category: ActivityCategory.stillness,
     worldRole: WorldSceneRole.breathe,
@@ -463,7 +475,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
   ),
   ActivityId.gentleStretchPause: ActivityDefinition(
     title: 'Gentle stretch pause',
-    firstAction: 'Stand or sit, and move into whatever stretch feels easiest first.',
+    firstAction:
+        'Stand or sit, and move into whatever stretch feels easiest first.',
     instructions:
         'Move slowly through a few gentle stretches for about half an '
         'hour, holding each only as long as it feels good.',
@@ -475,7 +488,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
   ),
   ActivityId.quietSittingOutside: ActivityDefinition(
     title: 'Sitting outside, unhurried',
-    firstAction: 'Find somewhere outside to sit — a balcony, step, bench, or garden.',
+    firstAction:
+        'Find somewhere outside to sit — a balcony, step, bench, or garden.',
     instructions:
         'Sit outside for about half an hour with your phone away, '
         'without needing to do anything else there.',
@@ -489,19 +503,22 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
   ),
   ActivityId.smallComfortRitual: ActivityDefinition(
     title: 'A slow warm drink',
-    firstAction: 'Make a warm drink — tea, coffee, or anything else you\'d enjoy.',
+    firstAction:
+        'Make a warm drink — tea, coffee, or anything else you\'d enjoy.',
     instructions:
         'Spend about half an hour having it slowly, with your phone out '
         'of reach and nothing else demanding attention.',
     preparation: 'Whatever you\'d use to make a warm drink.',
-    pacingNote: 'No pace to keep. Finish whenever you\'re done, sooner or later.',
+    pacingNote:
+        'No pace to keep. Finish whenever you\'re done, sooner or later.',
     family: ActivitySemanticFamily.comfortRitual,
     category: ActivityCategory.homeCare,
     worldRole: WorldSceneRole.comfort,
   ),
   ActivityId.unhurriedTidyPause: ActivityDefinition(
     title: 'Tend to one small thing',
-    firstAction: 'Pick one small, low-pressure thing — a plant, a bedside table, a single shelf.',
+    firstAction:
+        'Pick one small, low-pressure thing — a plant, a bedside table, a single shelf.',
     instructions:
         'Spend about half an hour tending to that one small thing, at '
         'whatever pace feels unhurried.',
@@ -515,7 +532,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
 
 /// [activityId]'s display name — intention-independent, unlike
 /// [whyCopyFor].
-String activityLabel(ActivityId activityId) => activityCatalog[activityId]!.title;
+String activityLabel(ActivityId activityId) =>
+    activityCatalog[activityId]!.title;
 
 /// [activityId]'s [ActivityCategory] — see [ActivityDefinition.category].
 ActivityCategory activityCategory(ActivityId activityId) =>

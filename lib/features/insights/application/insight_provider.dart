@@ -58,7 +58,8 @@ class InsightNotifier extends Notifier<InsightsState> {
   @override
   InsightsState build() {
     final prefs = ref.watch(sharedPreferencesProvider);
-    return _restore(prefs) ?? const InsightsState(lastAssessedAt: null, snapshots: []);
+    return _restore(prefs) ??
+        const InsightsState(lastAssessedAt: null, snapshots: []);
   }
 
   /// Re-assesses THIRTY's current eligible Insight if due — a no-op unless
@@ -252,7 +253,10 @@ class InsightNotifier extends Notifier<InsightsState> {
         if (snapshot != null) snapshots.add(snapshot);
       }
 
-      return InsightsState(lastAssessedAt: lastAssessedAt, snapshots: snapshots);
+      return InsightsState(
+        lastAssessedAt: lastAssessedAt,
+        snapshots: snapshots,
+      );
     } catch (_) {
       return null;
     }
@@ -284,20 +288,21 @@ final currentInsightProvider = Provider<Insight?>((ref) {
 /// current window — that observation as a dated, read-only earlier
 /// Insight (`isCurrent: false`, never actionable). `null` when there is
 /// nothing to show, including a dismissed observation.
-final displayedInsightProvider =
-    Provider<({Insight insight, bool isCurrent})?>((ref) {
-      final current = ref.watch(currentInsightProvider);
-      if (current != null) return (insight: current, isCurrent: true);
+final displayedInsightProvider = Provider<({Insight insight, bool isCurrent})?>(
+  (ref) {
+    final current = ref.watch(currentInsightProvider);
+    if (current != null) return (insight: current, isCurrent: true);
 
-      final snapshots = ref.watch(insightProvider).snapshots;
-      if (snapshots.isEmpty) return null;
-      final earlier = earlierInsightView(
-        snapshots.last,
-        ref.watch(planProvider),
-        ref.watch(nowProvider),
-      );
-      return earlier == null ? null : (insight: earlier, isCurrent: false);
-    });
+    final snapshots = ref.watch(insightProvider).snapshots;
+    if (snapshots.isEmpty) return null;
+    final earlier = earlierInsightView(
+      snapshots.last,
+      ref.watch(planProvider),
+      ref.watch(nowProvider),
+    );
+    return earlier == null ? null : (insight: earlier, isCurrent: false);
+  },
+);
 
 /// Reconstructs [snapshot] as a live [Insight] against [plansState], or
 /// `null` if its application is no longer valid right now.

@@ -769,80 +769,80 @@ void main() {
       });
     });
 
-    group(
-      'invalid stored activity/intention combination (ADR-013 §2) recovers '
-      'safely',
-      () {
-        test(
-          'an activityId that does not belong to the stored intention\'s '
-          'pool is treated as no recommendation, not silently trusted',
-          () async {
-            final (container, _) = await _containerWith({
-              recommendationDayKey: '2026-08-02',
-              recommendationIntentionKey: Intention.moreEnergy.name,
-              // quietReading only belongs to clearerHead's pool.
-              recommendationActivityIdKey: ActivityId.quietReading.name,
-            }, now: _today);
-            addTearDown(container.dispose);
+    group('invalid stored activity/intention combination (ADR-013 §2) recovers '
+        'safely', () {
+      test(
+        'an activityId that does not belong to the stored intention\'s '
+        'pool is treated as no recommendation, not silently trusted',
+        () async {
+          final (container, _) = await _containerWith({
+            recommendationDayKey: '2026-08-02',
+            recommendationIntentionKey: Intention.moreEnergy.name,
+            // quietReading only belongs to clearerHead's pool.
+            recommendationActivityIdKey: ActivityId.quietReading.name,
+          }, now: _today);
+          addTearDown(container.dispose);
 
-            final state = container.read(recommendationProvider);
+          final state = container.read(recommendationProvider);
 
-            expect(state.recommendation, isNull);
-            expect(state.status, RecommendationStatus.notStarted);
-          },
-        );
+          expect(state.recommendation, isNull);
+          expect(state.status, RecommendationStatus.notStarted);
+        },
+      );
 
-        test(
-          'the same incompatible pair does not crash chooseIntention() — a '
-          'fresh, compatible choice can still be made afterward',
-          () async {
-            final (container, _) = await _containerWith({
-              recommendationDayKey: '2026-08-02',
-              recommendationIntentionKey: Intention.moreEnergy.name,
-              recommendationActivityIdKey: ActivityId.quietReading.name,
-            }, now: _today);
-            addTearDown(container.dispose);
-
-            container
-                .read(recommendationProvider.notifier)
-                .chooseIntention(Intention.gentlerPace);
-            final state = container.read(recommendationProvider);
-
-            expect(state.recommendation, isNotNull);
-            expect(state.recommendation!.intent, 'Gentler Pace');
-            expect(
-              activityPools[Intention.gentlerPace],
-              contains(state.recommendation!.activityId),
-            );
-          },
-        );
-      },
-    );
-
-    group('optional action-report foundation (ADR-013 §4)', () {
-      test('reportAttempt() is a no-op before today\'s Circle is closed', () async {
-        final (container, _) = await _containerWith(_chosenToday(), now: _today);
+      test('the same incompatible pair does not crash chooseIntention() — a '
+          'fresh, compatible choice can still be made afterward', () async {
+        final (container, _) = await _containerWith({
+          recommendationDayKey: '2026-08-02',
+          recommendationIntentionKey: Intention.moreEnergy.name,
+          recommendationActivityIdKey: ActivityId.quietReading.name,
+        }, now: _today);
         addTearDown(container.dispose);
 
-        // notStarted:
         container
             .read(recommendationProvider.notifier)
-            .reportAttempt(CircleAttemptResponse.yes);
-        expect(
-          container.read(recommendationProvider).attemptResponse,
-          isNull,
-        );
+            .chooseIntention(Intention.gentlerPace);
+        final state = container.read(recommendationProvider);
 
-        // started:
-        container.read(recommendationProvider.notifier).start();
-        container
-            .read(recommendationProvider.notifier)
-            .reportAttempt(CircleAttemptResponse.yes);
+        expect(state.recommendation, isNotNull);
+        expect(state.recommendation!.intent, 'Gentler Pace');
         expect(
-          container.read(recommendationProvider).attemptResponse,
-          isNull,
+          activityPools[Intention.gentlerPace],
+          contains(state.recommendation!.activityId),
         );
       });
+    });
+
+    group('optional action-report foundation (ADR-013 §4)', () {
+      test(
+        'reportAttempt() is a no-op before today\'s Circle is closed',
+        () async {
+          final (container, _) = await _containerWith(
+            _chosenToday(),
+            now: _today,
+          );
+          addTearDown(container.dispose);
+
+          // notStarted:
+          container
+              .read(recommendationProvider.notifier)
+              .reportAttempt(CircleAttemptResponse.yes);
+          expect(
+            container.read(recommendationProvider).attemptResponse,
+            isNull,
+          );
+
+          // started:
+          container.read(recommendationProvider.notifier).start();
+          container
+              .read(recommendationProvider.notifier)
+              .reportAttempt(CircleAttemptResponse.yes);
+          expect(
+            container.read(recommendationProvider).attemptResponse,
+            isNull,
+          );
+        },
+      );
 
       for (final response in CircleAttemptResponse.values) {
         test('reportAttempt(${response.name}) is recorded once closed, and '
@@ -869,21 +869,24 @@ void main() {
 
       test('no answer at all leaves attemptResponse null — UNKNOWN, never a '
           'failure', () async {
-        final (container, _) = await _containerWith(_chosenToday(), now: _today);
+        final (container, _) = await _containerWith(
+          _chosenToday(),
+          now: _today,
+        );
         addTearDown(container.dispose);
 
         container.read(recommendationProvider.notifier).start();
         container.read(recommendationProvider.notifier).close();
 
-        expect(
-          container.read(recommendationProvider).attemptResponse,
-          isNull,
-        );
+        expect(container.read(recommendationProvider).attemptResponse, isNull);
       });
 
       test('reportAttempt() overwrites an earlier answer for the same day '
           '— changing your mind is allowed', () async {
-        final (container, _) = await _containerWith(_chosenToday(), now: _today);
+        final (container, _) = await _containerWith(
+          _chosenToday(),
+          now: _today,
+        );
         addTearDown(container.dispose);
 
         container.read(recommendationProvider.notifier).start();
@@ -901,41 +904,38 @@ void main() {
         );
       });
 
-      test(
-        'reportUsefulness() is a no-op without an affirmative attempt '
-        'response first',
-        () async {
-          final (container, _) = await _containerWith(
-            _chosenToday(),
-            now: _today,
-          );
-          addTearDown(container.dispose);
+      test('reportUsefulness() is a no-op without an affirmative attempt '
+          'response first', () async {
+        final (container, _) = await _containerWith(
+          _chosenToday(),
+          now: _today,
+        );
+        addTearDown(container.dispose);
 
-          container.read(recommendationProvider.notifier).start();
-          container.read(recommendationProvider.notifier).close();
+        container.read(recommendationProvider.notifier).start();
+        container.read(recommendationProvider.notifier).close();
 
-          // No attempt answer at all yet:
-          container
-              .read(recommendationProvider.notifier)
-              .reportUsefulness(CircleUsefulnessResponse.veryUseful);
-          expect(
-            container.read(recommendationProvider).usefulnessResponse,
-            isNull,
-          );
+        // No attempt answer at all yet:
+        container
+            .read(recommendationProvider.notifier)
+            .reportUsefulness(CircleUsefulnessResponse.veryUseful);
+        expect(
+          container.read(recommendationProvider).usefulnessResponse,
+          isNull,
+        );
 
-          // An explicit non-affirmative attempt:
-          container
-              .read(recommendationProvider.notifier)
-              .reportAttempt(CircleAttemptResponse.notToday);
-          container
-              .read(recommendationProvider.notifier)
-              .reportUsefulness(CircleUsefulnessResponse.veryUseful);
-          expect(
-            container.read(recommendationProvider).usefulnessResponse,
-            isNull,
-          );
-        },
-      );
+        // An explicit non-affirmative attempt:
+        container
+            .read(recommendationProvider.notifier)
+            .reportAttempt(CircleAttemptResponse.notToday);
+        container
+            .read(recommendationProvider.notifier)
+            .reportUsefulness(CircleUsefulnessResponse.veryUseful);
+        expect(
+          container.read(recommendationProvider).usefulnessResponse,
+          isNull,
+        );
+      });
 
       for (final attempt in [
         CircleAttemptResponse.yes,
@@ -951,7 +951,9 @@ void main() {
 
           container.read(recommendationProvider.notifier).start();
           container.read(recommendationProvider.notifier).close();
-          container.read(recommendationProvider.notifier).reportAttempt(attempt);
+          container
+              .read(recommendationProvider.notifier)
+              .reportAttempt(attempt);
           container
               .read(recommendationProvider.notifier)
               .reportUsefulness(CircleUsefulnessResponse.somewhatUseful);
@@ -965,7 +967,10 @@ void main() {
 
       test('changing the attempt answer to a non-affirmative one clears a '
           'previously recorded usefulness response', () async {
-        final (container, _) = await _containerWith(_chosenToday(), now: _today);
+        final (container, _) = await _containerWith(
+          _chosenToday(),
+          now: _today,
+        );
         addTearDown(container.dispose);
 
         container.read(recommendationProvider.notifier).start();
@@ -994,7 +999,10 @@ void main() {
       test('reporting an attempt/usefulness response never itself changes '
           'today\'s recommendation, and causes no automatic repeat or '
           'progression', () async {
-        final (container, _) = await _containerWith(_chosenToday(), now: _today);
+        final (container, _) = await _containerWith(
+          _chosenToday(),
+          now: _today,
+        );
         addTearDown(container.dispose);
 
         final before = container.read(recommendationProvider).recommendation;
@@ -1076,10 +1084,10 @@ void main() {
         container
             .read(recommendationProvider.notifier)
             .reportUsefulness(CircleUsefulnessResponse.veryUseful);
-        expect(
-          analytics.events,
-          [AnalyticsEventType.circleStarted, AnalyticsEventType.circleClosed],
-        );
+        expect(analytics.events, [
+          AnalyticsEventType.circleStarted,
+          AnalyticsEventType.circleClosed,
+        ]);
 
         container
             .read(recommendationProvider.notifier)
@@ -1155,37 +1163,42 @@ void main() {
         expect(entries.single.closedAt, isNotNull);
       });
 
-      test('is self-healing: start() still records a journal entry even if '
-          'the "shown" write for today never happened (e.g. an app kill '
-          'between chooseIntention and Start, restored in a later session)',
-          () async {
-        final (container, _) = await _containerWith(
-          _chosenToday(
-            intention: Intention.gentlerPace,
-            activityId: ActivityId.easyWalk,
-          ),
-          now: _today,
-        );
-        addTearDown(container.dispose);
+      test(
+        'is self-healing: start() still records a journal entry even if '
+        'the "shown" write for today never happened (e.g. an app kill '
+        'between chooseIntention and Start, restored in a later session)',
+        () async {
+          final (container, _) = await _containerWith(
+            _chosenToday(
+              intention: Intention.gentlerPace,
+              activityId: ActivityId.easyWalk,
+            ),
+            now: _today,
+          );
+          addTearDown(container.dispose);
 
-        // No journal key seeded at all — only the live per-day prefs.
-        container.read(recommendationProvider.notifier).start();
-        await Future<void>.delayed(Duration.zero);
+          // No journal key seeded at all — only the live per-day prefs.
+          container.read(recommendationProvider.notifier).start();
+          await Future<void>.delayed(Duration.zero);
 
-        final journal = CircleJournalRepository(
-          container.read(sharedPreferencesProvider),
-        );
-        final entries = journal.readAll();
-        expect(entries, hasLength(1));
-        expect(entries.single.circleId, '2026-08-02');
-        expect(entries.single.direction, Intention.gentlerPace);
-        expect(entries.single.activityId, ActivityId.easyWalk);
-        expect(entries.single.startedAt, isNotNull);
-      });
+          final journal = CircleJournalRepository(
+            container.read(sharedPreferencesProvider),
+          );
+          final entries = journal.readAll();
+          expect(entries, hasLength(1));
+          expect(entries.single.circleId, '2026-08-02');
+          expect(entries.single.direction, Intention.gentlerPace);
+          expect(entries.single.activityId, ActivityId.easyWalk);
+          expect(entries.single.startedAt, isNotNull);
+        },
+      );
 
       test('reportAttempt()/reportUsefulness() update the same journal '
           'entry', () async {
-        final (container, _) = await _containerWith(_chosenToday(), now: _today);
+        final (container, _) = await _containerWith(
+          _chosenToday(),
+          now: _today,
+        );
         addTearDown(container.dispose);
 
         container.read(recommendationProvider.notifier).start();
@@ -1203,7 +1216,10 @@ void main() {
         );
         final entry = journal.readAll().single;
         expect(entry.attemptResponse, CircleAttemptResponse.aLittle);
-        expect(entry.usefulnessResponse, CircleUsefulnessResponse.somewhatUseful);
+        expect(
+          entry.usefulnessResponse,
+          CircleUsefulnessResponse.somewhatUseful,
+        );
       });
 
       test('never fabricates historical entries from Batch 2\'s '
@@ -1226,82 +1242,81 @@ void main() {
     });
 
     group('Circle Plans daily integration (Batch 2A)', () {
-      test(
-        'an entitled, matching-direction active Plan resolves a Plan '
-        'Session instead of the Free selector',
-        () async {
-          final (container, _) = await _containerWith(
-            {},
-            now: _today,
-            entitled: true,
-          );
-          addTearDown(container.dispose);
+      test('an entitled, matching-direction active Plan resolves a Plan '
+          'Session instead of the Free selector', () async {
+        final (container, _) = await _containerWith(
+          {},
+          now: _today,
+          entitled: true,
+        );
+        addTearDown(container.dispose);
 
-          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
-          container
-              .read(recommendationProvider.notifier)
-              .chooseIntention(Intention.moreEnergy);
+        container
+            .read(planProvider.notifier)
+            .activatePlan(PlanId.moreEnergyPath);
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy);
 
-          final recommendation = container
-              .read(recommendationProvider)
-              .recommendation!;
-          final firstStage = planDefinitionFor(PlanId.moreEnergyPath).stages.first;
+        final recommendation = container
+            .read(recommendationProvider)
+            .recommendation!;
+        final firstStage = planDefinitionFor(
+          PlanId.moreEnergyPath,
+        ).stages.first;
 
-          expect(recommendation.planId, PlanId.moreEnergyPath);
-          expect(recommendation.stageId, firstStage.id);
-          expect(recommendation.activityId, firstStage.activityId);
-          expect(recommendation.planCycleId, isNotNull);
-          expect(recommendation.isPlanRevisit, isFalse);
-          expect(recommendation.treatmentUsed, PlanTreatment.standard);
-        },
-      );
+        expect(recommendation.planId, PlanId.moreEnergyPath);
+        expect(recommendation.stageId, firstStage.id);
+        expect(recommendation.activityId, firstStage.activityId);
+        expect(recommendation.planCycleId, isNotNull);
+        expect(recommendation.isPlanRevisit, isFalse);
+        expect(recommendation.treatmentUsed, PlanTreatment.standard);
+      });
 
-      test(
-        'a non-matching direction uses the Free selector even with an '
-        'active Plan',
-        () async {
-          final (container, _) = await _containerWith(
-            {},
-            now: _today,
-            entitled: true,
-          );
-          addTearDown(container.dispose);
+      test('a non-matching direction uses the Free selector even with an '
+          'active Plan', () async {
+        final (container, _) = await _containerWith(
+          {},
+          now: _today,
+          entitled: true,
+        );
+        addTearDown(container.dispose);
 
-          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
-          container
-              .read(recommendationProvider.notifier)
-              .chooseIntention(Intention.clearerHead);
+        container
+            .read(planProvider.notifier)
+            .activatePlan(PlanId.moreEnergyPath);
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.clearerHead);
 
-          final recommendation = container
-              .read(recommendationProvider)
-              .recommendation!;
-          expect(recommendation.planId, isNull);
-          expect(recommendation.stageId, isNull);
-        },
-      );
+        final recommendation = container
+            .read(recommendationProvider)
+            .recommendation!;
+        expect(recommendation.planId, isNull);
+        expect(recommendation.stageId, isNull);
+      });
 
-      test(
-        'without entitlement, an active Plan is ignored and the Free '
-        'selector is used',
-        () async {
-          final (container, _) = await _containerWith(
-            {},
-            now: _today,
-            entitled: false,
-          );
-          addTearDown(container.dispose);
+      test('without entitlement, an active Plan is ignored and the Free '
+          'selector is used', () async {
+        final (container, _) = await _containerWith(
+          {},
+          now: _today,
+          entitled: false,
+        );
+        addTearDown(container.dispose);
 
-          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
-          container
-              .read(recommendationProvider.notifier)
-              .chooseIntention(Intention.moreEnergy);
+        container
+            .read(planProvider.notifier)
+            .activatePlan(PlanId.moreEnergyPath);
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy);
 
-          expect(
-            container.read(recommendationProvider).recommendation!.planId,
-            isNull,
-          );
-        },
-      );
+        expect(
+          container.read(recommendationProvider).recommendation!.planId,
+          isNull,
+        );
+      });
 
       test(
         'a Plan never overrides the user\'s chosen direction — the '
@@ -1314,7 +1329,9 @@ void main() {
           );
           addTearDown(container.dispose);
 
-          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+          container
+              .read(planProvider.notifier)
+              .activatePlan(PlanId.moreEnergyPath);
           container
               .read(recommendationProvider.notifier)
               .chooseIntention(Intention.gentlerPace);
@@ -1326,42 +1343,39 @@ void main() {
         },
       );
 
-      test(
-        'a completed cycle with no repeat chosen falls back to the Free '
-        'selector for a matching direction',
-        () async {
-          final (container, clock) = await _containerWith(
-            {},
-            now: _today,
-            entitled: true,
-          );
-          addTearDown(container.dispose);
+      test('a completed cycle with no repeat chosen falls back to the Free '
+          'selector for a matching direction', () async {
+        final (container, clock) = await _containerWith(
+          {},
+          now: _today,
+          entitled: true,
+        );
+        addTearDown(container.dispose);
 
-          final planNotifier = container.read(planProvider.notifier);
-          planNotifier.activatePlan(PlanId.moreEnergyPath);
-          final stages = planDefinitionFor(PlanId.moreEnergyPath).stages;
-          for (var i = 0; i < stages.length; i++) {
-            planNotifier.advanceCursorForCircle(
-              PlanId.moreEnergyPath,
-              'synthetic-circle-$i',
-              isRevisit: false,
-            );
-          }
-          expect(
-            planNotifier.progressFor(PlanId.moreEnergyPath).status,
-            PlanCycleStatus.completed,
+        final planNotifier = container.read(planProvider.notifier);
+        planNotifier.activatePlan(PlanId.moreEnergyPath);
+        final stages = planDefinitionFor(PlanId.moreEnergyPath).stages;
+        for (var i = 0; i < stages.length; i++) {
+          planNotifier.advanceCursorForCircle(
+            PlanId.moreEnergyPath,
+            'synthetic-circle-$i',
+            isRevisit: false,
           );
+        }
+        expect(
+          planNotifier.progressFor(PlanId.moreEnergyPath).status,
+          PlanCycleStatus.completed,
+        );
 
-          container
-              .read(recommendationProvider.notifier)
-              .chooseIntention(Intention.moreEnergy);
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy);
 
-          expect(
-            container.read(recommendationProvider).recommendation!.planId,
-            isNull,
-          );
-        },
-      );
+        expect(
+          container.read(recommendationProvider).recommendation!.planId,
+          isNull,
+        );
+      });
 
       test(
         'same-day identity freeze: activating a different Plan after '
@@ -1374,13 +1388,17 @@ void main() {
           );
           addTearDown(container.dispose);
 
-          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
+          container
+              .read(planProvider.notifier)
+              .activatePlan(PlanId.moreEnergyPath);
           container
               .read(recommendationProvider.notifier)
               .chooseIntention(Intention.moreEnergy);
           final before = container.read(recommendationProvider).recommendation;
 
-          container.read(planProvider.notifier).activatePlan(PlanId.clearerHeadPath);
+          container
+              .read(planProvider.notifier)
+              .activatePlan(PlanId.clearerHeadPath);
           container.read(planProvider.notifier).deactivatePlan();
           container
               .read(recommendationProvider.notifier)
@@ -1393,135 +1411,129 @@ void main() {
         },
       );
 
-      test(
-        'close() advances the Plan forward cursor exactly once, even if '
-        'attempted twice',
-        () async {
-          final (container, clock) = await _containerWith(
-            {},
-            now: _today,
-            entitled: true,
-          );
-          addTearDown(container.dispose);
+      test('close() advances the Plan forward cursor exactly once, even if '
+          'attempted twice', () async {
+        final (container, clock) = await _containerWith(
+          {},
+          now: _today,
+          entitled: true,
+        );
+        addTearDown(container.dispose);
 
-          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
-          container
-              .read(recommendationProvider.notifier)
-              .chooseIntention(Intention.moreEnergy);
-          container.read(recommendationProvider.notifier).start();
-          clock.advanceTo(_laterToday);
-          container.read(recommendationProvider.notifier).close();
-          // A second close() is already a hard no-op (status is no longer
-          // `started`) — calling it again must not double-advance.
-          container.read(recommendationProvider.notifier).close();
+        container
+            .read(planProvider.notifier)
+            .activatePlan(PlanId.moreEnergyPath);
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy);
+        container.read(recommendationProvider.notifier).start();
+        clock.advanceTo(_laterToday);
+        container.read(recommendationProvider.notifier).close();
+        // A second close() is already a hard no-op (status is no longer
+        // `started`) — calling it again must not double-advance.
+        container.read(recommendationProvider.notifier).close();
 
-          final progress = container
-              .read(planProvider.notifier)
-              .progressFor(PlanId.moreEnergyPath);
-          expect(progress.forwardCursor, 1);
-        },
-      );
+        final progress = container
+            .read(planProvider.notifier)
+            .progressFor(PlanId.moreEnergyPath);
+        expect(progress.forwardCursor, 1);
+      });
 
-      test(
-        'a revisit-sourced Circle does not advance the forward cursor on '
-        'close()',
-        () async {
-          final (container, clock) = await _containerWith(
-            {},
-            now: _today,
-            entitled: true,
-          );
-          addTearDown(container.dispose);
+      test('a revisit-sourced Circle does not advance the forward cursor on '
+          'close()', () async {
+        final (container, clock) = await _containerWith(
+          {},
+          now: _today,
+          entitled: true,
+        );
+        addTearDown(container.dispose);
 
-          final planNotifier = container.read(planProvider.notifier);
-          planNotifier.activatePlan(PlanId.moreEnergyPath);
-          // Advance once so there is a lastEncounteredStageId to revisit.
-          planNotifier.advanceCursorForCircle(
-            PlanId.moreEnergyPath,
-            'synthetic-circle-0',
-            isRevisit: false,
-          );
-          expect(
-            planNotifier.progressFor(PlanId.moreEnergyPath).forwardCursor,
-            1,
-          );
-          planNotifier.queueRevisit();
+        final planNotifier = container.read(planProvider.notifier);
+        planNotifier.activatePlan(PlanId.moreEnergyPath);
+        // Advance once so there is a lastEncounteredStageId to revisit.
+        planNotifier.advanceCursorForCircle(
+          PlanId.moreEnergyPath,
+          'synthetic-circle-0',
+          isRevisit: false,
+        );
+        expect(
+          planNotifier.progressFor(PlanId.moreEnergyPath).forwardCursor,
+          1,
+        );
+        planNotifier.queueRevisit();
 
-          container
-              .read(recommendationProvider.notifier)
-              .chooseIntention(Intention.moreEnergy);
-          final recommendation = container
-              .read(recommendationProvider)
-              .recommendation!;
-          expect(recommendation.isPlanRevisit, isTrue);
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy);
+        final recommendation = container
+            .read(recommendationProvider)
+            .recommendation!;
+        expect(recommendation.isPlanRevisit, isTrue);
 
-          container.read(recommendationProvider.notifier).start();
-          clock.advanceTo(_laterToday);
-          container.read(recommendationProvider.notifier).close();
+        container.read(recommendationProvider.notifier).start();
+        clock.advanceTo(_laterToday);
+        container.read(recommendationProvider.notifier).close();
 
-          expect(
-            planNotifier.progressFor(PlanId.moreEnergyPath).forwardCursor,
-            1,
-          );
-        },
-      );
+        expect(
+          planNotifier.progressFor(PlanId.moreEnergyPath).forwardCursor,
+          1,
+        );
+      });
 
-      test(
-        'journal entry for a Plan-resolved Circle carries planId/stageId/'
-        'planCycleId/treatmentUsed',
-        () async {
-          final (container, _) = await _containerWith(
-            {},
-            now: _today,
-            entitled: true,
-          );
-          addTearDown(container.dispose);
+      test('journal entry for a Plan-resolved Circle carries planId/stageId/'
+          'planCycleId/treatmentUsed', () async {
+        final (container, _) = await _containerWith(
+          {},
+          now: _today,
+          entitled: true,
+        );
+        addTearDown(container.dispose);
 
-          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
-          container
-              .read(recommendationProvider.notifier)
-              .chooseIntention(Intention.moreEnergy);
-          await Future<void>.delayed(Duration.zero);
+        container
+            .read(planProvider.notifier)
+            .activatePlan(PlanId.moreEnergyPath);
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy);
+        await Future<void>.delayed(Duration.zero);
 
-          final journal = CircleJournalRepository(
-            container.read(sharedPreferencesProvider),
-          );
-          final entry = journal.readAll().single;
-          expect(entry.planId, PlanId.moreEnergyPath.name);
-          expect(entry.treatmentUsed, PlanTreatment.standard.name);
-          expect(entry.revisitUsed, isFalse);
-        },
-      );
+        final journal = CircleJournalRepository(
+          container.read(sharedPreferencesProvider),
+        );
+        final entry = journal.readAll().single;
+        expect(entry.planId, PlanId.moreEnergyPath.name);
+        expect(entry.treatmentUsed, PlanTreatment.standard.name);
+        expect(entry.revisitUsed, isFalse);
+      });
 
-      test(
-        'setPlanTreatment changes treatmentUsed without changing '
-        'activityId, and is a no-op for a Free-selector Circle',
-        () async {
-          final (container, _) = await _containerWith(
-            {},
-            now: _today,
-            entitled: true,
-          );
-          addTearDown(container.dispose);
+      test('setPlanTreatment changes treatmentUsed without changing '
+          'activityId, and is a no-op for a Free-selector Circle', () async {
+        final (container, _) = await _containerWith(
+          {},
+          now: _today,
+          entitled: true,
+        );
+        addTearDown(container.dispose);
 
-          container.read(planProvider.notifier).activatePlan(PlanId.moreEnergyPath);
-          container
-              .read(recommendationProvider.notifier)
-              .chooseIntention(Intention.moreEnergy);
-          final activityBefore = container
-              .read(recommendationProvider)
-              .recommendation!
-              .activityId;
+        container
+            .read(planProvider.notifier)
+            .activatePlan(PlanId.moreEnergyPath);
+        container
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy);
+        final activityBefore = container
+            .read(recommendationProvider)
+            .recommendation!
+            .activityId;
 
-          container
-              .read(recommendationProvider.notifier)
-              .setPlanTreatment(PlanTreatment.lighter);
+        container
+            .read(recommendationProvider.notifier)
+            .setPlanTreatment(PlanTreatment.lighter);
 
-          final after = container.read(recommendationProvider).recommendation!;
-          expect(after.treatmentUsed, PlanTreatment.lighter);
-          expect(after.activityId, activityBefore);
-        },
-      );
+        final after = container.read(recommendationProvider).recommendation!;
+        expect(after.treatmentUsed, PlanTreatment.lighter);
+        expect(after.activityId, activityBefore);
+      });
     });
   });
 
@@ -1563,8 +1575,9 @@ void main() {
           .read(recommendationProvider.notifier)
           .setPlanTreatment(PlanTreatment.lighter);
 
-      final recommendation =
-          container.read(recommendationProvider).recommendation!;
+      final recommendation = container
+          .read(recommendationProvider)
+          .recommendation!;
       expect(recommendation.treatmentSource, PlanTreatmentSource.directChoice);
       expect(
         planNotifier.progressFor(PlanId.moreEnergyPath).lighterDefault,

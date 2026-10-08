@@ -19,13 +19,19 @@ void main() {
       expect(await gateway.monthlyOffer(), isNull);
     });
 
-    test('purchaseMonthly() is unavailable, never fabricates a purchase', () async {
-      expect(await gateway.purchaseMonthly(), PurchaseOutcome.unavailable);
-    });
+    test(
+      'purchaseMonthly() is unavailable, never fabricates a purchase',
+      () async {
+        expect(await gateway.purchaseMonthly(), PurchaseOutcome.unavailable);
+      },
+    );
 
-    test('restore() is unavailable, never fabricates recovered access', () async {
-      expect(await gateway.restore(), RestoreOutcome.unavailable);
-    });
+    test(
+      'restore() is unavailable, never fabricates recovered access',
+      () async {
+        expect(await gateway.restore(), RestoreOutcome.unavailable);
+      },
+    );
 
     test('managementUrl() is null — no hardcoded fallback URL', () async {
       expect(await gateway.managementUrl(), isNull);

@@ -161,9 +161,7 @@ class ThirtyButton extends StatelessWidget {
         Flexible(
           child: Text(
             label,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: foregroundColor,
-            ),
+            style: theme.textTheme.labelLarge?.copyWith(color: foregroundColor),
             textAlign: TextAlign.center,
             // Only with a line cap: an ellipsis without one would hold the
             // label to a single line.
@@ -219,10 +217,7 @@ class ThirtyButton extends StatelessWidget {
         color: backgroundColor,
         // Fully rounded (founder decision D2, Phase A3) at either
         // height.
-        shape: RoundedRectangleBorder(
-          borderRadius: radius,
-          side: borderSide,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: radius, side: borderSide),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: _isEnabled ? onPressed : null,
@@ -249,17 +244,17 @@ class ThirtyButton extends StatelessWidget {
           // `pressed` is resolved; returning null for every other
           // state leaves InkWell's own default hover/focus treatment
           // in place.
-          overlayColor: WidgetStateProperty.resolveWith<Color?>((
-            states,
-          ) {
+          overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
             if (!states.contains(WidgetState.pressed)) {
               return null;
             }
             return switch (variant) {
-              ThirtyButtonVariant.primary => colors.textPrimary
-                  .withValues(alpha: 0.08),
-              ThirtyButtonVariant.secondary => colors.primary
-                  .withValues(alpha: 0.03),
+              ThirtyButtonVariant.primary => colors.textPrimary.withValues(
+                alpha: 0.08,
+              ),
+              ThirtyButtonVariant.secondary => colors.primary.withValues(
+                alpha: 0.03,
+              ),
             };
           }),
           child: Padding(

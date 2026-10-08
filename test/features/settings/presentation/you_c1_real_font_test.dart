@@ -241,10 +241,7 @@ void main() {
       expect(container.read(themeModeProvider), ThemeMode.dark);
       expect(
         find.descendant(
-          of: find.ancestor(
-            of: find.text('Dark'),
-            matching: find.byType(Row),
-          ),
+          of: find.ancestor(of: find.text('Dark'), matching: find.byType(Row)),
           matching: find.byIcon(Icons.check),
         ),
         findsOneWidget,

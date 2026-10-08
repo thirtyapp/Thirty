@@ -92,7 +92,8 @@ class _AttemptQuestion extends ConsumerWidget {
             ThirtyButton(
               label: 'Yes',
               variant: ThirtyButtonVariant.secondary,
-              onPressed: () => notifier.reportAttempt(CircleAttemptResponse.yes),
+              onPressed: () =>
+                  notifier.reportAttempt(CircleAttemptResponse.yes),
             ),
             const SizedBox(height: AppSpacing.xs),
             ThirtyButton(
@@ -158,9 +159,8 @@ class _UsefulnessQuestion extends ConsumerWidget {
             ThirtyButton(
               label: 'Not useful',
               variant: ThirtyButtonVariant.secondary,
-              onPressed: () => notifier.reportUsefulness(
-                CircleUsefulnessResponse.notUseful,
-              ),
+              onPressed: () =>
+                  notifier.reportUsefulness(CircleUsefulnessResponse.notUseful),
             ),
           ],
         ),
