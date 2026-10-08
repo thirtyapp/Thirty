@@ -139,28 +139,33 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
       path: '/premium',
       builder: (context, state) => const PremiumOfferPage(),
     ),
-    GoRoute(
-      path: '/showcase',
-      builder: (context, state) {
-        return Consumer(
-          builder: (context, ref, _) {
-            return DesignSystemShowcasePage(
-              themeMode: ref.watch(themeModeProvider),
-              onThemeModeChanged: (mode) =>
-                  ref.read(themeModeProvider.notifier).setThemeMode(mode),
-            );
-          },
-        );
-      },
-    ),
-    // TEMPORARY — see quiet_trail_hero_preview_page.dart. Remove this
-    // route and that file together once the Quiet Trail Hero visual
-    // review is complete.
-    if (includeDevPreview)
+    // Developer-only routes: registered in debug builds only, never in
+    // profile or release ([includeDevPreview] is `kDebugMode` for
+    // [appRouter]), so no link, deep link or typed location can reach them
+    // there.
+    if (includeDevPreview) ...[
+      GoRoute(
+        path: '/showcase',
+        builder: (context, state) {
+          return Consumer(
+            builder: (context, ref, _) {
+              return DesignSystemShowcasePage(
+                themeMode: ref.watch(themeModeProvider),
+                onThemeModeChanged: (mode) =>
+                    ref.read(themeModeProvider.notifier).setThemeMode(mode),
+              );
+            },
+          );
+        },
+      ),
+      // TEMPORARY — see quiet_trail_hero_preview_page.dart. Remove this
+      // route and that file together once the Quiet Trail Hero visual
+      // review is complete.
       GoRoute(
         path: '/dev/quiet-trail-hero-preview',
         builder: (context, state) => const QuietTrailHeroPreviewPage(),
       ),
+    ],
   ];
 }
 
@@ -197,13 +202,10 @@ final GoRouter appRouter = createAppRouter();
 /// session, so each session starts with no navigation or page state left
 /// from the last.
 ///
-/// `/showcase` is an internal developer route for reviewing the design
-/// system; it is reachable only by navigating to it directly, not linked
-/// from any product screen.
-///
-/// `/dev/quiet-trail-hero-preview` is a TEMPORARY, debug-only route — see
-/// [buildAppRoutes] — present only when `kDebugMode` is true, so it does
-/// not exist in release or profile builds.
+/// `/showcase` (the design-system review page) and the TEMPORARY
+/// `/dev/quiet-trail-hero-preview` are developer-only routes — see
+/// [buildAppRoutes] — registered only when `kDebugMode` is true, so they
+/// do not exist in release or profile builds.
 GoRouter createAppRouter() => GoRouter(
   initialLocation: kDebugMode && _debugInitialLocation.isNotEmpty
       ? _debugInitialLocation

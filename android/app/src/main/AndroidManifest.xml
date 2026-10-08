@@ -61,6 +61,13 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- THIRTY has no deep links. Flutter's default deep linking would
+                 otherwise hand the path of any intent sent to this exported
+                 activity to the router as a location. -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="false"
+              />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

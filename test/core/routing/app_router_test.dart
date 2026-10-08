@@ -189,5 +189,35 @@ void main() {
 
       expect(paths, contains('/dev/quiet-trail-hero-preview'));
     });
+
+    test('profile and release (includeDevPreview false) never register '
+        '/showcase', () {
+      final paths = buildAppRoutes(
+        includeDevPreview: false,
+      ).whereType<GoRoute>().map((route) => route.path);
+
+      expect(paths, isNot(contains('/showcase')));
+    });
+
+    test('debug (includeDevPreview true) registers /showcase', () {
+      final paths = buildAppRoutes(
+        includeDevPreview: true,
+      ).whereType<GoRoute>().map((route) => route.path);
+
+      expect(paths, contains('/showcase'));
+    });
+
+    test('the developer-only routes are the only difference between debug '
+        'and release routing', () {
+      List<String> pathsOf(bool includeDevPreview) => buildAppRoutes(
+        includeDevPreview: includeDevPreview,
+      ).whereType<GoRoute>().map((route) => route.path).toList();
+
+      expect(
+        pathsOf(true).where((path) => !pathsOf(false).contains(path)),
+        unorderedEquals(['/showcase', '/dev/quiet-trail-hero-preview']),
+      );
+      expect(pathsOf(false).every(pathsOf(true).contains), isTrue);
+    });
   });
 }

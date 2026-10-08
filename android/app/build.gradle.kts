@@ -1,4 +1,5 @@
 import java.io.FileInputStream
+import java.util.Base64
 import java.util.Properties
 
 plugins {
@@ -80,6 +81,63 @@ fun resolveSecret(envVarName: String, propertyName: String): String {
 // later.
 val isReleaseTaskRequested = gradle.startParameter.taskNames.any {
     it.contains("Release", ignoreCase = true)
+}
+
+// Billing must be configured for release (RELEASE-HARDENING-1). At runtime
+// missing RevenueCat values only ever fail closed — Premium stays
+// unavailable, nothing is granted — which is safe but silent. So, like the
+// signing check above, a release build fails here unless the build's
+// dart-defines carry release-ready billing values, as judged by
+// `RevenueCatConfig.releaseProblems` (lib/core/config/revenue_cat_config.dart)
+// via `tool/verify_release_config.dart`. Debug and profile builds are
+// unaffected.
+//
+// There is deliberately no bypass: a release build either carries valid
+// billing configuration or is not built at all.
+fun releaseDartDefines(): Map<String, String> {
+    val encoded = project.findProperty("dart-defines")?.toString() ?: return emptyMap()
+    return encoded.split(",").filter { it.isNotBlank() }.mapNotNull { entry ->
+        val define = String(Base64.getDecoder().decode(entry), Charsets.UTF_8)
+        val separator = define.indexOf('=')
+        if (separator <= 0) null else define.substring(0, separator) to define.substring(separator + 1)
+    }.toMap()
+}
+
+fun verifyReleaseBillingConfig() {
+    val localProperties = Properties()
+    rootProject.file("local.properties").takeIf { it.exists() }?.let { file ->
+        FileInputStream(file).use { localProperties.load(it) }
+    }
+    val flutterSdk = localProperties.getProperty("flutter.sdk")
+        ?: throw GradleException("android/local.properties has no flutter.sdk entry.")
+    val dartName =
+        if (System.getProperty("os.name").startsWith("Windows")) "dart.exe" else "dart"
+    val dart = File(flutterSdk, "bin/cache/dart-sdk/bin/$dartName")
+    val defines = releaseDartDefines()
+    val process = ProcessBuilder(dart.absolutePath, "tool/verify_release_config.dart")
+        .directory(rootProject.projectDir.parentFile)
+        .redirectErrorStream(true)
+        .apply {
+            environment()["REVENUECAT_ANDROID_API_KEY"] =
+                defines["REVENUECAT_ANDROID_API_KEY"] ?: ""
+            environment()["REVENUECAT_ENTITLEMENT_ID"] =
+                defines["REVENUECAT_ENTITLEMENT_ID"] ?: ""
+        }
+        .start()
+    val report = process.inputStream.bufferedReader().readText().trim()
+    if (process.waitFor() != 0) {
+        throw GradleException(
+            "THIRTY release build blocked: billing is not configured for " +
+                "release.\n$report\nBuild with " +
+                "--dart-define-from-file=config/revenuecat.local.json holding the " +
+                "real RevenueCat values (see config/revenuecat.example.json)."
+        )
+    }
+    logger.lifecycle(report)
+}
+
+if (isReleaseTaskRequested) {
+    verifyReleaseBillingConfig()
 }
 
 android {

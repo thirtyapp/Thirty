@@ -43,4 +43,39 @@ class RevenueCatConfig {
   /// (`entitlement_gateway.dart`).
   bool get isConfigured =>
       androidApiKey.trim().isNotEmpty && entitlementId.trim().isNotEmpty;
+
+  /// Why this configuration must not go into a distributed release build —
+  /// empty when it may. Stricter than [isConfigured], which only decides
+  /// whether to start the SDK at all: a release additionally needs real
+  /// Google Play values, never the `config/revenuecat.example.json`
+  /// placeholders or a non-Play (e.g. RevenueCat Test Store) key. Messages
+  /// name the missing setting but never echo a value.
+  ///
+  /// Enforced before any release artifact exists:
+  /// `android/app/build.gradle.kts` runs `tool/verify_release_config.dart`
+  /// for every release build and fails the build on any problem.
+  List<String> releaseProblems() {
+    final key = androidApiKey.trim();
+    final entitlement = entitlementId.trim();
+    return [
+      if (key.isEmpty)
+        'REVENUECAT_ANDROID_API_KEY is missing.'
+      else if (key == exampleAndroidApiKey)
+        'REVENUECAT_ANDROID_API_KEY is still the example placeholder.'
+      else if (!key.startsWith(googlePlayKeyPrefix))
+        'REVENUECAT_ANDROID_API_KEY is not a RevenueCat Google Play public '
+            'SDK key (expected the "$googlePlayKeyPrefix" prefix).',
+      if (entitlement.isEmpty)
+        'REVENUECAT_ENTITLEMENT_ID is missing.'
+      else if (entitlement == exampleEntitlementId)
+        'REVENUECAT_ENTITLEMENT_ID is still the example placeholder.',
+    ];
+  }
+
+  /// RevenueCat's prefix for a Google Play app's public SDK key.
+  static const googlePlayKeyPrefix = 'goog_';
+
+  /// The placeholders in `config/revenuecat.example.json`.
+  static const exampleAndroidApiKey = 'goog_your_public_android_sdk_key';
+  static const exampleEntitlementId = 'your_dashboard_entitlement_identifier';
 }
