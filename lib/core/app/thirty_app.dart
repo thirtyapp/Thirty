@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../features/reminder/application/reminder_provider.dart';
 import '../analytics/analytics_event_type.dart';
@@ -15,7 +16,17 @@ import '../theme/design_tokens.dart';
 /// THIRTY's root widget: wires up theming and routing. Product screens are
 /// deliberately out of scope here — see the design system showcase route.
 class ThirtyApp extends ConsumerStatefulWidget {
-  const ThirtyApp({super.key});
+  const ThirtyApp({super.key, this.builder, this.router});
+
+  /// Passed to [MaterialApp.router]'s `builder` — `null` in production; only
+  /// the debug-only QA-1 harness (`../qa/qa_premium_harness.dart`) uses it,
+  /// to draw its marker over every screen.
+  final TransitionBuilder? builder;
+
+  /// The router to use — `null` in production, meaning the shared
+  /// [appRouter]; only the debug-only QA-1 harness passes a fresh one per
+  /// QA session.
+  final GoRouter? router;
 
   @override
   ConsumerState<ThirtyApp> createState() => _ThirtyAppState();
@@ -87,7 +98,8 @@ class _ThirtyAppState extends ConsumerState<ThirtyApp>
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
-      routerConfig: appRouter,
+      routerConfig: widget.router ?? appRouter,
+      builder: widget.builder,
     );
   }
 }

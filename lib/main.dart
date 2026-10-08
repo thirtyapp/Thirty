@@ -10,6 +10,8 @@ import 'core/config/supabase_config.dart';
 import 'core/premium/premium_access.dart';
 import 'core/providers/shared_preferences_provider.dart';
 import 'core/providers/supabase_availability_provider.dart';
+import 'core/qa/qa_premium_gate.dart';
+import 'core/qa/qa_premium_harness.dart';
 import 'features/reminder/application/reminder_provider.dart';
 
 /// ADR-013 §8 — optional analytics must never own the local product's own
@@ -39,6 +41,18 @@ Future<void> main() async {
   final supabaseAvailable = await initializeSupabaseIfConfigured(config);
 
   final sharedPreferences = await SharedPreferences.getInstance();
+
+  // QA-1: a debug build launched with THIRTY_QA_PREMIUM=true runs the
+  // Premium QA harness instead. Compile-time false in profile and release.
+  if (kQaPremiumHarnessEnabled) {
+    runApp(
+      QaPremiumHarnessApp(
+        genuinePreferences: sharedPreferences,
+        supabaseAvailable: supabaseAvailable,
+      ),
+    );
+    return;
+  }
 
   final container = ProviderContainer(
     overrides: [

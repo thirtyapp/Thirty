@@ -187,9 +187,15 @@ String? firstUseRedirect({required bool promptSeen, required String location}) {
 /// shows.
 const _debugInitialLocation = String.fromEnvironment('THIRTY_DEBUG_ROUTE');
 
-/// THIRTY's single, shared router configuration. Created once at module
-/// load and reused for the app's lifetime — never rebuilt from a widget's
-/// build method.
+/// THIRTY's single, shared router configuration ([createAppRouter]).
+/// Created once at module load and reused for the app's lifetime — never
+/// rebuilt from a widget's build method.
+final GoRouter appRouter = createAppRouter();
+
+/// Builds THIRTY's router configuration. Production builds exactly one —
+/// [appRouter]; the debug-only QA-1 harness builds a fresh one per QA
+/// session, so each session starts with no navigation or page state left
+/// from the last.
 ///
 /// `/showcase` is an internal developer route for reviewing the design
 /// system; it is reachable only by navigating to it directly, not linked
@@ -198,7 +204,7 @@ const _debugInitialLocation = String.fromEnvironment('THIRTY_DEBUG_ROUTE');
 /// `/dev/quiet-trail-hero-preview` is a TEMPORARY, debug-only route — see
 /// [buildAppRoutes] — present only when `kDebugMode` is true, so it does
 /// not exist in release or profile builds.
-final GoRouter appRouter = GoRouter(
+GoRouter createAppRouter() => GoRouter(
   initialLocation: kDebugMode && _debugInitialLocation.isNotEmpty
       ? _debugInitialLocation
       : '/',
