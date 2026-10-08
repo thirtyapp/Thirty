@@ -1122,7 +1122,25 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         );
         journalChanged = true;
       case RecommendationStatus.notStarted:
-        break;
+        // Only `setPlanTreatment` persists an unstarted Circle: record the
+        // user's guidance choice now, so the history never lags behind it.
+        if (planId != null && treatmentUsedName != null) {
+          await journal.recordTreatment(
+            circleId: circleId,
+            localDate: circleId,
+            direction: direction,
+            activityId: activityId,
+            chosenAt: ref.read(nowProvider),
+            planId: planId,
+            planVersion: planVersion!,
+            stageId: stageId!,
+            planCycleId: planCycleId!,
+            treatmentUsed: treatmentUsedName,
+            revisitUsed: revisitUsed!,
+            treatmentSource: treatmentSourceName!,
+          );
+          journalChanged = true;
+        }
     }
 
     if (attemptResponse != null) {

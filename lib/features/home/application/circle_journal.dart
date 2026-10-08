@@ -181,6 +181,7 @@ class CircleJournalEntry {
     CircleAttemptResponse? attemptResponse,
     CircleUsefulnessResponse? usefulnessResponse,
     String? treatmentUsed,
+    String? treatmentSource,
   }) {
     return CircleJournalEntry(
       schemaVersion: schemaVersion,
@@ -200,7 +201,7 @@ class CircleJournalEntry {
       planCycleId: planCycleId,
       treatmentUsed: treatmentUsed ?? this.treatmentUsed,
       revisitUsed: revisitUsed,
-      treatmentSource: treatmentSource,
+      treatmentSource: treatmentSource ?? this.treatmentSource,
     );
   }
 
@@ -411,6 +412,42 @@ class CircleJournalRepository {
     treatmentUsed: treatmentUsed,
     revisitUsed: revisitUsed,
     treatmentSource: treatmentSource,
+    takeCurrentTreatment: false,
+    update: (entry) => entry,
+  );
+
+  /// Records today's current Plan treatment choice ([treatmentUsed] /
+  /// [treatmentSource]) on [circleId]'s entry while the Circle is still
+  /// unstarted — the user choosing (or changing back from) the lighter
+  /// guidance. Self-healing like [recordStarted]; see [_upsert] for why the
+  /// treatment, unlike the rest of the Plan fields, follows the latest
+  /// choice.
+  Future<void> recordTreatment({
+    required String circleId,
+    required String localDate,
+    required Intention direction,
+    required ActivityId activityId,
+    required DateTime chosenAt,
+    required String planId,
+    required int planVersion,
+    required String stageId,
+    required String planCycleId,
+    required String treatmentUsed,
+    required bool revisitUsed,
+    required String treatmentSource,
+  }) => _upsert(
+    circleId: circleId,
+    localDate: localDate,
+    direction: direction,
+    activityId: activityId,
+    fallbackShownAt: chosenAt,
+    planId: planId,
+    planVersion: planVersion,
+    stageId: stageId,
+    planCycleId: planCycleId,
+    treatmentUsed: treatmentUsed,
+    revisitUsed: revisitUsed,
+    treatmentSource: treatmentSource,
     update: (entry) => entry,
   );
 
@@ -607,13 +644,20 @@ class CircleJournalRepository {
   /// that instead. See [recordStarted]'s doc comment for why this never
   /// simply no-ops on a missing entry.
   ///
-  /// [planId]/[planVersion]/[stageId]/[planCycleId]/[treatmentUsed]/
-  /// [revisitUsed] (Batch 2A) are only ever used when synthesizing a *new*
-  /// entry (`index == -1`) — once an entry exists, its own Plan identity is
-  /// never overwritten by a later call (`CircleJournalEntry.copyWith`
-  /// preserves it by default), matching how [catalogVersion]/[activityId]
-  /// are already fixed at creation and never revised by a later `record*`
-  /// call.
+  /// [planId]/[planVersion]/[stageId]/[planCycleId]/[revisitUsed]
+  /// (Batch 2A) are the Circle's Plan identity: only ever used when
+  /// synthesizing a *new* entry (`index == -1`) — once an entry exists it is
+  /// never overwritten by a later call, matching how
+  /// [catalogVersion]/[activityId] are already fixed at creation.
+  ///
+  /// [treatmentUsed]/[treatmentSource] are different: they are the user's
+  /// current guidance choice, which `RecommendationNotifier.setPlanTreatment`
+  /// can change after the entry was first written. Every call that carries
+  /// the session's current treatment ([takeCurrentTreatment], the default)
+  /// therefore applies it to an existing entry too, so the history records
+  /// what the user actually chose. A `null` never clears a recorded value.
+  /// [recordShown] alone passes `false`: it writes the *initial* treatment
+  /// and must never overwrite a choice that landed first.
   Future<void> _upsert({
     required String circleId,
     required String localDate,
@@ -628,6 +672,7 @@ class CircleJournalRepository {
     String? treatmentUsed,
     bool? revisitUsed,
     String? treatmentSource,
+    bool takeCurrentTreatment = true,
   }) async {
     final entries = _readRaw();
     final index = entries.indexWhere((entry) => entry.circleId == circleId);
@@ -650,7 +695,13 @@ class CircleJournalRepository {
           )
         : entries[index];
 
-    final updated = update(base);
+    var updated = update(base);
+    if (index != -1 && takeCurrentTreatment) {
+      updated = updated.copyWith(
+        treatmentUsed: treatmentUsed,
+        treatmentSource: treatmentSource,
+      );
+    }
     if (index == -1) {
       entries.add(updated);
     } else {
