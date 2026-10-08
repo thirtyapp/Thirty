@@ -1,46 +1,34 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:timezone/data/latest.dart' as tzdata;
-import 'package:timezone/timezone.dart' as tz;
 
 import 'reminder_gateway.dart';
 
-/// The real local-notification adapter — `flutter_local_notifications`,
-/// `timezone` and `flutter_timezone` (the three packages approved for
-/// THIRTY's optional local reminder — Step 5 local closure).
+/// The real local-notification adapter. `flutter_local_notifications`
+/// handles the notification permission and Android's exact-alarm special
+/// access; the reminder itself is THIRTY's own native scheduler
+/// (`DailyReminder.kt`, REMINDER-1).
 ///
-/// Every schedule call resolves the device's actual current IANA
-/// timezone via [FlutterTimezone.getLocalTimezone] and schedules against
-/// that named [tz.Location] — never against [tz.UTC] — so the user's
-/// chosen wall-clock time (e.g. "8:00 PM") is preserved correctly across
-/// a DST transition, not just the fixed instant it happened to be
-/// computed at. Resolving fresh on every call (rather than caching a
-/// location at [initialize] time) is also how a genuine timezone change
-/// (the user travels, or changes their device clock) gets picked up —
-/// `ReminderNotifier` already reschedules on every app resume.
+/// The plugin's daily repeat (`DateTimeComponents.time`) always restarts
+/// from the next matching time after *now* — it cannot begin on a later
+/// day, so a reminder skipped because today's Circle is already resolved
+/// came straight back. The native scheduler keeps one exact alarm armed
+/// for the next eligible day and re-arms itself each time it fires, after
+/// a reboot, and on a clock or timezone change — reminders continue daily
+/// without THIRTY being opened, always at the chosen wall-clock time in
+/// the device's current timezone.
 ///
-/// If the device's timezone cannot be resolved, [scheduleDaily] returns
-/// [ScheduleOutcome.timezoneUnavailable] and schedules nothing — it never
-/// falls back to [tz.UTC] or any other assumed zone, because a reminder
-/// silently scheduled against the wrong timezone is a truthfulness
-/// defect, not an acceptable degradation.
-///
-/// Scheduling always uses [AndroidScheduleMode.exactAllowWhileIdle] (never
-/// `inexactAllowWhileIdle`) — a physical Samsung SM-S931B reproduced a
-/// correctly `inexactAllowWhileIdle`-scheduled 18:05 reminder twice
-/// actually delivered ~03:48 the next local day, i.e. Doze deferring it
-/// hours past its intended calendar day. [hasExactAlarmAccess] and
-/// [requestExactAlarmAccess] gate this: without granted access,
-/// [scheduleDaily] returns [ScheduleOutcome.exactAlarmAccessDenied] and
-/// schedules nothing — never a silent inexact fallback.
+/// Scheduling is always exact-while-idle, never inexact — a physical
+/// Samsung SM-S931B reproduced a correctly `inexactAllowWhileIdle`-
+/// scheduled 18:05 reminder twice actually delivered ~03:48 the next
+/// local day. Without granted access, [scheduleDaily] returns
+/// [ScheduleOutcome.exactAlarmAccessDenied] and nothing is armed — never
+/// a silent inexact fallback.
 class LocalNotificationsReminderGateway implements ReminderGateway {
   static const _notificationId = 7301;
-  static const _channelId = 'thirty_reminder';
-  static const _channelName = 'Daily reminder';
+  static const _scheduler = MethodChannel('com.thirty.app/daily_reminder');
 
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
-  bool _timezoneDataLoaded = false;
 
   @override
   Future<void> initialize() async {
@@ -130,49 +118,26 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
     required String title,
     required String body,
   }) async {
-    final location = await _resolveLocalLocation();
-    if (location == null) return ScheduleOutcome.timezoneUnavailable;
-
     // Independently fail closed here — never rely solely on the caller
-    // having already checked this. The reproduced Samsung failure (a
-    // correctly `inexactAllowWhileIdle`-scheduled 18:05 reminder twice
-    // actually delivered ~03:48 the next local day) is exactly why this
-    // gateway must never schedule with an inexact mode as a fallback: with
-    // no exact-alarm access, nothing is scheduled at all.
+    // having already checked this.
     if (!await hasExactAlarmAccess()) {
       return ScheduleOutcome.exactAlarmAccessDenied;
     }
 
     try {
-      await _plugin.cancel(id: _notificationId);
-      await _plugin.zonedSchedule(
-        id: _notificationId,
-        title: title,
-        body: body,
-        // The component constructor, not `.from` — this treats
-        // year/month/day/hour/minute as wall-clock time *in* [location],
-        // which is what makes the daily recurrence DST-correct.
-        scheduledDate: tz.TZDateTime(
-          location,
-          firstOccurrenceLocal.year,
-          firstOccurrenceLocal.month,
-          firstOccurrenceLocal.day,
-          firstOccurrenceLocal.hour,
-          firstOccurrenceLocal.minute,
-        ),
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
-            _channelId,
-            _channelName,
-            channelDescription: 'Your optional daily THIRTY reminder.',
-            importance: Importance.low,
-            priority: Priority.low,
-          ),
-        ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
-      return ScheduleOutcome.scheduled;
+      await _retirePluginAlarm();
+      final outcome = await _scheduler.invokeMethod<String>('schedule', {
+        'firstDate': _isoDate(firstOccurrenceLocal),
+        'hour': hour,
+        'minute': minute,
+        'title': title,
+        'body': body,
+      });
+      return switch (outcome) {
+        'scheduled' => ScheduleOutcome.scheduled,
+        'exactAlarmAccessDenied' => ScheduleOutcome.exactAlarmAccessDenied,
+        _ => ScheduleOutcome.failed,
+      };
     } catch (_) {
       return ScheduleOutcome.failed;
     }
@@ -180,6 +145,18 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
 
   @override
   Future<void> cancel() async {
+    await _retirePluginAlarm();
+    try {
+      await _scheduler.invokeMethod<void>('cancel');
+    } catch (_) {
+      // Never throws.
+    }
+  }
+
+  /// Earlier versions armed the reminder through the plugin's own daily
+  /// repeat under this same id — it must never fire alongside the native
+  /// schedule.
+  Future<void> _retirePluginAlarm() async {
     try {
       await _plugin.cancel(id: _notificationId);
     } catch (_) {
@@ -187,20 +164,8 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
     }
   }
 
-  /// Resolves the device's actual current IANA timezone as a `timezone`
-  /// package [tz.Location], or `null` if either the platform lookup or
-  /// the subsequent `timezone` database lookup fails — never a guessed
-  /// or default zone.
-  Future<tz.Location?> _resolveLocalLocation() async {
-    try {
-      if (!_timezoneDataLoaded) {
-        tzdata.initializeTimeZones();
-        _timezoneDataLoaded = true;
-      }
-      final info = await FlutterTimezone.getLocalTimezone();
-      return tz.getLocation(info.identifier);
-    } catch (_) {
-      return null;
-    }
-  }
+  static String _isoDate(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
 }

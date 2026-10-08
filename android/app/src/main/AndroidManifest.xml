@@ -94,6 +94,25 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
             </intent-filter>
         </receiver>
+        <!-- REMINDER-1 — THIRTY's own self-re-arming daily reminder
+             (DailyReminder.kt): the plugin's daily repeat cannot start on
+             a later day, so a reminder skipped after today's Circle came
+             straight back. The plugin above stays for permissions and to
+             retire alarms it armed in earlier versions. -->
+        <receiver
+            android:exported="false"
+            android:name=".DailyReminderAlarmReceiver" />
+        <receiver
+            android:exported="false"
+            android:name=".DailyReminderRearmReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.TIME_SET"/>
+                <action android:name="android.intent.action.TIMEZONE_CHANGED"/>
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"/>
+            </intent-filter>
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

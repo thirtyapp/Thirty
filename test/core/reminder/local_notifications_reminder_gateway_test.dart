@@ -2,45 +2,41 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:timezone/data/latest.dart' as tzdata;
-import 'package:timezone/timezone.dart' as tz;
 
 import 'package:thirty/core/reminder/local_notifications_reminder_gateway.dart';
 import 'package:thirty/core/reminder/reminder_gateway.dart';
 
-const _timezoneChannel = MethodChannel('flutter_timezone');
+const _schedulerChannel = MethodChannel('com.thirty.app/daily_reminder');
 const _notificationsChannel = MethodChannel(
   'dexterous.com/flutter/local_notifications',
 );
 
-/// Mocks the `flutter_timezone` platform channel to return [identifier],
-/// or to fail entirely if [identifier] is null — deterministic, no real
-/// device required (Flutter's own supported platform-channel mocking).
-void _mockTimezoneChannel(String? identifier) {
+/// Every call reaching THIRTY's native scheduler (`DailyReminder.kt`).
+final List<MethodCall> _schedulerCalls = [];
+
+/// Every call reaching the plugin's own scheduling or cancellation.
+final List<MethodCall> _pluginCalls = [];
+
+/// Mocks THIRTY's native scheduler, answering `schedule` with
+/// [scheduleResult] (thrown, if it is an exception).
+void _mockScheduler({Object? scheduleResult = 'scheduled'}) {
+  _schedulerCalls.clear();
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(_timezoneChannel, (call) async {
-        if (identifier == null) {
-          throw PlatformException(code: 'UNAVAILABLE');
+      .setMockMethodCallHandler(_schedulerChannel, (call) async {
+        _schedulerCalls.add(call);
+        if (call.method == 'schedule') {
+          if (scheduleResult is Exception) throw scheduleResult;
+          return scheduleResult;
         }
-        return {'identifier': identifier};
+        return null;
       });
 }
 
-/// Captures every `zonedSchedule` invocation's raw arguments so a test can
-/// assert on exactly which [AndroidScheduleMode] was actually sent across
-/// the platform channel — the one thing that separates "we changed a Dart
-/// enum" from "the native call genuinely uses exact-while-idle timing".
-final List<Map<dynamic, dynamic>> _zonedScheduleCalls = [];
-
 /// Mocks the `flutter_local_notifications` platform channel with generic
-/// successful responses — this test targets timezone *resolution*
-/// correctness, not the notification plugin's own native behavior (real
-/// delivery/permission-dialog/boot-survival proof requires a real
-/// device — see REAL DEVICE TEST REQUIRED items in the reconciliation
-/// report). [exactAlarmAccess] controls the mocked response for
-/// `canScheduleExactNotifications` (default: granted).
+/// successful responses. [exactAlarmAccess] controls the mocked response
+/// for `canScheduleExactNotifications` (default: granted).
 void _mockNotificationsChannel({bool exactAlarmAccess = true}) {
-  _zonedScheduleCalls.clear();
+  _pluginCalls.clear();
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(_notificationsChannel, (call) async {
         switch (call.method) {
@@ -51,8 +47,11 @@ void _mockNotificationsChannel({bool exactAlarmAccess = true}) {
             return true;
           case 'canScheduleExactNotifications':
             return exactAlarmAccess;
+          case 'cancel':
           case 'zonedSchedule':
-            _zonedScheduleCalls.add(call.arguments as Map<dynamic, dynamic>);
+          case 'periodicallyShow':
+          case 'periodicallyShowWithDuration':
+            _pluginCalls.add(call);
             return null;
           default:
             return null;
@@ -82,201 +81,114 @@ void main() {
   tearDown(() {
     debugDefaultTargetPlatformOverride = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(_timezoneChannel, null);
+        .setMockMethodCallHandler(_schedulerChannel, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(_notificationsChannel, null);
   });
 
-  group('timezone package DST correctness (no platform channel needed) — '
-      'DETERMINISTIC TEST', () {
-    setUpAll(tzdata.initializeTimeZones);
-
-    test('the component TZDateTime constructor preserves the same local '
-        'wall-clock hour across a US spring-forward transition '
-        '(America/New_York, 2026-03-08)', () {
-      final newYork = tz.getLocation('America/New_York');
-      final before = tz.TZDateTime(newYork, 2026, 3, 7, 8, 0);
-      final after = tz.TZDateTime(newYork, 2026, 3, 9, 8, 0);
-
-      expect(before.hour, 8);
-      expect(after.hour, 8);
-      // The wall-clock hour is identical, but the UTC offset changed —
-      // proof this is genuinely DST-aware, not a fixed-offset shortcut.
-      expect(before.timeZoneOffset, isNot(after.timeZoneOffset));
-    });
-
-    test('preserves the same local wall-clock hour across a US fall-back '
-        'transition (America/New_York, 2026-11-01)', () {
-      final newYork = tz.getLocation('America/New_York');
-      final before = tz.TZDateTime(newYork, 2026, 10, 31, 20, 0);
-      final after = tz.TZDateTime(newYork, 2026, 11, 2, 20, 0);
-
-      expect(before.hour, 20);
-      expect(after.hour, 20);
-      expect(before.timeZoneOffset, isNot(after.timeZoneOffset));
-    });
-
-    test('the same wall-clock reminder time resolves to a different '
-        'absolute instant in a different timezone — proof scheduling is '
-        'genuinely location-sensitive, not anchored to a fixed zone', () {
-      final berlin = tz.getLocation('Europe/Berlin');
-      final losAngeles = tz.getLocation('America/Los_Angeles');
-      final inBerlin = tz.TZDateTime(berlin, 2026, 6, 1, 8, 0);
-      final inLosAngeles = tz.TZDateTime(losAngeles, 2026, 6, 1, 8, 0);
-
-      expect(inBerlin.hour, 8);
-      expect(inLosAngeles.hour, 8);
-      expect(
-        inBerlin.millisecondsSinceEpoch,
-        isNot(inLosAngeles.millisecondsSinceEpoch),
-      );
-    });
-  });
-
   group('LocalNotificationsReminderGateway (mocked platform channels) — '
-      'DETERMINISTIC TEST for resolution logic; REAL DEVICE TEST '
-      'REQUIRED for actual delivery', () {
-    test('resolving a named timezone lets scheduling proceed past timezone '
-        'resolution — never throws even though this environment cannot '
-        'fully emulate the notification plugin\'s native serialization '
-        '(REAL DEVICE TEST REQUIRED to confirm the resulting outcome is '
-        'exactly `scheduled`)', () async {
-      _mockTimezoneChannel('Europe/Berlin');
+      'REAL DEVICE TEST REQUIRED for actual delivery', () {
+    Future<ScheduleOutcome> scheduleEightPm(
+      LocalNotificationsReminderGateway gateway, {
+      String title = 'Good evening.',
+    }) => gateway.scheduleDaily(
+      firstOccurrenceLocal: DateTime(2026, 9, 3, 20, 0),
+      hour: 20,
+      minute: 0,
+      title: title,
+      body: "Your Circle is here when you're ready.",
+    );
+
+    test('hands the whole schedule to THIRTY\'s native scheduler: first '
+        'eligible date, time and the caller\'s exact title and body', () async {
+      _mockScheduler();
       _mockNotificationsChannel();
       final gateway = LocalNotificationsReminderGateway();
       await gateway.initialize();
 
-      final outcome = await gateway.scheduleDaily(
-        firstOccurrenceLocal: DateTime(2026, 9, 2, 20, 0),
-        hour: 20,
-        minute: 0,
-        title: 'Good evening.',
-        body: "Your Circle is here when you're ready.",
-      );
-
-      // Timezone resolution succeeded — the outcome is never
-      // `timezoneUnavailable` here, whatever the mocked notification
-      // plugin's own response resolves to.
-      expect(outcome, isNot(ScheduleOutcome.timezoneUnavailable));
-    });
-
-    test('never falls back to a wrong timezone — returns '
-        'timezoneUnavailable and schedules nothing when the device '
-        'timezone cannot be resolved', () async {
-      _mockTimezoneChannel(null);
-      _mockNotificationsChannel();
-      final gateway = LocalNotificationsReminderGateway();
-      await gateway.initialize();
-
-      final outcome = await gateway.scheduleDaily(
-        firstOccurrenceLocal: DateTime(2026, 9, 2, 20, 0),
-        hour: 20,
-        minute: 0,
-        title: 'Good evening.',
-        body: "Your Circle is here when you're ready.",
-      );
-
-      expect(outcome, ScheduleOutcome.timezoneUnavailable);
-    });
-
-    test('cancel() never throws even without a prior schedule', () async {
-      _mockNotificationsChannel();
-      final gateway = LocalNotificationsReminderGateway();
-
-      await expectLater(gateway.cancel(), completes);
-    });
-
-    test('requestPermission()/hasPermission() never throw even when the '
-        'platform-specific implementation cannot be resolved in this '
-        'environment (REAL DEVICE TEST REQUIRED to confirm the actual '
-        'Android 13+ permission dialog and its true/false result)', () async {
-      _mockNotificationsChannel();
-      final gateway = LocalNotificationsReminderGateway();
-      await gateway.initialize();
-
-      await expectLater(gateway.requestPermission(), completes);
-      await expectLater(gateway.hasPermission(), completes);
-    });
-
-    test('hasExactAlarmAccess()/requestExactAlarmAccess() never throw even '
-        'when the platform-specific implementation cannot be resolved in '
-        'this environment (REAL DEVICE TEST REQUIRED to confirm the actual '
-        'ACTION_REQUEST_SCHEDULE_EXACT_ALARM screen and its true/false '
-        'result)', () async {
-      _mockNotificationsChannel();
-      final gateway = LocalNotificationsReminderGateway();
-      await gateway.initialize();
-
-      await expectLater(gateway.hasExactAlarmAccess(), completes);
-      await expectLater(gateway.requestExactAlarmAccess(), completes);
-    });
-
-    test('schedules using AndroidScheduleMode.exactAllowWhileIdle when '
-        'exact-alarm access is granted — never inexactAllowWhileIdle (the '
-        'reproduced Samsung SM-S931B ~03:48 late-delivery failure this '
-        'replaces)', () async {
-      _mockTimezoneChannel('Europe/Berlin');
-      _mockNotificationsChannel(exactAlarmAccess: true);
-      final gateway = LocalNotificationsReminderGateway();
-      await gateway.initialize();
-
-      final outcome = await gateway.scheduleDaily(
-        firstOccurrenceLocal: DateTime(2026, 9, 2, 20, 0),
-        hour: 20,
-        minute: 0,
-        title: 'Good evening.',
-        body: "Your Circle is here when you're ready.",
+      final outcome = await scheduleEightPm(
+        gateway,
+        title: 'Good evening, Thomas.',
       );
 
       expect(outcome, ScheduleOutcome.scheduled);
-      expect(_zonedScheduleCalls, hasLength(1));
-      final platformSpecifics =
-          _zonedScheduleCalls.single['platformSpecifics']
-              as Map<dynamic, dynamic>;
-      expect(platformSpecifics['scheduleMode'], 'exactAllowWhileIdle');
+      final schedule = _schedulerCalls.single;
+      expect(schedule.method, 'schedule');
+      expect(schedule.arguments, {
+        'firstDate': '2026-09-03',
+        'hour': 20,
+        'minute': 0,
+        'title': 'Good evening, Thomas.',
+        'body': "Your Circle is here when you're ready.",
+      });
     });
 
-    test('the notification shows exactly the caller\'s title and body — '
-        'the personal greeting reaches the platform payload', () async {
-      _mockTimezoneChannel('Europe/Berlin');
-      _mockNotificationsChannel(exactAlarmAccess: true);
+    test('never schedules through the plugin\'s own repeat, and retires '
+        'the alarm earlier versions armed with it', () async {
+      _mockScheduler();
+      _mockNotificationsChannel();
       final gateway = LocalNotificationsReminderGateway();
       await gateway.initialize();
 
-      await gateway.scheduleDaily(
-        firstOccurrenceLocal: DateTime(2026, 9, 3, 8, 0),
-        hour: 8,
-        minute: 0,
-        title: 'Good morning, Thomas.',
-        body: "Your Circle is here when you're ready.",
-      );
+      await scheduleEightPm(gateway);
 
-      expect(_zonedScheduleCalls, hasLength(1));
-      expect(_zonedScheduleCalls.single['title'], 'Good morning, Thomas.');
-      expect(
-        _zonedScheduleCalls.single['body'],
-        "Your Circle is here when you're ready.",
-      );
+      expect(_pluginCalls.map((call) => call.method), ['cancel']);
+      expect((_pluginCalls.single.arguments as Map)['id'], 7301);
     });
 
     test('schedules nothing — never a silent inexact fallback — when '
         'exact-alarm access is not granted', () async {
-      _mockTimezoneChannel('Europe/Berlin');
+      _mockScheduler();
       _mockNotificationsChannel(exactAlarmAccess: false);
       final gateway = LocalNotificationsReminderGateway();
       await gateway.initialize();
 
-      final outcome = await gateway.scheduleDaily(
-        firstOccurrenceLocal: DateTime(2026, 9, 2, 20, 0),
-        hour: 20,
-        minute: 0,
-        title: 'Good evening.',
-        body: "Your Circle is here when you're ready.",
-      );
+      final outcome = await scheduleEightPm(gateway);
 
       expect(outcome, ScheduleOutcome.exactAlarmAccessDenied);
-      expect(_zonedScheduleCalls, isEmpty);
+      expect(_schedulerCalls, isEmpty);
     });
+
+    test('reports the native scheduler\'s own refusal truthfully, and a '
+        'failure as failed — never throws', () async {
+      _mockNotificationsChannel();
+      final gateway = LocalNotificationsReminderGateway();
+      await gateway.initialize();
+
+      _mockScheduler(scheduleResult: 'exactAlarmAccessDenied');
+      expect(
+        await scheduleEightPm(gateway),
+        ScheduleOutcome.exactAlarmAccessDenied,
+      );
+
+      _mockScheduler(scheduleResult: PlatformException(code: 'boom'));
+      expect(await scheduleEightPm(gateway), ScheduleOutcome.failed);
+    });
+
+    test('cancel() clears the native schedule and the plugin\'s legacy '
+        'alarm, and never throws', () async {
+      _mockScheduler();
+      _mockNotificationsChannel();
+      final gateway = LocalNotificationsReminderGateway();
+
+      await expectLater(gateway.cancel(), completes);
+
+      expect(_schedulerCalls.map((call) => call.method), ['cancel']);
+      expect(_pluginCalls.map((call) => call.method), ['cancel']);
+    });
+
+    test(
+      'requestPermission()/hasPermission() never throw (REAL DEVICE TEST '
+      'REQUIRED to confirm the actual Android 13+ permission dialog)',
+      () async {
+        _mockNotificationsChannel();
+        final gateway = LocalNotificationsReminderGateway();
+        await gateway.initialize();
+
+        await expectLater(gateway.requestPermission(), completes);
+        await expectLater(gateway.hasPermission(), completes);
+      },
+    );
 
     test('hasExactAlarmAccess() reflects canScheduleExactNotifications() '
         'truthfully in both directions', () async {
@@ -289,6 +201,7 @@ void main() {
       final deniedGateway = LocalNotificationsReminderGateway();
       await deniedGateway.initialize();
       expect(await deniedGateway.hasExactAlarmAccess(), isFalse);
+      await expectLater(deniedGateway.requestExactAlarmAccess(), completes);
     });
   });
 }
