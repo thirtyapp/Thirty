@@ -1195,3 +1195,36 @@ final recommendationProvider =
     NotifierProvider<RecommendationNotifier, RecommendationState>(
       RecommendationNotifier.new,
     );
+
+/// Every persisted key holding a recorded Circle outside the journal:
+/// today's Circle session (its direction, activity, lifecycle, reflection
+/// answers and Plan fields) and the selection history drawn from past
+/// Circles. "Delete Circle history" removes these together with the
+/// journal (`../presentation/widgets/journal_data_controls.dart`), then
+/// invalidates [recommendationProvider] so today is re-derived from the
+/// empty store. Preferences, the first-breath flag and Plans are not
+/// Circle history and are left alone.
+Future<void> clearRecordedCircleState(SharedPreferences prefs) async {
+  for (final key in [
+    recommendationDayKey,
+    recommendationIntentionKey,
+    recommendationActivityIdKey,
+    recommendationStatusKey,
+    recommendationStartedAtKey,
+    recommendationClosedAtKey,
+    recommendationAttemptResponseKey,
+    recommendationUsefulnessResponseKey,
+    recommendationLastFamilyKey,
+    recommendationPlanIdKey,
+    recommendationStageIdKey,
+    recommendationPlanCycleIdKey,
+    recommendationPlanVersionKey,
+    recommendationIsPlanRevisitKey,
+    recommendationTreatmentKey,
+    recommendationTreatmentSourceKey,
+    for (final intention in Intention.values)
+      recommendationHistoryKeyFor(intention),
+  ]) {
+    await prefs.remove(key);
+  }
+}

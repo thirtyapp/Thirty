@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_confirm_dialog.dart';
 import '../../../insights/application/insight_provider.dart';
 import '../../application/circle_journal.dart';
+import '../../application/recommendation_provider.dart';
 
 /// THIRTY's local Circle-journal export/delete controls — extracted from
 /// `../circle_history_page.dart` (founder IA correction — "export/delete
@@ -71,8 +73,11 @@ class JournalDataControls extends ConsumerWidget {
     );
   }
 
-  /// Asks for explicit confirmation, then deletes every recorded Circle and
-  /// any Insight derived from them. Shared with You's "Your data" rows.
+  /// Asks for explicit confirmation, then deletes every recorded Circle —
+  /// the journal, today's Circle session and the selection history drawn
+  /// from past Circles — and any Insight derived from them. Today is then
+  /// re-derived from the empty store, so no deleted Circle stays on screen.
+  /// Shared with You's "Your data" rows.
   static Future<void> confirmAndClear(
     BuildContext context,
     CircleJournalRepository journal,
@@ -94,7 +99,9 @@ class JournalDataControls extends ConsumerWidget {
     if (confirmed != true) return;
 
     await journal.clearAll();
+    await clearRecordedCircleState(ref.read(sharedPreferencesProvider));
     ref.invalidate(circleJournalRepositoryProvider);
+    ref.invalidate(recommendationProvider);
     // Batch 2C: a derived Insight must never outlive the evidence it was
     // drawn from — "stop derived personalization... remove its dependent
     // snapshots" (frozen architecture §9).
