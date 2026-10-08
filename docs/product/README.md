@@ -1,5 +1,9 @@
 # THIRTY — Productkennis
 
+> **PRODUCT V2 AUTHORITY — 2026-10-08**
+>
+> [PRODUCT_V2_CONTRACT.md](PRODUCT_V2_CONTRACT.md) is the authoritative product specification and overrides every document listed below where they conflict (including VISION.md's precedence rule below). Implementation status lives only in [THIRTY_V2_DELIVERY_TRACKER.md](THIRTY_V2_DELIVERY_TRACKER.md). PREMIUM_STRATEGY.md, RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md, recommendation-mvp-v0.md and ADR-001/012–016 are superseded or partially superseded for V2 — see their headers.
+
 Dit is de productkennisbasis van THIRTY: waarom aanbevelingen worden gedaan zoals ze worden gedaan, wie de eerste gebruiker is, en welke onboarding-beslissingen zijn vastgesteld. Dit document is uitsluitend **navigatie** — het bevat zelf geen productbeslissingen.
 
 ## Leeswijzer

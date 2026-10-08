@@ -1,5 +1,7 @@
 # ADR-012 — Batch 2 / Recommendation Diversity
 
+> **SUPERSEDED FOR PRODUCT V2 — 2026-10-08.** The three-pool, day-index rotation model is replaced by the V2 Recommendation Engine contract (multi-direction fit, explicit feedback, recency, variety). Historical record retained unchanged below; where it conflicts with [PRODUCT_V2_CONTRACT.md](../PRODUCT_V2_CONTRACT.md), the V2 contract is authoritative. Implementation decisions for V2 are recorded in ADR-019 onward.
+
 **Status:** Accepted
 
 ## Context

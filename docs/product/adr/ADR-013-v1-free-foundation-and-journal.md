@@ -1,5 +1,7 @@
 # ADR-013 — V1 Productization Batch 1 / Free Foundation + Prospective Local Journal
 
+> **SUPERSEDED FOR PRODUCT V2 — 2026-10-08.** Partially: the journal foundation and Close-is-not-completion semantics remain; the three-pool catalogue shape and usefulness feedback without effect on selection are superseded, and V1 history participates in V2 learning only under the historical-learning compatibility rule. Historical record retained unchanged below; where it conflicts with [PRODUCT_V2_CONTRACT.md](../PRODUCT_V2_CONTRACT.md), the V2 contract is authoritative. Implementation decisions for V2 are recorded in ADR-019 onward.
+
 **Status:** Accepted
 
 ## Context

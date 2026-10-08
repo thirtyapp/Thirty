@@ -1,5 +1,9 @@
 # THIRTY — Roadmap
 
+> **SUPERSEDED FOR PRODUCT V2 — 2026-10-08**
+>
+> This roadmap is retained as historical context. V2 product scope is defined in [PRODUCT_V2_CONTRACT.md](product/PRODUCT_V2_CONTRACT.md); delivery status lives only in [THIRTY_V2_DELIVERY_TRACKER.md](product/THIRTY_V2_DELIVERY_TRACKER.md).
+
 Deze roadmap beschrijft de globale fasering van het project op hoofdlijnen. Het is geen gedetailleerde planning met deadlines, maar een leidraad voor de volgorde waarin THIRTY wordt opgebouwd.
 
 Status van elke fase wordt bijgewerkt zodra deze start of afgerond is.

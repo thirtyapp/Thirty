@@ -1,5 +1,9 @@
 # THIRTY RECURRING PREMIUM ARCHITECTURE + MONETIZATION FREEZE
 
+> **SUPERSEDED FOR PRODUCT V2 — 2026-10-08**
+>
+> This document is retained as historical context. Where it conflicts with [PRODUCT_V2_CONTRACT.md](PRODUCT_V2_CONTRACT.md), the V2 contract is authoritative.
+
 **Date:** 6 September 2026. **Status:** founder-requested Premium correction, ready for contradiction check and approval. This is a proposed contract, not a claim that Premium is built or commercially validated. No code is implemented and no existing authority file is edited by this review.
 
 **Document relationship:** the [47-section productization review](<C:/Users/thoma/Desktop/THIRTY App/Files/THIRTY V1 PRODUCTIZATION + COMMERCIAL REVIEW.md>) and the [one-time purchase amendment](<C:/Users/thoma/Desktop/THIRTY App/Files/THIRTY PREMIUM + ECONOMIC CEILING FREEZE AMENDMENT.md>) retain only their unaffected decisions. This document explicitly changes the Premium product and its direct commercial/implementation consequences in §34. The founder's latest request authorizes this correction; the earlier restriction on another targeted review does not override it.

@@ -1,5 +1,9 @@
 # THIRTY Premium Strategy
 
+> **SUPERSEDED FOR PRODUCT V2 — 2026-10-08**
+>
+> This document is retained as historical context. Where it conflicts with [PRODUCT_V2_CONTRACT.md](PRODUCT_V2_CONTRACT.md), the V2 contract is authoritative.
+
 **Version:** v1.0
 **Status:** Approved v1.0
 

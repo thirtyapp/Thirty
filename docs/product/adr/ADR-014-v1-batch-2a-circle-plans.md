@@ -1,5 +1,7 @@
 # ADR-014 — V1 Productization Batch 2A / Circle Plans + Guided Sessions
 
+> **SUPERSEDED FOR PRODUCT V2 — 2026-10-08.** Five-stage Circle Plans are replaced by V2 Paths that produce user-owned routines (Personal Toolkit). Historical record retained unchanged below; where it conflicts with [PRODUCT_V2_CONTRACT.md](../PRODUCT_V2_CONTRACT.md), the V2 contract is authoritative. Implementation decisions for V2 are recorded in ADR-019 onward.
+
 **Status:** Accepted
 
 ## Context

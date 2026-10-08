@@ -1,5 +1,7 @@
 # ADR-015 — V1 Productization Batch 2B / Minimum Circle Coach
 
+> **SUPERSEDED FOR PRODUCT V2 — 2026-10-08.** Coach is retired as a separate Premium pillar; its legitimate jobs move into the recommendation engine, Circle guidance, feedback acknowledgement, Path progression and toolkit maintenance. Historical record retained unchanged below; where it conflicts with [PRODUCT_V2_CONTRACT.md](../PRODUCT_V2_CONTRACT.md), the V2 contract is authoritative. Implementation decisions for V2 are recorded in ADR-019 onward.
+
 **Status:** Accepted
 
 ## Context

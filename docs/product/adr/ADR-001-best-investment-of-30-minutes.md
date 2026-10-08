@@ -1,5 +1,7 @@
 # ADR-001 — Best Investment of 30 Minutes
 
+> **SUPERSEDED FOR PRODUCT V2 — 2026-10-08.** Partially: a Circle is no longer a fixed 30-minute unit — V2 uses each activity's natural duration up to about 30 minutes. The intent of a bounded daily investment remains. Historical record retained unchanged below; where it conflicts with [PRODUCT_V2_CONTRACT.md](../PRODUCT_V2_CONTRACT.md), the V2 contract is authoritative. Implementation decisions for V2 are recorded in ADR-019 onward.
+
 **Status:** Accepted
 
 ## Context

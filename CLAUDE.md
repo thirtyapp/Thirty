@@ -2,10 +2,27 @@
 
 Dit document is het naslagwerk voor iedereen (en elke AI-assistent) die aan **THIRTY** werkt. Het beschrijft hoe we werken, niet alleen wat we bouwen.
 
+## 0. Productautoriteit — THIRTY V2 (sinds 2026-10-08)
+
+Voor elke productbeslissing geldt deze hiërarchie:
+
+1. **[docs/product/PRODUCT_V2_CONTRACT.md](docs/product/PRODUCT_V2_CONTRACT.md)** — de bindende productspecificatie: wát we bouwen.
+2. **[BRAND_BOOK.md](docs/BRAND_BOOK.md), [DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md), [WORLD_SYSTEM.md](docs/worlds/WORLD_SYSTEM.md)** — hoe goedgekeurd gedrag eruitziet en voelt (behalve waar hun geplande V2-update nog moet volgen; bij conflict wint het contract).
+3. **V2-ADR's** (`docs/product/adr/`, vanaf ADR-019) — hoe afzonderlijke implementatiebesluiten worden gerealiseerd.
+4. **[docs/product/THIRTY_V2_DELIVERY_TRACKER.md](docs/product/THIRTY_V2_DELIVERY_TRACKER.md)** — uitsluitend de implementatiestatus.
+5. **Historische / gesupersedeerde documenten** — alleen context (V1 Premium-strategie en -freeze, recommendation-mvp-v0, ROADMAP, ADR-001/012–016 waar gemarkeerd).
+
+Regels voor toekomstige sessies:
+
+- Conflicterende V1-productstrategie is historisch, ook als die in deze CLAUDE.md of in VISION.md nog anders staat.
+- De positionering **"AI Health Companion" stuurt V2-werk niet**: V2 gebruikt geen runtime-AI, ML of cloudpersonalisatie.
+- Bevroren productbesluiten in het V2-contract worden **niet heropend** tenzij de founder dat expliciet vraagt. Afstembare parameters (gemarkeerd als TUNABLE) en commerciële hypotheses mogen op basis van bewijs worden bijgesteld.
+- Werk alleen aan de fase die de delivery tracker als actief aanwijst.
+
 ## 1. Product in het kort
 
 - **Naam:** THIRTY
-- **Positionering:** AI Health Companion
+- **Positionering:** AI Health Companion *(historisch — stuurt V2-werk niet; zie §0)*
 - **Slogan:** "Your healthiest 30 minutes."
 - **Kernidee:** THIRTY helpt gebruikers om dagelijks 30 minuten te investeren in hun gezondheid, ondersteund door AI-gedreven inzichten en begeleiding.
 
@@ -86,6 +103,8 @@ Deze beperkingen worden losgelaten naarmate het project vordert, in overleg en s
 
 ## 6. Documentatie-overzicht
 
+- [docs/product/PRODUCT_V2_CONTRACT.md](docs/product/PRODUCT_V2_CONTRACT.md) — **de leidende V2-productspecificatie** (zie §0).
+- [docs/product/THIRTY_V2_DELIVERY_TRACKER.md](docs/product/THIRTY_V2_DELIVERY_TRACKER.md) — **de enige V2-implementatiestatus** (zie §0).
 - [README.md](README.md) — introductie voor iedereen die het project voor het eerst opent.
 - [docs/VISION.md](docs/VISION.md) — waarom THIRTY bestaat en voor wie.
 - [docs/BRAND_BOOK.md](docs/BRAND_BOOK.md) — hoe THIRTY voelt, klinkt en eruitziet.

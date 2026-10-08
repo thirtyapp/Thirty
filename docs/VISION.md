@@ -1,5 +1,9 @@
 # THIRTY — Visie
 
+> **PRODUCT V2 AUTHORITY — 2026-10-08**
+>
+> For product decisions, [PRODUCT_V2_CONTRACT.md](product/PRODUCT_V2_CONTRACT.md) is authoritative. The "AI Health Companion" positioning below is historical and must not guide V2 work: V2 uses no runtime AI. This vision text receives its substantive V2 update in a later scheduled phase.
+
 ## Slogan
 
 **"Your healthiest 30 minutes."**

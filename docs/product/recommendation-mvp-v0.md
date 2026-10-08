@@ -1,5 +1,9 @@
 # Recommendation MVP v0 — "A recommendation that could have been different"
 
+> **SUPERSEDED FOR PRODUCT V2 — 2026-10-08**
+>
+> This document is retained as historical context. Where it conflicts with [PRODUCT_V2_CONTRACT.md](PRODUCT_V2_CONTRACT.md), the V2 contract is authoritative.
+
 Dit document is de **source of truth** voor de concrete inhoud en het mechanisme van Recommendation MVP v0: de drie Intentions, de goedgekeurde activiteiten per Intention, hoe THIRTY daaruit deterministisch kiest, en de regels voor de "Why This Today?"-uitleg. Het herhaalt geen bredere filosofie — dat blijft de rol van [Recommendation Philosophy](recommendation-philosophy.md) en [Decision Framework](decision-framework.md), waarvan dit document de eerste concrete, geïmplementeerde toepassing is.
 
 ---
