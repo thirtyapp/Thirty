@@ -48,7 +48,9 @@ class LocalNotificationsReminderGateway implements ReminderGateway {
     try {
       await _plugin.initialize(
         settings: const InitializationSettings(
-          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+          // The one-colour THIRTY Circle — Android tints a notification's
+          // small icon, so it must be a silhouette, not the launcher art.
+          android: AndroidInitializationSettings('@drawable/ic_stat_thirty'),
         ),
         // Tapping the notification simply opens THIRTY to its current
         // canonical state (the OS's normal "launch app" behavior) — no

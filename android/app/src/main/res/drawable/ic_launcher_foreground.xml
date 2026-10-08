@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- THIRTY launcher foreground: watercolour artwork, then the canonical wordmark. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/ic_launcher_artwork" />
+    <item android:drawable="@drawable/ic_launcher_wordmark" />
+</layer-list>

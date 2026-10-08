@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The notification small icon is referenced only by name from Dart
+     (local_notifications_reminder_gateway.dart), so release resource
+     shrinking must be told to keep it. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_thirty" />

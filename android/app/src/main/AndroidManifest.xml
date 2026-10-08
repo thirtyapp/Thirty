@@ -40,7 +40,7 @@
          also disables Android 12's separate device-to-device transfer
          flow, so no XML backup/data-extraction rules file is needed. -->
     <application
-        android:label="thirty"
+        android:label="THIRTY"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false">
