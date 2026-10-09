@@ -326,28 +326,76 @@ void main() {
         expect(entries.single.circleId, '2026-08-02');
       });
 
-      test('an entry whose activityId no longer belongs to its recorded '
-          'direction\'s pool is dropped — compatibility must hold '
-          'historically too', () async {
-        final incompatibleEntry = {
+      test('V2: history is never dropped because the catalogue changed — '
+          'an entry whose activity no longer fits its recorded direction, '
+          'or was retired, still reads back exactly as recorded', () async {
+        Map<String, Object?> entry(
+          String date,
+          Intention direction,
+          ActivityId activityId,
+        ) => {
           'schemaVersion': circleJournalSchemaVersion,
-          'circleId': '2026-08-02',
-          'localDate': '2026-08-02',
-          'direction': Intention.moreEnergy.name,
-          // quietReading only ever belonged to clearerHead's pool.
-          'activityId': ActivityId.quietReading.name,
-          'catalogVersion': catalogVersion,
+          'circleId': date,
+          'localDate': date,
+          'direction': direction.name,
+          'activityId': activityId.name,
+          'catalogVersion': v1CatalogVersion,
           'shownAt': DateTime(2026, 8, 2, 9).toIso8601String(),
         };
         final prefs = await _prefsWith({
           circleJournalKey: jsonEncode({
             'schemaVersion': circleJournalSchemaVersion,
-            'entries': [incompatibleEntry],
+            'entries': [
+              // quietReading has no More Energy fit in V2.
+              entry(
+                '2026-08-02',
+                Intention.moreEnergy,
+                ActivityId.quietReading,
+              ),
+              // The retired V1 breathing concept.
+              entry(
+                '2026-08-03',
+                Intention.moreEnergy,
+                ActivityId.energisingBreathReset,
+              ),
+            ],
           }),
         });
-        final repo = CircleJournalRepository(prefs);
+        final entries = CircleJournalRepository(prefs).readAll();
 
-        expect(repo.readAll(), isEmpty);
+        expect(
+          entries.map((e) => e.activityId),
+          unorderedEquals([
+            ActivityId.energisingBreathReset,
+            ActivityId.quietReading,
+          ]),
+        );
+        expect(
+          entries.every((e) => e.catalogVersion == v1CatalogVersion),
+          isTrue,
+        );
+      });
+
+      test('an entry with an unknown activity name is still rejected as '
+          'corrupt', () async {
+        final prefs = await _prefsWith({
+          circleJournalKey: jsonEncode({
+            'schemaVersion': circleJournalSchemaVersion,
+            'entries': [
+              {
+                'schemaVersion': circleJournalSchemaVersion,
+                'circleId': '2026-08-02',
+                'localDate': '2026-08-02',
+                'direction': Intention.moreEnergy.name,
+                'activityId': 'notARealActivity',
+                'catalogVersion': catalogVersion,
+                'shownAt': DateTime(2026, 8, 2, 9).toIso8601String(),
+              },
+            ],
+          }),
+        });
+
+        expect(CircleJournalRepository(prefs).readAll(), isEmpty);
       });
 
       test('recordStarted() after a corrupt stored journal self-heals '

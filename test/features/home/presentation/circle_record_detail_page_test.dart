@@ -92,13 +92,11 @@ void main() {
         ),
       );
 
-      expect(find.text('2026-09-05'), findsWidgets);
-      expect(find.textContaining('More Energy'), findsOneWidget);
-      expect(find.text('Not closed'), findsOneWidget);
-      expect(
-        find.textContaining('never confirms the activity was actually done'),
-        findsOneWidget,
-      );
+      // Human dates: the page title without the weekday, the card with it.
+      expect(find.text('5 September 2026'), findsOneWidget);
+      expect(find.text('Saturday 5 September 2026'), findsOneWidget);
+      expect(find.text('More Energy'), findsOneWidget);
+      expect(find.text('Started at 09:05. Not closed.'), findsOneWidget);
     },
   );
 
@@ -113,7 +111,7 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(
-        find.textContaining('No record for 2026-09-05 is available'),
+        find.text('There\u2019s no record for 5 September 2026 anymore.'),
         findsOneWidget,
       );
     },
@@ -142,11 +140,9 @@ void main() {
 
     expect(tester.takeException(), isNull);
 
-    // The last line of the card — the factual-interaction note — must be
+    // The last line of the card — the user's usefulness answer — must be
     // reachable, not clipped off the bottom of the screen.
-    final note = find.textContaining(
-      'never confirms the activity was actually done',
-    );
+    final note = find.textContaining('Was it useful?', findRichText: true);
     await tester.scrollUntilVisible(note, 200);
     expect(note.hitTestable(), findsOneWidget);
     expect(tester.takeException(), isNull);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../../../core/activity_category.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -11,8 +12,11 @@ import '../../../../core/widgets/thirty_card.dart';
 String homeGreeting(DateTime now, {String? firstName}) =>
     daypartGreeting(now, firstName: firstName);
 
-/// The line under the greeting while today's Circle is still open.
-const homeGreetingSubline = "Ready to close today's Circle?";
+/// The line under the greeting while today's Circle is still open: an
+/// invitation to begin before Start Circle, then a calm note that closing
+/// is the user's call once it is running.
+String homeGreetingSubline({required bool started}) =>
+    started ? 'Close it whenever you’re ready.' : 'Here’s one thing for today.';
 
 /// The Today card (Phase D1, Design vision): TODAY, today's direction in
 /// the editorial serif, the activity with its icon, a divider, and up to
@@ -35,6 +39,10 @@ class TodayCard extends StatelessWidget {
     required this.activity,
     required this.why,
     required this.category,
+    required this.minutes,
+    required this.firstAction,
+    required this.showFirstAction,
+    required this.onShowGuide,
     required this.cardAsset,
     required this.intentOpacity,
     required this.detailOpacity,
@@ -46,6 +54,16 @@ class TodayCard extends StatelessWidget {
   final String activity;
   final String why;
   final ActivityCategory category;
+
+  /// The activity's natural length, shown beside its name.
+  final int minutes;
+
+  /// What to do first; replaces [why] once the Circle has started.
+  final String firstAction;
+  final bool showFirstAction;
+
+  /// Opens the full how-to; `null` hides the link.
+  final VoidCallback? onShowGuide;
   final String cardAsset;
   final Duration artSwitchDuration;
   final Animation<double> intentOpacity;
@@ -57,8 +75,12 @@ class TodayCard extends StatelessWidget {
   /// Share of the card's width the text column keeps beside the art.
   static const _textShareWithArt = 0.75;
 
-  static const _chipSize = 28.0;
   static const _intentFontSize = 22.0;
+
+  /// How much shorter Home's near-fit rhythm may lay the card out: its top
+  /// and bottom padding tighten from [AppSpacing.m] to [AppSpacing.s]
+  /// (home_rhythm_column.dart). Otherwise the card never changes.
+  static const nearFitReduction = 2 * (AppSpacing.m - AppSpacing.s);
 
   static IconData iconFor(ActivityCategory category) => switch (category) {
     ActivityCategory.walking => Icons.directions_walk_rounded,
@@ -96,70 +118,68 @@ class TodayCard extends StatelessWidget {
               final text = Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.featuredCard,
-                  vertical: AppSpacing.m,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('TODAY', semanticsLabel: 'Today', style: labelStyle),
-                    const SizedBox(height: 2),
-                    Text(intent, style: intentStyle),
-                    const SizedBox(height: AppSpacing.s),
-                    FadeTransition(
-                      opacity: detailOpacity,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              ExcludeSemantics(
-                                child: Container(
-                                  width: _chipSize,
-                                  height: _chipSize,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: colors.secondary,
-                                  ),
-                                  child: Icon(
-                                    iconFor(category),
-                                    size: 18,
-                                    color: colors.primary,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.s),
-                              Expanded(
-                                child: Text(
-                                  activity,
-                                  style: textTheme.bodyLarge?.copyWith(
-                                    color: colors.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.s),
-                          Divider(height: 1, color: colors.divider),
-                          const SizedBox(height: AppSpacing.s),
-                          // At most two lines: the card stays compact
-                          // enough for Start Circle to sit above the fold
-                          // beneath the full-size Circle. At large text
-                          // nothing is truncated; the page scrolls instead.
-                          Text(
-                            why,
-                            maxLines: largeText ? null : 2,
-                            overflow: largeText ? null : TextOverflow.ellipsis,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        ],
+                child: _NearFitVerticalPadding(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // The activity's natural length rides on the label line, which
+                      // has room to spare, so the activity name keeps its width.
+                      Text(
+                        'TODAY  ·  $minutes MIN',
+                        semanticsLabel: 'Today, about $minutes minutes',
+                        style: labelStyle,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(intent, style: intentStyle),
+                      FadeTransition(
+                        opacity: detailOpacity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // The activity row is also the way into its full
+                            // how-to (V2 Phase A): its tap padding takes the
+                            // place of the gaps above and below it, so the
+                            // card is no taller than before and Start Circle
+                            // keeps its place beneath the full-size Circle.
+                            _ActivityRow(
+                              activity: activity,
+                              icon: iconFor(category),
+                              onTap: onShowGuide,
+                            ),
+                            Divider(height: 1, color: colors.divider),
+                            const SizedBox(height: AppSpacing.s),
+                            // Before Start: why this might fit. Once running:
+                            // the one thing to do first, which is what
+                            // matters now. Never cut off (S25 device
+                            // finding): at normal text the copy itself is
+                            // kept to two lines for the reason and three for
+                            // the first action (today_card_test.dart), so the
+                            // card stays compact enough for Start Circle to
+                            // sit beneath the full-size Circle; enlarged text
+                            // grows the card and the page scrolls instead.
+                            if (showFirstAction)
+                              Text(
+                                firstAction,
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: colors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              )
+                            else
+                              Text(
+                                why,
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
               if (!showArt) return text;
@@ -289,4 +309,142 @@ class _TodayArt extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Today's activity — its icon, name and natural length — with a chevron
+/// that opens the full how-to. The row's own vertical padding is its touch
+/// target, so it adds no height to the card.
+class _ActivityRow extends StatelessWidget {
+  const _ActivityRow({
+    required this.activity,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String activity;
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  static const _chipSize = 28.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
+      child: Row(
+        children: [
+          ExcludeSemantics(
+            child: Container(
+              width: _chipSize,
+              height: _chipSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colors.secondary,
+              ),
+              child: Icon(icon, size: 18, color: colors.primary),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.s),
+          Expanded(
+            child: Text(
+              activity,
+              style: textTheme.bodyLarge?.copyWith(
+                color: colors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          if (onTap != null)
+            ExcludeSemantics(
+              child: Icon(
+                Icons.chevron_right_rounded,
+                size: 22,
+                color: colors.primary,
+              ),
+            ),
+        ],
+      ),
+    );
+    final label = activity;
+    if (onTap == null) {
+      return Semantics(label: label, excludeSemantics: true, child: row);
+    }
+    return Semantics(
+      button: true,
+      label: label,
+      hint: 'How to do it',
+      // The merged node carries the tap itself: excluding the children's
+      // semantics would otherwise drop the InkWell's tap action.
+      onTap: onTap,
+      excludeSemantics: true,
+      child: InkWell(onTap: onTap, borderRadius: AppRadius.small, child: row),
+    );
+  }
+}
+
+/// The Today card's top and bottom padding: [AppSpacing.m] each, unless the
+/// card is laid out shorter than that allows (Home's near-fit rhythm,
+/// [TodayCard.nearFitReduction]) — then just enough less, never below
+/// [AppSpacing.s]. The content itself is never squeezed.
+class _NearFitVerticalPadding extends SingleChildRenderObjectWidget {
+  const _NearFitVerticalPadding({required super.child});
+
+  @override
+  _RenderNearFitVerticalPadding createRenderObject(BuildContext context) =>
+      _RenderNearFitVerticalPadding();
+}
+
+class _RenderNearFitVerticalPadding extends RenderShiftedBox {
+  _RenderNearFitVerticalPadding() : super(null);
+
+  static const _usual = AppSpacing.m;
+  static const _least = AppSpacing.s;
+
+  double _padding(double contentHeight, BoxConstraints constraints) {
+    if (!constraints.hasBoundedHeight) return _usual;
+    return ((constraints.maxHeight - contentHeight) / 2).clamp(_least, _usual);
+  }
+
+  @override
+  Size computeDryLayout(covariant BoxConstraints constraints) {
+    final content = child!.getDryLayout(
+      BoxConstraints(maxWidth: constraints.maxWidth),
+    );
+    final padding = _padding(content.height, constraints);
+    return constraints.constrain(
+      Size(content.width, content.height + padding * 2),
+    );
+  }
+
+  @override
+  void performLayout() {
+    final content = child!;
+    content.layout(
+      BoxConstraints(maxWidth: constraints.maxWidth),
+      parentUsesSize: true,
+    );
+    final padding = _padding(content.size.height, constraints);
+    (content.parentData! as BoxParentData).offset = Offset(0, padding);
+    size = constraints.constrain(
+      Size(content.size.width, content.size.height + padding * 2),
+    );
+  }
+
+  @override
+  double computeMinIntrinsicWidth(double height) =>
+      child!.getMinIntrinsicWidth(double.infinity);
+
+  @override
+  double computeMaxIntrinsicWidth(double height) =>
+      child!.getMaxIntrinsicWidth(double.infinity);
+
+  @override
+  double computeMinIntrinsicHeight(double width) =>
+      child!.getMinIntrinsicHeight(width) + _usual * 2;
+
+  @override
+  double computeMaxIntrinsicHeight(double width) =>
+      child!.getMaxIntrinsicHeight(width) + _usual * 2;
 }

@@ -28,6 +28,11 @@ final _today = DateTime(2026, 8, 2);
 /// of its 30 minutes, and one started by a tap starts at exactly 0.
 final _clockNow = _today.add(const Duration(minutes: 12));
 
+/// The default activity's natural length — the ring's full extent in
+/// these tests (V2 Phase A: the ring follows the activity, never a fixed
+/// half hour).
+final _walkMinutes = activityTypicalMinutes(ActivityId.thirtyMinuteWalk);
+
 /// Phase D1: the heading beat is the time-of-day greeting ([_today] is
 /// midnight, so "Good evening").
 final _greeting = homeGreeting(_today);
@@ -282,7 +287,7 @@ void main() {
       expect(_circleProgress(tester), 0.0);
       expect(find.text(_greeting), findsOneWidget);
       expect(find.text('More Energy'), findsOneWidget);
-      expect(find.text('30-minute walk'), findsOneWidget);
+      expect(find.text('A brisk walk'), findsOneWidget);
       expect(find.text('Start Circle'), findsOneWidget);
     });
 
@@ -607,7 +612,7 @@ void main() {
               .widget<FadeTransition>(
                 find
                     .ancestor(
-                      of: find.text('30-minute walk'),
+                      of: find.text('A brisk walk'),
                       matching: find.byType(FadeTransition),
                     )
                     .first,
@@ -624,7 +629,7 @@ void main() {
               .widget<FadeTransition>(
                 find
                     .ancestor(
-                      of: find.text('30-minute walk'),
+                      of: find.text('A brisk walk'),
                       matching: find.byType(FadeTransition),
                     )
                     .first,
@@ -1015,7 +1020,10 @@ void main() {
           find.byType(ThirtyProgressCircle),
         );
         expect(semantics.label, "Today's Circle");
-        expect(semantics.value, 'Circle in progress. 12 of 30 minutes.');
+        expect(
+          semantics.value,
+          'Circle in progress. 12 of $_walkMinutes minutes.',
+        );
       });
 
       testWidgets('closed announces "Circle closed."', (
@@ -1059,7 +1067,10 @@ void main() {
         final startedSemantics = tester.getSemantics(
           find.byType(ThirtyProgressCircle),
         );
-        expect(startedSemantics.value, 'Circle in progress. 0 of 30 minutes.');
+        expect(
+          startedSemantics.value,
+          'Circle in progress. 0 of $_walkMinutes minutes.',
+        );
         final startedId = startedSemantics.id;
 
         await _tapAndConfirmClose(tester); // Close.
@@ -1072,7 +1083,7 @@ void main() {
       });
     });
 
-    group('Phase D1 ring — soft track, sage dot, 30-minute timer', () {
+    group('Phase D1 ring — soft track, sage dot, activity-length timer', () {
       ThirtyProgressCircle circleWidget(WidgetTester tester) => tester
           .widget<ThirtyProgressCircle>(find.byType(ThirtyProgressCircle));
 
@@ -1122,14 +1133,50 @@ void main() {
       });
 
       testWidgets('started: the arc is the time since Start Circle out of '
-          '30 minutes', (tester) async {
+          'the activity\'s own length, never a fixed 30 minutes', (
+        tester,
+      ) async {
+        expect(_walkMinutes, isNot(30));
         await tester.pumpWidget(await _wrap(storedPrefs: restored('started')));
         await tester.pump();
-        expect(circleWidget(tester).progress, closeTo(12 / 30, 1e-9));
+        expect(circleWidget(tester).progress, closeTo(12 / _walkMinutes, 1e-9));
+      });
+
+      testWidgets('representative ~10 and ~20 minute activities each run the '
+          'ring to their own length', (tester) async {
+        for (final (intention, activity) in [
+          (Intention.moreEnergy, ActivityId.moveToMusic),
+          (Intention.clearerHead, ActivityId.quietReading),
+        ]) {
+          final minutes = activityTypicalMinutes(activity);
+          await tester.pumpWidget(
+            await _wrap(
+              storedPrefs: {
+                ...restored('started'),
+                recommendationIntentionKey: intention.name,
+                recommendationActivityIdKey: activity.name,
+              },
+            ),
+          );
+          await tester.pump();
+          expect(
+            circleWidget(tester).progress,
+            closeTo((12 / minutes).clamp(0.0, 1.0), 1e-9),
+            reason: activity.name,
+          );
+          expect(
+            tester.getSemantics(find.byType(ThirtyProgressCircle)).value,
+            'Circle in progress. ${12.clamp(0, minutes)} of $minutes '
+            'minutes.',
+            reason: activity.name,
+          );
+        }
+        expect(activityTypicalMinutes(ActivityId.moveToMusic), 10);
+        expect(activityTypicalMinutes(ActivityId.quietReading), 20);
       });
 
       testWidgets('started: the arc advances as time passes and is full '
-          'from 30 minutes on', (tester) async {
+          'from the activity\'s length on', (tester) async {
         var now = _today.add(const Duration(minutes: 12));
         SharedPreferences.setMockInitialValues({
           ..._defaultChosenPrefs,
@@ -1150,14 +1197,14 @@ void main() {
           ),
         );
         await tester.pump();
-        expect(circleWidget(tester).progress, closeTo(0.4, 1e-9));
+        expect(circleWidget(tester).progress, closeTo(12 / _walkMinutes, 1e-9));
 
         now = _today.add(const Duration(minutes: 15));
         await tester.pump(const Duration(seconds: 1));
-        expect(circleWidget(tester).progress, closeTo(0.5, 1e-9));
+        expect(circleWidget(tester).progress, closeTo(15 / _walkMinutes, 1e-9));
         expect(
           tester.getSemantics(find.byType(ThirtyProgressCircle)).value,
-          'Circle in progress. 15 of 30 minutes.',
+          'Circle in progress. 15 of $_walkMinutes minutes.',
         );
 
         now = _today.add(const Duration(minutes: 45));
@@ -1165,7 +1212,7 @@ void main() {
         expect(circleWidget(tester).progress, 1);
         expect(
           tester.getSemantics(find.byType(ThirtyProgressCircle)).value,
-          'Circle in progress. 30 of 30 minutes.',
+          'Circle in progress. $_walkMinutes of $_walkMinutes minutes.',
         );
       });
 
@@ -1181,7 +1228,7 @@ void main() {
           ),
         );
         await tester.pump();
-        expect(circleWidget(tester).progress, closeTo(20 / 30, 1e-9));
+        expect(circleWidget(tester).progress, closeTo(20 / _walkMinutes, 1e-9));
       });
 
       testWidgets('Start Circle starts the timer at 0; its ticker never '

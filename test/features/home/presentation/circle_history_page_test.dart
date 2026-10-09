@@ -68,11 +68,20 @@ void main() {
 
       await tester.pumpWidget(widget);
 
-      expect(find.text('2026-08-02'), findsOneWidget);
-      expect(find.textContaining('More Energy'), findsOneWidget);
-      expect(find.textContaining('30-minute walk'), findsOneWidget);
-      expect(find.text('Not closed'), findsOneWidget);
-      expect(find.text('No answer'), findsNWidgets(2)); // attempt + usefulness
+      expect(find.text('Sunday 2 August 2026'), findsOneWidget);
+      expect(find.text('More Energy'), findsOneWidget);
+      expect(find.text('A brisk walk'), findsOneWidget);
+      // Truthful, in plain words: it started, it never closed, and the user
+      // said nothing about trying it.
+      expect(find.text('Started at 09:05. Not closed.'), findsOneWidget);
+      expect(
+        find.textContaining('Not answered', findRichText: true),
+        findsNWidgets(2),
+      ); // attempt + usefulness
+      expect(
+        find.textContaining('Did you try it?', findRichText: true),
+        findsOneWidget,
+      );
     },
   );
 
@@ -136,7 +145,7 @@ void main() {
       );
 
       await tester.pumpWidget(widget);
-      expect(find.text('2026-08-02'), findsOneWidget);
+      expect(find.text('Sunday 2 August 2026'), findsOneWidget);
 
       await tester.tap(find.text('Delete all'));
       await tester.pumpAndSettle();
@@ -146,7 +155,7 @@ void main() {
       await tester.tap(find.text('Keep my history'));
       await tester.pumpAndSettle();
       expect(journal.readAll(), isNotEmpty);
-      expect(find.text('2026-08-02'), findsOneWidget);
+      expect(find.text('Sunday 2 August 2026'), findsOneWidget);
 
       await tester.tap(find.text('Delete all'));
       await tester.pumpAndSettle();

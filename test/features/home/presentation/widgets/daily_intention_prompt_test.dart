@@ -36,6 +36,22 @@ Future<(Widget, ProviderContainer)> _wrap({
 }
 
 void main() {
+  test('every need meaning is the founder-approved wording', () {
+    expect(
+      intentionMeaning(Intention.moreEnergy),
+      'I want to feel a little more awake and active.',
+    );
+    expect(
+      intentionMeaning(Intention.clearerHead),
+      'I want fewer things competing for my attention, and one thing to '
+      'focus on.',
+    );
+    expect(
+      intentionMeaning(Intention.gentlerPace),
+      "I want something gentle that doesn't feel like another demand.",
+    );
+  });
+
   testWidgets('shows the Daily Context Question and exactly three options', (
     tester,
   ) async {

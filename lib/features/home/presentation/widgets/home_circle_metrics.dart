@@ -84,6 +84,13 @@ class HomeCircleMetrics {
   /// and scrolls.
   static const compactGap = AppSpacing.s;
 
+  /// Founder decision (V2 Phase A, S25 review): the most the near-fit
+  /// rhythm may trim the Circle, as a share of its size, and only as a last
+  /// resort once the compact gaps and the Today card's compact padding are
+  /// not enough (home_rhythm_column.dart). Never applied when there is room;
+  /// if this is not enough, nothing is trimmed and the page scrolls.
+  static const nearFitMaxTrim = 0.04;
+
   /// Phase D1 ring (Design vision): a thin ring inset inside the halo
   /// disc, a sage dot marking the arc's leading end, and a small band of
   /// the halo's surface between the ring and the illustration.

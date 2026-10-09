@@ -16,6 +16,7 @@ import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
 import 'package:thirty/core/routing/app_shell.dart';
 import 'package:thirty/core/theme/design_tokens.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/presentation/home_page.dart';
@@ -257,19 +258,30 @@ void main() {
         'closed', (tester) async {
       final semantics = tester.ensureSemantics();
       for (final (prefs, subline) in [
-        (_assigned, true),
-        (_started, true),
-        (_closed, false),
+        (_assigned, homeGreetingSubline(started: false)),
+        (_started, homeGreetingSubline(started: true)),
+        (_closed, null),
       ]) {
         await _pumpHome(tester, storedPrefs: prefs);
         expect(
           tester.getSemantics(find.text(homeGreeting(_today))),
           matchesSemantics(label: homeGreeting(_today), isHeader: true),
         );
-        expect(
-          find.text(homeGreetingSubline),
-          subline ? findsOneWidget : findsNothing,
-        );
+        for (final line in [
+          homeGreetingSubline(started: false),
+          homeGreetingSubline(started: true),
+        ]) {
+          expect(
+            find.text(line),
+            line == subline ? findsOneWidget : findsNothing,
+          );
+        }
+        // Regression (V2 Phase A): nothing on Home ever asks to close a
+        // Circle that has not started yet.
+        if (prefs == _assigned) {
+          expect(find.textContaining('close'), findsNothing);
+          expect(find.textContaining('Close'), findsNothing);
+        }
       }
       semantics.dispose();
     });
@@ -282,7 +294,10 @@ void main() {
       final card = tester.getRect(find.byType(TodayCard));
       expect(card.left, AppSpacing.page);
       expect(card.right, 360 - AppSpacing.page);
-      for (final text in ['TODAY', 'More Energy', '30-minute walk']) {
+      final today =
+          'TODAY  \u00b7  '
+          '${activityTypicalMinutes(ActivityId.thirtyMinuteWalk)} MIN';
+      for (final text in [today, 'More Energy', 'A brisk walk']) {
         expect(
           tester.getTopLeft(find.text(text)).dx,
           greaterThanOrEqualTo(card.left + AppSpacing.featuredCard - 0.5),
@@ -290,7 +305,7 @@ void main() {
         );
       }
       expect(
-        tester.getTopLeft(find.text('TODAY')).dx,
+        tester.getTopLeft(find.text(today)).dx,
         card.left + AppSpacing.featuredCard,
       );
       expect(
@@ -318,7 +333,11 @@ void main() {
       );
       expect(art, findsOneWidget);
       final artLeft = tester.getRect(art).left;
-      final why = tester.getRect(find.textContaining('For more energy'));
+      final why = tester.getRect(
+        find.text(
+          activityReasonFor(Intention.moreEnergy, ActivityId.thirtyMinuteWalk),
+        ),
+      );
       // The art fades in from its left edge; the text column ends where
       // the fade has barely begun.
       expect(why.right, lessThanOrEqualTo(artLeft + AppSpacing.xl + 0.5));

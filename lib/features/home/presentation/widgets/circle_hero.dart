@@ -11,9 +11,11 @@ import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_confirm_dialog.dart';
 import '../../../../core/world_rendering/world_hero_art_view.dart';
 import '../../../settings/application/first_name_provider.dart';
+import '../../application/activity_catalog.dart';
 import '../../application/first_breath_provider.dart';
 import '../../application/recommendation_provider.dart';
 import '../../application/world_scene_resolution.dart';
+import 'activity_guide_sheet.dart';
 import 'home_circle_metrics.dart';
 import 'home_rhythm_column.dart';
 import 'today_card.dart';
@@ -161,20 +163,21 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   late final AnimationController _controller;
   late final Animation<double> _wordmarkOpacity;
   late final Animation<double> _circleProgress;
+  late final Animation<double> _nearFitTrimProgress;
   late final Animation<double> _illustrationOpacity;
   late final Animation<double> _headingOpacity;
   late final Animation<double> _intentOpacity;
   late final Animation<double> _activityWhyOpacity;
   late final Animation<double> _buttonOpacity;
 
-  // Phase D1 — the ring is a real 30-minute timer (founder decision,
-  // `docs/design/PHASE_D_PLAN.md`; it replaces the earlier ambient
-  // "breathing", whose rule was "the active Circle breathes; it does not
-  // count"). While today's Circle is started, the sage arc shows the time
-  // since Start Circle, full at 30 minutes; once closed it keeps the time
+  // The ring is a real timer (Phase D1). V2 Phase A: it runs to the
+  // offered activity's natural length ([circleDurationFor]), never a fixed
+  // half hour. While today's Circle is started, the sage arc shows the time
+  // since Start Circle, full at that length; once closed it keeps the time
   // the Circle actually ran. A once-a-second ticker repaints it while
   // started — slow enough that reduced motion needs no special case.
-  static const circleDuration = Duration(minutes: 30);
+  static Duration circleDurationFor(ActivityId activityId) =>
+      Duration(minutes: activityTypicalMinutes(activityId));
   Timer? _ticker;
   RecommendationStatus? _tickerStatus;
 
@@ -292,6 +295,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       ),
     );
 
+    // The near-fit Circle trim (if any) follows the Circle's opening: none
+    // while it is still Ready's closed Circle, all of it once open.
+    _nearFitTrimProgress = ReverseAnimation(_circleProgress);
+
     _illustrationOpacity = CurvedAnimation(
       parent: _controller,
       curve: Interval(breatheEnd, illustrationEnd, curve: Curves.easeOut),
@@ -333,9 +340,11 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   double _timerProgress(RecommendationState state) {
     final startedAt = state.startedAt;
     if (startedAt == null) return 0;
+    final recommendation = state.recommendation;
+    if (recommendation == null) return 0;
     final end = state.closedAt ?? ref.read(eventClockProvider)();
     return (end.difference(startedAt).inMilliseconds /
-            circleDuration.inMilliseconds)
+            circleDurationFor(recommendation.activityId).inMilliseconds)
         .clamp(0.0, 1.0);
   }
 
@@ -497,10 +506,9 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       case RecommendationStatus.started:
         ctaLabel = 'Close Circle';
         ctaTrailingIcon = null;
-        final minutes = (timerProgress * circleDuration.inMinutes).floor();
-        circleSemanticValue =
-            'Circle in progress. $minutes of '
-            '${circleDuration.inMinutes} minutes.';
+        final total = circleDurationFor(recommendation.activityId).inMinutes;
+        final minutes = (timerProgress * total).floor();
+        circleSemanticValue = 'Circle in progress. $minutes of $total minutes.';
         // Batch 1, Phase B: no longer closes directly on tap — see
         // _confirmCloseCircle's own doc comment for the confirmation this
         // now requires before the irreversible transition.
@@ -517,6 +525,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     final greetingStyle = AppTypography.editorialDisplay(
       colors,
     ).copyWith(fontSize: 34, height: 1.15);
+
+    // The near-fit trim is for the user's normal text size only; enlarged
+    // text keeps the full Circle and scrolls.
+    final normalTextSize = MediaQuery.textScalerOf(context).scale(16) <= 16;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -557,9 +569,32 @@ class _CircleHeroState extends ConsumerState<CircleHero>
             // The hero's own rhythm: normal gaps, tightened only when
             // Start Circle would otherwise just miss the first screen
             // (home_rhythm_column.dart). Order is unchanged.
+            //
+            // When the compact gaps are not enough (a short screen, e.g.
+            // the Galaxy S25 with 3-button navigation), the Today card's
+            // padding tightens too; and only if Start Circle still misses
+            // — a two-line activity there — the Circle gives up exactly
+            // the remaining shortfall, never more than
+            // [HomeCircleMetrics.nearFitMaxTrim], at the user's normal
+            // text size only, and only before Start. The trim eases in with
+            // the Circle's opening ([_nearFitTrimProgress]) so it never
+            // jumps from Ready, and is then held through Start and Close.
             child: HomeRhythmColumn(
               fitHeight: constraints.maxHeight - widget.topInset,
               minClearance: HomeCircleMetrics.compactGap,
+              compactReductions: const [0, 0, TodayCard.nearFitReduction, 0],
+              trim: normalTextSize
+                  ? (
+                      index: 0,
+                      maxFraction: HomeCircleMetrics.nearFitMaxTrim,
+                      progress: _nearFitTrimProgress,
+                      // Decided for Start Circle only: once started or
+                      // closed, the Circle keeps the size it has.
+                      hold:
+                          recommendationState.status !=
+                          RecommendationStatus.notStarted,
+                    )
+                  : null,
               gaps: const [
                 (
                   normal: HomeCircleMetrics.circleToContentGap,
@@ -580,58 +615,62 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                 // Breath's own opening sweep (1.0 → 0.0, then settled at
                 // 0 with the dot at the top); from Start Circle on it is
                 // the 30-minute timer.
-                AnimatedBuilder(
-                  animation: _circleProgress,
-                  builder: (context, child) {
-                    return HomeCircle(
-                      metrics: metrics,
-                      progress:
-                          recommendationState.status ==
-                              RecommendationStatus.notStarted
-                          ? _circleProgress.value
-                          : timerProgress,
-                      trackColor: colors.ringTrack,
-                      progressColor: colors.primary,
-                      // Announced by its lifecycle meaning, never as a
-                      // bare percentage (Playbook Ch.2 §3).
-                      semanticValue: circleSemanticValue,
-                      child: child,
-                    );
-                  },
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // The wordmark is decorative only
-                      // (ThirtyWordmarkView already wraps itself in
-                      // ExcludeSemantics) — the Circle above is the
-                      // ritual's only semantics owner.
-                      FadeTransition(
-                        opacity: _wordmarkOpacity,
-                        // Phase D1: the wordmark with the tagline
-                        // beneath it, fading as one lockup.
-                        child: ExcludeSemantics(
-                          child: ThirtyBrandLockup(
-                            wordmarkWidth: wordmarkWidth,
-                            centered: true,
-                          ),
-                        ),
-                      ),
-                      FadeTransition(
-                        opacity: _illustrationOpacity,
-                        child: AnimatedSwitcher(
-                          duration: artSwitchDuration,
-                          child: SizedBox(
-                            key: ValueKey(_art.heroAsset),
-                            width: illustrationSize,
-                            height: illustrationSize,
-                            child: WorldHeroArtView(
-                              asset: _art.heroAsset,
-                              scale: _art.heroScale,
+                // Scales down only when the near-fit rhythm trims it.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AnimatedBuilder(
+                    animation: _circleProgress,
+                    builder: (context, child) {
+                      return HomeCircle(
+                        metrics: metrics,
+                        progress:
+                            recommendationState.status ==
+                                RecommendationStatus.notStarted
+                            ? _circleProgress.value
+                            : timerProgress,
+                        trackColor: colors.ringTrack,
+                        progressColor: colors.primary,
+                        // Announced by its lifecycle meaning, never as a
+                        // bare percentage (Playbook Ch.2 §3).
+                        semanticValue: circleSemanticValue,
+                        child: child,
+                      );
+                    },
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // The wordmark is decorative only
+                        // (ThirtyWordmarkView already wraps itself in
+                        // ExcludeSemantics) — the Circle above is the
+                        // ritual's only semantics owner.
+                        FadeTransition(
+                          opacity: _wordmarkOpacity,
+                          // Phase D1: the wordmark with the tagline
+                          // beneath it, fading as one lockup.
+                          child: ExcludeSemantics(
+                            child: ThirtyBrandLockup(
+                              wordmarkWidth: wordmarkWidth,
+                              centered: true,
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                        FadeTransition(
+                          opacity: _illustrationOpacity,
+                          child: AnimatedSwitcher(
+                            duration: artSwitchDuration,
+                            child: SizedBox(
+                              key: ValueKey(_art.heroAsset),
+                              width: illustrationSize,
+                              height: illustrationSize,
+                              child: WorldHeroArtView(
+                                asset: _art.heroAsset,
+                                scale: _art.heroScale,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 // Phase D1 (Design vision): a centred greeting, then the
@@ -661,7 +700,11 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                             height: HomeCircleMetrics.greetingToSublineGap,
                           ),
                           Text(
-                            homeGreetingSubline,
+                            homeGreetingSubline(
+                              started:
+                                  recommendationState.status ==
+                                  RecommendationStatus.started,
+                            ),
                             style: textTheme.bodyLarge?.copyWith(
                               color: colors.textSecondary,
                             ),
@@ -677,6 +720,24 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                   activity: recommendation.activity,
                   why: recommendation.why,
                   category: recommendation.category,
+                  minutes: activityTypicalMinutes(recommendation.activityId),
+                  firstAction: activityDefinition(
+                    recommendation.activityId,
+                  ).firstAction,
+                  showFirstAction:
+                      recommendationState.status ==
+                      RecommendationStatus.started,
+                  // A retired activity restored from history has no V2
+                  // guide to show.
+                  onShowGuide:
+                      activityDefinition(recommendation.activityId).status ==
+                          ActivityStatus.retired
+                      ? null
+                      : () => showActivityGuide(
+                          context,
+                          activityId: recommendation.activityId,
+                          intention: recommendation.intention,
+                        ),
                   cardAsset: _art.cardAsset,
                   artSwitchDuration: artSwitchDuration,
                   intentOpacity: _intentOpacity,

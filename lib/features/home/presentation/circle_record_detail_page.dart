@@ -40,7 +40,9 @@ class CircleRecordDetailPage extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: ThirtyAppBar(title: Text(localDate)),
+      appBar: ThirtyAppBar(
+        title: Text(humanJournalDate(localDate, withWeekday: false)),
+      ),
       body: SafeArea(
         child: entry == null
             ? Padding(
@@ -77,7 +79,11 @@ class _ScrollableRecord extends StatelessWidget {
                 constraints.maxHeight - AppSpacing.page * 2,
               ),
             ),
-            child: CircleJournalEntryCard(entry: entry),
+            // The card hugs its record instead of stretching to the screen.
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: CircleJournalEntryCard(entry: entry),
+            ),
           ),
         );
       },
@@ -95,7 +101,8 @@ class _NoLongerAvailable extends StatelessWidget {
     final colors = Theme.of(context).extension<AppColors>()!;
     return Center(
       child: Text(
-        'No record for $localDate is available anymore.',
+        'There’s no record for '
+        '${humanJournalDate(localDate, withWeekday: false)} anymore.',
         textAlign: TextAlign.center,
         style: Theme.of(
           context,

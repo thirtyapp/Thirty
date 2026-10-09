@@ -335,7 +335,7 @@ void main() {
           tester.getTopLeft(below).dy - tester.getBottomLeft(above).dy;
 
       final greeting = find.text(homeGreeting(_today));
-      final subline = find.text(homeGreetingSubline);
+      final subline = find.text(homeGreetingSubline(started: false));
       final card = find.byType(TodayCard);
       expect(gap(greeting, subline), HomeCircleMetrics.greetingToSublineGap);
       expect(gap(subline, card), HomeCircleMetrics.greetingToCardGap);

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/features/home/presentation/widgets/circle_journal_entry_card.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -300,7 +301,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(CircleRecordDetailPage), findsOneWidget);
-      expect(find.textContaining(localDate), findsWidgets);
+      expect(
+        find.text(humanJournalDate(localDate, withWeekday: false)),
+        findsWidgets,
+      );
 
       Navigator.of(tester.element(find.byType(CircleRecordDetailPage))).pop();
       await tester.pumpAndSettle();

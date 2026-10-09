@@ -8,14 +8,14 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
 |---|---|
 | **PRODUCT V2 CONTRACT** | FROZEN (2026-10-08) |
 | **PUBLIC LAUNCH** | PAUSED |
-| **CURRENT IMPLEMENTATION PHASE** | PHASE A — NOT STARTED |
+| **CURRENT IMPLEMENTATION PHASE** | PHASE A — PASS, COMPLETE · PHASE B NOT STARTED |
 | **MEASUREMENT-1** | PAUSED, resumes in Phase E |
 
 ---
 
 ## Phase A — Activities that feel designed
 
-**STATUS: NOT STARTED**
+**STATUS: PASS — COMPLETE** (2026-10-09; see [ADR-019](adr/ADR-019-v2-phase-a-activity-model.md))
 
 - **Purpose:** give every activity real substance and an honest length before adding any intelligence.
 - **Scope:**
@@ -173,3 +173,6 @@ Public launch requires **all** of the following:
   4. Delete scope: option A.
 
   Migration correction (history visibility ≠ learning eligibility) adopted.
+- **2026-10-08** — Phase A implementation candidate ready for founder review: content, durations, learning classifications and the interim Circle. Not committed; not accepted.
+- **2026-10-09** — Founder-review correction pass and S25 proof: three titles polished (A brisk walk, A quick standing stretch, Listen to one thing); brisk-walk guidance made distinct from Easy walk; two S25 display fixes (Today card text never truncated; how-to sheet clears the navigation bar). Still uncommitted; founder approval pending.
+- **2026-10-09** — **Phase A PASS — COMPLETE.** Founder approved the Phase A product direction. Final decisions applied: Start Circle layout correction (near-fit spacing, then a ≤ 4% Circle trim for two-line titles on 3-button navigation only); A brisk walk is LEARNING_RESET; A quick standing stretch is 5 minutes; Clearer Head meaning reads "fewer things competing". Final S25 acceptance passed: 3-button and gesture navigation, light and dark, normal and 130% text.

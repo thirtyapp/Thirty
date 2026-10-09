@@ -491,7 +491,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     if (planAssignment != null) {
       activityId = planAssignment.activityId;
     } else {
-      final pool = activityPools[intention]!;
+      final pool = legacySelectorPool(intention);
       historyKey = recommendationHistoryKeyFor(intention);
       final storedHistory = prefs.getStringList(historyKey) ?? const [];
       final recentActivityIds = storedHistory
@@ -776,8 +776,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     return Recommendation(
       intent: intentionLabel(intention),
       activity: activityLabel(activityId),
-      duration: '30 minutes',
-      why: whyCopyFor(intention, activityId),
+      duration: '${activityTypicalMinutes(activityId)} minutes',
+      why: activityReasonFor(intention, activityId),
       category: activityCategory(activityId),
       activityId: activityId,
       intention: intention,
@@ -801,12 +801,11 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// direction-compatible (intention, activityId) pair is persisted — the
   /// caller has already confirmed the persisted day matches [today].
   ///
-  /// **Compatibility check (ADR-013 §2):** a persisted [activityId] that no
-  /// longer belongs to the persisted [Intention]'s pool — e.g. after a
-  /// hypothetical future catalogue revision moved it elsewhere — is treated
-  /// exactly like a missing/corrupt value, not silently trusted, since
-  /// activity identity and direction compatibility must always be
-  /// validated together.
+  /// **Identity check (V2, Phase A):** only an unknown [ActivityId] or
+  /// [Intention] name is treated as corrupt. Today's Circle was already
+  /// offered and shown, so it is restored even if a later catalogue revision
+  /// changed that activity's need fit or retired it — rewriting what the
+  /// user was actually shown today would be untruthful.
   ///
   /// **Plan fields (Batch 2A):** restored only if every one of
   /// [recommendationPlanIdKey]/[recommendationStageIdKey]/
@@ -826,7 +825,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final activityId = ActivityId.values
         .asNameMap()[prefs.getString(recommendationActivityIdKey)];
     if (intention == null || activityId == null) return null;
-    if (!activityPools[intention]!.contains(activityId)) return null;
 
     final planId = PlanId.values
         .asNameMap()[prefs.getString(recommendationPlanIdKey)];

@@ -769,49 +769,55 @@ void main() {
       });
     });
 
-    group('invalid stored activity/intention combination (ADR-013 §2) recovers '
-        'safely', () {
-      test(
-        'an activityId that does not belong to the stored intention\'s '
-        'pool is treated as no recommendation, not silently trusted',
-        () async {
+    group(
+      'restoring today\'s Circle across a catalogue change (V2 Phase A)',
+      () {
+        test(
+          'today\'s shown activity is restored truthfully even if its need '
+          'fit changed since — what the user was shown is never rewritten',
+          () async {
+            final (container, _) = await _containerWith({
+              recommendationDayKey: '2026-08-02',
+              recommendationIntentionKey: Intention.moreEnergy.name,
+              // quietReading has no More Energy fit in V2.
+              recommendationActivityIdKey: ActivityId.quietReading.name,
+            }, now: _today);
+            addTearDown(container.dispose);
+
+            final recommendation = container
+                .read(recommendationProvider)
+                .recommendation;
+
+            expect(recommendation, isNotNull);
+            expect(recommendation!.activityId, ActivityId.quietReading);
+            expect(recommendation.intent, 'More Energy');
+          },
+        );
+
+        test('an unknown stored activity name is treated as no recommendation, '
+            'and a fresh choice can still be made', () async {
           final (container, _) = await _containerWith({
             recommendationDayKey: '2026-08-02',
             recommendationIntentionKey: Intention.moreEnergy.name,
-            // quietReading only belongs to clearerHead's pool.
-            recommendationActivityIdKey: ActivityId.quietReading.name,
+            recommendationActivityIdKey: 'notARealActivity',
           }, now: _today);
           addTearDown(container.dispose);
 
+          expect(container.read(recommendationProvider).recommendation, isNull);
+
+          container
+              .read(recommendationProvider.notifier)
+              .chooseIntention(Intention.gentlerPace);
           final state = container.read(recommendationProvider);
 
-          expect(state.recommendation, isNull);
-          expect(state.status, RecommendationStatus.notStarted);
-        },
-      );
-
-      test('the same incompatible pair does not crash chooseIntention() — a '
-          'fresh, compatible choice can still be made afterward', () async {
-        final (container, _) = await _containerWith({
-          recommendationDayKey: '2026-08-02',
-          recommendationIntentionKey: Intention.moreEnergy.name,
-          recommendationActivityIdKey: ActivityId.quietReading.name,
-        }, now: _today);
-        addTearDown(container.dispose);
-
-        container
-            .read(recommendationProvider.notifier)
-            .chooseIntention(Intention.gentlerPace);
-        final state = container.read(recommendationProvider);
-
-        expect(state.recommendation, isNotNull);
-        expect(state.recommendation!.intent, 'Gentler Pace');
-        expect(
-          activityPools[Intention.gentlerPace],
-          contains(state.recommendation!.activityId),
-        );
-      });
-    });
+          expect(state.recommendation!.intent, 'Gentler Pace');
+          expect(
+            legacySelectorPool(Intention.gentlerPace),
+            contains(state.recommendation!.activityId),
+          );
+        });
+      },
+    );
 
     group('optional action-report foundation (ADR-013 §4)', () {
       test(

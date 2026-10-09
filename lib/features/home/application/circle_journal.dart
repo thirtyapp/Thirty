@@ -248,13 +248,10 @@ class CircleJournalEntry {
         shownAt == null) {
       return null;
     }
-    // Compatibility must hold for a historical entry exactly as it must
-    // for today's live restore (recommendation_provider.dart) — an
-    // activity that no longer belongs to its recorded direction's pool is
-    // dropped rather than shown as a lie about what actually happened.
-    if (!(activityPools[direction] ?? const []).contains(activityId)) {
-      return null;
-    }
+    // V2 (Phase A): history is never dropped because the catalogue later
+    // changed an activity's need fit or retired it — the entry records what
+    // was actually shown that day. Whether its answers count as V2
+    // evidence is a separate question (`historicalEvidenceEligible`).
 
     final startedAtRaw = json['startedAt'];
     final startedAt = startedAtRaw == null

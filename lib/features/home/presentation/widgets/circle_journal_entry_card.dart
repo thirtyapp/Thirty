@@ -7,17 +7,14 @@ import '../../../plans/domain/plan_ids.dart';
 import '../../application/activity_catalog.dart';
 import '../../application/circle_journal.dart';
 
-/// One Circle journal record, rendered as a plain, factual card — the
-/// exact shown/started/closed/reported-attempt/reported-usefulness
-/// distinction (ADR-010, ADR-013 §4) is the entire point: nothing here
-/// blurs into a claim of verified completion or a performance score.
+/// One Circle journal record, written as a personal memory rather than a
+/// log — but exactly as truthful (ADR-010, ADR-013 §4): it says when the
+/// Circle was offered, started and closed, and what the user answered.
+/// Closing is never presented as having done the activity; only the user's
+/// own answer to "Did you try it?" speaks to that.
 ///
-/// Extracted from `../circle_history_page.dart` (founder IA correction —
-/// Journal/history amendment) so the founder-approved date-Circle
-/// calendar's record-detail route
-/// (`../circle_record_detail_page.dart`) can render one record with the
-/// exact same truthful semantics as the existing full-list page, without
-/// duplicating the rendering logic.
+/// Shared by the full history list (`../circle_history_page.dart`) and the
+/// calendar's record detail (`../circle_record_detail_page.dart`).
 class CircleJournalEntryCard extends StatelessWidget {
   const CircleJournalEntryCard({super.key, required this.entry});
 
@@ -27,64 +24,67 @@ class CircleJournalEntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
+    final secondary = textTheme.bodySmall?.copyWith(
+      color: colors.textSecondary,
+    );
 
     return ThirtyCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(entry.localDate, style: textTheme.titleSmall),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            '${intentionLabel(entry.direction)} — '
-            '${activityLabel(entry.activityId)}',
-            style: textTheme.bodyMedium,
-          ),
-          if (_planContextLabel(entry) case final label?) ...[
-            const SizedBox(height: AppSpacing.xs),
+      // Full width, so the card reads as one record, not a text-sized chip.
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              label,
-              style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+              humanJournalDate(entry.localDate),
+              style: textTheme.labelMedium?.copyWith(
+                color: colors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(activityLabel(entry.activityId), style: textTheme.titleMedium),
+            const SizedBox(height: 2),
+            Text(intentionLabel(entry.direction), style: secondary),
+            if (_planContextLabel(entry) case final label?) ...[
+              const SizedBox(height: 2),
+              Text(label, style: secondary),
+            ],
+            const SizedBox(height: AppSpacing.m),
+            Text(timelineSentence(entry), style: textTheme.bodyMedium),
+            const SizedBox(height: AppSpacing.s),
+            _AnswerLine(
+              question: 'Did you try it?',
+              answer: _attemptLabel(entry.attemptResponse),
+            ),
+            _AnswerLine(
+              question: 'Was it useful?',
+              answer: _usefulnessLabel(entry.usefulnessResponse),
             ),
           ],
-          const SizedBox(height: AppSpacing.s),
-          _StatusLine(label: 'Shown', value: _formatTime(entry.shownAt)),
-          _StatusLine(
-            label: 'Started',
-            value: entry.startedAt == null
-                ? 'Not started'
-                : _formatTime(entry.startedAt!),
-          ),
-          _StatusLine(
-            label: 'Closed',
-            value: entry.closedAt == null
-                ? 'Not closed'
-                : _formatTime(entry.closedAt!),
-          ),
-          _StatusLine(
-            label: 'Reported attempt',
-            value: _attemptLabel(entry.attemptResponse),
-          ),
-          _StatusLine(
-            label: 'Reported usefulness',
-            value: _usefulnessLabel(entry.usefulnessResponse),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Closed is a factual app interaction only — it never confirms '
-            'the activity was actually done.',
-            style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  /// A plain, bounded Plan-context line for [entry] — "Plan name, stage/
-  /// place, cycle" (frozen architecture §15) — or `null` for a
-  /// Free-selector-resolved entry, or one whose stage reference no longer
-  /// resolves in the current catalogue (fail-safe: the rest of the record
-  /// still displays normally either way). Never an activity browser, a
-  /// score, or anything beyond this one factual line.
+  /// What happened to the Circle that day, in one plain sentence. It only
+  /// ever states the app facts — offered, started, closed — never that the
+  /// activity itself was done.
+  static String timelineSentence(CircleJournalEntry entry) {
+    final startedAt = entry.startedAt;
+    final closedAt = entry.closedAt;
+    if (startedAt == null) {
+      return 'Offered at ${_formatTime(entry.shownAt)}. Not started.';
+    }
+    if (closedAt == null) {
+      return 'Started at ${_formatTime(startedAt)}. Not closed.';
+    }
+    return 'Started at ${_formatTime(startedAt)}, closed at '
+        '${_formatTime(closedAt)}.';
+  }
+
+  /// A Plan-context line for [entry] — "Plan name · stage n of 5" — or
+  /// `null` for a Free entry, or one whose stage no longer resolves in the
+  /// current catalogue (the rest of the record still displays normally).
   static String? _planContextLabel(CircleJournalEntry entry) {
     final planIdName = entry.planId;
     final stageId = entry.stageId;
@@ -95,11 +95,11 @@ class CircleJournalEntryCard extends StatelessWidget {
     final plan = planDefinitionFor(planId);
     final stageIndex = plan.stages.indexWhere((s) => s.id == stageId);
     final stageLabel = stageIndex >= 0
-        ? ', stage ${stageIndex + 1} of ${plan.stages.length}'
+        ? ' · stage ${stageIndex + 1} of ${plan.stages.length}'
         : '';
     final cycleId = entry.planCycleId;
     final cycleLabel = cycleId == null ? '' : ' (cycle $cycleId)';
-    return 'Plan: ${plan.name}$stageLabel$cycleLabel';
+    return '${plan.name}$stageLabel$cycleLabel';
   }
 
   static String _formatTime(DateTime time) {
@@ -110,7 +110,7 @@ class CircleJournalEntryCard extends StatelessWidget {
 
   static String _attemptLabel(CircleAttemptResponse? response) =>
       switch (response) {
-        null => 'No answer',
+        null => 'Not answered',
         CircleAttemptResponse.yes => 'Yes',
         CircleAttemptResponse.aLittle => 'A little',
         CircleAttemptResponse.notToday => 'Not today',
@@ -118,42 +118,78 @@ class CircleJournalEntryCard extends StatelessWidget {
 
   static String _usefulnessLabel(CircleUsefulnessResponse? response) =>
       switch (response) {
-        null => 'No answer',
+        null => 'Not answered',
         CircleUsefulnessResponse.veryUseful => 'Very useful',
         CircleUsefulnessResponse.somewhatUseful => 'Somewhat useful',
         CircleUsefulnessResponse.notUseful => 'Not useful',
       };
 }
 
-class _StatusLine extends StatelessWidget {
-  const _StatusLine({required this.label, required this.value});
+const _weekdays = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
 
-  final String label;
-  final String value;
+const _months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/// A journal `localDate` ("2026-09-05") as people say it — "Saturday
+/// 5 September 2026" — or without the weekday for tighter places. An
+/// unparseable value is shown as stored rather than guessed at.
+String humanJournalDate(String localDate, {bool withWeekday = true}) {
+  final parts = localDate.split('-');
+  if (parts.length != 3) return localDate;
+  final year = int.tryParse(parts[0]);
+  final month = int.tryParse(parts[1]);
+  final day = int.tryParse(parts[2]);
+  if (year == null || month == null || day == null || month < 1 || month > 12) {
+    return localDate;
+  }
+  final date = DateTime(year, month, day);
+  final text = '$day ${_months[month - 1]} $year';
+  return withWeekday ? '${_weekdays[date.weekday - 1]} $text' : text;
+}
+
+class _AnswerLine extends StatelessWidget {
+  const _AnswerLine({required this.question, required this.answer});
+
+  final String question;
+  final String answer;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
-      child: Semantics(
-        label: '$label: $value',
-        child: ExcludeSemantics(
-          child: Row(
-            children: [
-              SizedBox(
-                width: 140,
-                child: Text(
-                  label,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
-              ),
-              Expanded(child: Text(value, style: textTheme.bodySmall)),
-            ],
-          ),
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      // One wrapping line, so a long answer at large text flows onto the
+      // next line instead of overflowing.
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: '$question  ',
+              style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+            ),
+            TextSpan(text: answer, style: textTheme.bodySmall),
+          ],
         ),
       ),
     );

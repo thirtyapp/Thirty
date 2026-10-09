@@ -1,15 +1,13 @@
+import 'package:flutter/foundation.dart';
+
 import '../../../core/activity_category.dart';
 import '../../../core/worlds/world_scene_role.dart';
 
-/// The desired direction the user picks via the Daily Context Question
-/// ("What would help most today?") — Recommendation MVP v0
-/// (`docs/product/recommendation-mvp-v0.md`). Explicitly selected by the
-/// user, never inferred from behavior, mood, or any other signal — see
-/// [ADR-009](../../../../docs/product/adr/ADR-009-daily-intention-question.md).
-///
-/// This is [Decision Framework §4](../../../../docs/product/decision-framework.md#4-intentie-versus-activiteit)'s
-/// "Intentie": the first, primary decision. [ActivityId] is the later,
-/// narrower "Activiteit" chosen within it.
+/// The need the user picks via the Daily Context Question ("What would help
+/// most today?"). Explicitly selected by the user, never inferred from
+/// behaviour, mood, or any other signal — see
+/// [ADR-009](../../../../docs/product/adr/ADR-009-daily-intention-question.md)
+/// and `docs/product/PRODUCT_V2_CONTRACT.md`.
 enum Intention { moreEnergy, clearerHead, gentlerPace }
 
 /// The label shown for [intention] itself (used as
@@ -21,46 +19,23 @@ String intentionLabel(Intention intention) => switch (intention) {
 };
 
 /// The one-line meaning shown for [intention] on the Daily Context Question
-/// (`daily_intention_prompt.dart`) — the exact, approved wording from
-/// `docs/product/recommendation-mvp-v0.md`. A desired direction the user
-/// explicitly recognizes and picks, never a health-state description.
+/// (`daily_intention_prompt.dart`) — a need the user recognises and picks,
+/// never a health-state description. V2: no longer tied to "this
+/// half-hour", since activities now take their own natural length.
 String intentionMeaning(Intention intention) => switch (intention) {
-  Intention.moreEnergy =>
-    'I want to spend this half-hour being somewhat more active and '
-        'engaged.',
+  Intention.moreEnergy => 'I want to feel a little more awake and active.',
   Intention.clearerHead =>
-    'I want this half-hour to contain less competing input and more '
-        'single-focus attention.',
+    'I want fewer things competing for my attention, and one thing to focus '
+        'on.',
   Intention.gentlerPace =>
-    'I want to use this half-hour without turning it into another '
-        'performance or productivity demand.',
+    "I want something gentle that doesn't feel like another demand.",
 };
 
-/// A canonical activity identity, stable across intentions — the "same
-/// underlying activity" identity anti-repetition compares against, distinct
-/// from how that activity is presented/explained for a given [Intention].
-///
-/// Every value belongs to exactly one [activityPools] entry in this
-/// version, even where two activities are conceptually similar (e.g.
-/// [thirtyMinuteWalk], [phoneFreeWalk] and [easyWalk] are three distinct
-/// walks, not variants of one canonical activity). The same [ActivityId]
-/// appearing in more than one pool remains a supported way to model one
-/// activity offered under multiple intentions — see
-/// `docs/product/recommendation-mvp-v0.md` — it simply has no current
-/// example in this catalogue: every reviewed V1 placement (ADR-013) is
-/// concrete and direction-specific enough that sharing an identity across
-/// directions would blur, rather than clarify, why it was recommended.
-///
-/// **V1 catalogue (ADR-013 — Batch 1):** the original 7 (v0) identities are
-/// unchanged and reused as-is — reusing stable identities across catalogue
-/// revisions is deliberate, so a device's persisted
-/// `recommendationActivityIdKey`/history/journal values never need a
-/// migration just because the catalogue grew. 14 new identities were added
-/// to reach the frozen V1 launch target of 7 reviewed placements per
-/// [Intention] (21 total), each contributing a genuinely distinct
-/// [ActivitySemanticFamily] — see [activityCatalog].
+/// A canonical activity identity. Stable forever: journal entries, today's
+/// persisted Circle and V1 Plans all store these names, so a value is never
+/// removed or renamed — a concept that leaves the live catalogue is marked
+/// [ActivityStatus.retired] instead, and its history keeps resolving.
 enum ActivityId {
-  // v0 (unchanged identities)
   thirtyMinuteWalk,
   moveToMusic,
   phoneFreeWalk,
@@ -68,18 +43,15 @@ enum ActivityId {
   quietReading,
   easyWalk,
   quietMusicBreak,
-  // V1 / Batch 1 (ADR-013) — More Energy
   briskStepBurst,
   energisingStretchFlow,
   activeMovementSnack,
   energisingBreathReset,
   activeHouseholdTask,
-  // V1 / Batch 1 (ADR-013) — Clearer Head
   tidyOneSurface,
   singleTaskFocus,
   quietAudioFocus,
   focusedBreathingCount,
-  // V1 / Batch 1 (ADR-013) — Gentler Pace
   restfulBreathingPause,
   gentleStretchPause,
   quietSittingOutside,
@@ -87,15 +59,12 @@ enum ActivityId {
   unhurriedTidyPause,
 }
 
-/// The approved activities for each [Intention], in a fixed order —
-/// [selectActivityId] indexes into this order deterministically.
+/// **V1 historical pool membership — NOT the V2 source of truth.**
 ///
-/// **Frozen V1 launch target (ADR-013):** exactly 7 reviewed placements per
-/// [Intention] (21 total), each covering at least 4 genuinely different
-/// [ActivitySemanticFamily] values within that direction — see
-/// [activityCatalog] and `activity_catalog_test.dart`'s catalogue-coverage
-/// group, which enforces both numbers directly so this map can never
-/// silently drift below the approved target.
+/// The three hard pools of V1 (ADR-013), kept unchanged only because V1
+/// Plans (`plan_catalog.dart`, replaced in Phase D) and historical fixtures
+/// are defined against them. V2 need fit lives on each [ActivityDefinition]
+/// as [NeedFit]; the interim selector uses [legacySelectorPool].
 const Map<Intention, List<ActivityId>> activityPools = {
   Intention.moreEnergy: [
     ActivityId.thirtyMinuteWalk,
@@ -126,28 +95,17 @@ const Map<Intention, List<ActivityId>> activityPools = {
   ],
 };
 
-/// The content/catalogue schema version [activityCatalog] and
-/// [activityPools] currently satisfy — carried on
-/// `Recommendation`/`RecommendationState` (`recommendation_provider.dart`)
-/// and on every `CircleJournalEntry` (`circle_journal.dart`) so a future
-/// catalogue revision can tell, per persisted/journalled record, which
-/// version of the catalogue produced it. `1` is ADR-013's frozen V1 launch
-/// catalogue (the 7 v0 identities plus 14 new ones, 21 total). Bump this
-/// only alongside an explicit, reviewed catalogue-content ADR — never as an
-/// incidental side effect of an unrelated change.
-const int catalogVersion = 1;
+/// The catalogue version recorded on every journal entry and today's
+/// Circle. **2 = the V2 catalogue (Phase A).** Entries recorded under
+/// version 1 describe the V1 experience of an activity; whether their
+/// answers may feed V2 learning is decided by [historicalEvidenceEligible].
+const int catalogVersion = 2;
 
-/// A genuinely distinct family of activity — the axis
-/// [selectActivityId]'s cross-direction diversity guard (ADR-013) compares
-/// against, and the axis the "at least 4 genuinely different semantic
-/// activity families per direction" launch requirement is checked against.
-///
-/// Deliberately coarser than [ActivityId] (many activities can share a
-/// family) but independent of [ActivityCategory] (the World-rendering
-/// axis, WORLD_SYSTEM.md §3) — a family is a content-organisation concept
-/// only, and introducing one here never implies a new World/Place exists.
-/// [walking] is the one family name shared with [ActivityCategory] by
-/// coincidence of vocabulary, not by shared meaning.
+/// The catalogue version of the V1 launch catalogue (ADR-013).
+const int v1CatalogVersion = 1;
+
+/// A coarse, author-assigned grouping of "what kind of activity this is",
+/// used to keep consecutive Circles from feeling like the same thing twice.
 enum ActivitySemanticFamily {
   walking,
   musicMovement,
@@ -166,544 +124,819 @@ enum ActivitySemanticFamily {
   comfortRitual,
 }
 
-/// The full, reviewed definition of one [ActivityId] — everything about it
-/// that does not depend on which [Intention] it is being recommended
-/// under. See [activityCatalog] for the map every helper in this file
-/// (other than [whyCopyFor], which is pair-keyed) reads from.
+/// How well an activity fits one need (PRODUCT_V2_CONTRACT — Activity
+/// model). There are no hard pools: [primary] and [secondary] are both
+/// candidates, [none] never is.
+enum NeedFit { primary, secondary, none }
+
+/// The Circle experience an activity needs (PRODUCT_V2_CONTRACT — Circle
+/// V2). Phase A records it; the mode runtimes arrive in Phase C.
+enum CircleMode { open, guidedSteps, paced }
+
+/// Whether an activity may be offered at all.
+enum ActivityStatus {
+  /// Offered in every build.
+  live,
+
+  /// Drafted, but breathing/exertion content that has not passed the
+  /// separate safety/content review (PRODUCT_V2_CONTRACT — Safety gate).
+  /// Offered only in internal debug builds ([safetyPendingContentAllowed]).
+  safetyReviewPending,
+
+  /// No longer part of the live catalogue. Kept only so history resolves.
+  retired,
+}
+
+/// Whether V1 (catalogue version 1) answers about an activity may feed V2
+/// learning (PRODUCT_V2_CONTRACT — Historical-learning compatibility).
+enum LearningCompatibility {
+  /// The V2 activity is materially the same experience as V1.
+  compatible,
+
+  /// The V2 activity is a materially different experience; V1 answers stay
+  /// in history and export but are not V2 evidence.
+  reset,
+}
+
+/// One named step of a Guided Steps activity.
+class GuidedStep {
+  const GuidedStep({
+    required this.name,
+    required this.instruction,
+    required this.cue,
+  });
+
+  final String name;
+  final String instruction;
+
+  /// How long, or how many — e.g. "about 1 minute", "5 slow reaches".
+  final String cue;
+}
+
+/// One activity of the V2 catalogue.
 class ActivityDefinition {
   const ActivityDefinition({
     required this.title,
+    required this.fit,
+    required this.minMinutes,
+    required this.typicalMinutes,
+    required this.mode,
+    required this.status,
+    required this.v1Learning,
+    required this.reasons,
     required this.firstAction,
-    required this.instructions,
-    required this.preparation,
-    required this.pacingNote,
+    required this.ending,
     required this.family,
     required this.category,
     required this.worldRole,
+    this.preparation,
+    this.whileYoureThere = const [],
+    this.steps = const [],
+    this.lighter,
+    this.safetyNote,
   });
 
-  /// [activityLabel]'s value — intention-independent.
   final String title;
 
-  /// The one immediate action that starts the activity — short enough to
-  /// read in a glance, concrete enough that there is nothing left to
-  /// figure out before beginning.
+  /// Fit for every [Intention]; a missing key means [NeedFit.none].
+  final Map<Intention, NeedFit> fit;
+
+  /// The shortest length that is still this activity, in minutes.
+  final int minMinutes;
+
+  /// The natural length THIRTY offers, in minutes (≤ 30). The Circle's ring
+  /// runs to this.
+  final int typicalMinutes;
+
+  final CircleMode mode;
+  final ActivityStatus status;
+  final LearningCompatibility v1Learning;
+
+  /// Why this might fit what the user asked for — one human sentence per
+  /// [NeedFit.primary] need (secondary-fit reasons arrive with Phase B).
+  final Map<Intention, String> reasons;
+
+  /// The concrete thing to do first.
   final String firstAction;
 
-  /// Concise, actionable instructions for the roughly thirty-minute
-  /// activity itself. Never states or implies a timer requirement — see
-  /// `docs/product/recommendation-mvp-v0.md`.
-  final String instructions;
+  /// What to have ready, only where something is needed.
+  final String? preparation;
 
-  /// What, if anything, the activity requires beyond what's already at
-  /// hand — a truthful preparation/equipment/access constraint, not
-  /// marketing copy. `'None.'` when nothing beyond the activity itself is
-  /// needed.
-  final String preparation;
+  /// Open mode: two or three ideas for while you're doing it.
+  final List<String> whileYoureThere;
 
-  /// Explicit self-paced/"stop whenever" language — every V1 placement
-  /// must make clear there is no pace, count, or duration to actually hit
-  /// (`docs/product/recommendation-mvp-v0.md`'s "approximate thirty-minute
-  /// framing without a timer requirement").
-  final String pacingNote;
+  /// Guided Steps mode: the named steps, in order.
+  final List<GuidedStep> steps;
 
-  /// The [ActivitySemanticFamily] this activity belongs to — the axis the
-  /// "≥4 distinct families per direction" launch requirement and the
-  /// cross-direction diversity guard (both ADR-013) are checked against.
+  /// A shorter or lighter way to do it, where that is meaningful.
+  final String? lighter;
+
+  /// Plain stop/comfort guidance, where the activity needs it.
+  final String? safetyNote;
+
+  /// One calm line for the end.
+  final String ending;
+
   final ActivitySemanticFamily family;
-
-  /// [activityCategory]'s value — the internal World-compatibility
-  /// family (see [ActivityCategory]). Not a direction, pool or selection
-  /// signal.
   final ActivityCategory category;
-
-  /// [activityWorldRole]'s value — the visual need this activity has. It
-  /// names no World: the V1 Scene policy picks the concrete Scene
-  /// (`registered_worlds.dart`), so a new World can serve this role
-  /// without this definition changing.
   final WorldSceneRole worldRole;
+
+  NeedFit fitFor(Intention intention) => fit[intention] ?? NeedFit.none;
 }
 
-/// The single source of truth for every [ActivityId]'s reviewed content —
-/// see [ActivityDefinition] for what each entry carries. [whyCopyFor] is
-/// the one piece of per-activity copy kept separate from this map, because
-/// it is keyed on the (intention, activityId) pair rather than on
-/// [ActivityId] alone.
+const _p = NeedFit.primary;
+const _s = NeedFit.secondary;
+const _energy = Intention.moreEnergy;
+const _clearer = Intention.clearerHead;
+const _gentler = Intention.gentlerPace;
+
+/// The single source of truth for every activity THIRTY knows about. Its
+/// key order is the deterministic order [legacySelectorPool] uses.
 const Map<ActivityId, ActivityDefinition> activityCatalog = {
   ActivityId.thirtyMinuteWalk: ActivityDefinition(
-    title: '30-minute walk',
-    firstAction:
-        'Step outside (or start walking wherever you already are) and '
-        'begin.',
-    instructions:
-        'Walk at whatever pace feels natural for about half an hour — any '
-        'route, any surface, any direction.',
-    preparation: 'None — comfortable shoes help, but nothing is required.',
-    pacingNote: 'There\'s no pace or distance to hit. Stop when it feels done.',
+    title: 'A brisk walk',
+    fit: {_energy: _p, _clearer: _s},
+    minMinutes: 15,
+    typicalMinutes: 25,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    // V1 was a natural-pace half hour; V2 asks for a brisk pace — a
+    // materially different experience (founder decision, Phase A).
+    v1Learning: LearningCompatibility.reset,
+    reasons: {_energy: 'Fresh air and a quicker pace to get you moving.'},
+    firstAction: 'Put on shoes you can walk in and head out the door.',
+    preparation: 'Comfortable shoes, and a layer if it’s cool.',
+    whileYoureThere: [
+      'Start easy, then walk a little quicker than usual — brisk, but still '
+          'able to talk.',
+      'Let your arms swing.',
+      'Turn back about halfway through your time.',
+    ],
+    lighter: 'A shorter loop is fine on a busy day.',
+    ending: 'Slow down for the last few minutes on the way back.',
     family: ActivitySemanticFamily.walking,
     category: ActivityCategory.walking,
     worldRole: WorldSceneRole.walk,
   ),
   ActivityId.moveToMusic: ActivityDefinition(
     title: 'Move to music',
-    firstAction: 'Put on a song you actually like.',
-    instructions:
-        'Move however that music makes you want to move — dancing, '
-        'swaying, pacing the room — for about half an hour.',
-    preparation: 'A phone, speaker, or anything that plays music.',
-    pacingNote:
-        'No steps to learn and no one watching. Stop whenever you\'ve had '
-        'enough.',
+    fit: {_energy: _p, _clearer: _s},
+    minMinutes: 5,
+    typicalMinutes: 10,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {_energy: 'A few songs you like, and moving however feels good.'},
+    firstAction: 'Put on a song you really like and turn it up a little.',
+    preparation: 'Something that plays music.',
+    whileYoureThere: [
+      'Start small — sway, tap, walk around the room.',
+      'Let the next song be a bit livelier.',
+      'Nobody’s watching. There’s no right way to do this.',
+    ],
+    lighter: 'Two songs are enough.',
+    ending: 'Let the last song be a slower one, then sit for a moment.',
     family: ActivitySemanticFamily.musicMovement,
     category: ActivityCategory.movement,
     worldRole: WorldSceneRole.move,
   ),
   ActivityId.phoneFreeWalk: ActivityDefinition(
     title: 'Phone-free walk',
+    fit: {_energy: _s, _clearer: _p, _gentler: _s},
+    minMinutes: 15,
+    typicalMinutes: 20,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {
+      _clearer: 'Nothing to check, so your attention can follow one thing.',
+    },
     firstAction:
-        'Leave your phone behind, or put it fully out of reach, then '
+        'Put your phone on silent, out of sight in a pocket or bag, and '
         'start walking.',
-    instructions:
-        'Walk for about half an hour with nothing to check and nothing '
-        'playing — just you and where you\'re walking.',
-    preparation: 'None — just a place you can walk safely without your phone.',
-    pacingNote:
-        'Turn back whenever you\'re ready; there\'s no route to finish.',
+    preparation: 'A route you know, so you won’t need a map.',
+    whileYoureThere: [
+      'Notice three things you haven’t noticed before.',
+      'If a thought pulls at you, let it go and look around again.',
+      'Keep the pace easy enough to take things in.',
+    ],
+    lighter: 'Once round the block is enough.',
+    ending: 'Before you take your phone out again, stand still for a moment.',
     family: ActivitySemanticFamily.walking,
     category: ActivityCategory.walking,
     worldRole: WorldSceneRole.walk,
   ),
   ActivityId.writeItDown: ActivityDefinition(
     title: 'Write it down',
+    fit: {_clearer: _p, _gentler: _s},
+    minMinutes: 10,
+    typicalMinutes: 15,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {_clearer: 'Get it onto paper so you don’t have to hold it all.'},
     firstAction:
-        'Grab any paper or a blank note, and write the first thing on '
-        'your mind.',
-    instructions:
-        'Spend about half an hour writing down the tasks, reminders and '
-        'loose thoughts competing for your attention, in any order — no '
-        'need to solve or organise them.',
-    preparation:
-        'Paper and something to write with, or a blank note on your '
-        'phone or computer.',
-    pacingNote:
-        'There\'s no length to hit or list to finish. Stop when your head '
-        'feels clearer.',
+        'Grab paper or a blank note and write the first thing on your mind.',
+    preparation: 'Paper and a pen, or a blank note.',
+    whileYoureThere: [
+      'Keep writing without sorting — tasks, worries, reminders, anything.',
+      'When you run dry, ask yourself: what else is nagging at me?',
+      'Don’t try to solve anything yet.',
+    ],
+    lighter: 'Ten minutes of writing is enough.',
+    ending:
+        'Circle the one thing that matters most next, then put the list '
+        'away.',
     family: ActivitySemanticFamily.reflectiveWriting,
     category: ActivityCategory.quietFocus,
     worldRole: WorldSceneRole.write,
   ),
   ActivityId.quietReading: ActivityDefinition(
     title: 'Quiet reading',
-    firstAction:
-        'Pick up whatever you\'re already reading, or something nearby.',
-    instructions:
-        'Read for about half an hour, with notifications out of reach — '
-        'one thing to focus on instead of many.',
-    preparation:
-        'Something to read — a book, article, or anything else already '
-        'at hand.',
-    pacingNote: 'No page count to reach. Put it down whenever you\'re ready.',
+    fit: {_clearer: _p, _gentler: _s},
+    minMinutes: 15,
+    typicalMinutes: 20,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {_clearer: 'One thing to read, with nothing else competing.'},
+    firstAction: 'Pick up what you’re already reading, or anything nearby.',
+    preparation: 'Something to read, and notifications out of reach.',
+    whileYoureThere: [
+      'Find a comfortable spot with good light.',
+      'If your mind wanders, reread the last line and carry on.',
+      'A book or e-reader is easier than a phone, if you have one.',
+    ],
+    ending: 'Mark your place and look up for a moment before you move on.',
     family: ActivitySemanticFamily.quietReading,
     category: ActivityCategory.quietFocus,
     worldRole: WorldSceneRole.read,
   ),
   ActivityId.easyWalk: ActivityDefinition(
     title: 'Easy walk',
-    firstAction:
-        'Step outside, or just start walking, without deciding on a '
-        'route first.',
-    instructions:
-        'Walk slowly and without hurry for about half an hour — wherever '
-        'feels easiest, with nothing to hit or beat.',
-    preparation: 'None.',
-    pacingNote: 'Slower is fine. Turn back whenever you want to.',
+    fit: {_energy: _s, _clearer: _s, _gentler: _p},
+    minMinutes: 15,
+    typicalMinutes: 20,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {_gentler: 'A slow walk with nowhere to get to.'},
+    firstAction: 'Step outside and start walking, without picking a route.',
+    preparation: 'Comfortable shoes.',
+    whileYoureThere: [
+      'Walk slower than you normally would.',
+      'Let each corner decide the route.',
+      'Stop to look at anything that catches your eye.',
+    ],
+    lighter: 'Once round the block is enough.',
+    ending: 'Take the last few minutes even slower on the way back.',
     family: ActivitySemanticFamily.walking,
     category: ActivityCategory.walking,
     worldRole: WorldSceneRole.walk,
   ),
   ActivityId.quietMusicBreak: ActivityDefinition(
     title: 'Quiet music break',
+    fit: {_clearer: _s, _gentler: _p},
+    minMinutes: 10,
+    typicalMinutes: 15,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {_gentler: 'A few quiet songs, with nothing else to do.'},
     firstAction:
-        'Sit or lie down somewhere comfortable, and put on something quiet.',
-    instructions:
-        'Listen for about half an hour, with nothing else to do and '
-        'nothing to accomplish.',
-    preparation: 'A phone, speaker, or anything that plays quiet music.',
-    pacingNote: 'No goal attached. Stop the moment it\'s no longer helping.',
+        'Sit or lie down somewhere comfortable and put on something quiet.',
+    preparation: 'Something that plays music. Headphones if it’s noisy.',
+    whileYoureThere: [
+      'Close your eyes if you like.',
+      'Let one song run into the next without choosing.',
+      'There’s nothing to do but listen.',
+    ],
+    ending: 'When the music stops, stay where you are for a moment.',
     family: ActivitySemanticFamily.quietListening,
     category: ActivityCategory.quietFocus,
     worldRole: WorldSceneRole.listen,
   ),
   ActivityId.briskStepBurst: ActivityDefinition(
-    title: 'Brisk stairs or a slope',
-    firstAction: 'Find a staircase, a hill, or any incline nearby.',
-    instructions:
-        'For about half an hour, go up and down stairs or walk a slope at '
-        'a pace that raises your breathing a little — resting between '
-        'rounds whenever you need to.',
-    preparation: 'Stairs or a slope, and shoes you can move in.',
-    pacingNote:
-        'Go at whatever pace you can keep up. Slow down or rest any time.',
+    title: 'Stairs or a slope',
+    fit: {_energy: _p},
+    minMinutes: 5,
+    typicalMinutes: 10,
+    mode: CircleMode.guidedSteps,
+    status: ActivityStatus.safetyReviewPending,
+    v1Learning: LearningCompatibility.reset,
+    reasons: {
+      _energy: 'Short climbs, with rests, get your breathing up a little.',
+    },
+    firstAction: 'Find a staircase or a gentle slope nearby.',
+    preparation: 'Shoes with grip, and a handrail if you use stairs.',
+    steps: [
+      GuidedStep(
+        name: 'Warm up',
+        instruction: 'Walk on the flat, or take the stairs slowly once.',
+        cue: 'about 1 minute',
+      ),
+      GuidedStep(
+        name: 'Climb',
+        instruction: 'Go up at a pace that makes you breathe a little harder.',
+        cue: 'one flight or one stretch of slope',
+      ),
+      GuidedStep(
+        name: 'Rest',
+        instruction: 'Walk back down slowly and let your breathing settle.',
+        cue: 'as long as you need',
+      ),
+      GuidedStep(
+        name: 'Repeat',
+        instruction: 'Climb and rest again.',
+        cue: '3 to 5 rounds',
+      ),
+      GuidedStep(
+        name: 'Cool down',
+        instruction: 'Finish with easy walking on the flat.',
+        cue: 'about 1 minute',
+      ),
+    ],
+    lighter: 'Two slow rounds are plenty.',
+    safetyNote:
+        'Stop if you feel pain, dizziness or chest discomfort. Use the '
+        'handrail.',
+    ending: 'Walk easily for a minute before you sit down.',
     family: ActivitySemanticFamily.stepMovement,
     category: ActivityCategory.walking,
     worldRole: WorldSceneRole.walk,
   ),
   ActivityId.energisingStretchFlow: ActivityDefinition(
-    title: 'Energising stretch flow',
+    title: 'A quick standing stretch',
+    fit: {_energy: _p, _clearer: _s},
+    // The authored sequence takes about four to five minutes; the length
+    // follows it, and nothing is added to fill a longer Circle.
+    minMinutes: 5,
+    typicalMinutes: 5,
+    mode: CircleMode.guidedSteps,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.reset,
+    reasons: {_energy: 'A short standing sequence for when you’ve been still.'},
     firstAction: 'Stand up and reach both arms overhead.',
-    instructions:
-        'Move through a simple standing stretch sequence — reaches, side '
-        'bends, gentle twists — for about half an hour, repeating '
-        'whatever feels good.',
-    preparation: 'None — enough space to stand and stretch your arms.',
-    pacingNote:
-        'There\'s no sequence to complete correctly. Repeat what helps, '
-        'skip what doesn\'t.',
+    preparation: 'Enough space to stretch your arms out.',
+    steps: [
+      GuidedStep(
+        name: 'Reach up',
+        instruction: 'Reach both arms overhead and stretch tall, then lower.',
+        cue: '5 slow reaches',
+      ),
+      GuidedStep(
+        name: 'Side bend',
+        instruction:
+            'One arm overhead, lean gently to the other side. Then switch.',
+        cue: '3 each side',
+      ),
+      GuidedStep(
+        name: 'Shoulder rolls',
+        instruction: 'Roll your shoulders back in slow circles, then forward.',
+        cue: 'about 30 seconds',
+      ),
+      GuidedStep(
+        name: 'Gentle twist',
+        instruction:
+            'Hands on hips, turn your upper body slowly left, then '
+            'right.',
+        cue: '5 each way',
+      ),
+      GuidedStep(
+        name: 'March',
+        instruction: 'March on the spot, lifting your knees a little.',
+        cue: 'about 1 minute',
+      ),
+    ],
+    lighter: 'Just the reaches and the shoulder rolls.',
+    safetyNote: 'Move only as far as is comfortable. Skip anything that hurts.',
+    ending: 'Finish with one more long reach, then let your arms drop.',
     family: ActivitySemanticFamily.stretchMobility,
     category: ActivityCategory.movement,
     worldRole: WorldSceneRole.stretch,
   ),
   ActivityId.activeMovementSnack: ActivityDefinition(
-    title: 'Active movement snack',
-    firstAction:
-        'Pick one simple move — marching in place, wall push-ups, or '
-        'slow squats.',
-    instructions:
-        'Repeat that move (or switch between a few) at your own pace for '
-        'about half an hour, resting between sets whenever you like.',
+    title: 'Movement snack',
+    fit: {_energy: _p},
+    minMinutes: 5,
+    typicalMinutes: 8,
+    mode: CircleMode.guidedSteps,
+    status: ActivityStatus.safetyReviewPending,
+    v1Learning: LearningCompatibility.reset,
+    reasons: {_energy: 'A few simple moves at home, with rests in between.'},
+    firstAction: 'Clear a small space near a wall and a sturdy chair.',
     preparation:
-        'None — a clear patch of floor, and a wall if you choose wall push-ups.',
-    pacingNote: 'No rep count to hit. Do a little, rest, do a little more.',
+        'A clear patch of floor, a wall, and a chair that won’t slide.',
+    steps: [
+      GuidedStep(
+        name: 'March',
+        instruction: 'March on the spot at an easy pace.',
+        cue: 'about 1 minute',
+      ),
+      GuidedStep(
+        name: 'Wall push',
+        instruction:
+            'Hands on the wall at shoulder height. Bend your elbows, then '
+            'push back.',
+        cue: '8 to 10 slow ones',
+      ),
+      GuidedStep(
+        name: 'Rest',
+        instruction: 'Stand easy and let your breathing settle.',
+        cue: 'about 30 seconds',
+      ),
+      GuidedStep(
+        name: 'Sit to stand',
+        instruction: 'From the chair, stand up slowly, then sit back down.',
+        cue: '8 to 10 slow ones',
+      ),
+      GuidedStep(
+        name: 'Again, if you like',
+        instruction: 'Go through the moves once more, or stop here.',
+        cue: 'optional',
+      ),
+    ],
+    lighter: 'One round only.',
+    safetyNote:
+        'Stop if you feel pain, dizziness or chest discomfort. Use a chair '
+        'that won’t slide.',
+    ending: 'Finish with a minute of easy marching, slowing down.',
     family: ActivitySemanticFamily.bodyweightMovement,
     category: ActivityCategory.movement,
     worldRole: WorldSceneRole.move,
   ),
+  // RETIRED (founder decision 1, PRODUCT_V2_CONTRACT — Catalogue status):
+  // the long/brisk breathing concept is not carried into V2. Kept only so
+  // history and V1 Plans still resolve; never offered, never V2 evidence.
   ActivityId.energisingBreathReset: ActivityDefinition(
     title: 'Standing breath reset',
-    firstAction:
-        'Stand up, roll your shoulders back, and take one deep breath.',
-    instructions:
-        'Spend about half an hour alternating brisk, deliberate breaths '
-        'with a straighter posture and a few shoulder rolls — sitting '
-        'back down whenever you want.',
-    preparation: 'None.',
-    pacingNote:
-        'Breathe at whatever pace feels comfortable. Stop the moment it doesn\'t.',
+    fit: {},
+    minMinutes: 0,
+    typicalMinutes: 0,
+    mode: CircleMode.paced,
+    status: ActivityStatus.retired,
+    v1Learning: LearningCompatibility.reset,
+    reasons: {
+      _energy:
+          'For more energy: an upright posture and a brisk breathing '
+          'pattern, nothing more.',
+    },
+    firstAction: '',
+    ending: '',
     family: ActivitySemanticFamily.breathingEnergizer,
     category: ActivityCategory.stillness,
     worldRole: WorldSceneRole.breathe,
   ),
   ActivityId.activeHouseholdTask: ActivityDefinition(
     title: 'One active household task',
+    fit: {_energy: _p, _clearer: _s},
+    minMinutes: 10,
+    typicalMinutes: 15,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {_energy: 'A job you’d do anyway, done on your feet.'},
     firstAction:
-        'Pick one physical task — sweeping, tidying, carrying, or a bit '
-        'of gardening.',
-    instructions:
-        'Spend about half an hour on that one task, moving at a pace '
-        'that keeps you a little more active than sitting still.',
-    preparation: 'Whatever the chosen task needs — nothing more than that.',
-    pacingNote:
-        'Pick a task you can stop partway through without it mattering.',
+        'Pick one task that keeps you on your feet: sweeping, hoovering, '
+        'carrying, or some gardening.',
+    preparation: 'Whatever that one task needs.',
+    whileYoureThere: [
+      'Move a little quicker than you normally would.',
+      'Put some music on if it helps.',
+      'Stop when your time is up, even if the job isn’t finished.',
+    ],
+    ending: 'Put things away and leave the rest for another day.',
     family: ActivitySemanticFamily.activeChore,
     category: ActivityCategory.homeCare,
     worldRole: WorldSceneRole.tend,
   ),
   ActivityId.tidyOneSurface: ActivityDefinition(
     title: 'Tidy one surface',
-    firstAction: 'Pick exactly one desk, drawer, or shelf.',
-    instructions:
-        'Spend about half an hour tidying that one surface only — '
-        'nothing else in the room.',
-    preparation: 'None.',
-    pacingNote:
-        'One surface is the whole task. Stop even if it isn\'t perfect.',
+    fit: {_energy: _s, _clearer: _p, _gentler: _s},
+    minMinutes: 10,
+    typicalMinutes: 15,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {_clearer: 'One small space you can actually finish.'},
+    firstAction: 'Pick exactly one desk, drawer or shelf.',
+    whileYoureThere: [
+      'Take everything off or out first.',
+      'Put back only what belongs there.',
+      'Anything that lives elsewhere goes in one pile for later.',
+    ],
+    lighter: 'A single drawer is enough.',
+    ending: 'Stop when that one surface is clear. The rest can wait.',
     family: ActivitySemanticFamily.tidyReset,
     category: ActivityCategory.homeCare,
     worldRole: WorldSceneRole.tend,
   ),
   ActivityId.singleTaskFocus: ActivityDefinition(
     title: 'One task, full attention',
-    firstAction: 'Choose exactly one task already on your mind.',
-    instructions:
-        'Give that single task your full attention for about half an '
-        'hour, setting other tabs, apps and tasks aside.',
-    preparation: 'Whatever that one task itself needs.',
-    pacingNote:
-        'Only one task. If your attention drifts, just come back to the same one.',
+    fit: {_clearer: _p},
+    minMinutes: 20,
+    typicalMinutes: 25,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {_clearer: 'One thing, no switching, instead of juggling it all.'},
+    firstAction:
+        'Choose one task that’s been on your mind, and close everything that '
+        'isn’t it.',
+    preparation: 'Whatever that task needs. Other tabs and apps closed.',
+    whileYoureThere: [
+      'Write the task down in one line, so it’s clear what you’re doing.',
+      'If something else comes up, jot it down and come back.',
+      'You don’t have to finish — giving it your attention is the point.',
+    ],
+    ending: 'Note where you got to, so it’s easy to pick up later.',
     family: ActivitySemanticFamily.singleFocusTask,
     category: ActivityCategory.quietFocus,
     worldRole: WorldSceneRole.write,
   ),
   ActivityId.quietAudioFocus: ActivityDefinition(
-    title: 'One quiet recording, phone face down',
-    firstAction: 'Choose one album, podcast episode, or recording.',
-    instructions:
-        'Listen to it for about half an hour with your phone face down '
-        'and nothing else open — one audio source, nothing layered on '
-        'top.',
-    preparation: 'A phone, speaker, or headphones.',
-    pacingNote: 'No need to finish the recording. Stop whenever you want to.',
+    title: 'Listen to one thing',
+    fit: {_clearer: _p, _gentler: _s},
+    minMinutes: 15,
+    typicalMinutes: 20,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {_clearer: 'One thing to listen to, with your phone face down.'},
+    firstAction:
+        'Choose one album, podcast episode or recording, and press play.',
+    preparation: 'Headphones or a speaker.',
+    whileYoureThere: [
+      'Put your phone face down once it’s playing.',
+      'Sit or lie somewhere comfortable — no need to do anything else.',
+      'If you drift into thought, come back to the sound.',
+    ],
+    ending: 'When you stop it, sit for a moment in the quiet.',
     family: ActivitySemanticFamily.quietListening,
     category: ActivityCategory.quietFocus,
     worldRole: WorldSceneRole.listen,
   ),
+  // Paced breathing: pace parameters are deliberately absent until the
+  // separate safety/content review supplies them.
   ActivityId.focusedBreathingCount: ActivityDefinition(
-    title: 'Counted breathing pause',
-    firstAction:
-        'Sit down somewhere quiet and close your eyes if that\'s comfortable.',
-    instructions:
-        'For about half an hour, breathe slowly and count each breath, '
-        'starting over at ten whenever your attention wanders.',
-    preparation: 'None.',
-    pacingNote:
-        'Losing count is normal — just start again. Stop whenever you\'re ready.',
+    title: 'Counted breathing',
+    fit: {_clearer: _p, _gentler: _s},
+    minMinutes: 3,
+    typicalMinutes: 5,
+    mode: CircleMode.paced,
+    status: ActivityStatus.safetyReviewPending,
+    v1Learning: LearningCompatibility.reset,
+    reasons: {_clearer: 'Counting breaths: one small thing for a busy mind.'},
+    firstAction: 'Sit down somewhere quiet and let your shoulders drop.',
+    safetyNote:
+        'Breathe gently, at a pace that feels comfortable. If you feel '
+        'light-headed, breathe normally and stop.',
+    ending: 'Let the counting go and breathe normally for a moment.',
     family: ActivitySemanticFamily.breathingStillness,
     category: ActivityCategory.stillness,
     worldRole: WorldSceneRole.breathe,
   ),
   ActivityId.restfulBreathingPause: ActivityDefinition(
     title: 'Slow breathing pause',
+    fit: {_clearer: _s, _gentler: _p},
+    minMinutes: 3,
+    typicalMinutes: 5,
+    mode: CircleMode.paced,
+    status: ActivityStatus.safetyReviewPending,
+    v1Learning: LearningCompatibility.reset,
+    reasons: {_gentler: 'Slow, easy breathing, with nothing to get right.'},
     firstAction: 'Sit or lie down somewhere comfortable.',
-    instructions:
-        'Breathe slowly for about half an hour, with nothing to count '
-        'and nothing to achieve.',
-    preparation: 'None.',
-    pacingNote: 'No pattern to follow. Stop the moment you feel ready to.',
+    safetyNote:
+        'Breathe gently, at a pace that feels comfortable. If you feel '
+        'light-headed, breathe normally and stop.',
+    ending: 'Stay still for a moment before you get up.',
     family: ActivitySemanticFamily.breathingStillness,
     category: ActivityCategory.stillness,
     worldRole: WorldSceneRole.breathe,
   ),
   ActivityId.gentleStretchPause: ActivityDefinition(
     title: 'Gentle stretch pause',
+    fit: {_energy: _s, _clearer: _s, _gentler: _p},
+    minMinutes: 8,
+    typicalMinutes: 10,
+    mode: CircleMode.guidedSteps,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.reset,
+    reasons: {_gentler: 'Slow, easy stretches that don’t ask much of you.'},
     firstAction:
-        'Stand or sit, and move into whatever stretch feels easiest first.',
-    instructions:
-        'Move slowly through a few gentle stretches for about half an '
-        'hour, holding each only as long as it feels good.',
-    preparation: 'None.',
-    pacingNote: 'No stretch to force and no sequence to finish. Stop anytime.',
+        'Sit on the edge of a chair, or stand somewhere with a little space.',
+    steps: [
+      GuidedStep(
+        name: 'Neck',
+        instruction:
+            'Let your head tip slowly towards one shoulder, then the '
+            'other.',
+        cue: '3 each side',
+      ),
+      GuidedStep(
+        name: 'Shoulders',
+        instruction:
+            'Lift your shoulders up towards your ears, then let them '
+            'drop.',
+        cue: '5 times',
+      ),
+      GuidedStep(
+        name: 'Open the chest',
+        instruction:
+            'Hold the sides of the chair, or clasp your hands behind '
+            'you, and gently open your chest.',
+        cue: '5 slow breaths',
+      ),
+      GuidedStep(
+        name: 'Seated twist',
+        instruction:
+            'Sit tall and turn gently to one side, one hand on the chair. Then '
+            'the other side.',
+        cue: '5 slow breaths each side',
+      ),
+      GuidedStep(
+        name: 'Fold forward',
+        instruction:
+            'Let your upper body fold forward slowly, arms heavy. Come up '
+            'slowly.',
+        cue: '5 slow breaths',
+      ),
+    ],
+    lighter: 'Just the neck and shoulders.',
+    safetyNote:
+        'Stay well within what feels comfortable. Skip anything that '
+        'hurts.',
+    ending: 'Sit still for a moment before you get up.',
     family: ActivitySemanticFamily.stretchMobility,
     category: ActivityCategory.movement,
     worldRole: WorldSceneRole.stretch,
   ),
   ActivityId.quietSittingOutside: ActivityDefinition(
     title: 'Sitting outside, unhurried',
-    firstAction:
-        'Find somewhere outside to sit — a balcony, step, bench, or garden.',
-    instructions:
-        'Sit outside for about half an hour with your phone away, '
-        'without needing to do anything else there.',
-    preparation: 'Somewhere outside you can sit for a while.',
-    pacingNote:
-        'No destination and nothing to observe on purpose. Come back in '
-        'whenever you\'re ready.',
+    fit: {_clearer: _s, _gentler: _p},
+    minMinutes: 10,
+    typicalMinutes: 15,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {_gentler: 'Somewhere outside to sit, with nowhere to be.'},
+    firstAction: 'Find somewhere outside to sit — a step, a bench, a balcony.',
+    preparation: 'A warm layer if it’s cool out.',
+    whileYoureThere: [
+      'Leave your phone inside, or face down.',
+      'Let your eyes rest on something far away.',
+      'Listen to what you can hear, near and far.',
+    ],
+    ending: 'Take one last look around before you go back in.',
     family: ActivitySemanticFamily.natureSit,
     category: ActivityCategory.stillness,
     worldRole: WorldSceneRole.breathe,
   ),
   ActivityId.smallComfortRitual: ActivityDefinition(
     title: 'A slow warm drink',
-    firstAction:
-        'Make a warm drink — tea, coffee, or anything else you\'d enjoy.',
-    instructions:
-        'Spend about half an hour having it slowly, with your phone out '
-        'of reach and nothing else demanding attention.',
-    preparation: 'Whatever you\'d use to make a warm drink.',
-    pacingNote:
-        'No pace to keep. Finish whenever you\'re done, sooner or later.',
+    fit: {_clearer: _s, _gentler: _p},
+    minMinutes: 10,
+    typicalMinutes: 10,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {_gentler: 'A small, warm pause that asks nothing of you.'},
+    firstAction: 'Put the kettle on and make a drink you’d enjoy.',
+    preparation: 'Whatever you need for a warm drink.',
+    whileYoureThere: [
+      'Wait for it at the counter, instead of doing something else.',
+      'Hold the cup in both hands for a moment.',
+      'Keep your phone out of reach while you drink.',
+    ],
+    ending: 'Rinse the cup, and take your time getting back to things.',
     family: ActivitySemanticFamily.comfortRitual,
     category: ActivityCategory.homeCare,
     worldRole: WorldSceneRole.comfort,
   ),
   ActivityId.unhurriedTidyPause: ActivityDefinition(
     title: 'Tend to one small thing',
+    fit: {_clearer: _s, _gentler: _p},
+    minMinutes: 10,
+    typicalMinutes: 15,
+    mode: CircleMode.open,
+    status: ActivityStatus.live,
+    v1Learning: LearningCompatibility.compatible,
+    reasons: {
+      _gentler: 'Caring for one small thing, slowly, with no deadline.',
+    },
     firstAction:
-        'Pick one small, low-pressure thing — a plant, a bedside table, a single shelf.',
-    instructions:
-        'Spend about half an hour tending to that one small thing, at '
-        'whatever pace feels unhurried.',
-    preparation: 'Whatever that one small thing needs.',
-    pacingNote: 'It doesn\'t need to be finished. Stop whenever you\'re ready.',
+        'Pick one small thing to look after: a plant, a bedside table, a '
+        'single shelf.',
+    whileYoureThere: [
+      'Go slower than you would if you were in a hurry.',
+      'Water, wipe, straighten — whatever it needs.',
+      'It doesn’t need to be finished.',
+    ],
+    ending: 'Stand back and look at it for a moment.',
     family: ActivitySemanticFamily.tidyReset,
     category: ActivityCategory.homeCare,
     worldRole: WorldSceneRole.tend,
   ),
 };
 
-/// [activityId]'s display name — intention-independent, unlike
-/// [whyCopyFor].
+/// Whether this build may offer activities awaiting the safety/content
+/// review. Only internal debug builds may — never profile or release
+/// builds (PRODUCT_V2_CONTRACT — Safety gate).
+const bool safetyPendingContentAllowed = kDebugMode;
+
+/// Whether [activityId] may be offered as a Circle in this build.
+bool isActivityOfferable(
+  ActivityId activityId, {
+  bool allowSafetyPending = safetyPendingContentAllowed,
+}) => switch (activityCatalog[activityId]!.status) {
+  ActivityStatus.live => true,
+  ActivityStatus.safetyReviewPending => allowSafetyPending,
+  ActivityStatus.retired => false,
+};
+
+/// Whether an answer recorded about [activityId] under [recordedCatalogVersion]
+/// may count as evidence for V2 learning (PRODUCT_V2_CONTRACT —
+/// Historical-learning compatibility). History itself is never affected.
+bool historicalEvidenceEligible(
+  ActivityId activityId,
+  int recordedCatalogVersion,
+) {
+  final activity = activityCatalog[activityId]!;
+  if (activity.status == ActivityStatus.retired) return false;
+  if (recordedCatalogVersion >= catalogVersion) return true;
+  return activity.v1Learning == LearningCompatibility.compatible;
+}
+
+/// **TEMPORARY — Phase A only; replaced by Engine V2 in Phase B.**
+///
+/// The candidate list the V1 rotation selector ([selectActivityId]) still
+/// uses until Engine V2 exists: every offerable activity with a
+/// [NeedFit.primary] fit for [intention], in catalogue order. Secondary fit
+/// is deliberately unused here — weighing it is Engine V2's job.
+List<ActivityId> legacySelectorPool(
+  Intention intention, {
+  bool allowSafetyPending = safetyPendingContentAllowed,
+}) => [
+  for (final entry in activityCatalog.entries)
+    if (entry.value.fitFor(intention) == NeedFit.primary &&
+        isActivityOfferable(entry.key, allowSafetyPending: allowSafetyPending))
+      entry.key,
+];
+
+ActivityDefinition activityDefinition(ActivityId activityId) =>
+    activityCatalog[activityId]!;
+
 String activityLabel(ActivityId activityId) =>
     activityCatalog[activityId]!.title;
 
-/// [activityId]'s [ActivityCategory] — see [ActivityDefinition.category].
 ActivityCategory activityCategory(ActivityId activityId) =>
     activityCatalog[activityId]!.category;
 
-/// [activityId]'s [WorldSceneRole] — see [ActivityDefinition.worldRole].
 WorldSceneRole activityWorldRole(ActivityId activityId) =>
     activityCatalog[activityId]!.worldRole;
 
-/// [activityId]'s [ActivitySemanticFamily] — see [ActivityDefinition.family].
 ActivitySemanticFamily activityFamily(ActivityId activityId) =>
     activityCatalog[activityId]!.family;
 
-/// [activityId]'s one immediate first action. See [ActivityDefinition.firstAction].
-String activityFirstAction(ActivityId activityId) =>
-    activityCatalog[activityId]!.firstAction;
-
-/// [activityId]'s concise instructions. See [ActivityDefinition.instructions].
-String activityInstructions(ActivityId activityId) =>
-    activityCatalog[activityId]!.instructions;
-
-/// [activityId]'s preparation/equipment/access constraint. See
-/// [ActivityDefinition.preparation].
-String activityPreparation(ActivityId activityId) =>
-    activityCatalog[activityId]!.preparation;
-
-/// [activityId]'s explicit self-paced/stop language. See
-/// [ActivityDefinition.pacingNote].
-String activityPacingNote(ActivityId activityId) =>
-    activityCatalog[activityId]!.pacingNote;
-
-/// The "Why This Today?" copy for ([intention], [activityId]) — deliberately
-/// keyed on the pair, not on [activityId] alone, so a future activity
-/// shared across pools (see [ActivityId]'s own doc comment) could carry a
-/// different reason per intention even though the activity itself is the
-/// same.
-///
-/// Every string here may reference only (1) the intention the user
-/// explicitly selected, and (2) a truthful, practical characteristic of the
-/// activity — never a claim of hidden knowledge about the user (no "your
-/// body needs...", no "based on your energy...", no medical or emotional
-/// claims). See `docs/product/recommendation-mvp-v0.md` for the full rule.
-const Map<(Intention, ActivityId), String> _whyCopy = {
-  (Intention.moreEnergy, ActivityId.thirtyMinuteWalk):
-      'For more energy: a 30-minute walk, wherever you are — no pace or '
-      'distance to keep up with.',
-  (Intention.moreEnergy, ActivityId.moveToMusic):
-      'For more energy: moving to your own music, at whatever pace feels '
-      'good.',
-  (Intention.moreEnergy, ActivityId.briskStepBurst):
-      'For more energy: brisk stairs or a slope, at whatever pace raises '
-      'your breathing a little — with rest whenever you need it.',
-  (Intention.moreEnergy, ActivityId.energisingStretchFlow):
-      'For more energy: a standing stretch flow that wakes up your body, '
-      'no equipment or routine to learn.',
-  (Intention.moreEnergy, ActivityId.activeMovementSnack):
-      'For more energy: simple, repeated movement — no gym, no '
-      'equipment, no set count to reach.',
-  (Intention.moreEnergy, ActivityId.energisingBreathReset):
-      'For more energy: an upright posture and a brisk breathing '
-      'pattern, nothing more.',
-  (Intention.moreEnergy, ActivityId.activeHouseholdTask):
-      'For more energy: one physically active task, chosen by you, done '
-      'at your own pace.',
-  (Intention.clearerHead, ActivityId.phoneFreeWalk):
-      'For a clearer head: a walk with your phone\'s content set aside — '
-      'just you and where you\'re walking.',
-  (Intention.clearerHead, ActivityId.writeItDown):
-      'For a clearer head: spend about 30 minutes writing down the tasks, '
-      'reminders and loose thoughts competing for your attention, in any '
-      'order. No need to solve or organise them.',
-  (Intention.clearerHead, ActivityId.quietReading):
-      'For a clearer head: quiet reading, one thing to focus on instead '
-      'of many.',
-  (Intention.clearerHead, ActivityId.tidyOneSurface):
-      'For a clearer head: one contained surface to tidy, and nothing '
-      'wider than that.',
-  (Intention.clearerHead, ActivityId.singleTaskFocus):
-      'For a clearer head: exactly one task, chosen by you, without '
-      'switching between others.',
-  (Intention.clearerHead, ActivityId.quietAudioFocus):
-      'For a clearer head: a single recording, with nothing else '
-      'competing for your attention.',
-  (Intention.clearerHead, ActivityId.focusedBreathingCount):
-      'For a clearer head: one simple counting anchor, and nothing else '
-      'to track.',
-  (Intention.gentlerPace, ActivityId.easyWalk):
-      'For a gentler pace: an easy, unhurried walk with nothing to hit '
-      'or beat.',
-  (Intention.gentlerPace, ActivityId.quietMusicBreak):
-      'For a gentler pace: a quiet music break, just for you, with no '
-      'goal attached.',
-  (Intention.gentlerPace, ActivityId.restfulBreathingPause):
-      'For a gentler pace: slow, unhurried breathing, with nothing to '
-      'get right.',
-  (Intention.gentlerPace, ActivityId.gentleStretchPause):
-      'For a gentler pace: slow, gentle stretching, with nothing to '
-      'push through.',
-  (Intention.gentlerPace, ActivityId.quietSittingOutside):
-      'For a gentler pace: simply sitting outside, with nowhere to be '
-      'and nothing to do there.',
-  (Intention.gentlerPace, ActivityId.smallComfortRitual):
-      'For a gentler pace: a slow drink, with nothing else asked of you.',
-  (Intention.gentlerPace, ActivityId.unhurriedTidyPause):
-      'For a gentler pace: one small, low-pressure thing to tend to, '
-      'with no deadline.',
-};
-
-/// The "why" explanation for choosing [activityId] under [intention].
-///
-/// Throws a [StateError] if the pair has no copy defined — this can only
-/// happen if [activityPools] and [_whyCopy] have drifted out of sync, which
-/// is a programming error, not a runtime condition to recover from.
-String whyCopyFor(Intention intention, ActivityId activityId) {
-  final why = _whyCopy[(intention, activityId)];
-  if (why == null) {
-    throw StateError('No why-copy defined for ($intention, $activityId).');
-  }
-  return why;
+/// The length THIRTY offers for [activityId], in minutes. A retired
+/// activity restored from history has no V2 length and falls back to the
+/// V1 half hour it was offered with.
+int activityTypicalMinutes(ActivityId activityId) {
+  final minutes = activityCatalog[activityId]!.typicalMinutes;
+  return minutes > 0 ? minutes : 30;
 }
 
-/// A stable, calendar-derived integer for [date]'s local calendar day —
-/// the same value for every [DateTime] on the same local date, regardless
-/// of time-of-day, and strictly increasing from one calendar day to the
-/// next. Built from [DateTime.utc] (never a local-time difference) so it
-/// can never be perturbed by daylight-saving transitions.
-///
-/// This is the deterministic "which day is it, as a number" primitive
-/// [selectActivityId] rotates through [activityPools] with — never a
-/// hash code, and never randomness.
+/// Why [activityId] might fit [intention]: its reason for that need, or —
+/// for a pairing without one (a V1 Plan stage, or a secondary fit before
+/// Phase B) — its first authored reason.
+String activityReasonFor(Intention intention, ActivityId activityId) {
+  final reasons = activityCatalog[activityId]!.reasons;
+  return reasons[intention] ?? reasons.values.first;
+}
+
+/// The number of days since the Unix epoch for [date]'s local calendar
+/// date — the deterministic day index the interim selector rotates by.
 int epochDay(DateTime date) =>
     DateTime.utc(date.year, date.month, date.day).millisecondsSinceEpoch ~/
     Duration.millisecondsPerDay;
 
-/// Deterministically picks one [ActivityId] from [intention]'s pool.
+/// **TEMPORARY — Phase A only; replaced by Engine V2 in Phase B.**
 ///
-/// - **Deterministic:** the same ([dayIndex], [intention],
-///   [recentActivityIds], [lastShownFamily]) always resolves to the same
-///   [ActivityId] — no scoring, no AI, no probabilistic ranking, no
-///   randomness.
-/// - **Per-intention anti-repetition (Batch 2 — see
-///   [ADR-012](../../../../docs/product/adr/ADR-012-batch-2-recommendation-diversity.md)):**
-///   [recentActivityIds] is excluded from the candidate pool first.
-/// - **Cross-direction family avoidance (Batch 1 / V1 — ADR-013):** among
-///   whatever survives that first filter, any candidate sharing
-///   [lastShownFamily] (the semantic family of the immediately prior
-///   Circle, regardless of which [Intention] it belonged to) is excluded
-///   next — but only when doing so still leaves at least one candidate;
-///   otherwise this second filter is skipped entirely rather than
-///   emptying the pool. This is a second, independent, fixed exclusion
-///   step — not a scored or weighted rule, and not a general recommendation
-///   engine.
-///
-/// [RecommendationNotifier] (`recommendation_provider.dart`) is the sole
-/// caller and is responsible for keeping [recentActivityIds] bounded to at
-/// most `pool.length - 1` entries for [intention] (see
-/// [recommendationHistoryKeyFor]'s own doc comment) — that cap is what
-/// guarantees the first filter alone can never empty the pool. If a caller
-/// ever violates that cap (e.g. a future pool shrinks below what the cap
-/// assumes), the documented fallback at each stage is to ignore that
-/// stage's exclusion entirely for this call and fall through to the next
-/// stage (or, at the last stage, the full unfiltered pool) — never a
-/// deadlock, and never a cross-[Intention] substitution.
+/// Picks today's activity for [intention] from [legacySelectorPool] by
+/// day-index rotation, first excluding [recentActivityIds] and then any
+/// candidate sharing [lastShownFamily] — each exclusion skipped if it would
+/// empty the pool. Unchanged V1 behaviour on the V2 catalogue.
 ActivityId selectActivityId({
   required Intention intention,
   required int dayIndex,
   Set<ActivityId> recentActivityIds = const {},
   ActivitySemanticFamily? lastShownFamily,
+  bool allowSafetyPending = safetyPendingContentAllowed,
 }) {
-  final pool = activityPools[intention]!;
+  final pool = legacySelectorPool(
+    intention,
+    allowSafetyPending: allowSafetyPending,
+  );
 
   final afterHistory = pool
       .where((id) => !recentActivityIds.contains(id))
