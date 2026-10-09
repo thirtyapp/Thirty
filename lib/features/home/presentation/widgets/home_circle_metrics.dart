@@ -91,6 +91,16 @@ class HomeCircleMetrics {
   /// if this is not enough, nothing is trimmed and the page scrolls.
   static const nearFitMaxTrim = 0.04;
 
+  /// A running Circle only, once the compact rhythm is not enough: the
+  /// tightest the Circle → greeting, greeting → subline and greeting → card
+  /// gaps may become (circle_hero.dart). The card → action gap never goes
+  /// below [compactGap].
+  static const runningTightGap = AppSpacing.xs;
+
+  /// A running Circle only, as the very last spacing step: the least room
+  /// kept between its action and the tab bar (usually [compactGap]).
+  static const runningLeastClearance = AppSpacing.xs;
+
   /// Phase D1 ring (Design vision): a thin ring inset inside the halo
   /// disc, a sage dot marking the arc's leading end, and a small band of
   /// the halo's surface between the ring and the illustration.

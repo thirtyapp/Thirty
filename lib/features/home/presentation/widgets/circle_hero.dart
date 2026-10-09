@@ -530,6 +530,60 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     // text keeps the full Circle and scrolls.
     final normalTextSize = MediaQuery.textScalerOf(context).scale(16) <= 16;
 
+    final greeting = Semantics(
+      header: true,
+      child: Text(
+        homeGreeting(
+          ref.watch(nowProvider),
+          firstName: ref.watch(firstNameProvider),
+        ),
+        style: greetingStyle,
+        textAlign: TextAlign.center,
+      ),
+    );
+
+    // A running Circle's action must sit fully on the first screen too. When
+    // the compact rhythm is not enough, these give up room in order, each
+    // only as far as needed: the running gaps (Circle → greeting, greeting →
+    // subline, greeting → card — never card → action); then the Today
+    // card's padding; then the space above its first action; and last, a
+    // little of the room between the action and the tab bar.
+    const gapRelief =
+        HomeCircleMetrics.compactGap - HomeCircleMetrics.runningTightGap;
+    final runningTightSteps =
+        recommendationState.status == RecommendationStatus.started
+        ? const <HomeRhythmStep>[
+            (
+              gaps: [gapRelief, gapRelief, 0],
+              children: [
+                0,
+                HomeCircleMetrics.greetingToSublineGap -
+                    HomeCircleMetrics.runningTightGap,
+                0,
+                0,
+              ],
+              clearance: 0,
+            ),
+            (
+              gaps: [0, 0, 0],
+              children: [0, 0, TodayCard.runningPaddingReduction, 0],
+              clearance: 0,
+            ),
+            (
+              gaps: [0, 0, 0],
+              children: [0, 0, TodayCard.runningInnerReduction, 0],
+              clearance: 0,
+            ),
+            (
+              gaps: [0, 0, 0],
+              children: [0, 0, 0, 0],
+              clearance:
+                  HomeCircleMetrics.compactGap -
+                  HomeCircleMetrics.runningLeastClearance,
+            ),
+          ]
+        : const <HomeRhythmStep>[];
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final metrics = HomeCircleMetrics.forWidth(constraints.maxWidth);
@@ -583,6 +637,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
               fitHeight: constraints.maxHeight - widget.topInset,
               minClearance: HomeCircleMetrics.compactGap,
               compactReductions: const [0, 0, TodayCard.nearFitReduction, 0],
+              tightSteps: runningTightSteps,
               trim: normalTextSize
                   ? (
                       index: 0,
@@ -680,39 +735,39 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                   opacity: _headingOpacity,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: textMaxWidth),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Semantics(
-                          header: true,
-                          child: Text(
-                            homeGreeting(
-                              ref.watch(nowProvider),
-                              firstName: ref.watch(firstNameProvider),
+                    child:
+                        recommendationState.status ==
+                            RecommendationStatus.closed
+                        ? greeting
+                        // The space between the greeting and its subline
+                        // gives up room only for a running Circle that
+                        // still misses the first screen (tightSteps).
+                        : HomeSqueezePair(
+                            spacing: (
+                              top: 0,
+                              middle: HomeCircleMetrics.greetingToSublineGap,
+                              bottom: 0,
                             ),
-                            style: greetingStyle,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        if (recommendationState.status !=
-                            RecommendationStatus.closed) ...[
-                          const SizedBox(
-                            height: HomeCircleMetrics.greetingToSublineGap,
-                          ),
-                          Text(
-                            homeGreetingSubline(
-                              started:
-                                  recommendationState.status ==
-                                  RecommendationStatus.started,
+                            steps: const [
+                              (
+                                top: 0,
+                                middle: HomeCircleMetrics.runningTightGap,
+                                bottom: 0,
+                              ),
+                            ],
+                            first: greeting,
+                            second: Text(
+                              homeGreetingSubline(
+                                started:
+                                    recommendationState.status ==
+                                    RecommendationStatus.started,
+                              ),
+                              style: textTheme.bodyLarge?.copyWith(
+                                color: colors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            style: textTheme.bodyLarge?.copyWith(
-                              color: colors.textSecondary,
-                            ),
-                            textAlign: TextAlign.center,
                           ),
-                        ],
-                      ],
-                    ),
                   ),
                 ),
                 TodayCard(

@@ -134,9 +134,60 @@ double _cardToCta(WidgetTester tester) =>
 
 /// Whether Start Circle is fully on the first screen, at least
 /// [HomeCircleMetrics.compactGap] above the fold.
-bool _ctaOnFirstScreen(WidgetTester tester) =>
-    tester.getRect(_cta).bottom + HomeCircleMetrics.compactGap <=
-    tester.getRect(_homeScrollable).bottom + 0.5;
+bool _ctaOnFirstScreen(WidgetTester tester) => _onFirstScreen(tester, _cta);
+
+Finder get _closeCta => find.widgetWithText(ThirtyButton, 'Close Circle');
+
+/// Whether [action] is fully on the first screen — unscrolled, at least
+/// [clearance] above the fold.
+bool _onFirstScreen(
+  WidgetTester tester,
+  Finder action, {
+  double clearance = HomeCircleMetrics.compactGap,
+}) {
+  final viewport = find
+      .ancestor(of: action, matching: find.byType(Scrollable))
+      .first;
+  return tester.state<ScrollableState>(viewport).position.pixels == 0 &&
+      tester.getRect(action).bottom + clearance <=
+          tester.getRect(viewport).bottom + 0.5;
+}
+
+/// A running Circle's Close Circle: fully on the first screen, at least
+/// [HomeCircleMetrics.runningLeastClearance] above the fold — and the usual
+/// [HomeCircleMetrics.compactGap] for every one-line activity.
+void _expectCloseOnFirstScreen(
+  WidgetTester tester,
+  ActivityId activity,
+  String reason,
+) {
+  expect(
+    _onFirstScreen(
+      tester,
+      _closeCta,
+      clearance: HomeCircleMetrics.runningLeastClearance,
+    ),
+    isTrue,
+    reason: reason,
+  );
+  final oneLine =
+      tester.getSize(find.text(activityLabel(activity))).height <= 30;
+  if (oneLine) {
+    expect(_onFirstScreen(tester, _closeCta), isTrue, reason: reason);
+  }
+  // The Today card's padding never crowds its content.
+  final card = tester.getRect(find.byType(TodayCard));
+  final label = tester.getRect(find.textContaining('TODAY'));
+  expect(label.top - card.top, greaterThanOrEqualTo(6 - 0.01), reason: reason);
+}
+
+/// Taps Close Circle and confirms.
+Future<void> _closeCircle(WidgetTester tester) async {
+  await tester.tap(_closeCta);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Close Circle').last);
+  await tester.pumpAndSettle();
+}
 
 /// Home never reaches behind the nav; scrolled to its end, Start Circle is
 /// fully visible with the composition's bottom spacing above the nav, and
@@ -377,30 +428,158 @@ void main() {
       await _expectCtaReachableClearOfNav(tester);
     });
 
-    testWidgets('Start and Close never resize the Circle: a two-line '
-        'activity keeps its trim, a one-line activity stays full size', (
-      tester,
-    ) async {
-      for (final (activity, trimmed) in [
-        (ActivityId.energisingStretchFlow, true),
-        (ActivityId.writeItDown, false),
-      ]) {
+    testWidgets('3-button navigation, a whole session for every live '
+        'activity: Start Circle and then Close Circle fully on the first '
+        'screen, and the Circle exactly the same size before Start, running '
+        'and closed', (tester) async {
+      for (final activity in _liveActivities.keys) {
+        final reason = activity.name;
         await pumpS25(tester, activity);
-        final ready = _circle(tester);
-        expect(ready < _fullCircle(tester) - 0.01, trimmed);
+        final circle = _circle(tester);
+        expect(_ctaOnFirstScreen(tester), isTrue, reason: reason);
 
         await tester.tap(_cta);
         await tester.pumpAndSettle();
-        expect(find.widgetWithText(ThirtyButton, 'Close Circle'), findsOne);
-        expect(_circle(tester), closeTo(ready, 0.01), reason: activity.name);
+        _expectCloseOnFirstScreen(tester, activity, reason);
+        expect(_circle(tester), closeTo(circle, 0.01), reason: reason);
 
-        await tester.tap(find.widgetWithText(ThirtyButton, 'Close Circle'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Close Circle').last);
-        await tester.pumpAndSettle();
-        expect(find.text('Done for today'), findsOneWidget);
-        expect(_circle(tester), closeTo(ready, 0.01), reason: activity.name);
+        await _closeCircle(tester);
+        expect(find.text('Done for today'), findsOneWidget, reason: reason);
+        expect(_circle(tester), closeTo(circle, 0.01), reason: reason);
       }
+    });
+
+    testWidgets('gesture navigation, a whole session for every live '
+        'activity: both actions fully on the first screen, with the full '
+        'Circle throughout', (tester) async {
+      for (final activity in _liveActivities.keys) {
+        final reason = activity.name;
+        await pumpS25(tester, activity, bottomInset: _s25GestureNavigation);
+        expect(_ctaOnFirstScreen(tester), isTrue, reason: reason);
+
+        await tester.tap(_cta);
+        await tester.pumpAndSettle();
+        _expectCloseOnFirstScreen(tester, activity, reason);
+        expect(_circle(tester), closeTo(_fullCircle(tester), 0.01));
+
+        await _closeCircle(tester);
+        expect(_circle(tester), closeTo(_fullCircle(tester), 0.01));
+      }
+    });
+
+    testWidgets('reopened while running (a fresh launch, nothing on screen '
+        'to jump from): Close Circle fully on the first screen for every '
+        'live activity — the full Circle for one-line activities, at most a '
+        '4% trim otherwise', (tester) async {
+      for (final inset in [_s25ButtonNavigation, _s25GestureNavigation]) {
+        for (final activity in _liveActivities.keys) {
+          final reason = '${activity.name}, inset $inset';
+          // A fresh widget tree, as after the app process was restarted.
+          await tester.pumpWidget(const SizedBox());
+          await _pumpHome(
+            tester,
+            prefs: {
+              ..._assigned(_liveActivities[activity]!.name, activity.name),
+              recommendationStatusKey: 'started',
+              recommendationStartedAtKey: DateTime(
+                2026,
+                9,
+                30,
+                7,
+              ).toIso8601String(),
+            },
+            screen: _s25,
+            topInset: _s25StatusBar,
+            bottomInset: inset,
+          );
+          _expectCloseOnFirstScreen(tester, activity, reason);
+          // A fresh launch may trim, so it keeps the full clearance.
+          expect(_onFirstScreen(tester, _closeCta), isTrue, reason: reason);
+          expect(
+            _circle(tester),
+            greaterThanOrEqualTo(
+              _fullCircle(tester) * (1 - HomeCircleMetrics.nearFitMaxTrim) -
+                  0.01,
+            ),
+            reason: reason,
+          );
+          final twoLine =
+              tester.getSize(find.text(activityLabel(activity))).height > 30;
+          if (!twoLine || inset == _s25GestureNavigation) {
+            expect(
+              _circle(tester),
+              closeTo(_fullCircle(tester), 0.01),
+              reason: reason,
+            );
+          }
+        }
+      }
+    });
+
+    testWidgets('a running Circle tightens only as far as needed: one-line '
+        'activities with a short first action keep the compact rhythm, and '
+        'Pixel 7 keeps its own', (tester) async {
+      for (final activity in [
+        ActivityId.thirtyMinuteWalk,
+        ActivityId.easyWalk,
+      ]) {
+        await pumpS25(tester, activity);
+        await tester.tap(_cta);
+        await tester.pumpAndSettle();
+        expect(
+          _column(tester).fit,
+          HomeRhythmFit.compactChildren,
+          reason: activity.name,
+        );
+      }
+
+      await _pumpHome(
+        tester,
+        prefs: _assigned('moreEnergy', 'thirtyMinuteWalk'),
+        hour: 14,
+      );
+      await tester.tap(_cta);
+      await tester.pumpAndSettle();
+      expect(_column(tester).fit, HomeRhythmFit.usual);
+      expect(_circle(tester), closeTo(_fullCircle(tester), 0.01));
+      expect(_onFirstScreen(tester, _closeCta), isTrue);
+    });
+
+    testWidgets('dark, 3-button navigation, a two-line activity with a '
+        'three-line first action: Close Circle fully on the first screen', (
+      tester,
+    ) async {
+      await pumpS25(
+        tester,
+        ActivityId.activeHouseholdTask,
+        brightness: Brightness.dark,
+      );
+      await tester.tap(_cta);
+      await tester.pumpAndSettle();
+      _expectCloseOnFirstScreen(tester, ActivityId.activeHouseholdTask, 'dark');
+      expect(_column(tester).fit, HomeRhythmFit.tightened);
+    });
+
+    testWidgets('130% text, running: the full Circle, no tightening, and '
+        'the page scrolls to Close Circle without overflow', (tester) async {
+      await pumpS25(tester, ActivityId.activeHouseholdTask, textScale: 1.3);
+      await tester.ensureVisible(_cta);
+      await tester.pumpAndSettle();
+      await tester.tap(_cta);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(_column(tester).trimmed, 0);
+      expect(_column(tester).fit, isNot(HomeRhythmFit.tightened));
+      expect(_circle(tester), closeTo(_fullCircle(tester), 0.01));
+      final viewport = tester.getRect(
+        find.ancestor(of: _closeCta, matching: find.byType(Scrollable)).first,
+      );
+      await tester.ensureVisible(_closeCta);
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(_closeCta).bottom,
+        lessThanOrEqualTo(viewport.bottom),
+      );
     });
 
     testWidgets('First Breath: a trimmed Circle starts at its full Ready size '

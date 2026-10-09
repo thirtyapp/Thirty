@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import '../../../../core/activity_category.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/utils/daypart_greeting.dart';
 import '../../../../core/widgets/thirty_card.dart';
+import 'home_rhythm_column.dart';
 
 /// The greeting that opens every Circle (Phase D1): THIRTY's daypart
 /// greeting, with the user's first name when they have given one —
@@ -82,6 +82,18 @@ class TodayCard extends StatelessWidget {
   /// (home_rhythm_column.dart). Otherwise the card never changes.
   static const nearFitReduction = 2 * (AppSpacing.m - AppSpacing.s);
 
+  /// Running Circle only, once the compact rhythm is not enough: the top
+  /// and bottom padding may tighten further, to [_leastPadding]…
+  static const runningPaddingReduction = 2 * (AppSpacing.s - _leastPadding);
+
+  /// The card's tightest top and bottom padding: below this the label and
+  /// the last line crowd the card's edges (S25 founder review).
+  static const _leastPadding = 6.0;
+
+  /// …and then the space between the divider and the first action, from
+  /// [AppSpacing.s] to [AppSpacing.xs].
+  static const runningInnerReduction = AppSpacing.s - AppSpacing.xs;
+
   static IconData iconFor(ActivityCategory category) => switch (category) {
     ActivityCategory.walking => Icons.directions_walk_rounded,
     ActivityCategory.stillness ||
@@ -119,8 +131,36 @@ class TodayCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.featuredCard,
                 ),
-                child: _NearFitVerticalPadding(
-                  child: Column(
+                // The card's padding, and the space between the divider and
+                // the line beneath it, are all that give up room in Home's
+                // near-fit rhythm ([nearFitReduction], then
+                // [runningPaddingReduction] and [runningInnerReduction]);
+                // the content never does.
+                child: HomeSqueezePair(
+                  spacing: (
+                    top: AppSpacing.m,
+                    middle: AppSpacing.s,
+                    bottom: AppSpacing.m,
+                  ),
+                  steps: const [
+                    (
+                      top: AppSpacing.s,
+                      middle: AppSpacing.s,
+                      bottom: AppSpacing.s,
+                    ),
+                    (
+                      top: _leastPadding,
+                      middle: AppSpacing.s,
+                      bottom: _leastPadding,
+                    ),
+                    (
+                      top: _leastPadding,
+                      middle: AppSpacing.xs,
+                      bottom: _leastPadding,
+                    ),
+                  ],
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  first: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -150,35 +190,35 @@ class TodayCard extends StatelessWidget {
                               onTap: onShowGuide,
                             ),
                             Divider(height: 1, color: colors.divider),
-                            const SizedBox(height: AppSpacing.s),
-                            // Before Start: why this might fit. Once running:
-                            // the one thing to do first, which is what
-                            // matters now. Never cut off (S25 device
-                            // finding): at normal text the copy itself is
-                            // kept to two lines for the reason and three for
-                            // the first action (today_card_test.dart), so the
-                            // card stays compact enough for Start Circle to
-                            // sit beneath the full-size Circle; enlarged text
-                            // grows the card and the page scrolls instead.
-                            if (showFirstAction)
-                              Text(
-                                firstAction,
-                                style: textTheme.bodyMedium?.copyWith(
-                                  color: colors.textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              )
-                            else
-                              Text(
-                                why,
-                                style: textTheme.bodyMedium?.copyWith(
-                                  color: colors.textSecondary,
-                                ),
-                              ),
                           ],
                         ),
                       ),
                     ],
+                  ),
+                  // Before Start: why this might fit. Once running: the one
+                  // thing to do first, which is what matters now. Never cut
+                  // off (S25 device finding): at normal text the copy itself
+                  // is kept to two lines for the reason and three for the
+                  // first action (today_card_test.dart), so the card stays
+                  // compact enough for the Circle's action to sit beneath
+                  // the full-size Circle; enlarged text grows the card and
+                  // the page scrolls instead.
+                  second: FadeTransition(
+                    opacity: detailOpacity,
+                    child: showFirstAction
+                        ? Text(
+                            firstAction,
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          )
+                        : Text(
+                            why,
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colors.textSecondary,
+                            ),
+                          ),
                   ),
                 ),
               );
@@ -382,69 +422,4 @@ class _ActivityRow extends StatelessWidget {
       child: InkWell(onTap: onTap, borderRadius: AppRadius.small, child: row),
     );
   }
-}
-
-/// The Today card's top and bottom padding: [AppSpacing.m] each, unless the
-/// card is laid out shorter than that allows (Home's near-fit rhythm,
-/// [TodayCard.nearFitReduction]) — then just enough less, never below
-/// [AppSpacing.s]. The content itself is never squeezed.
-class _NearFitVerticalPadding extends SingleChildRenderObjectWidget {
-  const _NearFitVerticalPadding({required super.child});
-
-  @override
-  _RenderNearFitVerticalPadding createRenderObject(BuildContext context) =>
-      _RenderNearFitVerticalPadding();
-}
-
-class _RenderNearFitVerticalPadding extends RenderShiftedBox {
-  _RenderNearFitVerticalPadding() : super(null);
-
-  static const _usual = AppSpacing.m;
-  static const _least = AppSpacing.s;
-
-  double _padding(double contentHeight, BoxConstraints constraints) {
-    if (!constraints.hasBoundedHeight) return _usual;
-    return ((constraints.maxHeight - contentHeight) / 2).clamp(_least, _usual);
-  }
-
-  @override
-  Size computeDryLayout(covariant BoxConstraints constraints) {
-    final content = child!.getDryLayout(
-      BoxConstraints(maxWidth: constraints.maxWidth),
-    );
-    final padding = _padding(content.height, constraints);
-    return constraints.constrain(
-      Size(content.width, content.height + padding * 2),
-    );
-  }
-
-  @override
-  void performLayout() {
-    final content = child!;
-    content.layout(
-      BoxConstraints(maxWidth: constraints.maxWidth),
-      parentUsesSize: true,
-    );
-    final padding = _padding(content.size.height, constraints);
-    (content.parentData! as BoxParentData).offset = Offset(0, padding);
-    size = constraints.constrain(
-      Size(content.size.width, content.size.height + padding * 2),
-    );
-  }
-
-  @override
-  double computeMinIntrinsicWidth(double height) =>
-      child!.getMinIntrinsicWidth(double.infinity);
-
-  @override
-  double computeMaxIntrinsicWidth(double height) =>
-      child!.getMaxIntrinsicWidth(double.infinity);
-
-  @override
-  double computeMinIntrinsicHeight(double width) =>
-      child!.getMinIntrinsicHeight(width) + _usual * 2;
-
-  @override
-  double computeMaxIntrinsicHeight(double width) =>
-      child!.getMaxIntrinsicHeight(width) + _usual * 2;
 }
