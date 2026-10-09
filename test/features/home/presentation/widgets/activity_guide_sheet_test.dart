@@ -143,7 +143,8 @@ void main() {
       tester.getSemantics(row),
       matchesSemantics(
         label: 'Gentle stretch pause',
-        hint: 'How to do it',
+        // Before Start, while it can still be swapped (V2 Phase B).
+        hint: 'How to do it, or not this one today',
         isButton: true,
         hasTapAction: true,
       ),

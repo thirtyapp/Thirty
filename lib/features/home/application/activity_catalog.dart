@@ -133,6 +133,30 @@ enum NeedFit { primary, secondary, none }
 /// V2). Phase A records it; the mode runtimes arrive in Phase C.
 enum CircleMode { open, guidedSteps, paced }
 
+/// Where an activity happens — only what "Can't go outside" needs to know
+/// (V2 Phase B, "Not this one today").
+enum ActivitySetting {
+  /// Indoors.
+  indoor,
+
+  /// Outdoors: never offered after "Can't go outside".
+  outdoor,
+
+  /// Wherever suits — inside works.
+  either,
+}
+
+/// How much an activity asks of the body — only what "Too much for today"
+/// needs to know (V2 Phase B). Not a fitness level and never inferred about
+/// the user.
+enum ActivityEffort {
+  /// Easy on the body.
+  low,
+
+  /// Asks for a bit of energy: a quicker pace, moving about.
+  moderate,
+}
+
 /// Whether an activity may be offered at all.
 enum ActivityStatus {
   /// Offered in every build.
@@ -189,6 +213,8 @@ class ActivityDefinition {
     required this.family,
     required this.category,
     required this.worldRole,
+    required this.setting,
+    required this.effort,
     this.preparation,
     this.whileYoureThere = const [],
     this.steps = const [],
@@ -241,6 +267,12 @@ class ActivityDefinition {
   final ActivityCategory category;
   final WorldSceneRole worldRole;
 
+  /// Inside, outside or either (Phase B replacement constraints).
+  final ActivitySetting setting;
+
+  /// Low or moderate effort (Phase B replacement constraints).
+  final ActivityEffort effort;
+
   NeedFit fitFor(Intention intention) => fit[intention] ?? NeedFit.none;
 }
 
@@ -277,6 +309,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.walking,
     category: ActivityCategory.walking,
     worldRole: WorldSceneRole.walk,
+    setting: ActivitySetting.outdoor,
+    effort: ActivityEffort.moderate,
   ),
   ActivityId.moveToMusic: ActivityDefinition(
     title: 'Move to music',
@@ -299,6 +333,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.musicMovement,
     category: ActivityCategory.movement,
     worldRole: WorldSceneRole.move,
+    setting: ActivitySetting.indoor,
+    effort: ActivityEffort.moderate,
   ),
   ActivityId.phoneFreeWalk: ActivityDefinition(
     title: 'Phone-free walk',
@@ -325,6 +361,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.walking,
     category: ActivityCategory.walking,
     worldRole: WorldSceneRole.walk,
+    setting: ActivitySetting.outdoor,
+    effort: ActivityEffort.low,
   ),
   ActivityId.writeItDown: ActivityDefinition(
     title: 'Write it down',
@@ -350,6 +388,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.reflectiveWriting,
     category: ActivityCategory.quietFocus,
     worldRole: WorldSceneRole.write,
+    setting: ActivitySetting.either,
+    effort: ActivityEffort.low,
   ),
   ActivityId.quietReading: ActivityDefinition(
     title: 'Quiet reading',
@@ -371,6 +411,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.quietReading,
     category: ActivityCategory.quietFocus,
     worldRole: WorldSceneRole.read,
+    setting: ActivitySetting.either,
+    effort: ActivityEffort.low,
   ),
   ActivityId.easyWalk: ActivityDefinition(
     title: 'Easy walk',
@@ -393,6 +435,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.walking,
     category: ActivityCategory.walking,
     worldRole: WorldSceneRole.walk,
+    setting: ActivitySetting.outdoor,
+    effort: ActivityEffort.low,
   ),
   ActivityId.quietMusicBreak: ActivityDefinition(
     title: 'Quiet music break',
@@ -415,6 +459,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.quietListening,
     category: ActivityCategory.quietFocus,
     worldRole: WorldSceneRole.listen,
+    setting: ActivitySetting.either,
+    effort: ActivityEffort.low,
   ),
   ActivityId.briskStepBurst: ActivityDefinition(
     title: 'Stairs or a slope',
@@ -464,6 +510,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.stepMovement,
     category: ActivityCategory.walking,
     worldRole: WorldSceneRole.walk,
+    setting: ActivitySetting.either,
+    effort: ActivityEffort.moderate,
   ),
   ActivityId.energisingStretchFlow: ActivityDefinition(
     title: 'A quick standing stretch',
@@ -514,6 +562,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.stretchMobility,
     category: ActivityCategory.movement,
     worldRole: WorldSceneRole.stretch,
+    setting: ActivitySetting.either,
+    effort: ActivityEffort.low,
   ),
   ActivityId.activeMovementSnack: ActivityDefinition(
     title: 'Movement snack',
@@ -564,6 +614,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.bodyweightMovement,
     category: ActivityCategory.movement,
     worldRole: WorldSceneRole.move,
+    setting: ActivitySetting.indoor,
+    effort: ActivityEffort.moderate,
   ),
   // RETIRED (founder decision 1, PRODUCT_V2_CONTRACT — Catalogue status):
   // the long/brisk breathing concept is not carried into V2. Kept only so
@@ -586,6 +638,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.breathingEnergizer,
     category: ActivityCategory.stillness,
     worldRole: WorldSceneRole.breathe,
+    setting: ActivitySetting.either,
+    effort: ActivityEffort.low,
   ),
   ActivityId.activeHouseholdTask: ActivityDefinition(
     title: 'One active household task',
@@ -609,6 +663,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.activeChore,
     category: ActivityCategory.homeCare,
     worldRole: WorldSceneRole.tend,
+    setting: ActivitySetting.either,
+    effort: ActivityEffort.moderate,
   ),
   ActivityId.tidyOneSurface: ActivityDefinition(
     title: 'Tidy one surface',
@@ -630,6 +686,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.tidyReset,
     category: ActivityCategory.homeCare,
     worldRole: WorldSceneRole.tend,
+    setting: ActivitySetting.indoor,
+    effort: ActivityEffort.low,
   ),
   ActivityId.singleTaskFocus: ActivityDefinition(
     title: 'One task, full attention',
@@ -653,6 +711,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.singleFocusTask,
     category: ActivityCategory.quietFocus,
     worldRole: WorldSceneRole.write,
+    setting: ActivitySetting.either,
+    effort: ActivityEffort.low,
   ),
   ActivityId.quietAudioFocus: ActivityDefinition(
     title: 'Listen to one thing',
@@ -675,6 +735,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.quietListening,
     category: ActivityCategory.quietFocus,
     worldRole: WorldSceneRole.listen,
+    setting: ActivitySetting.either,
+    effort: ActivityEffort.low,
   ),
   // Paced breathing: pace parameters are deliberately absent until the
   // separate safety/content review supplies them.
@@ -695,6 +757,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.breathingStillness,
     category: ActivityCategory.stillness,
     worldRole: WorldSceneRole.breathe,
+    setting: ActivitySetting.either,
+    effort: ActivityEffort.low,
   ),
   ActivityId.restfulBreathingPause: ActivityDefinition(
     title: 'Slow breathing pause',
@@ -713,6 +777,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.breathingStillness,
     category: ActivityCategory.stillness,
     worldRole: WorldSceneRole.breathe,
+    setting: ActivitySetting.either,
+    effort: ActivityEffort.low,
   ),
   ActivityId.gentleStretchPause: ActivityDefinition(
     title: 'Gentle stretch pause',
@@ -770,6 +836,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.stretchMobility,
     category: ActivityCategory.movement,
     worldRole: WorldSceneRole.stretch,
+    setting: ActivitySetting.either,
+    effort: ActivityEffort.low,
   ),
   ActivityId.quietSittingOutside: ActivityDefinition(
     title: 'Sitting outside, unhurried',
@@ -791,6 +859,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.natureSit,
     category: ActivityCategory.stillness,
     worldRole: WorldSceneRole.breathe,
+    setting: ActivitySetting.outdoor,
+    effort: ActivityEffort.low,
   ),
   ActivityId.smallComfortRitual: ActivityDefinition(
     title: 'A slow warm drink',
@@ -812,6 +882,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.comfortRitual,
     category: ActivityCategory.homeCare,
     worldRole: WorldSceneRole.comfort,
+    setting: ActivitySetting.indoor,
+    effort: ActivityEffort.low,
   ),
   ActivityId.unhurriedTidyPause: ActivityDefinition(
     title: 'Tend to one small thing',
@@ -836,6 +908,8 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     family: ActivitySemanticFamily.tidyReset,
     category: ActivityCategory.homeCare,
     worldRole: WorldSceneRole.tend,
+    setting: ActivitySetting.indoor,
+    effort: ActivityEffort.low,
   ),
 };
 

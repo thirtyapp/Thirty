@@ -14,6 +14,7 @@ import 'package:thirty/core/routing/app_shell.dart';
 import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/core/widgets/thirty_button.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
 import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/presentation/widgets/home_circle_metrics.dart';
@@ -382,6 +383,28 @@ void main() {
         }
       }
       await _expectCtaReachableClearOfNav(tester);
+    });
+
+    testWidgets('V2 Phase B: a personal reason on the card never costs '
+        'Start Circle its place', (tester) async {
+      for (final reason in [
+        RecommendationReason.usefulHere,
+        RecommendationReason.tryingNew,
+        RecommendationReason.replacedIndoor,
+      ]) {
+        await _pumpHome(
+          tester,
+          prefs: {
+            ..._assigned('moreEnergy', ActivityId.energisingStretchFlow.name),
+            recommendationReasonKey: reason.name,
+          },
+          screen: _s25,
+          topInset: _s25StatusBar,
+          bottomInset: _s25ButtonNavigation,
+        );
+        expect(find.text(reason.visibleCopy!), findsOneWidget);
+        expect(_ctaOnFirstScreen(tester), isTrue, reason: reason.name);
+      }
     });
 
     testWidgets('gesture navigation: every live activity fits with the full '

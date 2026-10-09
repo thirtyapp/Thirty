@@ -16,6 +16,7 @@ import '../../application/first_breath_provider.dart';
 import '../../application/recommendation_provider.dart';
 import '../../application/world_scene_resolution.dart';
 import 'activity_guide_sheet.dart';
+import 'not_this_one_sheet.dart';
 import 'home_circle_metrics.dart';
 import 'home_rhythm_column.dart';
 import 'today_card.dart';
@@ -171,13 +172,14 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   late final Animation<double> _buttonOpacity;
 
   // The ring is a real timer (Phase D1). V2 Phase A: it runs to the
-  // offered activity's natural length ([circleDurationFor]), never a fixed
+  // offered activity's natural length — today's offer, within the time the
+  // user said they have ([circleDurationFor]) — never a fixed
   // half hour. While today's Circle is started, the sage arc shows the time
   // since Start Circle, full at that length; once closed it keeps the time
   // the Circle actually ran. A once-a-second ticker repaints it while
   // started — slow enough that reduced motion needs no special case.
-  static Duration circleDurationFor(ActivityId activityId) =>
-      Duration(minutes: activityTypicalMinutes(activityId));
+  static Duration circleDurationFor(Recommendation recommendation) =>
+      Duration(minutes: recommendation.offeredMinutes);
   Timer? _ticker;
   RecommendationStatus? _tickerStatus;
 
@@ -344,7 +346,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     if (recommendation == null) return 0;
     final end = state.closedAt ?? ref.read(eventClockProvider)();
     return (end.difference(startedAt).inMilliseconds /
-            circleDurationFor(recommendation.activityId).inMilliseconds)
+            circleDurationFor(recommendation).inMilliseconds)
         .clamp(0.0, 1.0);
   }
 
@@ -432,6 +434,20 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     super.dispose();
   }
 
+  /// "Not this one today": asks why, then replaces today's Circle once.
+  Future<void> _notThisOne(ActivityId current) async {
+    final reason = await showNotThisOneSheet(context, current: current);
+    if (reason == null || !mounted) return;
+    final replaced = ref
+        .read(recommendationProvider.notifier)
+        .replaceToday(reason);
+    if (!replaced && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nothing else fits today — this stays.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -506,7 +522,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       case RecommendationStatus.started:
         ctaLabel = 'Close Circle';
         ctaTrailingIcon = null;
-        final total = circleDurationFor(recommendation.activityId).inMinutes;
+        final total = circleDurationFor(recommendation).inMinutes;
         final minutes = (timerProgress * total).floor();
         circleSemanticValue = 'Circle in progress. $minutes of $total minutes.';
         // Batch 1, Phase B: no longer closes directly on tap — see
@@ -773,9 +789,12 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                 TodayCard(
                   intent: recommendation.intent,
                   activity: recommendation.activity,
-                  why: recommendation.why,
+                  // V2 Phase B: a truthful personal reason, when there is
+                  // one, takes the line; the activity's own reason stays in
+                  // its how-to.
+                  why: recommendation.personalReason ?? recommendation.why,
                   category: recommendation.category,
-                  minutes: activityTypicalMinutes(recommendation.activityId),
+                  minutes: recommendation.offeredMinutes,
                   firstAction: activityDefinition(
                     recommendation.activityId,
                   ).firstAction,
@@ -792,7 +811,23 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                           context,
                           activityId: recommendation.activityId,
                           intention: recommendation.intention,
+                          offeredMinutes: recommendation.offeredMinutes,
+                          onNotThisOne:
+                              recommendation.canReplace &&
+                                  recommendationState.status ==
+                                      RecommendationStatus.notStarted
+                              ? () => _notThisOne(recommendation.activityId)
+                              : null,
                         ),
+                  // Before Start, the row says what it opens — and, while
+                  // today's activity can still be swapped, that it can be.
+                  guideCue:
+                      recommendationState.status !=
+                          RecommendationStatus.notStarted
+                      ? ActivityRowCue.none
+                      : recommendation.canReplace
+                      ? ActivityRowCue.howToOrNotThisOne
+                      : ActivityRowCue.howTo,
                   cardAsset: _art.cardAsset,
                   artSwitchDuration: artSwitchDuration,
                   intentOpacity: _intentOpacity,

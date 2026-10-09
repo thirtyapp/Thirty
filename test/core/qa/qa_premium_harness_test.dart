@@ -59,9 +59,16 @@ void main() {
   /// Applies [scenario] through the QA panel and waits for the new session.
   Future<void> applyScenario(WidgetTester tester, QaScenario scenario) async {
     await openPanel(tester);
-    await tester.tap(find.byKey(Key('qa-scenario-${scenario.wireName}')));
+    // The panel scrolls once it lists more scenarios than fit.
+    final chip = find.byKey(Key('qa-scenario-${scenario.wireName}'));
+    await tester.ensureVisible(chip);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('qa-apply')));
+    await tester.tap(chip);
+    await tester.pumpAndSettle();
+    final apply = find.byKey(const Key('qa-apply'));
+    await tester.ensureVisible(apply);
+    await tester.pumpAndSettle();
+    await tester.tap(apply);
     final marker = find.text('QA DATA · ${scenario.wireName}');
     for (var i = 0; i < 2000 && marker.evaluate().isEmpty; i++) {
       await tester.pump(const Duration(milliseconds: 1));
@@ -122,6 +129,8 @@ void main() {
     expect(find.text('QA DATA · plan_in_progress'), findsOneWidget);
 
     await openPanel(tester);
+    await tester.ensureVisible(find.byKey(const Key('qa-reset')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('qa-reset')));
     await tester.pumpAndSettle();
 
@@ -155,6 +164,8 @@ void main() {
     await leaveMonthTwoState(tester);
 
     await openPanel(tester);
+    await tester.ensureVisible(find.byKey(const Key('qa-reset')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('qa-reset')));
     await tester.pumpAndSettle();
 

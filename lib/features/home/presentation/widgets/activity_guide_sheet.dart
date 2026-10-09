@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/thirty_text_action.dart';
 import '../../application/activity_catalog.dart';
 
 /// Opens the full how-to for today's activity — the progressive-disclosure
 /// layer behind the Today card (V2 Phase A). The Circle itself only shows
 /// the activity, its length and what to do first; everything else lives
 /// here, one tap away.
+///
+/// [offeredMinutes] is today's real length of the activity; [onNotThisOne],
+/// when given, offers today's one "Not this one today" (V2 Phase B).
 Future<void> showActivityGuide(
   BuildContext context, {
   required ActivityId activityId,
   required Intention intention,
+  int? offeredMinutes,
+  VoidCallback? onNotThisOne,
 }) {
   final colors = Theme.of(context).extension<AppColors>()!;
   return showModalBottomSheet<void>(
@@ -24,8 +30,12 @@ Future<void> showActivityGuide(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) =>
-        ActivityGuideSheet(activityId: activityId, intention: intention),
+    builder: (_) => ActivityGuideSheet(
+      activityId: activityId,
+      intention: intention,
+      offeredMinutes: offeredMinutes,
+      onNotThisOne: onNotThisOne,
+    ),
   );
 }
 
@@ -37,10 +47,19 @@ class ActivityGuideSheet extends StatelessWidget {
     super.key,
     required this.activityId,
     required this.intention,
+    this.offeredMinutes,
+    this.onNotThisOne,
   });
 
   final ActivityId activityId;
   final Intention intention;
+
+  /// Today's length; the activity's usual length when `null`.
+  final int? offeredMinutes;
+
+  /// "Not this one today": closes this sheet and asks why. `null` once used,
+  /// once started, or for a Plan stage.
+  final VoidCallback? onNotThisOne;
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +96,7 @@ class ActivityGuideSheet extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            _lengthLabel(activity),
+            _lengthLabel(activity, offeredMinutes),
             style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.m),
@@ -85,6 +104,16 @@ class ActivityGuideSheet extends StatelessWidget {
             activityReasonFor(intention, activityId),
             style: textTheme.bodyLarge,
           ),
+          // Quiet, and only here: the card's room above Start Circle is
+          // spoken for, and this is where the activity is being weighed up.
+          if (onNotThisOne case final notThisOne?)
+            ThirtyTextAction(
+              label: 'Not this one today',
+              onPressed: () {
+                Navigator.of(context).pop();
+                notThisOne();
+              },
+            ),
           _Section(
             label: 'First',
             child: Text(
@@ -141,11 +170,12 @@ class ActivityGuideSheet extends StatelessWidget {
     );
   }
 
-  static String _lengthLabel(ActivityDefinition activity) =>
-      activity.minMinutes < activity.typicalMinutes
-      ? 'About ${activity.typicalMinutes} minutes · '
-            '${activity.minMinutes} works too'
-      : 'About ${activity.typicalMinutes} minutes';
+  static String _lengthLabel(ActivityDefinition activity, int? offered) {
+    final minutes = offered ?? activity.typicalMinutes;
+    return activity.minMinutes < minutes
+        ? 'About $minutes minutes · ${activity.minMinutes} works too'
+        : 'About $minutes minutes';
+  }
 }
 
 class _Section extends StatelessWidget {

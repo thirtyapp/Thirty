@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,6 +37,16 @@ Future<(Widget, ProviderContainer)> _wrap({
 }
 
 void main() {
+  // The real font: whether the time choice shows as three segments depends
+  // on real glyph widths (the test font's square glyphs never fit).
+  setUpAll(() async {
+    final inter = FontLoader('Inter')
+      ..addFont(rootBundle.load('assets/fonts/Inter-Regular.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/Inter-Medium.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/Inter-SemiBold.ttf'));
+    await inter.load();
+  });
+
   test('every need meaning is the founder-approved wording', () {
     expect(
       intentionMeaning(Intention.moreEnergy),
@@ -158,6 +169,20 @@ void main() {
     await tester.pumpWidget(widget);
 
     expect(find.textContaining('THIRTY gives you one activity'), findsNothing);
-    expect(find.byType(Text), findsNWidgets(4));
+    // Exactly the question, the time already chosen (V2 Phase B) and the
+    // three needs — nothing else.
+    expect(
+      tester.widgetList<Text>(find.byType(Text)).map((t) => t.data).toList(),
+      [
+        'What would help most today?',
+        'Time you have',
+        '10 min',
+        '20 min',
+        '30 min',
+        'More Energy',
+        'Clearer Head',
+        'Gentler Pace',
+      ],
+    );
   });
 }

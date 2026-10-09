@@ -5,6 +5,7 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../application/activity_catalog.dart';
 import '../../application/recommendation_provider.dart';
+import 'time_window_choice.dart';
 
 /// THIRTY's Daily Context Question — Recommendation MVP v0
 /// (`docs/product/recommendation-mvp-v0.md`): "What would help most
@@ -17,7 +18,9 @@ import '../../application/recommendation_provider.dart';
 /// (circle_hero.dart) on the next build, which then plays The First Breath.
 ///
 /// Exactly the three [Intention] values, in the same fixed order every day —
-/// no inference, no additional questions. Presented as compact, discrete
+/// no inference, no additional questions. Above them, the time the user has
+/// (V2 Phase B, `time_window_choice.dart`), already set to their last choice
+/// so it never becomes a second step. Presented as compact, discrete
 /// choices — the same visual language as THIRTY's post-Circle feedback
 /// questions (`action_report_prompt.dart`'s "Did you try this activity?"):
 /// a calm, centered question followed by a stack of secondary
@@ -62,6 +65,9 @@ class DailyIntentionPrompt extends ConsumerWidget {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppSpacing.s),
+        // V2 Phase B: the time, already chosen — the need stays the only tap.
+        const TimeWindowChoiceControl(),
+        const SizedBox(height: AppSpacing.m),
         for (final intention in Intention.values) ...[
           _IntentionOption(intention: intention),
           if (intention != Intention.values.last)

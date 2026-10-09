@@ -12,14 +12,14 @@ import '../../../core/utils/date_key.dart';
 import '../../plans/application/plan_provider.dart';
 import '../../plans/domain/plan_ids.dart';
 import '../../plans/domain/plan_state.dart';
+import '../domain/recommendation_engine.dart';
 import 'activity_catalog.dart';
 import 'circle_journal.dart';
 
-/// THIRTY's daily recommendation — Recommendation MVP v0
-/// (`docs/product/recommendation-mvp-v0.md`): the user picks an [Intention]
-/// via the Daily Context Question, and THIRTY deterministically picks one
-/// [ActivityId] within it (`activity_catalog.dart`). No scoring, no AI, no
-/// personalization beyond that one explicit daily choice.
+/// THIRTY's daily recommendation (V2 Phase B, ADR-020): the user states
+/// today's [Intention] and [TimeWindow], and Recommendation Engine V2
+/// (`../domain/recommendation_engine.dart`) picks one [ActivityId] from the
+/// user's own explicit history — locally and deterministically.
 ///
 /// Purely content — the day's session/lifecycle state (whether it has been
 /// started or closed, and when) lives on [RecommendationState], not here.
@@ -41,6 +41,11 @@ class Recommendation {
     this.isPlanRevisit = false,
     this.treatmentUsed,
     this.treatmentSource,
+    required this.offeredMinutes,
+    this.timeWindow = TimeWindow.firstUse,
+    this.reason = RecommendationReason.bestFit,
+    this.replacedFrom,
+    this.replacementReason,
   });
 
   final String intent;
@@ -118,6 +123,39 @@ class Recommendation {
   /// never counted as a fresh user choice merely because the resulting
   /// [treatmentUsed] happens to be [PlanTreatment.lighter].
   final PlanTreatmentSource? treatmentSource;
+
+  /// The time the user said they had today (V2 Phase B).
+  final TimeWindow timeWindow;
+
+  /// Today's real length of [activityId]: what the ring runs to.
+  final int offeredMinutes;
+
+  /// The engine's decisive reason for this offer.
+  final RecommendationReason reason;
+
+  /// The one line shown on the Today card in place of the activity's own
+  /// reason, or `null`.
+  String? get personalReason => reason.visibleCopy;
+
+  /// The activity first offered today, if the user asked for another.
+  final ActivityId? replacedFrom;
+
+  /// Why ("Not this one today"). Today's constraint, never a usefulness
+  /// answer.
+  final ReplacementReason? replacementReason;
+
+  /// Whether "Not this one today" is still available: once a day, and not
+  /// for a V1 Plan stage (Plans are replaced in Phase D).
+  bool get canReplace => replacedFrom == null && planId == null;
+
+  /// What this offer records in the Circle journal.
+  CircleOffer get journalOffer => CircleOffer(
+    timeWindow: timeWindow.name,
+    offeredMinutes: offeredMinutes,
+    reasonCode: reason.name,
+    replacedFrom: replacedFrom,
+    replacementReason: replacementReason?.name,
+  );
 }
 
 /// Today's Circle's lifecycle status. Deliberately only the three states
@@ -142,6 +180,10 @@ const recommendationIntentionKey = 'recommendation_intention';
 /// today.
 const recommendationActivityIdKey = 'recommendation_activity_id';
 
+/// **Retired (V2 Phase B).** Engine V2 derives recency from the Circle
+/// journal; this V1 key is no longer read or written, only removed — on the
+/// next choice and by Delete.
+///
 /// SharedPreferences key prefix for [intention]'s bounded recent-activity
 /// history (Batch 2 — see
 /// [ADR-012](../../../../docs/product/adr/ADR-012-batch-2-recommendation-diversity.md)),
@@ -189,6 +231,8 @@ const recommendationAttemptResponseKey = 'recommendation_attempt_response';
 const recommendationUsefulnessResponseKey =
     'recommendation_usefulness_response';
 
+/// **Retired (V2 Phase B)** — see [recommendationHistoryKeyFor].
+///
 /// SharedPreferences key for the [ActivitySemanticFamily.name] of the most
 /// recently *shown* Circle, regardless of which [Intention] it belonged to
 /// (ADR-013 §2 — cross-direction family avoidance). Deliberately a single,
@@ -230,6 +274,22 @@ const recommendationTreatmentKey = 'recommendation_treatment';
 /// one-for-one: both are set together at resolution, and both are updated
 /// together by [RecommendationNotifier.setPlanTreatment].
 const recommendationTreatmentSourceKey = 'recommendation_treatment_source';
+
+/// V2 Phase B: today's [TimeWindow.name].
+const recommendationTimeWindowKey = 'recommendation_time_window';
+
+/// V2 Phase B: today's [Recommendation.offeredMinutes].
+const recommendationOfferedMinutesKey = 'recommendation_offered_minutes';
+
+/// V2 Phase B: today's [RecommendationReason.name].
+const recommendationReasonKey = 'recommendation_reason';
+
+/// V2 Phase B: the [ActivityId.name] replaced today, if any — its presence
+/// is what makes today's one replacement used.
+const recommendationReplacedFromKey = 'recommendation_replaced_from';
+
+/// V2 Phase B: today's [ReplacementReason.name], if any.
+const recommendationReplacementReasonKey = 'recommendation_replacement_reason';
 
 /// Today's Circle: its content ([recommendation]) plus its session/
 /// lifecycle state.
@@ -337,6 +397,16 @@ class RecommendationState {
 /// other rebuild happens — no midnight timer is introduced to close that
 /// narrower remaining gap.
 class RecommendationNotifier extends Notifier<RecommendationState> {
+  /// Every write runs after the previous one: today's choice, a replacement
+  /// moments later and the Circle's lifecycle are persisted in the order
+  /// they happened, never interleaved.
+  Future<void> _writes = Future<void>.value();
+
+  void _enqueue(Future<void> Function() write) {
+    _writes = _writes.then((_) => write()).catchError((Object _) {});
+    unawaited(_writes);
+  }
+
   @override
   RecommendationState build() {
     final prefs = ref.watch(sharedPreferencesProvider);
@@ -434,110 +504,73 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     }
   }
 
-  /// Answers the Daily Context Question for today: resolves and persists
-  /// today's [Recommendation] for [intention], then transitions today's
-  /// Circle to [RecommendationStatus.notStarted] with it.
+  /// Answers the Daily Context Question for today: Recommendation Engine
+  /// V2 decides today's one activity for [intention] and [window] (by
+  /// default the time currently chosen, [timeWindowChoiceProvider]) from the
+  /// user's own Circle journal, and today's Circle becomes
+  /// [RecommendationStatus.notStarted] with it.
   ///
-  /// A no-op once today's recommendation already exists — "once selected,
-  /// the day's intention becomes fixed" (`docs/product/recommendation-mvp-v0.md`):
-  /// this can only meaningfully run once per local calendar day.
+  /// A no-op once today's recommendation already exists: THIRTY decides once
+  /// a day, and the decision is restored — never re-made — on rebuilds and
+  /// restarts. The only re-selection is [replaceToday].
   ///
-  /// The activity is chosen deterministically
-  /// (`activity_catalog.dart`'s [selectActivityId]) from [intention]'s pool,
-  /// keyed on today's calendar day, and avoids repeating any activity still
-  /// in [intention]'s bounded recent-history list
-  /// ([recommendationHistoryKeyFor]) — Batch 2's diversity guard (see
-  /// [ADR-012](../../../../docs/product/adr/ADR-012-batch-2-recommendation-diversity.md)),
-  /// which replaces v0's narrower "only the immediately preceding local
-  /// calendar day" rule. Unlike that superseded rule, this history is keyed
-  /// on *how many times [intention] was actually chosen*, not on calendar
-  /// adjacency — a multi-day gap between uses no longer defeats the guard.
-  /// Capped at `pool.length - 1` entries so at least one alternative always
-  /// remains (see [selectActivityId]'s own doc comment for the exhaustion
-  /// fallback this cap exists to make unreachable in practice).
+  /// Records a [AnalyticsEventType.recommendationShown] event only on this
+  /// real, once-per-day resolution.
   ///
-  /// Also records a [AnalyticsEventType.recommendationShown] event (Batch 2,
-  /// Phase F) — but only on this real, once-per-day resolution, never on
-  /// the no-op early return above, matching [start]/[close]'s own
-  /// "only a genuine transition is measured" discipline.
-  ///
-  /// **Circle Plans (Batch 2A):** before falling through to the Free
-  /// selector above, this first asks
-  /// `../../plans/application/plan_provider.dart`'s
-  /// `PlanNotifier.resolveSessionFor` whether [intention] matches an
-  /// active, in-progress Plan — the frozen architecture's "daily
-  /// resolution rule." A non-null result substitutes that Plan's assigned
-  /// [ActivityId] (and carries the Plan/stage/cycle identity into
-  /// [Recommendation]) in place of [selectActivityId]; a `null` result
-  /// (no entitlement, no active Plan, a direction mismatch, or a completed
-  /// cycle with no repeat chosen) is the exact, unmodified Free path. A
-  /// Plan never overrides the user's chosen [intention] — it only ever
-  /// supplies which activity fulfils it.
-  void chooseIntention(Intention intention) {
+  /// **Circle Plans (V1, until Phase D):** an active, in-progress Plan whose
+  /// direction matches [intention] still supplies the activity
+  /// (`PlanNotifier.resolveSessionFor`), at its usual length; the engine is
+  /// not asked and no replacement is offered.
+  void chooseIntention(Intention intention, {TimeWindow? window}) {
     if (state.recommendation != null) return;
 
-    final prefs = ref.read(sharedPreferencesProvider);
     final now = ref.read(nowProvider);
     final today = dateKey(now);
+    final TimeWindow chosen = ref.read(timeWindowChoiceProvider);
+    final timeWindow = window ?? chosen;
 
     final planAssignment = ref
         .read(planProvider.notifier)
         .resolveSessionFor(intention);
 
-    final ActivityId activityId;
-    String? historyKey;
-    List<String>? cappedHistory;
-
+    final Recommendation recommendation;
     if (planAssignment != null) {
-      activityId = planAssignment.activityId;
-    } else {
-      final pool = legacySelectorPool(intention);
-      historyKey = recommendationHistoryKeyFor(intention);
-      final storedHistory = prefs.getStringList(historyKey) ?? const [];
-      final recentActivityIds = storedHistory
-          .map((name) => ActivityId.values.asNameMap()[name])
-          .whereType<ActivityId>()
-          .toSet();
-      final lastShownFamily = ActivitySemanticFamily.values
-          .asNameMap()[prefs.getString(recommendationLastFamilyKey)];
-
-      activityId = selectActivityId(
-        intention: intention,
-        dayIndex: epochDay(now),
-        recentActivityIds: recentActivityIds,
-        lastShownFamily: lastShownFamily,
+      recommendation = _buildRecommendation(
+        intention,
+        planAssignment.activityId,
+        today,
+        planAssignment: planAssignment,
+        window: timeWindow,
+        reason: RecommendationReason.planStage,
       );
-
-      // Bounded to pool.length - 1 most-recent entries — see
-      // recommendationHistoryKeyFor's own doc comment for why that
-      // specific cap. Only maintained for a Free-selector resolution — a
-      // Plan-resolved day's activity comes from the Plan's own state, not
-      // this diversity guard.
-      final updatedHistory = [...storedHistory, activityId.name];
-      final historyCap = pool.length - 1;
-      cappedHistory = updatedHistory.length > historyCap
-          ? updatedHistory.sublist(updatedHistory.length - historyCap)
-          : updatedHistory;
+    } else {
+      final decision = recommend(
+        RecommendationContext(
+          date: now,
+          need: intention,
+          window: timeWindow,
+          allowSafetyPending: ref.read(safetyPendingAllowedProvider),
+        ),
+        pastCirclesFrom(ref.read(circleJournalRepositoryProvider).readAll()),
+      )!;
+      recommendation = _buildRecommendation(
+        intention,
+        decision.activityId,
+        today,
+        window: timeWindow,
+        offeredMinutes: decision.offeredMinutes,
+        reason: decision.reason,
+      );
     }
-
-    final recommendation = _buildRecommendation(
-      intention,
-      activityId,
-      today,
-      planAssignment: planAssignment,
-    );
 
     state = RecommendationState(
       recommendation: recommendation,
       status: RecommendationStatus.notStarted,
     );
-    unawaited(
-      _persistChoice(
+    _enqueue(
+      () => _persistChoice(
         today: today,
-        intention: intention,
-        activityId: activityId,
-        historyKey: historyKey,
-        cappedHistory: cappedHistory,
+        recommendation: recommendation,
         shownAt: now,
         planAssignment: planAssignment,
       ),
@@ -548,9 +581,58 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           AnalyticsEventType.recommendationShown,
           metadata: {
             'intention': intention.name,
-            'activity_id': activityId.name,
+            'activity_id': recommendation.activityId.name,
           },
         );
+  }
+
+  /// "Not this one today" (V2 Phase B): re-selects today's activity once,
+  /// under [reason] as a hard constraint for today. Returns `false` — and
+  /// changes nothing — unless today's Circle is offered but not yet
+  /// started, has not been replaced already, and isn't a Plan stage; or if
+  /// nothing else fits [reason] today.
+  ///
+  /// The reason is never a usefulness answer. The journal records the final
+  /// activity, the one it replaced and why, so a restart restores the
+  /// replacement and never offers a second one.
+  bool replaceToday(ReplacementReason reason) {
+    final current = state.recommendation;
+    if (current == null || !current.canReplace) return false;
+    if (state.status != RecommendationStatus.notStarted) return false;
+
+    final now = ref.read(nowProvider);
+    final decision = recommend(
+      RecommendationContext(
+        date: now,
+        need: current.intention,
+        window: current.timeWindow,
+        replacement: ReplacementRequest(
+          reason: reason,
+          replacing: current.activityId,
+          replacingMinutes: current.offeredMinutes,
+        ),
+        allowSafetyPending: ref.read(safetyPendingAllowedProvider),
+      ),
+      pastCirclesFrom(ref.read(circleJournalRepositoryProvider).readAll()),
+    );
+    if (decision == null) return false;
+
+    final replacement = _buildRecommendation(
+      current.intention,
+      decision.activityId,
+      current.circleId,
+      window: current.timeWindow,
+      offeredMinutes: decision.offeredMinutes,
+      reason: decision.reason,
+      replacedFrom: current.activityId,
+      replacementReason: reason,
+    );
+    state = RecommendationState(
+      recommendation: replacement,
+      status: RecommendationStatus.notStarted,
+    );
+    _enqueue(() => _persistReplacement(replacement, now));
+    return true;
   }
 
   /// Starts today's Circle. A no-op unless today's recommendation already
@@ -569,7 +651,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       status: RecommendationStatus.started,
       startedAt: startedAt,
     );
-    unawaited(_persist(state));
+    final snapshot = state;
+    _enqueue(() => _persist(snapshot));
     // Fired only on a real transition — the two guard clauses above already
     // make this method a no-op on a repeat call, so a double/duplicate
     // start() can never record a duplicate circleStarted event either
@@ -610,7 +693,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       startedAt: state.startedAt,
       closedAt: closedAt,
     );
-    unawaited(_persist(state));
+    final snapshot = state;
+    _enqueue(() => _persist(snapshot));
     // Fired only on a real transition, for the same reason start() above
     // only fires once per Circle — this is also the frozen post-fix
     // measurement protocol's "Daily Check-In completed" (see
@@ -671,6 +755,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       isPlanRevisit: recommendation.isPlanRevisit,
       treatmentUsed: treatment,
       treatmentSource: PlanTreatmentSource.directChoice,
+      timeWindow: recommendation.timeWindow,
+      offeredMinutes: recommendation.offeredMinutes,
+      reason: recommendation.reason,
     );
     state = RecommendationState(
       recommendation: updated,
@@ -680,7 +767,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       attemptResponse: state.attemptResponse,
       usefulnessResponse: state.usefulnessResponse,
     );
-    unawaited(_persist(state));
+    final snapshot = state;
+    _enqueue(() => _persist(snapshot));
   }
 
   /// Records the user's optional "Did you try this activity?" answer
@@ -713,7 +801,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       attemptResponse: response,
       usefulnessResponse: isAffirmative ? state.usefulnessResponse : null,
     );
-    unawaited(_persist(state));
+    final snapshot = state;
+    _enqueue(() => _persist(snapshot));
     ref
         .read(analyticsServiceProvider)
         .track(
@@ -747,7 +836,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       attemptResponse: attempt,
       usefulnessResponse: response,
     );
-    unawaited(_persist(state));
+    final snapshot = state;
+    _enqueue(() => _persist(snapshot));
     ref
         .read(analyticsServiceProvider)
         .track(
@@ -772,11 +862,17 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     PlanSessionAssignment? planAssignment,
     PlanTreatment? treatmentOverride,
     PlanTreatmentSource? treatmentSourceOverride,
+    TimeWindow window = TimeWindow.firstUse,
+    int? offeredMinutes,
+    RecommendationReason reason = RecommendationReason.bestFit,
+    ActivityId? replacedFrom,
+    ReplacementReason? replacementReason,
   }) {
+    final minutes = offeredMinutes ?? activityTypicalMinutes(activityId);
     return Recommendation(
       intent: intentionLabel(intention),
       activity: activityLabel(activityId),
-      duration: '${activityTypicalMinutes(activityId)} minutes',
+      duration: '$minutes minutes',
       why: activityReasonFor(intention, activityId),
       category: activityCategory(activityId),
       activityId: activityId,
@@ -794,6 +890,11 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       treatmentSource: planAssignment == null
           ? null
           : (treatmentSourceOverride ?? planAssignment.treatmentSource),
+      timeWindow: window,
+      offeredMinutes: minutes,
+      reason: reason,
+      replacedFrom: replacedFrom,
+      replacementReason: replacementReason,
     );
   }
 
@@ -826,6 +927,24 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         .asNameMap()[prefs.getString(recommendationActivityIdKey)];
     if (intention == null || activityId == null) return null;
 
+    // V2 Phase B: today's offer. Absent on a day persisted before Phase B —
+    // the first-use window and the activity's usual length, then.
+    final window =
+        TimeWindow.values.asNameMap()[prefs.getString(
+          recommendationTimeWindowKey,
+        )] ??
+        TimeWindow.firstUse;
+    final offeredMinutes = prefs.getInt(recommendationOfferedMinutesKey);
+    final reason =
+        RecommendationReason.values.asNameMap()[prefs.getString(
+          recommendationReasonKey,
+        )] ??
+        RecommendationReason.bestFit;
+    final replacedFrom = ActivityId.values
+        .asNameMap()[prefs.getString(recommendationReplacedFromKey)];
+    final replacementReason = ReplacementReason.values
+        .asNameMap()[prefs.getString(recommendationReplacementReasonKey)];
+
     final planId = PlanId.values
         .asNameMap()[prefs.getString(recommendationPlanIdKey)];
     final stageId = prefs.getString(recommendationStageIdKey);
@@ -838,7 +957,16 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         planVersion != null;
 
     if (!isValidPlanRecord) {
-      return _buildRecommendation(intention, activityId, today);
+      return _buildRecommendation(
+        intention,
+        activityId,
+        today,
+        window: window,
+        offeredMinutes: offeredMinutes,
+        reason: reason,
+        replacedFrom: replacedFrom,
+        replacementReason: replacementReason,
+      );
     }
 
     final isRevisit = prefs.getBool(recommendationIsPlanRevisitKey) ?? false;
@@ -872,6 +1000,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       ),
       treatmentOverride: treatment,
       treatmentSourceOverride: treatmentSource,
+      window: window,
+      offeredMinutes: offeredMinutes,
+      reason: reason,
     );
   }
 
@@ -889,14 +1020,13 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// non-null — today's Plan identity (Batch 2A).
   Future<void> _persistChoice({
     required String today,
-    required Intention intention,
-    required ActivityId activityId,
-    required String? historyKey,
-    required List<String>? cappedHistory,
+    required Recommendation recommendation,
     required DateTime shownAt,
     PlanSessionAssignment? planAssignment,
   }) async {
     final prefs = ref.read(sharedPreferencesProvider);
+    final intention = recommendation.intention;
+    final activityId = recommendation.activityId;
     await prefs.setString(recommendationDayKey, today);
     await prefs.setString(recommendationIntentionKey, intention.name);
     await prefs.setString(recommendationActivityIdKey, activityId.name);
@@ -908,13 +1038,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     await prefs.remove(recommendationClosedAtKey);
     await prefs.remove(recommendationAttemptResponseKey);
     await prefs.remove(recommendationUsefulnessResponseKey);
-    if (historyKey != null && cappedHistory != null) {
-      await prefs.setStringList(historyKey, cappedHistory);
+    await _persistOffer(prefs, recommendation);
+    // V1 selector history is retired: Engine V2 reads the journal.
+    await prefs.remove(recommendationLastFamilyKey);
+    for (final need in Intention.values) {
+      await prefs.remove(recommendationHistoryKeyFor(need));
     }
-    await prefs.setString(
-      recommendationLastFamilyKey,
-      activityFamily(activityId).name,
-    );
 
     if (planAssignment != null) {
       await prefs.setString(
@@ -973,6 +1102,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           treatmentUsed: planAssignment?.initialTreatment.name,
           revisitUsed: planAssignment?.isRevisit,
           treatmentSource: planAssignment?.treatmentSource.name,
+          offer: recommendation.journalOffer,
         );
     // A plain repository mutation does not itself notify Riverpod
     // watchers — invalidate so an already-mounted reactive reader (e.g.
@@ -981,6 +1111,61 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     // staying stale until something else happens to rebuild it. Mirrors
     // the same invalidate-after-write `journal_data_controls.dart`
     // already does after `clearAll()`.
+    if (ref.mounted) ref.invalidate(circleJournalRepositoryProvider);
+  }
+
+  /// Today's offer — time window, length, reason and any replacement — in
+  /// the per-day keys [build] restores.
+  Future<void> _persistOffer(
+    SharedPreferences prefs,
+    Recommendation recommendation,
+  ) async {
+    await prefs.setString(
+      recommendationTimeWindowKey,
+      recommendation.timeWindow.name,
+    );
+    await prefs.setInt(
+      recommendationOfferedMinutesKey,
+      recommendation.offeredMinutes,
+    );
+    await prefs.setString(recommendationReasonKey, recommendation.reason.name);
+    final replacedFrom = recommendation.replacedFrom;
+    final replacementReason = recommendation.replacementReason;
+    if (replacedFrom != null && replacementReason != null) {
+      await prefs.setString(recommendationReplacedFromKey, replacedFrom.name);
+      await prefs.setString(
+        recommendationReplacementReasonKey,
+        replacementReason.name,
+      );
+    } else {
+      await prefs.remove(recommendationReplacedFromKey);
+      await prefs.remove(recommendationReplacementReasonKey);
+    }
+  }
+
+  /// Persists today's replacement: the per-day keys first (so a restart
+  /// restores the replacement and never offers a second), then the journal.
+  Future<void> _persistReplacement(
+    Recommendation replacement,
+    DateTime replacedAt,
+  ) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setString(
+      recommendationActivityIdKey,
+      replacement.activityId.name,
+    );
+    await _persistOffer(prefs, replacement);
+    if (!ref.mounted) return;
+    await ref
+        .read(circleJournalRepositoryProvider)
+        .recordReplaced(
+          circleId: replacement.circleId,
+          localDate: replacement.circleId,
+          direction: replacement.intention,
+          activityId: replacement.activityId,
+          replacedAt: replacedAt,
+          offer: replacement.journalOffer,
+        );
     if (ref.mounted) ref.invalidate(circleJournalRepositoryProvider);
   }
 
@@ -1084,6 +1269,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final revisitUsed = recommendation.planId == null
         ? null
         : recommendation.isPlanRevisit;
+    final offer = recommendation.journalOffer;
 
     var journalChanged = false;
     switch (state.status) {
@@ -1101,6 +1287,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           treatmentUsed: treatmentUsedName,
           revisitUsed: revisitUsed,
           treatmentSource: treatmentSourceName,
+          offer: offer,
         );
         journalChanged = true;
       case RecommendationStatus.closed:
@@ -1117,6 +1304,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           treatmentUsed: treatmentUsedName,
           revisitUsed: revisitUsed,
           treatmentSource: treatmentSourceName,
+          offer: offer,
         );
         journalChanged = true;
       case RecommendationStatus.notStarted:
@@ -1156,6 +1344,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         treatmentUsed: treatmentUsedName,
         revisitUsed: revisitUsed,
         treatmentSource: treatmentSourceName,
+        offer: offer,
       );
       journalChanged = true;
     }
@@ -1174,6 +1363,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         treatmentUsed: treatmentUsedName,
         revisitUsed: revisitUsed,
         treatmentSource: treatmentSourceName,
+        offer: offer,
       );
       journalChanged = true;
     }
@@ -1220,9 +1410,65 @@ Future<void> clearRecordedCircleState(SharedPreferences prefs) async {
     recommendationIsPlanRevisitKey,
     recommendationTreatmentKey,
     recommendationTreatmentSourceKey,
+    recommendationTimeWindowKey,
+    recommendationOfferedMinutesKey,
+    recommendationReasonKey,
+    recommendationReplacedFromKey,
+    recommendationReplacementReasonKey,
     for (final intention in Intention.values)
       recommendationHistoryKeyFor(intention),
   ]) {
     await prefs.remove(key);
   }
 }
+
+/// Whether content awaiting the safety review may be offered: only internal
+/// debug builds ([safetyPendingContentAllowed]). The QA harness pins it off,
+/// so a QA walkthrough always shows exactly what a release build would.
+final safetyPendingAllowedProvider = Provider<bool>(
+  (ref) => safetyPendingContentAllowed,
+);
+
+/// The time window chosen on today's Daily Context Question (V2 Phase B).
+///
+/// Starts from the most recent explicit choice in the Circle journal, or
+/// [TimeWindow.firstUse] — so it is derived, never a separate profile: once
+/// Circle history is deleted, it starts from first use again.
+class TimeWindowChoice extends Notifier<TimeWindow> {
+  @override
+  TimeWindow build() {
+    final entries = ref.watch(circleJournalRepositoryProvider).readAll();
+    for (final entry in entries.reversed) {
+      final window = TimeWindow.values.asNameMap()[entry.timeWindow];
+      if (window != null) return window;
+    }
+    return TimeWindow.firstUse;
+  }
+
+  void choose(TimeWindow window) => state = window;
+}
+
+final NotifierProvider<TimeWindowChoice, TimeWindow> timeWindowChoiceProvider =
+    NotifierProvider<TimeWindowChoice, TimeWindow>(TimeWindowChoice.new);
+
+/// The Circle journal as Recommendation Engine V2 sees it: one past Circle
+/// per entry, with only its explicit usefulness answer. "Didn't try" ("Not
+/// today") is no usefulness answer; Close alone is never evidence.
+List<PastCircle> pastCirclesFrom(Iterable<CircleJournalEntry> entries) => [
+  for (final entry in entries)
+    if (DateTime.tryParse(entry.localDate) case final date?)
+      PastCircle(
+        date: date,
+        need: entry.direction,
+        activityId: entry.activityId,
+        catalogVersion: entry.catalogVersion,
+        usefulness: switch (entry.usefulnessResponse) {
+          CircleUsefulnessResponse.veryUseful => PastUsefulness.veryUseful,
+          CircleUsefulnessResponse.somewhatUseful =>
+            PastUsefulness.somewhatUseful,
+          CircleUsefulnessResponse.notUseful => PastUsefulness.notUseful,
+          null => null,
+        },
+        replacedFrom: entry.replacedFrom,
+      ),
+];

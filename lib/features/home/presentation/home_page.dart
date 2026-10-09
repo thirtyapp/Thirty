@@ -11,6 +11,7 @@ import '../application/recommendation_provider.dart';
 import 'widgets/action_report_prompt.dart';
 import 'widgets/circle_hero.dart';
 import 'widgets/circle_ready_prompt.dart';
+import 'widgets/feedback_acknowledgement.dart';
 import 'widgets/home_circle_metrics.dart';
 import 'widgets/home_header.dart';
 import 'widgets/later_today_label.dart';
@@ -102,6 +103,7 @@ class HomePage extends ConsumerWidget {
                       // unchanged).
                       footer: const [
                         PlanSessionPanel(),
+                        FeedbackAcknowledgement(),
                         LaterTodayLabel(),
                         ActionReportPrompt(),
                         ReminderInvitationCard(),

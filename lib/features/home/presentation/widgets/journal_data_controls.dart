@@ -88,9 +88,9 @@ class JournalDataControls extends ConsumerWidget {
       builder: (_) => const ThirtyConfirmDialog(
         title: 'Delete your Circle history?',
         body:
-            'This permanently deletes every recorded Circle on this device. '
-            'It cannot be undone, and nothing is stored anywhere else to '
-            'restore it from.',
+            'This permanently deletes every recorded Circle on this device, '
+            'and everything THIRTY has learned from them. It cannot be '
+            'undone, and nothing is stored anywhere else to restore it from.',
         cancelLabel: 'Keep my history',
         confirmLabel: 'Delete permanently',
         destructive: true,

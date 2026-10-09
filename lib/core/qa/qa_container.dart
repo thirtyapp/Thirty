@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/home/application/recommendation_provider.dart';
 import '../analytics/analytics_service.dart';
 import '../premium/entitlement_gateway.dart';
 import '../providers/shared_preferences_provider.dart';
@@ -23,6 +24,8 @@ List<Override> qaContainerOverrides({
   required bool supabaseAvailable,
   QaSession? session,
 }) => [
+  // QA shows what a release build would: no content awaiting review.
+  safetyPendingAllowedProvider.overrideWithValue(false),
   if (session == null) ...[
     sharedPreferencesProvider.overrideWithValue(genuinePreferences),
     supabaseAvailableProvider.overrideWithValue(supabaseAvailable),

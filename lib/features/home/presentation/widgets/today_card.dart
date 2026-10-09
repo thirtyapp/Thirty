@@ -6,6 +6,36 @@ import '../../../../core/utils/daypart_greeting.dart';
 import '../../../../core/widgets/thirty_card.dart';
 import 'home_rhythm_column.dart';
 
+/// What the activity row says beneath the activity's name (V2 Phase B).
+enum ActivityRowCue {
+  /// Nothing — Phase A's row: once the Circle has started, the first action
+  /// is what matters.
+  none('', '', 'How to do it'),
+
+  /// Before Start: the row opens the how-to.
+  howTo('How to do it', 'How to do it', 'How to do it'),
+
+  /// Before Start, while today's activity can still be swapped once: the
+  /// how-to, where "Not this one today" waits.
+  howToOrNotThisOne(
+    'How to do it · Not this one?',
+    'Not this one?',
+    'How to do it, or not this one today',
+  );
+
+  const ActivityRowCue(this.text, this.shortText, this.hint);
+
+  final String text;
+
+  /// Shown instead of [text] when [text] would need a second line: the
+  /// chevron already says the row opens something, and the cue must never
+  /// make the card taller (narrow phones, enlarged text).
+  final String shortText;
+
+  /// What TalkBack and VoiceOver say after the activity's name.
+  final String hint;
+}
+
 /// The greeting that opens every Circle (Phase D1): THIRTY's daypart
 /// greeting, with the user's first name when they have given one —
 /// "Good morning, Thomas." or "Good morning." ([daypartGreeting]).
@@ -43,6 +73,7 @@ class TodayCard extends StatelessWidget {
     required this.firstAction,
     required this.showFirstAction,
     required this.onShowGuide,
+    this.guideCue = ActivityRowCue.none,
     required this.cardAsset,
     required this.intentOpacity,
     required this.detailOpacity,
@@ -64,6 +95,9 @@ class TodayCard extends StatelessWidget {
 
   /// Opens the full how-to; `null` hides the link.
   final VoidCallback? onShowGuide;
+
+  /// The quiet line beneath the activity's name, saying what the row opens.
+  final ActivityRowCue guideCue;
   final String cardAsset;
   final Duration artSwitchDuration;
   final Animation<double> intentOpacity;
@@ -188,6 +222,9 @@ class TodayCard extends StatelessWidget {
                               activity: activity,
                               icon: iconFor(category),
                               onTap: onShowGuide,
+                              cue: onShowGuide == null
+                                  ? ActivityRowCue.none
+                                  : guideCue,
                             ),
                             Divider(height: 1, color: colors.divider),
                           ],
@@ -354,25 +391,59 @@ class _TodayArt extends StatelessWidget {
 /// Today's activity — its icon, name and natural length — with a chevron
 /// that opens the full how-to. The row's own vertical padding is its touch
 /// target, so it adds no height to the card.
+///
+/// With a [cue], the name and the cue share that height: the padding and
+/// the name's line height tighten so the row is never taller than Phase A's
+/// (phase_b_ui_test.dart), and Start Circle keeps its place.
 class _ActivityRow extends StatelessWidget {
   const _ActivityRow({
     required this.activity,
     required this.icon,
     required this.onTap,
+    required this.cue,
   });
 
   final String activity;
   final IconData icon;
   final VoidCallback? onTap;
+  final ActivityRowCue cue;
 
   static const _chipSize = 28.0;
+  static const _cuedNameHeight = 1.25;
+  static const _cueHeight = 1.2;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
+    final cued = cue != ActivityRowCue.none;
+    final nameStyle = textTheme.bodyLarge?.copyWith(
+      color: colors.primary,
+      fontWeight: FontWeight.w600,
+    );
+    final name = cued
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                activity,
+                style: nameStyle?.copyWith(height: _cuedNameHeight),
+              ),
+              _CueLine(
+                cue: cue,
+                style: textTheme.bodySmall?.copyWith(
+                  color: colors.textSecondary,
+                  height: _cueHeight,
+                ),
+              ),
+            ],
+          )
+        : Text(activity, style: nameStyle);
     final row = Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
+      padding: EdgeInsets.symmetric(
+        vertical: cued ? AppSpacing.xs : AppSpacing.s,
+      ),
       child: Row(
         children: [
           ExcludeSemantics(
@@ -387,15 +458,7 @@ class _ActivityRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.s),
-          Expanded(
-            child: Text(
-              activity,
-              style: textTheme.bodyLarge?.copyWith(
-                color: colors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          Expanded(child: name),
           if (onTap != null)
             ExcludeSemantics(
               child: Icon(
@@ -414,12 +477,37 @@ class _ActivityRow extends StatelessWidget {
     return Semantics(
       button: true,
       label: label,
-      hint: 'How to do it',
+      hint: cue.hint,
       // The merged node carries the tap itself: excluding the children's
       // semantics would otherwise drop the InkWell's tap action.
       onTap: onTap,
       excludeSemantics: true,
       child: InkWell(onTap: onTap, borderRadius: AppRadius.small, child: row),
+    );
+  }
+}
+
+/// [cue] on one line: in full when it fits, else its short form.
+class _CueLine extends StatelessWidget {
+  const _CueLine({required this.cue, required this.style});
+
+  final ActivityRowCue cue;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final painter = TextPainter(
+          text: TextSpan(text: cue.text, style: style),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+          maxLines: 1,
+        )..layout(maxWidth: constraints.maxWidth);
+        final fits = !painter.didExceedMaxLines;
+        painter.dispose();
+        return Text(fits ? cue.text : cue.shortText, style: style);
+      },
     );
   }
 }

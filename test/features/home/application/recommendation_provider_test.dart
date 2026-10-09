@@ -10,6 +10,7 @@ import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
 import 'package:thirty/features/plans/application/plan_provider.dart';
 import 'package:thirty/features/plans/domain/plan_catalog.dart';
 import 'package:thirty/features/plans/domain/plan_ids.dart';
@@ -230,17 +231,13 @@ void main() {
         expect(todayActivity, isNot(staleActivity));
       });
 
-      test('across many consecutive days, the same activity never repeats '
-          'until every other pool member has been shown, and the persisted '
-          'history never exceeds pool.length - 1 entries', () async {
-        final pool = activityPools[Intention.clearerHead]!;
-        final historyKey = recommendationHistoryKeyFor(Intention.clearerHead);
-        final historyCap = pool.length - 1;
-
+      test('V2: across many consecutive days, never yesterday\'s activity '
+          'and never more than twice in a week — derived from the journal, '
+          'with the retired V1 selector keys never written', () async {
         Map<String, Object> storedPrefs = {};
         final chosen = <ActivityId>[];
 
-        for (var i = 0; i < 8; i++) {
+        for (var i = 0; i < 10; i++) {
           final day = DateTime(2026, 8, 1 + i, 9);
           final (container, _) = await _containerWith(storedPrefs, now: day);
           container
@@ -257,38 +254,47 @@ void main() {
           };
           container.dispose();
 
-          final history = prefs.getStringList(historyKey);
-          expect(history, isNotNull);
-          expect(history!.length, lessThanOrEqualTo(historyCap));
+          for (final need in Intention.values) {
+            expect(
+              prefs.containsKey(recommendationHistoryKeyFor(need)),
+              isFalse,
+            );
+          }
+          expect(prefs.containsKey(recommendationLastFamilyKey), isFalse);
         }
 
-        // No activity repeats within any window of historyCap consecutive
-        // picks — e.g. for a 3-item pool, no two picks within the last 2
-        // are the same.
-        for (var i = historyCap; i < chosen.length; i++) {
-          final window = chosen.sublist(i - historyCap, i);
-          expect(window, isNot(contains(chosen[i])));
+        for (var i = 1; i < chosen.length; i++) {
+          expect(chosen[i], isNot(chosen[i - 1]), reason: 'day $i');
+        }
+        for (var i = 0; i + 7 <= chosen.length; i++) {
+          final week = chosen.sublist(i, i + 7);
+          for (final id in week.toSet()) {
+            expect(
+              week.where((a) => a == id).length,
+              lessThanOrEqualTo(2),
+              reason: '${id.name} from day $i',
+            );
+          }
         }
       });
 
-      test('an empty/absent history (fresh install, or after clear-storage) '
-          'behaves exactly like first-ever use — the plain rotation '
-          'candidate, no crash', () async {
+      test('V2: an empty history (fresh install, or after Delete) is a '
+          'first-ever use — the curated start, nothing personal, no '
+          'crash', () async {
         final (container, _) = await _containerWith({}, now: _today);
         addTearDown(container.dispose);
 
         container
             .read(recommendationProvider.notifier)
             .chooseIntention(Intention.gentlerPace);
-        final state = container.read(recommendationProvider);
+        final recommendation = container
+            .read(recommendationProvider)
+            .recommendation!;
 
-        expect(
-          state.recommendation!.activityId,
-          selectActivityId(
-            intention: Intention.gentlerPace,
-            dayIndex: epochDay(_today),
-          ),
-        );
+        expect(recommendation.activityId, ActivityId.easyWalk);
+        expect(recommendation.reason, RecommendationReason.starter);
+        expect(recommendation.personalReason, isNull);
+        expect(recommendation.timeWindow, TimeWindow.about20);
       });
     });
 

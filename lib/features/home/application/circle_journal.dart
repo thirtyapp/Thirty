@@ -56,6 +56,35 @@ extension CircleUsefulnessResponseWire on CircleUsefulnessResponse {
   String get wireName => name;
 }
 
+/// What THIRTY offered for a Circle, and why (V2 Phase B) — recorded with
+/// the day's journal entry. Every field is `null` on entries written before
+/// Phase B.
+class CircleOffer {
+  const CircleOffer({
+    this.timeWindow,
+    this.offeredMinutes,
+    this.reasonCode,
+    this.replacedFrom,
+    this.replacementReason,
+  });
+
+  /// The time the user said they had (`TimeWindow.name`).
+  final String? timeWindow;
+
+  /// The length offered (minutes).
+  final int? offeredMinutes;
+
+  /// The engine's reason code for the offer (`RecommendationReason.name`).
+  final String? reasonCode;
+
+  /// The activity first offered, if the user asked for another
+  /// ("Not this one today").
+  final ActivityId? replacedFrom;
+
+  /// Why (`ReplacementReason.name`). Never a usefulness answer.
+  final String? replacementReason;
+}
+
 /// One local day's Circle journal record.
 ///
 /// [circleId] and [localDate] are currently always equal — Free is bounded
@@ -86,6 +115,11 @@ class CircleJournalEntry {
     this.treatmentUsed,
     this.revisitUsed,
     this.treatmentSource,
+    this.timeWindow,
+    this.offeredMinutes,
+    this.reasonCode,
+    this.replacedFrom,
+    this.replacementReason,
   });
 
   /// The journal record schema version this entry was written under — see
@@ -175,26 +209,41 @@ class CircleJournalEntry {
   /// new user choice (ADR-015 §10).
   final String? treatmentSource;
 
+  /// V2 Phase B — see [CircleOffer]. All `null` on older entries.
+  final String? timeWindow;
+  final int? offeredMinutes;
+  final String? reasonCode;
+  final ActivityId? replacedFrom;
+  final String? replacementReason;
+
+  /// A copy with the given fields changed. [clearUsefulness] removes the
+  /// usefulness answer (it may only follow an affirmative attempt).
+  /// [activityId] and [offer] change only for a replacement.
   CircleJournalEntry copyWith({
     DateTime? startedAt,
     DateTime? closedAt,
     CircleAttemptResponse? attemptResponse,
     CircleUsefulnessResponse? usefulnessResponse,
+    bool clearUsefulness = false,
     String? treatmentUsed,
     String? treatmentSource,
+    ActivityId? activityId,
+    CircleOffer? offer,
   }) {
     return CircleJournalEntry(
       schemaVersion: schemaVersion,
       circleId: circleId,
       localDate: localDate,
       direction: direction,
-      activityId: activityId,
+      activityId: activityId ?? this.activityId,
       catalogVersion: catalogVersion,
       shownAt: shownAt,
       startedAt: startedAt ?? this.startedAt,
       closedAt: closedAt ?? this.closedAt,
       attemptResponse: attemptResponse ?? this.attemptResponse,
-      usefulnessResponse: usefulnessResponse ?? this.usefulnessResponse,
+      usefulnessResponse: clearUsefulness
+          ? null
+          : (usefulnessResponse ?? this.usefulnessResponse),
       planId: planId,
       planVersion: planVersion,
       stageId: stageId,
@@ -202,6 +251,11 @@ class CircleJournalEntry {
       treatmentUsed: treatmentUsed ?? this.treatmentUsed,
       revisitUsed: revisitUsed,
       treatmentSource: treatmentSource ?? this.treatmentSource,
+      timeWindow: offer?.timeWindow ?? timeWindow,
+      offeredMinutes: offer?.offeredMinutes ?? offeredMinutes,
+      reasonCode: offer?.reasonCode ?? reasonCode,
+      replacedFrom: offer?.replacedFrom ?? replacedFrom,
+      replacementReason: offer?.replacementReason ?? replacementReason,
     );
   }
 
@@ -224,6 +278,11 @@ class CircleJournalEntry {
     'treatmentUsed': treatmentUsed,
     'revisitUsed': revisitUsed,
     'treatmentSource': treatmentSource,
+    'timeWindow': timeWindow,
+    'offeredMinutes': offeredMinutes,
+    'reasonCode': reasonCode,
+    'replacedFromActivityId': replacedFrom?.name,
+    'replacementReason': replacementReason,
   };
 
   /// Parses one journal entry, or `null` if [json] is missing or has an
@@ -286,6 +345,12 @@ class CircleJournalEntry {
     final treatmentSource = treatmentSourceRaw is String
         ? treatmentSourceRaw
         : null;
+    // V2 Phase B offer fields — additive like the Plan fields: absent or
+    // malformed means not recorded.
+    final timeWindowRaw = json['timeWindow'];
+    final offeredMinutesRaw = json['offeredMinutes'];
+    final reasonCodeRaw = json['reasonCode'];
+    final replacementReasonRaw = json['replacementReason'];
 
     return CircleJournalEntry(
       schemaVersion: schemaVersion,
@@ -308,6 +373,14 @@ class CircleJournalEntry {
       treatmentUsed: treatmentUsed,
       revisitUsed: revisitUsed,
       treatmentSource: treatmentSource,
+      timeWindow: timeWindowRaw is String ? timeWindowRaw : null,
+      offeredMinutes: offeredMinutesRaw is int ? offeredMinutesRaw : null,
+      reasonCode: reasonCodeRaw is String ? reasonCodeRaw : null,
+      replacedFrom: ActivityId.values
+          .asNameMap()[json['replacedFromActivityId']],
+      replacementReason: replacementReasonRaw is String
+          ? replacementReasonRaw
+          : null,
     );
   }
 }
@@ -396,6 +469,7 @@ class CircleJournalRepository {
     String? treatmentUsed,
     bool? revisitUsed,
     String? treatmentSource,
+    CircleOffer? offer,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
@@ -410,6 +484,7 @@ class CircleJournalRepository {
     revisitUsed: revisitUsed,
     treatmentSource: treatmentSource,
     takeCurrentTreatment: false,
+    offer: offer,
     update: (entry) => entry,
   );
 
@@ -432,6 +507,7 @@ class CircleJournalRepository {
     required String treatmentUsed,
     required bool revisitUsed,
     required String treatmentSource,
+    CircleOffer? offer,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
@@ -445,6 +521,7 @@ class CircleJournalRepository {
     treatmentUsed: treatmentUsed,
     revisitUsed: revisitUsed,
     treatmentSource: treatmentSource,
+    offer: offer,
     update: (entry) => entry,
   );
 
@@ -472,6 +549,7 @@ class CircleJournalRepository {
     String? treatmentUsed,
     bool? revisitUsed,
     String? treatmentSource,
+    CircleOffer? offer,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
@@ -485,6 +563,7 @@ class CircleJournalRepository {
     treatmentUsed: treatmentUsed,
     revisitUsed: revisitUsed,
     treatmentSource: treatmentSource,
+    offer: offer,
     update: (entry) => entry.copyWith(startedAt: startedAt),
   );
 
@@ -504,6 +583,7 @@ class CircleJournalRepository {
     String? treatmentUsed,
     bool? revisitUsed,
     String? treatmentSource,
+    CircleOffer? offer,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
@@ -517,6 +597,7 @@ class CircleJournalRepository {
     treatmentUsed: treatmentUsed,
     revisitUsed: revisitUsed,
     treatmentSource: treatmentSource,
+    offer: offer,
     update: (entry) => entry.copyWith(closedAt: closedAt),
   );
 
@@ -542,6 +623,7 @@ class CircleJournalRepository {
     String? treatmentUsed,
     bool? revisitUsed,
     String? treatmentSource,
+    CircleOffer? offer,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
@@ -555,31 +637,13 @@ class CircleJournalRepository {
     treatmentUsed: treatmentUsed,
     revisitUsed: revisitUsed,
     treatmentSource: treatmentSource,
-    update: (entry) {
-      final isAffirmative =
-          response == CircleAttemptResponse.yes ||
-          response == CircleAttemptResponse.aLittle;
-      return CircleJournalEntry(
-        schemaVersion: entry.schemaVersion,
-        circleId: entry.circleId,
-        localDate: entry.localDate,
-        direction: entry.direction,
-        activityId: entry.activityId,
-        catalogVersion: entry.catalogVersion,
-        shownAt: entry.shownAt,
-        startedAt: entry.startedAt,
-        closedAt: entry.closedAt,
-        attemptResponse: response,
-        usefulnessResponse: isAffirmative ? entry.usefulnessResponse : null,
-        planId: entry.planId,
-        planVersion: entry.planVersion,
-        stageId: entry.stageId,
-        planCycleId: entry.planCycleId,
-        treatmentUsed: entry.treatmentUsed,
-        revisitUsed: entry.revisitUsed,
-        treatmentSource: entry.treatmentSource,
-      );
-    },
+    offer: offer,
+    update: (entry) => entry.copyWith(
+      attemptResponse: response,
+      clearUsefulness:
+          response != CircleAttemptResponse.yes &&
+          response != CircleAttemptResponse.aLittle,
+    ),
   );
 
   /// Records the user's optional usefulness rating on [circleId]'s entry.
@@ -598,6 +662,7 @@ class CircleJournalRepository {
     String? treatmentUsed,
     bool? revisitUsed,
     String? treatmentSource,
+    CircleOffer? offer,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
@@ -611,7 +676,30 @@ class CircleJournalRepository {
     treatmentUsed: treatmentUsed,
     revisitUsed: revisitUsed,
     treatmentSource: treatmentSource,
+    offer: offer,
     update: (entry) => entry.copyWith(usefulnessResponse: response),
+  );
+
+  /// Records today's replacement ("Not this one today", V2 Phase B):
+  /// [circleId]'s entry now names [activityId] — the activity actually
+  /// offered — and [offer] records what it replaced and why. Self-healing
+  /// like [recordStarted].
+  Future<void> recordReplaced({
+    required String circleId,
+    required String localDate,
+    required Intention direction,
+    required ActivityId activityId,
+    required DateTime replacedAt,
+    required CircleOffer offer,
+  }) => _upsert(
+    circleId: circleId,
+    localDate: localDate,
+    direction: direction,
+    activityId: activityId,
+    fallbackShownAt: replacedAt,
+    offer: offer,
+    takeCurrentTreatment: false,
+    update: (entry) => entry.copyWith(activityId: activityId, offer: offer),
   );
 
   /// Permanently deletes the entire local journal (ADR-013 §6 — "local
@@ -669,6 +757,7 @@ class CircleJournalRepository {
     String? treatmentUsed,
     bool? revisitUsed,
     String? treatmentSource,
+    CircleOffer? offer,
     bool takeCurrentTreatment = true,
   }) async {
     final entries = _readRaw();
@@ -689,6 +778,11 @@ class CircleJournalRepository {
             treatmentUsed: treatmentUsed,
             revisitUsed: revisitUsed,
             treatmentSource: treatmentSource,
+            timeWindow: offer?.timeWindow,
+            offeredMinutes: offer?.offeredMinutes,
+            reasonCode: offer?.reasonCode,
+            replacedFrom: offer?.replacedFrom,
+            replacementReason: offer?.replacementReason,
           )
         : entries[index];
 

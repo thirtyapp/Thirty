@@ -83,6 +83,11 @@ void main() {
       'month_two',
       'never_reflects',
       'lapsed_retained_snapshots',
+      'free_not_useful',
+      'free_useful',
+      'free_exploration',
+      'free_secondary',
+      'free_v1_history',
     ]);
   });
 

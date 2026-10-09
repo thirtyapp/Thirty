@@ -2,9 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../features/home/application/activity_catalog.dart' show Intention;
+import 'dart:convert';
+
+import '../../features/home/application/activity_catalog.dart';
 import '../../features/home/application/circle_journal.dart';
 import '../../features/home/application/recommendation_provider.dart';
+import '../../features/home/domain/recommendation_engine.dart';
 import '../../features/insights/application/insight_provider.dart';
 import '../../features/plans/application/plan_provider.dart';
 import '../../features/plans/domain/plan_ids.dart';
@@ -14,6 +17,7 @@ import '../premium/premium_access.dart';
 import '../providers/clock_provider.dart';
 import '../providers/shared_preferences_provider.dart';
 import '../providers/theme_mode_provider.dart';
+import '../utils/date_key.dart';
 import 'qa_entitlement_gateway.dart';
 import 'qa_inert_services.dart';
 import 'qa_shared_preferences.dart';
@@ -46,7 +50,25 @@ enum QaScenario {
   lapsedRetainedSnapshots(
     'lapsed_retained_snapshots',
     'Lapsed, retained snapshots',
-  );
+  ),
+
+  /// V2 Phase B (Free): day 5, after one "Not useful" — that activity rests.
+  freeNotUseful('free_not_useful', 'Free · one Not useful'),
+
+  /// V2 Phase B (Free): a "Very useful" walk, ready to come back with its
+  /// reason.
+  freeUseful('free_useful', 'Free · useful before'),
+
+  /// V2 Phase B (Free): a settled Clearer Head, due something new.
+  freeExploration('free_exploration', 'Free · something new'),
+
+  /// V2 Phase B (Free): tired Energy primaries and a secondary fit found
+  /// very useful for Gentler Pace; ≈ 10 minutes preselected.
+  freeSecondary('free_secondary', 'Free · secondary promoted'),
+
+  /// V2 Phase B (Free): V1 answers — Write it down (compatible) counts, A
+  /// brisk walk (LEARNING_RESET) does not.
+  freeV1History('free_v1_history', 'Free · V1 history');
 
   const QaScenario(this.wireName, this.label);
 
@@ -118,6 +140,10 @@ class QaScenarioDay {
     this.queueRevisit = false,
     this.attempt,
     this.usefulness,
+    this.window,
+    this.replace,
+    this.seeded,
+    this.catalogVersion = _currentCatalogVersion,
   });
 
   final int offsetDays;
@@ -137,13 +163,33 @@ class QaScenarioDay {
 
   final CircleAttemptResponse? attempt;
   final CircleUsefulnessResponse? usefulness;
+
+  /// V2 Phase B: the time chosen that day (the provider's default if null).
+  final TimeWindow? window;
+
+  /// V2 Phase B: "Not this one today" before starting.
+  final ReplacementReason? replace;
+
+  /// V2 Phase B: a fixed activity recorded straight into the journal, for
+  /// a history the engine would not produce on its own (V1-era entries).
+  final ActivityId? seeded;
+
+  /// The catalogue version a [seeded] entry was recorded under.
+  final int catalogVersion;
 }
+
+/// The current catalogue version, under a name [QaScenarioDay]'s default can
+/// reach past its own `catalogVersion` field.
+const _currentCatalogVersion = catalogVersion;
 
 const _yes = CircleAttemptResponse.yes;
 const _aLittle = CircleAttemptResponse.aLittle;
 const _notToday = CircleAttemptResponse.notToday;
 const _very = CircleUsefulnessResponse.veryUseful;
 const _somewhat = CircleUsefulnessResponse.somewhatUseful;
+
+const _not = CircleUsefulnessResponse.notUseful;
+const _t10 = TimeWindow.about10;
 
 const _energy = Intention.moreEnergy;
 const _head = Intention.clearerHead;
@@ -241,6 +287,160 @@ List<QaScenarioDay> qaScenarioDays(QaScenario scenario) => switch (scenario) {
     QaScenarioDay(-4, _head),
     QaScenarioDay(-2, _energy),
   ],
+  QaScenario.freeNotUseful => const [
+    QaScenarioDay(
+      -4,
+      _energy,
+      entitled: false,
+      attempt: _yes,
+      usefulness: _not,
+    ),
+    QaScenarioDay(
+      -3,
+      _head,
+      entitled: false,
+      attempt: _yes,
+      usefulness: _somewhat,
+    ),
+    QaScenarioDay(
+      -2,
+      _gentle,
+      entitled: false,
+      attempt: _yes,
+      usefulness: _somewhat,
+    ),
+    QaScenarioDay(-1, _head, entitled: false),
+  ],
+  QaScenario.freeUseful => const [
+    QaScenarioDay(
+      -9,
+      _energy,
+      entitled: false,
+      attempt: _yes,
+      usefulness: _very,
+    ),
+    QaScenarioDay(-7, _energy, entitled: false),
+    QaScenarioDay(
+      -5,
+      _energy,
+      entitled: false,
+      attempt: _aLittle,
+      usefulness: _somewhat,
+    ),
+    QaScenarioDay(-3, _gentle, entitled: false),
+    QaScenarioDay(-1, _head, entitled: false),
+  ],
+  QaScenario.freeExploration => const [
+    QaScenarioDay(
+      -14,
+      _head,
+      entitled: false,
+      attempt: _yes,
+      usefulness: _somewhat,
+    ),
+    QaScenarioDay(
+      -12,
+      _head,
+      entitled: false,
+      attempt: _yes,
+      usefulness: _very,
+    ),
+    QaScenarioDay(
+      -10,
+      _head,
+      entitled: false,
+      attempt: _yes,
+      usefulness: _somewhat,
+    ),
+    QaScenarioDay(-8, _head, entitled: false, attempt: _yes, usefulness: _very),
+    QaScenarioDay(
+      -6,
+      _head,
+      entitled: false,
+      attempt: _yes,
+      usefulness: _somewhat,
+    ),
+    QaScenarioDay(-4, _head, entitled: false, attempt: _yes, usefulness: _very),
+    QaScenarioDay(
+      -2,
+      _head,
+      entitled: false,
+      attempt: _yes,
+      usefulness: _somewhat,
+    ),
+  ],
+  QaScenario.freeSecondary => const [
+    QaScenarioDay(
+      -9,
+      _gentle,
+      entitled: false,
+      seeded: ActivityId.gentleStretchPause,
+      attempt: _yes,
+      usefulness: _very,
+    ),
+    QaScenarioDay(
+      -3,
+      _energy,
+      entitled: false,
+      seeded: ActivityId.activeHouseholdTask,
+      attempt: _yes,
+      usefulness: _not,
+    ),
+    QaScenarioDay(
+      -2,
+      _energy,
+      entitled: false,
+      seeded: ActivityId.energisingStretchFlow,
+    ),
+    QaScenarioDay(
+      -1,
+      _energy,
+      entitled: false,
+      seeded: ActivityId.moveToMusic,
+      window: _t10,
+    ),
+  ],
+  QaScenario.freeV1History => const [
+    QaScenarioDay(
+      -20,
+      _head,
+      entitled: false,
+      seeded: ActivityId.writeItDown,
+      catalogVersion: v1CatalogVersion,
+      attempt: _yes,
+      usefulness: _very,
+    ),
+    QaScenarioDay(
+      -18,
+      _energy,
+      entitled: false,
+      seeded: ActivityId.thirtyMinuteWalk,
+      catalogVersion: v1CatalogVersion,
+      attempt: _yes,
+      usefulness: _very,
+    ),
+    QaScenarioDay(
+      -14,
+      _head,
+      entitled: false,
+      seeded: ActivityId.writeItDown,
+      catalogVersion: v1CatalogVersion,
+      attempt: _yes,
+      usefulness: _very,
+    ),
+    QaScenarioDay(
+      -12,
+      _energy,
+      entitled: false,
+      seeded: ActivityId.thirtyMinuteWalk,
+      catalogVersion: v1CatalogVersion,
+      attempt: _yes,
+      usefulness: _very,
+    ),
+    QaScenarioDay(-6, _head, entitled: false),
+    QaScenarioDay(-4, _head, entitled: false),
+    QaScenarioDay(-2, _energy, entitled: false),
+  ],
   QaScenario.lapsedRetainedSnapshots => const [
     QaScenarioDay(-40, _head, attempt: _yes, usefulness: _very),
     QaScenarioDay(-36, _head, attempt: _yes, usefulness: _somewhat),
@@ -284,6 +484,10 @@ Future<void> _simulateDay(
     referenceNow.day + day.offsetDays,
     9,
   );
+  if (day.seeded case final activity?) {
+    await _seedJournalEntry(store, morning, day, activity);
+    return;
+  }
   var clock = morning;
   final container = ProviderContainer(
     overrides: [
@@ -291,6 +495,7 @@ Future<void> _simulateDay(
       nowProvider.overrideWithValue(morning),
       eventClockProvider.overrideWithValue(() => clock),
       premiumEntitlementProvider.overrideWithValue(day.entitled),
+      safetyPendingAllowedProvider.overrideWithValue(false),
       analyticsServiceProvider.overrideWithValue(
         const QaSilentAnalyticsService(),
       ),
@@ -305,8 +510,12 @@ Future<void> _simulateDay(
     if (day.queueRevisit) plans.queueRevisit();
     await _settle();
 
-    circle.chooseIntention(day.direction);
+    circle.chooseIntention(day.direction, window: day.window);
     await _settle();
+    if (day.replace case final reason?) {
+      circle.replaceToday(reason);
+      await _settle();
+    }
 
     clock = morning.add(const Duration(minutes: 2));
     circle.start();
@@ -336,3 +545,38 @@ Future<void> _simulateDay(
 /// Lets the notifiers' fire-and-forget writes (all in-memory here) finish
 /// before the next step reads them back.
 Future<void> _settle() => Future<void>.delayed(Duration.zero);
+
+/// Records [activity] for [day] straight into [store]'s Circle journal, as
+/// the catalogue version [QaScenarioDay.catalogVersion] would have.
+Future<void> _seedJournalEntry(
+  QaSharedPreferences store,
+  DateTime morning,
+  QaScenarioDay day,
+  ActivityId activity,
+) async {
+  final date = dateKey(morning);
+  final entries = CircleJournalRepository(store).readAll()
+    ..add(
+      CircleJournalEntry(
+        schemaVersion: circleJournalSchemaVersion,
+        circleId: date,
+        localDate: date,
+        direction: day.direction,
+        activityId: activity,
+        catalogVersion: day.catalogVersion,
+        shownAt: morning,
+        startedAt: morning.add(const Duration(minutes: 2)),
+        closedAt: morning.add(const Duration(minutes: 22)),
+        attemptResponse: day.attempt,
+        usefulnessResponse: day.usefulness,
+        timeWindow: day.window?.name,
+      ),
+    );
+  await store.setString(
+    circleJournalKey,
+    jsonEncode({
+      'schemaVersion': circleJournalSchemaVersion,
+      'entries': [for (final e in entries) e.toJson()],
+    }),
+  );
+}

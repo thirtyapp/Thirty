@@ -17,6 +17,7 @@ import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
 import 'package:thirty/features/home/presentation/widgets/journal_data_controls.dart';
 import 'package:thirty/features/insights/application/insight_provider.dart';
 import 'package:thirty/features/insights/domain/insight_snapshot.dart';
@@ -152,11 +153,23 @@ void main() {
         await tester.runAsync(setUpApp)
             as (SharedPreferences, ProviderContainer);
     addTearDown(container.dispose);
+    // Retired V1 selector keys an older build may have left behind.
+    await tester.runAsync(() async {
+      await prefs.setStringList(
+        recommendationHistoryKeyFor(Intention.gentlerPace),
+        ['easyWalk'],
+      );
+      await prefs.setString(recommendationLastFamilyKey, 'walking');
+    });
     await tester.runAsync(() => walkTodaysCircle(container));
-    expect(
-      prefs.getStringList(recommendationHistoryKeyFor(Intention.gentlerPace)),
-      isNotEmpty,
-    );
+    // V2 Phase B: today's offer is recorded too.
+    for (final key in [
+      recommendationTimeWindowKey,
+      recommendationOfferedMinutesKey,
+      recommendationReasonKey,
+    ]) {
+      expect(prefs.containsKey(key), isTrue, reason: key);
+    }
 
     await deleteThroughDialog(tester, container);
 
@@ -168,6 +181,29 @@ void main() {
       );
     }
     expect(prefs.containsKey(recommendationLastFamilyKey), isFalse);
+  });
+
+  testWidgets('V2: everything learned goes with it — the next Circle is a '
+      'first-ever use again, and the time choice starts from first use', (
+    tester,
+  ) async {
+    final (prefs, container) =
+        await tester.runAsync(setUpApp)
+            as (SharedPreferences, ProviderContainer);
+    addTearDown(container.dispose);
+    container.read(timeWindowChoiceProvider.notifier).choose(TimeWindow.upTo30);
+    await tester.runAsync(() => walkTodaysCircle(container));
+    expect(container.read(timeWindowChoiceProvider), TimeWindow.upTo30);
+
+    await deleteThroughDialog(tester, container);
+
+    expect(container.read(timeWindowChoiceProvider), TimeWindow.about20);
+    container
+        .read(recommendationProvider.notifier)
+        .chooseIntention(Intention.gentlerPace);
+    final again = container.read(recommendationProvider).recommendation!;
+    expect(again.activityId, ActivityId.easyWalk);
+    expect(again.reason, RecommendationReason.starter);
   });
 
   testWidgets('preferences survive: name, reminder, appearance, analytics '

@@ -143,7 +143,12 @@ void main() {
 
     // A Galaxy S25 at its default display size (411 × 891 dp), with Home's
     // page margins either side of the card.
-    Widget card(ActivityId id, {required bool running, double scale = 1}) {
+    Widget card(
+      ActivityId id, {
+      required bool running,
+      double scale = 1,
+      ActivityRowCue cue = ActivityRowCue.none,
+    }) {
       final activity = activityDefinition(id);
       return MaterialApp(
         theme: AppTheme.light,
@@ -164,6 +169,7 @@ void main() {
                 firstAction: activity.firstAction,
                 showFirstAction: running,
                 onShowGuide: () {},
+                guideCue: cue,
                 cardAsset: _asset,
                 intentOpacity: const AlwaysStoppedAnimation(1),
                 detailOpacity: const AlwaysStoppedAnimation(1),
@@ -225,6 +231,56 @@ void main() {
         }
       }
       expect(truncated, isEmpty);
+    });
+
+    testWidgets('V2 Phase B: the row\'s cue is always one line and, at '
+        'normal text, never makes the card taller — on the S25 in full, on '
+        'narrower phones in its short form', (tester) async {
+      final problems = <String>[];
+      final shownOnS25 = <String>{};
+      // 1.29: Android's 130% setting reaches Flutter just below 1.3, so the
+      // World art stays and the column is narrow. 1.3: text only.
+      for (final width in [360.0, 375.0, 393.0, 411.0]) {
+        tester.view.physicalSize = Size(width, 891);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        for (final scale in [1.0, 1.29, 1.3]) {
+          for (final id in offerable()) {
+            await tester.pumpWidget(card(id, running: false, scale: scale));
+            final phaseA = tester.getSize(find.byType(TodayCard)).height;
+            for (final cue in [
+              ActivityRowCue.howTo,
+              ActivityRowCue.howToOrNotThisOne,
+            ]) {
+              await tester.pumpWidget(
+                card(id, running: false, scale: scale, cue: cue),
+              );
+              final at = '$width $scale ${id.name} ${cue.name}';
+              final line = 13 * 1.2 * scale; // bodySmall at a 1.2 height
+              final cued = tester.getSize(find.byType(TodayCard)).height;
+              // Enlarged text grows the name and the cue; Home scrolls
+              // instead (home_cta_nav_layout_test.dart).
+              if (cued > phaseA + (scale == 1 ? 0 : line)) {
+                problems.add('$at: $cued > $phaseA');
+              }
+              final shown = find.byWidgetPredicate(
+                (w) =>
+                    w is Text &&
+                    (w.data == cue.text || w.data == cue.shortText),
+              );
+              if (tester.getSize(shown).height > line + 0.5) {
+                problems.add('$at: wraps');
+              }
+              if (width == 411 && scale == 1) {
+                shownOnS25.add(tester.widget<Text>(shown).data!);
+              }
+            }
+          }
+        }
+      }
+      expect(problems, isEmpty);
+      // The founder's wording, whole, on the S25 at normal text.
+      expect(shownOnS25, {'How to do it', 'How to do it · Not this one?'});
     });
   });
 }
