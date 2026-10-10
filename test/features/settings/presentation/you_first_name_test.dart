@@ -20,7 +20,6 @@ import 'package:thirty/core/routing/app_router.dart';
 import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
-import 'package:thirty/features/insights/domain/insight_snapshot.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
 import 'package:thirty/features/settings/presentation/widgets/first_name_editor.dart';
@@ -529,14 +528,7 @@ void main() {
     testWidgets('"Delete Circle history" keeps the name', (tester) async {
       final (container, prefs) = await _pump(
         tester,
-        prefsValues: {
-          firstNameKey: 'Thomas',
-          insightSnapshotsKey: jsonEncode({
-            'schemaVersion': insightSnapshotsSchemaVersion,
-            'lastAssessedAt': '2026-10-01T09:00:00.000',
-            'snapshots': <Object?>[],
-          }),
-        },
+        prefsValues: {firstNameKey: 'Thomas'},
         withJournal: true,
         size: const Size(412, 3000),
       );
@@ -546,7 +538,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(prefs.getString(circleJournalKey), isNull);
-      expect(prefs.getString(insightSnapshotsKey), isNull);
       expect(prefs.getString(firstNameKey), 'Thomas');
       expect(container.read(firstNameProvider), 'Thomas');
       expect(find.text('Thomas'), findsOneWidget);

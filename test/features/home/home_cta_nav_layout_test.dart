@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -22,9 +24,6 @@ import 'package:thirty/features/home/presentation/widgets/circle_session_card.da
 import 'package:thirty/features/home/presentation/widgets/home_circle_metrics.dart';
 import 'package:thirty/features/home/presentation/widgets/home_rhythm_column.dart';
 import 'package:thirty/features/home/presentation/widgets/today_card.dart';
-import 'package:thirty/features/plans/domain/plan_catalog.dart';
-import 'package:thirty/features/plans/domain/plan_ids.dart';
-import 'package:thirty/features/plans/presentation/widgets/plan_session_panel.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 /// Start Circle vs the floating bottom navigation, on the real app shell
@@ -280,33 +279,49 @@ void main() {
       await _expectCtaReachableClearOfNav(tester);
     });
 
-    testWidgets('Plan day: Start Circle still comes after the Today card and '
-        'before the Plan session panel', (tester) async {
-      final stage = planDefinitionFor(PlanId.moreEnergyPath).stages.first;
-      await _pumpHome(
-        tester,
-        prefs: {
-          ..._assigned('moreEnergy', stage.activityId.name),
-          recommendationPlanIdKey: PlanId.moreEnergyPath.name,
-          recommendationStageIdKey: stage.id,
-          recommendationPlanCycleIdKey: 'moreEnergyPath_cycle_1',
-          recommendationPlanVersionKey: planContentVersion,
-          recommendationIsPlanRevisitKey: false,
-          recommendationTreatmentKey: 'standard',
+    // V2 Phase D: a joined Path step and a routine take the same card.
+    for (final (label, session) in [
+      (
+        'Path step',
+        {
+          'modules': ['standingStretch:full', 'musicMove:full'],
+          'title': 'Standing stretch + Move to music',
+          'pathRunId': 'path-1',
+          'pathKind': 'build',
+          'pathName': 'A lift at home',
+          'pathCircle': 4,
+          'pathCircles': 7,
+          'pathReason': 'together',
+          'pathExplanation': 'Now the two together.',
         },
-      );
-      final panel = find.byType(PlanSessionPanel);
-      expect(panel, findsOneWidget);
-      expect(
-        tester.getRect(panel).top,
-        greaterThan(tester.getRect(_cta).bottom),
-      );
-      expect(
-        tester.getRect(_cta).top,
-        greaterThan(tester.getRect(find.byType(TodayCard)).bottom),
-      );
-      await _expectCtaReachableClearOfNav(tester);
-    });
+      ),
+      (
+        'routine',
+        {
+          'modules': ['standingStretch:full', 'musicMove:full'],
+          'title': 'My pick-me-up',
+          'routineId': 'routine-1',
+          'routineVersionId': 'routine-1-v1',
+          'routineVersionNumber': 1,
+        },
+      ),
+    ]) {
+      testWidgets('$label day: Start Circle comes after the Today card, '
+          'reachable and clear of the nav', (tester) async {
+        await _pumpHome(
+          tester,
+          prefs: {
+            ..._assigned('moreEnergy', 'energisingStretchFlow'),
+            recommendationSessionKey: jsonEncode(session),
+          },
+        );
+        expect(
+          tester.getRect(_cta).top,
+          greaterThan(tester.getRect(find.byType(TodayCard)).bottom),
+        );
+        await _expectCtaReachableClearOfNav(tester);
+      });
+    }
 
     testWidgets('small phone (360×740), tend: large overflow keeps the usual '
         'rhythm and scrolls naturally', (tester) async {

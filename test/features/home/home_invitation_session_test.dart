@@ -48,7 +48,8 @@ final _today = DateTime(2026, 8, 2, 9);
 
 const _reminderCopy =
     "When would you like THIRTY to remind you about tomorrow's Circle?";
-const _premiumCopy = 'THIRTY Premium adds guided Plans, Coach and Insights.';
+const _premiumCopy =
+    'THIRTY Premium helps you build a few routines of your own.';
 
 const _chosen = <String, Object>{
   recommendationDayKey: '2026-08-02',

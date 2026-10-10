@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_card.dart';
 import '../../../../core/widgets/thirty_text_action.dart';
-import '../../../plans/domain/plan_catalog.dart';
-import '../../../plans/domain/plan_ids.dart';
 import '../../application/activity_catalog.dart';
+import '../../domain/v1_plan_history.dart';
 import '../../application/circle_journal.dart';
 
 /// One Circle journal record, written as a personal memory rather than a
@@ -53,14 +52,14 @@ class CircleJournalEntryCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(activityLabel(entry.activityId), style: textTheme.titleMedium),
+            Text(entry.title, style: textTheme.titleMedium),
             const SizedBox(height: 2),
             Text(needLine(entry), style: secondary),
             if (replacementLine(entry) case final swap?) ...[
               const SizedBox(height: 2),
               Text(swap, style: secondary),
             ],
-            if (_planContextLabel(entry) case final label?) ...[
+            if (contextLine(entry) case final label?) ...[
               const SizedBox(height: 2),
               Text(label, style: secondary),
             ],
@@ -103,7 +102,8 @@ class CircleJournalEntryCard extends StatelessWidget {
       'notFeeling' => ' — you weren’t feeling it',
       _ => '',
     };
-    return 'Instead of ${activityLabel(replaced)}$why';
+    final title = entry.session?.replacedFromTitle ?? activityLabel(replaced);
+    return 'Instead of $title$why';
   }
 
   /// What happened to the Circle that day, in one plain sentence. It only
@@ -122,24 +122,25 @@ class CircleJournalEntryCard extends StatelessWidget {
         '${_formatTime(closedAt)}.';
   }
 
-  /// A Plan-context line for [entry] — "Plan name · stage n of 5" — or
-  /// `null` for a Free entry, or one whose stage no longer resolves in the
-  /// current catalogue (the rest of the record still displays normally).
-  static String? _planContextLabel(CircleJournalEntry entry) {
-    final planIdName = entry.planId;
-    final stageId = entry.stageId;
-    if (planIdName == null || stageId == null) return null;
-
-    final planId = PlanId.values.asNameMap()[planIdName];
-    if (planId == null) return null;
-    final plan = planDefinitionFor(planId);
-    final stageIndex = plan.stages.indexWhere((s) => s.id == stageId);
-    final stageLabel = stageIndex >= 0
-        ? ' · stage ${stageIndex + 1} of ${plan.stages.length}'
-        : '';
-    final cycleId = entry.planCycleId;
-    final cycleLabel = cycleId == null ? '' : ' (cycle $cycleId)';
-    return '${plan.name}$stageLabel$cycleLabel';
+  /// Where the Circle came from, when it wasn't a single activity: a
+  /// routine and its version, a Path and its Circle — or, for an old
+  /// record, the V1 Plan it came from. Only what was true that day.
+  static String? contextLine(CircleJournalEntry entry) {
+    final session = entry.session;
+    if (session != null && session.pathName != null) {
+      final circle = session.pathCircle;
+      final circles = session.pathCircles;
+      return circle == null || circles == null
+          ? session.pathName
+          : '${session.pathName} · Circle $circle of $circles';
+    }
+    if (session != null && session.routineId != null) {
+      final version = session.routineVersionNumber;
+      return version == null || version == 1
+          ? 'Your routine'
+          : 'Your routine · version $version';
+    }
+    return v1PlanLabel(entry.planId, entry.stageId);
   }
 
   static String _formatTime(DateTime time) {

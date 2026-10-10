@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -16,15 +17,12 @@ import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/presentation/home_page.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
-import 'package:thirty/features/plans/domain/plan_catalog.dart';
-import 'package:thirty/features/plans/domain/plan_ids.dart';
-import 'package:thirty/features/plans/presentation/widgets/plan_session_panel.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 /// The greeting that opens every Circle: THIRTY's daypart greeting with the
 /// user's first name when there is one, from one shared path
 /// (`CircleHero` → `homeGreeting` → `daypartGreeting`) for every direction,
-/// activity, World and Plan.
+/// activity, World and Path step.
 
 Map<String, Object> _assigned(
   DateTime day,
@@ -184,25 +182,29 @@ void main() {
       });
     }
 
-    testWidgets('a Plan Circle opens with the same greeting', (tester) async {
+    testWidgets('a Path step opens with the same greeting', (tester) async {
       final now = DateTime(2026, 10, 4, 8);
-      final stage = planDefinitionFor(PlanId.moreEnergyPath).stages.first;
       await _pumpHome(
         tester,
         now: now,
         prefsValues: {
-          ..._assigned(now, 'moreEnergy', stage.activityId.name),
-          recommendationPlanIdKey: PlanId.moreEnergyPath.name,
-          recommendationStageIdKey: stage.id,
-          recommendationPlanCycleIdKey: 'moreEnergyPath_cycle_1',
-          recommendationPlanVersionKey: planContentVersion,
-          recommendationIsPlanRevisitKey: false,
-          recommendationTreatmentKey: 'standard',
+          ..._assigned(now, 'moreEnergy', 'moveToMusic'),
+          recommendationSessionKey: jsonEncode({
+            'modules': ['musicMove:short'],
+            'title': 'Move to music',
+            'pathRunId': 'path-1',
+            'pathKind': 'build',
+            'pathName': 'A lift at home',
+            'pathCircle': 1,
+            'pathCircles': 7,
+            'pathReason': 'firstTry',
+            'pathExplanation': 'A short first try.',
+          }),
           firstNameKey: 'Thomas',
         },
         size: const Size(412, 2400),
       );
-      expect(find.byType(PlanSessionPanel), findsOneWidget);
+      expect(find.textContaining('PATH'), findsOneWidget);
       expect(_greetings(tester), ['Good morning, Thomas.']);
     });
 

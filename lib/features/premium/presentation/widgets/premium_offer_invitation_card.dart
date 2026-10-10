@@ -96,7 +96,9 @@ class _PremiumOfferInvitationCardState
                     const SizedBox(width: AppSpacing.m),
                     Expanded(
                       child: Text(
-                        'THIRTY Premium adds guided Plans, Coach and Insights.',
+                        // V2 Phase D: the real paid job.
+                        'THIRTY Premium helps you build a few routines of '
+                        'your own.',
                         style: textTheme.bodyLarge,
                       ),
                     ),

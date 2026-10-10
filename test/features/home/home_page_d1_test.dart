@@ -216,7 +216,7 @@ void main() {
     expect(find.byType(SettingsPage), findsOneWidget);
     expect(
       tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
-      3,
+      2,
     );
   });
 
@@ -303,7 +303,7 @@ void main() {
       expect(card.right, 360 - AppSpacing.page);
       final today =
           'TODAY  \u00b7  '
-          '${activityTypicalMinutes(ActivityId.thirtyMinuteWalk)} MIN';
+          '${activityTypicalMinutes(ActivityId.thirtyMinuteWalk)}\u00A0MIN';
       for (final text in [today, 'More Energy', 'A brisk walk']) {
         expect(
           tester.getTopLeft(find.text(text)).dx,
@@ -470,7 +470,7 @@ void main() {
         AppColors.light.primary,
       );
 
-      await tester.tap(find.text('Plans'));
+      await tester.tap(find.text('Toolkit'));
       await tester.pumpAndSettle();
       expect(ringWidth(), 2);
       expect(

@@ -22,9 +22,9 @@ void main() {
     ));
     QaSession session(QaEntitlement e, QaScenario s) =>
         QaSession(entitlement: e, scenario: s, store: QaSharedPreferences());
-    expect(qaMarkerLines(session(QaEntitlement.active, QaScenario.monthTwo)), (
+    expect(qaMarkerLines(session(QaEntitlement.active, QaScenario.dMonthTwo)), (
       'QA PREMIUM · ACTIVE',
-      'QA DATA · month_two',
+      'QA DATA · d_month_two',
     ));
     expect(qaMarkerLines(session(QaEntitlement.unavailable, QaScenario.none)), (
       'QA PREMIUM · UNAVAILABLE',
@@ -82,33 +82,25 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// Leaves state behind in a month_two session that a fresh app start
-  /// would never show: a pushed Plan page, and Insights' one-off
-  /// "Applied" confirmation after applying the revisit Insight.
-  Future<void> leaveMonthTwoState(WidgetTester tester) async {
-    await openTab(tester, 'Insights');
-    final apply = find.text('Queue a one-off revisit of this stage');
-    await tester.ensureVisible(apply);
+  /// Leaves state behind that a fresh app start would never show: a
+  /// routine's page pushed inside the Toolkit.
+  Future<void> leaveToolkitState(WidgetTester tester) async {
+    await openTab(tester, 'Toolkit');
+    final routine = find.text('My pick-me-up');
+    await tester.ensureVisible(routine);
     await tester.pumpAndSettle();
-    await tester.tap(apply);
+    await tester.tap(routine);
     await tester.pumpAndSettle();
-    expect(find.text('Applied. Your Plan is updated.'), findsOneWidget);
-
-    await openTab(tester, 'Plans');
-    await tester.tap(find.text('More Energy Path'));
-    await tester.pumpAndSettle();
-    expect(find.text('Your Path'), findsOneWidget);
+    expect(find.text('What’s in it'.toUpperCase()), findsOneWidget);
   }
 
-  /// What a fresh app start shows: Today at the root, the Plans list (not a
-  /// pushed Plan page), and no Insights confirmation.
+  /// What a fresh app start shows: Today at the root, and the Toolkit at its
+  /// own root (no routine page pushed).
   Future<void> expectFreshSession(WidgetTester tester) async {
     expect(find.text("Begin today's Circle"), findsOneWidget);
-    await openTab(tester, 'Plans');
-    expect(find.text('Your Plans'), findsOneWidget);
-    expect(find.text('Your Path'), findsNothing);
-    await openTab(tester, 'Insights');
-    expect(find.text('Applied. Your Plan is updated.'), findsNothing);
+    await openTab(tester, 'Toolkit');
+    expect(find.text('Routines that are yours.'), findsOneWidget);
+    expect(find.text('What’s in it'.toUpperCase()), findsNothing);
   }
 
   testWidgets('starts on the genuine state, applies a scenario only when '
@@ -120,13 +112,13 @@ void main() {
     expect(find.text('REAL DATA · tap to set up'), findsOneWidget);
     expect(find.byKey(const Key('qa-panel')), findsNothing);
 
-    await applyScenario(tester, QaScenario.planInProgress);
+    await applyScenario(tester, QaScenario.dPathUnderWay);
     expect(find.text('QA PREMIUM · ACTIVE'), findsOneWidget);
     expect(genuine.getKeys(), genuineKeys);
 
     // The marker stays over another tab.
-    await openTab(tester, 'Plans');
-    expect(find.text('QA DATA · plan_in_progress'), findsOneWidget);
+    await openTab(tester, 'Toolkit');
+    expect(find.text('QA DATA · d_path_under_way'), findsOneWidget);
 
     await openPanel(tester);
     await tester.ensureVisible(find.byKey(const Key('qa-reset')));
@@ -141,17 +133,15 @@ void main() {
   testWidgets('applying another scenario is a fresh app start: no pushed '
       'route, page state or message from the previous session', (tester) async {
     await pumpHarness(tester);
-    await applyScenario(tester, QaScenario.monthTwo);
-    await leaveMonthTwoState(tester);
+    await applyScenario(tester, QaScenario.dMonthTwo);
+    await leaveToolkitState(tester);
 
-    await applyScenario(tester, QaScenario.neverReflects);
+    await applyScenario(tester, QaScenario.dLapsed);
 
     await expectFreshSession(tester);
-    // Insights shows the new session's own Insight.
-    expect(
-      find.textContaining('More Energy was your direction'),
-      findsOneWidget,
-    );
+    // The Toolkit shows the new session's own state: Premium has ended, the
+    // Path is saved.
+    expect(find.textContaining('Saved where you left it.'), findsOneWidget);
   });
 
   testWidgets('Reset to real is a fresh app start on the genuine data, with '
@@ -160,8 +150,8 @@ void main() {
     final genuineValues = {
       for (final key in genuine.getKeys()) key: genuine.get(key),
     };
-    await applyScenario(tester, QaScenario.monthTwo);
-    await leaveMonthTwoState(tester);
+    await applyScenario(tester, QaScenario.dMonthTwo);
+    await leaveToolkitState(tester);
 
     await openPanel(tester);
     await tester.ensureVisible(find.byKey(const Key('qa-reset')));
@@ -172,7 +162,7 @@ void main() {
     expect(find.text('QA PREMIUM · OFF'), findsOneWidget);
     expect(find.text('REAL DATA · tap to set up'), findsOneWidget);
     await expectFreshSession(tester);
-    expect(find.textContaining('Gentler Pace Path'), findsNothing);
+    expect(find.text('My pick-me-up'), findsNothing);
     expect({
       for (final key in genuine.getKeys()) key: genuine.get(key),
     }, genuineValues);

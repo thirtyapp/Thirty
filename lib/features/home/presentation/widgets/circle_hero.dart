@@ -427,7 +427,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         final direction = Directionality.of(context);
         final message = SessionCopy.naturalEndAnnouncement(
           recommendation.offeredMinutes,
-          activityDefinition(recommendation.activityId).ending,
+          recommendation.sessionDefinition.ending,
         );
         _endAnnouncement?.cancel();
         _endAnnouncement = Timer(CircleHero.naturalEndAnnouncementDelay, () {
@@ -538,8 +538,13 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   }
 
   /// "Not this one today": asks why, then replaces today's Circle once.
-  Future<void> _notThisOne(ActivityId current) async {
-    final reason = await showNotThisOneSheet(context, current: current);
+  Future<void> _notThisOne(Recommendation recommendation) async {
+    final reason = await showNotThisOneSheet(
+      context,
+      current: recommendation.activityId,
+      outdoor:
+          recommendation.sessionDefinition.setting == ActivitySetting.outdoor,
+    );
     if (reason == null || !mounted) return;
     final replaced = ref
         .read(recommendationProvider.notifier)
@@ -580,7 +585,9 @@ class _CircleHeroState extends ConsumerState<CircleHero>
 
     _syncTicker(recommendationState.status);
     final status = recommendationState.status;
-    final activity = activityDefinition(recommendation.activityId);
+    // V2 Phase D: a routine or a joined Path step runs its pieces on the
+    // same Guided runtime; a single activity runs as authored.
+    final activity = recommendation.sessionDefinition;
     final offered = circleDurationFor(recommendation);
     final elapsed = recommendationState.activeElapsedAt(
       ref.read(eventClockProvider)(),
@@ -962,28 +969,36 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                     why: recommendation.personalReason ?? recommendation.why,
                     category: recommendation.category,
                     minutes: recommendation.offeredMinutes,
-                    firstAction: activityDefinition(
-                      recommendation.activityId,
-                    ).firstAction,
+                    firstAction: activity.firstAction,
+                    label: switch (recommendation.session) {
+                      TodaySession(:final pathCircle?, :final pathCircles?) =>
+                        'Path · $pathCircle of $pathCircles',
+                      TodaySession(isRoutine: true) => 'Your routine',
+                      _ => 'Today',
+                    },
+                    spokenLabel: switch (recommendation.session) {
+                      TodaySession(:final pathCircle?, :final pathCircles?) =>
+                        'Path · Circle $pathCircle of $pathCircles',
+                      _ => null,
+                    },
                     showFirstAction:
                         recommendationState.status ==
                         RecommendationStatus.started,
                     // A retired activity restored from history has no V2
                     // guide to show.
-                    onShowGuide:
-                        activityDefinition(recommendation.activityId).status ==
-                            ActivityStatus.retired
+                    onShowGuide: activity.status == ActivityStatus.retired
                         ? null
                         : () => showActivityGuide(
                             context,
                             activityId: recommendation.activityId,
                             intention: recommendation.intention,
                             offeredMinutes: recommendation.offeredMinutes,
+                            definition: activity,
                             onNotThisOne:
                                 recommendation.canReplace &&
                                     recommendationState.status ==
                                         RecommendationStatus.notStarted
-                                ? () => _notThisOne(recommendation.activityId)
+                                ? () => _notThisOne(recommendation)
                                 : null,
                           ),
                     // Before Start, the row says what it opens — and, while
@@ -1021,6 +1036,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                               activityId: recommendation.activityId,
                               intention: recommendation.intention,
                               offeredMinutes: recommendation.offeredMinutes,
+                              definition: activity,
                             ),
                       onMoveTo: notifier.moveTo,
                       onPause: notifier.pause,

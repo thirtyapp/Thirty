@@ -6,7 +6,8 @@ import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_confirm_dialog.dart';
-import '../../../insights/application/insight_provider.dart';
+import '../../../toolkit/application/toolkit_provider.dart';
+import '../../../toolkit/domain/toolkit_model.dart';
 import '../../application/circle_journal.dart';
 import '../../application/recommendation_provider.dart';
 import '../../application/suggestion_preferences.dart';
@@ -28,6 +29,7 @@ class JournalDataControls extends ConsumerWidget {
     final journal = ref.watch(circleJournalRepositoryProvider);
     final hasEntries = journal.readAll().isNotEmpty;
     final preferences = ref.watch(suggestionPreferencesProvider);
+    final toolkit = ref.watch(toolkitProvider);
 
     // Paired buttons share one height: if large text wraps one label onto
     // a second line, both grow together (IntrinsicHeight + stretch). At
@@ -40,11 +42,12 @@ class JournalDataControls extends ConsumerWidget {
             child: ThirtyButton(
               label: 'Copy as text',
               variant: ThirtyButtonVariant.secondary,
-              onPressed: hasEntries || !preferences.isEmpty
+              onPressed: hasEntries || !preferences.isEmpty || !toolkit.isEmpty
                   ? () => exportToClipboard(
                       context,
                       journal,
                       preferences: preferences,
+                      toolkit: toolkit,
                     )
                   : null,
             ),
@@ -73,6 +76,7 @@ class JournalDataControls extends ConsumerWidget {
     BuildContext context,
     CircleJournalRepository journal, {
     SuggestionPreferences preferences = SuggestionPreferences.empty,
+    ToolkitState toolkit = ToolkitState.empty,
   }) async {
     await Clipboard.setData(
       ClipboardData(
@@ -80,6 +84,9 @@ class JournalDataControls extends ConsumerWidget {
           suggestionPreferences: preferences.isEmpty
               ? null
               : preferences.toJson(),
+          // V2 Phase D: the user's routines, their versions and any Path —
+          // never a derived score.
+          toolkit: toolkit.isEmpty ? null : toolkit.toJson(),
         ),
       ),
     );
@@ -91,9 +98,14 @@ class JournalDataControls extends ConsumerWidget {
 
   /// Asks for explicit confirmation, then deletes every recorded Circle —
   /// the journal, today's Circle session and the selection history drawn
-  /// from past Circles — and any Insight derived from them. Today is then
-  /// re-derived from the empty store, so no deleted Circle stays on screen.
-  /// Shared with You's "Your data" rows.
+  /// from past Circles — and with them everything learned from them. Today
+  /// is then re-derived from the empty store, so no deleted Circle stays on
+  /// screen. Shared with You's "Your data" rows.
+  ///
+  /// V2 Phase D: the user's routines, any Path under way and their
+  /// suggestion preferences are kept — they have their own controls — but
+  /// no maintenance claim survives the evidence it came from: everything
+  /// the Toolkit says is recomputed from the (now empty) journal.
   static Future<void> confirmAndClear(
     BuildContext context,
     CircleJournalRepository journal,
@@ -106,10 +118,10 @@ class JournalDataControls extends ConsumerWidget {
         title: 'Delete your Circle history?',
         body:
             'This permanently deletes every recorded Circle on this device, '
-            'and everything THIRTY has learned from them. Your suggestion '
-            'preferences are kept — you can reset them in What THIRTY '
-            'remembers. It cannot be undone, and nothing is stored anywhere '
-            'else to restore it from.',
+            'and everything THIRTY has learned from them. Your routines, any '
+            'Path under way and your suggestion preferences are kept — you '
+            'can change those yourself. It cannot be undone, and nothing is '
+            'stored anywhere else to restore it from.',
         cancelLabel: 'Keep my history',
         confirmLabel: 'Delete permanently',
         destructive: true,
@@ -121,9 +133,5 @@ class JournalDataControls extends ConsumerWidget {
     await clearRecordedCircleState(ref.read(sharedPreferencesProvider));
     ref.invalidate(circleJournalRepositoryProvider);
     ref.invalidate(recommendationProvider);
-    // Batch 2C: a derived Insight must never outlive the evidence it was
-    // drawn from — "stop derived personalization... remove its dependent
-    // snapshots" (frozen architecture §9).
-    await ref.read(insightProvider.notifier).clearAll();
   }
 }

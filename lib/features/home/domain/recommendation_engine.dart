@@ -54,9 +54,9 @@ enum RecommendationReason {
   /// A rule had to give way — repetition, a rest — because nothing else fit.
   fallback,
 
-  /// A V1 Plan stage supplied today's activity (until Phase D replaces
-  /// Plans); the engine was not asked.
-  planStage,
+  /// V2 Phase D: today's Circle is the next step of the user's Path; the
+  /// engine was not asked. Its own one line is the step's.
+  pathStep,
 
   /// "Can't go outside": an indoor replacement.
   replacedIndoor,
@@ -75,7 +75,7 @@ enum RecommendationReason {
     replacedIndoor => 'An indoor one instead.',
     replacedLighter => 'Something lighter instead.',
     replacedDifferent => 'Something different instead.',
-    starter || bestFit || fallback || planStage => null,
+    starter || bestFit || fallback || pathStep => null,
   };
 }
 
@@ -93,6 +93,11 @@ class PastCircle {
     this.replacedFrom,
     this.answeredAt,
     this.window,
+    this.routineId,
+    this.routineVersionId,
+    this.pathRunId,
+    this.components = const [],
+    this.replacedFromRoutineId,
   });
 
   /// The local calendar date (time of day ignored).
@@ -120,6 +125,31 @@ class PastCircle {
   /// The time the user chose that day, if recorded (V2 entries). Only the
   /// memory page's usual-time observation reads it.
   final TimeWindow? window;
+
+  /// V2 Phase D: the user's routine this Circle is evidence for — a Circle
+  /// of that routine, or a Path Circle of the same pieces that built it —
+  /// and which of its versions.
+  final String? routineId;
+  final String? routineVersionId;
+
+  /// V2 Phase D: the Path run the Circle belonged to.
+  final String? pathRunId;
+
+  /// V2 Phase D: every activity a Circle joining several pieces drew on.
+  /// Empty for a single activity.
+  final List<ActivityId> components;
+
+  /// V2 Phase D: the routine declined that day with "Not this one today".
+  final String? replacedFromRoutineId;
+
+  /// Whether the answer is about something other than [activityId] alone —
+  /// a routine, or several pieces joined. Such an answer is that routine's
+  /// evidence, never evidence about the activities inside it.
+  bool get composite => routineId != null || components.length > 1;
+
+  /// Whether the Circle drew on [activity] at all — what recency sees.
+  bool touches(ActivityId activity) =>
+      activityId == activity || components.contains(activity);
 }
 
 /// The user's explicit suggestion controls (V2 Phase C, ADR-021) — direct
@@ -129,6 +159,7 @@ class SuggestionControls {
   const SuggestionControls({
     this.notSuggested = const {},
     this.restsLifted = const {},
+    this.routinesNotSuggested = const {},
   });
 
   static const none = SuggestionControls();
@@ -142,6 +173,44 @@ class SuggestionControls {
   /// moment no longer rest it for that need. The answers stay, and so does
   /// their bounded evidence; a later "Not useful" rests it again.
   final Map<(ActivityId, Intention), DateTime> restsLifted;
+
+  /// V2 Phase D: "Don't suggest" for one of the user's routines and a need
+  /// — the same hard constraint, for a routine.
+  final Set<(String, Intention)> routinesNotSuggested;
+}
+
+/// V2 Phase D: one of the user's routines, as the engine sees it — an
+/// ordinary candidate, ranked by exactly the same rules as an activity. Being
+/// a routine earns it nothing.
+class RoutineCandidate {
+  const RoutineCandidate({
+    required this.id,
+    required this.fit,
+    required this.forms,
+    required this.components,
+    required this.setting,
+    required this.effort,
+  });
+
+  final String id;
+
+  /// How it fits each need (a missing need is [NeedFit.none]).
+  final Map<Intention, NeedFit> fit;
+
+  /// The versions THIRTY may offer and their real lengths, longest first:
+  /// today gets the first that fits the window — never a cut-down one.
+  final List<({String versionId, int minutes})> forms;
+
+  /// The activities it is made of, in order.
+  final List<ActivityId> components;
+
+  final ActivitySetting setting;
+  final ActivityEffort effort;
+
+  /// Its first piece: its family is the routine's, for variety.
+  ActivityId get anchor => components.first;
+
+  NeedFit fitFor(Intention need) => fit[need] ?? NeedFit.none;
 }
 
 /// Today's replacement request.
@@ -150,13 +219,26 @@ class ReplacementRequest {
     required this.reason,
     required this.replacing,
     required this.replacingMinutes,
+    this.replacingRoutineId,
+    this.replacingComponents = const [],
   });
 
   final ReplacementReason reason;
 
-  /// Today's current offer, which is never offered again today.
+  /// Today's current offer, which is never offered again today — for a
+  /// routine or a Path step, its first piece.
   final ActivityId replacing;
   final int replacingMinutes;
+
+  /// V2 Phase D: today's offer, when it was a routine.
+  final String? replacingRoutineId;
+
+  /// V2 Phase D: every piece of today's offer, when it joined several —
+  /// none of them is offered again today.
+  final List<ActivityId> replacingComponents;
+
+  bool replaces(ActivityId activity) =>
+      activity == replacing || replacingComponents.contains(activity);
 }
 
 /// Everything the user told THIRTY about today.
@@ -167,6 +249,7 @@ class RecommendationContext {
     required this.window,
     this.replacement,
     this.allowSafetyPending = safetyPendingContentAllowed,
+    this.routines = const [],
   });
 
   /// Today's local date (time of day ignored).
@@ -178,6 +261,9 @@ class RecommendationContext {
   /// Whether content awaiting the safety review may be offered (internal
   /// debug builds only).
   final bool allowSafetyPending;
+
+  /// V2 Phase D: the user's enabled routines — candidates like any other.
+  final List<RoutineCandidate> routines;
 }
 
 /// The engine's answer.
@@ -187,9 +273,16 @@ class RecommendationDecision {
     required this.offeredMinutes,
     required this.reason,
     required this.trace,
+    this.routineId,
+    this.routineVersionId,
   });
 
+  /// The activity — for a routine, its first piece.
   final ActivityId activityId;
+
+  /// V2 Phase D: the routine picked, and the version that fits today.
+  final String? routineId;
+  final String? routineVersionId;
 
   /// A real length of this activity that fits today's window: never padded,
   /// and for Guided/Paced content never cut short.
@@ -219,9 +312,12 @@ int? offeredMinutesFor(ActivityDefinition activity, TimeWindow window) {
 /// A stable, platform-independent 32-bit FNV-1a hash of today's date, the
 /// need and the activity: the deterministic tie-break ("date-seeded, never
 /// dayIndex % n").
-int stableTieBreak(DateTime date, Intention need, ActivityId activity) {
+int stableTieBreak(DateTime date, Intention need, ActivityId activity) =>
+    _tieBreak(date, need, activity.name);
+
+int _tieBreak(DateTime date, Intention need, String subject) {
   var hash = 0x811c9dc5;
-  final key = '${_dateKey(date)}|${need.name}|${activity.name}';
+  final key = '${_dateKey(date)}|${need.name}|$subject';
   for (final byte in utf8.encode(key)) {
     hash ^= byte;
     hash = (hash * 0x01000193) & 0xffffffff;
@@ -264,6 +360,7 @@ class RecommendationMemory {
 
   /// Whether the user lifted the rest this answer would cause.
   bool _restLifted(PastCircle c) {
+    if (c.composite) return false;
     final liftedAt = _lifted[(c.activityId, c.need)];
     if (liftedAt == null) return false;
     return !(c.answeredAt ?? c.date).isAfter(liftedAt);
@@ -274,19 +371,24 @@ class RecommendationMemory {
   bool _counts(PastCircle c) =>
       c.usefulness != null &&
       _age(c) <= _policy.evidenceWindowDays &&
-      historicalEvidenceEligible(c.activityId, c.catalogVersion);
+      (c.composite ||
+          historicalEvidenceEligible(c.activityId, c.catalogVersion));
 
   double _weight(PastCircle c) =>
       _age(c) > _policy.evidenceHalfLifeDays ? 0.5 : 1.0;
 
-  /// The user's explicit evidence for ([activity], [need]): "Very useful"
-  /// +2, "Somewhat useful" +1, "Not useful" −2, halved once older than the
-  /// half-life, nothing beyond the window. Ineligible V1 answers never
-  /// count.
-  double strengthFor(ActivityId activity, Intention need) {
+  /// An answer about [activity] alone — never one about a routine or about
+  /// several pieces joined.
+  static bool Function(PastCircle) _aboutActivity(ActivityId activity) =>
+      (c) => !c.composite && c.activityId == activity;
+
+  static bool Function(PastCircle) _aboutRoutine(String routineId) =>
+      (c) => c.routineId == routineId;
+
+  double _strength(bool Function(PastCircle) about, Intention need) {
     var strength = 0.0;
     for (final c in _past) {
-      if (c.activityId != activity || c.need != need || !_counts(c)) continue;
+      if (!about(c) || c.need != need || !_counts(c)) continue;
       strength +=
           _weight(c) *
           switch (c.usefulness!) {
@@ -298,43 +400,28 @@ class RecommendationMemory {
     return strength;
   }
 
-  /// The strongest positive evidence for [activity] under any other need.
-  double strengthElsewhere(ActivityId activity, Intention need) {
+  double _strengthElsewhere(bool Function(PastCircle) about, Intention need) {
     var best = 0.0;
     for (final other in Intention.values) {
       if (other == need) continue;
-      final s = strengthFor(activity, other);
+      final s = _strength(about, other);
       if (s > best) best = s;
     }
     return best;
   }
 
-  /// Whether the user answered "Very useful" for ([activity], [need]) within
-  /// the window — what a visible "You found this useful before." needs.
-  bool veryUsefulFor(ActivityId activity, Intention need) => _past.any(
-    (c) =>
-        c.activityId == activity &&
-        c.need == need &&
-        c.usefulness == PastUsefulness.veryUseful &&
-        _counts(c),
-  );
+  bool _veryUseful(bool Function(PastCircle) about, Intention need) =>
+      _past.any(
+        (c) =>
+            about(c) &&
+            c.need == need &&
+            c.usefulness == PastUsefulness.veryUseful &&
+            _counts(c),
+      );
 
-  /// Whether the user answered "Very useful" for [activity] under another
-  /// need within the window.
-  bool veryUsefulElsewhere(ActivityId activity, Intention need) =>
-      Intention.values.any((o) => o != need && veryUsefulFor(activity, o));
-
-  /// The activities of the last [count] Circles of [need], newest first.
-  List<ActivityId> lastFor(Intention need, int count) => [
-    for (final c in _past.reversed)
-      if (c.need == need && _age(c) <= _policy.evidenceWindowDays) c.activityId,
-  ].take(count).toList();
-
-  /// Days since the latest "Not useful" for ([activity], [need]) that still
-  /// rests it — one given after any "Suggest again" — or `null`.
-  int? daysSinceNotUseful(ActivityId activity, Intention need) {
+  int? _daysSinceNotUseful(bool Function(PastCircle) about, Intention need) {
     for (final c in _past.reversed) {
-      if (c.activityId == activity &&
+      if (about(c) &&
           c.need == need &&
           c.usefulness == PastUsefulness.notUseful &&
           _counts(c) &&
@@ -344,6 +431,54 @@ class RecommendationMemory {
     }
     return null;
   }
+
+  /// The user's explicit evidence for ([activity], [need]): "Very useful"
+  /// +2, "Somewhat useful" +1, "Not useful" −2, halved once older than the
+  /// half-life, nothing beyond the window. Ineligible V1 answers never
+  /// count, and neither do answers about a routine.
+  double strengthFor(ActivityId activity, Intention need) =>
+      _strength(_aboutActivity(activity), need);
+
+  /// The strongest positive evidence for [activity] under any other need.
+  double strengthElsewhere(ActivityId activity, Intention need) =>
+      _strengthElsewhere(_aboutActivity(activity), need);
+
+  /// Whether the user answered "Very useful" for ([activity], [need]) within
+  /// the window — what a visible "You found this useful before." needs.
+  bool veryUsefulFor(ActivityId activity, Intention need) =>
+      _veryUseful(_aboutActivity(activity), need);
+
+  /// Whether the user answered "Very useful" for [activity] under another
+  /// need within the window.
+  bool veryUsefulElsewhere(ActivityId activity, Intention need) =>
+      Intention.values.any((o) => o != need && veryUsefulFor(activity, o));
+
+  /// V2 Phase D: the same evidence for one of the user's routines.
+  double routineStrength(String routineId, Intention need) =>
+      _strength(_aboutRoutine(routineId), need);
+
+  double routineStrengthElsewhere(String routineId, Intention need) =>
+      _strengthElsewhere(_aboutRoutine(routineId), need);
+
+  bool routineVeryUseful(String routineId, Intention need) =>
+      _veryUseful(_aboutRoutine(routineId), need);
+
+  bool routineVeryUsefulElsewhere(String routineId, Intention need) =>
+      Intention.values.any((o) => o != need && routineVeryUseful(routineId, o));
+
+  /// The last [count] Circles of [need], newest first.
+  List<PastCircle> lastFor(Intention need, int count) => [
+    for (final c in _past.reversed)
+      if (c.need == need && _age(c) <= _policy.evidenceWindowDays) c,
+  ].take(count).toList();
+
+  /// Days since the latest "Not useful" for ([activity], [need]) that still
+  /// rests it — one given after any "Suggest again" — or `null`.
+  int? daysSinceNotUseful(ActivityId activity, Intention need) =>
+      _daysSinceNotUseful(_aboutActivity(activity), need);
+
+  int? routineDaysSinceNotUseful(String routineId, Intention need) =>
+      _daysSinceNotUseful(_aboutRoutine(routineId), need);
 
   /// Whether another need's recent "Not useful" for [activity] is still
   /// within its rest.
@@ -362,7 +497,8 @@ class RecommendationMemory {
     final family = activityFamily(activity);
     for (final c in _past.reversed) {
       if (_age(c) > _policy.familyCarryOverDays) break;
-      if (c.activityId != activity &&
+      if (!c.composite &&
+          c.activityId != activity &&
           c.need == need &&
           c.usefulness == PastUsefulness.notUseful &&
           activityFamily(c.activityId) == family &&
@@ -373,10 +509,18 @@ class RecommendationMemory {
     return false;
   }
 
-  /// Days since [activity] was last offered (any need), or `null`.
+  /// Days since [activity] was last offered (any need, alone or as a
+  /// piece of something larger), or `null`.
   int? daysSinceOffered(ActivityId activity) {
     for (final c in _past.reversed) {
-      if (c.activityId == activity) return _age(c);
+      if (c.touches(activity)) return _age(c);
+    }
+    return null;
+  }
+
+  int? routineDaysSinceOffered(String routineId) {
+    for (final c in _past.reversed) {
+      if (c.routineId == routineId) return _age(c);
     }
     return null;
   }
@@ -384,7 +528,16 @@ class RecommendationMemory {
   /// Days since [activity] was last declined with "Not this one today".
   int? daysSinceDeclined(ActivityId activity) {
     for (final c in _past.reversed) {
-      if (c.replacedFrom == activity) return _age(c);
+      if (c.replacedFrom == activity && c.replacedFromRoutineId == null) {
+        return _age(c);
+      }
+    }
+    return null;
+  }
+
+  int? routineDaysSinceDeclined(String routineId) {
+    for (final c in _past.reversed) {
+      if (c.replacedFromRoutineId == routineId) return _age(c);
     }
     return null;
   }
@@ -396,7 +549,10 @@ class RecommendationMemory {
 
   /// Offers of [activity] in the last 7 days.
   int offersThisWeek(ActivityId activity) =>
-      _past.where((c) => c.activityId == activity && _age(c) <= 7).length;
+      _past.where((c) => c.touches(activity) && _age(c) <= 7).length;
+
+  int routineOffersThisWeek(String routineId) =>
+      _past.where((c) => c.routineId == routineId && _age(c) <= 7).length;
 
   /// Yesterday's Circle, if there was one.
   PastCircle? get yesterday {
@@ -407,7 +563,14 @@ class RecommendationMemory {
   /// Whether [activity] has ever been offered for [need] within the window.
   bool triedFor(ActivityId activity, Intention need) => _past.any(
     (c) =>
-        c.activityId == activity &&
+        c.touches(activity) &&
+        c.need == need &&
+        _age(c) <= _policy.evidenceWindowDays,
+  );
+
+  bool routineTriedFor(String routineId, Intention need) => _past.any(
+    (c) =>
+        c.routineId == routineId &&
         c.need == need &&
         _age(c) <= _policy.evidenceWindowDays,
   );
@@ -424,11 +587,14 @@ class RecommendationMemory {
   /// Circles of [need] since the last one that offered something new for
   /// it (everything, if nothing new was ever offered).
   int circlesSinceNew(Intention need) {
-    final seen = <ActivityId>{};
+    final seen = <String>{};
     var since = 0;
     for (final c in _past) {
       if (c.need != need) continue;
-      if (seen.add(c.activityId)) {
+      final subject = c.routineId != null
+          ? 'routine:${c.routineId}'
+          : c.activityId.name;
+      if (seen.add(subject)) {
         since = 0;
       } else {
         since++;
@@ -438,7 +604,8 @@ class RecommendationMemory {
   }
 }
 
-/// One activity's standing today.
+/// One candidate's standing today: an activity, or one of the user's
+/// routines. Both are ranked by exactly the same fields and rules.
 class _Candidate {
   _Candidate({
     required this.id,
@@ -457,9 +624,17 @@ class _Candidate {
     required this.strongElsewhere,
     required this.recentForNeed,
     required this.restAge,
+    this.routineId,
+    this.routineVersionId,
   });
 
+  /// The activity — for a routine, its first piece.
   final ActivityId id;
+
+  /// V2 Phase D: set for a routine, with the version that fits today.
+  final String? routineId;
+  final String? routineVersionId;
+
   final int minutes;
   final bool primary;
   final double strength;
@@ -493,6 +668,10 @@ class _Candidate {
 
   bool get resting => block == 3;
 
+  bool get isRoutine => routineId != null;
+
+  String get label => isRoutine ? 'routine:$routineId' : id.name;
+
   /// 0: useful here and ready to come back. 1: a primary fit, or a
   /// secondary fit the user found useful. 2: any other secondary fit.
   int band(RecommendationPolicy policy) {
@@ -509,7 +688,7 @@ class _Candidate {
     return 2;
   }
 
-  /// Positive evidence lifts an activity — except straight after it was
+  /// Positive evidence lifts a candidate — except straight after it was
   /// offered for this need, so it comes back rather than alternates.
   int get affinity =>
       recentForNeed ? 0 : (strength > 0 ? 2 : (strengthElsewhere > 0 ? 1 : 0));
@@ -537,6 +716,14 @@ class _Candidate {
 ///    new, then the date-seeded tie-break.
 /// 4. **Exploration:** occasionally, something untried for this need —
 ///    never on a short day, never as a replacement.
+///
+/// **V2 Phase D — routines.** The user's routines ([RecommendationContext.
+/// routines]) are gathered beside the activities under the same hard limits
+/// (their own "Don't suggest", a "Don't suggest" on any piece of them, the
+/// safety status of every piece, a version that truly fits the window,
+/// today's replacement constraint) and ranked by the same comparison on the
+/// same fields. Their evidence is their own answers. Nothing about being a
+/// routine is scored: a routine wins only when its evidence and fit do.
 RecommendationDecision? recommend(
   RecommendationContext context,
   Iterable<PastCircle> history, {
@@ -559,6 +746,36 @@ RecommendationDecision? recommend(
   final yesterday = memory.yesterday;
   final lastForNeed = memory.lastFor(need, policy.provenSpacingCircles);
 
+  /// Whether today's replacement constraint rules out something of this
+  /// [setting], [effort] and [family] — and its soft reasons against.
+  ({bool excluded, int penalty}) replacementFit({
+    required ActivitySetting setting,
+    required ActivityEffort effort,
+    required ActivitySemanticFamily family,
+    required int minutes,
+    required bool gentle,
+    required bool excludeFamily,
+  }) {
+    if (replacement == null) return (excluded: false, penalty: 0);
+    var penalty = 0;
+    switch (replacement.reason) {
+      case ReplacementReason.cantGoOutside:
+        if (setting == ActivitySetting.outdoor) {
+          return (excluded: true, penalty: 0);
+        }
+      case ReplacementReason.tooMuch:
+        if (effort != ActivityEffort.low) return (excluded: true, penalty: 0);
+        // Lighter means shorter, and made to be gentle.
+        if (minutes >= replacement.replacingMinutes) penalty++;
+        if (!gentle) penalty += 2;
+      case ReplacementReason.notFeeling:
+        if (excludeFamily && family == activityFamily(replacement.replacing)) {
+          return (excluded: true, penalty: 0);
+        }
+    }
+    return (excluded: false, penalty: penalty);
+  }
+
   List<_Candidate> gather({required bool excludeFamily}) {
     final candidates = <_Candidate>[];
     for (final MapEntry(key: id, value: activity) in activityCatalog.entries) {
@@ -574,27 +791,17 @@ RecommendationDecision? recommend(
       if (notSuggested(id)) continue;
       final minutes = offeredMinutesFor(activity, context.window);
       if (minutes == null) continue;
-
-      var penalty = 0;
-      if (replacement != null) {
-        if (id == replacement.replacing) continue;
-        switch (replacement.reason) {
-          case ReplacementReason.cantGoOutside:
-            if (activity.setting == ActivitySetting.outdoor) continue;
-          case ReplacementReason.tooMuch:
-            if (activity.effort != ActivityEffort.low) continue;
-            // Lighter means shorter, and made to be gentle.
-            if (minutes >= replacement.replacingMinutes) penalty++;
-            if (activity.fitFor(Intention.gentlerPace) != NeedFit.primary) {
-              penalty += 2;
-            }
-          case ReplacementReason.notFeeling:
-            if (excludeFamily &&
-                activity.family == activityFamily(replacement.replacing)) {
-              continue;
-            }
-        }
-      }
+      if (replacement != null && replacement.replaces(id)) continue;
+      final constraint = replacementFit(
+        setting: activity.setting,
+        effort: activity.effort,
+        family: activity.family,
+        minutes: minutes,
+        gentle: activity.fitFor(Intention.gentlerPace) == NeedFit.primary,
+        excludeFamily: excludeFamily,
+      );
+      if (constraint.excluded) continue;
+      var penalty = constraint.penalty;
 
       final strength = memory.strengthFor(id, need);
       final elsewhere = memory.strengthElsewhere(id, need);
@@ -603,7 +810,7 @@ RecommendationDecision? recommend(
 
       var block = 0;
       if (memory.offersThisWeek(id) >= policy.weeklyCap) block = 1;
-      if (yesterday?.activityId == id) block = 2;
+      if (yesterday != null && yesterday.touches(id)) block = 2;
       if (notUsefulDays != null && notUsefulDays <= policy.restDays) {
         block = 3;
       }
@@ -614,7 +821,7 @@ RecommendationDecision? recommend(
         penalty++;
       }
       if (yesterday != null &&
-          yesterday.activityId != id &&
+          !yesterday.touches(id) &&
           activity.family == activityFamily(yesterday.activityId)) {
         penalty++;
       }
@@ -627,7 +834,7 @@ RecommendationDecision? recommend(
       if (memory.familyNotUseful(id, need)) penalty++;
       // The last Circle of this need: let a need chosen only now and then
       // still feel varied.
-      if (lastForNeed.isNotEmpty && lastForNeed.first == id) penalty++;
+      if (lastForNeed.isNotEmpty && lastForNeed.first.touches(id)) penalty++;
       // Family variety across the week, not only day to day.
       if (memory.familyOffersThisWeek(activity.family) >=
           policy.familyWeeklySoftCap) {
@@ -656,7 +863,127 @@ RecommendationDecision? recommend(
               elsewhere >= policy.usefulThreshold,
           strong: memory.veryUsefulFor(id, need),
           strongElsewhere: memory.veryUsefulElsewhere(id, need),
-          recentForNeed: lastForNeed.contains(id),
+          recentForNeed: lastForNeed.any((c) => c.touches(id)),
+          restAge: block == 3 ? notUsefulDays! : 1 << 20,
+        ),
+      );
+    }
+
+    // V2 Phase D: the user's routines, under the same limits and rules.
+    for (final routine in context.routines) {
+      final fit = routine.fitFor(need);
+      if (fit == NeedFit.none) continue;
+      // "Don't suggest" — for the routine, or for any piece of it — is
+      // never relaxed.
+      if (controls.routinesNotSuggested.contains((routine.id, need))) {
+        continue;
+      }
+      if (routine.components.any(notSuggested)) continue;
+      // A piece resting for this need after a recent "Not useful" (not
+      // lifted by "Suggest again") keeps the routine out while it rests:
+      // Memory says that piece is resting, so Today never brings it back
+      // inside a routine. The rest is the piece's own — answers about the
+      // routine never rest its pieces — and it ends on its own (ADR-022).
+      if (routine.components.any((piece) {
+        final days = memory.daysSinceNotUseful(piece, need);
+        return days != null && days <= policy.restDays;
+      })) {
+        continue;
+      }
+      if (!routine.components.every(
+        (piece) => isActivityOfferable(
+          piece,
+          allowSafetyPending: context.allowSafetyPending,
+        ),
+      )) {
+        continue;
+      }
+      // The longest version that truly fits — never a cut-down one.
+      final form = routine.forms
+          .where((f) => f.minutes <= context.window.maxMinutes)
+          .firstOrNull;
+      if (form == null) continue;
+      final minutes = form.minutes;
+      if (replacement != null &&
+          (replacement.replacingRoutineId == routine.id ||
+              routine.components.any(replacement.replaces))) {
+        continue;
+      }
+      final family = activityFamily(routine.anchor);
+      final constraint = replacementFit(
+        setting: routine.setting,
+        effort: routine.effort,
+        family: family,
+        minutes: minutes,
+        gentle: routine.fitFor(Intention.gentlerPace) == NeedFit.primary,
+        excludeFamily: excludeFamily,
+      );
+      if (constraint.excluded) continue;
+      var penalty = constraint.penalty;
+
+      final id = routine.id;
+      final strength = memory.routineStrength(id, need);
+      final elsewhere = memory.routineStrengthElsewhere(id, need);
+      final daysSince = memory.routineDaysSinceOffered(id);
+      final notUsefulDays = memory.routineDaysSinceNotUseful(id, need);
+
+      var block = 0;
+      if (memory.routineOffersThisWeek(id) >= policy.weeklyCap) block = 1;
+      if (yesterday != null &&
+          (yesterday.routineId == id ||
+              routine.components.any(yesterday.touches))) {
+        block = 2;
+      }
+      if (notUsefulDays != null && notUsefulDays <= policy.restDays) {
+        block = 3;
+      }
+
+      if (daysSince != null && daysSince <= policy.recentDays) penalty++;
+      final declined = memory.routineDaysSinceDeclined(id);
+      if (declined != null && declined <= policy.declinedContextDays) {
+        penalty++;
+      }
+      if (yesterday != null &&
+          yesterday.routineId != id &&
+          family == activityFamily(yesterday.activityId)) {
+        penalty++;
+      }
+      if (notUsefulDays != null &&
+          notUsefulDays > policy.restDays &&
+          notUsefulDays <= policy.restDays * 2) {
+        penalty++;
+      }
+      if (lastForNeed.isNotEmpty && lastForNeed.first.routineId == id) {
+        penalty++;
+      }
+      if (memory.familyOffersThisWeek(family) >= policy.familyWeeklySoftCap) {
+        penalty++;
+      }
+      if (minutes * 2 < context.window.maxMinutes) penalty++;
+
+      candidates.add(
+        _Candidate(
+          id: routine.anchor,
+          routineId: id,
+          routineVersionId: form.versionId,
+          minutes: minutes,
+          primary: fit == NeedFit.primary,
+          strength: strength,
+          strengthElsewhere: elsewhere,
+          daysSinceOffered: daysSince,
+          block: block,
+          penalty: penalty,
+          // Never in the curated starter order: a routine is never a
+          // newcomer's default.
+          starterRank: starter.length,
+          tieBreak: _tieBreak(today, need, 'routine:$id'),
+          tried: memory.routineTriedFor(id, need),
+          useful:
+              strength >= policy.usefulThreshold ||
+              elsewhere >= policy.usefulThreshold,
+          strong: memory.routineVeryUseful(id, need),
+          strongElsewhere: memory.routineVeryUsefulElsewhere(id, need),
+          recentForNeed: lastForNeed.any((c) => c.routineId == id),
           restAge: block == 3 ? notUsefulDays! : 1 << 20,
         ),
       );
@@ -748,8 +1075,10 @@ RecommendationDecision? recommend(
         context.window != TimeWindow.about10 &&
         settledNeed &&
         !pick.tried &&
+        !pick.isRoutine &&
         reason == RecommendationReason.bestFit) {
-      // Already something new for a need the user has answered for.
+      // Already something new for a need the user has answered for. A
+      // routine the user built is never "something new to try".
       reason = RecommendationReason.tryingNew;
     } else if (replacement == null &&
         context.window != TimeWindow.about10 &&
@@ -757,7 +1086,7 @@ RecommendationDecision? recommend(
         settledNeed &&
         memory.circlesSinceNew(need) >= policy.explorationInterval) {
       // Already sorted: an untried primary before an untried secondary.
-      final untried = eligible.where((c) => !c.tried);
+      final untried = eligible.where((c) => !c.tried && !c.isRoutine);
       if (untried.isNotEmpty) {
         pick = untried.first;
         reason = RecommendationReason.tryingNew;
@@ -778,12 +1107,14 @@ RecommendationDecision? recommend(
 
     return RecommendationDecision(
       activityId: pick.id,
+      routineId: pick.routineId,
+      routineVersionId: pick.routineVersionId,
       offeredMinutes: pick.minutes,
       reason: reason,
       trace: [
         'relax=$relaxation',
         for (final c in eligible.take(4))
-          '${c.id.name}(b${c.band(policy)} p${c.penalty}'
+          '${c.label}(b${c.band(policy)} p${c.penalty}'
               '${c.primary ? ' P' : ' S'} s${c.strength}'
               '${c.block > 0 ? ' blk${c.block}' : ''})',
       ].join(' '),

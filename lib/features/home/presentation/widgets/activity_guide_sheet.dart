@@ -17,6 +17,7 @@ Future<void> showActivityGuide(
   required Intention intention,
   int? offeredMinutes,
   VoidCallback? onNotThisOne,
+  ActivityDefinition? definition,
 }) {
   final colors = Theme.of(context).extension<AppColors>()!;
   return showModalBottomSheet<void>(
@@ -37,6 +38,7 @@ Future<void> showActivityGuide(
       intention: intention,
       offeredMinutes: offeredMinutes,
       onNotThisOne: onNotThisOne,
+      definition: definition,
     ),
   );
 }
@@ -51,6 +53,7 @@ class ActivityGuideSheet extends StatelessWidget {
     required this.intention,
     this.offeredMinutes,
     this.onNotThisOne,
+    this.definition,
   });
 
   final ActivityId activityId;
@@ -63,9 +66,14 @@ class ActivityGuideSheet extends StatelessWidget {
   /// once started, or for a Plan stage.
   final VoidCallback? onNotThisOne;
 
+  /// V2 Phase D: the session to describe when today's Circle is a routine
+  /// or a joined Path step (`Recommendation.sessionDefinition`) — its parts
+  /// as steps. `null`: the activity itself.
+  final ActivityDefinition? definition;
+
   @override
   Widget build(BuildContext context) {
-    final activity = activityDefinition(activityId);
+    final activity = definition ?? activityDefinition(activityId);
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
     final titleStyle = AppTypography.editorialDisplay(
@@ -103,7 +111,8 @@ class ActivityGuideSheet extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.m),
           Text(
-            activityReasonFor(intention, activityId),
+            definition?.reasons[intention] ??
+                activityReasonFor(intention, activityId),
             style: textTheme.bodyLarge,
           ),
           // Quiet, and only here: the card's room above Start Circle is

@@ -516,7 +516,7 @@ void main() {
       await tester.tap(find.text('Delete'));
       await tester.pumpAndSettle();
       expect(
-        find.textContaining('Your suggestion preferences are kept'),
+        find.textContaining('your suggestion preferences are kept'),
         findsOneWidget,
       );
       await tester.tap(find.text('Delete permanently'));

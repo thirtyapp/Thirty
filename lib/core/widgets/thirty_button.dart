@@ -321,7 +321,10 @@ class ThirtyButton extends StatelessWidget {
             },
           );
 
+    // Always its own node: a button never merges into the text around it
+    // (V2 Phase D, S25 TalkBack — "See Premium" was read inside a card).
     Widget semantics({bool? focused}) => Semantics(
+      container: true,
       button: true,
       enabled: _isEnabled,
       liveRegion: isLoading,

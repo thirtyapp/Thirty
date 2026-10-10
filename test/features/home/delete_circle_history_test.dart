@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,16 +21,16 @@ import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/domain/recommendation_engine.dart';
 import 'package:thirty/features/home/presentation/widgets/journal_data_controls.dart';
-import 'package:thirty/features/insights/application/insight_provider.dart';
-import 'package:thirty/features/insights/domain/insight_snapshot.dart';
-import 'package:thirty/features/plans/application/plan_provider.dart';
-import 'package:thirty/features/plans/domain/plan_ids.dart';
+import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
+import 'package:thirty/features/toolkit/domain/module_library.dart';
+import 'package:thirty/features/toolkit/domain/path_catalog.dart';
+import 'package:thirty/features/toolkit/domain/toolkit_model.dart';
 import 'package:thirty/features/reminder/application/reminder_provider.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 /// RELEASE-DEVICE-FIX-1 (P1) — "Delete Circle history" removes every
 /// recorded Circle: the journal, today's Circle session, the selection
-/// history drawn from past Circles, and derived Insights. Today is
+/// history drawn from past Circles, and everything learned from them. Today is
 /// re-derived from the empty store. Preferences survive.
 class _SilentAnalytics implements AnalyticsService {
   @override
@@ -145,10 +147,9 @@ void main() {
     expect(todayState.usefulnessResponse, isNull);
   });
 
-  testWidgets('no recorded-Circle key survives: session, reflection, Plan '
-      'fields and the selection history drawn from past Circles', (
-    tester,
-  ) async {
+  testWidgets('no recorded-Circle key survives: session, reflection, '
+      'routine or Path step and the selection history drawn from past '
+      'Circles', (tester) async {
     final (prefs, container) =
         await tester.runAsync(setUpApp)
             as (SharedPreferences, ProviderContainer);
@@ -221,38 +222,59 @@ void main() {
     }
   });
 
-  testWidgets('Premium: derived Insight snapshots go, entitlement and Plan '
-      'progress stay', (tester) async {
+  testWidgets('V2 Phase D: routines and the Path under way stay, the '
+      'entitlement stays — and nothing the Toolkit says rests on deleted '
+      'evidence', (tester) async {
     final (prefs, container) =
         await tester.runAsync(() => setUpApp(entitled: true))
             as (SharedPreferences, ProviderContainer);
     addTearDown(container.dispose);
-    container.read(planProvider.notifier).activatePlan(PlanId.gentlerPacePath);
-    await tester.runAsync(() => walkTodaysCircle(container));
+    final routine = Routine(
+      id: 'routine-1',
+      name: 'My pick-me-up',
+      need: Intention.moreEnergy,
+      versions: [
+        RoutineVersion(
+          id: 'routine-1-v1',
+          number: 1,
+          composition: Composition(const [
+            ModuleUse(ModuleId.standingStretch, short: false),
+            ModuleUse(ModuleId.musicMove, short: false),
+          ]),
+          createdAt: today.subtract(const Duration(days: 40)),
+          origin: VersionOrigin.path,
+        ),
+      ],
+      activeVersionId: 'routine-1-v1',
+      createdAt: today.subtract(const Duration(days: 40)),
+    );
+    final path = PathRun(
+      id: 'path-2',
+      kind: PathKind.build,
+      need: Intention.clearerHead,
+      startedAt: today.subtract(const Duration(days: 3)),
+      pool: const [ModuleId.writeDown, ModuleId.clearSurface],
+      seed: SeedReason.sparseStart,
+      template: PathTemplateId.clearTheDecks,
+    );
     await tester.runAsync(
       () => prefs.setString(
-        insightSnapshotsKey,
-        '{"schemaVersion":1,"lastAssessedAt":null,"snapshots":[]}',
+        toolkitStateKey,
+        jsonEncode(ToolkitState(routines: [routine], path: path).toJson()),
       ),
     );
-    final cursorBefore = container
-        .read(planProvider)
-        .progress[PlanId.gentlerPacePath]!
-        .forwardCursor;
-    expect(cursorBefore, 1);
+    container.invalidate(toolkitProvider);
+    await tester.runAsync(() => walkTodaysCircle(container));
 
     await deleteThroughDialog(tester, container);
 
-    expect(prefs.containsKey(insightSnapshotsKey), isFalse);
-    expect(container.read(insightProvider).snapshots, isEmpty);
+    final toolkit = container.read(toolkitProvider);
+    expect(toolkit.routines.single.name, 'My pick-me-up');
+    expect(toolkit.path?.id, 'path-2');
     expect(container.read(entitlementStatusProvider), EntitlementStatus.active);
-    expect(
-      container
-          .read(planProvider)
-          .progress[PlanId.gentlerPacePath]!
-          .forwardCursor,
-      cursorBefore,
-    );
+    // No evidence left: no maintenance offer, no claim.
+    expect(container.read(maintenanceOffersProvider), isEmpty);
+    expect(container.read(toolkitHistoryProvider), isEmpty);
   });
 
   testWidgets('after a restart the deleted Circle does not come back', (

@@ -18,6 +18,8 @@ class YouPersonalCard extends ConsumerWidget {
   static const addPrompt = 'Add your name';
   static const memoryTitle = 'What THIRTY remembers';
   static const memoryDetail = 'What you’ve told it, need by need';
+  static const historyTitle = 'Your Circles';
+  static const historyDetail = 'Every Circle, as it happened';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,41 +73,76 @@ class YouPersonalCard extends ConsumerWidget {
             ),
           ),
         ),
-        Semantics(
+        _LinkRow(
           key: const ValueKey('you.memory'),
-          button: true,
-          label: '$memoryTitle, $memoryDetail',
-          onTap: () => context.push('/memory'),
-          child: ExcludeSemantics(
-            child: InkWell(
-              onTap: () => context.push('/memory'),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 48),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSpacing.m),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      YouRowIcon(Icons.auto_stories_outlined),
-                      SizedBox(width: AppSpacing.m),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            YouRowTitle(memoryTitle),
-                            SizedBox(height: 2),
-                            YouRowDetail(memoryDetail),
-                          ],
-                        ),
-                      ),
-                    ],
+          title: memoryTitle,
+          detail: memoryDetail,
+          icon: Icons.auto_stories_outlined,
+          location: '/memory',
+        ),
+        // V2 Phase D: history, which Insights used to host.
+        _LinkRow(
+          key: const ValueKey('you.history'),
+          title: historyTitle,
+          detail: historyDetail,
+          icon: Icons.history_rounded,
+          location: '/history',
+        ),
+      ],
+    );
+  }
+}
+
+/// One row that opens a page: an icon, a title and one line, read as one.
+class _LinkRow extends StatelessWidget {
+  const _LinkRow({
+    required this.title,
+    required this.detail,
+    required this.icon,
+    required this.location,
+    super.key,
+  });
+
+  final String title;
+  final String detail;
+  final IconData icon;
+  final String location;
+
+  @override
+  Widget build(BuildContext context) {
+    void open() => context.push(location);
+    return Semantics(
+      button: true,
+      label: '$title, $detail',
+      onTap: open,
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: open,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.m),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  YouRowIcon(icon),
+                  const SizedBox(width: AppSpacing.m),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        YouRowTitle(title),
+                        const SizedBox(height: 2),
+                        YouRowDetail(detail),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

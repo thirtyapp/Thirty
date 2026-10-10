@@ -66,6 +66,7 @@ class CircleOffer {
     this.reasonCode,
     this.replacedFrom,
     this.replacementReason,
+    this.session,
   });
 
   /// The time the user said they had (`TimeWindow.name`).
@@ -83,6 +84,105 @@ class CircleOffer {
 
   /// Why (`ReplacementReason.name`). Never a usefulness answer.
   final String? replacementReason;
+
+  /// V2 Phase D: what the Circle was when it was a routine or a Path step —
+  /// `null` for a single activity offered by the engine.
+  final CircleSessionRecord? session;
+}
+
+/// V2 Phase D: the routine or Path context of a Circle, as the journal
+/// keeps it. Its titles are captured when the Circle was offered, so the
+/// record stays readable after a routine is renamed or deleted; its pieces
+/// are kept so it can be understood later.
+class CircleSessionRecord {
+  const CircleSessionRecord({
+    required this.title,
+    this.modules = const [],
+    this.routineId,
+    this.routineVersionId,
+    this.routineVersionNumber,
+    this.pathRunId,
+    this.pathKind,
+    this.pathName,
+    this.pathCircle,
+    this.pathCircles,
+    this.pathReason,
+    this.replacedFromTitle,
+    this.replacedFromRoutineId,
+  });
+
+  /// What the Circle was called that day.
+  final String title;
+
+  /// Its pieces (`ModuleUse` wire form, e.g. `writeDown:short`).
+  final List<String> modules;
+
+  final String? routineId;
+  final String? routineVersionId;
+  final int? routineVersionNumber;
+
+  final String? pathRunId;
+
+  /// `build`, `tuneUp` or `shorter`.
+  final String? pathKind;
+  final String? pathName;
+  final int? pathCircle;
+  final int? pathCircles;
+
+  /// The step's internal reason code (`PathStepReason.name`).
+  final String? pathReason;
+
+  /// The routine or Path step "Not this one today" replaced, by name.
+  final String? replacedFromTitle;
+
+  /// The routine it replaced, when it was one.
+  final String? replacedFromRoutineId;
+
+  Map<String, Object?> toJson() => {
+    'title': title,
+    'modules': modules,
+    'routineId': routineId,
+    'routineVersionId': routineVersionId,
+    'routineVersionNumber': routineVersionNumber,
+    'pathRunId': pathRunId,
+    'pathKind': pathKind,
+    'pathName': pathName,
+    'pathCircle': pathCircle,
+    'pathCircles': pathCircles,
+    'pathReason': pathReason,
+    'replacedFromTitle': replacedFromTitle,
+    'replacedFromRoutineId': replacedFromRoutineId,
+  };
+
+  /// Opaque at this layer, like the Plan fields: right types are trusted,
+  /// anything else is absent. `null` when there is no usable title.
+  static CircleSessionRecord? fromJson(Object? raw) {
+    if (raw is! Map<String, Object?>) return null;
+    final title = raw['title'];
+    if (title is! String || title.isEmpty) return null;
+    String? text(String key) => raw[key] is String ? raw[key] as String : null;
+    int? number(String key) => raw[key] is int ? raw[key] as int : null;
+    final modules = raw['modules'];
+    return CircleSessionRecord(
+      title: title,
+      modules: [
+        if (modules is List)
+          for (final m in modules)
+            if (m is String) m,
+      ],
+      routineId: text('routineId'),
+      routineVersionId: text('routineVersionId'),
+      routineVersionNumber: number('routineVersionNumber'),
+      pathRunId: text('pathRunId'),
+      pathKind: text('pathKind'),
+      pathName: text('pathName'),
+      pathCircle: number('pathCircle'),
+      pathCircles: number('pathCircles'),
+      pathReason: text('pathReason'),
+      replacedFromTitle: text('replacedFromTitle'),
+      replacedFromRoutineId: text('replacedFromRoutineId'),
+    );
+  }
 }
 
 /// One local day's Circle journal record.
@@ -121,6 +221,7 @@ class CircleJournalEntry {
     this.replacedFrom,
     this.replacementReason,
     this.minutesAtClose,
+    this.session,
   });
 
   /// The journal record schema version this entry was written under — see
@@ -222,6 +323,13 @@ class CircleJournalEntry {
   /// `null` on older entries.
   final int? minutesAtClose;
 
+  /// V2 Phase D: the routine or Path context, when there was one.
+  final CircleSessionRecord? session;
+
+  /// The title shown for this Circle: the routine or Path step as it was
+  /// named that day, else the activity's.
+  String get title => session?.title ?? activityLabel(activityId);
+
   /// A copy with the given fields changed. [clearUsefulness] removes the
   /// usefulness answer (it may only follow an affirmative attempt);
   /// [clearAttempt] removes the attempt answer, and with it any usefulness.
@@ -268,6 +376,9 @@ class CircleJournalEntry {
       replacedFrom: offer?.replacedFrom ?? replacedFrom,
       replacementReason: offer?.replacementReason ?? replacementReason,
       minutesAtClose: minutesAtClose ?? this.minutesAtClose,
+      // An offer always says exactly what the Circle was: a replacement
+      // that is a single activity clears the routine or Path it replaced.
+      session: offer == null ? session : offer.session,
     );
   }
 
@@ -296,6 +407,7 @@ class CircleJournalEntry {
     'replacedFromActivityId': replacedFrom?.name,
     'replacementReason': replacementReason,
     'minutesAtClose': minutesAtClose,
+    'session': session?.toJson(),
   };
 
   /// Parses one journal entry, or `null` if [json] is missing or has an
@@ -396,6 +508,7 @@ class CircleJournalEntry {
           ? replacementReasonRaw
           : null,
       minutesAtClose: minutesAtCloseRaw is int ? minutesAtCloseRaw : null,
+      session: CircleSessionRecord.fromJson(json['session']),
     );
   }
 }
@@ -759,13 +872,17 @@ class CircleJournalRepository {
   /// [suggestionPreferences] (V2 Phase C), when given, is exported beside
   /// the entries under its own key — the user's explicit choices, kept
   /// apart from what happened. Nothing derived is ever exported.
-  String exportAsJson({Map<String, Object?>? suggestionPreferences}) {
+  String exportAsJson({
+    Map<String, Object?>? suggestionPreferences,
+    Map<String, Object?>? toolkit,
+  }) {
     final entries = readAll();
     const encoder = JsonEncoder.withIndent('  ');
     return encoder.convert({
       'schemaVersion': circleJournalSchemaVersion,
       'entries': entries.map((entry) => entry.toJson()).toList(),
       'suggestionPreferences': ?suggestionPreferences,
+      'toolkit': ?toolkit,
     });
   }
 
@@ -829,6 +946,7 @@ class CircleJournalRepository {
             reasonCode: offer?.reasonCode,
             replacedFrom: offer?.replacedFrom,
             replacementReason: offer?.replacementReason,
+            session: offer?.session,
           )
         : entries[index];
 

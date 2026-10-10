@@ -9,10 +9,12 @@ import '../../domain/recommendation_engine.dart';
 /// words, and returns it — or `null` if the user changes their mind. One
 /// answer gives one replacement; there is no list and no browsing.
 ///
-/// "Can't go outside" is only offered when [current] is an outdoor activity.
+/// "Can't go outside" is only offered when [current] is an outdoor activity —
+/// or, for a routine or a joined Path step, when [outdoor] says so.
 Future<ReplacementReason?> showNotThisOneSheet(
   BuildContext context, {
   required ActivityId current,
+  bool? outdoor,
 }) {
   final colors = Theme.of(context).extension<AppColors>()!;
   return showModalBottomSheet<ReplacementReason>(
@@ -26,13 +28,16 @@ Future<ReplacementReason?> showNotThisOneSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => NotThisOneSheet(current: current),
+    builder: (_) => NotThisOneSheet(current: current, outdoor: outdoor),
   );
 }
 
 /// The reasons [showNotThisOneSheet] offers for [current].
-List<ReplacementReason> replacementReasonsFor(ActivityId current) => [
-  if (activityDefinition(current).setting == ActivitySetting.outdoor)
+List<ReplacementReason> replacementReasonsFor(
+  ActivityId current, {
+  bool? outdoor,
+}) => [
+  if (outdoor ?? activityDefinition(current).setting == ActivitySetting.outdoor)
     ReplacementReason.cantGoOutside,
   ReplacementReason.tooMuch,
   ReplacementReason.notFeeling,
@@ -46,9 +51,12 @@ String replacementReasonLabel(ReplacementReason reason) => switch (reason) {
 };
 
 class NotThisOneSheet extends StatelessWidget {
-  const NotThisOneSheet({required this.current, super.key});
+  const NotThisOneSheet({required this.current, this.outdoor, super.key});
 
   final ActivityId current;
+
+  /// Whether today's routine or joined Path step happens outside.
+  final bool? outdoor;
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +88,10 @@ class NotThisOneSheet extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.m),
-          for (final reason in replacementReasonsFor(current)) ...[
+          for (final reason in replacementReasonsFor(
+            current,
+            outdoor: outdoor,
+          )) ...[
             ThirtyButton(
               label: replacementReasonLabel(reason),
               variant: ThirtyButtonVariant.secondary,

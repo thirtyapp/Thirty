@@ -74,6 +74,8 @@ class TodayCard extends StatelessWidget {
     required this.showFirstAction,
     required this.onShowGuide,
     this.guideCue = ActivityRowCue.none,
+    this.label = 'Today',
+    this.spokenLabel,
     required this.cardAsset,
     required this.intentOpacity,
     required this.detailOpacity,
@@ -98,6 +100,15 @@ class TodayCard extends StatelessWidget {
 
   /// The quiet line beneath the activity's name, saying what the row opens.
   final ActivityRowCue guideCue;
+
+  /// V2 Phase D: what today's Circle is, on the label line — "Today", "Your
+  /// routine", or "Path · 3 of 7".
+  final String label;
+
+  /// [label] as TalkBack reads it, where the line's short form needs more
+  /// words ("Path · Circle 3 of 7"); `null` reads [label].
+  final String? spokenLabel;
+
   final String cardAsset;
   final Duration artSwitchDuration;
   final Animation<double> intentOpacity;
@@ -159,9 +170,10 @@ class TodayCard extends StatelessWidget {
           children: [
             // The activity's natural length rides on the label line, which
             // has room to spare, so the activity name keeps its width.
-            Text(
-              'TODAY  ·  $minutes MIN',
-              semanticsLabel: 'Today, about $minutes minutes',
+            _LabelLine(
+              label: label,
+              minutes: minutes,
+              semanticsLabel: '${spokenLabel ?? label}, about $minutes minutes',
               style: labelStyle,
             ),
             const SizedBox(height: 2),
@@ -542,6 +554,50 @@ class _CueLine extends StatelessWidget {
         final fits = !painter.didExceedMaxLines;
         painter.dispose();
         return Text(fits ? cue.text : cue.shortText, style: style);
+      },
+    );
+  }
+}
+
+/// [text] with its spaces made non-breaking.
+String _unbroken(String text) => text.replaceAll(' ', '\u00A0');
+
+/// "PATH · 3 OF 7  ·  15 MIN" on one line when it fits. When it doesn't
+/// (larger text), the two parts take a line each and the separator goes —
+/// never a dangling "·", never "MIN" on its own (S25 finding).
+class _LabelLine extends StatelessWidget {
+  const _LabelLine({
+    required this.label,
+    required this.minutes,
+    required this.semanticsLabel,
+    required this.style,
+  });
+
+  final String label;
+  final int minutes;
+  final String semanticsLabel;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = _unbroken(label.toUpperCase());
+    final length = '$minutes MIN';
+    final oneLine = '$name  ·  $length';
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final painter = TextPainter(
+          text: TextSpan(text: oneLine, style: style),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+          maxLines: 1,
+        )..layout(maxWidth: constraints.maxWidth);
+        final fits = !painter.didExceedMaxLines;
+        painter.dispose();
+        return Text(
+          fits ? oneLine : '$name\n$length',
+          semanticsLabel: semanticsLabel,
+          style: style,
+        );
       },
     );
   }

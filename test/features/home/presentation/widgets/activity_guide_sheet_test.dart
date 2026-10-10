@@ -63,7 +63,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('TODAY  ·  15 MIN'), findsOneWidget);
+    expect(find.text('TODAY  ·  15\u00A0MIN'), findsOneWidget);
     expect(
       find.text(
         activityReasonFor(Intention.clearerHead, ActivityId.writeItDown),

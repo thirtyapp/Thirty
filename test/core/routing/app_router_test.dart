@@ -12,9 +12,10 @@ import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_ready_prompt.dart';
 import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
 import 'package:thirty/core/routing/app_shell.dart';
-import 'package:thirty/features/plans/domain/plan_ids.dart';
-import 'package:thirty/features/plans/presentation/plan_detail_page.dart';
-import 'package:thirty/features/plans/presentation/plan_path_page.dart';
+import 'package:thirty/features/toolkit/domain/path_catalog.dart';
+import 'package:thirty/features/toolkit/presentation/path_start_page.dart';
+import 'package:thirty/features/toolkit/presentation/routine_detail_page.dart';
+import 'package:thirty/features/toolkit/presentation/toolkit_page.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 void main() {
@@ -78,30 +79,9 @@ void main() {
   );
 
   testWidgets(
-    'the /plans route shows PlanPathPage, reachable regardless of the '
-    'AppBar icon\'s own entitlement gating (Batch 2A)',
-    (WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
-      final prefs = await SharedPreferences.getInstance();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-          child: const ThirtyApp(),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      appRouter.go('/plans');
-      await tester.pumpAndSettle();
-
-      expect(find.byType(PlanPathPage), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    "/plans/:planId opens that Plan's Your Path inside the shell (the "
-    'navigation bar stays); an unknown id returns to Plans',
+    "V2 Phase D: a Path's page and a routine's open inside the Toolkit "
+    'branch (the navigation bar stays); an unknown Path returns to the '
+    'Toolkit',
     (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
       final prefs = await SharedPreferences.getInstance();
@@ -115,18 +95,25 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      appRouter.go('/plans/clearerHeadPath');
+      appRouter.go(PathStartPage.locationFor(PathTemplateId.clearTheDecks));
       await tester.pumpAndSettle();
       expect(
-        tester.widget<PlanDetailPage>(find.byType(PlanDetailPage)).planId,
-        PlanId.clearerHeadPath,
+        tester.widget<PathStartPage>(find.byType(PathStartPage)).template,
+        PathTemplateId.clearTheDecks,
       );
       expect(find.byType(AppShell), findsOneWidget);
 
-      appRouter.go('/plans/notAPlan');
+      appRouter.go('/toolkit/paths/notAPath');
       await tester.pumpAndSettle();
-      expect(find.byType(PlanDetailPage), findsNothing);
-      expect(find.byType(PlanPathPage), findsOneWidget);
+      expect(find.byType(PathStartPage), findsNothing);
+      expect(find.byType(ToolkitPage), findsOneWidget);
+
+      appRouter.go(RoutineDetailPage.locationFor('gone'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('This routine is no longer in your Toolkit.'),
+        findsOneWidget,
+      );
     },
   );
 

@@ -31,8 +31,10 @@ import '../../../premium/presentation/widgets/manage_subscription.dart';
 class YouPremiumCard extends ConsumerWidget {
   const YouPremiumCard({super.key});
 
+  /// V2 Phase D: what Premium actually does.
   static const body =
-      'Guided Plans, Coach guidance and Insights drawn from your Circles.';
+      'Build a few routines of your own, and keep them fitting as your days '
+      'change.';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

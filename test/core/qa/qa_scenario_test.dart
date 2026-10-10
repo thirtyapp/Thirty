@@ -7,21 +7,20 @@ import 'package:thirty/core/qa/qa_container.dart';
 import 'package:thirty/core/qa/qa_entitlement_gateway.dart';
 import 'package:thirty/core/qa/qa_scenario.dart';
 import 'package:thirty/core/qa/qa_shared_preferences.dart';
-import 'package:thirty/features/coach/application/coach_provider.dart';
-import 'package:thirty/features/coach/domain/coach_family.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
-import 'package:thirty/features/insights/application/insight_provider.dart';
-import 'package:thirty/features/insights/domain/insight_family.dart';
-import 'package:thirty/features/plans/application/plan_provider.dart';
-import 'package:thirty/features/plans/domain/plan_catalog.dart';
-import 'package:thirty/features/plans/domain/plan_ids.dart';
-import 'package:thirty/features/plans/domain/plan_state.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
+import 'package:thirty/features/toolkit/domain/maintenance.dart';
+import 'package:thirty/features/toolkit/domain/module_library.dart';
+import 'package:thirty/features/toolkit/domain/path_catalog.dart';
+import 'package:thirty/features/toolkit/domain/toolkit_model.dart';
 
-/// QA-1 — each synthetic scenario, built through the production Circle,
-/// Plan and Insight notifiers, then opened on the reference day exactly as
-/// the harness would open it.
+/// QA-1 — each synthetic scenario, built through the production Circle and
+/// Toolkit notifiers, then opened on the reference day exactly as the
+/// harness would open it. The V2 Phase D group is the founder's Premium
+/// proofs, checked here before they are walked on the S25.
 void main() {
   final reference = DateTime(2026, 10, 8, 10);
   late SharedPreferences genuine;
@@ -64,13 +63,11 @@ void main() {
   List<CircleJournalEntry> journalOf(ProviderContainer container) =>
       container.read(circleJournalRepositoryProvider).readAll();
 
-  test('only lapsed_retained_snapshots fixes its entitlement (inactive)', () {
+  test('only d_lapsed fixes its entitlement (inactive)', () {
     for (final scenario in QaScenario.values) {
       expect(
         scenario.fixedEntitlement,
-        scenario == QaScenario.lapsedRetainedSnapshots
-            ? QaEntitlement.inactive
-            : isNull,
+        scenario == QaScenario.dLapsed ? QaEntitlement.inactive : isNull,
       );
     }
   });
@@ -79,10 +76,6 @@ void main() {
     expect(QaScenario.values.map((s) => s.wireName), [
       'none',
       'new_user',
-      'plan_in_progress',
-      'month_two',
-      'never_reflects',
-      'lapsed_retained_snapshots',
       'free_not_useful',
       'free_useful',
       'free_exploration',
@@ -106,6 +99,23 @@ void main() {
       'c_memory_nothing_fits',
       'c_delete_keeps_preferences',
       'c_reset_preferences',
+      'd_first_path',
+      'd_path_under_way',
+      'd_path_adapted',
+      'd_path_review',
+      'd_routine_saved',
+      'd_routine_daily_pick',
+      'd_routine_piece_resting',
+      'd_routine_rest_lifted',
+      'd_week7_time_misfit',
+      'd_fading',
+      'd_tune_up_under_way',
+      'd_tune_up_review',
+      'd_stable_check',
+      'd_lapsed',
+      'd_month_two',
+      'd_gap',
+      'd_served_well',
     ]);
   });
 
@@ -137,237 +147,347 @@ void main() {
     }
   });
 
-  group('new_user', () {
-    test('Premium active with no history: no Plan, no Coach, and Insights '
-        'claims nothing', () async {
-      final container = await open(QaScenario.newUser);
-      addTearDown(container.dispose);
+  ToolkitState toolkitOf(ProviderContainer c) => c.read(toolkitProvider);
 
-      expect(container.read(premiumEntitlementProvider), isTrue);
-      expect(journalOf(container), isEmpty);
-      expect(container.read(planProvider).activePlanId, isNull);
-      for (final planId in PlanId.values) {
-        expect(container.read(coachCueProvider(planId)), isNull);
-      }
-
-      container.read(insightProvider.notifier).refreshIfDue();
-      expect(container.read(insightProvider).snapshots, isEmpty);
-      expect(container.read(displayedInsightProvider), isNull);
+  group('V2 Phase D — Premium proofs', () {
+    test('new_user: nothing built, nothing claimed', () async {
+      final c = await open(QaScenario.newUser);
+      addTearDown(c.dispose);
+      expect(toolkitOf(c).isEmpty, isTrue);
+      expect(c.read(maintenanceOffersProvider), isEmpty);
+      expect(c.read(toolkitCheckProvider), isNull);
     });
-  });
 
-  group('plan_in_progress', () {
-    test('More Energy Path three stages in; today resolves stage 4 and '
-        'Coach speaks from the last reflection', () async {
-      final container = await open(QaScenario.planInProgress);
-      addTearDown(container.dispose);
-
-      final journal = journalOf(container);
-      expect(journal, hasLength(5));
-      expect(journal.where((e) => e.planId != null).map((e) => e.stageId), [
-        for (var i = 0; i < 3; i++) stageAt(PlanId.moreEnergyPath, i).id,
-      ]);
-
-      final plans = container.read(planProvider);
-      expect(plans.activePlanId, PlanId.moreEnergyPath);
-      final progress = plans.progress[PlanId.moreEnergyPath]!;
-      expect(progress.forwardCursor, 3);
-      expect(progress.status, PlanCycleStatus.inProgress);
-
+    test('B — d_first_path: the first Path is seeded from Free evidence: '
+        'Move to music, found very useful, comes first', () async {
+      final c = await open(QaScenario.dFirstPath);
+      addTearDown(c.dispose);
+      expect(toolkitOf(c).path, isNull);
       expect(
-        container.read(coachCueProvider(PlanId.moreEnergyPath)),
-        isNotNull,
+        c
+            .read(toolkitProvider.notifier)
+            .startBuild(PathTemplateId.wakeUpIndoors),
+        PathStart.started,
       );
+      final run = toolkitOf(c).path!;
+      expect(run.seed, SeedReason.usefulModule);
+      expect(run.pool.first, ModuleId.musicMove);
+      final step = c.read(nextPathStepProvider)!;
+      expect(
+        step.explanation,
+        'You’ve found this useful before, so it comes first.',
+      );
+    });
 
-      container
+    test("C/D — d_path_under_way: today's More Energy Circle is Circle 3, "
+        'and it keeps the piece found useful', () async {
+      final c = await open(QaScenario.dPathUnderWay);
+      addTearDown(c.dispose);
+      final run = toolkitOf(c).path!;
+      expect(run.circles, hasLength(2));
+      // A Clearer Head day in between left the Path where it was.
+      final journal = journalOf(c);
+      expect(journal.last.direction, Intention.clearerHead);
+      expect(journal.last.session, isNull);
+
+      c
           .read(recommendationProvider.notifier)
-          .chooseIntention(Intention.moreEnergy);
-      final today = container.read(recommendationProvider).recommendation!;
-      expect(today.planId, PlanId.moreEnergyPath);
-      expect(today.stageId, stageAt(PlanId.moreEnergyPath, 3).id);
+          .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      final today = c.read(recommendationProvider).recommendation!;
+      expect(today.session?.pathCircle, 3);
+      expect(today.activity, 'Move to music');
+      expect(today.why, 'You found this useful, so here it is in full.');
+      expect(today.offeredMinutes, 10);
     });
 
-    test('ten days of history is too little for an Insight — none is '
-        'invented', () async {
-      final container = await open(QaScenario.planInProgress);
-      addTearDown(container.dispose);
-
-      container.read(insightProvider.notifier).refreshIfDue();
-      expect(container.read(insightProvider).snapshots, isEmpty);
-    });
-  });
-
-  group('month_two', () {
-    test('one completed cycle retained, a second under way', () async {
-      final container = await open(QaScenario.monthTwo);
-      addTearDown(container.dispose);
-
-      final plans = container.read(planProvider);
-      expect(plans.activePlanId, PlanId.gentlerPacePath);
-      final progress = plans.progress[PlanId.gentlerPacePath]!;
-      expect(progress.cycleHistory, hasLength(1));
-      expect(progress.cycleHistory.single.completedAt, isNotNull);
-      expect(progress.cycleId, 'gentlerPacePath_cycle_2');
-      expect(progress.status, PlanCycleStatus.inProgress);
-      expect(progress.forwardCursor, 2);
-      expect(
-        container.read(coachCueProvider(PlanId.gentlerPacePath)),
-        isNotNull,
-      );
+    test('E — "Not this one today" on a Path step: the engine replaces it, '
+        'and the Path waits', () async {
+      final c = await open(QaScenario.dPathUnderWay);
+      addTearDown(c.dispose);
+      final circle = c.read(recommendationProvider.notifier);
+      circle.chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      expect(circle.replaceToday(ReplacementReason.notFeeling), isTrue);
+      final today = c.read(recommendationProvider).recommendation!;
+      expect(today.session?.isPath ?? false, isFalse);
+      expect(today.replacedFromTitle, 'Move to music');
+      circle.start();
+      circle.close();
+      await Future<void>.delayed(Duration.zero);
+      expect(toolkitOf(c).path!.circles, hasLength(2));
     });
 
-    test('continuing value: opening Insights finds the deliberate revisits '
-        'of cycle 2 and offers to queue the stage again', () async {
-      final container = await open(QaScenario.monthTwo);
-      addTearDown(container.dispose);
-
-      final revisits = journalOf(
-        container,
-      ).where((e) => e.revisitUsed == true).toList();
-      expect(revisits, hasLength(5));
-      expect(revisits.map((e) => e.stageId).toSet(), {
-        stageAt(PlanId.gentlerPacePath, 1).id,
+    test('D — d_path_adapted: Circle 4 turned down, so Circle 5 tries '
+        'another partner', () async {
+      final c = await open(QaScenario.dPathAdapted);
+      addTearDown(c.dispose);
+      expect(toolkitOf(c).path!.circles, hasLength(4));
+      final step = c.read(nextPathStepProvider)!;
+      expect(step.number, 5);
+      expect(step.reason, PathStepReason.alternateAfterNegative);
+      expect(step.composition.modules, {
+        ModuleId.musicMove,
+        ModuleId.activeTask,
       });
+      expect(
+        step.explanation,
+        'That pairing didn’t suit you, so this tries another.',
+      );
 
-      container.read(insightProvider.notifier).refreshIfDue();
-      final snapshot = container.read(insightProvider).snapshots.last;
-      expect(snapshot.family, InsightFamily.deliberateRevisits);
-      expect(snapshot.targetPlanId, PlanId.gentlerPacePath);
-      expect(snapshot.evidenceCount, 5);
-      expect(snapshot.usefulnessDenominator, 5);
-
-      final displayed = container.read(displayedInsightProvider)!;
-      expect(displayed.isCurrent, isTrue);
+      // On an about-20 day it runs in its shorter form, and still says why
+      // it changed: the answer outranks the time line (S25 finding).
+      c
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      final today = c.read(recommendationProvider).recommendation!;
+      expect(today.offeredMinutes, lessThan(step.composition.minutes));
+      expect(today.why, step.explanation);
     });
-  });
 
-  group('never_reflects', () {
-    test('weeks of closed Circles with no reflection answer at all', () async {
-      final container = await open(QaScenario.neverReflects);
-      addTearDown(container.dispose);
+    test('F — d_path_review: seven Circles; the review proposes the routine '
+        'and claims only what the answers support', () async {
+      final c = await open(QaScenario.dPathReview);
+      addTearDown(c.dispose);
+      final run = toolkitOf(c).path!;
+      expect(run.finished, isTrue);
+      final proposal = c.read(pathProposalProvider)!;
+      expect(proposal.composition.modules, {
+        ModuleId.standingStretch,
+        ModuleId.musicMove,
+      });
+      expect(proposal.composition.minutes, 15);
+      expect(proposal.shorter?.minutes, 10);
+      expect(proposal.facts.answeredForResult, 4);
+      expect(proposal.facts.positiveForResult, 4);
+      // Until kept, nothing is in the Toolkit.
+      expect(toolkitOf(c).routines, isEmpty);
+    });
 
-      final journal = journalOf(container);
-      expect(journal, hasLength(10));
-      expect(journal.every((e) => e.closedAt != null), isTrue);
-      expect(journal.every((e) => e.attemptResponse == null), isTrue);
-      expect(journal.every((e) => e.usefulnessResponse == null), isTrue);
+    test("G — d_routine_saved: the routine is the user's, with a shorter "
+        'version from the Path', () async {
+      final c = await open(QaScenario.dRoutineSaved);
+      addTearDown(c.dispose);
+      final routine = toolkitOf(c).routines.single;
+      expect(routine.name, 'My pick-me-up');
+      expect(routine.active.minutes, 15);
+      expect(routine.shortVersion?.minutes, 10);
+      expect(toolkitOf(c).path, isNull);
+    });
+
+    test('H — d_routine_daily_pick: an ordinary More Energy day offers the '
+        'routine — on its evidence, no Premium bonus', () async {
+      final c = await open(QaScenario.dRoutineDailyPick);
+      addTearDown(c.dispose);
+      c
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      final today = c.read(recommendationProvider).recommendation!;
+      expect(today.session?.routineId, toolkitOf(c).routines.single.id);
+      expect(today.reason, RecommendationReason.usefulHere);
+      expect(today.sessionDefinition.steps, isNotEmpty);
     });
 
     test(
-      'Coach and Insights stay truthful: no feedback-based cue, an '
-      'Insight from closed Circles alone with no usefulness figure',
+      'H2 — d_routine_piece_resting: Move to music, a piece of the '
+      'routine, is resting after "Not useful" — Memory says so, and Today '
+      'never brings it back inside the routine; Free picks normally',
       () async {
-        final container = await open(QaScenario.neverReflects);
-        addTearDown(container.dispose);
-
-        final plans = container.read(planProvider);
-        expect(plans.activePlanId, PlanId.clearerHeadPath);
-        expect(plans.progress[PlanId.clearerHeadPath]!.forwardCursor, 3);
-        final cue = container.read(coachCueProvider(PlanId.clearerHeadPath));
-        expect(cue?.family, isNot(CoachFamily.actionFeedback));
-
-        final snapshot = container.read(insightProvider).snapshots.single;
-        expect(snapshot.family, InsightFamily.directionPathContinuity);
-        expect(snapshot.targetPlanId, PlanId.moreEnergyPath);
-        expect(snapshot.usefulnessNumerator, isNull);
-        expect(snapshot.usefulnessDenominator, isNull);
+        final c = await open(QaScenario.dRoutinePieceResting);
+        addTearDown(c.dispose);
+        final routine = toolkitOf(c).routines.single;
+        expect(
+          routine.active.composition.modules,
+          contains(ModuleId.musicMove),
+        );
+        c
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+        final today = c.read(recommendationProvider).recommendation!;
+        expect(today.session?.routineId, isNull);
+        expect(today.activityId, isNot(ActivityId.moveToMusic));
       },
     );
-  });
 
-  group('lapsed_retained_snapshots', () {
-    test('inactive, with the Plan position and Insight snapshots earned '
-        'while subscribed retained', () async {
-      final container = await open(QaScenario.lapsedRetainedSnapshots);
-      addTearDown(container.dispose);
-
-      expect(container.read(premiumEntitlementProvider), isFalse);
-      final plans = container.read(planProvider);
-      expect(plans.activePlanId, PlanId.moreEnergyPath);
-      expect(plans.progress[PlanId.moreEnergyPath]!.forwardCursor, 3);
-
-      final snapshots = container.read(insightProvider).snapshots;
-      expect(snapshots, isNotEmpty);
-      expect(
-        snapshots.every(
-          (s) => s.family == InsightFamily.directionPathContinuity,
-        ),
-        isTrue,
-      );
-    });
-
-    test('Free continued after the lapse: the last three Circles are '
-        'Free-selector Circles, not Plan Sessions', () async {
-      final container = await open(QaScenario.lapsedRetainedSnapshots);
-      addTearDown(container.dispose);
-
-      final journal = journalOf(container);
-      expect(journal, hasLength(13));
-      final afterLapse = journal.sublist(journal.length - 3);
-      expect(afterLapse.map((e) => e.localDate), [
-        '2026-10-02',
-        '2026-10-05',
-        '2026-10-07',
-      ]);
-      expect(afterLapse.every((e) => e.planId == null), isTrue);
-      expect(afterLapse.every((e) => e.closedAt != null), isTrue);
-    });
-
-    test('no new paid computation: no Insight assessment, no Plan Session, '
-        'no application — and today is a normal Free Circle', () async {
-      final container = await open(QaScenario.lapsedRetainedSnapshots);
-      addTearDown(container.dispose);
-      final before = container.read(insightProvider);
-
-      container.read(insightProvider.notifier).refreshIfDue();
-      final after = container.read(insightProvider);
-      expect(after.lastAssessedAt, before.lastAssessedAt);
-      expect(after.snapshots, hasLength(before.snapshots.length));
-      expect(container.read(insightProvider.notifier).applyCurrent(), isFalse);
-
-      container
+    test('H3 — d_routine_rest_lifted: "Suggest again" lifted that rest — the '
+        'routine is today\'s pick again', () async {
+      final c = await open(QaScenario.dRoutineRestLifted);
+      addTearDown(c.dispose);
+      c
           .read(recommendationProvider.notifier)
-          .chooseIntention(Intention.moreEnergy);
-      final today = container.read(recommendationProvider).recommendation!;
-      expect(today.planId, isNull);
+          .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      final today = c.read(recommendationProvider).recommendation!;
+      expect(today.session?.routineId, toolkitOf(c).routines.single.id);
+    });
+
+    test('I — d_week7_time_misfit: about 20 minutes most days lately: the '
+        'one offer is a shorter version — and it is still the same routine, '
+        'every piece in its authored short form', () async {
+      final c = await open(QaScenario.dWeek7TimeMisfit);
+      addTearDown(c.dispose);
+      final offer = c.read(primaryOfferProvider)!;
+      expect(offer.kind, OfferKind.timeMisfit);
+      expect(offer.targetMinutes, 20);
+      final routine = toolkitOf(c).routines.single;
+      expect(routine.name, 'My reset');
+      expect(routine.shortVersion, isNull);
+      expect(routine.active.minutes, 30);
       expect(
-        container
-            .read(planProvider)
-            .progress[PlanId.moreEnergyPath]!
-            .forwardCursor,
-        3,
+        offer.evidence,
+        'You’ve had about 20 minutes most days lately, and My reset takes 30.',
+      );
+      // Try it: the shorter Path's first Circle is the same pieces, short.
+      expect(
+        c.read(toolkitProvider.notifier).startShorter(routine.id, 20),
+        PathStart.started,
+      );
+      final step = c.read(nextPathStepProvider)!;
+      expect(step.composition.minutes, 20);
+      expect(
+        [for (final u in step.composition.uses) u.module],
+        [for (final u in routine.active.composition.uses) u.module],
+      );
+      expect(step.composition.uses.every((u) => u.short), isTrue);
+    });
+
+    test('N2 — d_served_well: Clearer Head chosen as often, but every Free '
+        'pick "Somewhat useful": Free serves it — no gap offer', () async {
+      final c = await open(QaScenario.dServedWell);
+      addTearDown(c.dispose);
+      expect(c.read(maintenanceOffersProvider), isEmpty);
+    });
+
+    test('J — d_fading: a routine that used to suit, suiting less well '
+        'lately: a tune-up is offered', () async {
+      final c = await open(QaScenario.dFading);
+      addTearDown(c.dispose);
+      final offer = c.read(primaryOfferProvider)!;
+      expect(offer.kind, OfferKind.fading);
+      expect(offer.evidence, 'My pick-me-up hasn’t suited you as well lately.');
+    });
+
+    test("J2 — d_tune_up_under_way: two Circles in; today's More Energy "
+        'Circle is its Circle 3', () async {
+      final c = await open(QaScenario.dTuneUpUnderWay);
+      addTearDown(c.dispose);
+      final run = toolkitOf(c).path!;
+      expect(run.kind, PathKind.tuneUp);
+      expect(run.circles, hasLength(2));
+      expect(c.read(nextPathStepProvider)!.number, 3);
+    });
+
+    test('J3 — d_tune_up_review: keeping it makes version 2 the one THIRTY '
+        'uses, and keeps version 1', () async {
+      final c = await open(QaScenario.dTuneUpReview);
+      addTearDown(c.dispose);
+      expect(toolkitOf(c).path!.finished, isTrue);
+      final kept = c.read(toolkitProvider.notifier).keepProposal()!;
+      expect(kept.versions.length, greaterThanOrEqualTo(2));
+      expect(kept.active.number, kept.versions.last.number);
+      expect(kept.active.origin, VersionOrigin.tuneUp);
+      expect(kept.versions.first.origin, VersionOrigin.path);
+    });
+
+    test('K — d_stable_check: four weeks of steady answers: nothing to '
+        'change, and nothing invented', () async {
+      final c = await open(QaScenario.dStableCheck);
+      addTearDown(c.dispose);
+      expect(c.read(maintenanceOffersProvider), isEmpty);
+      final check = c.read(toolkitCheckProvider)!;
+      expect(check.state, CheckState.stable);
+      expect(
+        check.message,
+        'Your routines are working well — nothing to change.',
       );
     });
-  });
 
-  test('inactive and unavailable on a Premium history pause Plans the same '
-      'way, keeping the saved position', () async {
-    for (final entitlement in [
-      QaEntitlement.inactive,
-      QaEntitlement.unavailable,
-    ]) {
-      final container = await open(
-        QaScenario.planInProgress,
-        entitlement: entitlement,
+    test('L — d_lapsed: the routine stays usable in Free; the second Path is '
+        'saved and does not claim the day', () async {
+      final c = await open(QaScenario.dLapsed);
+      addTearDown(c.dispose);
+      expect(c.read(premiumEntitlementProvider), isFalse);
+      final toolkit = toolkitOf(c);
+      expect(toolkit.routines.single.name, 'My pick-me-up');
+      expect(toolkit.path?.template, PathTemplateId.clearTheDecks);
+      expect(toolkit.path!.circles, hasLength(2));
+      // Paid operations stop.
+      expect(
+        c
+            .read(toolkitProvider.notifier)
+            .startTuneUp(toolkit.routines.single.id),
+        PathStart.notEntitled,
       );
-      addTearDown(container.dispose);
-
-      expect(container.read(premiumEntitlementProvider), isFalse);
-      container
+      // A Clearer Head day is a Free day: the Path waits.
+      c
           .read(recommendationProvider.notifier)
-          .chooseIntention(Intention.moreEnergy);
+          .chooseIntention(Intention.clearerHead, window: TimeWindow.upTo30);
       expect(
-        container.read(recommendationProvider).recommendation!.planId,
-        isNull,
-        reason: entitlement.name,
+        c.read(recommendationProvider).recommendation!.session?.isPath ?? false,
+        isFalse,
       );
+      // Ownership stays.
+      c
+          .read(toolkitProvider.notifier)
+          .rename(toolkit.routines.single.id, 'Mornings');
+      expect(toolkitOf(c).routines.single.name, 'Mornings');
+    });
+
+    test('L — restored: the same Path resumes exactly where it was', () async {
+      final store = await build(QaScenario.dLapsed);
+      final c = ProviderContainer(
+        overrides: [
+          ...qaContainerOverrides(
+            genuinePreferences: genuine,
+            supabaseAvailable: false,
+            session: QaSession(
+              entitlement: QaEntitlement.active,
+              scenario: QaScenario.dLapsed,
+              store: store,
+            ),
+          ),
+          nowProvider.overrideWithValue(reference),
+          eventClockProvider.overrideWithValue(() => reference),
+        ],
+      );
+      addTearDown(c.dispose);
+      await c.read(entitlementStatusProvider.notifier).initialize();
+      expect(c.read(premiumEntitlementProvider), isTrue);
+      c
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.clearerHead, window: TimeWindow.upTo30);
+      final today = c.read(recommendationProvider).recommendation!;
+      expect(today.session?.pathCircle, 3);
+      expect(toolkitOf(c).path!.circles, hasLength(2));
+    });
+
+    test('M — d_month_two: two routines, a shorter version, ordinary use — '
+        'and no new content needed', () async {
+      final c = await open(QaScenario.dMonthTwo);
+      addTearDown(c.dispose);
+      final routines = toolkitOf(c).routines;
+      expect(routines.map((r) => r.name), ['My pick-me-up', 'My desk reset']);
+      expect(routines.first.shortVersion, isNotNull);
+      expect(routines.first.shortVersion!.minutes, lessThanOrEqualTo(10));
+      // The desk reset's shorter version, from the time misfit: both its
+      // pieces, each short — the same routine.
+      final reset = routines.last;
+      expect(reset.shortVersion, isNotNull);
       expect(
-        container
-            .read(planProvider)
-            .progress[PlanId.moreEnergyPath]!
-            .forwardCursor,
-        3,
+        reset.shortVersion!.composition.modules,
+        reset.active.composition.modules,
       );
-    }
+      expect(reset.shortVersion!.minutes, lessThanOrEqualTo(20));
+      expect(toolkitOf(c).path, isNull);
+      final offers = c.read(maintenanceOffersProvider);
+      expect(offers.where((o) => o.kind == OfferKind.gap), isEmpty);
+    });
+
+    test('N — d_gap: Clearer Head chosen often, no routine for it: a build '
+        'is offered — one, bounded', () async {
+      final c = await open(QaScenario.dGap);
+      addTearDown(c.dispose);
+      final offer = c.read(primaryOfferProvider)!;
+      expect(offer.kind, OfferKind.gap);
+      expect(offer.need, Intention.clearerHead);
+      expect(offer.template, PathTemplateId.clearTheDecks);
+    });
   });
 }

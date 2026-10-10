@@ -37,6 +37,37 @@ import 'widgets/premium_restore_footer.dart';
 class PremiumOfferPage extends ConsumerStatefulWidget {
   const PremiumOfferPage({super.key});
 
+  /// V2 Phase D: what Premium is.
+  static const headline = 'Routines of your own';
+  static const promise =
+      'Build a few personal routines, then keep them fitting when your days '
+      'change.';
+
+  /// What stays Free — complete, and never weakened.
+  static const freeLine =
+      'Free stays complete: THIRTY chooses one thing for today, and learns '
+      'from what you tell it.';
+
+  /// V2 Phase D: the paid job, in three points (PRODUCT_V2_CONTRACT —
+  /// Premium sells a process: Paths → routines → Toolkit → maintenance).
+  static const points = [
+    (
+      'Paths',
+      'seven Circles that try a few pieces with you and build one routine, '
+          'shaped by what you tell THIRTY',
+    ),
+    (
+      'Your routines',
+      'THIRTY offers them on the days they fit — and they stay yours, with '
+          'or without Premium',
+    ),
+    (
+      'Upkeep',
+      'when a routine stops fitting your time or your days, THIRTY offers '
+          'to tune it — and says so when nothing needs changing',
+    ),
+  ];
+
   @override
   ConsumerState<PremiumOfferPage> createState() => _PremiumOfferPageState();
 }
@@ -88,9 +119,18 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.page),
           children: [
-            Text('Plans, Coach and Insights', style: textTheme.titleLarge),
+            Text(PremiumOfferPage.headline, style: textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              PremiumOfferPage.promise,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colors.textSecondary,
+              ),
+            ),
             const SizedBox(height: AppSpacing.m),
             const _ValueCard(),
+            const SizedBox(height: AppSpacing.m),
+            Text(PremiumOfferPage.freeLine, style: quiet),
             const SizedBox(height: AppSpacing.l),
             switch (status) {
               EntitlementStatus.initializing => const _StatusNote(
@@ -131,15 +171,9 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
   }
 }
 
-/// What you get: Premium V1's three actual features.
+/// What you get: the paid job, in its three points.
 class _ValueCard extends StatelessWidget {
   const _ValueCard();
-
-  static const _points = [
-    ('Circle Plans', 'three guided Plans that remember your place'),
-    ('Circle Coach', 'contextual pacing and gentle resumption'),
-    ('Circle Insights', 'what your own choices tell you'),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +184,7 @@ class _ValueCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final (i, (name, line)) in _points.indexed) ...[
+          for (final (i, (name, line)) in PremiumOfferPage.points.indexed) ...[
             if (i > 0) const SizedBox(height: AppSpacing.m),
             // Its own semantics node: one screen-reader stop per point.
             Semantics(
@@ -253,7 +287,11 @@ class _PurchaseBlock extends ConsumerWidget {
           style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
           child: const Text('Not now'),
         ),
-        Text('Free stays complete.', style: quiet, textAlign: TextAlign.center),
+        Text(
+          'Routines you build stay yours.',
+          style: quiet,
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }

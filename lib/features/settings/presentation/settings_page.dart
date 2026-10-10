@@ -73,7 +73,7 @@ class SettingsPage extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
 
     // No pinned Material AppBar: the header scrolls with the page, as on
-    // Home, Plans and Insights.
+    // Home and the Toolkit.
     return Scaffold(
       body: SafeArea(
         child: ListView(

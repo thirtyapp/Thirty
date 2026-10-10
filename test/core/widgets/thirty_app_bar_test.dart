@@ -189,7 +189,9 @@ void main() {
     tearDown(() => appRouter.go('/'));
 
     for (final location in [
-      '/plans/moreEnergyPath',
+      '/toolkit/paths/wakeUpIndoors',
+      '/toolkit/review',
+      '/toolkit/routine/any',
       '/premium',
       '/history',
       '/history/2026-09-01',
@@ -212,24 +214,14 @@ void main() {
       expect(find.byType(HomeHeader), findsOneWidget);
     });
 
-    testWidgets('Plans has no pinned bar either: like Home, its header '
-        'scrolls with the page (Plans convergence)', (tester) async {
+    testWidgets('the Toolkit has no pinned bar either: like Home and You, '
+        'its header scrolls with the page (V2 Phase D)', (tester) async {
       await pumpApp(tester);
-      appRouter.go('/plans');
+      appRouter.go('/toolkit');
       await tester.pumpAndSettle();
       expect(find.byType(AppBar), findsNothing);
       expect(find.byType(ThirtyAppBar), findsNothing);
-      expect(find.text('Your Plans'), findsOneWidget);
-    });
-
-    testWidgets('Insights has no pinned bar either: its header scrolls with '
-        'the page (Insights convergence)', (tester) async {
-      await pumpApp(tester);
-      appRouter.go('/insights');
-      await tester.pumpAndSettle();
-      expect(find.byType(AppBar), findsNothing);
-      expect(find.byType(ThirtyAppBar), findsNothing);
-      expect(find.text('Your Insights'), findsOneWidget);
+      expect(find.text('Routines that are yours.'), findsOneWidget);
     });
 
     testWidgets('You has no pinned bar either: its header scrolls with the '

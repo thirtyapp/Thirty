@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/design_tokens.dart';
-import '../../plans/presentation/widgets/plan_session_panel.dart';
 import '../../premium/presentation/widgets/premium_offer_invitation_card.dart';
 import '../../reminder/presentation/widgets/reminder_invitation_card.dart';
 import '../application/first_breath_provider.dart';
@@ -31,24 +30,18 @@ import 'widgets/later_today_label.dart';
 /// beneath [CircleHero] — a separate widget, deliberately not folded into
 /// `circle_hero.dart` itself (see ADR-013 §10); since Phase B3 it is passed
 /// in as part of CircleHero's `footer`, so it scrolls with the hero as one
-/// document rather than taking height from it. Since Phase D1,
-/// [PlanSessionPanel] (Batch 2A, only when today's Circle is
-/// Plan-resolved) comes first, then a "LATER TODAY" label heading the
-/// reflection and, below it, at most one of
+/// document rather than taking height from it. Since Phase D1, a "LATER
+/// TODAY" label heads the follow-ups and, below it, at most one of
 /// `ReminderInvitationCard` or `PremiumOfferInvitationCard` ever renders
 /// — each is internally gated on the other (and both on
 /// `ActionReportPrompt`'s own pending state) to enforce the parent V1
 /// prompt-priority order: reflection, then reminder invitation, then
 /// Premium invitation, never stacked (Step 5 local closure).
 ///
-/// **Founder IA correction:** the AppBar's former history/Plans/Settings
-/// shortcut icons are gone — all three destinations they pointed at
-/// (Journal's history now inside Insights' calendar, Plans, and "You")
-/// are primary bottom-nav destinations of `../../../core/routing/app_shell.dart`,
-/// always one tap away regardless of which screen is showing; retaining
-/// a duplicate AppBar shortcut here would just be a second, redundant
-/// path to the same place. Today's own widget tree is otherwise
-/// unchanged by this correction.
+/// **IA (V2 Phase D):** Today | Toolkit | You are the primary destinations
+/// of `../../../core/routing/app_shell.dart`; history is reached from You.
+/// Today carries no shortcut icons of its own. A Path step or a routine is
+/// today's Circle itself — nothing extra is stacked under it.
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
@@ -95,14 +88,12 @@ class HomePage extends ConsumerWidget {
                   ? CircleHero(
                       header: header,
                       topInset: circleTop,
-                      // Phase D1: today's Plan guidance first, then the
-                      // follow-ups under "LATER TODAY" (the reminder or
+                      // The follow-ups under "LATER TODAY" (the reminder or
                       // Premium invitation — priority unchanged). V2 Phase
                       // C: the reflection lives in the Circle itself now
                       // (circle_reflection_card.dart), and still comes first:
                       // neither invitation shows while it is pending.
                       footer: const [
-                        PlanSessionPanel(),
                         LaterTodayLabel(),
                         ReminderInvitationCard(),
                         PremiumOfferInvitationCard(),

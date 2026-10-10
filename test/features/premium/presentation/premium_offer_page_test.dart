@@ -56,17 +56,27 @@ Future<(Widget, ProviderContainer)> _wrap({
 }
 
 void main() {
-  testWidgets('describes Plans, Coach and Insights and nothing else — no '
-      'Atmosphere, AI, trial, annual or scarcity language', (tester) async {
+  testWidgets('describes the V2 paid job — Paths, routines that stay yours, '
+      'upkeep — and nothing else: no retired pillar, no Atmosphere, AI, '
+      'trial, annual or scarcity language (V2 Phase D)', (tester) async {
+    _phoneView(tester);
     final (widget, container) = await _wrap(gateway: _FakeEntitlementGateway());
     addTearDown(container.dispose);
 
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Circle Plans'), findsOneWidget);
-    expect(find.textContaining('Circle Coach'), findsOneWidget);
-    expect(find.textContaining('Circle Insights'), findsOneWidget);
+    expect(find.text(PremiumOfferPage.headline), findsOneWidget);
+    expect(find.text(PremiumOfferPage.freeLine), findsOneWidget);
+    expect(find.text('Routines you build stay yours.'), findsOneWidget);
+    for (final retired in ['Plans', 'Coach', 'Insights', 'Worlds']) {
+      expect(
+        find.textContaining(retired, findRichText: true),
+        findsNothing,
+        reason: retired,
+      );
+    }
+    expect(find.textContaining('unlimited', findRichText: true), findsNothing);
     expect(find.textContaining('Atmosphere'), findsNothing);
     expect(find.textContaining('trial', findRichText: true), findsNothing);
     expect(find.textContaining('annual', findRichText: true), findsNothing);
@@ -75,6 +85,7 @@ void main() {
 
   testWidgets('shows the real localized store price and period, never a '
       'hardcoded figure', (tester) async {
+    _phoneView(tester);
     final gateway = _FakeEntitlementGateway()
       ..offer = const MonthlyOffer(localizedPrice: '€3.99');
     final (widget, container) = await _wrap(gateway: gateway);
@@ -93,6 +104,7 @@ void main() {
 
   testWidgets('shows a quiet unavailable state and no purchase button when '
       'no monthly package is configured', (tester) async {
+    _phoneView(tester);
     final gateway = _FakeEntitlementGateway()..offer = null;
     final (widget, container) = await _wrap(gateway: gateway);
     addTearDown(container.dispose);
@@ -106,6 +118,7 @@ void main() {
 
   testWidgets('already-entitled users see their active status, not a '
       'purchase button (Phase C2 copy)', (tester) async {
+    _phoneView(tester);
     final gateway = _FakeEntitlementGateway(
       initialStatus: EntitlementStatus.active,
     );
@@ -122,6 +135,7 @@ void main() {
 
   testWidgets('a successful purchase reports confirmation and updates '
       'entitlement state authoritatively', (tester) async {
+    _phoneView(tester);
     final gateway = _FakeEntitlementGateway()
       ..purchaseOutcome = PurchaseOutcome.purchased
       ..statusAfterPurchase = EntitlementStatus.active;
@@ -140,6 +154,7 @@ void main() {
 
   testWidgets('a user-cancelled purchase is treated as an ordinary outcome '
       '— no error message, no crash', (tester) async {
+    _phoneView(tester);
     final gateway = _FakeEntitlementGateway()
       ..purchaseOutcome = PurchaseOutcome.userCancelled;
     final (widget, container) = await _wrap(gateway: gateway);
@@ -157,6 +172,7 @@ void main() {
 
   testWidgets('a pending Google Play payment is explained, never shown as '
       'success or as an error', (tester) async {
+    _phoneView(tester);
     final gateway = _FakeEntitlementGateway()
       ..purchaseOutcome = PurchaseOutcome.pending;
     final (widget, container) = await _wrap(gateway: gateway);
@@ -182,6 +198,7 @@ void main() {
 
   testWidgets('a purchase whose entitlement is not yet active is shown as '
       'confirming, never as success', (tester) async {
+    _phoneView(tester);
     final gateway = _FakeEntitlementGateway()
       ..purchaseOutcome = PurchaseOutcome.purchased
       ..statusAfterPurchase = EntitlementStatus.inactive;
@@ -208,6 +225,7 @@ void main() {
   testWidgets('a provider error is reported without implying success', (
     tester,
   ) async {
+    _phoneView(tester);
     final gateway = _FakeEntitlementGateway()
       ..purchaseOutcome = PurchaseOutcome.error;
     final (widget, container) = await _wrap(gateway: gateway);
@@ -225,13 +243,14 @@ void main() {
 
   testWidgets('says Free stays complete and that history stays on this '
       'device (Phase C2 copy)', (tester) async {
+    _phoneView(tester);
     final (widget, container) = await _wrap(gateway: _FakeEntitlementGateway());
     addTearDown(container.dispose);
 
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
 
-    expect(find.text('Free stays complete.'), findsOneWidget);
+    expect(find.text(PremiumOfferPage.freeLine), findsOneWidget);
     expect(
       find.textContaining('Your Circle history stays on this device'),
       findsOneWidget,
@@ -241,6 +260,7 @@ void main() {
   testWidgets('Phase A2 — the Premium offer card uses featuredCard padding', (
     tester,
   ) async {
+    _phoneView(tester);
     final (widget, container) = await _wrap(gateway: _FakeEntitlementGateway());
     addTearDown(container.dispose);
 
@@ -252,4 +272,12 @@ void main() {
       const EdgeInsets.all(AppSpacing.featuredCard),
     );
   });
+}
+
+/// The S25's logical size, tall enough that the page's messages below the
+/// purchase button are laid out (the page grew with V2 Phase D's copy).
+void _phoneView(WidgetTester tester) {
+  tester.view.physicalSize = const Size(412, 1400);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
 }

@@ -13,6 +13,7 @@ import 'core/providers/supabase_availability_provider.dart';
 import 'core/qa/qa_premium_gate.dart';
 import 'core/qa/qa_premium_harness.dart';
 import 'features/reminder/application/reminder_provider.dart';
+import 'features/toolkit/application/v1_premium_retirement.dart';
 
 /// ADR-013 §8 — optional analytics must never own the local product's own
 /// startup availability. Missing configuration (`!config.isConfigured`)
@@ -41,6 +42,9 @@ Future<void> main() async {
   final supabaseAvailable = await initializeSupabaseIfConfigured(config);
 
   final sharedPreferences = await SharedPreferences.getInstance();
+  // V2 Phase D: V1 Plans and Insights are retired before anything reads
+  // the store (once; idempotent).
+  await retireV1Premium(sharedPreferences);
 
   // QA-1: a debug build launched with THIRTY_QA_PREMIUM=true runs the
   // Premium QA harness instead. Compile-time false in profile and release.

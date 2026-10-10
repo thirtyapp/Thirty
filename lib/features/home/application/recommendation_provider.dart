@@ -6,12 +6,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/activity_category.dart';
 import '../../../core/analytics/analytics_event_type.dart';
 import '../../../core/analytics/analytics_service.dart';
+import 'dart:convert';
+
+import '../../../core/premium/premium_access.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../../../core/utils/date_key.dart';
-import '../../plans/application/plan_provider.dart';
-import '../../plans/domain/plan_ids.dart';
-import '../../plans/domain/plan_state.dart';
+import '../../toolkit/application/toolkit_provider.dart';
+import '../../toolkit/domain/module_library.dart';
+import '../../toolkit/domain/path_catalog.dart';
+import '../../toolkit/domain/path_engine.dart';
+import '../../toolkit/domain/toolkit_model.dart';
 import '../domain/circle_session.dart';
 import '../domain/recommendation_engine.dart';
 import 'activity_catalog.dart';
@@ -22,6 +27,10 @@ import 'suggestion_preferences.dart';
 /// today's [Intention] and [TimeWindow], and Recommendation Engine V2
 /// (`../domain/recommendation_engine.dart`) picks one [ActivityId] from the
 /// user's own explicit history — locally and deterministically.
+///
+/// **V2 Phase D:** today's Circle may instead be one of the user's routines
+/// (the engine picked it, as an ordinary candidate) or the next step of
+/// their Path (it claimed today's matching need) — see [session].
 ///
 /// Purely content — the day's session/lifecycle state (whether it has been
 /// started or closed, and when) lives on [RecommendationState], not here.
@@ -36,21 +45,20 @@ class Recommendation {
     required this.intention,
     required this.circleId,
     required this.catalogVersion,
-    this.planId,
-    this.stageId,
-    this.planCycleId,
-    this.planVersion,
-    this.isPlanRevisit = false,
-    this.treatmentUsed,
-    this.treatmentSource,
     required this.offeredMinutes,
     this.timeWindow = TimeWindow.firstUse,
     this.reason = RecommendationReason.bestFit,
     this.replacedFrom,
     this.replacementReason,
+    this.session,
+    this.replacedFromTitle,
+    this.replacedFromRoutineId,
   });
 
   final String intent;
+
+  /// What today's Circle is called: the activity, the routine, or the Path
+  /// step's pieces.
   final String activity;
   final String duration;
   final String why;
@@ -63,15 +71,14 @@ class Recommendation {
   final ActivityCategory category;
 
   /// The canonical activity identity this recommendation was built from —
-  /// not displayed anywhere, used only for persistence and next-day
-  /// anti-repetition (`activity_catalog.dart`'s [selectActivityId]).
+  /// for a routine or a Path step joining several pieces, its first piece,
+  /// whose World art stands for the Circle.
   final ActivityId activityId;
 
   /// The raw [Intention] this recommendation was resolved for — kept
   /// alongside [intent] (its display label) so the Circle journal
-  /// (`circle_journal.dart`) and the cross-direction diversity guard's
-  /// persistence can use the stable enum identity rather than re-parsing
-  /// display copy (ADR-013).
+  /// (`circle_journal.dart`) can use the stable enum identity rather than
+  /// re-parsing display copy (ADR-013).
   final Intention intention;
 
   /// This Circle's stable identity — currently always equal to the local
@@ -84,52 +91,10 @@ class Recommendation {
   /// identity").
   final int catalogVersion;
 
-  /// This Circle's Plan identity, if it was Plan-resolved
-  /// (`../../plans/application/plan_provider.dart`'s
-  /// `PlanNotifier.resolveSessionFor`) rather than the complete Free
-  /// selector (`activity_catalog.dart`'s [selectActivityId]) — `null` for
-  /// every Free-selector-resolved Circle. All five Plan-related fields
-  /// below are only ever meaningful together with a non-null [planId].
-  final PlanId? planId;
-
-  /// The assigned [StageId] — `null` iff [planId] is `null`.
-  final StageId? stageId;
-
-  /// The Plan cycle this Circle belonged to
-  /// (`../../plans/domain/plan_state.dart`'s `PlanProgress.cycleId`) —
-  /// `null` iff [planId] is `null`.
-  final String? planCycleId;
-
-  /// The `../../plans/domain/plan_catalog.dart` `planContentVersion`
-  /// active when this Circle was resolved — `null` iff [planId] is `null`.
-  final int? planVersion;
-
-  /// Whether this Circle was assigned via a queued one-off revisit
-  /// (frozen architecture §9) rather than ordinary forward progression —
-  /// always `false` when [planId] is `null`.
-  final bool isPlanRevisit;
-
-  /// Which of the stage's two authored guidance texts is currently
-  /// selected for display (`../../plans/domain/plan_state.dart`'s
-  /// `PlanTreatment`) — `null` iff [planId] is `null`. Mutable after
-  /// resolution via [RecommendationNotifier.setPlanTreatment]; changing it
-  /// never substitutes a different [activityId] (frozen architecture §10).
-  final PlanTreatment? treatmentUsed;
-
-  /// Truthfully records *why* [treatmentUsed] is what it is — Batch 2B
-  /// (ADR-015 §10) — `null` iff [planId] is `null`. Set to
-  /// [PlanTreatmentSource.directChoice] whenever
-  /// [RecommendationNotifier.setPlanTreatment] is called; set from
-  /// `../../plans/application/plan_provider.dart`'s
-  /// `PlanSessionAssignment.treatmentSource` at resolution time otherwise —
-  /// never counted as a fresh user choice merely because the resulting
-  /// [treatmentUsed] happens to be [PlanTreatment.lighter].
-  final PlanTreatmentSource? treatmentSource;
-
   /// The time the user said they had today (V2 Phase B).
   final TimeWindow timeWindow;
 
-  /// Today's real length of [activityId]: what the ring runs to.
+  /// Today's real length: what the ring runs to.
   final int offeredMinutes;
 
   /// The engine's decisive reason for this offer.
@@ -139,16 +104,42 @@ class Recommendation {
   /// reason, or `null`.
   String? get personalReason => reason.visibleCopy;
 
-  /// The activity first offered today, if the user asked for another.
+  /// The activity first offered today, if the user asked for another — for
+  /// a routine or Path step, its first piece.
   final ActivityId? replacedFrom;
 
   /// Why ("Not this one today"). Today's constraint, never a usefulness
   /// answer.
   final ReplacementReason? replacementReason;
 
-  /// Whether "Not this one today" is still available: once a day, and not
-  /// for a V1 Plan stage (Plans are replaced in Phase D).
-  bool get canReplace => replacedFrom == null && planId == null;
+  /// V2 Phase D: the routine or Path step today's Circle is, or `null` for
+  /// a single activity the engine picked.
+  final TodaySession? session;
+
+  /// V2 Phase D: the routine or Path step replaced today, by name.
+  final String? replacedFromTitle;
+  final String? replacedFromRoutineId;
+
+  /// Whether "Not this one today" is still available: once a day — for an
+  /// activity, a routine or a Path step alike.
+  bool get canReplace => replacedFrom == null;
+
+  /// The session today's Circle runs: the activity as authored; for a
+  /// routine or a joined Path step, its pieces one after the other on the
+  /// Guided runtime (`sessionFor`); for a single-piece Path step, that
+  /// piece's activity.
+  ActivityDefinition get sessionDefinition {
+    final uses = session?.composition.uses;
+    if (uses == null) return activityDefinition(activityId);
+    if (uses.length == 1) return uses.single.definition.activity;
+    // Running, a Path step goes by its Path's name ("Step 1 of 6 · A lift
+    // at home"): the pieces' joined title is already the step heading's
+    // job, and would wrap beneath it (S25 finding).
+    return sessionFor(
+      session!.composition,
+      title: session!.pathName ?? session!.title,
+    );
+  }
 
   /// What this offer records in the Circle journal.
   CircleOffer get journalOffer => CircleOffer(
@@ -157,7 +148,128 @@ class Recommendation {
     reasonCode: reason.name,
     replacedFrom: replacedFrom,
     replacementReason: replacementReason?.name,
+    session:
+        session?.toRecord(
+          replacedFromTitle: replacedFromTitle,
+          replacedFromRoutineId: replacedFromRoutineId,
+        ) ??
+        (replacedFromTitle == null
+            ? null
+            : CircleSessionRecord(
+                title: activity,
+                replacedFromTitle: replacedFromTitle,
+                replacedFromRoutineId: replacedFromRoutineId,
+              )),
   );
+}
+
+/// V2 Phase D: today's routine or Path step — what it is made of, and
+/// where it comes from. Persisted with today's Circle so a restart restores
+/// exactly what was offered.
+class TodaySession {
+  const TodaySession({
+    required this.composition,
+    required this.title,
+    this.planned,
+    this.routineId,
+    this.routineVersionId,
+    this.routineVersionNumber,
+    this.pathRunId,
+    this.pathKind,
+    this.pathName,
+    this.pathCircle,
+    this.pathCircles,
+    this.pathReason,
+    this.pathExplanation,
+  });
+
+  /// What today's Circle runs.
+  final Composition composition;
+
+  /// A Path step's own pieces, before today's time made it shorter.
+  final Composition? planned;
+
+  final String title;
+
+  final String? routineId;
+  final String? routineVersionId;
+  final int? routineVersionNumber;
+
+  final String? pathRunId;
+  final PathKind? pathKind;
+  final String? pathName;
+  final int? pathCircle;
+  final int? pathCircles;
+  final PathStepReason? pathReason;
+
+  /// The Path step's one line ("Now the two together.").
+  final String? pathExplanation;
+
+  bool get isPath => pathRunId != null;
+  bool get isRoutine => routineId != null;
+
+  CircleSessionRecord toRecord({
+    String? replacedFromTitle,
+    String? replacedFromRoutineId,
+  }) => CircleSessionRecord(
+    title: title,
+    modules: composition.toWire(),
+    routineId: routineId,
+    routineVersionId: routineVersionId,
+    routineVersionNumber: routineVersionNumber,
+    pathRunId: pathRunId,
+    pathKind: pathKind?.name,
+    pathName: pathName,
+    pathCircle: pathCircle,
+    pathCircles: pathCircles,
+    pathReason: pathReason?.name,
+    replacedFromTitle: replacedFromTitle,
+    replacedFromRoutineId: replacedFromRoutineId,
+  );
+
+  Map<String, Object?> toJson() => {
+    'modules': composition.toWire(),
+    'planned': planned?.toWire(),
+    'title': title,
+    'routineId': routineId,
+    'routineVersionId': routineVersionId,
+    'routineVersionNumber': routineVersionNumber,
+    'pathRunId': pathRunId,
+    'pathKind': pathKind?.name,
+    'pathName': pathName,
+    'pathCircle': pathCircle,
+    'pathCircles': pathCircles,
+    'pathReason': pathReason?.name,
+    'pathExplanation': pathExplanation,
+  };
+
+  static TodaySession? fromJson(Object? raw) {
+    if (raw is! Map<String, Object?>) return null;
+    final composition = Composition.fromWire(raw['modules']);
+    final title = raw['title'];
+    if (composition == null || title is! String) return null;
+    String? text(String key) => raw[key] is String ? raw[key] as String : null;
+    int? number(String key) => raw[key] is int ? raw[key] as int : null;
+    final pathRunId = text('pathRunId');
+    final pathReason = PathStepReason.values.asNameMap()[raw['pathReason']];
+    // A Path step is only restored whole.
+    if (pathRunId != null && pathReason == null) return null;
+    return TodaySession(
+      composition: composition,
+      planned: Composition.fromWire(raw['planned']),
+      title: title,
+      routineId: text('routineId'),
+      routineVersionId: text('routineVersionId'),
+      routineVersionNumber: number('routineVersionNumber'),
+      pathRunId: pathRunId,
+      pathKind: PathKind.values.asNameMap()[raw['pathKind']],
+      pathName: text('pathName'),
+      pathCircle: number('pathCircle'),
+      pathCircles: number('pathCircles'),
+      pathReason: pathReason,
+      pathExplanation: text('pathExplanation'),
+    );
+  }
 }
 
 /// Today's Circle's lifecycle status. Deliberately only the three states
@@ -243,38 +355,26 @@ const recommendationUsefulnessResponseKey =
 /// matter which direction it came from.
 const recommendationLastFamilyKey = 'recommendation_last_family';
 
-/// SharedPreferences key for today's [Recommendation.planId]'s
-/// [PlanId.name] (Batch 2A) — absent for a Free-selector-resolved Circle.
-/// All five `recommendationPlan*`/`recommendationStageId*`/
-/// `recommendationTreatment*` keys below are only ever meaningful together;
-/// see [_restoreRecommendation].
+/// **Retired (V2 Phase D).** Today's V1 Plan context. No longer read or
+/// written — only removed, by the V1 Premium retirement and by Delete.
 const recommendationPlanIdKey = 'recommendation_plan_id';
 
-/// SharedPreferences key for today's [Recommendation.stageId]. See
-/// [recommendationPlanIdKey].
+/// **Retired (V2 Phase D).** See [recommendationPlanIdKey].
 const recommendationStageIdKey = 'recommendation_stage_id';
 
-/// SharedPreferences key for today's [Recommendation.planCycleId]. See
-/// [recommendationPlanIdKey].
+/// **Retired (V2 Phase D).** See [recommendationPlanIdKey].
 const recommendationPlanCycleIdKey = 'recommendation_plan_cycle_id';
 
-/// SharedPreferences key for today's [Recommendation.planVersion]. See
-/// [recommendationPlanIdKey].
+/// **Retired (V2 Phase D).** See [recommendationPlanIdKey].
 const recommendationPlanVersionKey = 'recommendation_plan_version';
 
-/// SharedPreferences key for today's [Recommendation.isPlanRevisit]. See
-/// [recommendationPlanIdKey].
+/// **Retired (V2 Phase D).** See [recommendationPlanIdKey].
 const recommendationIsPlanRevisitKey = 'recommendation_is_plan_revisit';
 
-/// SharedPreferences key for today's [Recommendation.treatmentUsed]'s
-/// [PlanTreatment.name] — the one Plan-related field
-/// [RecommendationNotifier.setPlanTreatment] can change after resolution.
+/// **Retired (V2 Phase D).** See [recommendationPlanIdKey].
 const recommendationTreatmentKey = 'recommendation_treatment';
 
-/// SharedPreferences key for today's [Recommendation.treatmentSource]'s
-/// [PlanTreatmentSource.name] (Batch 2B) — mirrors [recommendationTreatmentKey]
-/// one-for-one: both are set together at resolution, and both are updated
-/// together by [RecommendationNotifier.setPlanTreatment].
+/// **Retired (V2 Phase D).** See [recommendationPlanIdKey].
 const recommendationTreatmentSourceKey = 'recommendation_treatment_source';
 
 /// V2 Phase B: today's [TimeWindow.name].
@@ -303,6 +403,15 @@ const recommendationPausedMsKey = 'recommendation_paused_ms';
 /// V2 Phase C: a Guided Circle's position (`circle_session.dart`'s
 /// [guidedFinishPosition]) — where the user is, never what they did.
 const recommendationGuidedPositionKey = 'recommendation_guided_position';
+
+/// V2 Phase D: today's routine or Path step ([TodaySession]), as JSON —
+/// absent for a single activity.
+const recommendationSessionKey = 'recommendation_session';
+
+/// V2 Phase D: the routine or Path step replaced today, by name and (for a
+/// routine) id.
+const recommendationReplacedTitleKey = 'recommendation_replaced_title';
+const recommendationReplacedRoutineKey = 'recommendation_replaced_routine';
 
 /// Today's Circle: its content ([recommendation]) plus its session/
 /// lifecycle state.
@@ -536,7 +645,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       ),
     );
     final storedPosition = clampGuidedPosition(
-      activityDefinition(recommendation.activityId),
+      recommendation.sessionDefinition,
       prefs.getInt(recommendationGuidedPositionKey) ?? 0,
     );
 
@@ -615,10 +724,14 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// Records a [AnalyticsEventType.recommendationShown] event only on this
   /// real, once-per-day resolution.
   ///
-  /// **Circle Plans (V1, until Phase D):** an active, in-progress Plan whose
-  /// direction matches [intention] still supplies the activity
-  /// (`PlanNotifier.resolveSessionFor`), at its usual length; the engine is
-  /// not asked and no replacement is offered.
+  /// **V2 Phase D:**
+  /// - A Path under way whose need is today's need claims today's Circle —
+  ///   only with Premium, only when its next step's pieces are all still
+  ///   allowed, and only at a truthful length that fits today's time (its
+  ///   own, or its truly shorter form). Otherwise the Path waits, untouched,
+  ///   and the engine decides as on any day.
+  /// - The engine weighs the user's enabled routines as ordinary candidates
+  ///   — whatever Premium's state: routines stay the user's.
   void chooseIntention(Intention intention, {TimeWindow? window}) {
     if (state.recommendation != null) return;
 
@@ -627,20 +740,10 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final TimeWindow chosen = ref.read(timeWindowChoiceProvider);
     final timeWindow = window ?? chosen;
 
-    final planAssignment = ref
-        .read(planProvider.notifier)
-        .resolveSessionFor(intention);
-
+    final pathStep = _pathStepToday(intention, timeWindow, today);
     final Recommendation recommendation;
-    if (planAssignment != null) {
-      recommendation = _buildRecommendation(
-        intention,
-        planAssignment.activityId,
-        today,
-        planAssignment: planAssignment,
-        window: timeWindow,
-        reason: RecommendationReason.planStage,
-      );
+    if (pathStep != null) {
+      recommendation = pathStep;
     } else {
       final decision = recommend(
         RecommendationContext(
@@ -648,8 +751,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           need: intention,
           window: timeWindow,
           allowSafetyPending: ref.read(safetyPendingAllowedProvider),
+          routines: ref.read(routineCandidatesProvider),
         ),
-        pastCirclesFrom(ref.read(circleJournalRepositoryProvider).readAll()),
+        ref.read(toolkitHistoryProvider),
         controls: ref.read(suggestionPreferencesProvider).controls,
       );
       if (decision == null) {
@@ -662,14 +766,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         );
         return;
       }
-      recommendation = _buildRecommendation(
-        intention,
-        decision.activityId,
-        today,
-        window: timeWindow,
-        offeredMinutes: decision.offeredMinutes,
-        reason: decision.reason,
-      );
+      recommendation = _fromDecision(intention, decision, today, timeWindow);
     }
 
     state = RecommendationState(
@@ -681,7 +778,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         today: today,
         recommendation: recommendation,
         shownAt: now,
-        planAssignment: planAssignment,
       ),
     );
     ref
@@ -695,15 +791,130 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         );
   }
 
+  /// Today's Path step, when the Path under way may claim today (see
+  /// [chooseIntention]) — else `null`.
+  Recommendation? _pathStepToday(
+    Intention intention,
+    TimeWindow window,
+    String today,
+  ) {
+    final toolkit = ref.read(toolkitProvider);
+    final run = toolkit.path;
+    if (run == null || run.finished || run.need != intention) return null;
+    // Progressing a Path is Premium: without it, the Path is saved, waiting.
+    if (!ref.read(premiumEntitlementProvider)) return null;
+    final base = run.routineId == null
+        ? null
+        : toolkit.routineById(run.routineId!)?.versionById(run.baseVersionId!);
+    if (run.kind != PathKind.build && base == null) return null;
+    final resting = ref.read(pathRestingProvider);
+    final step = nextPathStep(
+      run,
+      ref.read(pathAnswersProvider),
+      base: base,
+      resting: resting,
+    );
+    if (step == null) return null;
+    if (!stepAllowed(
+      step,
+      intention,
+      controls: ref.read(suggestionPreferencesProvider).controls,
+      allowSafetyPending: ref.read(safetyPendingAllowedProvider),
+      resting: resting,
+    )) {
+      return null;
+    }
+    final fit = fitToWindow(step, window);
+    if (fit == null) return null;
+    final composition = fit.composition;
+    // What the user told THIRTY outranks the time line: a step that changed
+    // because of an answer says so even on a shorter day — the offered
+    // length on the card already shows it is shorter (S25 finding, D-D).
+    final explanation = fit.reason == step.reason || step.reason.fromAnswers
+        ? step.explanation
+        : pathStepExplanation(fit.reason, combined: composition.combined);
+    final routine = run.routineId == null
+        ? null
+        : toolkit.routineById(run.routineId!);
+    return _buildRecommendation(
+      intention,
+      composition.anchor,
+      today,
+      window: window,
+      offeredMinutes: composition.minutes,
+      reason: RecommendationReason.pathStep,
+      session: TodaySession(
+        composition: composition,
+        planned: step.composition,
+        title: composition.combined
+            ? composition.title
+            : composition.uses.single.definition.activity.title,
+        pathRunId: run.id,
+        pathKind: run.kind,
+        pathName: switch (run.kind) {
+          PathKind.build => pathTemplate(run.template!).name,
+          PathKind.tuneUp => 'Tuning ${routine?.name ?? 'a routine'}',
+          PathKind.shorter => 'Shortening ${routine?.name ?? 'a routine'}',
+        },
+        pathCircle: step.number,
+        pathCircles: run.length,
+        pathReason: fit.reason,
+        pathExplanation: explanation,
+      ),
+    );
+  }
+
+  /// The engine's [decision] as today's Circle: an activity, or one of the
+  /// user's routines at the version that fits.
+  Recommendation _fromDecision(
+    Intention intention,
+    RecommendationDecision decision,
+    String circleId,
+    TimeWindow window, {
+    Recommendation? replacing,
+    ReplacementReason? replacementReason,
+  }) {
+    final routineId = decision.routineId;
+    final routine = routineId == null
+        ? null
+        : ref.read(toolkitProvider).routineById(routineId);
+    final version = routine?.versionById(decision.routineVersionId ?? '');
+    return _buildRecommendation(
+      intention,
+      decision.activityId,
+      circleId,
+      window: window,
+      offeredMinutes: decision.offeredMinutes,
+      reason: decision.reason,
+      replacedFrom: replacing?.activityId,
+      replacementReason: replacementReason,
+      replacedFromTitle: replacing?.session?.title,
+      replacedFromRoutineId: replacing?.session?.routineId,
+      session: routine == null || version == null
+          ? null
+          : TodaySession(
+              composition: version.composition,
+              title: routine.name,
+              routineId: routine.id,
+              routineVersionId: version.id,
+              routineVersionNumber: version.number,
+            ),
+    );
+  }
+
   /// "Not this one today" (V2 Phase B): re-selects today's activity once,
   /// under [reason] as a hard constraint for today. Returns `false` — and
   /// changes nothing — unless today's Circle is offered but not yet
-  /// started, has not been replaced already, and isn't a Plan stage; or if
-  /// nothing else fits [reason] today.
+  /// started and has not been replaced already; or if nothing else fits
+  /// [reason] today.
   ///
   /// The reason is never a usefulness answer. The journal records the final
   /// activity, the one it replaced and why, so a restart restores the
   /// replacement and never offers a second one.
+  ///
+  /// **V2 Phase D:** a routine or a Path step is replaced the same way, by
+  /// the engine — never by another Path step. A replaced Path step doesn't
+  /// count: the Path waits where it was.
   bool replaceToday(ReplacementReason reason) {
     final current = state.recommendation;
     if (current == null || !current.canReplace) return false;
@@ -719,22 +930,23 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           reason: reason,
           replacing: current.activityId,
           replacingMinutes: current.offeredMinutes,
+          replacingRoutineId: current.session?.routineId,
+          replacingComponents: current.session?.composition.activities ?? [],
         ),
         allowSafetyPending: ref.read(safetyPendingAllowedProvider),
+        routines: ref.read(routineCandidatesProvider),
       ),
-      pastCirclesFrom(ref.read(circleJournalRepositoryProvider).readAll()),
+      ref.read(toolkitHistoryProvider),
       controls: ref.read(suggestionPreferencesProvider).controls,
     );
     if (decision == null) return false;
 
-    final replacement = _buildRecommendation(
+    final replacement = _fromDecision(
       current.intention,
-      decision.activityId,
+      decision,
       current.circleId,
-      window: current.timeWindow,
-      offeredMinutes: decision.offeredMinutes,
-      reason: decision.reason,
-      replacedFrom: current.activityId,
+      current.timeWindow,
+      replacing: current,
       replacementReason: reason,
     );
     state = RecommendationState(
@@ -803,7 +1015,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     if (recommendation == null) return;
     if (state.status != RecommendationStatus.started) return;
     final clamped = clampGuidedPosition(
-      activityDefinition(recommendation.activityId),
+      recommendation.sessionDefinition,
       position,
     );
     if (clamped == state.guidedPosition) return;
@@ -851,67 +1063,21 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     // AnalyticsEventType.circleClosed's own doc comment).
     ref.read(analyticsServiceProvider).track(AnalyticsEventType.circleClosed);
 
-    // Circle Plans (Batch 2A): a real Close of a Plan-resolved Circle
-    // advances that Plan's forward guidance cursor exactly once (frozen
-    // architecture §8) — never on the no-op guard clauses above, so a
-    // duplicate close() can never advance it twice. A revisit-sourced
-    // Circle never advances the cursor (see
-    // `PlanNotifier.advanceCursorForCircle`'s own doc comment).
-    final planId = recommendation.planId;
-    if (planId != null) {
+    // V2 Phase D: a real Close of today's Path step counts it — once (the
+    // guard clauses above make a repeat close a no-op). Close moves the
+    // Path on; it never says the step was done.
+    final session = recommendation.session;
+    if (session != null && session.isPath && session.pathReason != null) {
       ref
-          .read(planProvider.notifier)
-          .advanceCursorForCircle(
-            planId,
-            recommendation.circleId,
-            isRevisit: recommendation.isPlanRevisit,
+          .read(toolkitProvider.notifier)
+          .recordPathCircle(
+            runId: session.pathRunId!,
+            circleId: recommendation.circleId,
+            composition: session.composition,
+            planned: session.planned ?? session.composition,
+            reason: session.pathReason!,
           );
     }
-  }
-
-  /// Switches which of a Plan Session's two authored guidance texts is
-  /// currently shown for today's Circle (frozen architecture §10). A
-  /// no-op unless today's recommendation exists and is Plan-resolved
-  /// (`Recommendation.planId != null`) — Free-selector Circles have no
-  /// treatment to switch. Never changes [Recommendation.activityId] or any
-  /// other identity field — only [Recommendation.treatmentUsed], and the
-  /// journal's own `treatmentUsed` record for today's Circle.
-  ///
-  /// Always records [Recommendation.treatmentSource] as
-  /// [PlanTreatmentSource.directChoice] (Batch 2B, ADR-015 §10) — this
-  /// method is only ever called for an explicit current-Session choice,
-  /// never for the automatic application of a saved Plan-level default
-  /// (that happens once, at resolution, inside
-  /// `../../plans/application/plan_provider.dart`'s `resolveSessionFor`).
-  void setPlanTreatment(PlanTreatment treatment) {
-    final recommendation = state.recommendation;
-    if (recommendation == null || recommendation.planId == null) return;
-    if (recommendation.treatmentUsed == treatment) return;
-
-    final updated = Recommendation(
-      intent: recommendation.intent,
-      activity: recommendation.activity,
-      duration: recommendation.duration,
-      why: recommendation.why,
-      category: recommendation.category,
-      activityId: recommendation.activityId,
-      intention: recommendation.intention,
-      circleId: recommendation.circleId,
-      catalogVersion: recommendation.catalogVersion,
-      planId: recommendation.planId,
-      stageId: recommendation.stageId,
-      planCycleId: recommendation.planCycleId,
-      planVersion: recommendation.planVersion,
-      isPlanRevisit: recommendation.isPlanRevisit,
-      treatmentUsed: treatment,
-      treatmentSource: PlanTreatmentSource.directChoice,
-      timeWindow: recommendation.timeWindow,
-      offeredMinutes: recommendation.offeredMinutes,
-      reason: recommendation.reason,
-    );
-    state = state.copyWith(recommendation: updated);
-    final snapshot = state;
-    _enqueue(() => _persist(snapshot));
   }
 
   /// Records the user's optional "Did you try this activity?" answer
@@ -1006,56 +1172,59 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     });
   }
 
-  /// Builds today's [Recommendation] from the approved catalog
-  /// (`activity_catalog.dart`) for ([intention], [activityId]), resolved on
-  /// local date [today]. [planAssignment] (Batch 2A), when non-null, folds
-  /// that Plan Session's identity in and defaults
-  /// [Recommendation.treatmentUsed]/[Recommendation.treatmentSource] to
-  /// [PlanSessionAssignment.initialTreatment]/
-  /// [PlanSessionAssignment.treatmentSource] (Batch 2B, ADR-015 §7) — a
-  /// freshly-resolved Session already respects a saved Plan-level lighter
-  /// default, never a hardcoded standard.
+  /// Builds today's [Recommendation] for ([intention], [activityId]) on local
+  /// date [today] — or, with [session], today's routine or Path step.
   Recommendation _buildRecommendation(
     Intention intention,
     ActivityId activityId,
     String today, {
-    PlanSessionAssignment? planAssignment,
-    PlanTreatment? treatmentOverride,
-    PlanTreatmentSource? treatmentSourceOverride,
     TimeWindow window = TimeWindow.firstUse,
     int? offeredMinutes,
     RecommendationReason reason = RecommendationReason.bestFit,
     ActivityId? replacedFrom,
     ReplacementReason? replacementReason,
+    TodaySession? session,
+    String? replacedFromTitle,
+    String? replacedFromRoutineId,
   }) {
-    final minutes = offeredMinutes ?? activityTypicalMinutes(activityId);
+    final minutes =
+        offeredMinutes ??
+        session?.composition.minutes ??
+        activityTypicalMinutes(activityId);
     return Recommendation(
       intent: intentionLabel(intention),
-      activity: activityLabel(activityId),
+      activity: session?.title ?? activityLabel(activityId),
       duration: '$minutes minutes',
-      why: activityReasonFor(intention, activityId),
+      why: switch (session) {
+        null => activityReasonFor(intention, activityId),
+        TodaySession(:final pathExplanation?) => pathExplanation,
+        final routine => _piecesLine(routine.composition),
+      },
       category: activityCategory(activityId),
       activityId: activityId,
       intention: intention,
       circleId: today,
       catalogVersion: catalogVersion,
-      planId: planAssignment?.planId,
-      stageId: planAssignment?.stageId,
-      planCycleId: planAssignment?.planCycleId,
-      planVersion: planAssignment?.planVersion,
-      isPlanRevisit: planAssignment?.isRevisit ?? false,
-      treatmentUsed: planAssignment == null
-          ? null
-          : (treatmentOverride ?? planAssignment.initialTreatment),
-      treatmentSource: planAssignment == null
-          ? null
-          : (treatmentSourceOverride ?? planAssignment.treatmentSource),
       timeWindow: window,
       offeredMinutes: minutes,
       reason: reason,
       replacedFrom: replacedFrom,
       replacementReason: replacementReason,
+      session: session,
+      replacedFromTitle: replacedFromTitle,
+      replacedFromRoutineId: replacedFromRoutineId,
     );
+  }
+
+  /// "Standing stretch, then Move to music."
+  static String _piecesLine(Composition composition) {
+    final names = [for (final use in composition.uses) use.definition.name];
+    final line = [
+      names.first,
+      for (final name in names.skip(1))
+        '${name[0].toLowerCase()}${name.substring(1)}',
+    ].join(', then ');
+    return '$line.';
   }
 
   /// Restores today's [Recommendation] from [prefs], or `null` if no valid,
@@ -1068,15 +1237,10 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// changed that activity's need fit or retired it — rewriting what the
   /// user was actually shown today would be untruthful.
   ///
-  /// **Plan fields (Batch 2A):** restored only if every one of
-  /// [recommendationPlanIdKey]/[recommendationStageIdKey]/
-  /// [recommendationPlanCycleIdKey]/[recommendationPlanVersionKey] parses
-  /// validly together — a partially corrupt subset never invalidates the
-  /// whole day's activity (§20's "never silently replace today's resolved
-  /// activity"): the base [Recommendation] is still restored, simply
-  /// without its Plan context. [recommendationTreatmentKey] defaults to
-  /// [PlanTreatment.standard] when the Circle is Plan-resolved but no
-  /// treatment was ever explicitly persisted.
+  /// **V2 Phase D:** today's routine or Path step is restored from its own
+  /// key exactly as offered — even if the routine has since been renamed or
+  /// changed. An unreadable one restores the plain activity (its first
+  /// piece) rather than nothing.
   Recommendation? _restoreRecommendation(
     SharedPreferences prefs,
     String today,
@@ -1105,84 +1269,40 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final replacementReason = ReplacementReason.values
         .asNameMap()[prefs.getString(recommendationReplacementReasonKey)];
 
-    final planId = PlanId.values
-        .asNameMap()[prefs.getString(recommendationPlanIdKey)];
-    final stageId = prefs.getString(recommendationStageIdKey);
-    final planCycleId = prefs.getString(recommendationPlanCycleIdKey);
-    final planVersion = prefs.getInt(recommendationPlanVersionKey);
-    final isValidPlanRecord =
-        planId != null &&
-        stageId != null &&
-        planCycleId != null &&
-        planVersion != null;
-
-    if (!isValidPlanRecord) {
-      return _buildRecommendation(
-        intention,
-        activityId,
-        today,
-        window: window,
-        offeredMinutes: offeredMinutes,
-        reason: reason,
-        replacedFrom: replacedFrom,
-        replacementReason: replacementReason,
-      );
+    TodaySession? session;
+    final rawSession = prefs.getString(recommendationSessionKey);
+    if (rawSession != null) {
+      try {
+        session = TodaySession.fromJson(jsonDecode(rawSession));
+      } catch (_) {
+        session = null;
+      }
     }
-
-    final isRevisit = prefs.getBool(recommendationIsPlanRevisitKey) ?? false;
-    final treatment =
-        PlanTreatment.values.asNameMap()[prefs.getString(
-          recommendationTreatmentKey,
-        )] ??
-        PlanTreatment.standard;
-    // Batch 2B: absent on any record persisted before this batch shipped —
-    // falls back to ordinaryDefault, the same honest "no explicit choice
-    // recorded" meaning that state already carries.
-    final treatmentSource =
-        PlanTreatmentSource.values.asNameMap()[prefs.getString(
-          recommendationTreatmentSourceKey,
-        )] ??
-        PlanTreatmentSource.ordinaryDefault;
 
     return _buildRecommendation(
       intention,
       activityId,
       today,
-      planAssignment: PlanSessionAssignment(
-        planId: planId,
-        stageId: stageId,
-        activityId: activityId,
-        planCycleId: planCycleId,
-        planVersion: planVersion,
-        isRevisit: isRevisit,
-        initialTreatment: treatment,
-        treatmentSource: treatmentSource,
-      ),
-      treatmentOverride: treatment,
-      treatmentSourceOverride: treatmentSource,
       window: window,
       offeredMinutes: offeredMinutes,
       reason: reason,
+      replacedFrom: replacedFrom,
+      replacementReason: replacementReason,
+      session: session,
+      replacedFromTitle: prefs.getString(recommendationReplacedTitleKey),
+      replacedFromRoutineId: prefs.getString(recommendationReplacedRoutineKey),
     );
   }
 
-  /// Persists [intention]/[activityId] as today's freshly-chosen
-  /// recommendation, alongside [RecommendationStatus.notStarted], and
-  /// [cappedHistory] under [historyKey] (Batch 2's diversity guard — see
-  /// [recommendationHistoryKeyFor]) — both `null` when [planAssignment] is
-  /// non-null, since a Plan-resolved day never touches that guard. Any
-  /// started/closed/attempt/usefulness values from an earlier day are
-  /// explicitly cleared — a fresh choice must never inherit a stale
-  /// session. Also records this Circle's "shown" journal entry
-  /// (`circle_journal.dart`), this activity's [ActivitySemanticFamily] as
-  /// the new cross-direction diversity-guard baseline
-  /// ([recommendationLastFamilyKey]), and — only when [planAssignment] is
-  /// non-null — today's Plan identity (Batch 2A).
+  /// Persists today's freshly-chosen [recommendation] alongside
+  /// [RecommendationStatus.notStarted]. Any started/closed/attempt/
+  /// usefulness values from an earlier day are explicitly cleared — a fresh
+  /// choice must never inherit a stale session. Also records this Circle's
+  /// "shown" journal entry (`circle_journal.dart`).
   Future<void> _persistChoice({
     required String today,
     required Recommendation recommendation,
     required DateTime shownAt,
-    PlanSessionAssignment? planAssignment,
   }) async {
     final prefs = ref.read(sharedPreferencesProvider);
     final intention = recommendation.intention;
@@ -1208,42 +1328,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       await prefs.remove(recommendationHistoryKeyFor(need));
     }
 
-    if (planAssignment != null) {
-      await prefs.setString(
-        recommendationPlanIdKey,
-        planAssignment.planId.name,
-      );
-      await prefs.setString(recommendationStageIdKey, planAssignment.stageId);
-      await prefs.setString(
-        recommendationPlanCycleIdKey,
-        planAssignment.planCycleId,
-      );
-      await prefs.setInt(
-        recommendationPlanVersionKey,
-        planAssignment.planVersion,
-      );
-      await prefs.setBool(
-        recommendationIsPlanRevisitKey,
-        planAssignment.isRevisit,
-      );
-      await prefs.setString(
-        recommendationTreatmentKey,
-        planAssignment.initialTreatment.name,
-      );
-      await prefs.setString(
-        recommendationTreatmentSourceKey,
-        planAssignment.treatmentSource.name,
-      );
-    } else {
-      await prefs.remove(recommendationPlanIdKey);
-      await prefs.remove(recommendationStageIdKey);
-      await prefs.remove(recommendationPlanCycleIdKey);
-      await prefs.remove(recommendationPlanVersionKey);
-      await prefs.remove(recommendationIsPlanRevisitKey);
-      await prefs.remove(recommendationTreatmentKey);
-      await prefs.remove(recommendationTreatmentSourceKey);
-    }
-
     // Guards the read below, which runs after several await points — if
     // this Notifier's container was disposed in the meantime (e.g. a test
     // tearing down without awaiting this fire-and-forget call; see
@@ -1258,22 +1342,13 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           direction: intention,
           activityId: activityId,
           shownAt: shownAt,
-          planId: planAssignment?.planId.name,
-          planVersion: planAssignment?.planVersion,
-          stageId: planAssignment?.stageId,
-          planCycleId: planAssignment?.planCycleId,
-          treatmentUsed: planAssignment?.initialTreatment.name,
-          revisitUsed: planAssignment?.isRevisit,
-          treatmentSource: planAssignment?.treatmentSource.name,
           offer: recommendation.journalOffer,
         );
     // A plain repository mutation does not itself notify Riverpod
-    // watchers — invalidate so an already-mounted reactive reader (e.g.
-    // the Insights Circle-history calendar kept alive off-screen by
-    // `StatefulShellRoute.indexedStack`) picks up this write instead of
-    // staying stale until something else happens to rebuild it. Mirrors
-    // the same invalidate-after-write `journal_data_controls.dart`
-    // already does after `clearAll()`.
+    // watchers — invalidate so an already-mounted reactive reader picks up
+    // this write instead of staying stale until something else happens to
+    // rebuild it. Mirrors the same invalidate-after-write
+    // `journal_data_controls.dart` already does after `clearAll()`.
     if (ref.mounted) ref.invalidate(circleJournalRepositoryProvider);
   }
 
@@ -1303,6 +1378,31 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     } else {
       await prefs.remove(recommendationReplacedFromKey);
       await prefs.remove(recommendationReplacementReasonKey);
+    }
+    final session = recommendation.session;
+    if (session != null) {
+      await prefs.setString(
+        recommendationSessionKey,
+        jsonEncode(session.toJson()),
+      );
+    } else {
+      await prefs.remove(recommendationSessionKey);
+    }
+    final replacedTitle = recommendation.replacedFromTitle;
+    if (replacedTitle != null) {
+      await prefs.setString(recommendationReplacedTitleKey, replacedTitle);
+    } else {
+      await prefs.remove(recommendationReplacedTitleKey);
+    }
+    final replacedRoutine = recommendation.replacedFromRoutineId;
+    if (replacedRoutine != null) {
+      await prefs.setString(recommendationReplacedRoutineKey, replacedRoutine);
+    } else {
+      await prefs.remove(recommendationReplacedRoutineKey);
+    }
+    // V1 Plan context is retired (V2 Phase D).
+    for (final key in retiredPlanDayKeys) {
+      await prefs.remove(key);
     }
   }
 
@@ -1420,25 +1520,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       await prefs.remove(recommendationGuidedPositionKey);
     }
 
-    // Circle Plans (Batch 2A): mirror today's current treatment choice —
-    // `setPlanTreatment` is the only method that can change it after
-    // resolution, but every call to `_persist` (start/close/reportAttempt/
-    // reportUsefulness too) re-writes the current value so it never drifts
-    // out of sync with in-memory state.
-    final treatmentUsed = recommendation?.treatmentUsed;
-    if (treatmentUsed != null) {
-      await prefs.setString(recommendationTreatmentKey, treatmentUsed.name);
-    }
-    // Batch 2B: mirrors treatmentSource the same way treatmentUsed is
-    // mirrored just above — see that block's own doc comment.
-    final treatmentSource = recommendation?.treatmentSource;
-    if (treatmentSource != null) {
-      await prefs.setString(
-        recommendationTreatmentSourceKey,
-        treatmentSource.name,
-      );
-    }
-
     if (recommendation == null) return;
     // See _persistChoice's matching comment — this read also happens after
     // several await points.
@@ -1447,15 +1528,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final circleId = recommendation.circleId;
     final direction = recommendation.intention;
     final activityId = recommendation.activityId;
-    final planId = recommendation.planId?.name;
-    final planVersion = recommendation.planVersion;
-    final stageId = recommendation.stageId;
-    final planCycleId = recommendation.planCycleId;
-    final treatmentUsedName = treatmentUsed?.name;
-    final treatmentSourceName = treatmentSource?.name;
-    final revisitUsed = recommendation.planId == null
-        ? null
-        : recommendation.isPlanRevisit;
     final offer = recommendation.journalOffer;
 
     var journalChanged = false;
@@ -1467,13 +1539,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           direction: direction,
           activityId: activityId,
           startedAt: startedAt!,
-          planId: planId,
-          planVersion: planVersion,
-          stageId: stageId,
-          planCycleId: planCycleId,
-          treatmentUsed: treatmentUsedName,
-          revisitUsed: revisitUsed,
-          treatmentSource: treatmentSourceName,
           offer: offer,
         );
         journalChanged = true;
@@ -1484,37 +1549,13 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           direction: direction,
           activityId: activityId,
           closedAt: closedAt!,
-          planId: planId,
-          planVersion: planVersion,
-          stageId: stageId,
-          planCycleId: planCycleId,
-          treatmentUsed: treatmentUsedName,
-          revisitUsed: revisitUsed,
-          treatmentSource: treatmentSourceName,
           offer: offer,
           minutesAtClose: state.activeElapsedAt(closedAt).inMinutes,
         );
         journalChanged = true;
       case RecommendationStatus.notStarted:
-        // Only `setPlanTreatment` persists an unstarted Circle: record the
-        // user's guidance choice now, so the history never lags behind it.
-        if (planId != null && treatmentUsedName != null) {
-          await journal.recordTreatment(
-            circleId: circleId,
-            localDate: circleId,
-            direction: direction,
-            activityId: activityId,
-            chosenAt: ref.read(nowProvider),
-            planId: planId,
-            planVersion: planVersion!,
-            stageId: stageId!,
-            planCycleId: planCycleId!,
-            treatmentUsed: treatmentUsedName,
-            revisitUsed: revisitUsed!,
-            treatmentSource: treatmentSourceName!,
-          );
-          journalChanged = true;
-        }
+        // Nothing to record: "shown" was recorded with the choice.
+        break;
     }
 
     if (attemptResponse != null) {
@@ -1525,13 +1566,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         activityId: activityId,
         response: attemptResponse,
         respondedAt: closedAt ?? startedAt ?? ref.read(nowProvider),
-        planId: planId,
-        planVersion: planVersion,
-        stageId: stageId,
-        planCycleId: planCycleId,
-        treatmentUsed: treatmentUsedName,
-        revisitUsed: revisitUsed,
-        treatmentSource: treatmentSourceName,
         offer: offer,
       );
       journalChanged = true;
@@ -1544,13 +1578,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         activityId: activityId,
         response: usefulnessResponse,
         respondedAt: closedAt ?? startedAt ?? ref.read(nowProvider),
-        planId: planId,
-        planVersion: planVersion,
-        stageId: stageId,
-        planCycleId: planCycleId,
-        treatmentUsed: treatmentUsedName,
-        revisitUsed: revisitUsed,
-        treatmentSource: treatmentSourceName,
         offer: offer,
       );
       journalChanged = true;
@@ -1572,13 +1599,25 @@ final recommendationProvider =
       RecommendationNotifier.new,
     );
 
+/// The retired V1 Plan context of today's Circle (V2 Phase D) — removed
+/// whenever today's offer is written, and by Delete.
+const retiredPlanDayKeys = [
+  recommendationPlanIdKey,
+  recommendationStageIdKey,
+  recommendationPlanCycleIdKey,
+  recommendationPlanVersionKey,
+  recommendationIsPlanRevisitKey,
+  recommendationTreatmentKey,
+  recommendationTreatmentSourceKey,
+];
+
 /// Every persisted key holding a recorded Circle outside the journal:
 /// today's Circle session (its direction, activity, lifecycle, reflection
-/// answers and Plan fields) and the selection history drawn from past
+/// answers, routine or Path step) and the selection history drawn from past
 /// Circles. "Delete Circle history" removes these together with the
 /// journal (`../presentation/widgets/journal_data_controls.dart`), then
 /// invalidates [recommendationProvider] so today is re-derived from the
-/// empty store. Preferences, the first-breath flag and Plans are not
+/// empty store. Preferences, the first-breath flag and the Toolkit are not
 /// Circle history and are left alone.
 Future<void> clearRecordedCircleState(SharedPreferences prefs) async {
   for (final key in [
@@ -1606,6 +1645,9 @@ Future<void> clearRecordedCircleState(SharedPreferences prefs) async {
     recommendationPausedAtKey,
     recommendationPausedMsKey,
     recommendationGuidedPositionKey,
+    recommendationSessionKey,
+    recommendationReplacedTitleKey,
+    recommendationReplacedRoutineKey,
     for (final intention in Intention.values)
       recommendationHistoryKeyFor(intention),
   ]) {
@@ -1645,23 +1687,78 @@ final NotifierProvider<TimeWindowChoice, TimeWindow> timeWindowChoiceProvider =
 /// The Circle journal as Recommendation Engine V2 sees it: one past Circle
 /// per entry, with only its explicit usefulness answer. "Didn't try" ("Not
 /// today") is no usefulness answer; Close alone is never evidence.
-List<PastCircle> pastCirclesFrom(Iterable<CircleJournalEntry> entries) => [
+///
+/// **V2 Phase D:** a Circle of one of [routines] is that routine's evidence,
+/// never the evidence of the activities in it; so is a Path Circle of the
+/// very pieces a version of it was built from. A Circle that joined several
+/// pieces lists them all, so recency sees each one.
+List<PastCircle> pastCirclesFrom(
+  Iterable<CircleJournalEntry> entries, {
+  List<Routine> routines = const [],
+}) => [
   for (final entry in entries)
     if (DateTime.tryParse(entry.localDate) case final date?)
-      PastCircle(
-        date: date,
-        need: entry.direction,
-        activityId: entry.activityId,
-        catalogVersion: entry.catalogVersion,
-        usefulness: switch (entry.usefulnessResponse) {
-          CircleUsefulnessResponse.veryUseful => PastUsefulness.veryUseful,
-          CircleUsefulnessResponse.somewhatUseful =>
-            PastUsefulness.somewhatUseful,
-          CircleUsefulnessResponse.notUseful => PastUsefulness.notUseful,
-          null => null,
-        },
-        replacedFrom: entry.replacedFrom,
-        answeredAt: entry.closedAt,
-        window: TimeWindow.values.asNameMap()[entry.timeWindow],
-      ),
+      _pastCircle(entry, date, routines),
 ];
+
+PastCircle _pastCircle(
+  CircleJournalEntry entry,
+  DateTime date,
+  List<Routine> routines,
+) {
+  final session = entry.session;
+  final uses = [
+    for (final m in session?.modules ?? const []) ?ModuleUse.fromWire(m),
+  ];
+  var routineId = session?.routineId;
+  var routineVersionId = session?.routineVersionId;
+  final pathRunId = session?.pathRunId;
+  if (routineId == null && pathRunId != null && uses.isNotEmpty) {
+    // A Path Circle of the very pieces a version was built from: the
+    // version of exactly that form first (a full and a shorter version share
+    // their pieces), else the earliest of those pieces.
+    final ran = Composition(uses);
+    RoutineVersion? sameForm;
+    RoutineVersion? samePieces;
+    String? owner;
+    for (final routine in routines) {
+      for (final version in routine.versions) {
+        if (version.pathRunId != pathRunId) continue;
+        final modules = version.composition.modules;
+        if (modules.length != ran.modules.length ||
+            !modules.containsAll(ran.modules)) {
+          continue;
+        }
+        owner = routine.id;
+        if (version.composition == ran) sameForm ??= version;
+        samePieces ??= version;
+      }
+    }
+    if (owner != null) {
+      routineId = owner;
+      routineVersionId = (sameForm ?? samePieces)!.id;
+    }
+  }
+  return PastCircle(
+    date: date,
+    need: entry.direction,
+    activityId: entry.activityId,
+    catalogVersion: entry.catalogVersion,
+    usefulness: switch (entry.usefulnessResponse) {
+      CircleUsefulnessResponse.veryUseful => PastUsefulness.veryUseful,
+      CircleUsefulnessResponse.somewhatUseful => PastUsefulness.somewhatUseful,
+      CircleUsefulnessResponse.notUseful => PastUsefulness.notUseful,
+      null => null,
+    },
+    replacedFrom: entry.replacedFrom,
+    answeredAt: entry.closedAt,
+    window: TimeWindow.values.asNameMap()[entry.timeWindow],
+    routineId: routineId,
+    routineVersionId: routineVersionId,
+    pathRunId: pathRunId,
+    components: uses.length > 1
+        ? [for (final use in uses) use.definition.source]
+        : const [],
+    replacedFromRoutineId: session?.replacedFromRoutineId,
+  );
+}

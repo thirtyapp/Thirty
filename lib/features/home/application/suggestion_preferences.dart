@@ -74,10 +74,41 @@ class RestLifted {
   }
 }
 
+/// V2 Phase D: "Don't suggest" for one of the user's routines, for one
+/// need — the same explicit control as for an activity, kept in the same
+/// place.
+class RoutineNotSuggested {
+  const RoutineNotSuggested({
+    required this.routineId,
+    required this.need,
+    required this.since,
+  });
+
+  final String routineId;
+  final Intention need;
+  final DateTime since;
+
+  Map<String, Object?> toJson() => {
+    'routineId': routineId,
+    'need': need.name,
+    'since': since.toIso8601String(),
+  };
+
+  static RoutineNotSuggested? fromJson(Object? json) {
+    if (json is! Map<String, Object?>) return null;
+    final routineId = json['routineId'];
+    final need = Intention.values.asNameMap()[json['need']];
+    final since = DateTime.tryParse('${json['since']}');
+    if (routineId is! String || need == null || since == null) return null;
+    return RoutineNotSuggested(routineId: routineId, need: need, since: since);
+  }
+}
+
 class SuggestionPreferences {
   const SuggestionPreferences({
     this.notSuggested = const [],
     this.restsLifted = const [],
+    this.routinesNotSuggested = const [],
   });
 
   static const empty = SuggestionPreferences();
@@ -85,7 +116,18 @@ class SuggestionPreferences {
   final List<NotSuggested> notSuggested;
   final List<RestLifted> restsLifted;
 
-  bool get isEmpty => notSuggested.isEmpty && restsLifted.isEmpty;
+  /// V2 Phase D.
+  final List<RoutineNotSuggested> routinesNotSuggested;
+
+  bool get isEmpty =>
+      notSuggested.isEmpty &&
+      restsLifted.isEmpty &&
+      routinesNotSuggested.isEmpty;
+
+  bool isRoutineNotSuggested(String routineId, Intention need) =>
+      routinesNotSuggested.any(
+        (n) => n.routineId == routineId && n.need == need,
+      );
 
   bool isNotSuggested(ActivityId activity, Intention need) =>
       notSuggested.any((n) => n.activity == activity && n.need == need);
@@ -94,12 +136,16 @@ class SuggestionPreferences {
   SuggestionControls get controls => SuggestionControls(
     notSuggested: {for (final n in notSuggested) (n.activity, n.need)},
     restsLifted: {for (final r in restsLifted) (r.activity, r.need): r.at},
+    routinesNotSuggested: {
+      for (final n in routinesNotSuggested) (n.routineId, n.need),
+    },
   );
 
   Map<String, Object?> toJson() => {
     'schemaVersion': suggestionPreferencesSchemaVersion,
     'notSuggested': [for (final n in notSuggested) n.toJson()],
     'restsLifted': [for (final r in restsLifted) r.toJson()],
+    'routinesNotSuggested': [for (final n in routinesNotSuggested) n.toJson()],
   };
 
   /// Reads [raw], failing safe to [empty] for anything unreadable; a single
@@ -120,6 +166,10 @@ class SuggestionPreferences {
       return SuggestionPreferences(
         notSuggested: items(decoded['notSuggested'], NotSuggested.fromJson),
         restsLifted: items(decoded['restsLifted'], RestLifted.fromJson),
+        routinesNotSuggested: items(
+          decoded['routinesNotSuggested'],
+          RoutineNotSuggested.fromJson,
+        ),
       );
     } catch (_) {
       return empty;
@@ -161,6 +211,7 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
           ),
         ],
         restsLifted: state.restsLifted,
+        routinesNotSuggested: state.routinesNotSuggested,
       ),
     );
   }
@@ -174,6 +225,7 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
           if (n.activity != activity || n.need != need) n,
       ],
       restsLifted: state.restsLifted,
+      routinesNotSuggested: state.routinesNotSuggested,
     ),
   );
 
@@ -190,6 +242,39 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
           need: need,
           at: ref.read(eventClockProvider)(),
         ),
+      ],
+      routinesNotSuggested: state.routinesNotSuggested,
+    ),
+  );
+
+  /// V2 Phase D: "Don't suggest" [routineId] for [need].
+  Future<void> dontSuggestRoutine(String routineId, Intention need) {
+    if (state.isRoutineNotSuggested(routineId, need)) return Future.value();
+    return _save(
+      SuggestionPreferences(
+        notSuggested: state.notSuggested,
+        restsLifted: state.restsLifted,
+        routinesNotSuggested: [
+          ...state.routinesNotSuggested,
+          RoutineNotSuggested(
+            routineId: routineId,
+            need: need,
+            since: ref.read(eventClockProvider)(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// V2 Phase D: "Suggest again" for [routineId] — for [need], or for every
+  /// need when [need] is `null` (the routine was deleted).
+  Future<void> allowRoutineAgain(String routineId, {Intention? need}) => _save(
+    SuggestionPreferences(
+      notSuggested: state.notSuggested,
+      restsLifted: state.restsLifted,
+      routinesNotSuggested: [
+        for (final n in state.routinesNotSuggested)
+          if (n.routineId != routineId || (need != null && n.need != need)) n,
       ],
     ),
   );

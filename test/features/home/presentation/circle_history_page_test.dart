@@ -11,7 +11,7 @@ import 'package:thirty/core/theme/app_colors.dart';
 import 'package:thirty/core/theme/app_theme.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
-import 'package:thirty/features/insights/domain/insight_snapshot.dart';
+import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
 import 'package:thirty/core/widgets/thirty_button.dart';
 import 'package:thirty/features/home/presentation/circle_history_page.dart';
 
@@ -86,8 +86,8 @@ void main() {
   );
 
   testWidgets(
-    'a Plan-resolved entry (Batch 2A) shows a bounded Plan/stage/cycle '
-    'context line',
+    'an old V1 Plan entry keeps a truthful line — what it came from, never '
+    'a V2 Path (V2 Phase D)',
     (tester) async {
       final (widget, prefs) = await _wrap();
       final journal = CircleJournalRepository(prefs);
@@ -107,8 +107,65 @@ void main() {
 
       await tester.pumpWidget(widget);
 
-      expect(find.textContaining('More Energy Path'), findsOneWidget);
-      expect(find.textContaining('stage 1 of 5'), findsOneWidget);
+      expect(
+        find.text('From an earlier Plan: More Energy · stage 1 of 5'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Path'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'a Path step and a routine read as what they were that day (V2 Phase D)',
+    (tester) async {
+      final (widget, prefs) = await _wrap();
+      final journal = CircleJournalRepository(prefs);
+      await journal.recordShown(
+        circleId: '2026-08-02',
+        localDate: '2026-08-02',
+        direction: Intention.moreEnergy,
+        activityId: ActivityId.energisingStretchFlow,
+        shownAt: DateTime(2026, 8, 2, 9),
+        offer: const CircleOffer(
+          timeWindow: 'about20',
+          offeredMinutes: 15,
+          session: CircleSessionRecord(
+            title: 'Standing stretch + Move to music',
+            modules: ['standingStretch:full', 'musicMove:full'],
+            pathRunId: 'path-1',
+            pathKind: 'build',
+            pathName: 'A lift at home',
+            pathCircle: 4,
+            pathCircles: 7,
+            pathReason: 'together',
+          ),
+        ),
+      );
+      await journal.recordShown(
+        circleId: '2026-08-03',
+        localDate: '2026-08-03',
+        direction: Intention.moreEnergy,
+        activityId: ActivityId.energisingStretchFlow,
+        shownAt: DateTime(2026, 8, 3, 9),
+        offer: const CircleOffer(
+          timeWindow: 'about20',
+          offeredMinutes: 15,
+          session: CircleSessionRecord(
+            title: 'My pick-me-up',
+            modules: ['standingStretch:full', 'musicMove:full'],
+            routineId: 'routine-1',
+            routineVersionId: 'routine-1-v2',
+            routineVersionNumber: 2,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(widget);
+
+      expect(find.text('Standing stretch + Move to music'), findsOneWidget);
+      expect(find.text('A lift at home · Circle 4 of 7'), findsOneWidget);
+      expect(find.text('My pick-me-up'), findsOneWidget);
+      expect(find.text('Your routine · version 2'), findsOneWidget);
     },
   );
 
@@ -203,37 +260,28 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Delete all also clears any retained Insight snapshots — a derived '
-    'observation must never outlive the evidence it was drawn from',
-    (tester) async {
-      final (widget, prefs) = await _wrap();
-      final journal = CircleJournalRepository(prefs);
-      await journal.recordShown(
-        circleId: '2026-08-02',
-        localDate: '2026-08-02',
-        direction: Intention.moreEnergy,
-        activityId: ActivityId.thirtyMinuteWalk,
-        shownAt: DateTime(2026, 8, 2, 9),
-      );
-      await prefs.setString(
-        insightSnapshotsKey,
-        jsonEncode({
-          'schemaVersion': insightSnapshotsSchemaVersion,
-          'lastAssessedAt': '2026-08-02T09:00:00.000',
-          'snapshots': <Object?>[],
-        }),
-      );
+  testWidgets('Delete all keeps the Toolkit — routines have their own controls '
+      '(V2 Phase D)', (tester) async {
+    final (widget, prefs) = await _wrap();
+    final journal = CircleJournalRepository(prefs);
+    await journal.recordShown(
+      circleId: '2026-08-02',
+      localDate: '2026-08-02',
+      direction: Intention.moreEnergy,
+      activityId: ActivityId.thirtyMinuteWalk,
+      shownAt: DateTime(2026, 8, 2, 9),
+    );
+    await prefs.setString(toolkitStateKey, jsonEncode({'kept': true}));
 
-      await tester.pumpWidget(widget);
-      await tester.tap(find.text('Delete all'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Delete permanently'));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(widget);
+    await tester.tap(find.text('Delete all'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete permanently'));
+    await tester.pumpAndSettle();
 
-      expect(prefs.getString(insightSnapshotsKey), isNull);
-    },
-  );
+    expect(journal.readAll(), isEmpty);
+    expect(prefs.getString(toolkitStateKey), jsonEncode({'kept': true}));
+  });
 
   testWidgets('Copy as text copies the exported journal to the clipboard', (
     tester,

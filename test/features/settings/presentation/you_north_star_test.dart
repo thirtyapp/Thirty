@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -29,8 +28,7 @@ import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/presentation/widgets/home_header.dart'
     show HomeProfileButton;
-import 'package:thirty/features/insights/domain/insight_snapshot.dart';
-import 'package:thirty/features/plans/application/plan_provider.dart';
+import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
 import 'package:thirty/features/reminder/application/reminder_provider.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
@@ -267,7 +265,7 @@ void main() {
     });
 
     test('every asset is a bundled WebP of the declared size, and its own — '
-        'never the Plans or Insights band or a World scene', () {
+        'never the Toolkit band or a World scene', () {
       final assets = <String>{};
       for (final daypart in Daypart.values) {
         final image = youHeaderArt.at(daypart);
@@ -357,14 +355,11 @@ void main() {
         tester,
       ) async {
         await _pump(tester, status: status);
-        expect(
-          find.text(
-            'Guided Plans, Coach guidance and Insights drawn from your '
-            'Circles.',
-          ),
-          findsOneWidget,
-        );
-        expect(find.text('Plans, Coach and Insights'), findsNothing);
+        expect(find.text(YouPremiumCard.body), findsOneWidget);
+        // V2 Phase D: no retired pillar is sold.
+        for (final retired in ['Plans', 'Coach', 'Insights']) {
+          expect(find.textContaining(retired), findsNothing, reason: retired);
+        }
         expect(find.textContaining('Unlock'), findsNothing);
       });
     }
@@ -466,21 +461,15 @@ void main() {
   });
 
   group('Data & privacy', () {
-    testWidgets('"Delete Circle history" deletes the journal and Insight '
-        'snapshots only — Plans, reminder, appearance, analytics consent '
-        'and other preferences are kept', (tester) async {
-      final insights = jsonEncode({
-        'schemaVersion': insightSnapshotsSchemaVersion,
-        'lastAssessedAt': '2026-08-02T09:00:00.000',
-        'snapshots': <Object?>[],
-      });
+    testWidgets('"Delete Circle history" deletes the journal only — the '
+        'Toolkit, reminder, appearance, analytics consent and other '
+        'preferences are kept', (tester) async {
       final (container, prefs) = await _pump(
         tester,
         size: const Size(412, 3000),
         withJournal: true,
         prefsValues: {
-          insightSnapshotsKey: insights,
-          plansStateKey: 'plans-sentinel',
+          toolkitStateKey: 'toolkit-sentinel',
           reminderEnabledKey: true,
           reminderHourKey: 18,
           reminderMinuteKey: 5,
@@ -505,8 +494,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(prefs.getString(circleJournalKey), isNull);
-      expect(prefs.getString(insightSnapshotsKey), isNull);
-      expect(prefs.getString(plansStateKey), 'plans-sentinel');
+      expect(prefs.getString(toolkitStateKey), 'toolkit-sentinel');
       expect(prefs.getBool(reminderEnabledKey), isTrue);
       expect(prefs.getInt(reminderHourKey), 18);
       expect(prefs.getInt(reminderMinuteKey), 5);

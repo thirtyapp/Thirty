@@ -83,7 +83,7 @@ void main() {
     // Phase D1: one button, its chevron read as "Learn more".
     final row = find.bySemanticsLabel(
       RegExp(
-        r'^THIRTY Premium adds guided Plans, Coach and Insights\.\s+'
+        r'^THIRTY Premium helps you build a few routines of your own.\s+'
         r'Learn more$',
       ),
     );
@@ -96,7 +96,7 @@ void main() {
         isFocusable: true,
         hasFocusAction: true,
         label:
-            'THIRTY Premium adds guided Plans, Coach and Insights.\n'
+            'THIRTY Premium helps you build a few routines of your own.\n'
             'Learn more',
       ),
     );

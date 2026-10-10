@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../home/application/circle_journal.dart';
 import '../../../home/application/suggestion_preferences.dart';
 import '../../../home/presentation/widgets/journal_data_controls.dart';
+import '../../../toolkit/application/toolkit_provider.dart';
 import 'you_group_card.dart';
 
 /// You's "Data & privacy" group: "Copy as text", then "Delete Circle
@@ -12,9 +13,10 @@ import 'you_group_card.dart';
 /// presented stacked here; the history page's own layout is unchanged.
 ///
 /// "Delete Circle history" names exactly what it deletes: the Circle
-/// journal, and the Insight snapshots drawn from it
-/// ([JournalDataControls.confirmAndClear]). Plans, reminder, appearance,
-/// analytics consent and Premium are untouched by it.
+/// journal and everything learned from it
+/// ([JournalDataControls.confirmAndClear]). Routines, a Path under way,
+/// suggestion preferences, reminder, appearance, analytics consent and
+/// Premium are untouched by it.
 class YouDataCard extends ConsumerWidget {
   const YouDataCard({super.key});
 
@@ -23,17 +25,19 @@ class YouDataCard extends ConsumerWidget {
     final journal = ref.watch(circleJournalRepositoryProvider);
     final hasEntries = journal.readAll().isNotEmpty;
     final preferences = ref.watch(suggestionPreferencesProvider);
+    final toolkit = ref.watch(toolkitProvider);
 
     return YouGroupCard(
       children: [
         YouActionRow(
           label: 'Copy as text',
           icon: Icons.content_copy_outlined,
-          onTap: hasEntries || !preferences.isEmpty
+          onTap: hasEntries || !preferences.isEmpty || !toolkit.isEmpty
               ? () => JournalDataControls.exportToClipboard(
                   context,
                   journal,
                   preferences: preferences,
+                  toolkit: toolkit,
                 )
               : null,
         ),

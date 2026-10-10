@@ -7,24 +7,26 @@ import '../../features/home/presentation/circle_record_detail_page.dart';
 import '../../features/home/presentation/home_page.dart';
 import '../../features/home/application/activity_catalog.dart';
 import '../../features/home/presentation/memory_page.dart';
-import '../../features/insights/presentation/insights_page.dart';
-import '../../features/plans/domain/plan_ids.dart';
-import '../../features/plans/presentation/plan_detail_page.dart';
-import '../../features/plans/presentation/plan_path_page.dart';
 import '../../features/premium/presentation/premium_offer_page.dart';
 import '../../features/settings/application/first_name_provider.dart';
 import '../../features/settings/presentation/first_name_question_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
+import '../../features/toolkit/domain/path_catalog.dart';
+import '../../features/toolkit/presentation/choose_path_page.dart';
+import '../../features/toolkit/presentation/path_review_page.dart';
+import '../../features/toolkit/presentation/path_start_page.dart';
+import '../../features/toolkit/presentation/routine_detail_page.dart';
+import '../../features/toolkit/presentation/toolkit_page.dart';
 import '../dev_preview/paced_qa_bench_page.dart';
 import '../dev_preview/quiet_trail_hero_preview_page.dart';
 import '../providers/theme_mode_provider.dart';
 import '../showcase/design_system_showcase_page.dart';
 import 'app_shell.dart';
 
-/// The [PlanId] named by a `/plans/:planId` location, or `null` for an
-/// unknown name.
-PlanId? _planIdFrom(GoRouterState state) =>
-    PlanId.values.asNameMap()[state.pathParameters['planId']];
+/// The [PathTemplateId] named by a `/toolkit/paths/:template` location, or
+/// `null` for an unknown name.
+PathTemplateId? _templateFrom(GoRouterState state) =>
+    PathTemplateId.values.asNameMap()[state.pathParameters['template']];
 
 /// The route list `appRouter` is built from. Extracted to a standalone,
 /// `@visibleForTesting` function so the debug-only gating below can be
@@ -33,22 +35,15 @@ PlanId? _planIdFrom(GoRouterState state) =>
 /// exercised from a test; asserting on [includeDevPreview] instead lets
 /// the gating logic itself be checked without one.
 ///
-/// Batch B introduced a `StatefulShellRoute.indexedStack` of 4 branches —
-/// originally Today | Plans | Insights | Journal. The founder's IA
-/// correction ("Today | Plans | Insights | You" supersedes that) replaces
-/// the `/history` branch with `/settings` (presented as "You" —
-/// `../../features/settings/presentation/settings_page.dart`): Journal
-/// is no longer a primary destination, its shared history now presents
-/// inside Insights as a date-Circle calendar
-/// (`../../features/insights/presentation/widgets/circle_history_calendar.dart`),
-/// and `/settings` moves from a top-level pushed route into the shell
-/// itself. `/history` and the new `/history/:date` record-detail route
-/// stay registered as top-level, unlinked-from-primary-nav routes —
-/// "may remain... for compatibility, export/delete, or record detail"
-/// — never a second bottom-nav-equivalent destination. `/premium` stays
-/// a top-level sibling, pushed from "You" exactly as it was pushed from
-/// Settings before. Each shell branch keeps its own independent
-/// Navigator, so switching tabs never disposes another branch's state.
+/// **V2 Phase D — Today | Toolkit | You.** The V1 Plans and Insights
+/// branches are retired (PRODUCT_V2_CONTRACT: Coach and Insights retired
+/// as pillars; Plans replaced by Paths). The Toolkit is the one Premium
+/// destination: the Path under way, maintenance and the user's routines,
+/// with its Paths and routines pushed inside its branch. History, which
+/// Insights used to host, is reached from You. An old `/plans…` or
+/// `/insights` location leads to the Toolkit, never to a dead page. Each
+/// shell branch keeps its own independent Navigator, so switching tabs
+/// never disposes another branch's state.
 @visibleForTesting
 List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
   return [
@@ -61,40 +56,40 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
             GoRoute(path: '/', builder: (context, state) => const HomePage()),
           ],
         ),
-        // Reachable regardless of entitlement, as a primary bottom-nav
-        // destination — `PlanPathPage.build()` itself branches on
-        // `premiumEntitlementProvider` (Batch A) to decide what content to
-        // show; the route/branch is never gated.
+        // V2 Phase D: the Toolkit — reachable regardless of entitlement;
+        // what each page offers depends on it, never whether it opens.
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/plans',
-              builder: (context, state) => const PlanPathPage(),
+              path: ToolkitPage.location,
+              builder: (context, state) => const ToolkitPage(),
               routes: [
-                // One Plan's Your Path, inside the Plans branch so the
-                // navigation bar stays and back returns to Plans. Like
-                // `/plans` it is never gated: `PlanDetailPage` itself
-                // shows the Free preview without entitlement. An unknown
-                // id returns to `/plans` rather than guessing a Plan.
                 GoRoute(
-                  path: ':planId',
-                  redirect: (context, state) =>
-                      _planIdFrom(state) == null ? '/plans' : null,
+                  path: 'paths',
+                  builder: (context, state) => const ChoosePathPage(),
+                  routes: [
+                    // An unknown Path returns to the Toolkit rather than
+                    // guessing one.
+                    GoRoute(
+                      path: ':template',
+                      redirect: (context, state) => _templateFrom(state) == null
+                          ? ToolkitPage.location
+                          : null,
+                      builder: (context, state) =>
+                          PathStartPage(template: _templateFrom(state)!),
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: 'review',
+                  builder: (context, state) => const PathReviewPage(),
+                ),
+                GoRoute(
+                  path: 'routine/:id',
                   builder: (context, state) =>
-                      PlanDetailPage(planId: _planIdFrom(state)!),
+                      RoutineDetailPage(routineId: state.pathParameters['id']!),
                 ),
               ],
-            ),
-          ],
-        ),
-        // Hosts the Free/shared history calendar unconditionally, plus
-        // the existing Premium Insight interpretation surface — see
-        // `InsightsPage`'s own doc comment for the exact split.
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/insights',
-              builder: (context, state) => const InsightsPage(),
             ),
           ],
         ),
@@ -111,12 +106,19 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
         ),
       ],
     ),
-    // Compatibility/secondary surface only, since the founder IA
-    // correction: no longer linked from any primary-nav element (Today's
-    // old history icon and Settings' old history link are both gone —
-    // see `home_page.dart` and `settings_page.dart`'s own doc comments).
-    // Still the one place local export/delete/full-list access lives for
-    // anything that needs it directly.
+    // V2 Phase D: the retired V1 Plans and Insights locations lead to the
+    // Toolkit, never to a page that no longer exists.
+    GoRoute(path: '/plans', redirect: (context, state) => ToolkitPage.location),
+    GoRoute(
+      path: '/plans/:planId',
+      redirect: (context, state) => ToolkitPage.location,
+    ),
+    GoRoute(
+      path: '/insights',
+      redirect: (context, state) => ToolkitPage.location,
+    ),
+    // History: every recorded Circle — reached from You (V2 Phase D; it
+    // used to sit inside Insights).
     GoRoute(
       path: '/history',
       builder: (context, state) => const CircleHistoryPage(),

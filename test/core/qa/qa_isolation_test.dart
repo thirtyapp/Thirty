@@ -12,8 +12,7 @@ import 'package:thirty/core/qa/qa_shared_preferences.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
-import 'package:thirty/features/plans/application/plan_provider.dart';
-import 'package:thirty/features/plans/domain/plan_ids.dart';
+import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 /// QA-1 — synthetic history lives only in its own store: the genuine store
@@ -57,7 +56,7 @@ void main() {
           supabaseAvailable: false,
           session: QaSession(
             entitlement: QaEntitlement.active,
-            scenario: QaScenario.planInProgress,
+            scenario: QaScenario.dPathUnderWay,
             store: store,
           ),
         ),
@@ -71,7 +70,7 @@ void main() {
     circle.start();
     circle.close();
     circle.reportAttempt(CircleAttemptResponse.yes);
-    container.read(planProvider.notifier).activatePlan(PlanId.gentlerPacePath);
+    container.read(toolkitProvider.notifier).leavePath();
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
   }
@@ -112,7 +111,7 @@ void main() {
   test('a whole Circle walked inside a QA session lands in the QA store '
       'only', () async {
     final store = await buildQaStore(
-      scenario: QaScenario.planInProgress,
+      scenario: QaScenario.dPathUnderWay,
       genuine: genuine,
       referenceNow: reference,
     );
@@ -146,7 +145,7 @@ void main() {
 
   test('reset returns the genuine state exactly as it was', () async {
     final store = await buildQaStore(
-      scenario: QaScenario.monthTwo,
+      scenario: QaScenario.dMonthTwo,
       genuine: genuine,
       referenceNow: reference,
     );
@@ -167,7 +166,8 @@ void main() {
           .map((e) => e.localDate),
       ['2026-05-01'],
     );
-    expect(reset.read(planProvider).activePlanId, isNull);
+    expect(reset.read(toolkitProvider).routines, isEmpty);
+    expect(reset.read(toolkitProvider).path, isNull);
     expect(valuesOf(genuine), genuineBefore);
   });
 }
