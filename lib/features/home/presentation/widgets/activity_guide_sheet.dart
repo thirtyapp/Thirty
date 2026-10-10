@@ -23,6 +23,8 @@ Future<void> showActivityGuide(
     context: context,
     // Above the app shell, so the floating nav bar never covers the sheet.
     useRootNavigator: true,
+    // TalkBack names the backdrop by what it does.
+    barrierLabel: 'Close',
     isScrollControlled: true,
     showDragHandle: true,
     useSafeArea: true,

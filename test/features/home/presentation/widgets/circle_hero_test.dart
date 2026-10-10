@@ -838,9 +838,9 @@ void main() {
       );
 
       testWidgets(
-        'does not fire a haptic when the now-enabled Close Circle CTA is '
-        'tapped — Circle Closed reserves its own haptic for a later, '
-        'separate pass',
+        'V2 Phase C: Circle Closed spends its one soft haptic only on a '
+        'confirmed close — never on the Close tap itself or a cancelled '
+        'confirmation',
         (WidgetTester tester) async {
           final calls = _recordHapticCalls(tester);
           final (widget, container) = await _wrapWithContainer();
@@ -858,16 +858,27 @@ void main() {
             RecommendationStatus.started,
           );
 
-          // Same-Home: the button is now the enabled "Close Circle" CTA,
-          // not a disabled leftover — confirming it performs a real,
-          // meaningful close() transition, which still must add no haptic.
+          // Same-Home: the button is now the enabled "Close Circle" CTA.
+          // Opening the confirmation and keeping the Circle open adds no
+          // haptic…
+          await tester.ensureVisible(find.text('Close Circle'));
+          await tester.tap(find.text('Close Circle'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Keep Circle open'));
+          await tester.pumpAndSettle();
+          expect(calls, hasLength(1));
+
+          // …and a confirmed close adds exactly one (MOTION_LANGUAGE.md §10).
           await _tapAndConfirmClose(tester);
 
           expect(
             container.read(recommendationProvider).status,
             RecommendationStatus.closed,
           );
-          expect(calls, hasLength(1));
+          expect(calls, [
+            'HapticFeedbackType.lightImpact',
+            'HapticFeedbackType.lightImpact',
+          ]);
         },
       );
 
@@ -931,8 +942,11 @@ void main() {
           await tester.pump();
           await _tapAndConfirmClose(tester); // Close.
 
-          expect(find.text('Done for today'), findsOneWidget);
-          expect(find.text('Your next Circle opens tomorrow.'), findsOneWidget);
+          // V2 Phase C: a calm close, then the reflection — nothing that
+          // claims the activity was done, and no button to reopen it.
+          expect(find.text(CircleHero.closedHeading), findsOneWidget);
+          expect(find.text(CircleHero.closedDetail), findsOneWidget);
+          expect(find.text('Did you try it?'), findsOneWidget);
           expect(find.byType(ThirtyButton), findsNothing);
           expect(find.text('Circle closed'), findsNothing);
 
@@ -980,8 +994,8 @@ void main() {
           );
           await tester.pump();
 
-          expect(find.text('Done for today'), findsOneWidget);
-          expect(find.text('Your next Circle opens tomorrow.'), findsOneWidget);
+          expect(find.text(CircleHero.closedHeading), findsOneWidget);
+          expect(find.text(CircleHero.closedDetail), findsOneWidget);
           expect(find.byType(ThirtyButton), findsNothing);
           expect(find.text('Circle closed'), findsNothing);
         },
@@ -1164,10 +1178,13 @@ void main() {
             closeTo((12 / minutes).clamp(0.0, 1.0), 1e-9),
             reason: activity.name,
           );
+          // V2 Phase C: once the time set aside is reached, the Circle says
+          // so — and that it is still open — rather than counting on.
           expect(
             tester.getSemantics(find.byType(ThirtyProgressCircle)).value,
-            'Circle in progress. ${12.clamp(0, minutes)} of $minutes '
-            'minutes.',
+            12 >= minutes
+                ? 'That’s your $minutes minutes. The Circle is still open.'
+                : 'Circle in progress. 12 of $minutes minutes.',
             reason: activity.name,
           );
         }
@@ -1212,7 +1229,7 @@ void main() {
         expect(circleWidget(tester).progress, 1);
         expect(
           tester.getSemantics(find.byType(ThirtyProgressCircle)).value,
-          'Circle in progress. $_walkMinutes of $_walkMinutes minutes.',
+          'That’s your $_walkMinutes minutes. The Circle is still open.',
         );
       });
 

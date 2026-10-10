@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/activity_category.dart';
 import '../../../core/worlds/world_scene_role.dart';
+import '../domain/pace_pattern.dart';
 
 /// The need the user picks via the Daily Context Question ("What would help
 /// most today?"). Explicitly selected by the user, never inferred from
@@ -220,6 +221,7 @@ class ActivityDefinition {
     this.steps = const [],
     this.lighter,
     this.safetyNote,
+    this.pace,
   });
 
   final String title;
@@ -259,6 +261,11 @@ class ActivityDefinition {
 
   /// Plain stop/comfort guidance, where the activity needs it.
   final String? safetyNote;
+
+  /// Paced mode: the reviewed pacing pattern. Deliberately absent on every
+  /// activity until the separate safety/content review supplies one; a
+  /// Paced activity without it never paces (ADR-021).
+  final PacePattern? pace;
 
   /// One calm line for the end.
   final String ending;

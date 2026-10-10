@@ -18,6 +18,8 @@ Future<ReplacementReason?> showNotThisOneSheet(
   return showModalBottomSheet<ReplacementReason>(
     context: context,
     useRootNavigator: true,
+    // TalkBack names the backdrop by what it does.
+    barrierLabel: 'Close',
     showDragHandle: true,
     useSafeArea: true,
     backgroundColor: colors.surface,

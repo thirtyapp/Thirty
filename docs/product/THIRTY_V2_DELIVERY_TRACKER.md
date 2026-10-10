@@ -8,7 +8,7 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
 |---|---|
 | **PRODUCT V2 CONTRACT** | FROZEN (2026-10-08) |
 | **PUBLIC LAUNCH** | PAUSED |
-| **CURRENT IMPLEMENTATION PHASE** | PHASE C — NOT STARTED (Phase B complete) |
+| **CURRENT IMPLEMENTATION PHASE** | PHASE D — NOT STARTED (Phase C complete) |
 | **MEASUREMENT-1** | PAUSED, resumes in Phase E |
 
 ---
@@ -68,7 +68,7 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
 
 ## Phase C — Circle experience and memory
 
-**STATUS: NOT STARTED**
+**STATUS: PASS — COMPLETE** (2026-10-10; see [ADR-021](adr/ADR-021-v2-phase-c-circle-experience-and-memory.md))
 
 - **Purpose:** an experience inside the Circle that the founder judges worth having.
 - **Scope:**
@@ -101,6 +101,7 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
   - Retire V1 Plans, Coach and Insights, migrating their state.
   - New QA scenarios.
   - Offer-page copy. Price is not touched.
+- **Carried from Phase C (ADR-021, Consequences):** an explicit per-need "Don't suggest" MUST be respected by the new Path / Toolkit architecture — no Path stage, routine, Toolkit candidate or tune-up may offer an activity for a need the user asked THIRTY not to suggest it for. No temporary V1 Plan compatibility work.
 - **Acceptance — device/QA proof that:**
   1. Free history exists.
   2. A Path starts seeded from that history.
@@ -180,3 +181,6 @@ Public launch requires **all** of the following:
 - **2026-10-09** — Phase B implementation candidate ready for founder review: Recommendation Engine V2 (pure, deterministic, journal-derived), time input, "Not this one today", reasons, feedback acknowledgement, journal fields, V1 history keys retired, six 40-day simulations and S25 proof. Not committed; not accepted.
 - **2026-10-09** — Phase B founder quality correction: "Not useful" now outranks variety (fallback order weekly cap → yesterday's activity → a rest, closest to expiry and weakest first, ADR-020 §6), proven by pathological simulations 7a–7c; "Not this one today" made discoverable by a quiet cue on the card's activity row (ADR-020 §10). Still uncommitted; founder review pending.
 - **2026-10-09** — **Phase B PASS — COMPLETE.** Founder approved the Phase B product behaviour. Recommendation Engine V2 is the Free daily selector. Frozen: explicit "Not useful" outranks variety — normal rules → weekly cap → yesterday's activity → only then a temporary rest, closest to expiry and weakest evidence first, labelled `fallback` with no personal reason; consecutive repetition is a fallback only (ADR-020 §6). Recourse: before Start the activity row reads "How to do it · Not this one?" ("Not this one?" where the full line would wrap; "How to do it" once swapped), opening the how-to with "Not this one today" and the three reasons — one replacement a day. Final audit and human trace review of all simulations (sparse, positive, negative, mixed, migration, delete, broad-negative) passed. S25 acceptance: 3-button and gesture navigation, light and dark, normal and 130% text; no Phase A geometry regression. Full suite 1733 passed, 0 failed, 0 skipped; analyze clean.
+- **2026-10-09** — Phase C implementation candidate ready for founder review: one Circle shell with Open, Guided and (architecture-only, internal QA) Paced runtimes; wall-clock lifecycle with pause; a calm natural end; inline reflection with acknowledgement; "What THIRTY remembers" per need; explicit "Don't suggest" / "Suggest again" preferences that survive Delete and have their own reset; "Remove this answer"; History refinements; QA fixtures C-A–C-R; S25 device proof. No pacing pattern is reviewed — the safety gate is unchanged. Not committed; not accepted.
+- **2026-10-10** — Phase C quality closure: live S25 TalkBack pass complete (Open, Guided, reflection, Memory, nothing-fits). Fixes from it: Open moment read as one stop; every backdrop named (guarded by a test across `lib/`); confirmations announced by their question; focus follows only the user's own action; natural-end announcement after Close's focus; "Review what THIRTY remembers" now opens memory on the need that has nothing left (ADR-021 §9, §14). S25 visual smoke at 100% and 130% text: closed copy, Guided end, Memory, nothing-fits. Full suite 1825 passed; analyze clean. Still uncommitted; founder acceptance pending.
+- **2026-10-10** — **Phase C PASS — COMPLETE.** Founder approved Phase C with one final copy correction: the closed Circle reads "Your Circle for today." / "Your next Circle opens tomorrow." (no orphaned word on the S25 at 100% or 130%, dark mode). Final live TalkBack acceptance on the S25: Open, Guided, feedback/reflection, Memory and nothing-fits. No-candidate Memory deep link fixed: "Review what THIRTY remembers" opens memory on the need with nothing left (`/memory?need=…`). Every dialog/sheet backdrop labelled. Phase D migration invariant recorded (ADR-021): explicit per-need "Don't suggest" must be respected by the new Path / Toolkit architecture. Full suite 1825 passed, 0 failed, 0 skipped; analyze clean. Phase D not started.

@@ -17,6 +17,8 @@ import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/domain/recommendation_engine.dart';
 import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
+import 'package:thirty/features/home/presentation/widgets/circle_session_card.dart';
 import 'package:thirty/features/home/presentation/widgets/home_circle_metrics.dart';
 import 'package:thirty/features/home/presentation/widgets/home_rhythm_column.dart';
 import 'package:thirty/features/home/presentation/widgets/today_card.dart';
@@ -171,15 +173,25 @@ void _expectCloseOnFirstScreen(
     isTrue,
     reason: reason,
   );
-  final oneLine =
-      tester.getSize(find.text(activityLabel(activity))).height <= 30;
-  if (oneLine) {
-    expect(_onFirstScreen(tester, _closeCta), isTrue, reason: reason);
-  }
-  // The Today card's padding never crowds its content.
-  final card = tester.getRect(find.byType(TodayCard));
-  final label = tester.getRect(find.textContaining('TODAY'));
-  expect(label.top - card.top, greaterThanOrEqualTo(6 - 0.01), reason: reason);
+  // V2 Phase C: the running Circle's session card is more compact than the
+  // Phase A running card, so every live activity — one-line or not — keeps
+  // the full compact clearance.
+  expect(_onFirstScreen(tester, _closeCta), isTrue, reason: reason);
+  // The session card's padding never crowds its content.
+  final card = tester.getRect(find.byType(CircleSessionCard));
+  final content = tester.getRect(
+    find
+        .descendant(
+          of: find.byType(CircleSessionCard),
+          matching: find.byType(Text),
+        )
+        .first,
+  );
+  expect(
+    content.top - card.top,
+    greaterThanOrEqualTo(6 - 0.01),
+    reason: reason,
+  );
 }
 
 /// Taps Close Circle and confirms.
@@ -467,7 +479,18 @@ void main() {
         expect(_circle(tester), closeTo(circle, 0.01), reason: reason);
 
         await _closeCircle(tester);
-        expect(find.text('Done for today'), findsOneWidget, reason: reason);
+        // V2 Phase C: the reflection is inline — its answers are on the
+        // first screen, never something to scroll for.
+        expect(
+          find.text(CircleHero.closedHeading),
+          findsOneWidget,
+          reason: reason,
+        );
+        expect(
+          _onFirstScreen(tester, find.text('Not today'), clearance: 0),
+          isTrue,
+          reason: reason,
+        );
         expect(_circle(tester), closeTo(circle, 0.01), reason: reason);
       }
     });
@@ -526,15 +549,13 @@ void main() {
             ),
             reason: reason,
           );
-          final twoLine =
-              tester.getSize(find.text(activityLabel(activity))).height > 30;
-          if (!twoLine || inset == _s25GestureNavigation) {
-            expect(
-              _circle(tester),
-              closeTo(_fullCircle(tester), 0.01),
-              reason: reason,
-            );
-          }
+          // V2 Phase C: the session card is compact enough that a fresh
+          // launch into a running Circle never needs the trim.
+          expect(
+            _circle(tester),
+            closeTo(_fullCircle(tester), 0.01),
+            reason: reason,
+          );
         }
       }
     });
@@ -549,9 +570,11 @@ void main() {
         await pumpS25(tester, activity);
         await tester.tap(_cta);
         await tester.pumpAndSettle();
+        // V2 Phase C: the session card is shorter than the Phase A running
+        // card, so the compact gaps alone are enough.
         expect(
           _column(tester).fit,
-          HomeRhythmFit.compactChildren,
+          HomeRhythmFit.compactGaps,
           reason: activity.name,
         );
       }

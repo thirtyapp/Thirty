@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_card.dart';
+import '../../../../core/widgets/thirty_text_action.dart';
 import '../../../plans/domain/plan_catalog.dart';
 import '../../../plans/domain/plan_ids.dart';
 import '../../application/activity_catalog.dart';
@@ -16,9 +17,19 @@ import '../../application/circle_journal.dart';
 /// Shared by the full history list (`../circle_history_page.dart`) and the
 /// calendar's record detail (`../circle_record_detail_page.dart`).
 class CircleJournalEntryCard extends StatelessWidget {
-  const CircleJournalEntryCard({super.key, required this.entry});
+  const CircleJournalEntryCard({
+    super.key,
+    required this.entry,
+    this.onRemoveAttempt,
+    this.onRemoveUsefulness,
+  });
 
   final CircleJournalEntry entry;
+
+  /// V2 Phase C — "Remove this answer": offered beside an answer when given
+  /// (the record's own page). The Circle's record always stays.
+  final VoidCallback? onRemoveAttempt;
+  final VoidCallback? onRemoveUsefulness;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +55,11 @@ class CircleJournalEntryCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(activityLabel(entry.activityId), style: textTheme.titleMedium),
             const SizedBox(height: 2),
-            Text(intentionLabel(entry.direction), style: secondary),
+            Text(needLine(entry), style: secondary),
+            if (replacementLine(entry) case final swap?) ...[
+              const SizedBox(height: 2),
+              Text(swap, style: secondary),
+            ],
             if (_planContextLabel(entry) case final label?) ...[
               const SizedBox(height: 2),
               Text(label, style: secondary),
@@ -55,15 +70,40 @@ class CircleJournalEntryCard extends StatelessWidget {
             _AnswerLine(
               question: 'Did you try it?',
               answer: _attemptLabel(entry.attemptResponse),
+              onRemove: entry.attemptResponse == null ? null : onRemoveAttempt,
             ),
             _AnswerLine(
               question: 'Was it useful?',
               answer: _usefulnessLabel(entry.usefulnessResponse),
+              onRemove: entry.usefulnessResponse == null
+                  ? null
+                  : onRemoveUsefulness,
             ),
           ],
         ),
       ),
     );
+  }
+
+  /// The need, and — for V2 Circles — the length offered that day.
+  static String needLine(CircleJournalEntry entry) {
+    final need = intentionLabel(entry.direction);
+    final minutes = entry.offeredMinutes;
+    return minutes == null ? need : '$need · about $minutes minutes';
+  }
+
+  /// "Not this one today" (V2 Phase B), as a plain fact: what it replaced,
+  /// and why — or `null`.
+  static String? replacementLine(CircleJournalEntry entry) {
+    final replaced = entry.replacedFrom;
+    if (replaced == null) return null;
+    final why = switch (entry.replacementReason) {
+      'cantGoOutside' => ' — you couldn’t go outside',
+      'tooMuch' => ' — it was too much for that day',
+      'notFeeling' => ' — you weren’t feeling it',
+      _ => '',
+    };
+    return 'Instead of ${activityLabel(replaced)}$why';
   }
 
   /// What happened to the Circle that day, in one plain sentence. It only
@@ -168,30 +208,51 @@ String humanJournalDate(String localDate, {bool withWeekday = true}) {
 }
 
 class _AnswerLine extends StatelessWidget {
-  const _AnswerLine({required this.question, required this.answer});
+  const _AnswerLine({
+    required this.question,
+    required this.answer,
+    this.onRemove,
+  });
 
   final String question;
   final String answer;
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      // One wrapping line, so a long answer at large text flows onto the
-      // next line instead of overflowing.
-      child: Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(
-              text: '$question  ',
-              style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
-            ),
-            TextSpan(text: answer, style: textTheme.bodySmall),
-          ],
-        ),
+    // One wrapping line, so a long answer at large text flows onto the
+    // next line instead of overflowing.
+    final line = Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: '$question  ',
+            style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+          ),
+          TextSpan(text: answer, style: textTheme.bodySmall),
+        ],
       ),
+    );
+    final remove = onRemove;
+    if (remove == null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: line,
+      );
+    }
+    return Row(
+      children: [
+        Expanded(child: line),
+        Semantics(
+          button: true,
+          label: 'Remove your answer to $question',
+          onTap: remove,
+          excludeSemantics: true,
+          child: ThirtyTextAction(label: 'Remove', onPressed: remove),
+        ),
+      ],
     );
   }
 }

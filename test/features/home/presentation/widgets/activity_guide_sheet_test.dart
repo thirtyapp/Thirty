@@ -100,8 +100,8 @@ void main() {
     );
   });
 
-  testWidgets('A quick standing stretch: 5 MIN on the card, and the ring '
-      'runs to 5 minutes', (tester) async {
+  testWidgets('A quick standing stretch: started, it runs one step at a '
+      'time (V2 Phase C), and the ring runs to 5 minutes', (tester) async {
     final semantics = tester.ensureSemantics();
     await tester.pumpWidget(
       await _hero(
@@ -112,7 +112,8 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('TODAY  ·  5 MIN'), findsOneWidget);
+    expect(find.text('Reach up'), findsOneWidget);
+    expect(find.text('Step 1 of 5 · A quick standing stretch'), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp(r"Today's Circle")), findsOneWidget);
     expect(
       tester.getSemantics(find.bySemanticsLabel(RegExp(r"Today's Circle"))),

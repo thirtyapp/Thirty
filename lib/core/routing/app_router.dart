@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../features/home/presentation/circle_history_page.dart';
 import '../../features/home/presentation/circle_record_detail_page.dart';
 import '../../features/home/presentation/home_page.dart';
+import '../../features/home/application/activity_catalog.dart';
+import '../../features/home/presentation/memory_page.dart';
 import '../../features/insights/presentation/insights_page.dart';
 import '../../features/plans/domain/plan_ids.dart';
 import '../../features/plans/presentation/plan_detail_page.dart';
@@ -13,6 +15,7 @@ import '../../features/premium/presentation/premium_offer_page.dart';
 import '../../features/settings/application/first_name_provider.dart';
 import '../../features/settings/presentation/first_name_question_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
+import '../dev_preview/paced_qa_bench_page.dart';
 import '../dev_preview/quiet_trail_hero_preview_page.dart';
 import '../providers/theme_mode_provider.dart';
 import '../showcase/design_system_showcase_page.dart';
@@ -128,6 +131,15 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
       builder: (context, state) =>
           CircleRecordDetailPage(localDate: state.pathParameters['date']!),
     ),
+    // "What THIRTY remembers" (V2 Phase C): the Free memory page, reached
+    // from You, from a closed Circle's acknowledgement and from a need with
+    // nothing left to suggest. Pushed over the shell, like a record.
+    GoRoute(
+      path: '/memory',
+      builder: (context, state) => MemoryPage(
+        need: Intention.values.asNameMap()[state.uri.queryParameters['need']],
+      ),
+    ),
     // The one first-use question ("What should we call you?") — outside the
     // shell, so nothing else is reachable until it is resolved; see
     // [firstUseRedirect].
@@ -164,6 +176,12 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
       GoRoute(
         path: '/dev/quiet-trail-hero-preview',
         builder: (context, state) => const QuietTrailHeroPreviewPage(),
+      ),
+      // V2 Phase C — the Paced runtime's internal QA bench (synthetic,
+      // neutral pattern; never in profile or release builds).
+      GoRoute(
+        path: PacedQaBenchPage.location,
+        builder: (context, state) => const PacedQaBenchPage(),
       ),
     ],
   ];
@@ -206,10 +224,12 @@ final GoRouter appRouter = createAppRouter();
 /// `/dev/quiet-trail-hero-preview` are developer-only routes — see
 /// [buildAppRoutes] — registered only when `kDebugMode` is true, so they
 /// do not exist in release or profile builds.
-GoRouter createAppRouter() => GoRouter(
-  initialLocation: kDebugMode && _debugInitialLocation.isNotEmpty
-      ? _debugInitialLocation
-      : '/',
+GoRouter createAppRouter({String? initialLocation}) => GoRouter(
+  initialLocation:
+      initialLocation ??
+      (kDebugMode && _debugInitialLocation.isNotEmpty
+          ? _debugInitialLocation
+          : '/'),
   routes: buildAppRoutes(includeDevPreview: kDebugMode),
   redirect: (context, state) => firstUseRedirect(
     promptSeen: ProviderScope.containerOf(

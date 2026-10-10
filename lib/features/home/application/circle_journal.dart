@@ -120,6 +120,7 @@ class CircleJournalEntry {
     this.reasonCode,
     this.replacedFrom,
     this.replacementReason,
+    this.minutesAtClose,
   });
 
   /// The journal record schema version this entry was written under — see
@@ -216,8 +217,14 @@ class CircleJournalEntry {
   final ActivityId? replacedFrom;
   final String? replacementReason;
 
+  /// V2 Phase C: the Circle's active minutes when it was closed — its time
+  /// less any pause. A fact about the Circle, never about the activity.
+  /// `null` on older entries.
+  final int? minutesAtClose;
+
   /// A copy with the given fields changed. [clearUsefulness] removes the
-  /// usefulness answer (it may only follow an affirmative attempt).
+  /// usefulness answer (it may only follow an affirmative attempt);
+  /// [clearAttempt] removes the attempt answer, and with it any usefulness.
   /// [activityId] and [offer] change only for a replacement.
   CircleJournalEntry copyWith({
     DateTime? startedAt,
@@ -225,6 +232,8 @@ class CircleJournalEntry {
     CircleAttemptResponse? attemptResponse,
     CircleUsefulnessResponse? usefulnessResponse,
     bool clearUsefulness = false,
+    bool clearAttempt = false,
+    int? minutesAtClose,
     String? treatmentUsed,
     String? treatmentSource,
     ActivityId? activityId,
@@ -240,8 +249,10 @@ class CircleJournalEntry {
       shownAt: shownAt,
       startedAt: startedAt ?? this.startedAt,
       closedAt: closedAt ?? this.closedAt,
-      attemptResponse: attemptResponse ?? this.attemptResponse,
-      usefulnessResponse: clearUsefulness
+      attemptResponse: clearAttempt
+          ? null
+          : (attemptResponse ?? this.attemptResponse),
+      usefulnessResponse: clearUsefulness || clearAttempt
           ? null
           : (usefulnessResponse ?? this.usefulnessResponse),
       planId: planId,
@@ -256,6 +267,7 @@ class CircleJournalEntry {
       reasonCode: offer?.reasonCode ?? reasonCode,
       replacedFrom: offer?.replacedFrom ?? replacedFrom,
       replacementReason: offer?.replacementReason ?? replacementReason,
+      minutesAtClose: minutesAtClose ?? this.minutesAtClose,
     );
   }
 
@@ -283,6 +295,7 @@ class CircleJournalEntry {
     'reasonCode': reasonCode,
     'replacedFromActivityId': replacedFrom?.name,
     'replacementReason': replacementReason,
+    'minutesAtClose': minutesAtClose,
   };
 
   /// Parses one journal entry, or `null` if [json] is missing or has an
@@ -351,6 +364,7 @@ class CircleJournalEntry {
     final offeredMinutesRaw = json['offeredMinutes'];
     final reasonCodeRaw = json['reasonCode'];
     final replacementReasonRaw = json['replacementReason'];
+    final minutesAtCloseRaw = json['minutesAtClose'];
 
     return CircleJournalEntry(
       schemaVersion: schemaVersion,
@@ -381,6 +395,7 @@ class CircleJournalEntry {
       replacementReason: replacementReasonRaw is String
           ? replacementReasonRaw
           : null,
+      minutesAtClose: minutesAtCloseRaw is int ? minutesAtCloseRaw : null,
     );
   }
 }
@@ -584,6 +599,7 @@ class CircleJournalRepository {
     bool? revisitUsed,
     String? treatmentSource,
     CircleOffer? offer,
+    int? minutesAtClose,
   }) => _upsert(
     circleId: circleId,
     localDate: localDate,
@@ -598,7 +614,8 @@ class CircleJournalRepository {
     revisitUsed: revisitUsed,
     treatmentSource: treatmentSource,
     offer: offer,
-    update: (entry) => entry.copyWith(closedAt: closedAt),
+    update: (entry) =>
+        entry.copyWith(closedAt: closedAt, minutesAtClose: minutesAtClose),
   );
 
   /// Records the user's "Did you try this activity?" answer on [circleId]'s
@@ -702,6 +719,30 @@ class CircleJournalRepository {
     update: (entry) => entry.copyWith(activityId: activityId, offer: offer),
   );
 
+  /// "Remove this answer" (V2 Phase C): removes [circleId]'s usefulness
+  /// answer — and, with [includingAttempt], its "Did you try it?" answer
+  /// too. The Circle's own record (offered, started, closed) stays. Returns
+  /// whether anything changed.
+  Future<bool> removeAnswer(
+    String circleId, {
+    required bool includingAttempt,
+  }) async {
+    final entries = _readRaw();
+    final index = entries.indexWhere((entry) => entry.circleId == circleId);
+    if (index == -1) return false;
+    final entry = entries[index];
+    final hadAnswer = includingAttempt
+        ? entry.attemptResponse != null || entry.usefulnessResponse != null
+        : entry.usefulnessResponse != null;
+    if (!hadAnswer) return false;
+    entries[index] = entry.copyWith(
+      clearAttempt: includingAttempt,
+      clearUsefulness: true,
+    );
+    await _save(entries);
+    return true;
+  }
+
   /// Permanently deletes the entire local journal (ADR-013 §6 — "local
   /// deletion/reset control"). Irreversible; there is no undo and nothing
   /// to restore it from, since nothing is ever sent off-device.
@@ -714,12 +755,17 @@ class CircleJournalRepository {
   /// system clipboard without adding a file-sharing dependency (AGENTS.md
   /// §5 — no new packages beyond `pubspec.yaml`); see
   /// `circle_history_page.dart` for where this is offered to the user.
-  String exportAsJson() {
+  ///
+  /// [suggestionPreferences] (V2 Phase C), when given, is exported beside
+  /// the entries under its own key — the user's explicit choices, kept
+  /// apart from what happened. Nothing derived is ever exported.
+  String exportAsJson({Map<String, Object?>? suggestionPreferences}) {
     final entries = readAll();
     const encoder = JsonEncoder.withIndent('  ');
     return encoder.convert({
       'schemaVersion': circleJournalSchemaVersion,
       'entries': entries.map((entry) => entry.toJson()).toList(),
+      'suggestionPreferences': ?suggestionPreferences,
     });
   }
 

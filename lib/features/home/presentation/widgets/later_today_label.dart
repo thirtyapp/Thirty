@@ -4,20 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../premium/application/premium_offer_provider.dart';
 import '../../../reminder/application/reminder_invitation_provider.dart';
-import 'action_report_prompt.dart';
 
 /// Home's "LATER TODAY" section label (Phase D1, Design vision): heads the
-/// follow-ups that come after today's Circle — the reflection, then the
-/// reminder or Premium invitation (their V1 priority order is unchanged).
-/// Shown only while one of them is actually showing, so it never labels
-/// an empty section. A semantic header, read as "Later today".
+/// follow-ups that come after today's Circle — the reminder or Premium
+/// invitation (their V1 priority order is unchanged; V2 Phase C moved the
+/// reflection into the Circle). Shown only while one of them is actually
+/// showing, so it never labels an empty section. A semantic header, read as
+/// "Later today".
 class LaterTodayLabel extends ConsumerWidget {
   const LaterTodayLabel({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final anyShowing =
-        ref.watch(reflectionPendingProvider) ||
         ref.watch(showReminderInvitationProvider) ||
         ref.watch(showPremiumOfferInvitationProvider);
     if (!anyShowing) return const SizedBox.shrink();

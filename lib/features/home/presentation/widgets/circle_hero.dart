@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,7 +16,10 @@ import '../../application/activity_catalog.dart';
 import '../../application/first_breath_provider.dart';
 import '../../application/recommendation_provider.dart';
 import '../../application/world_scene_resolution.dart';
+import '../../domain/circle_session.dart';
 import 'activity_guide_sheet.dart';
+import 'circle_reflection_card.dart';
+import 'circle_session_card.dart';
 import 'not_this_one_sheet.dart';
 import 'home_circle_metrics.dart';
 import 'home_rhythm_column.dart';
@@ -107,6 +111,15 @@ class CircleHero extends ConsumerStatefulWidget {
   /// owns its own padding and visibility; the hero never resizes for them.
   final List<Widget> footer;
 
+  /// V2 Phase C: a closed Circle's heading pair — a calm close that claims
+  /// nothing about the activity.
+  static const closedHeading = 'Your Circle for today.';
+
+  /// How long after the natural end its announcement waits — enough for
+  /// TalkBack to have spoken the focus move to Close first.
+  static const naturalEndAnnouncementDelay = Duration(milliseconds: 900);
+  static const closedDetail = 'Your next Circle opens tomorrow.';
+
   @override
   ConsumerState<CircleHero> createState() => _CircleHeroState();
 }
@@ -183,6 +196,29 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   Timer? _ticker;
   RecommendationStatus? _tickerStatus;
 
+  // V2 Phase C — the natural end's quiet beat (ADR-021): when the time set
+  // aside is reached while the user is here, the World warms over a moment
+  // and TalkBack hears it once. Seen on arrival instead — a restore, a
+  // return from the background — it is simply there, never replayed.
+  static const _endBeatDuration = Duration(milliseconds: 1600);
+  late final AnimationController _endBeat;
+  bool? _endSeen;
+
+  // Out of sight, nothing is seen: the next look after the app comes back
+  // only records where things stand, whatever frame the resume lands on.
+  late final _OutOfSight _sightObserver = _OutOfSight(() {
+    _endSeen = null;
+    _closeLed = null;
+  });
+
+  // When Close takes the lead mid-session — the time is reached, or Guided
+  // reaches "To finish" — the step controls TalkBack may be on are gone:
+  // focus goes to Close, the one thing left to do, instead of falling to
+  // the top of the page.
+  final _closeFocus = FocusNode(skipTraversal: true);
+  Timer? _endAnnouncement;
+  bool? _closeLed;
+
   // Guards the play-vs-skip decision (and the MediaQuery read it needs) so
   // it runs exactly once per widget lifetime, not again on a later,
   // unrelated dependency change (e.g. a theme change) while the ritual is
@@ -202,6 +238,8 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     super.initState();
 
     _controller = AnimationController(vsync: this, duration: _totalDuration);
+    _endBeat = AnimationController(vsync: this, duration: _endBeatDuration);
+    WidgetsBinding.instance.addObserver(_sightObserver);
 
     // Cumulative fractions of the total timeline, walked in playback order.
     // Pauses advance the clock without producing a boundary of their own —
@@ -337,17 +375,68 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         : null;
   }
 
-  /// The share of [circleDuration] today's Circle has run: from Start
-  /// Circle until now while started, until Close Circle once closed.
-  double _timerProgress(RecommendationState state) {
-    final startedAt = state.startedAt;
-    if (startedAt == null) return 0;
-    final recommendation = state.recommendation;
-    if (recommendation == null) return 0;
-    final end = state.closedAt ?? ref.read(eventClockProvider)();
-    return (end.difference(startedAt).inMilliseconds /
-            circleDurationFor(recommendation).inMilliseconds)
-        .clamp(0.0, 1.0);
+  /// The share of the time set aside that today's Circle has run — its
+  /// active time (pauses set aside), until now while started, until Close
+  /// once closed.
+  double _timerProgress(Duration elapsed, Duration offered) =>
+      offered <= Duration.zero
+      ? 0
+      : (elapsed.inMilliseconds / offered.inMilliseconds).clamp(0.0, 1.0);
+
+  /// Moves focus to Close the moment it takes the lead in a running Circle
+  /// seen live — never on a first look, a return or a restart.
+  void _noticeCloseLead(bool leads, {required bool running}) {
+    final before = _closeLed;
+    _closeLed = leads;
+    if (before != false || !leads || !running) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _closeFocus.requestFocus();
+    });
+  }
+
+  /// Notices the natural end. The first look only records where things
+  /// stand; a crossing seen live plays the beat and is announced once.
+  void _noticeNaturalEnd(bool ended, {required bool running}) {
+    final seen = _endSeen;
+    if (seen == null) {
+      _endSeen = ended;
+      _endBeat.value = ended ? 1 : 0;
+      return;
+    }
+    if (!ended || seen) return;
+    _endSeen = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Unknown (before any lifecycle event) counts as here.
+      final lifecycle = WidgetsBinding.instance.lifecycleState;
+      final foreground =
+          lifecycle == null || lifecycle == AppLifecycleState.resumed;
+      if (foreground && !MediaQuery.disableAnimationsOf(context)) {
+        _endBeat.forward(from: 0);
+      } else {
+        _endBeat.value = 1;
+      }
+      final recommendation = ref.read(recommendationProvider).recommendation;
+      if (foreground && running && recommendation != null) {
+        // Close — the one thing left — takes focus now (whatever step
+        // control TalkBack was on may be gone), and the end is spoken just
+        // after it: on the S25 an announcement sent in the same frame was
+        // cut off by TalkBack's reaction to the changed screen.
+        _closeFocus.requestFocus();
+        final view = View.of(context);
+        final direction = Directionality.of(context);
+        final message = SessionCopy.naturalEndAnnouncement(
+          recommendation.offeredMinutes,
+          activityDefinition(recommendation.activityId).ending,
+        );
+        _endAnnouncement?.cancel();
+        _endAnnouncement = Timer(CircleHero.naturalEndAnnouncementDelay, () {
+          if (mounted) {
+            SemanticsService.sendAnnouncement(view, message, direction);
+          }
+        });
+      }
+    });
   }
 
   /// Batch 1, Phase B — the irreversible Close Circle confirmation.
@@ -370,6 +459,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   Future<void> _confirmCloseCircle(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
+      barrierLabel: 'Keep Circle open',
       builder: (_) => const ThirtyConfirmDialog(
         title: "Close today's Circle?",
         body: "You won't be able to reopen it until tomorrow.",
@@ -383,6 +473,15 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     if (!mounted) return;
 
     ref.read(recommendationProvider.notifier).close();
+    // Circle Closed — the second of the two moments THIRTY spends a haptic
+    // on (MOTION_LANGUAGE.md §10): soft, once, for the Circle's ending —
+    // never for the activity, which Close does not claim.
+    HapticFeedback.lightImpact();
+    SemanticsService.sendAnnouncement(
+      View.of(this.context),
+      'Circle closed.',
+      Directionality.of(this.context),
+    );
   }
 
   @override
@@ -430,6 +529,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   @override
   void dispose() {
     _controller.dispose();
+    _endBeat.dispose();
+    WidgetsBinding.instance.removeObserver(_sightObserver);
+    _closeFocus.dispose();
+    _endAnnouncement?.cancel();
     _ticker?.cancel();
     super.dispose();
   }
@@ -476,7 +579,33 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         : _illustrationPhase;
 
     _syncTicker(recommendationState.status);
-    final timerProgress = _timerProgress(recommendationState);
+    final status = recommendationState.status;
+    final activity = activityDefinition(recommendation.activityId);
+    final offered = circleDurationFor(recommendation);
+    final elapsed = recommendationState.activeElapsedAt(
+      ref.read(eventClockProvider)(),
+    );
+    final timerProgress = _timerProgress(elapsed, offered);
+    final ended =
+        status != RecommendationStatus.notStarted &&
+        naturalEndReached(elapsed, offered);
+    _noticeNaturalEnd(ended, running: status == RecommendationStatus.started);
+    final paused = recommendationState.isPaused;
+    final body = sessionBodyFor(activity, activity.pace);
+    // One filled action at a time: Start before the Circle; while it runs,
+    // Close stays quiet — the session's own action leads — until the time
+    // set aside is reached or a Guided Circle reaches "To finish".
+    final closeLeads =
+        status != RecommendationStatus.started ||
+        ended ||
+        (body == SessionBody.guided &&
+            recommendationState.guidedPosition >=
+                guidedFinishPosition(activity));
+    _noticeCloseLead(
+      closeLeads,
+      running: status == RecommendationStatus.started,
+    );
+    final notifier = ref.read(recommendationProvider.notifier);
 
     // Same Home throughout the whole daily lifecycle (READY/ACTIVE/CLOSED)
     // — no route, no page transition, no second screen: the Circle stays
@@ -522,9 +651,13 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       case RecommendationStatus.started:
         ctaLabel = 'Close Circle';
         ctaTrailingIcon = null;
-        final total = circleDurationFor(recommendation).inMinutes;
-        final minutes = (timerProgress * total).floor();
-        circleSemanticValue = 'Circle in progress. $minutes of $total minutes.';
+        final total = offered.inMinutes;
+        final minutes = elapsed.inMinutes.clamp(0, total);
+        circleSemanticValue = ended
+            ? 'That’s your $total minutes. The Circle is still open.'
+            : paused
+            ? 'Circle paused. $minutes of $total minutes.'
+            : 'Circle in progress. $minutes of $total minutes.';
         // Batch 1, Phase B: no longer closes directly on tap — see
         // _confirmCloseCircle's own doc comment for the confirmation this
         // now requires before the irreversible transition.
@@ -546,15 +679,46 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     // text keeps the full Circle and scrolls.
     final normalTextSize = MediaQuery.textScalerOf(context).scale(16) <= 16;
 
-    final greeting = Semantics(
-      header: true,
-      child: Text(
-        homeGreeting(
+    // V2 Phase C: the heading pair belongs to the Circle's moment — the
+    // greeting before Start, the session while it runs (the activity and
+    // its time; for Guided, the step on show), and a quiet close after.
+    final SessionHeading heading = switch (status) {
+      RecommendationStatus.notStarted => (
+        title: homeGreeting(
           ref.watch(nowProvider),
           firstName: ref.watch(firstNameProvider),
         ),
-        style: greetingStyle,
-        textAlign: TextAlign.center,
+        detail: homeGreetingSubline(started: false),
+      ),
+      RecommendationStatus.started => sessionHeadingFor(
+        activity: activity,
+        body: body,
+        elapsedMinutes: elapsed.inMinutes.clamp(0, offered.inMinutes),
+        offeredMinutes: offered.inMinutes,
+        ended: ended,
+        paused: paused,
+        guidedPosition: recommendationState.guidedPosition,
+      ),
+      RecommendationStatus.closed => (
+        title: CircleHero.closedHeading,
+        detail: CircleHero.closedDetail,
+      ),
+    };
+    final headingStyle = status == RecommendationStatus.notStarted
+        ? greetingStyle
+        // A session's title can be an activity name or a step: a touch
+        // smaller than the greeting, so a long name keeps to one line.
+        : greetingStyle.copyWith(fontSize: 30);
+    final greeting = Semantics(
+      header: true,
+      child: AnimatedSwitcher(
+        duration: artSwitchDuration,
+        child: Text(
+          heading.title,
+          key: ValueKey(heading.title),
+          style: headingStyle,
+          textAlign: TextAlign.center,
+        ),
       ),
     );
 
@@ -740,6 +904,16 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                             ),
                           ),
                         ),
+                        // V2 Phase C: the natural end's quiet light — the
+                        // same World, a little warmer (WORLD_SYSTEM.md §5D).
+                        // Never a celebration; held, not replayed.
+                        FadeTransition(
+                          opacity: CurvedAnimation(
+                            parent: _endBeat,
+                            curve: Curves.easeInOut,
+                          ),
+                          child: CircleEndWarmth(size: illustrationSize),
+                        ),
                       ],
                     ),
                   ),
@@ -751,88 +925,113 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                   opacity: _headingOpacity,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: textMaxWidth),
-                    child:
-                        recommendationState.status ==
-                            RecommendationStatus.closed
-                        ? greeting
-                        // The space between the greeting and its subline
-                        // gives up room only for a running Circle that
-                        // still misses the first screen (tightSteps).
-                        : HomeSqueezePair(
-                            spacing: (
-                              top: 0,
-                              middle: HomeCircleMetrics.greetingToSublineGap,
-                              bottom: 0,
-                            ),
-                            steps: const [
-                              (
-                                top: 0,
-                                middle: HomeCircleMetrics.runningTightGap,
-                                bottom: 0,
-                              ),
-                            ],
-                            first: greeting,
-                            second: Text(
-                              homeGreetingSubline(
-                                started:
-                                    recommendationState.status ==
-                                    RecommendationStatus.started,
-                              ),
-                              style: textTheme.bodyLarge?.copyWith(
-                                color: colors.textSecondary,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
+                    // The space between the heading and its detail gives up
+                    // room only for a running Circle that still misses the
+                    // first screen (tightSteps).
+                    child: HomeSqueezePair(
+                      spacing: (
+                        top: 0,
+                        middle: HomeCircleMetrics.greetingToSublineGap,
+                        bottom: 0,
+                      ),
+                      steps: const [
+                        (
+                          top: 0,
+                          middle: HomeCircleMetrics.runningTightGap,
+                          bottom: 0,
+                        ),
+                      ],
+                      first: greeting,
+                      second: Text(
+                        heading.detail,
+                        style: textTheme.bodyLarge?.copyWith(
+                          color: colors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
                 ),
-                TodayCard(
-                  intent: recommendation.intent,
-                  activity: recommendation.activity,
-                  // V2 Phase B: a truthful personal reason, when there is
-                  // one, takes the line; the activity's own reason stays in
-                  // its how-to.
-                  why: recommendation.personalReason ?? recommendation.why,
-                  category: recommendation.category,
-                  minutes: recommendation.offeredMinutes,
-                  firstAction: activityDefinition(
-                    recommendation.activityId,
-                  ).firstAction,
-                  showFirstAction:
-                      recommendationState.status ==
-                      RecommendationStatus.started,
-                  // A retired activity restored from history has no V2
-                  // guide to show.
-                  onShowGuide:
-                      activityDefinition(recommendation.activityId).status ==
-                          ActivityStatus.retired
-                      ? null
-                      : () => showActivityGuide(
-                          context,
-                          activityId: recommendation.activityId,
-                          intention: recommendation.intention,
-                          offeredMinutes: recommendation.offeredMinutes,
-                          onNotThisOne:
-                              recommendation.canReplace &&
-                                  recommendationState.status ==
-                                      RecommendationStatus.notStarted
-                              ? () => _notThisOne(recommendation.activityId)
-                              : null,
-                        ),
-                  // Before Start, the row says what it opens — and, while
-                  // today's activity can still be swapped, that it can be.
-                  guideCue:
-                      recommendationState.status !=
-                          RecommendationStatus.notStarted
-                      ? ActivityRowCue.none
-                      : recommendation.canReplace
-                      ? ActivityRowCue.howToOrNotThisOne
-                      : ActivityRowCue.howTo,
-                  cardAsset: _art.cardAsset,
-                  artSwitchDuration: artSwitchDuration,
-                  intentOpacity: _intentOpacity,
-                  detailOpacity: _activityWhyOpacity,
-                ),
+                switch (status) {
+                  RecommendationStatus.notStarted => TodayCard(
+                    intent: recommendation.intent,
+                    activity: recommendation.activity,
+                    // V2 Phase B: a truthful personal reason, when there is
+                    // one, takes the line; the activity's own reason stays in
+                    // its how-to.
+                    why: recommendation.personalReason ?? recommendation.why,
+                    category: recommendation.category,
+                    minutes: recommendation.offeredMinutes,
+                    firstAction: activityDefinition(
+                      recommendation.activityId,
+                    ).firstAction,
+                    showFirstAction:
+                        recommendationState.status ==
+                        RecommendationStatus.started,
+                    // A retired activity restored from history has no V2
+                    // guide to show.
+                    onShowGuide:
+                        activityDefinition(recommendation.activityId).status ==
+                            ActivityStatus.retired
+                        ? null
+                        : () => showActivityGuide(
+                            context,
+                            activityId: recommendation.activityId,
+                            intention: recommendation.intention,
+                            offeredMinutes: recommendation.offeredMinutes,
+                            onNotThisOne:
+                                recommendation.canReplace &&
+                                    recommendationState.status ==
+                                        RecommendationStatus.notStarted
+                                ? () => _notThisOne(recommendation.activityId)
+                                : null,
+                          ),
+                    // Before Start, the row says what it opens — and, while
+                    // today's activity can still be swapped, that it can be.
+                    guideCue:
+                        recommendationState.status !=
+                            RecommendationStatus.notStarted
+                        ? ActivityRowCue.none
+                        : recommendation.canReplace
+                        ? ActivityRowCue.howToOrNotThisOne
+                        : ActivityRowCue.howTo,
+                    cardAsset: _art.cardAsset,
+                    artSwitchDuration: artSwitchDuration,
+                    intentOpacity: _intentOpacity,
+                    detailOpacity: _activityWhyOpacity,
+                  ),
+                  // V2 Phase C: the running Circle's session — Open, Guided
+                  // or Paced — in the same card shell.
+                  RecommendationStatus.started => _pausedWhenHidden(
+                    paced: body == SessionBody.paced,
+                    onHidden: notifier.pause,
+                    child: CircleSessionCard(
+                      activity: activity,
+                      body: body,
+                      elapsed: elapsed,
+                      offered: offered,
+                      guidedPosition: recommendationState.guidedPosition,
+                      paused: paused,
+                      ended: ended,
+                      pace: activity.pace,
+                      onShowGuide: activity.status == ActivityStatus.retired
+                          ? null
+                          : () => showActivityGuide(
+                              context,
+                              activityId: recommendation.activityId,
+                              intention: recommendation.intention,
+                              offeredMinutes: recommendation.offeredMinutes,
+                            ),
+                      onMoveTo: notifier.moveTo,
+                      onPause: notifier.pause,
+                      onResume: notifier.resume,
+                      cardAsset: _art.cardAsset,
+                      artSwitchDuration: artSwitchDuration,
+                    ),
+                  ),
+                  // V2 Phase C: the reflection, inline — no hunting for it.
+                  RecommendationStatus.closed => const CircleReflectionCard(),
+                },
                 // FadeTransition alone only controls painting and
                 // semantics inclusion — it never gates hit-testing, so
                 // without this wrapper the button could already be
@@ -862,37 +1061,27 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                     // is exactly the existing authoritative reset rule
                     // (recommendation_provider.dart's local-calendar-day
                     // scoping), not a guessed time of day.
+                    // Once closed the reflection above is the moment: no
+                    // action here at all (the heading says when the next
+                    // Circle opens).
                     child: ctaLabel == null
-                        ? ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: textMaxWidth),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Done for today',
-                                  style: textTheme.titleMedium,
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: AppSpacing.xs),
-                                Text(
-                                  'Your next Circle opens tomorrow.',
-                                  style: textTheme.bodyMedium?.copyWith(
-                                    color: colors.textSecondary,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          )
+                        ? const SizedBox.shrink()
                         // Phase D1: the full content width, like the
-                        // Today card above it.
+                        // Today card above it. V2 Phase C: while the
+                        // Circle runs, Close stays quiet — it is always
+                        // there, never the thing to do — and becomes the
+                        // filled action once the time set aside is here.
                         : SizedBox(
                             width: double.infinity,
                             child: ThirtyButton(
                               label: ctaLabel,
                               size: ThirtyButtonSize.hero,
+                              variant: closeLeads
+                                  ? ThirtyButtonVariant.primary
+                                  : ThirtyButtonVariant.secondary,
                               trailingIcon: ctaTrailingIcon,
                               onPressed: onCtaPressed,
+                              focusNode: _closeFocus,
                             ),
                           ),
                   ),
@@ -924,6 +1113,68 @@ class _CircleHeroState extends ConsumerState<CircleHero>
           ),
         );
       },
+    );
+  }
+}
+
+/// Calls [onHidden] whenever the app is no longer visible. A plain binding
+/// observer: it takes the lifecycle exactly as reported, in any order.
+class _OutOfSight with WidgetsBindingObserver {
+  _OutOfSight(this.onHidden);
+
+  final VoidCallback onHidden;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      onHidden();
+    }
+  }
+}
+
+/// Pauses a Paced session whenever the app leaves the foreground.
+Widget _pausedWhenHidden({
+  required bool paced,
+  required VoidCallback onHidden,
+  required Widget child,
+}) => paced ? PauseWhenHidden(onHidden: onHidden, child: child) : child;
+
+/// The natural end's light over the World: a soft warm wash from above,
+/// clipped to the World's circle. Decorative.
+class CircleEndWarmth extends StatelessWidget {
+  const CircleEndWarmth({required this.size, super.key});
+
+  final double size;
+
+  static const _warm = Color(0xFFFFD9A3);
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final strength = dark ? 0.30 : 0.38;
+    return IgnorePointer(
+      child: ExcludeSemantics(
+        child: SizedBox.square(
+          dimension: size,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                center: const Alignment(0, -0.55),
+                radius: 1.05,
+                colors: [
+                  _warm.withValues(alpha: strength),
+                  _warm.withValues(alpha: strength * 0.45),
+                  _warm.withValues(alpha: 0),
+                ],
+                stops: const [0, 0.55, 1],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

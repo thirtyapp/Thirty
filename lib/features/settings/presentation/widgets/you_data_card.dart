@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../home/application/circle_journal.dart';
+import '../../../home/application/suggestion_preferences.dart';
 import '../../../home/presentation/widgets/journal_data_controls.dart';
 import 'you_group_card.dart';
 
@@ -21,14 +22,19 @@ class YouDataCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final journal = ref.watch(circleJournalRepositoryProvider);
     final hasEntries = journal.readAll().isNotEmpty;
+    final preferences = ref.watch(suggestionPreferencesProvider);
 
     return YouGroupCard(
       children: [
         YouActionRow(
           label: 'Copy as text',
           icon: Icons.content_copy_outlined,
-          onTap: hasEntries
-              ? () => JournalDataControls.exportToClipboard(context, journal)
+          onTap: hasEntries || !preferences.isEmpty
+              ? () => JournalDataControls.exportToClipboard(
+                  context,
+                  journal,
+                  preferences: preferences,
+                )
               : null,
         ),
         YouActionRow(

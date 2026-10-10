@@ -140,8 +140,6 @@ class TodayCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
-    final largeText =
-        MediaQuery.textScalerOf(context).scale(1) >= _largeTextScale;
     final labelStyle = textTheme.labelSmall?.copyWith(
       color: colors.textSecondary,
       letterSpacing: 1.5,
@@ -152,151 +150,188 @@ class TodayCard extends StatelessWidget {
 
     return FadeTransition(
       opacity: intentOpacity,
-      // The card always spans the page's content width.
-      child: SizedBox(
-        width: double.infinity,
-        child: ThirtyCard(
-          padding: EdgeInsets.zero,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final showArt =
-                  !largeText && constraints.maxWidth >= _minWidthForArt;
-              final text = Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.featuredCard,
-                ),
-                // The card's padding, and the space between the divider and
-                // the line beneath it, are all that give up room in Home's
-                // near-fit rhythm ([nearFitReduction], then
-                // [runningPaddingReduction] and [runningInnerReduction]);
-                // the content never does.
-                child: HomeSqueezePair(
-                  spacing: (
-                    top: AppSpacing.m,
-                    middle: AppSpacing.s,
-                    bottom: AppSpacing.m,
+      child: HomeCardShell(
+        cardAsset: cardAsset,
+        artSwitchDuration: artSwitchDuration,
+        first: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // The activity's natural length rides on the label line, which
+            // has room to spare, so the activity name keeps its width.
+            Text(
+              'TODAY  ·  $minutes MIN',
+              semanticsLabel: 'Today, about $minutes minutes',
+              style: labelStyle,
+            ),
+            const SizedBox(height: 2),
+            Text(intent, style: intentStyle),
+            FadeTransition(
+              opacity: detailOpacity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // The activity row is also the way into its full how-to
+                  // (V2 Phase A): its tap padding takes the place of the
+                  // gaps above and below it, so the card is no taller than
+                  // before and Start Circle keeps its place beneath the
+                  // full-size Circle.
+                  _ActivityRow(
+                    activity: activity,
+                    icon: iconFor(category),
+                    onTap: onShowGuide,
+                    cue: onShowGuide == null ? ActivityRowCue.none : guideCue,
                   ),
-                  steps: const [
-                    (
-                      top: AppSpacing.s,
-                      middle: AppSpacing.s,
-                      bottom: AppSpacing.s,
-                    ),
-                    (
-                      top: _leastPadding,
-                      middle: AppSpacing.s,
-                      bottom: _leastPadding,
-                    ),
-                    (
-                      top: _leastPadding,
-                      middle: AppSpacing.xs,
-                      bottom: _leastPadding,
-                    ),
-                  ],
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  first: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // The activity's natural length rides on the label line, which
-                      // has room to spare, so the activity name keeps its width.
-                      Text(
-                        'TODAY  ·  $minutes MIN',
-                        semanticsLabel: 'Today, about $minutes minutes',
-                        style: labelStyle,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(intent, style: intentStyle),
-                      FadeTransition(
-                        opacity: detailOpacity,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // The activity row is also the way into its full
-                            // how-to (V2 Phase A): its tap padding takes the
-                            // place of the gaps above and below it, so the
-                            // card is no taller than before and Start Circle
-                            // keeps its place beneath the full-size Circle.
-                            _ActivityRow(
-                              activity: activity,
-                              icon: iconFor(category),
-                              onTap: onShowGuide,
-                              cue: onShowGuide == null
-                                  ? ActivityRowCue.none
-                                  : guideCue,
-                            ),
-                            Divider(height: 1, color: colors.divider),
-                          ],
-                        ),
-                      ),
-                    ],
+                  Divider(height: 1, color: colors.divider),
+                ],
+              ),
+            ),
+          ],
+        ),
+        // Before Start: why this might fit. Once running: the one thing to
+        // do first, which is what matters now. Never cut off (S25 device
+        // finding): at normal text the copy itself is kept to two lines for
+        // the reason and three for the first action (today_card_test.dart),
+        // so the card stays compact enough for the Circle's action to sit
+        // beneath the full-size Circle; enlarged text grows the card and the
+        // page scrolls instead.
+        second: FadeTransition(
+          opacity: detailOpacity,
+          child: showFirstAction
+              ? Text(
+                  firstAction,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colors.textPrimary,
+                    fontWeight: FontWeight.w600,
                   ),
-                  // Before Start: why this might fit. Once running: the one
-                  // thing to do first, which is what matters now. Never cut
-                  // off (S25 device finding): at normal text the copy itself
-                  // is kept to two lines for the reason and three for the
-                  // first action (today_card_test.dart), so the card stays
-                  // compact enough for the Circle's action to sit beneath
-                  // the full-size Circle; enlarged text grows the card and
-                  // the page scrolls instead.
-                  second: FadeTransition(
-                    opacity: detailOpacity,
-                    child: showFirstAction
-                        ? Text(
-                            firstAction,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: colors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          )
-                        : Text(
-                            why,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: colors.textSecondary,
-                            ),
-                          ),
+                )
+              : Text(
+                  why,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colors.textSecondary,
                   ),
                 ),
-              );
-              if (!showArt) return text;
+        ),
+      ),
+    );
+  }
+}
 
-              final width = constraints.maxWidth;
-              // Full width: the text column alone would otherwise size the
-              // Stack and pull the art over it.
-              return SizedBox(
-                width: width,
-                child: Stack(
-                  children: [
-                    // The art viewport: from where the text column's
-                    // content ends to the card's right edge. Art never
-                    // paints left of it.
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      bottom: 0,
-                      width:
-                          width * (1 - _textShareWithArt) +
-                          AppSpacing.featuredCard,
-                      child: AnimatedSwitcher(
-                        duration: artSwitchDuration,
-                        // Fill the viewport; never re-centre the art.
-                        layoutBuilder: (current, previous) => Stack(
-                          fit: StackFit.expand,
-                          children: [...previous, ?current],
-                        ),
-                        child: _TodayArt(
-                          key: ValueKey(cardAsset),
-                          asset: cardAsset,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: width * _textShareWithArt, child: text),
-                  ],
+/// The Today card's shell, shared by every card under the Home Circle — the
+/// Today card itself, the running Circle's session card and the closed
+/// Circle's reflection (V2 Phase C): one [ThirtyCard] at the page's content
+/// width, [first] and [second] in a [HomeSqueezePair], and — given a
+/// [cardAsset] — today's World Card companion on the right.
+///
+/// The card's padding and the space between [first] and [second] are all
+/// that give up room in Home's near-fit rhythm ([TodayCard.nearFitReduction],
+/// then [TodayCard.runningPaddingReduction] and
+/// [TodayCard.runningInnerReduction]); the content never does.
+///
+/// The art is decorative and appears only while the text has room for it
+/// (text scale below 130% and a card at least 300pt wide).
+class HomeCardShell extends StatelessWidget {
+  const HomeCardShell({
+    required this.first,
+    required this.second,
+    this.cardAsset,
+    this.artSwitchDuration = Duration.zero,
+    super.key,
+  });
+
+  final Widget first;
+  final Widget second;
+
+  /// Today's World Card art, or `null` for a card of text alone.
+  final String? cardAsset;
+  final Duration artSwitchDuration;
+
+  @override
+  Widget build(BuildContext context) {
+    final largeText =
+        MediaQuery.textScalerOf(context).scale(1) >= TodayCard._largeTextScale;
+    final asset = cardAsset;
+    // The card always spans the page's content width.
+    return SizedBox(
+      width: double.infinity,
+      child: ThirtyCard(
+        padding: EdgeInsets.zero,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final showArt =
+                asset != null &&
+                !largeText &&
+                constraints.maxWidth >= TodayCard._minWidthForArt;
+            final text = Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.featuredCard,
+              ),
+              child: HomeSqueezePair(
+                spacing: (
+                  top: AppSpacing.m,
+                  middle: AppSpacing.s,
+                  bottom: AppSpacing.m,
                 ),
-              );
-            },
-          ),
+                steps: const [
+                  (
+                    top: AppSpacing.s,
+                    middle: AppSpacing.s,
+                    bottom: AppSpacing.s,
+                  ),
+                  (
+                    top: TodayCard._leastPadding,
+                    middle: AppSpacing.s,
+                    bottom: TodayCard._leastPadding,
+                  ),
+                  (
+                    top: TodayCard._leastPadding,
+                    middle: AppSpacing.xs,
+                    bottom: TodayCard._leastPadding,
+                  ),
+                ],
+                crossAxisAlignment: CrossAxisAlignment.start,
+                first: first,
+                second: second,
+              ),
+            );
+            if (!showArt) return text;
+
+            final width = constraints.maxWidth;
+            // Full width: the text column alone would otherwise size the
+            // Stack and pull the art over it.
+            return SizedBox(
+              width: width,
+              child: Stack(
+                children: [
+                  // The art viewport: from where the text column's content
+                  // ends to the card's right edge. Art never paints left of
+                  // it.
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    width:
+                        width * (1 - TodayCard._textShareWithArt) +
+                        AppSpacing.featuredCard,
+                    child: AnimatedSwitcher(
+                      duration: artSwitchDuration,
+                      // Fill the viewport; never re-centre the art.
+                      layoutBuilder: (current, previous) => Stack(
+                        fit: StackFit.expand,
+                        children: [...previous, ?current],
+                      ),
+                      child: _TodayArt(key: ValueKey(asset), asset: asset),
+                    ),
+                  ),
+                  SizedBox(
+                    width: width * TodayCard._textShareWithArt,
+                    child: text,
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );

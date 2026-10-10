@@ -215,9 +215,17 @@ void main() {
 
       expect(
         pathsOf(true).where((path) => !pathsOf(false).contains(path)),
-        unorderedEquals(['/showcase', '/dev/quiet-trail-hero-preview']),
+        unorderedEquals([
+          '/showcase',
+          '/dev/quiet-trail-hero-preview',
+          // V2 Phase C: the Paced runtime's internal QA bench — its
+          // synthetic pattern never reaches a profile or release build.
+          '/dev/paced-qa',
+        ]),
       );
       expect(pathsOf(false).every(pathsOf(true).contains), isTrue);
+      // V2 Phase C: the memory page is Free and in every build.
+      expect(pathsOf(false), contains('/memory'));
     });
   });
 }

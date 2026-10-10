@@ -153,7 +153,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Did you try this activity?'), findsNothing);
+      expect(find.text('Did you try it?'), findsNothing);
     },
   );
 
@@ -173,7 +173,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Did you try this activity?'), findsOneWidget);
+    expect(find.text('Did you try it?'), findsOneWidget);
   });
 
   testWidgets(

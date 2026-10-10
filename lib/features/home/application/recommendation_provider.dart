@@ -12,9 +12,11 @@ import '../../../core/utils/date_key.dart';
 import '../../plans/application/plan_provider.dart';
 import '../../plans/domain/plan_ids.dart';
 import '../../plans/domain/plan_state.dart';
+import '../domain/circle_session.dart';
 import '../domain/recommendation_engine.dart';
 import 'activity_catalog.dart';
 import 'circle_journal.dart';
+import 'suggestion_preferences.dart';
 
 /// THIRTY's daily recommendation (V2 Phase B, ADR-020): the user states
 /// today's [Intention] and [TimeWindow], and Recommendation Engine V2
@@ -291,6 +293,17 @@ const recommendationReplacedFromKey = 'recommendation_replaced_from';
 /// V2 Phase B: today's [ReplacementReason.name], if any.
 const recommendationReplacementReasonKey = 'recommendation_replacement_reason';
 
+/// V2 Phase C: when today's started Circle was paused, if it is paused now.
+const recommendationPausedAtKey = 'recommendation_paused_at';
+
+/// V2 Phase C: the milliseconds today's Circle spent paused before
+/// [recommendationPausedAtKey].
+const recommendationPausedMsKey = 'recommendation_paused_ms';
+
+/// V2 Phase C: a Guided Circle's position (`circle_session.dart`'s
+/// [guidedFinishPosition]) — where the user is, never what they did.
+const recommendationGuidedPositionKey = 'recommendation_guided_position';
+
 /// Today's Circle: its content ([recommendation]) plus its session/
 /// lifecycle state.
 ///
@@ -313,6 +326,10 @@ class RecommendationState {
     this.closedAt,
     this.attemptResponse,
     this.usefulnessResponse,
+    this.pausedAt,
+    this.pausedTotal = Duration.zero,
+    this.guidedPosition = 0,
+    this.noCandidateFor,
   }) : assert(
          recommendation != null ||
              (status == RecommendationStatus.notStarted &&
@@ -352,6 +369,67 @@ class RecommendationState {
   /// only ever non-null alongside an affirmative [attemptResponse]
   /// ([CircleAttemptResponse.yes] or [CircleAttemptResponse.aLittle]).
   final CircleUsefulnessResponse? usefulnessResponse;
+
+  /// V2 Phase C — when the Circle was paused, while it is (or was, if it
+  /// was closed paused).
+  final DateTime? pausedAt;
+
+  /// V2 Phase C — time spent paused before [pausedAt].
+  final Duration pausedTotal;
+
+  /// V2 Phase C — a Guided Circle's position: the step on show, or the
+  /// "To finish" page after the last ([guidedFinishPosition]).
+  final int guidedPosition;
+
+  /// V2 Phase C — the need and time just asked for, when the user's own
+  /// "Don't suggest" choices left nothing to offer. Not persisted.
+  final (Intention, TimeWindow)? noCandidateFor;
+
+  bool get isPaused =>
+      status == RecommendationStatus.started && pausedAt != null;
+
+  /// The Circle's active time at [now] (`circle_session.dart`): from Start,
+  /// less pauses, until Close.
+  Duration activeElapsedAt(DateTime now) {
+    final startedAt = this.startedAt;
+    if (startedAt == null) return Duration.zero;
+    return activeElapsed(
+      startedAt: startedAt,
+      at: closedAt ?? now,
+      pausedAt: pausedAt,
+      pausedTotal: pausedTotal,
+    );
+  }
+
+  /// A copy carrying the session runtime, with the given changes.
+  RecommendationState copyWith({
+    Recommendation? recommendation,
+    RecommendationStatus? status,
+    DateTime? startedAt,
+    DateTime? closedAt,
+    DateTime? pausedAt,
+    bool clearPausedAt = false,
+    Duration? pausedTotal,
+    int? guidedPosition,
+    CircleAttemptResponse? attemptResponse,
+    bool clearAttempt = false,
+    CircleUsefulnessResponse? usefulnessResponse,
+    bool clearUsefulness = false,
+  }) => RecommendationState(
+    recommendation: recommendation ?? this.recommendation,
+    status: status ?? this.status,
+    startedAt: startedAt ?? this.startedAt,
+    closedAt: closedAt ?? this.closedAt,
+    pausedAt: clearPausedAt ? null : (pausedAt ?? this.pausedAt),
+    pausedTotal: pausedTotal ?? this.pausedTotal,
+    guidedPosition: guidedPosition ?? this.guidedPosition,
+    attemptResponse: clearAttempt
+        ? null
+        : (attemptResponse ?? this.attemptResponse),
+    usefulnessResponse: clearUsefulness || clearAttempt
+        ? null
+        : (usefulnessResponse ?? this.usefulnessResponse),
+  );
 }
 
 /// The smallest technical state machine behind today's Circle:
@@ -447,6 +525,20 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final storedStartedAt = DateTime.tryParse(
       prefs.getString(recommendationStartedAtKey) ?? '',
     );
+    // V2 Phase C: the session runtime — a pause and a Guided position.
+    final storedPausedAt = DateTime.tryParse(
+      prefs.getString(recommendationPausedAtKey) ?? '',
+    );
+    final storedPausedTotal = Duration(
+      milliseconds: (prefs.getInt(recommendationPausedMsKey) ?? 0).clamp(
+        0,
+        1 << 40,
+      ),
+    );
+    final storedPosition = clampGuidedPosition(
+      activityDefinition(recommendation.activityId),
+      prefs.getInt(recommendationGuidedPositionKey) ?? 0,
+    );
 
     switch (storedStatus) {
       case RecommendationStatus.started:
@@ -457,6 +549,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           recommendation: recommendation,
           status: RecommendationStatus.started,
           startedAt: storedStartedAt,
+          pausedAt: storedPausedAt,
+          pausedTotal: storedPausedTotal,
+          guidedPosition: storedPosition,
         );
 
       case RecommendationStatus.closed:
@@ -493,6 +588,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           closedAt: storedClosedAt,
           attemptResponse: storedAttempt,
           usefulnessResponse: storedUsefulness,
+          pausedAt: storedPausedAt,
+          pausedTotal: storedPausedTotal,
+          guidedPosition: storedPosition,
         );
 
       case RecommendationStatus.notStarted:
@@ -552,7 +650,18 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           allowSafetyPending: ref.read(safetyPendingAllowedProvider),
         ),
         pastCirclesFrom(ref.read(circleJournalRepositoryProvider).readAll()),
-      )!;
+        controls: ref.read(suggestionPreferencesProvider).controls,
+      );
+      if (decision == null) {
+        // V2 Phase C: the user's own "Don't suggest" choices leave nothing
+        // that fits. Say so; never override them.
+        state = RecommendationState(
+          recommendation: null,
+          status: RecommendationStatus.notStarted,
+          noCandidateFor: (intention, timeWindow),
+        );
+        return;
+      }
       recommendation = _buildRecommendation(
         intention,
         decision.activityId,
@@ -614,6 +723,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         allowSafetyPending: ref.read(safetyPendingAllowedProvider),
       ),
       pastCirclesFrom(ref.read(circleJournalRepositoryProvider).readAll()),
+      controls: ref.read(suggestionPreferencesProvider).controls,
     );
     if (decision == null) return false;
 
@@ -660,6 +770,48 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     ref.read(analyticsServiceProvider).track(AnalyticsEventType.circleStarted);
   }
 
+  /// Pauses today's started Circle (V2 Phase C): its time stops until
+  /// [resume]. A no-op unless started and running. Guided Circles pause on
+  /// request; Paced ones also whenever the app leaves the foreground.
+  void pause() {
+    if (state.status != RecommendationStatus.started || state.isPaused) return;
+    state = state.copyWith(pausedAt: ref.read(eventClockProvider)());
+    final snapshot = state;
+    _enqueue(() => _persist(snapshot));
+  }
+
+  /// Resumes a paused Circle: the paused stretch is set aside, never
+  /// counted. A no-op unless paused.
+  void resume() {
+    final pausedAt = state.pausedAt;
+    if (!state.isPaused || pausedAt == null) return;
+    final now = ref.read(eventClockProvider)();
+    final paused = now.difference(pausedAt);
+    state = state.copyWith(
+      clearPausedAt: true,
+      pausedTotal:
+          state.pausedTotal + (paused.isNegative ? Duration.zero : paused),
+    );
+    final snapshot = state;
+    _enqueue(() => _persist(snapshot));
+  }
+
+  /// Shows [position] of a Guided Circle (V2 Phase C). Where the user is,
+  /// never a record that a step was done.
+  void moveTo(int position) {
+    final recommendation = state.recommendation;
+    if (recommendation == null) return;
+    if (state.status != RecommendationStatus.started) return;
+    final clamped = clampGuidedPosition(
+      activityDefinition(recommendation.activityId),
+      position,
+    );
+    if (clamped == state.guidedPosition) return;
+    state = state.copyWith(guidedPosition: clamped);
+    final snapshot = state;
+    _enqueue(() => _persist(snapshot));
+  }
+
   /// Closes today's Circle. A no-op unless [RecommendationState.status] is
   /// currently [RecommendationStatus.started] — calling this before a
   /// start, or again after already closed, does nothing, and in
@@ -687,10 +839,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
 
     final recommendation = state.recommendation!;
     final closedAt = ref.read(eventClockProvider)();
-    state = RecommendationState(
-      recommendation: recommendation,
+    state = state.copyWith(
       status: RecommendationStatus.closed,
-      startedAt: state.startedAt,
       closedAt: closedAt,
     );
     final snapshot = state;
@@ -759,14 +909,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       offeredMinutes: recommendation.offeredMinutes,
       reason: recommendation.reason,
     );
-    state = RecommendationState(
-      recommendation: updated,
-      status: state.status,
-      startedAt: state.startedAt,
-      closedAt: state.closedAt,
-      attemptResponse: state.attemptResponse,
-      usefulnessResponse: state.usefulnessResponse,
-    );
+    state = state.copyWith(recommendation: updated);
     final snapshot = state;
     _enqueue(() => _persist(snapshot));
   }
@@ -793,13 +936,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final isAffirmative =
         response == CircleAttemptResponse.yes ||
         response == CircleAttemptResponse.aLittle;
-    state = RecommendationState(
-      recommendation: recommendation,
-      status: state.status,
-      startedAt: state.startedAt,
-      closedAt: state.closedAt,
+    state = state.copyWith(
       attemptResponse: response,
-      usefulnessResponse: isAffirmative ? state.usefulnessResponse : null,
+      clearUsefulness: !isAffirmative,
     );
     final snapshot = state;
     _enqueue(() => _persist(snapshot));
@@ -828,14 +967,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         attempt == CircleAttemptResponse.aLittle;
     if (!isAffirmative) return;
 
-    state = RecommendationState(
-      recommendation: recommendation,
-      status: state.status,
-      startedAt: state.startedAt,
-      closedAt: state.closedAt,
-      attemptResponse: attempt,
-      usefulnessResponse: response,
-    );
+    state = state.copyWith(usefulnessResponse: response);
     final snapshot = state;
     _enqueue(() => _persist(snapshot));
     ref
@@ -844,6 +976,34 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           AnalyticsEventType.circleUsefulnessReported,
           metadata: {'response': response.wireName},
         );
+  }
+
+  /// "Remove this answer" (V2 Phase C): removes the usefulness answer of
+  /// [circleId] — and, with [includingAttempt], its "Did you try it?"
+  /// answer too. The Circle's own record stays. Today's Circle updates at
+  /// once; memory and future picks recompute from the journal.
+  void removeAnswer(String circleId, {required bool includingAttempt}) {
+    final today = state.recommendation;
+    if (today != null &&
+        today.circleId == circleId &&
+        state.status == RecommendationStatus.closed) {
+      state = state.copyWith(
+        clearAttempt: includingAttempt,
+        clearUsefulness: true,
+      );
+    }
+    final snapshot = state;
+    final isToday = today?.circleId == circleId;
+    _enqueue(() async {
+      if (isToday) await _persist(snapshot);
+      if (!ref.mounted) return;
+      final changed = await ref
+          .read(circleJournalRepositoryProvider)
+          .removeAnswer(circleId, includingAttempt: includingAttempt);
+      if (changed && ref.mounted) {
+        ref.invalidate(circleJournalRepositoryProvider);
+      }
+    });
   }
 
   /// Builds today's [Recommendation] from the approved catalog
@@ -1038,6 +1198,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     await prefs.remove(recommendationClosedAtKey);
     await prefs.remove(recommendationAttemptResponseKey);
     await prefs.remove(recommendationUsefulnessResponseKey);
+    await prefs.remove(recommendationPausedAtKey);
+    await prefs.remove(recommendationPausedMsKey);
+    await prefs.remove(recommendationGuidedPositionKey);
     await _persistOffer(prefs, recommendation);
     // V1 selector history is retired: Engine V2 reads the journal.
     await prefs.remove(recommendationLastFamilyKey);
@@ -1233,6 +1396,30 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       await prefs.remove(recommendationUsefulnessResponseKey);
     }
 
+    // V2 Phase C: the session runtime, as timestamps and small state.
+    final pausedAt = state.pausedAt;
+    if (pausedAt != null) {
+      await prefs.setString(
+        recommendationPausedAtKey,
+        pausedAt.toIso8601String(),
+      );
+    } else {
+      await prefs.remove(recommendationPausedAtKey);
+    }
+    if (state.pausedTotal > Duration.zero) {
+      await prefs.setInt(
+        recommendationPausedMsKey,
+        state.pausedTotal.inMilliseconds,
+      );
+    } else {
+      await prefs.remove(recommendationPausedMsKey);
+    }
+    if (state.guidedPosition > 0) {
+      await prefs.setInt(recommendationGuidedPositionKey, state.guidedPosition);
+    } else {
+      await prefs.remove(recommendationGuidedPositionKey);
+    }
+
     // Circle Plans (Batch 2A): mirror today's current treatment choice —
     // `setPlanTreatment` is the only method that can change it after
     // resolution, but every call to `_persist` (start/close/reportAttempt/
@@ -1305,6 +1492,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           revisitUsed: revisitUsed,
           treatmentSource: treatmentSourceName,
           offer: offer,
+          minutesAtClose: state.activeElapsedAt(closedAt).inMinutes,
         );
         journalChanged = true;
       case RecommendationStatus.notStarted:
@@ -1415,6 +1603,9 @@ Future<void> clearRecordedCircleState(SharedPreferences prefs) async {
     recommendationReasonKey,
     recommendationReplacedFromKey,
     recommendationReplacementReasonKey,
+    recommendationPausedAtKey,
+    recommendationPausedMsKey,
+    recommendationGuidedPositionKey,
     for (final intention in Intention.values)
       recommendationHistoryKeyFor(intention),
   ]) {
@@ -1470,5 +1661,7 @@ List<PastCircle> pastCirclesFrom(Iterable<CircleJournalEntry> entries) => [
           null => null,
         },
         replacedFrom: entry.replacedFrom,
+        answeredAt: entry.closedAt,
+        window: TimeWindow.values.asNameMap()[entry.timeWindow],
       ),
 ];

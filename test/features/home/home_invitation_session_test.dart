@@ -423,7 +423,7 @@ void main() {
       final container = await _session(tester, prefs);
       await tester.pump(const Duration(seconds: 2));
 
-      expect(find.text('Did you try this activity?'), findsOneWidget);
+      expect(find.text('Did you try it?'), findsOneWidget);
       expect(find.text(_reminderCopy), findsNothing);
       expect(find.text(_premiumCopy), findsNothing);
       expect(container.read(homeInvitationSlotProvider).owner, isNull);

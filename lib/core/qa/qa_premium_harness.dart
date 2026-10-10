@@ -83,7 +83,7 @@ class _QaPremiumHarnessAppState extends State<QaPremiumHarnessApp> {
     setState(() {
       _session = session;
       _container = _startContainer(session);
-      _router = createAppRouter();
+      _router = createAppRouter(initialLocation: session?.scenario.opensAt);
       _generation++;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {

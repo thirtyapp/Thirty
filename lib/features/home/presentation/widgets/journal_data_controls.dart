@@ -9,6 +9,7 @@ import '../../../../core/widgets/thirty_confirm_dialog.dart';
 import '../../../insights/application/insight_provider.dart';
 import '../../application/circle_journal.dart';
 import '../../application/recommendation_provider.dart';
+import '../../application/suggestion_preferences.dart';
 
 /// THIRTY's local Circle-journal export/delete controls — extracted from
 /// `../circle_history_page.dart` (founder IA correction — "export/delete
@@ -26,6 +27,7 @@ class JournalDataControls extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final journal = ref.watch(circleJournalRepositoryProvider);
     final hasEntries = journal.readAll().isNotEmpty;
+    final preferences = ref.watch(suggestionPreferencesProvider);
 
     // Paired buttons share one height: if large text wraps one label onto
     // a second line, both grow together (IntrinsicHeight + stretch). At
@@ -38,8 +40,12 @@ class JournalDataControls extends ConsumerWidget {
             child: ThirtyButton(
               label: 'Copy as text',
               variant: ThirtyButtonVariant.secondary,
-              onPressed: hasEntries
-                  ? () => exportToClipboard(context, journal)
+              onPressed: hasEntries || !preferences.isEmpty
+                  ? () => exportToClipboard(
+                      context,
+                      journal,
+                      preferences: preferences,
+                    )
                   : null,
             ),
           ),
@@ -58,15 +64,25 @@ class JournalDataControls extends ConsumerWidget {
     );
   }
 
-  /// Copies the journal as text and confirms with a SnackBar. Shared with
-  /// You's own "Your data" rows (`settings_page.dart`), which present the
-  /// same actions stacked; this widget's own side-by-side layout (Circle
-  /// history) is unchanged.
+  /// Copies the journal as text — with the user's suggestion preferences
+  /// beside it (V2 Phase C), when there are any — and confirms with a
+  /// SnackBar. Shared with You's own "Your data" rows (`settings_page.dart`),
+  /// which present the same actions stacked; this widget's own side-by-side
+  /// layout (Circle history) is unchanged.
   static Future<void> exportToClipboard(
     BuildContext context,
-    CircleJournalRepository journal,
-  ) async {
-    await Clipboard.setData(ClipboardData(text: journal.exportAsJson()));
+    CircleJournalRepository journal, {
+    SuggestionPreferences preferences = SuggestionPreferences.empty,
+  }) async {
+    await Clipboard.setData(
+      ClipboardData(
+        text: journal.exportAsJson(
+          suggestionPreferences: preferences.isEmpty
+              ? null
+              : preferences.toJson(),
+        ),
+      ),
+    );
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Copied your Circle history as text.')),
@@ -85,12 +101,15 @@ class JournalDataControls extends ConsumerWidget {
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,
+      barrierLabel: 'Keep my history',
       builder: (_) => const ThirtyConfirmDialog(
         title: 'Delete your Circle history?',
         body:
             'This permanently deletes every recorded Circle on this device, '
-            'and everything THIRTY has learned from them. It cannot be '
-            'undone, and nothing is stored anywhere else to restore it from.',
+            'and everything THIRTY has learned from them. Your suggestion '
+            'preferences are kept — you can reset them in What THIRTY '
+            'remembers. It cannot be undone, and nothing is stored anywhere '
+            'else to restore it from.',
         cancelLabel: 'Keep my history',
         confirmLabel: 'Delete permanently',
         destructive: true,

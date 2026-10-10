@@ -8,10 +8,8 @@ import '../../premium/presentation/widgets/premium_offer_invitation_card.dart';
 import '../../reminder/presentation/widgets/reminder_invitation_card.dart';
 import '../application/first_breath_provider.dart';
 import '../application/recommendation_provider.dart';
-import 'widgets/action_report_prompt.dart';
 import 'widgets/circle_hero.dart';
 import 'widgets/circle_ready_prompt.dart';
-import 'widgets/feedback_acknowledgement.dart';
 import 'widgets/home_circle_metrics.dart';
 import 'widgets/home_header.dart';
 import 'widgets/later_today_label.dart';
@@ -98,14 +96,14 @@ class HomePage extends ConsumerWidget {
                       header: header,
                       topInset: circleTop,
                       // Phase D1: today's Plan guidance first, then the
-                      // follow-ups under "LATER TODAY" (reflection, then
-                      // the reminder or Premium invitation — priority
-                      // unchanged).
+                      // follow-ups under "LATER TODAY" (the reminder or
+                      // Premium invitation — priority unchanged). V2 Phase
+                      // C: the reflection lives in the Circle itself now
+                      // (circle_reflection_card.dart), and still comes first:
+                      // neither invitation shows while it is pending.
                       footer: const [
                         PlanSessionPanel(),
-                        FeedbackAcknowledgement(),
                         LaterTodayLabel(),
-                        ActionReportPrompt(),
                         ReminderInvitationCard(),
                         PremiumOfferInvitationCard(),
                       ],

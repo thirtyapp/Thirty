@@ -91,6 +91,8 @@ class PastCircle {
     required this.catalogVersion,
     this.usefulness,
     this.replacedFrom,
+    this.answeredAt,
+    this.window,
   });
 
   /// The local calendar date (time of day ignored).
@@ -110,6 +112,36 @@ class PastCircle {
 
   /// The activity declined that day with "Not this one today", if any.
   final ActivityId? replacedFrom;
+
+  /// When the answer was given (the Circle's close), if known — what a
+  /// lifted rest is compared against.
+  final DateTime? answeredAt;
+
+  /// The time the user chose that day, if recorded (V2 entries). Only the
+  /// memory page's usual-time observation reads it.
+  final TimeWindow? window;
+}
+
+/// The user's explicit suggestion controls (V2 Phase C, ADR-021) — direct
+/// choices on the memory page, kept apart from Circle history and never
+/// folded into derived scores.
+class SuggestionControls {
+  const SuggestionControls({
+    this.notSuggested = const {},
+    this.restsLifted = const {},
+  });
+
+  static const none = SuggestionControls();
+
+  /// "Don't suggest" for an activity and a need: a hard constraint, never
+  /// relaxed by variety, fallback or exploration, until the user reverses
+  /// it.
+  final Set<(ActivityId, Intention)> notSuggested;
+
+  /// "Suggest again" on a resting activity: answers given before this
+  /// moment no longer rest it for that need. The answers stay, and so does
+  /// their bounded evidence; a later "Not useful" rests it again.
+  final Map<(ActivityId, Intention), DateTime> restsLifted;
 }
 
 /// Today's replacement request.
@@ -210,22 +242,32 @@ int _daysBetween(DateTime earlier, DateTime later) =>
 /// What the past says, derived fresh from [PastCircle]s every time — never
 /// stored (PRODUCT_V2_CONTRACT — Memory contract, "Derived").
 class RecommendationMemory {
-  RecommendationMemory._(this._today, this._past, this._policy);
+  RecommendationMemory._(this._today, this._past, this._policy, this._lifted);
 
-  /// The memory of every Circle before [today].
+  /// The memory of every Circle before [today]. [restsLifted] — the user's
+  /// "Suggest again" on resting activities ([SuggestionControls]).
   factory RecommendationMemory.of(
     DateTime today,
     Iterable<PastCircle> history,
-    RecommendationPolicy policy,
-  ) {
+    RecommendationPolicy policy, {
+    Map<(ActivityId, Intention), DateTime> restsLifted = const {},
+  }) {
     final past = history.where((c) => _daysBetween(c.date, today) > 0).toList()
       ..sort((a, b) => a.date.compareTo(b.date));
-    return RecommendationMemory._(today, past, policy);
+    return RecommendationMemory._(today, past, policy, restsLifted);
   }
 
   final DateTime _today;
   final List<PastCircle> _past;
   final RecommendationPolicy _policy;
+  final Map<(ActivityId, Intention), DateTime> _lifted;
+
+  /// Whether the user lifted the rest this answer would cause.
+  bool _restLifted(PastCircle c) {
+    final liftedAt = _lifted[(c.activityId, c.need)];
+    if (liftedAt == null) return false;
+    return !(c.answeredAt ?? c.date).isAfter(liftedAt);
+  }
 
   int _age(PastCircle c) => _daysBetween(c.date, _today);
 
@@ -288,13 +330,15 @@ class RecommendationMemory {
       if (c.need == need && _age(c) <= _policy.evidenceWindowDays) c.activityId,
   ].take(count).toList();
 
-  /// Days since the latest "Not useful" for ([activity], [need]), or `null`.
+  /// Days since the latest "Not useful" for ([activity], [need]) that still
+  /// rests it — one given after any "Suggest again" — or `null`.
   int? daysSinceNotUseful(ActivityId activity, Intention need) {
     for (final c in _past.reversed) {
       if (c.activityId == activity &&
           c.need == need &&
           c.usefulness == PastUsefulness.notUseful &&
-          _counts(c)) {
+          _counts(c) &&
+          !_restLifted(c)) {
         return _age(c);
       }
     }
@@ -472,10 +516,14 @@ class _Candidate {
 }
 
 /// Recommendation Engine V2: today's one activity (ADR-020). Returns `null`
-/// only for a replacement when nothing else fits today's constraint.
+/// when nothing may be offered: for a replacement, when nothing else fits
+/// today's constraint; for any offer, when the user's own "Don't suggest"
+/// choices leave nothing that fits ([controls], ADR-021) — their choice is
+/// never overridden to keep up the appearance of a pick.
 ///
 /// 1. **Hard limits, never relaxed:** safety status, fit NONE excluded, the
-///    time window, and today's replacement constraint.
+///    user's "Don't suggest", the time window, and today's replacement
+///    constraint.
 /// 2. **Protective rules, relaxed only in this order if nothing else is
 ///    left:** the weekly cap; then yesterday's activity; and only when no
 ///    fit that isn't resting remains, a "Not useful" rest — the oldest and
@@ -493,10 +541,18 @@ RecommendationDecision? recommend(
   RecommendationContext context,
   Iterable<PastCircle> history, {
   RecommendationPolicy policy = RecommendationPolicy.initial,
+  SuggestionControls controls = SuggestionControls.none,
 }) {
   final today = _day(context.date);
   final need = context.need;
-  final memory = RecommendationMemory.of(today, history, policy);
+  final memory = RecommendationMemory.of(
+    today,
+    history,
+    policy,
+    restsLifted: controls.restsLifted,
+  );
+  bool notSuggested(ActivityId id) =>
+      controls.notSuggested.contains((id, need));
   final replacement = context.replacement;
   final sparse = memory.circlesFor(need) < policy.starterCircles;
   final starter = policy.starterOrder[need] ?? const [];
@@ -514,6 +570,8 @@ RecommendationDecision? recommend(
       }
       final fit = activity.fitFor(need);
       if (fit == NeedFit.none) continue;
+      // The user's own "Don't suggest": never relaxed.
+      if (notSuggested(id)) continue;
       final minutes = offeredMinutesFor(activity, context.window);
       if (minutes == null) continue;
 
@@ -632,16 +690,30 @@ RecommendationDecision? recommend(
     candidates = gather(excludeFamily: false);
   }
   if (candidates.isEmpty) {
-    // Nothing fits today's constraint. A replacement simply has none; the
-    // day's first offer must still exist, so — never reached with today's
-    // catalogue, which the coverage tests prove — the shortest offerable
-    // fit is offered at its minimum, as a fallback.
+    // Nothing fits today's constraint. A replacement simply has none.
     if (replacement != null) return null;
+    // The user's own "Don't suggest" left nothing in this time: no pick —
+    // never another activity's longer length, which they did not choose.
+    final userExcludedAFit = activityCatalog.entries.any(
+      (e) =>
+          notSuggested(e.key) &&
+          e.value.fitFor(need) != NeedFit.none &&
+          isActivityOfferable(
+            e.key,
+            allowSafetyPending: context.allowSafetyPending,
+          ) &&
+          offeredMinutesFor(e.value, context.window) != null,
+    );
+    if (userExcludedAFit) return null;
+    // Otherwise the day's first offer must still exist, so — never reached
+    // with today's catalogue, which the coverage tests prove — the shortest
+    // offerable fit is offered at its minimum, as a fallback.
     final shortest =
         activityCatalog.entries
             .where(
               (e) =>
                   e.value.fitFor(need) != NeedFit.none &&
+                  !notSuggested(e.key) &&
                   isActivityOfferable(
                     e.key,
                     allowSafetyPending: context.allowSafetyPending,

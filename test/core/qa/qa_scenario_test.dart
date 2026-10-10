@@ -88,12 +88,32 @@ void main() {
       'free_exploration',
       'free_secondary',
       'free_v1_history',
+      'c_open_fresh',
+      'c_open_ended',
+      'c_open_running',
+      'c_guided_first',
+      'c_guided_middle',
+      'c_guided_paused',
+      'c_guided_ended',
+      'c_paced_internal',
+      'c_closed_no_answer',
+      'c_closed_useful',
+      'c_closed_not_useful',
+      'c_memory_mixed',
+      'c_memory_resting',
+      'c_memory_not_suggested',
+      'c_memory_rest_lifted',
+      'c_memory_nothing_fits',
+      'c_delete_keeps_preferences',
+      'c_reset_preferences',
     ]);
   });
 
   test('synthetic history never includes the reference day itself, so '
-      "today's Circle is still open to walk", () async {
+      "today's Circle is still open to walk — unless a V2 Phase C scenario "
+      'sets today up on purpose', () async {
     for (final scenario in QaScenario.values) {
+      if (qaTodayFor(scenario) != null) continue;
       final container = await open(scenario);
       addTearDown(container.dispose);
       expect(

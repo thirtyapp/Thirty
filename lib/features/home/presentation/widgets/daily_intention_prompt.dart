@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
+import '../../../../core/widgets/thirty_text_action.dart';
 import '../../application/activity_catalog.dart';
 import '../../application/recommendation_provider.dart';
+import '../../domain/recommendation_engine.dart';
+import '../memory_page.dart';
 import 'time_window_choice.dart';
 
 /// THIRTY's Daily Context Question — Recommendation MVP v0
@@ -73,7 +77,96 @@ class DailyIntentionPrompt extends ConsumerWidget {
           if (intention != Intention.values.last)
             const SizedBox(height: AppSpacing.xs),
         ],
+        if (ref.watch(recommendationProvider).noCandidateFor case (
+          final need,
+          final window,
+        ))
+          NothingFitsNote(need: need, window: window),
       ],
+    );
+  }
+}
+
+/// V2 Phase C: the user's own "Don't suggest" choices left nothing that
+/// fits this need in this time. THIRTY says so plainly — it never overrides
+/// their choice — and points to where it can be changed. Another time or
+/// another need is still one tap away above.
+class NothingFitsNote extends StatefulWidget {
+  const NothingFitsNote({required this.need, required this.window, super.key});
+
+  final Intention need;
+  final TimeWindow window;
+
+  static String message(Intention need, TimeWindow window) =>
+      'With what you’ve asked THIRTY not to suggest, nothing fits '
+      '${intentionLabel(need)} in '
+      '${TimeWindowChoiceControl.meaning(window).toLowerCase()}.';
+
+  static const review = 'Review what THIRTY remembers';
+
+  @override
+  State<NothingFitsNote> createState() => _NothingFitsNoteState();
+}
+
+class _NothingFitsNoteState extends State<NothingFitsNote> {
+  @override
+  void initState() {
+    super.initState();
+    _bringIntoView();
+  }
+
+  @override
+  void didUpdateWidget(NothingFitsNote oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.need != widget.need || oldWidget.window != widget.window) {
+      _bringIntoView();
+    }
+  }
+
+  /// The note appears under the needs, often below the fold: brought into
+  /// view at once, so the tap is never answered by nothing (S25 finding).
+  void _bringIntoView() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Scrollable.ensureVisible(
+        context,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final need = widget.need;
+    final window = widget.window;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.m),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              NothingFitsNote.message(need, window),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          ThirtyTextAction(
+            label: NothingFitsNote.review,
+            centered: true,
+            onPressed: () => context.push(MemoryPage.location(need)),
+          ),
+        ],
+      ),
     );
   }
 }

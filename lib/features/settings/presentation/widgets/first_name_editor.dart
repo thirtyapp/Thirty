@@ -5,8 +5,12 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../application/first_name_provider.dart';
 
 /// Opens the first-name editor over the current page.
-Future<void> showFirstNameEditor(BuildContext context) =>
-    showDialog<void>(context: context, builder: (_) => const FirstNameEditor());
+Future<void> showFirstNameEditor(BuildContext context) => showDialog<void>(
+  context: context,
+  // TalkBack names the backdrop by what it does.
+  barrierLabel: 'Cancel',
+  builder: (_) => const FirstNameEditor(),
+);
 
 /// The focused editor for the user's optional first name: one field,
 /// prefilled with the current name, plus "Save" and "Cancel" — and a quiet

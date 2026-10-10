@@ -42,6 +42,8 @@ class ThirtyConfirmDialog extends StatelessWidget {
         MediaQuery.textScalerOf(context).scale(1) >= _largeTextScale;
 
     return AlertDialog(
+      // TalkBack announces the question itself on opening, not "Alert".
+      semanticLabel: title,
       scrollable: true,
       insetPadding: largeText
           ? const EdgeInsets.symmetric(

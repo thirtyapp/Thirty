@@ -166,6 +166,7 @@ class HomeCircle extends StatelessWidget {
     required this.progressColor,
     required this.trackColor,
     required this.semanticValue,
+    this.semanticLabel = "Today's Circle",
     this.showThumb = true,
     this.child,
     super.key,
@@ -176,6 +177,10 @@ class HomeCircle extends StatelessWidget {
   final Color progressColor;
   final Color trackColor;
   final String semanticValue;
+
+  /// What TalkBack calls the ring. Only the internal Paced QA bench, which
+  /// is not today's Circle, names it otherwise.
+  final String semanticLabel;
   final bool showThumb;
   final Widget? child;
 
@@ -191,7 +196,7 @@ class HomeCircle extends StatelessWidget {
           progressColor: progressColor,
           trackColor: trackColor,
           thumbDiameter: showThumb ? HomeCircleMetrics.thumbDiameter : null,
-          semanticLabel: "Today's Circle",
+          semanticLabel: semanticLabel,
           semanticValue: semanticValue,
           child: child,
         ),

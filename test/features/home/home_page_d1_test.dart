@@ -24,6 +24,7 @@ import 'package:thirty/core/activity_category.dart';
 import 'package:thirty/core/widgets/thirty_button.dart';
 import 'package:thirty/features/home/presentation/widgets/home_header.dart';
 import 'package:thirty/features/home/presentation/widgets/later_today_label.dart';
+import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/today_card.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
@@ -254,28 +255,27 @@ void main() {
       }
     });
 
-    testWidgets('is a header; the subline shows until the Circle is '
-        'closed', (tester) async {
+    testWidgets('V2 Phase C: the heading belongs to the moment — the '
+        'greeting before Start, the session while it runs, a calm close '
+        'after — and is always a header', (tester) async {
       final semantics = tester.ensureSemantics();
-      for (final (prefs, subline) in [
-        (_assigned, homeGreetingSubline(started: false)),
-        (_started, homeGreetingSubline(started: true)),
-        (_closed, null),
+      final walk = activityDefinition(ActivityId.thirtyMinuteWalk);
+      for (final (prefs, title, detail) in [
+        (_assigned, homeGreeting(_today), homeGreetingSubline(started: false)),
+        (_started, walk.title, null),
+        (_closed, CircleHero.closedHeading, CircleHero.closedDetail),
       ]) {
         await _pumpHome(tester, storedPrefs: prefs);
         expect(
-          tester.getSemantics(find.text(homeGreeting(_today))),
-          matchesSemantics(label: homeGreeting(_today), isHeader: true),
+          tester.getSemantics(find.text(title)),
+          matchesSemantics(label: title, isHeader: true),
         );
-        for (final line in [
-          homeGreetingSubline(started: false),
-          homeGreetingSubline(started: true),
-        ]) {
-          expect(
-            find.text(line),
-            line == subline ? findsOneWidget : findsNothing,
-          );
-        }
+        if (detail != null) expect(find.text(detail), findsOneWidget);
+        // The greeting is for the start of the day's Circle only.
+        expect(
+          find.text(homeGreeting(_today)),
+          prefs == _assigned ? findsOneWidget : findsNothing,
+        );
         // Regression (V2 Phase A): nothing on Home ever asks to close a
         // Circle that has not started yet.
         if (prefs == _assigned) {
@@ -283,6 +283,13 @@ void main() {
           expect(find.textContaining('Close'), findsNothing);
         }
       }
+      // While running, the detail is the Circle's time — minutes so far,
+      // of the time set aside — never a countdown.
+      await _pumpHome(tester, storedPrefs: _started);
+      expect(
+        find.textContaining(' of ${walk.typicalMinutes} minutes'),
+        findsOneWidget,
+      );
       semantics.dispose();
     });
   });
@@ -364,14 +371,16 @@ void main() {
             );
             expect(tester.takeException(), isNull);
             expect(_truncated(tester), isEmpty);
+            // V2 Phase C: the Today card, the running session card and the
+            // closed reflection share one shell — text only, full width.
             expect(
               find.descendant(
-                of: find.byType(TodayCard),
+                of: find.byType(HomeCardShell),
                 matching: find.byType(Image),
               ),
               findsNothing,
             );
-            final card = tester.getRect(find.byType(TodayCard));
+            final card = tester.getRect(find.byType(HomeCardShell));
             expect(card.width, width - AppSpacing.page * 2);
             if (state != 'closed') {
               final cta = tester.getRect(find.byType(ThirtyButton));
@@ -391,31 +400,25 @@ void main() {
       expect(find.text('LATER TODAY'), findsNothing);
     });
 
-    testWidgets('once closed, heads the reflection as a "Later today" '
-        'header, below the CTA area', (tester) async {
-      final semantics = tester.ensureSemantics();
+    testWidgets('V2 Phase C: once closed, the reflection sits in the Circle '
+        'itself, under its calm close — "Later today" never labels it', (
+      tester,
+    ) async {
       await _pumpHome(tester, storedPrefs: _closed);
-      await tester.scrollUntilVisible(
-        find.text('Did you try this activity?'),
-        200,
-      );
-      await tester.pumpAndSettle();
-      final label = find.text('LATER TODAY');
-      expect(label, findsOneWidget);
+      final question = find.text('Did you try it?');
+      expect(question, findsOneWidget);
       expect(
-        tester.getSemantics(label),
-        matchesSemantics(label: 'Later today', isHeader: true),
+        find.descendant(of: find.byType(CircleHero), matching: question),
+        findsOneWidget,
       );
       expect(
-        tester.getTopLeft(label).dy,
-        lessThan(tester.getTopLeft(find.text('Did you try this activity?')).dy),
+        tester.getTopLeft(question).dy,
+        greaterThan(
+          tester.getBottomLeft(find.text(CircleHero.closedDetail)).dy,
+        ),
       );
-      expect(
-        tester.getTopLeft(label).dy,
-        greaterThan(tester.getBottomLeft(find.text('Done for today')).dy),
-      );
-      expect(tester.getTopLeft(label).dx, AppSpacing.page);
-      semantics.dispose();
+      // Nothing else follows today's Circle yet, so nothing is labelled.
+      expect(find.text('LATER TODAY'), findsNothing);
     });
   });
 

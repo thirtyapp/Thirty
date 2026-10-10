@@ -13,7 +13,7 @@ import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/presentation/home_page.dart';
-import 'package:thirty/features/home/presentation/widgets/action_report_prompt.dart';
+import 'package:thirty/features/home/presentation/widgets/circle_reflection_card.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/premium/application/premium_offer_provider.dart';
 import 'package:thirty/features/premium/presentation/widgets/premium_offer_invitation_card.dart';
@@ -171,7 +171,7 @@ void main() {
       await tester.pump();
 
       for (final card in [
-        ActionReportPrompt,
+        CircleReflectionCard,
         ReminderInvitationCard,
         PremiumOfferInvitationCard,
       ]) {
@@ -256,12 +256,7 @@ void main() {
 
   group('Cards are reached through the single page scroll', () {
     for (final (name, prefs, seed, cardText) in [
-      (
-        'reflection',
-        _closedPendingReflection,
-        null,
-        'Did you try this activity?',
-      ),
+      ('reflection', _closedPendingReflection, null, 'Did you try it?'),
       ('reminder invitation', _chosen, _oneClosedDay, 'Not now'),
       (
         'Premium invitation',
@@ -361,7 +356,7 @@ void main() {
       await tester.pumpWidget(widget);
       await tester.pump();
 
-      expect(find.text('Did you try this activity?'), findsOneWidget);
+      expect(find.text('Did you try it?'), findsOneWidget);
       expect(_visibleCards(tester, ReminderInvitationCard), isFalse);
       expect(_visibleCards(tester, PremiumOfferInvitationCard), isFalse);
     });
@@ -376,7 +371,7 @@ void main() {
       await tester.pumpWidget(widget);
       await tester.pump();
 
-      expect(find.text('Did you try this activity?'), findsNothing);
+      expect(find.text('Did you try it?'), findsNothing);
       expect(_visibleCards(tester, ReminderInvitationCard), isTrue);
       expect(_visibleCards(tester, PremiumOfferInvitationCard), isFalse);
     });

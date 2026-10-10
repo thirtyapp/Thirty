@@ -146,6 +146,8 @@ class _ReminderRowState extends ConsumerState<_ReminderRow> {
   Future<void> _requestExactAlarmAccess() async {
     final proceed = await showDialog<bool>(
       context: context,
+      // TalkBack names the backdrop by what it does.
+      barrierLabel: 'Not now',
       builder: (_) => const ThirtyConfirmDialog(
         title: 'Allow Alarms & reminders',
         body:

@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_app_bar.dart';
+import '../../../core/widgets/thirty_confirm_dialog.dart';
 import '../application/circle_journal.dart';
+import '../application/recommendation_provider.dart';
 import 'widgets/circle_journal_entry_card.dart';
 
 /// One recorded local date's Circle detail — reached by tapping a
@@ -49,9 +51,53 @@ class CircleRecordDetailPage extends ConsumerWidget {
                 padding: const EdgeInsets.all(AppSpacing.page),
                 child: _NoLongerAvailable(localDate: localDate),
               )
-            : _ScrollableRecord(entry: entry),
+            : _ScrollableRecord(
+                entry: entry,
+                onRemoveAttempt: () => _confirmRemove(
+                  context,
+                  ref,
+                  entry!,
+                  includingAttempt: true,
+                ),
+                onRemoveUsefulness: () => _confirmRemove(
+                  context,
+                  ref,
+                  entry!,
+                  includingAttempt: false,
+                ),
+              ),
       ),
     );
+  }
+
+  /// "Remove this answer" (V2 Phase C): the record stays; THIRTY stops
+  /// using the answer, and its memory and future picks recompute at once.
+  static Future<void> _confirmRemove(
+    BuildContext context,
+    WidgetRef ref,
+    CircleJournalEntry entry, {
+    required bool includingAttempt,
+  }) async {
+    final alsoUsefulness = includingAttempt && entry.usefulnessResponse != null;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierLabel: 'Keep it',
+      builder: (_) => ThirtyConfirmDialog(
+        title: 'Remove this answer?',
+        body: alsoUsefulness
+            ? 'Your “Was it useful?” answer goes with it. The Circle stays in '
+                  'your history; THIRTY stops using these answers.'
+            : 'The Circle stays in your history; THIRTY stops using this '
+                  'answer.',
+        cancelLabel: 'Keep it',
+        confirmLabel: 'Remove answer',
+        destructive: true,
+      ),
+    );
+    if (confirmed != true) return;
+    ref
+        .read(recommendationProvider.notifier)
+        .removeAnswer(entry.circleId, includingAttempt: includingAttempt);
   }
 }
 
@@ -62,9 +108,15 @@ class CircleRecordDetailPage extends ConsumerWidget {
 /// height, exactly as it did unscrolled, and only grows past it — and
 /// starts scrolling — when its content genuinely needs more room.
 class _ScrollableRecord extends StatelessWidget {
-  const _ScrollableRecord({required this.entry});
+  const _ScrollableRecord({
+    required this.entry,
+    required this.onRemoveAttempt,
+    required this.onRemoveUsefulness,
+  });
 
   final CircleJournalEntry entry;
+  final VoidCallback onRemoveAttempt;
+  final VoidCallback onRemoveUsefulness;
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +134,11 @@ class _ScrollableRecord extends StatelessWidget {
             // The card hugs its record instead of stretching to the screen.
             child: Align(
               alignment: Alignment.topCenter,
-              child: CircleJournalEntryCard(entry: entry),
+              child: CircleJournalEntryCard(
+                entry: entry,
+                onRemoveAttempt: onRemoveAttempt,
+                onRemoveUsefulness: onRemoveUsefulness,
+              ),
             ),
           ),
         );

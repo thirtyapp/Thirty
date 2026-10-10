@@ -186,7 +186,8 @@ void main() {
       addTearDown(c.dispose);
       await tester.pumpWidget(app);
       await tester.pump();
-      expect(find.text('TODAY  ·  20 MIN'), findsOneWidget);
+      // V2 Phase C: while running, the session heading carries the time.
+      expect(find.text('0 of 20 minutes'), findsOneWidget);
       expect(
         tester.getSemantics(find.bySemanticsLabel("Today's Circle")),
         matchesSemantics(
@@ -306,10 +307,11 @@ void main() {
       await tester.pumpWidget(app);
       await tester.pump();
 
-      // Once started, Phase A's row: no cue, and no swap.
+      // Once started: no cue, and no swap — the session's how-to has none.
       expect(find.textContaining('Not this one?'), findsNothing);
-      expect(find.text('How to do it'), findsNothing);
-      await openGuide(tester, 'Easy walk');
+      await tester.tap(find.text('How to do it'));
+      await tester.pumpAndSettle();
+      expect(find.text('Easy walk'), findsWidgets);
       expect(find.text('Not this one today'), findsNothing);
     });
   });

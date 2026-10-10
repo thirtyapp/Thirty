@@ -22,6 +22,7 @@ class ThirtyButton extends StatelessWidget {
     this.trailingIcon,
     this.size = ThirtyButtonSize.regular,
     this.maxLabelLines = _maxLabelLines,
+    this.focusNode,
     super.key,
   }) : assert(
          trailingIcon == null || maxLabelLines == _maxLabelLines,
@@ -49,6 +50,10 @@ class ThirtyButton extends StatelessWidget {
   /// way to the card's 24pt corner radius ([AppRadius.xl]) — a fully
   /// rounded shape that tall would read as an oval and crowd the text.
   final int? maxLabelLines;
+
+  /// Lets a screen give this button focus — which TalkBack follows — when
+  /// it becomes the thing to do. Optional; nothing changes without it.
+  final FocusNode? focusNode;
 
   static const _trailingIconSize = 20.0;
 
@@ -316,10 +321,12 @@ class ThirtyButton extends StatelessWidget {
             },
           );
 
-    return Semantics(
+    Widget semantics({bool? focused}) => Semantics(
       button: true,
       enabled: _isEnabled,
       liveRegion: isLoading,
+      focusable: focused == null ? null : true,
+      focused: focused,
       label: isLoading ? '$label, bezig' : label,
       onTap: _isEnabled ? onPressed : null,
       child: ExcludeSemantics(
@@ -327,6 +334,18 @@ class ThirtyButton extends StatelessWidget {
         // so IntrinsicWidth keeps the button sized like every other one:
         // its content's width, or wider only when its parent asks for it.
         child: trailingIcon == null ? button : IntrinsicWidth(child: button),
+      ),
+    );
+    final node = focusNode;
+    if (node == null) return semantics();
+    // Focus is reported on the button's own node, so TalkBack follows it
+    // there; the node itself stays exactly as without a focusNode.
+    return Focus(
+      focusNode: node,
+      includeSemantics: false,
+      child: ListenableBuilder(
+        listenable: node,
+        builder: (context, _) => semantics(focused: node.hasFocus),
       ),
     );
   }
