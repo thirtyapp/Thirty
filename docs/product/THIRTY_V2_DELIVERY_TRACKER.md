@@ -144,6 +144,7 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
   - Full suite and analyze clean.
   - Real-device QA and TalkBack pass.
   - Founder content review passes.
+  - Founder approval of the production voice recordings (spoken guidance: bundled, pre-generated; founder decision 2026-10-11).
   - Documentation matches the implementation.
 - **Device proof:** S25. Free unchanged; Premium 10/20/30-minute guided sessions; skip and leave-out; next-day effect; Use it today; Path; Toolkit; lapse and resubscribe; dark mode, 130 % text and TalkBack.
 - **Commercial question:** does a personal guided Circle every day feel worth a monthly subscription? Unproven until pre-release users try the complete product.
@@ -246,3 +247,26 @@ Public launch requires **all** of the following:
   - **Tests:** full suite green (1658, plus 13 long-horizon simulations); analyze clean.
   - **Still open before D2 can pass:** founder content review (`CONTENT_REVIEW.md`) and the spoken-guidance decision.
 
+- **2026-10-11** — **Phase D2 founder correction pass** (founder reviewed `CONTENT_REVIEW.md` and `SIMULATION_REVIEW.md`; element count is no longer a blocker; D2 not yet approved):
+  - **Semantic dependencies:** a part that builds on another ("Choose one thing" after "Get it out") is composed only directly after it, and skipping that part skips it too. All 38 elements were audited.
+  - **Copy:** 20 element instructions corrected:
+    - the phone stays the audible guide;
+    - nothing asks the user to close what could lose unsaved work;
+    - no needless intensity;
+    - no assumed daylight;
+    - comfort wording added from the source activities.
+  - **Premium offer truth:** no evidence claims on a subscriber's first day; "Free stays complete" replaced with consumer wording.
+  - **Spoken guidance:** founder decision recorded (bundled pre-generated recordings).
+    - Architecture, the 42-clip manifest (`SPOKEN_GUIDANCE_MANIFEST.csv`), the Android player, the You setting and tests are complete.
+    - **No recordings exist; the voice is silent.**
+  - **Attacks:**
+    - `p14_more_energy_dominant`: no degeneration, but visibly narrow (9 mains, 31 materially distinct sessions a year);
+    - saved-Circle / lapse: 40 of 60 lapsed days served by kept Circles the user chose. **Substitution is a commercial hypothesis for the post-D2 audit.**
+  - **S25:**
+    - Skip-with-dependants, voice plumbing (with temporary test tones, never committed), voice under TalkBack, the voice switch, and offer copy all pass.
+    - Two device defects were fixed: the voice never became available, and Flutter's `accessibleNavigation` was true with TalkBack off.
+    - **Open:** once the user switches away, Android freezes THIRTY and cues stop. A foreground service is a founder decision within the voice gate.
+  - **Tests:** 1672 regular plus 14 long-horizon simulations pass; analyze clean.
+  - **Still open before D2 can pass:**
+    - founder approval of the corrected content;
+    - founder approval of the production voice recordings, together with the background-playback decision.
