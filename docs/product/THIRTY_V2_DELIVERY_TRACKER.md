@@ -234,4 +234,15 @@ Public launch requires **all** of the following:
   - **Spoken guidance:** architecture only; no voice ships (blocking quality decision).
   - **Open:** founder content review, the spoken-guidance decision, S25 device QA and live TalkBack.
   - **Tests:** full suite green and analyze clean. Commits 9acd03b, add2157, c694189, b62f493 (not pushed).
+- **2026-10-11** — Phase D2 S25 device QA (`artifacts/v2_phase_d2/DEVICE_QA.md`):
+  - **Rounds 1–9 pass:** Free unchanged; first Premium Today at ≈ 10, ≈ 20 and up to 30; a part moving on by itself; Skip; finish and Close; reflection; Keep; kept Circle page; Memory put-back; lapse with "Use it today"; resubscribe; 130 %; light mode; live TalkBack on the running card and the Skip sheet.
+  - **Six defects found on the device and fixed:**
+    - the composed card pushed Start Circle off the first screen (it now shows the substance line at full width);
+    - Memory showed composite answers as activity answers;
+    - Toolkit order and the Path-suggestion wording;
+    - a long part instruction pushed Close under the tab bar (seven instructions tightened; new S25 guard for every element);
+    - the Skip sheet overflowed at 130 %;
+    - orphaned words.
+  - **Tests:** full suite green (1658, plus 13 long-horizon simulations); analyze clean.
+  - **Still open before D2 can pass:** founder content review (`CONTENT_REVIEW.md`) and the spoken-guidance decision.
 

@@ -1,6 +1,6 @@
 # ADR-023 — V2 Recurring Premium / Personal Guided Circle
 
-**Status:** Proposed — Phase D2 implemented 2026-10-11; becomes Accepted only when every Phase D2 gate in [THIRTY_V2_DELIVERY_TRACKER.md](../THIRTY_V2_DELIVERY_TRACKER.md) passes (founder content review, spoken-guidance decision, device QA and TalkBack are open).
+**Status:** Proposed — Phase D2 implemented and S25-verified 2026-10-11 (device QA and live TalkBack pass; `artifacts/v2_phase_d2/DEVICE_QA.md`). Becomes Accepted only when the remaining Phase D2 gates pass: founder content review and the spoken-guidance decision.
 
 Product authority: [PRODUCT_V2_CONTRACT.md](../PRODUCT_V2_CONTRACT.md), as amended on 2026-10-11 ("Amendment — Recurring Premium (Phase D2)"). This ADR **supersedes the conflicting Premium portions of [ADR-022](ADR-022-v2-phase-d-paths-toolkit-and-maintenance.md)**: Premium's headline job, what Today does for a Premium user, the offer page, and the three defects in §10. ADR-022 stays the historical record of Phase D as built and accepted on 2026-10-10. Free V2 stays governed by the contract and ADR-020/021. Review pack: `artifacts/v2_phase_d2/`.
 
@@ -101,7 +101,7 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
      - reduced motion swaps parts without movement;
      - no overflow at 130 % or at 200 % on a 320 pt screen (tested).
    - The how-to sheet lists the parts with their times and says how the Circle runs.
-   - Today's card shows "YOUR CIRCLE · 16 MIN", the need, the parts in order ("Stand and reach · Clear one corner · Get it out · Choose one thing", opening "See the parts"), and the one basis line.
+   - Today's card shows "YOUR CIRCLE · 16 MIN", the need, and the session's substance — its main and second piece ("Clear one corner · Get it out"), guarded to two lines so Start Circle keeps its place on the S25. It opens "See the parts", where every part is listed with its time. The card carries the one basis line, without the decorative art: the text needs the full width. History shows every part.
 
 6. **Spoken guidance: architecture in place, no voice shipped** (`application/guidance_voice.dart`, `domain/spoken_cues.dart`).
    - Cues are derived from the authored text, never generated. Each is one line as a part begins ("Next: Get it out. Write down everything…") and the ending.
@@ -194,8 +194,8 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
 - Phase D's history, data and Path/Toolkit behaviour are preserved; nothing the user built is migrated away.
 - **Open before D2 can pass:**
   - founder review of all element and Premium copy;
-  - the spoken-guidance decision (§6);
-  - S25 device QA and live TalkBack on the composed runtime.
+  - the spoken-guidance decision (§6).
+- **S25 device QA and live TalkBack passed** after six device findings were fixed (Today card height, Memory showing composite answers, Toolkit order and wording, the running Close clearance, Skip-sheet overflow at 130 %, orphaned words).
 - **More Energy is thin** without its gated exertion and breathing content. Widening it honestly needs the separate safety review, never invented content.
 - **Every composer value is a hypothesis** (`ComposerPolicy`). Read them against pre-release behaviour.
 - **Commercial hypothesis, unproven:** whether a personal guided Circle each day is worth a monthly subscription. The €5–€9 range is a hypothesis, not a finding.
