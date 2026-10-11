@@ -355,14 +355,14 @@ void main() {
         extra: {circleJournalKey: jsonEncode(journal)},
       );
       expect(
-        find.text('Your routines are working well — nothing to change.'),
+        find.text('My pick-me-up is working well — nothing to change.'),
         findsOneWidget,
       );
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
       expect(c.read(toolkitProvider).lastCheckAt, isNotNull);
       expect(
-        find.text('Your routines are working well — nothing to change.'),
+        find.text('My pick-me-up is working well — nothing to change.'),
         findsNothing,
       );
     });

@@ -65,7 +65,16 @@ enum RecommendationReason {
   replacedLighter,
 
   /// "Not feeling this one": something different.
-  replacedDifferent;
+  replacedDifferent,
+
+  /// V2 Phase D2: today's Circle is the user's Personal Guided Circle —
+  /// composed, not picked by the engine. Its one line is the composition's
+  /// own (`CompositionBasis`).
+  personalCircle,
+
+  /// V2 Phase D2: the user chose one of their own routines or kept Circles
+  /// for today ("Use it today"). THIRTY claims no reason for it.
+  ownChoice;
 
   /// The one line shown on the Today card, or `null` when this reason is
   /// internal only.
@@ -75,7 +84,12 @@ enum RecommendationReason {
     replacedIndoor => 'An indoor one instead.',
     replacedLighter => 'Something lighter instead.',
     replacedDifferent => 'Something different instead.',
-    starter || bestFit || fallback || pathStep => null,
+    starter ||
+    bestFit ||
+    fallback ||
+    pathStep ||
+    personalCircle ||
+    ownChoice => null,
   };
 }
 
@@ -98,6 +112,10 @@ class PastCircle {
     this.pathRunId,
     this.components = const [],
     this.replacedFromRoutineId,
+    this.builtRoutineId,
+    this.parts = const [],
+    this.skipped = const [],
+    this.keptCircleId,
   });
 
   /// The local calendar date (time of day ignored).
@@ -142,10 +160,37 @@ class PastCircle {
   /// V2 Phase D: the routine declined that day with "Not this one today".
   final String? replacedFromRoutineId;
 
+  /// V2 Phase D2 (ADR-023 §10): a Path Circle of the very pieces a routine
+  /// version was later built from — the routine's *trial* evidence. It
+  /// informs the build and the routine's standing ("it used to suit"),
+  /// never the owned routine's rest or ranking: only [routineId] — actual
+  /// use of the routine — does.
+  final String? builtRoutineId;
+
+  /// V2 Phase D2: a Personal Guided Circle's parts (`CirclePart` wire form,
+  /// e.g. `getItOut:4`) — or a kept Circle's. Empty otherwise.
+  final List<String> parts;
+
+  /// V2 Phase D2: the elements the user skipped that day. A skip is never
+  /// a usefulness answer — it only keeps a skipped part from sharing the
+  /// session's positive answer.
+  final List<String> skipped;
+
+  /// V2 Phase D2: the user's kept Circle this Circle ran, if it was one.
+  final String? keptCircleId;
+
+  /// V2 Phase D2: a Personal Guided Circle or a kept Circle.
+  bool get composed => parts.isNotEmpty;
+
   /// Whether the answer is about something other than [activityId] alone —
-  /// a routine, or several pieces joined. Such an answer is that routine's
-  /// evidence, never evidence about the activities inside it.
-  bool get composite => routineId != null || components.length > 1;
+  /// a routine, several pieces joined, a Path trial of a routine, or a
+  /// composed Circle. Such an answer is never evidence about the activities
+  /// inside it.
+  bool get composite =>
+      routineId != null ||
+      builtRoutineId != null ||
+      components.length > 1 ||
+      composed;
 
   /// Whether the Circle drew on [activity] at all — what recency sees.
   bool touches(ActivityId activity) =>
@@ -382,8 +427,18 @@ class RecommendationMemory {
   static bool Function(PastCircle) _aboutActivity(ActivityId activity) =>
       (c) => !c.composite && c.activityId == activity;
 
+  /// A routine's evidence (ADR-023 §10): its real uses, and — from the Path
+  /// trial that built it — only the positive answers. Keeping a routine is
+  /// the user's own answer to its trial: positive trial answers agree with
+  /// it and stand as its first evidence; a negative one is superseded by
+  /// the decision to keep, so it never rests or down-ranks the routine. A
+  /// rest comes only from using the routine the user owns.
   static bool Function(PastCircle) _aboutRoutine(String routineId) =>
-      (c) => c.routineId == routineId;
+      (c) =>
+          c.routineId == routineId ||
+          (c.builtRoutineId == routineId &&
+              (c.usefulness == PastUsefulness.veryUseful ||
+                  c.usefulness == PastUsefulness.somewhatUseful));
 
   double _strength(bool Function(PastCircle) about, Intention need) {
     var strength = 0.0;
@@ -465,6 +520,28 @@ class RecommendationMemory {
 
   bool routineVeryUsefulElsewhere(String routineId, Intention need) =>
       Intention.values.any((o) => o != need && routineVeryUseful(routineId, o));
+
+  /// V2 Phase D2: the same explicit evidence for whichever past Circles
+  /// [about] selects — what the Personal Guided Circle composer weighs an
+  /// element by. Same window, half-life, weights and V1 eligibility as
+  /// every other strength here.
+  double strengthWhere(bool Function(PastCircle) about, Intention need) =>
+      _strength(about, need);
+
+  /// V2 Phase D2: whether a "Very useful" answer within the window is among
+  /// the Circles [about] selects, for [need].
+  bool veryUsefulWhere(bool Function(PastCircle) about, Intention need) =>
+      _veryUseful(about, need);
+
+  /// V2 Phase D2: every Circle before today within the evidence window,
+  /// newest first — what composition recency reads.
+  List<PastCircle> get recentCircles => [
+    for (final c in _past.reversed)
+      if (_age(c) <= _policy.evidenceWindowDays) c,
+  ];
+
+  /// V2 Phase D2: days since [circle], counted from today.
+  int ageOf(PastCircle circle) => _age(circle);
 
   /// The last [count] Circles of [need], newest first.
   List<PastCircle> lastFor(Intention need, int count) => [

@@ -76,7 +76,9 @@ PastCircle _use(
   activityId: ActivityId.energisingStretchFlow,
   catalogVersion: catalogVersion,
   usefulness: usefulness,
-  routineId: routineId,
+  // A Path Circle is the routine's trial, never its use (ADR-023 §10).
+  routineId: pathRunId == null ? routineId : null,
+  builtRoutineId: pathRunId == null ? null : routineId,
   routineVersionId: '$routineId-v1',
   components: const [ActivityId.energisingStretchFlow, ActivityId.moveToMusic],
   window: window,
@@ -202,7 +204,11 @@ void main() {
       expect(routineStanding(routine, history, _today).fading, isTrue);
       final offers = _offers(ToolkitState(routines: [routine]), history);
       expect(offers.single.kind, OfferKind.fading);
-      expect(offers.single.evidence, contains('hasn’t suited you as well'));
+      expect(
+        offers.single.evidence,
+        'Your recent answers about My routine have been less positive than '
+        'before.',
+      );
     });
 
     test('never positive is not "fading": the claim needs an earlier good '
@@ -226,10 +232,17 @@ void main() {
       final offer = _offers(ToolkitState(routines: [routine]), history).single;
       expect(offer.kind, OfferKind.timeMisfit);
       expect(offer.targetMinutes, 10);
+      // Exactly what THIRTY saw — the days the user chose this need and
+      // the time they said they had — never "most days" (ADR-023 §10).
       expect(
         offer.evidence,
-        'You’ve had about 10 minutes most days lately, and My routine takes '
-        '15.',
+        'On each of your last 5 More Energy days, you had less than the 15 '
+        'minutes My routine takes.',
+      );
+      expect(
+        offer.proposal,
+        'Want a shorter version for days with about 10 minutes? Three '
+        'Circles to try it.',
       );
     });
 
@@ -328,8 +341,8 @@ void main() {
       expect(offer.template, PathTemplateId.clearTheDecks);
       expect(
         offer.evidence,
-        'You’ve often chosen Clearer Head lately, and no routine THIRTY can '
-        'offer you fits it in about 20 minutes.',
+        'You chose Clearer Head on 6 of the last 28 days, and no routine '
+        'THIRTY can offer you fits it in about 20 minutes.',
       );
     });
 
@@ -526,10 +539,7 @@ void main() {
         offer: null,
       )!;
       expect(stable.state, CheckState.stable);
-      expect(
-        stable.message,
-        'Your routines are working well — nothing to change.',
-      );
+      expect(stable.message, 'My routine is working well — nothing to change.');
       final learning = toolkitCheck(
         toolkit: ToolkitState(routines: [routine]),
         history: [_use(7, _v)],
@@ -538,6 +548,55 @@ void main() {
       )!;
       expect(learning.state, CheckState.learning);
       expect(learning.message, 'Still learning how these fit.');
+    });
+
+    test('"working well" names only the routines its answers are about '
+        '(ADR-023 §10)', () {
+      final one = _routine(createdDaysAgo: 40);
+      final other = _routine(id: 'q', createdDaysAgo: 40);
+      final steadyForOne = [_use(20, _v), _use(14, _s), _use(7, _v)];
+      final partial = toolkitCheck(
+        toolkit: ToolkitState(routines: [one, other]),
+        history: steadyForOne,
+        today: _today,
+        offer: null,
+      )!;
+      expect(partial.state, CheckState.stable);
+      expect(partial.coversAll, isFalse);
+      expect(
+        partial.message,
+        'My routine is working well. Still learning how the others fit.',
+      );
+      expect(partial.message, isNot(contains('Your routines')));
+      final both = toolkitCheck(
+        toolkit: ToolkitState(routines: [one, other]),
+        history: [
+          ...steadyForOne,
+          _use(10, _v, routineId: 'q'),
+        ],
+        today: _today,
+        offer: null,
+      )!;
+      expect(
+        both.message,
+        'Your routines are working well — nothing to change.',
+      );
+    });
+
+    test('a time-misfit count that is not every day says how many', () {
+      final routine = _routine();
+      final history = [
+        for (final d in [12, 9, 6, 4])
+          _day(d, Intention.moreEnergy, TimeWindow.about10),
+        for (final d in [3, 1])
+          _day(d, Intention.moreEnergy, TimeWindow.upTo30),
+      ];
+      final offer = _offers(ToolkitState(routines: [routine]), history).single;
+      expect(
+        offer.evidence,
+        'On 4 of your last 6 More Energy days, you had less than the 15 '
+        'minutes My routine takes.',
+      );
     });
 
     test('never "working well" with a "Not useful" in the period, and not '

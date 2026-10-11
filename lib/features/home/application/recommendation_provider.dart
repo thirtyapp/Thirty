@@ -17,6 +17,7 @@ import '../../toolkit/domain/module_library.dart';
 import '../../toolkit/domain/path_catalog.dart';
 import '../../toolkit/domain/path_engine.dart';
 import '../../toolkit/domain/toolkit_model.dart';
+import '../../personal_circle/domain/circle_elements.dart';
 import '../domain/circle_session.dart';
 import '../domain/recommendation_engine.dart';
 import 'activity_catalog.dart';
@@ -1689,9 +1690,15 @@ final NotifierProvider<TimeWindowChoice, TimeWindow> timeWindowChoiceProvider =
 /// today") is no usefulness answer; Close alone is never evidence.
 ///
 /// **V2 Phase D:** a Circle of one of [routines] is that routine's evidence,
-/// never the evidence of the activities in it; so is a Path Circle of the
-/// very pieces a version of it was built from. A Circle that joined several
+/// never the evidence of the activities in it. A Circle that joined several
 /// pieces lists them all, so recency sees each one.
+///
+/// **V2 Phase D2 (ADR-023 §10):** a Path Circle of the very pieces a routine
+/// version was later built from is that routine's *trial* evidence
+/// ([PastCircle.builtRoutineId]) — it informs the routine's standing ("it
+/// used to suit"), never its rest or ranking, which only real use of the
+/// owned routine decides. A Personal Guided Circle (or a kept Circle) lists
+/// its parts and skips; its answer is never evidence about an activity.
 List<PastCircle> pastCirclesFrom(
   Iterable<CircleJournalEntry> entries, {
   List<Routine> routines = const [],
@@ -1710,10 +1717,10 @@ PastCircle _pastCircle(
   final uses = [
     for (final m in session?.modules ?? const []) ?ModuleUse.fromWire(m),
   ];
-  var routineId = session?.routineId;
-  var routineVersionId = session?.routineVersionId;
   final pathRunId = session?.pathRunId;
-  if (routineId == null && pathRunId != null && uses.isNotEmpty) {
+  String? builtRoutineId;
+  String? builtVersionId;
+  if (session?.routineId == null && pathRunId != null && uses.isNotEmpty) {
     // A Path Circle of the very pieces a version was built from: the
     // version of exactly that form first (a full and a shorter version share
     // their pieces), else the earliest of those pieces.
@@ -1735,10 +1742,15 @@ PastCircle _pastCircle(
       }
     }
     if (owner != null) {
-      routineId = owner;
-      routineVersionId = (sameForm ?? samePieces)!.id;
+      builtRoutineId = owner;
+      builtVersionId = (sameForm ?? samePieces)!.id;
     }
   }
+  final parts = [
+    for (final p in session?.parts ?? const <String>[])
+      if (CirclePart.fromWire(p) != null) p,
+  ];
+  final plan = CirclePlan.fromWire(parts);
   return PastCircle(
     date: date,
     need: entry.direction,
@@ -1753,12 +1765,20 @@ PastCircle _pastCircle(
     replacedFrom: entry.replacedFrom,
     answeredAt: entry.closedAt,
     window: TimeWindow.values.asNameMap()[entry.timeWindow],
-    routineId: routineId,
-    routineVersionId: routineVersionId,
+    routineId: session?.routineId,
+    routineVersionId: session?.routineId != null
+        ? session?.routineVersionId
+        : builtVersionId,
     pathRunId: pathRunId,
-    components: uses.length > 1
+    components: plan != null
+        ? plan.activities
+        : uses.length > 1
         ? [for (final use in uses) use.definition.source]
         : const [],
     replacedFromRoutineId: session?.replacedFromRoutineId,
+    builtRoutineId: builtRoutineId,
+    parts: plan == null ? const [] : parts,
+    skipped: session?.skipped ?? const [],
+    keptCircleId: session?.keptCircleId,
   );
 }

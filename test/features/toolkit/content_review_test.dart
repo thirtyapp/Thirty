@@ -388,6 +388,18 @@ String _pack() {
       routine: sample,
       targetMinutes: 20,
       window: TimeWindow.about20,
+      observedDays: 6,
+      matchingDays: 4,
+    ),
+    MaintenanceOffer(
+      kind: OfferKind.timeMisfit,
+      key: '',
+      need: Intention.clearerHead,
+      routine: sample,
+      targetMinutes: 20,
+      window: TimeWindow.about20,
+      observedDays: 6,
+      matchingDays: 6,
     ),
     MaintenanceOffer(
       kind: OfferKind.fading,
@@ -401,6 +413,8 @@ String _pack() {
       need: Intention.clearerHead,
       window: TimeWindow.about20,
       template: PathTemplateId.clearTheDecks,
+      observedDays: 28,
+      matchingDays: 6,
     ),
   ]) {
     b.writeln(
@@ -409,8 +423,15 @@ String _pack() {
   }
   b
     ..writeln(
-      '- **Stable (Toolkit check):** '
-      '“${const ToolkitCheck(state: CheckState.stable).message}”',
+      '- **Stable (Toolkit check), every routine answered:** '
+      '“${const ToolkitCheck(state: CheckState.stable, working: ['My reset', 'My screen break'], coversAll: true).message}”; '
+      'with one routine: '
+      '“${const ToolkitCheck(state: CheckState.stable, working: ['My reset'], coversAll: true).message}”',
+    )
+    ..writeln(
+      '- **Stable (Toolkit check), only some routines answered:** '
+      '“${const ToolkitCheck(state: CheckState.stable, working: ['My reset'], coversAll: false).message}” '
+      '(ADR-023 §10: answers about one routine never vouch for another)',
     )
     ..writeln(
       '- **Insufficient evidence (Toolkit check):** '

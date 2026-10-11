@@ -8,7 +8,7 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
 |---|---|
 | **PRODUCT V2 CONTRACT** | FROZEN (2026-10-08) |
 | **PUBLIC LAUNCH** | PAUSED |
-| **CURRENT IMPLEMENTATION PHASE** | PHASE E — NOT STARTED (Phase D complete) |
+| **CURRENT IMPLEMENTATION PHASE** | PHASE D2 — IN PROGRESS (Recurring Premium redesign; Phase E on hold) |
 | **MEASUREMENT-1** | PAUSED, resumes in Phase E |
 
 ---
@@ -88,7 +88,7 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
 
 ## Phase D — Premium V2
 
-**STATUS: PASS — COMPLETE** (2026-10-10; see [ADR-022](adr/ADR-022-v2-phase-d-paths-toolkit-and-maintenance.md))
+**STATUS: PASS — COMPLETE** (2026-10-10; see [ADR-022](adr/ADR-022-v2-phase-d-paths-toolkit-and-maintenance.md)) — the historical V2 Premium architecture. Its Premium headline is superseded by Phase D2 (ADR-023); its Paths, Toolkit and maintenance remain, as supporting infrastructure.
 
 - **Purpose:** a Premium that builds the user's routines and keeps them working.
 - **Scope:**
@@ -116,9 +116,42 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
 - **Commercial question:** will people pay, and keep paying?
 - **Dependencies:** Phases B and C.
 
+## Phase D2 — Recurring Premium redesign (Personal Guided Circle)
+
+**STATUS: IN PROGRESS** (started 2026-10-11; see [ADR-023](adr/ADR-023-v2-recurring-premium-personal-guided-circle.md) and the contract amendment of 2026-10-11)
+
+- **Purpose:** give monthly Premium a legitimate recurring job. Every day, THIRTY turns the user's need and time into one personal guided Circle built from what has worked for them, then guides them through it. Phase D's Paths and Toolkit stay, as supporting infrastructure.
+- **Scope:**
+  - Governance: ADR-023, the contract amendment, and this entry. Phase D's history is untouched.
+  - An element model and a safe release element library, with a coverage report.
+  - A pure, local, deterministic composer with a documented quality gate and time-use policy, falling back to Free when no honest composition exists.
+  - Premium Today integration, and a guided composed runtime on Phase C's shell.
+  - Element controls: skip this step, and leave this out next time, reversible in Memory, with documented evidence boundaries.
+  - Ownership: "Use it today" (Free), kept Circles, and the lapse boundary.
+  - Paths, Toolkit and maintenance repositioned as supporting infrastructure.
+  - Truth fixes: the hidden routine rest from Path-trial answers, the Toolkit check's "working well" claim, and the time-misfit wording.
+  - Premium offer copy for the recurring job. Billing stays a subscription; price is untouched.
+  - Long-horizon internal simulations (day 1 to month 12), a content pack, and device QA.
+- **Acceptance (all required):**
+  - Recurring Premium contract frozen.
+  - Element model and safe release library complete.
+  - Composer, Premium Today and composed runtime complete.
+  - Explicit element control complete.
+  - Free unchanged in capability, and owned routines and Circles stay Free.
+  - Hidden-rest and truth-copy defects fixed.
+  - No gated or retired content leaks.
+  - Long-horizon simulations pass structurally.
+  - Full suite and analyze clean.
+  - Real-device QA and TalkBack pass.
+  - Founder content review passes.
+  - Documentation matches the implementation.
+- **Device proof:** S25. Free unchanged; Premium 10/20/30-minute guided sessions; skip and leave-out; next-day effect; Use it today; Path; Toolkit; lapse and resubscribe; dark mode, 130 % text and TalkBack.
+- **Commercial question:** does a personal guided Circle every day feel worth a monthly subscription? Unproven until pre-release users try the complete product.
+- **Dependencies:** Phase D.
+
 ## Phase E — Measurement & release
 
-**STATUS: NOT STARTED**
+**STATUS: NOT STARTED — ON HOLD until Phase D2 passes**
 
 - **Purpose:** a measurable, compliant launch.
 - **Scope:**
@@ -132,7 +165,7 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
 - **Acceptance:** the release gate below.
 - **Device proof:** release build on the S25, plus a live purchase and restore.
 - **Commercial question:** D7, D30, feedback response rate, conversion and pause behaviour.
-- **Dependencies:** Phase D.
+- **Dependencies:** Phase D2.
 
 ---
 
@@ -188,3 +221,4 @@ Public launch requires **all** of the following:
 - **2026-10-10** — Phase D founder quality correction (ADR-022): a shorter version is always the same routine (every piece, each full or in its authored short form) or there is none; the gap needs explicit weak answers to Free's own picks ("Somewhat useful" counts as served; too few answers claim nothing); an active "Not useful" rest is respected in Path seeding, adaptation, tune-ups, shorter versions and gap builds, and ends on its own; time-neutral names (A lift at home / My pick-me-up, My brisk walk, My screen break, A soft landing / My quiet pause, Easy time outdoors / My time outdoors); step lines no longer put piece names mid-sentence; internal "levels" renamed short / full / combined; content review pack complete and checked against shipped copy. Simulations re-run (plus 5b served-well, 10b active rest); S25 re-proof of the changed flows (dark, 130 %) and final live TalkBack on the maintenance offer and the lapsed Toolkit. **Closed-test question:** after building a routine, do users feel THIRTY offers it often enough to feel useful and owned? (no ranking bonus, no preference control added). Still uncommitted; founder approval pending; Phase E not started.
 - **2026-10-10** — Phase D final quality closure (ADR-022): two Path jobs no longer promise an outcome (A lift at home: "A short movement routine for when you want a little more energy — all at home, about 15 to 25 minutes."; Out the door: "A routine built around a brisk walk for when you want a little more energy — about 25 to 30 minutes."), with a guard test; Path and routine names frozen. Evidence-scope invariant: a routine with a piece resting for the chosen need is not today's routine while the rest lasts (eligible again on expiry or Suggest again); a routine's own "Not useful" never rests its pieces; no cross-need suppression. Full suite 1567 passed, 0 failed, 0 skipped; analyze clean. S25 smoke: both start pages, routine-with-resting-piece not chosen (Memory shows the rest), chosen again once lifted. Routine frequency remains a closed-test question. Still uncommitted; founder sign-off pending; Phase E not started.
 - **2026-10-10** — **Phase D PASS — COMPLETE.** Founder approved the Premium V2 design and content (six Paths and six routine names frozen; outcome-free job lines). Final S25 acceptance: corrected start pages, a routine with a resting piece not chosen and chosen again once the rest is lifted, Week-7 shorter version (My reset 30 → Write it down + Clear one surface, both short, 20 min), gap vs served-well, lapse (routines kept and offered in Free, the Path saved and resumed exactly), 100 % and 130 %, dark. Live TalkBack acceptance on the maintenance offer and the lapsed Toolkit. 14 eight-week simulations pass with human review. Full suite 1567 passed, 0 failed, 0 skipped; analyze clean. ADR-022 accepted. Closed-test question carried to Phase E: after building a routine, do users feel THIRTY offers it often enough to feel useful and owned? Phase E not started.
+- **2026-10-11** — **Phase D2 started (Recurring Premium redesign).** The founder decided that THIRTY must support legitimate monthly recurring revenue, with no lifetime purchase, after the post-V2 audits judged Phase D's Premium a weak recurring fit (build and cancel). The new Premium job is the Personal Guided Circle (contract amendment 2026-10-11, ADR-023). The founder chose to implement before external validation; product–market fit is unproven. Phase D stays PASS as the historical architecture. Phase E is on hold until D2 passes.

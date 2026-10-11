@@ -109,6 +109,9 @@ class CircleSessionRecord {
     this.pathReason,
     this.replacedFromTitle,
     this.replacedFromRoutineId,
+    this.parts = const [],
+    this.skipped = const [],
+    this.keptCircleId,
   });
 
   /// What the Circle was called that day.
@@ -138,6 +141,17 @@ class CircleSessionRecord {
   /// The routine it replaced, when it was one.
   final String? replacedFromRoutineId;
 
+  /// V2 Phase D2: a Personal Guided Circle's (or a kept Circle's) parts, in
+  /// `CirclePart` wire form (e.g. `getItOut:4`).
+  final List<String> parts;
+
+  /// V2 Phase D2: the elements skipped that day — never a usefulness
+  /// answer.
+  final List<String> skipped;
+
+  /// V2 Phase D2: the kept Circle this Circle ran, when it was one.
+  final String? keptCircleId;
+
   Map<String, Object?> toJson() => {
     'title': title,
     'modules': modules,
@@ -152,6 +166,9 @@ class CircleSessionRecord {
     'pathReason': pathReason,
     'replacedFromTitle': replacedFromTitle,
     'replacedFromRoutineId': replacedFromRoutineId,
+    if (parts.isNotEmpty) 'parts': parts,
+    if (skipped.isNotEmpty) 'skipped': skipped,
+    'keptCircleId': ?keptCircleId,
   };
 
   /// Opaque at this layer, like the Plan fields: right types are trusted,
@@ -163,6 +180,11 @@ class CircleSessionRecord {
     String? text(String key) => raw[key] is String ? raw[key] as String : null;
     int? number(String key) => raw[key] is int ? raw[key] as int : null;
     final modules = raw['modules'];
+    List<String> strings(String key) => [
+      if (raw[key] case final List list)
+        for (final item in list)
+          if (item is String) item,
+    ];
     return CircleSessionRecord(
       title: title,
       modules: [
@@ -181,6 +203,9 @@ class CircleSessionRecord {
       pathReason: text('pathReason'),
       replacedFromTitle: text('replacedFromTitle'),
       replacedFromRoutineId: text('replacedFromRoutineId'),
+      parts: strings('parts'),
+      skipped: strings('skipped'),
+      keptCircleId: text('keptCircleId'),
     );
   }
 }

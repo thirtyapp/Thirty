@@ -39,6 +39,8 @@ class MaintenanceOffer {
     this.targetMinutes,
     this.window,
     this.template,
+    this.observedDays,
+    this.matchingDays,
   });
 
   final OfferKind kind;
@@ -57,24 +59,34 @@ class MaintenanceOffer {
   /// A gap's Path.
   final PathTemplateId? template;
 
-  /// What THIRTY saw — only what the evidence supports.
+  /// The days the evidence looked at, and how many of them showed it — so
+  /// the words say exactly what THIRTY saw (ADR-023 §10).
+  final int? observedDays;
+  final int? matchingDays;
+
+  /// What THIRTY saw — only what the evidence supports. THIRTY knows only
+  /// the days the user opened it and the time they chose, never "most days".
   String get evidence => switch (kind) {
     OfferKind.timeMisfit =>
-      'You’ve had about ${window!.maxMinutes} minutes most days lately, and '
-          '${routine!.name} takes ${routine!.active.minutes}.',
-    OfferKind.fading => '${routine!.name} hasn’t suited you as well lately.',
+      '${matchingDays == observedDays ? 'On each of your last $observedDays' : 'On $matchingDays of your last $observedDays'} '
+          '${intentionLabel(need)} days, you had less than the '
+          '${routine!.active.minutes} minutes ${routine!.name} takes.',
+    OfferKind.fading =>
+      'Your recent answers about ${routine!.name} have been less positive '
+          'than before.',
     OfferKind.gap =>
       // "THIRTY can offer": a routine the user asked THIRTY not to suggest
       // for this need is theirs, but doesn't count as fitting it.
-      'You’ve often chosen ${intentionLabel(need)} lately, and no routine '
-          'THIRTY can offer you fits it in about ${window!.maxMinutes} '
-          'minutes.',
+      'You chose ${intentionLabel(need)} on $matchingDays of the last '
+          '$observedDays days, and no routine THIRTY can offer you fits it in '
+          'about ${window!.maxMinutes} minutes.',
   };
 
   /// What THIRTY offers to do about it.
   String get proposal => switch (kind) {
     OfferKind.timeMisfit =>
-      'Want a shorter version for those days? Three Circles to try it.',
+      'Want a shorter version for days with about ${window!.maxMinutes} '
+          'minutes? Three Circles to try it.',
     OfferKind.fading =>
       'Want to tune it? Three Circles try one change; you decide whether to '
           'keep it.',
@@ -98,16 +110,40 @@ enum CheckState {
 }
 
 class ToolkitCheck {
-  const ToolkitCheck({required this.state, this.offer});
+  const ToolkitCheck({
+    required this.state,
+    this.offer,
+    this.working = const [],
+    this.coversAll = false,
+  });
 
   final CheckState state;
   final MaintenanceOffer? offer;
 
+  /// [CheckState.stable]: the routines the evidence actually covers — each
+  /// with answers in the period, none of them "Not useful".
+  final List<String> working;
+
+  /// Whether [working] is every routine in the Toolkit.
+  final bool coversAll;
+
+  /// What the check says — never more than its evidence covers (ADR-023
+  /// §10): "working well" names only the routines with answers behind it.
   String get message => switch (state) {
     CheckState.action => offer!.evidence,
-    CheckState.stable => 'Your routines are working well — nothing to change.',
+    CheckState.stable when coversAll && working.length > 1 =>
+      'Your routines are working well — nothing to change.',
+    CheckState.stable when coversAll =>
+      '${working.single} is working well — nothing to change.',
+    CheckState.stable =>
+      '${_names(working)} ${working.length == 1 ? 'is' : 'are'} working '
+          'well. Still learning how the others fit.',
     CheckState.learning => 'Still learning how these fit.',
   };
+
+  static String _names(List<String> names) => names.length == 1
+      ? names.single
+      : '${names.sublist(0, names.length - 1).join(', ')} and ${names.last}';
 }
 
 DateTime _day(DateTime date) => DateTime.utc(date.year, date.month, date.day);
@@ -142,20 +178,19 @@ RoutineStanding routineStanding(
   final since = _day(active.createdAt);
   final ordered = [...history]..sort((a, b) => a.date.compareTo(b.date));
   bool counts(PastCircle c) =>
-      c.routineId == routine.id &&
       c.usefulness != null &&
       _age(c.date, today) >= 0 &&
       (c.routineVersionId == active.id || !_day(c.date).isBefore(since));
-  // The Path Circles that built this version, and its uses since — told
-  // apart by where they came from, never by date (the last Path Circle and
-  // the routine's creation can share a day).
+  // The Path Circles that built this version (its trial, ADR-023 §10), and
+  // its real uses since — told apart by what they were, never by date (the
+  // last Path Circle and the routine's creation can share a day).
   final built = [
     for (final c in ordered)
-      if (counts(c) && c.pathRunId != null) c.usefulness!,
+      if (c.builtRoutineId == routine.id && counts(c)) c.usefulness!,
   ];
   final used = [
     for (final c in ordered)
-      if (counts(c) && c.pathRunId == null) c.usefulness!,
+      if (c.routineId == routine.id && counts(c)) c.usefulness!,
   ];
   final rated = [...built, ...used];
   bool positive(PastUsefulness u) =>
@@ -297,6 +332,8 @@ List<MaintenanceOffer> maintenanceOffers({
             routine: routine,
             targetMinutes: window.maxMinutes,
             window: window,
+            observedDays: needDays.length,
+            matchingDays: tooShort.length,
           ),
         );
       }
@@ -341,13 +378,15 @@ List<MaintenanceOffer> maintenanceOffers({
             c,
       ];
       if (days.length < policy.gapMinDays) continue;
-      // Free's own picks for this need, as the user rated them. Too few
+      // Free's own picks for this need, as the user rated them — never a
+      // routine, a Path Circle or a composed Circle (ADR-023). Too few
       // answers: THIRTY doesn't know Free falls short, so it claims no gap.
       // Free already serves it well ("Somewhat useful" counts too):
       // nothing to build.
       final answers = [
         for (final c in days)
-          if (c.routineId == null && c.pathRunId == null) ?c.usefulness,
+          if (c.routineId == null && c.pathRunId == null && !c.composed)
+            ?c.usefulness,
       ];
       if (answers.length < policy.gapMinAnswers) continue;
       final served =
@@ -404,6 +443,8 @@ List<MaintenanceOffer> maintenanceOffers({
             need: need,
             window: usual,
             template: template.id,
+            observedDays: policy.gapWindowDays,
+            matchingDays: days.length,
           ),
         );
         break;
@@ -459,11 +500,19 @@ ToolkitCheck? toolkitCheck({
   );
   // "Working well" only when it is: enough answers, and none of them
   // "Not useful" — a declined offer must not turn into a false all-clear.
+  // And only for the routines those answers are about: one routine's
+  // answers never vouch for another (ADR-023 §10).
+  final stable =
+      recentRated.length >= policy.stableMinRatedUses &&
+      recentRated.every((c) => c.usefulness != PastUsefulness.notUseful);
+  if (!stable) return const ToolkitCheck(state: CheckState.learning);
+  final answered = {for (final c in recentRated) c.routineId!};
   return ToolkitCheck(
-    state:
-        recentRated.length >= policy.stableMinRatedUses &&
-            recentRated.every((c) => c.usefulness != PastUsefulness.notUseful)
-        ? CheckState.stable
-        : CheckState.learning,
+    state: CheckState.stable,
+    working: [
+      for (final routine in toolkit.routines)
+        if (answered.contains(routine.id)) routine.name,
+    ],
+    coversAll: toolkit.routines.every((r) => answered.contains(r.id)),
   );
 }

@@ -318,35 +318,39 @@ void main() {
       expect(today.session?.routineId, toolkitOf(c).routines.single.id);
     });
 
-    test('I — d_week7_time_misfit: about 20 minutes most days lately: the '
-        'one offer is a shorter version — and it is still the same routine, '
-        'every piece in its authored short form', () async {
-      final c = await open(QaScenario.dWeek7TimeMisfit);
-      addTearDown(c.dispose);
-      final offer = c.read(primaryOfferProvider)!;
-      expect(offer.kind, OfferKind.timeMisfit);
-      expect(offer.targetMinutes, 20);
-      final routine = toolkitOf(c).routines.single;
-      expect(routine.name, 'My reset');
-      expect(routine.shortVersion, isNull);
-      expect(routine.active.minutes, 30);
-      expect(
-        offer.evidence,
-        'You’ve had about 20 minutes most days lately, and My reset takes 30.',
-      );
-      // Try it: the shorter Path's first Circle is the same pieces, short.
-      expect(
-        c.read(toolkitProvider.notifier).startShorter(routine.id, 20),
-        PathStart.started,
-      );
-      final step = c.read(nextPathStepProvider)!;
-      expect(step.composition.minutes, 20);
-      expect(
-        [for (final u in step.composition.uses) u.module],
-        [for (final u in routine.active.composition.uses) u.module],
-      );
-      expect(step.composition.uses.every((u) => u.short), isTrue);
-    });
+    test(
+      'I — d_week7_time_misfit: less time on most recent Clearer Head days: the '
+      'one offer is a shorter version — and it is still the same routine, '
+      'every piece in its authored short form',
+      () async {
+        final c = await open(QaScenario.dWeek7TimeMisfit);
+        addTearDown(c.dispose);
+        final offer = c.read(primaryOfferProvider)!;
+        expect(offer.kind, OfferKind.timeMisfit);
+        expect(offer.targetMinutes, 20);
+        final routine = toolkitOf(c).routines.single;
+        expect(routine.name, 'My reset');
+        expect(routine.shortVersion, isNull);
+        expect(routine.active.minutes, 30);
+        expect(
+          offer.evidence,
+          'On 5 of your last 6 Clearer Head days, you had less than the 30 '
+          'minutes My reset takes.',
+        );
+        // Try it: the shorter Path's first Circle is the same pieces, short.
+        expect(
+          c.read(toolkitProvider.notifier).startShorter(routine.id, 20),
+          PathStart.started,
+        );
+        final step = c.read(nextPathStepProvider)!;
+        expect(step.composition.minutes, 20);
+        expect(
+          [for (final u in step.composition.uses) u.module],
+          [for (final u in routine.active.composition.uses) u.module],
+        );
+        expect(step.composition.uses.every((u) => u.short), isTrue);
+      },
+    );
 
     test('N2 — d_served_well: Clearer Head chosen as often, but every Free '
         'pick "Somewhat useful": Free serves it — no gap offer', () async {
@@ -361,7 +365,11 @@ void main() {
       addTearDown(c.dispose);
       final offer = c.read(primaryOfferProvider)!;
       expect(offer.kind, OfferKind.fading);
-      expect(offer.evidence, 'My pick-me-up hasn’t suited you as well lately.');
+      expect(
+        offer.evidence,
+        'Your recent answers about My pick-me-up have been less positive than '
+        'before.',
+      );
     });
 
     test("J2 — d_tune_up_under_way: two Circles in; today's More Energy "
@@ -395,7 +403,7 @@ void main() {
       expect(check.state, CheckState.stable);
       expect(
         check.message,
-        'Your routines are working well — nothing to change.',
+        'My pick-me-up is working well — nothing to change.',
       );
     });
 

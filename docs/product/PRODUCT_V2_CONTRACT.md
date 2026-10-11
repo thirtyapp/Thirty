@@ -11,6 +11,17 @@
 
 Where any older THIRTY document conflicts with this contract, **this contract is authoritative** (see [Authority](#authority)).
 
+> **Amendment — Recurring Premium (Phase D2), founder decision 2026-10-11.** The Premium job changes; everything about Free stays as written. Where this amendment conflicts with the Premium sections below ([Product progression](#product-progression) "Premium" row, [Premium V2 contract](#premium-v2-contract), the Premium column of the [boundary](#free--premium-boundary), and "Premium as toolkit process" among the frozen rules), **this amendment wins**. Realised by [ADR-023](adr/ADR-023-v2-recurring-premium-personal-guided-circle.md), which supersedes the conflicting Premium portions of ADR-022. The text below this note is kept as it was frozen on 2026-10-08.
+>
+> - **Premium job:** "THIRTY turns the time I have today into a personal guided Circle built from what has worked for me, then guides me through it." Free chooses one good activity; Premium creates and guides one coherent personal session for today. Today's session is perishable, and tomorrow THIRTY does the work again.
+> - **Today is the Premium value surface.** The user still states only need and time. Premium never composes merely because the user pays: when no honest, high-quality composition exists, Today falls back to Free's choice.
+> - **Paths, routines, Toolkit and maintenance** remain as supporting infrastructure: calibration, discovery, ownership and occasional re-fit. They are no longer the headline reason to subscribe, and nothing in Premium requires finishing a Path first.
+> - **Free keeps:** everything in the [Free V2 contract](#free-v2-contract), plus use of everything the user owns (routines and kept Circles), including a bounded **"Use it today"** before today's Circle starts.
+> - **Premium monthly owns:** the new Personal Guided Circle each day, its guided multi-part session, ongoing personal variation from explicit evidence, and the supporting Paths, tune-ups and shorter versions.
+> - **Lapse:** the user keeps every routine, kept Circle, name, version, History, Memory, export and delete, ordinary Free Today, and "Use it today". THIRTY stops composing a new Personal Guided Circle.
+> - **Billing:** recurring subscription; monthly is the economic target. No lifetime purchase. Price stays a Phase E commercial hypothesis.
+> - **Unchanged and still binding:** the safety gate, one Circle per day, no streaks, scores, levels, collectibles or content treadmill, no runtime AI or cloud personalisation, local-first deterministic and explainable behaviour, editable Memory, and hard "Don't suggest".
+
 ---
 
 ## Product job
