@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/features/personal_circle/domain/circle_composer.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/personal_circle/domain/composed_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:thirty/core/app/thirty_app.dart';
@@ -508,6 +511,56 @@ void main() {
         );
         expect(_circle(tester), closeTo(circle, 0.01), reason: reason);
       }
+    });
+
+    testWidgets('V2 Phase D2: a running composed Circle keeps Close Circle '
+        'fully on the first screen whatever part is on show — every element '
+        '(S25 finding)', (tester) async {
+      final tooTall = <String>[];
+      for (final element in elementLibrary.values) {
+        final reason = element.id.name;
+        final need = element.needs.first;
+        await tester.pumpWidget(const SizedBox());
+        await _pumpHome(
+          tester,
+          prefs: {
+            ..._assigned(need.name, element.art.name),
+            recommendationReasonKey: 'personalCircle',
+            recommendationOfferedMinutesKey: element.minutes + 15,
+            recommendationComposedKey: jsonEncode(
+              ComposedSession(
+                // The longest next-part name follows, so the heading's detail
+                // line is at its longest too.
+                plan: CirclePlan([
+                  CirclePart(element.id, element.minutes),
+                  element.id == ElementId.oneTask
+                      ? const CirclePart(ElementId.whatsNext, 1)
+                      : const CirclePart(ElementId.oneTask, 15),
+                ]),
+                basis: CompositionBasis.sized,
+              ).toJson(),
+            ),
+          },
+          screen: _s25,
+          topInset: _s25StatusBar,
+          bottomInset: _s25ButtonNavigation,
+        );
+        // As on the device: the Today card first (its trim decided there and
+        // held), then Start.
+        expect(_ctaOnFirstScreen(tester), isTrue, reason: reason);
+        await tester.tap(_cta);
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump(const Duration(seconds: 1));
+        expect(find.text(element.name), findsWidgets, reason: reason);
+        if (!_onFirstScreen(
+          tester,
+          _closeCta,
+          clearance: HomeCircleMetrics.runningLeastClearance,
+        )) {
+          tooTall.add(reason);
+        }
+      }
+      expect(tooTall, isEmpty);
     });
 
     testWidgets('gesture navigation, a whole session for every live '

@@ -334,9 +334,7 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.activeJob,
     name: 'One active job',
     instruction:
-        'Pick one job that keeps you on your feet — sweeping, hoovering, '
-        'carrying — and do it a little quicker than usual. Stop when the '
-        'time’s up.',
+        'One job that keeps you on your feet — sweeping, hoovering, carrying — a little quicker than usual.',
     needs: {_energy},
     roles: {_main},
     minutes: 12,
@@ -411,8 +409,7 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.getItOut,
     name: 'Get it out',
     instruction:
-        'Write down everything on your mind — tasks, worries, reminders — '
-        'without sorting. When you run dry, ask what else is nagging at you.',
+        'Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.',
     needs: {_head, _gentle},
     roles: {_main, _second},
     minutes: 6,
@@ -443,9 +440,7 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.oneTask,
     name: 'One task, no switching',
     instruction:
-        'Pick one task that’s been on your mind. Close everything that isn’t '
-        'it, and give it your attention until the time’s up — finished or '
-        'not.',
+        'Pick one task on your mind and close everything else. Stay with it until the time’s up — finished or not.',
     needs: {_head},
     roles: {_main},
     minutes: 15,
@@ -460,8 +455,7 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.listenOne,
     name: 'Listen to one thing',
     instruction:
-        'Put on one album, episode or recording. Phone face down, somewhere '
-        'comfortable — nothing else to do but listen.',
+        'Put on one album, episode or recording. Phone face down, and nothing else to do but listen.',
     needs: {_head, _gentle},
     roles: {_main},
     minutes: 12,
@@ -476,8 +470,7 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.readPages,
     name: 'Read a few pages',
     instruction:
-        'Pick up what you’re reading, or anything nearby, and read with '
-        'nothing else competing. If your mind wanders, reread the last line.',
+        'Read what you’re reading, or anything nearby. If your mind wanders, reread the last line.',
     needs: {_head, _gentle},
     roles: {_main, _second},
     minutes: 10,
@@ -555,8 +548,7 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.gentleStretch,
     name: 'Gentle stretch',
     instruction:
-        'Slowly: neck, shoulders, open the chest, a gentle seated twist, then '
-        'fold forward with heavy arms. Stay well within what’s comfortable.',
+        'Slowly: neck, shoulders, open the chest, a seated twist, then fold forward. Only what’s comfortable.',
     needs: {_gentle, _head, _energy},
     roles: {_main, _second},
     minutes: 8,
@@ -570,8 +562,7 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.neckAndShoulders,
     name: 'Neck and shoulders',
     instruction:
-        'Let your head tip slowly towards one shoulder, then the other. Lift '
-        'your shoulders to your ears and let them drop. A few times each.',
+        'Tip your head slowly towards each shoulder. Then lift your shoulders to your ears and let them drop.',
     needs: {_gentle, _head, _energy},
     roles: {_arrive, _second},
     minutes: 2,

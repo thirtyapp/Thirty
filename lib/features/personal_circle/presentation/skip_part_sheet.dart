@@ -24,6 +24,9 @@ Future<SkipChoice?> showSkipPartSheet(BuildContext context) {
     useRootNavigator: true,
     // TalkBack names the backdrop by what it does.
     barrierLabel: ComposedCopy.keepGoing,
+    // Enlarged text needs more than the default sheet height; the content
+    // then scrolls instead of overflowing (S25 finding at 130 %, D2).
+    isScrollControlled: true,
     showDragHandle: true,
     useSafeArea: true,
     backgroundColor: colors.surface,
@@ -42,7 +45,7 @@ class SkipPartSheet extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
     final detail = textTheme.bodySmall?.copyWith(color: colors.textSecondary);
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.page,
         0,

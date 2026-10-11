@@ -259,6 +259,27 @@ void main() {
       );
     });
 
+    testWidgets('the Skip sheet never overflows at 200 % text on a narrow '
+        'phone (S25 finding at 130 %)', (tester) async {
+      await _pump(
+        tester,
+        _today(status: 'started', startedMinutesAgo: 2),
+        width: 320,
+        height: 640,
+        textScale: 2,
+      );
+      await tester.ensureVisible(find.text(ComposedCopy.skip));
+      await tester.tap(find.text(ComposedCopy.skip));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.scrollUntilVisible(
+        find.text(ComposedCopy.keepGoing).last,
+        100,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('Keep going changes nothing', (tester) async {
       final container = await _pump(
         tester,
