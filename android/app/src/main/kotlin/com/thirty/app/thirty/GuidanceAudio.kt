@@ -6,6 +6,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
+import android.view.accessibility.AccessibilityManager
 import io.flutter.FlutterInjector
 
 /**
@@ -24,6 +25,8 @@ class GuidanceAudio(private val context: Context) {
 
     private val audioManager =
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private val accessibilityManager =
+        context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
     private val attributes = AudioAttributes.Builder()
         .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
@@ -40,9 +43,15 @@ class GuidanceAudio(private val context: Context) {
     private var player: MediaPlayer? = null
     private var queue: List<String> = emptyList()
 
-    /** Plays [assets] in order, replacing anything still playing. */
-    fun play(assets: List<String>) {
+    /**
+     * Plays [assets] in order, replacing anything still playing. With
+     * [deferToScreenReader], nothing plays while a screen reader (touch
+     * exploration — TalkBack) is on: it announces the part itself. Other
+     * accessibility services don't count.
+     */
+    fun play(assets: List<String>, deferToScreenReader: Boolean) {
         stop()
+        if (deferToScreenReader && accessibilityManager.isTouchExplorationEnabled) return
         queue = assets
         if (queue.isEmpty()) return
         requestFocus()

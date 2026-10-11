@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,16 +75,37 @@ class _Clock {
 /// A voice that only remembers what it was asked to play.
 class _RecordingVoice implements GuidanceVoice {
   final said = <List<SpokenClip>>[];
+  final deferred = <bool>[];
   var stops = 0;
 
   @override
   bool get available => true;
 
   @override
-  Future<void> play(List<SpokenClip> clips) async => said.add(clips);
+  Future<void> play(
+    List<SpokenClip> clips, {
+    bool deferToScreenReader = false,
+  }) async {
+    said.add(clips);
+    deferred.add(deferToScreenReader);
+  }
 
   @override
   Future<void> stop() async => stops++;
+}
+
+/// A platform player that only remembers what it was asked to play.
+class _RecordingPlayer implements GuidanceAudioPlayer {
+  final played = <List<String>>[];
+
+  @override
+  Future<void> play(
+    List<String> assets, {
+    bool deferToScreenReader = false,
+  }) async => played.add(assets);
+
+  @override
+  Future<void> stop() async {}
 }
 
 Future<ProviderContainer> _pump(
@@ -96,6 +119,7 @@ Future<ProviderContainer> _pump(
   _Clock? clock,
   Widget? home,
   GuidanceVoice? voice,
+  List<Override> extra = const [],
 }) async {
   tester.view.physicalSize = Size(width, height);
   tester.view.devicePixelRatio = 1;
@@ -111,6 +135,7 @@ Future<ProviderContainer> _pump(
       safetyPendingAllowedProvider.overrideWithValue(false),
       premiumEntitlementProvider.overrideWithValue(true),
       if (voice != null) guidanceVoiceProvider.overrideWithValue(voice),
+      ...extra,
     ],
   );
   addTearDown(container.dispose);
@@ -360,6 +385,29 @@ void main() {
       expect(voice.said.last, [spokenEnding]);
     });
 
+    testWidgets('through the real providers: with the recordings bundled, '
+        'the platform player gets the part’s clips (S25 finding: the voice '
+        'never became available)', (tester) async {
+      final clock = _Clock();
+      final player = _RecordingPlayer();
+      await _pump(
+        tester,
+        _today(status: 'started', startedMinutesAgo: 2),
+        clock: clock,
+        extra: [
+          spokenGuidanceAvailableProvider.overrideWithValue(true),
+          guidanceAudioPlayerProvider.overrideWithValue(player),
+        ],
+      );
+      await tester.pump();
+      clock.now = _morning.add(const Duration(minutes: 8));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump();
+      expect(player.played, [
+        [for (final clip in spokenCueFor(_plan, 2)) clip.asset],
+      ]);
+    });
+
     testWidgets('spoken guidance stops at Pause, and says nothing while '
         'paused', (tester) async {
       final clock = _Clock();
@@ -383,8 +431,11 @@ void main() {
       expect(find.text('Stand and reach'), findsOneWidget);
     });
 
-    testWidgets('with a screen reader on and THIRTY in front, the part’s live '
-        'announcement speaks — never two voices at once', (tester) async {
+    testWidgets('in front, the voice defers to a screen reader (decided by '
+        'the platform from the screen reader itself, not Flutter’s '
+        'accessibleNavigation — S25 finding) — never two voices at once', (
+      tester,
+    ) async {
       final clock = _Clock();
       final voice = _RecordingVoice();
       await _pump(
@@ -398,7 +449,10 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       await tester.pump();
       expect(find.text('Get it out'), findsOneWidget);
-      expect(voice.said, isEmpty);
+      // Flutter's flag alone silences nothing: on the S25 it is true for an
+      // unrelated accessibility service.
+      expect(voice.said, [spokenCueFor(_plan, 2)]);
+      expect(voice.deferred, [isTrue]);
     });
 
     test('without the bundled recordings the voice is silent — this build '
@@ -406,7 +460,7 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
       expect(container.read(guidanceVoiceProvider).available, isFalse);
-      expect(await container.read(spokenGuidanceBundledProvider.future), false);
+      expect(await spokenGuidanceBundled(rootBundle), isFalse);
       expect(container.read(spokenGuidanceAvailableProvider), isFalse);
     });
 

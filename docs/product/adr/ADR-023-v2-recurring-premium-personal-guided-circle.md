@@ -118,11 +118,16 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
    - **Decision:** fixed, high-quality recordings bundled with the app. No runtime generative AI, no voice API or other recurring cost, and no device text-to-speech as the intended Premium experience.
    - **Deterministic lookup:** when a part begins, the voice plays a lead — "First." for the first part, "And last." for the last, otherwise "Next." — then that element's own clip: its name and instruction, exactly the words on the screen. After the last part it plays the close ("That's your Circle…"). `spokenGuidanceManifest` is the complete recording list: 3 leads, 1 clip per offerable element and the close (42 today). It is exported for the recording session as `SPOKEN_GUIDANCE_MANIFEST.csv`.
    - **Never stale:** each clip's file name carries a fingerprint of its script (`part_getItOut_<fnv32>.m4a`), so changing an instruction makes its clip missing.
-   - **All or nothing:** the voice is available only when every manifest clip is bundled. A partial set is silent, never patchy.
+   - **All or nothing:** the voice is available only when every manifest clip is bundled. A partial set is silent, never patchy. This is checked once at start-up (`spokenGuidanceBundled`, overridden into `spokenGuidanceAvailableProvider` by `main.dart` and the QA harness).
    - **Offline playback** goes through a small platform player over a method channel (`com.thirty.app/guidance_audio`). On Android it plays Flutter assets with transient, duckable audio focus, so music the user put on dips under the voice. Without a player (iOS today) or a playable clip, it is silent — never an error.
-   - **Timing without the screen:** the cue fires from the Circle's one-second timer as well as from builds, so a part that begins with the phone in a pocket and the screen off is still spoken.
+   - **Timing without the screen:** the cue fires from the Circle's one-second timer as well as from builds, so it doesn't depend on frames being drawn.
+     - **S25 finding:** once the user switches to another app, Android's cached-app freezer freezes THIRTY (`isFrozen=true` within about a minute), and no cue fires until they return. No stale cue plays on return.
+     - Screen off with THIRTY still on top was not tested on the device: the S25 has a lock screen, and waking it needs the founder.
+     - **To close before the voice ships:** a media-playback foreground service while a voiced Circle runs, which keeps cues on time in a pocket and across apps. It shows a persistent "Circle running" notification, so it is a founder decision and part of the voice gate.
    - **Never on a first look** into a running Circle. It stops at Pause, at Close and when leaving the Circle.
    - **Accessibility stays independent:** the visual runtime and its live TalkBack announcements are complete without audio. While a screen reader is on and THIRTY is in front, the live announcement speaks and the voice stays silent — never two voices at once.
+     - The platform player decides this from the screen reader itself (Android: touch exploration).
+     - Flutter's `accessibleNavigation` is not used: on the S25 it was true with TalkBack off, because an unrelated accessibility service (a cleaner app) was enabled. That would have silenced the voice for anyone with such a service.
    - **User control:** You → Preferences → "Spoken guidance", on by default, shown only in a build that bundles the recordings.
    - **State today:** the architecture, manifest and tests are complete, but **no recording exists**. The build bundles none, so the voice is silent. The production voice and every clip are a final founder gate: they must meet the same quality bar as the rest of THIRTY.
 

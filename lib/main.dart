@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,6 +13,7 @@ import 'core/providers/shared_preferences_provider.dart';
 import 'core/providers/supabase_availability_provider.dart';
 import 'core/qa/qa_premium_gate.dart';
 import 'core/qa/qa_premium_harness.dart';
+import 'features/personal_circle/application/guidance_voice.dart';
 import 'features/reminder/application/reminder_provider.dart';
 import 'features/toolkit/application/v1_premium_retirement.dart';
 
@@ -45,6 +47,8 @@ Future<void> main() async {
   // V2 Phase D: V1 Plans and Insights are retired before anything reads
   // the store (once; idempotent).
   await retireV1Premium(sharedPreferences);
+  // V2 Phase D2: whether this build bundles the spoken-guidance recordings.
+  final spokenGuidance = await spokenGuidanceBundled(rootBundle);
 
   // QA-1: a debug build launched with THIRTY_QA_PREMIUM=true runs the
   // Premium QA harness instead. Compile-time false in profile and release.
@@ -53,6 +57,7 @@ Future<void> main() async {
       QaPremiumHarnessApp(
         genuinePreferences: sharedPreferences,
         supabaseAvailable: supabaseAvailable,
+        spokenGuidanceAvailable: spokenGuidance,
       ),
     );
     return;
@@ -62,6 +67,7 @@ Future<void> main() async {
     overrides: [
       sharedPreferencesProvider.overrideWithValue(sharedPreferences),
       supabaseAvailableProvider.overrideWithValue(supabaseAvailable),
+      spokenGuidanceAvailableProvider.overrideWithValue(spokenGuidance),
     ],
   );
 

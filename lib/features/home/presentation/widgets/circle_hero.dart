@@ -377,8 +377,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         ? Timer.periodic(const Duration(seconds: 1), (_) {
             if (!mounted) return;
             setState(() {});
-            // Frames stop with the screen; this timer doesn't. A part that
-            // begins with the phone in a pocket is still spoken.
+            // Frames stop when THIRTY is out of sight; this timer doesn't,
+            // for as long as Android lets THIRTY run. It freezes an app the
+            // user has left (S25), so speaking from there needs more
+            // (ADR-023 §6).
             _guideFromTimer();
           })
         : null;
@@ -419,7 +421,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   /// bundled recordings or when the user turned it off; never on a first
   /// look into a Circle already under way; stopped at Pause and Close.
   /// While a screen reader is on and THIRTY is in front, the part's live
-  /// announcement speaks instead — never two voices at once.
+  /// announcement speaks instead — never two voices at once. The platform
+  /// player decides that from the screen reader itself: Flutter's
+  /// `accessibleNavigation` is also true for unrelated accessibility
+  /// services (S25 finding, D2 correction pass).
   void _speakPart(
     ComposedSession? composed,
     PartMoment? moment, {
@@ -443,13 +448,13 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     final lifecycle = WidgetsBinding.instance.lifecycleState;
     final foreground =
         lifecycle == null || lifecycle == AppLifecycleState.resumed;
-    if (foreground && MediaQuery.accessibleNavigationOf(context)) return;
     _playingVoice = voice;
     unawaited(
       voice.play(
         moment.finished
             ? [spokenEnding]
             : spokenCueFor(composed.plan, moment.position),
+        deferToScreenReader: foreground,
       ),
     );
   }
@@ -679,6 +684,9 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         : _illustrationPhase;
 
     _syncTicker(recommendationState.status);
+    // Watched, not only read: turning spoken guidance on or off in You
+    // applies to a Circle already running.
+    ref.watch(guidanceVoiceProvider);
     final status = recommendationState.status;
     // V2 Phase D: a routine or a joined Path step runs its pieces on the
     // same Guided runtime; a single activity runs as authored.

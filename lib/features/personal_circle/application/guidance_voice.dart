@@ -18,8 +18,10 @@ abstract interface class GuidanceVoice {
   /// Whether this voice can speak at all.
   bool get available;
 
-  /// Plays [clips] in order, replacing anything still playing.
-  Future<void> play(List<SpokenClip> clips);
+  /// Plays [clips] in order, replacing anything still playing. With
+  /// [deferToScreenReader], nothing plays while a screen reader is on: its
+  /// own announcement of the part speaks instead.
+  Future<void> play(List<SpokenClip> clips, {bool deferToScreenReader});
 
   /// Stops — at Pause, Close or leaving the Circle.
   Future<void> stop();
@@ -33,7 +35,10 @@ class SilentGuidanceVoice implements GuidanceVoice {
   bool get available => false;
 
   @override
-  Future<void> play(List<SpokenClip> clips) async {}
+  Future<void> play(
+    List<SpokenClip> clips, {
+    bool deferToScreenReader = false,
+  }) async {}
 
   @override
   Future<void> stop() async {}
@@ -49,8 +54,12 @@ class BundledGuidanceVoice implements GuidanceVoice {
   bool get available => true;
 
   @override
-  Future<void> play(List<SpokenClip> clips) =>
-      player.play([for (final clip in clips) clip.asset]);
+  Future<void> play(
+    List<SpokenClip> clips, {
+    bool deferToScreenReader = false,
+  }) => player.play([
+    for (final clip in clips) clip.asset,
+  ], deferToScreenReader: deferToScreenReader);
 
   @override
   Future<void> stop() => player.stop();
@@ -58,7 +67,9 @@ class BundledGuidanceVoice implements GuidanceVoice {
 
 /// Plays bundled audio assets, one after another.
 abstract interface class GuidanceAudioPlayer {
-  Future<void> play(List<String> assets);
+  /// Plays [assets] in order. With [deferToScreenReader], nothing plays
+  /// while the platform's screen reader is on (Android: touch exploration).
+  Future<void> play(List<String> assets, {bool deferToScreenReader});
   Future<void> stop();
 }
 
@@ -70,7 +81,11 @@ class PlatformGuidanceAudioPlayer implements GuidanceAudioPlayer {
   static const _channel = MethodChannel('com.thirty.app/guidance_audio');
 
   @override
-  Future<void> play(List<String> assets) => _call('play', {'assets': assets});
+  Future<void> play(List<String> assets, {bool deferToScreenReader = false}) =>
+      _call('play', {
+        'assets': assets,
+        'deferToScreenReader': deferToScreenReader,
+      });
 
   @override
   Future<void> stop() => _call('stop');
@@ -86,19 +101,20 @@ class PlatformGuidanceAudioPlayer implements GuidanceAudioPlayer {
   }
 }
 
-/// Whether this build bundles every clip in [spokenGuidanceManifest]. A
-/// partial set is no set: the voice never speaks some parts and not others.
-final spokenGuidanceBundledProvider = FutureProvider<bool>((ref) async {
-  final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+/// Whether [bundle] holds every clip in [spokenGuidanceManifest]. A partial
+/// set is no set: the voice never speaks some parts and not others. Read
+/// once at start-up (`main.dart`), so nothing waits on it later.
+Future<bool> spokenGuidanceBundled(AssetBundle bundle) async {
+  final manifest = await AssetManifest.loadFromAssetBundle(bundle);
   final bundled = manifest.listAssets().toSet();
   return spokenGuidanceManifest.every((clip) => bundled.contains(clip.asset));
-});
+}
 
 /// Whether spoken guidance exists in this build — the You setting shows
-/// only then.
-final spokenGuidanceAvailableProvider = Provider<bool>(
-  (ref) => ref.watch(spokenGuidanceBundledProvider).value ?? false,
-);
+/// only then. Overridden at start-up with [spokenGuidanceBundled]; `false`
+/// wherever it isn't (S25 finding: an asynchronous provider that was only
+/// read never settled, D2 correction pass).
+final spokenGuidanceAvailableProvider = Provider<bool>((ref) => false);
 
 /// The SharedPreferences key for the user's choice.
 const spokenGuidanceEnabledKey = 'spoken_guidance_enabled_v1';

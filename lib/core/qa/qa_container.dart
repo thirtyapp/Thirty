@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/home/application/recommendation_provider.dart';
+import '../../features/personal_circle/application/guidance_voice.dart';
 import '../analytics/analytics_service.dart';
 import '../premium/entitlement_gateway.dart';
 import '../providers/shared_preferences_provider.dart';
@@ -22,10 +23,13 @@ import 'qa_scenario.dart';
 List<Override> qaContainerOverrides({
   required SharedPreferences genuinePreferences,
   required bool supabaseAvailable,
+  bool spokenGuidanceAvailable = false,
   QaSession? session,
 }) => [
   // QA shows what a release build would: no content awaiting review.
   safetyPendingAllowedProvider.overrideWithValue(false),
+  // What this build bundles, as `main.dart` found it.
+  spokenGuidanceAvailableProvider.overrideWithValue(spokenGuidanceAvailable),
   if (session == null) ...[
     sharedPreferencesProvider.overrideWithValue(genuinePreferences),
     supabaseAvailableProvider.overrideWithValue(supabaseAvailable),

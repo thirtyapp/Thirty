@@ -29,11 +29,13 @@ class QaPremiumHarnessApp extends StatefulWidget {
     super.key,
     required this.genuinePreferences,
     required this.supabaseAvailable,
+    this.spokenGuidanceAvailable = false,
     this.clock = DateTime.now,
   });
 
   final SharedPreferences genuinePreferences;
   final bool supabaseAvailable;
+  final bool spokenGuidanceAvailable;
 
   /// The reference moment synthetic history is built back from.
   final DateTime Function() clock;
@@ -69,6 +71,7 @@ class _QaPremiumHarnessAppState extends State<QaPremiumHarnessApp> {
       overrides: qaContainerOverrides(
         genuinePreferences: widget.genuinePreferences,
         supabaseAvailable: widget.supabaseAvailable,
+        spokenGuidanceAvailable: widget.spokenGuidanceAvailable,
         session: session,
       ),
     );

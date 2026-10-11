@@ -35,7 +35,10 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "play" -> {
-                        guidance.play(call.argument<List<String>>("assets") ?: emptyList())
+                        guidance.play(
+                            call.argument<List<String>>("assets") ?: emptyList(),
+                            call.argument<Boolean>("deferToScreenReader") ?: false,
+                        )
                         result.success(null)
                     }
                     "stop" -> {
