@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/design_tokens.dart';
+import '../../personal_circle/presentation/keep_circle_card.dart';
 import '../../premium/presentation/widgets/premium_offer_invitation_card.dart';
 import '../../reminder/presentation/widgets/reminder_invitation_card.dart';
 import '../application/first_breath_provider.dart';
@@ -94,6 +95,9 @@ class HomePage extends ConsumerWidget {
                       // (circle_reflection_card.dart), and still comes first:
                       // neither invitation shows while it is pending.
                       footer: const [
+                        // V2 Phase D2: after Close, a composed Circle can be
+                        // kept — the user's own from then on.
+                        KeepCircleCard(),
                         LaterTodayLabel(),
                         ReminderInvitationCard(),
                         PremiumOfferInvitationCard(),

@@ -185,10 +185,13 @@ void main() {
       addTearDown(c.dispose);
       final run = toolkitOf(c).path!;
       expect(run.circles, hasLength(2));
-      // A Clearer Head day in between left the Path where it was.
+      // A Clearer Head day in between left the Path where it was. With
+      // Premium it was that day's Personal Guided Circle (ADR-023) — never a
+      // Path step.
       final journal = journalOf(c);
       expect(journal.last.direction, Intention.clearerHead);
-      expect(journal.last.session, isNull);
+      expect(journal.last.session?.pathRunId, isNull);
+      expect(journal.last.session?.parts, isNotEmpty);
 
       c
           .read(recommendationProvider.notifier)

@@ -221,7 +221,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(AppBar), findsNothing);
       expect(find.byType(ThirtyAppBar), findsNothing);
-      expect(find.text('Routines that are yours.'), findsOneWidget);
+      expect(find.text('Routines and Circles that are yours.'), findsOneWidget);
     });
 
     testWidgets('You has no pinned bar either: its header scrolls with the '

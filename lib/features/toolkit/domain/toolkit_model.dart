@@ -9,6 +9,7 @@
 library;
 
 import '../../home/application/activity_catalog.dart';
+import '../../personal_circle/domain/circle_elements.dart';
 import 'module_library.dart';
 import 'path_catalog.dart';
 
@@ -513,6 +514,82 @@ class FinishedPath {
   }
 }
 
+/// V2 Phase D2 (ADR-023 §8): a Personal Guided Circle the user kept, to
+/// use again on a day they choose ("Use it today"). It is theirs whatever
+/// happens to Premium: renamable, deletable and exportable. THIRTY never
+/// offers it unasked — it is not a candidate in Free's choice.
+class KeptCircle {
+  const KeptCircle({
+    required this.id,
+    required this.name,
+    required this.need,
+    required this.plan,
+    required this.createdAt,
+    this.fromCircleId,
+  });
+
+  final String id;
+  final String name;
+
+  /// The need it was composed for.
+  final Intention need;
+  final CirclePlan plan;
+  final DateTime createdAt;
+
+  /// The day's Circle it was kept from, so the same Circle is kept once.
+  final String? fromCircleId;
+
+  int get minutes => plan.minutes;
+
+  KeptCircle copyWith({String? name}) => KeptCircle(
+    id: id,
+    name: name ?? this.name,
+    need: need,
+    plan: plan,
+    createdAt: createdAt,
+    fromCircleId: fromCircleId,
+  );
+
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'name': name,
+    'need': need.name,
+    'parts': plan.toWire(),
+    'createdAt': createdAt.toIso8601String(),
+    'fromCircleId': fromCircleId,
+  };
+
+  static KeptCircle? fromJson(Object? raw) {
+    if (raw is! Map<String, Object?>) return null;
+    final id = raw['id'];
+    final name = raw['name'];
+    final need = Intention.values.asNameMap()[raw['need']];
+    final plan = CirclePlan.fromWire(raw['parts']);
+    final createdAt = DateTime.tryParse('${raw['createdAt']}');
+    final fromCircleId = raw['fromCircleId'];
+    if (id is! String ||
+        name is! String ||
+        name.trim().isEmpty ||
+        need == null ||
+        plan == null ||
+        createdAt == null) {
+      return null;
+    }
+    return KeptCircle(
+      id: id,
+      name: name,
+      need: need,
+      plan: plan,
+      createdAt: createdAt,
+      fromCircleId: fromCircleId is String ? fromCircleId : null,
+    );
+  }
+}
+
+/// The most Circles one Toolkit keeps: enough to have a few favourites,
+/// never a catalogue to browse.
+const maxKeptCircles = 8;
+
 /// Everything the Toolkit stores.
 class ToolkitState {
   const ToolkitState({
@@ -521,6 +598,7 @@ class ToolkitState {
     this.finished = const [],
     this.declined = const {},
     this.lastCheckAt,
+    this.kept = const [],
   });
 
   static const empty = ToolkitState();
@@ -531,7 +609,8 @@ class ToolkitState {
       path == null &&
       finished.isEmpty &&
       declined.isEmpty &&
-      lastCheckAt == null;
+      lastCheckAt == null &&
+      kept.isEmpty;
 
   /// Oldest first.
   final List<Routine> routines;
@@ -548,6 +627,16 @@ class ToolkitState {
 
   /// When the user last saw the Toolkit check.
   final DateTime? lastCheckAt;
+
+  /// V2 Phase D2: the Circles the user kept, oldest first.
+  final List<KeptCircle> kept;
+
+  KeptCircle? keptById(String id) {
+    for (final circle in kept) {
+      if (circle.id == id) return circle;
+    }
+    return null;
+  }
 
   Routine? routineById(String id) {
     for (final routine in routines) {
@@ -568,12 +657,14 @@ class ToolkitState {
     List<FinishedPath>? finished,
     Map<String, DateTime>? declined,
     DateTime? lastCheckAt,
+    List<KeptCircle>? kept,
   }) => ToolkitState(
     routines: routines ?? this.routines,
     path: clearPath ? null : (path ?? this.path),
     finished: finished ?? this.finished,
     declined: declined ?? this.declined,
     lastCheckAt: lastCheckAt ?? this.lastCheckAt,
+    kept: kept ?? this.kept,
   );
 
   Map<String, Object?> toJson() => {
@@ -586,6 +677,7 @@ class ToolkitState {
         key: value.toIso8601String(),
     },
     'lastCheckAt': lastCheckAt?.toIso8601String(),
+    'kept': [for (final k in kept) k.toJson()],
   };
 
   /// The stored state, item by item: whatever can't be read safely is left
@@ -596,6 +688,7 @@ class ToolkitState {
     final rawRoutines = raw['routines'];
     final rawFinished = raw['finished'];
     final rawDeclined = raw['declined'];
+    final rawKept = raw['kept'];
     final routines = <Routine>[];
     final seen = <String>{};
     if (rawRoutines is List) {
@@ -617,6 +710,10 @@ class ToolkitState {
             key: ?DateTime.tryParse('$value'),
       },
       lastCheckAt: DateTime.tryParse('${raw['lastCheckAt']}'),
+      kept: [
+        if (rawKept is List)
+          for (final k in rawKept) ?KeptCircle.fromJson(k),
+      ],
     );
   }
 }

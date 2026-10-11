@@ -56,9 +56,10 @@ Future<(Widget, ProviderContainer)> _wrap({
 }
 
 void main() {
-  testWidgets('describes the V2 paid job — Paths, routines that stay yours, '
-      'upkeep — and nothing else: no retired pillar, no Atmosphere, AI, '
-      'trial, annual or scarcity language (V2 Phase D)', (tester) async {
+  testWidgets('describes the recurring paid job — a guided Circle made each '
+      'day, owned things kept — and nothing else: no retired pillar, no '
+      'upkeep pitch, no Atmosphere, AI, trial, annual or scarcity language '
+      '(V2 Phase D2)', (tester) async {
     _phoneView(tester);
     final (widget, container) = await _wrap(gateway: _FakeEntitlementGateway());
     addTearDown(container.dispose);
@@ -68,7 +69,15 @@ void main() {
 
     expect(find.text(PremiumOfferPage.headline), findsOneWidget);
     expect(find.text(PremiumOfferPage.freeLine), findsOneWidget);
-    expect(find.text('Routines you build stay yours.'), findsOneWidget);
+    expect(
+      find.text('What you keep stays yours, with or without Premium.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('guided Circle'), findsWidgets);
+    // Upkeep is no reason to subscribe (ADR-023 §11).
+    expect(find.textContaining('Upkeep', findRichText: true), findsNothing);
+    // What changes on cancellation is said plainly.
+    expect(PremiumOfferPage.lapseLine, contains('Today goes back to one good'));
     for (final retired in ['Plans', 'Coach', 'Insights', 'Worlds']) {
       expect(
         find.textContaining(retired, findRichText: true),

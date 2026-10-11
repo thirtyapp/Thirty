@@ -105,8 +105,9 @@ class ElementStanding {
   final bool allowed;
 
   /// Its explicit evidence: answers about its own activity (only where it
-  /// carries that activity's evidence) plus a fraction of the answers about
-  /// composed Circles it was part of, unskipped.
+  /// carries that activity's evidence), plus a fraction of the answers about
+  /// composed Circles it was part of, unskipped, and of the positive
+  /// answers about the user's routines that hold its activity.
   final double evidence;
 
   /// Whether "things you've found useful" may name it.
@@ -146,7 +147,21 @@ ElementStanding elementStanding(
       : 0.0;
   final about = composedWith(element.id);
   final composed = memory.strengthWhere(about, need);
-  final evidence = own + composerPolicy.composedEvidenceFactor * composed;
+  // The user's own routine, used and found useful, speaks for its pieces'
+  // elements too — positive answers only: a routine's "Not useful" may be
+  // about the combination, never about each part (ADR-022 §5).
+  final routine = element.carriesEvidence && from != null
+      ? memory.strengthWhere(
+          (c) =>
+              c.routineId != null &&
+              c.touches(from) &&
+              (c.usefulness == PastUsefulness.veryUseful ||
+                  c.usefulness == PastUsefulness.somewhatUseful),
+          need,
+        )
+      : 0.0;
+  final evidence =
+      own + composerPolicy.composedEvidenceFactor * (composed + routine);
   final veryUseful =
       (element.carriesEvidence &&
           from != null &&
@@ -211,6 +226,17 @@ String _dateKey(DateTime date) =>
     '${date.year.toString().padLeft(4, '0')}-'
     '${date.month.toString().padLeft(2, '0')}-'
     '${date.day.toString().padLeft(2, '0')}';
+
+/// A plan's substance: its main piece and the second piece after it, if
+/// any — what must not loop day after day.
+(ElementId, ElementId?) _coreOf(CirclePlan plan) {
+  final main = plan.main;
+  final index = plan.parts.indexOf(main);
+  final after = plan.parts
+      .skip(index + 1)
+      .where((p) => _roleIn(plan.parts, p) == ElementRole.second);
+  return (main.element, after.isEmpty ? null : after.first.element);
+}
 
 /// The main element of a past composed Circle, if any.
 ElementId? _mainOf(PastCircle circle) {
@@ -390,10 +416,14 @@ ComposedCircle? composeCircle(
       : CirclePlan.fromWire(lastComposed.first.parts);
 
   final daysSinceComposed = <ElementId, int>{};
+  final weeklyParts = <ElementId, int>{};
   for (final c in recent.reversed) {
     if (!c.composed) continue;
     for (final part in CirclePlan.fromWire(c.parts)?.parts ?? const []) {
       daysSinceComposed[part.element] = memory.ageOf(c);
+      if (memory.ageOf(c) <= 7) {
+        weeklyParts[part.element] = (weeklyParts[part.element] ?? 0) + 1;
+      }
     }
   }
 
@@ -416,13 +446,28 @@ ComposedCircle? composeCircle(
     (seen) => seen.length == elements.length && seen.containsAll(elements),
   );
 
+  // The session's substance — its main and second piece — within the week.
+  final recentCores = <(ElementId, ElementId?)>{};
+  for (final c in recent) {
+    if (!c.composed || memory.ageOf(c) > composerPolicy.coreRepeatDays) {
+      continue;
+    }
+    final plan = CirclePlan.fromWire(c.parts);
+    if (plan != null) recentCores.add(_coreOf(plan));
+  }
+
   double scorePart(CirclePart part, {required bool main}) {
     final element = part.definition;
     final standing = standings[element.id]!;
+    final evidence = standing.evidence > composerPolicy.evidenceCap
+        ? composerPolicy.evidenceCap
+        : standing.evidence;
     var score =
         composerPolicy.evidenceWeight *
-        standing.evidence *
-        (main ? composerPolicy.mainEvidenceFactor : 1);
+        evidence *
+        (main
+            ? composerPolicy.mainEvidenceFactor
+            : composerPolicy.supportEvidenceFactor);
     if (part.minutes < element.minutes) score -= composerPolicy.shortFormCost;
     final since = daysSinceComposed[element.id];
     if (since != null && since <= composerPolicy.recentPartDays) {
@@ -437,10 +482,6 @@ ComposedCircle? composeCircle(
         score -= composerPolicy.declinedCost;
       }
     }
-    if (main &&
-        mainOffersThisWeek(element) >= composerPolicy.mainWeeklySoftCap) {
-      score -= composerPolicy.mainWeeklyCost;
-    }
     return score;
   }
 
@@ -451,59 +492,80 @@ ComposedCircle? composeCircle(
   final dateKey = _dateKey(context.date);
   ComposedCircle? best;
   var considered = 0;
-  for (final parts in gatePassingShapes(
-    allowed,
-    window: window,
-    constraint: constraint,
-    // Never yesterday's main piece again.
-    mainAllowed: (element) => !touchedYesterday(element),
-    policy: composerPolicy,
-  )) {
-    considered++;
-    final plan = CirclePlan(parts);
-    final main = plan.main;
-    var score = 0.0;
-    for (final part in parts) {
-      score += partScore(part, main: part == main);
-    }
-    final total = plan.minutes;
-    final use = total / window;
-    score += composerPolicy.fillWeight * use;
-    if (use >= composerPolicy.targetUtilization) {
-      score += composerPolicy.targetUseBonus;
-    } else if (use >=
-        (composerPolicy.minUtilization + composerPolicy.targetUtilization) /
-            2) {
-      score += composerPolicy.partialUseBonus;
-    }
-    bool has(ElementRole role) =>
-        parts.any((p) => p != main && _roleIn(parts, p) == role);
-    if (has(ElementRole.settle)) score += composerPolicy.settleBonus;
-    if (has(ElementRole.arrive)) score += composerPolicy.arriveBonus;
-    if (has(ElementRole.second) && window >= 20) {
-      score += composerPolicy.secondBonus;
-    }
-    if (samePlanRecently(plan.elements)) score -= composerPolicy.samePlanCost;
-    if (lastPlan != null) {
-      if (lastPlan.parts.first.element == parts.first.element) {
-        score -= composerPolicy.sameEdgeCost;
+  var relaxed = false;
+  // First within the weekly caps; only if nothing passes the gate there,
+  // without them — the composer's version of Free's relaxation order.
+  for (final capped in [true, false]) {
+    final within = capped
+        ? [
+            for (final element in allowed)
+              if ((weeklyParts[element.id] ?? 0) < composerPolicy.partWeeklyCap)
+                element,
+          ]
+        : allowed;
+    for (final parts in gatePassingShapes(
+      within,
+      window: window,
+      constraint: constraint,
+      // Never yesterday's main piece again; within the caps, never a main
+      // piece already offered twice this week.
+      mainAllowed: (element) =>
+          !touchedYesterday(element) &&
+          (!capped ||
+              mainOffersThisWeek(element) < composerPolicy.mainWeeklyCap),
+      policy: composerPolicy,
+    )) {
+      considered++;
+      final plan = CirclePlan(parts);
+      final main = plan.main;
+      var score = 0.0;
+      for (final part in parts) {
+        score += partScore(part, main: part == main);
       }
-      if (lastPlan.parts.last.element == parts.last.element) {
-        score -= composerPolicy.sameEdgeCost;
+      final total = plan.minutes;
+      final use = total / window;
+      score += composerPolicy.fillWeight * use;
+      if (use >= composerPolicy.targetUtilization) {
+        score += composerPolicy.targetUseBonus;
+      } else if (use >=
+          (composerPolicy.minUtilization + composerPolicy.targetUtilization) /
+              2) {
+        score += composerPolicy.partialUseBonus;
       }
-    }
-    final key = plan.toWire().join(',');
-    // A fraction far below any real difference: it only separates ties.
-    score += _hash('$dateKey|${need.name}|$key') / 0x100000000 * 0.01;
+      bool has(ElementRole role) =>
+          parts.any((p) => p != main && _roleIn(parts, p) == role);
+      if (has(ElementRole.settle)) score += composerPolicy.settleBonus;
+      if (has(ElementRole.arrive)) score += composerPolicy.arriveBonus;
+      if (has(ElementRole.second) && window >= 20) {
+        score += composerPolicy.secondBonus;
+      }
+      if (recentCores.contains(_coreOf(plan))) {
+        score -= composerPolicy.coreRepeatCost;
+      }
+      if (samePlanRecently(plan.elements)) score -= composerPolicy.samePlanCost;
+      if (lastPlan != null) {
+        if (lastPlan.parts.first.element == parts.first.element) {
+          score -= composerPolicy.sameEdgeCost;
+        }
+        if (lastPlan.parts.last.element == parts.last.element) {
+          score -= composerPolicy.sameEdgeCost;
+        }
+      }
+      final key = plan.toWire().join(',');
+      // A fraction far below any real difference: it only separates ties.
+      score += _hash('$dateKey|${need.name}|$key') / 0x100000000 * 0.01;
 
-    if (best == null || score > best.score) {
-      best = ComposedCircle(
-        plan: plan,
-        basis: CompositionBasis.sized,
-        score: score,
-        trace: '',
-      );
+      if (best == null || score > best.score) {
+        best = ComposedCircle(
+          plan: plan,
+          basis: CompositionBasis.sized,
+          score: score,
+          trace: '',
+        );
+      }
     }
+    if (best != null) break;
+    relaxed = true;
   }
   if (best == null) return null;
 
@@ -514,6 +576,7 @@ ComposedCircle? composeCircle(
     basis: proven ? CompositionBasis.foundUseful : CompositionBasis.sized,
     score: best.score,
     trace: [
+      if (relaxed) 'relaxed',
       'considered=$considered',
       'score=${best.score.toStringAsFixed(2)}',
       for (final p in plan.parts)

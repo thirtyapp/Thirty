@@ -96,9 +96,9 @@ class _PremiumOfferInvitationCardState
                     const SizedBox(width: AppSpacing.m),
                     Expanded(
                       child: Text(
-                        // V2 Phase D: the real paid job.
-                        'THIRTY Premium helps you build a few routines of '
-                        'your own.',
+                        // V2 Phase D2: the recurring paid job.
+                        'THIRTY Premium makes you a guided Circle each day, '
+                        'around the time you have.',
                         style: textTheme.bodyLarge,
                       ),
                     ),

@@ -57,7 +57,7 @@ const _whyDistinct = {
 /// checked against the source so the pack can't drift from it.
 const _pageCopy = {
   'lib/features/toolkit/presentation/toolkit_page.dart': [
-    'Routines that are yours.',
+    'Routines and Circles that are yours.',
     'This Path has had all its Circles. See what it built, and decide '
         'whether to keep it.',
     'is resting after your “Not useful”, so this Path waits until its '
@@ -68,13 +68,16 @@ const _pageCopy = {
     'Its Circles stay in your history. You can start a Path again whenever '
         'you like.',
     'Tuning routines is Premium. Your routines stay yours either way.',
-    'Routines you built stay yours — THIRTY still offers them on Today. '
-        'Building and tuning routines is Premium.',
-    'With Premium, a Path tries a few pieces with you over seven Circles — '
-        'short, then in full, then together — and ends with a routine you '
-        'keep. When your days change, THIRTY offers to tune it.',
-    'Routines you build stay yours, with or without Premium. Free stays '
-        'complete: THIRTY still chooses one thing for today.',
+    'Routines you built stay yours — THIRTY still offers them on Today, '
+        'and you can use one today from its page. Building and tuning '
+        'routines is Premium.',
+    'With Premium, THIRTY turns the time you have each day into one guided '
+        'Circle of a few small parts, built from what you’ve found useful. '
+        'Along the way, Paths can help you build routines of your own.',
+    'What you build or keep stays yours, with or without Premium. Free '
+        'stays complete: THIRTY still chooses one thing for today.',
+    'Optional: your Circle on Today doesn’t need it. A Path tries a few '
+        'pieces with you and ends with a routine you keep.',
     'A simple place to start. You can choose another Path.',
   ],
   'lib/features/toolkit/presentation/path_start_page.dart': [
@@ -106,8 +109,8 @@ const _pageCopy = {
     'Off — THIRTY won’t offer it until you turn it on.',
     'It hasn’t suited you as well lately.',
     'Still learning how this one fits.',
-    'A shorter version, or tuning it, is Premium. Your routine stays yours, '
-        'and THIRTY keeps offering it either way.',
+    'A shorter version, or tuning it, is Premium. Your routine stays yours '
+        'either way: THIRTY keeps offering it, and you can use it today.',
     'It and its versions leave your Toolkit, and THIRTY won’t offer it '
         'again. Circles you did with it stay in your history.',
   ],
@@ -452,7 +455,11 @@ String _pack() {
   }
   b
     ..writeln('- **Free line:** “${PremiumOfferPage.freeLine}”')
-    ..writeln('- **Under the action:** “Routines you build stay yours.”')
+    ..writeln(
+      '- **Under the action:** “What you keep stays yours, with or without '
+      'Premium.”',
+    )
+    ..writeln('- **Cancellation:** “${PremiumOfferPage.lapseLine}”')
     ..writeln()
     ..writeln('## Toolkit, start, review, routine and lapse copy')
     ..writeln();

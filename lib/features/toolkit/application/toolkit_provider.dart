@@ -17,6 +17,7 @@ import '../domain/maintenance.dart';
 import '../domain/module_library.dart';
 import '../domain/path_catalog.dart';
 import '../domain/path_engine.dart';
+import '../../personal_circle/domain/circle_elements.dart';
 import '../domain/toolkit_model.dart';
 
 /// Where the Toolkit is stored: one versioned JSON record.
@@ -99,7 +100,7 @@ class ToolkitNotifier extends Notifier<ToolkitState> {
 
   String _newId(String prefix) =>
       '$prefix-${_now.microsecondsSinceEpoch}-'
-      '${state.routines.length + state.finished.length}';
+      '${state.routines.length + state.finished.length + state.kept.length}';
 
   /// The journal as the engine sees it, with this Toolkit's routines —
   /// built here rather than read from [toolkitHistoryProvider], which
@@ -455,6 +456,60 @@ class ToolkitNotifier extends Notifier<ToolkitState> {
     );
   }
 
+  /// V2 Phase D2: keeps today's composed Circle as one of the user's own
+  /// ([KeptCircle]) — named [name], or by its need. Never gated: what was
+  /// made for the user is theirs. Returns `null` when the Toolkit already
+  /// keeps [maxKeptCircles], or this day's Circle is already kept.
+  KeptCircle? keepCircle({
+    required CirclePlan plan,
+    required Intention need,
+    required String circleId,
+    String? name,
+  }) {
+    if (state.kept.length >= maxKeptCircles) return null;
+    if (state.kept.any((k) => k.fromCircleId == circleId)) return null;
+    final trimmed = name?.trim();
+    final circle = KeptCircle(
+      id: _newId('kept'),
+      name: trimmed == null || trimmed.isEmpty
+          ? keptCircleDefaultName(need)
+          : trimmed,
+      need: need,
+      plan: plan,
+      createdAt: _now,
+      fromCircleId: circleId,
+    );
+    _set(state.copyWith(kept: [...state.kept, circle]));
+    return circle;
+  }
+
+  void renameKept(String id, String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty || state.keptById(id) == null) return;
+    _set(
+      state.copyWith(
+        kept: [
+          for (final k in state.kept)
+            k.id == id ? k.copyWith(name: trimmed) : k,
+        ],
+      ),
+    );
+  }
+
+  /// Removes a kept Circle. History keeps the days it was used, under the
+  /// name it had then.
+  void deleteKept(String id) {
+    if (state.keptById(id) == null) return;
+    _set(
+      state.copyWith(
+        kept: [
+          for (final k in state.kept)
+            if (k.id != id) k,
+        ],
+      ),
+    );
+  }
+
   /// "Not now" on an offer: it stays away for a while.
   void declineOffer(String key) =>
       _set(state.copyWith(declined: {...state.declined, key: _now}));
@@ -600,3 +655,10 @@ final toolkitCheckProvider = Provider<ToolkitCheck?>(
     offer: ref.watch(primaryOfferProvider),
   ),
 );
+
+/// A kept Circle's name until the user gives it one: its need, plainly.
+String keptCircleDefaultName(Intention need) => switch (need) {
+  Intention.moreEnergy => 'My energy Circle',
+  Intention.clearerHead => 'My clear-head Circle',
+  Intention.gentlerPace => 'My gentle Circle',
+};

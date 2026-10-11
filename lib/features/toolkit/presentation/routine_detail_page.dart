@@ -17,6 +17,7 @@ import '../application/toolkit_provider.dart';
 import '../domain/maintenance.dart';
 import '../domain/path_engine.dart';
 import '../domain/toolkit_model.dart';
+import '../../personal_circle/presentation/use_today_control.dart';
 import 'toolkit_page.dart';
 import 'widgets/toolkit_parts.dart';
 
@@ -89,6 +90,15 @@ class RoutineDetailPage extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.s),
             ToolkitNote(_standingWords(standing)),
+            const SizedBox(height: AppSpacing.l),
+            // V2 Phase D2: the user's own routine, theirs to use today —
+            // Free, before today's Circle starts.
+            UseTodayControl(
+              routineId: routine.id,
+              unavailableNote: routine.enabled
+                  ? null
+                  : 'Turn it on to use it today.',
+            ),
             const SizedBox(height: AppSpacing.l),
             ToolkitSection(
               title: 'What’s in it',
@@ -380,7 +390,8 @@ class _ChangeIt extends ConsumerWidget {
         children: [
           const ToolkitNote(
             'A shorter version, or tuning it, is Premium. Your routine stays '
-            'yours, and THIRTY keeps offering it either way.',
+            'yours either way: THIRTY keeps offering it, and you can use it '
+            'today.',
           ),
           const SizedBox(height: AppSpacing.s),
           ThirtyButton(

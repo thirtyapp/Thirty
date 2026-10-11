@@ -13,7 +13,9 @@ class ComposerPolicy {
     this.targetUtilization = 0.8,
     this.minMainShare = 0.4,
     this.evidenceWeight = 3,
+    this.evidenceCap = 4,
     this.mainEvidenceFactor = 1.5,
+    this.supportEvidenceFactor = 0.5,
     this.composedEvidenceFactor = 0.5,
     this.targetUseBonus = 3,
     this.partialUseBonus = 1.5,
@@ -25,11 +27,13 @@ class ComposerPolicy {
     this.recentPartDays = 2,
     this.recentPartCost = 1,
     this.recentMainCost = 2,
-    this.mainWeeklySoftCap = 2,
-    this.mainWeeklyCost = 2,
+    this.mainWeeklyCap = 2,
+    this.partWeeklyCap = 4,
+    this.coreRepeatDays = 7,
+    this.coreRepeatCost = 4,
     this.samePlanDays = 14,
     this.samePlanCost = 4,
-    this.sameEdgeCost = 0.5,
+    this.sameEdgeCost = 1.5,
     this.declinedCost = 1,
   });
 
@@ -58,11 +62,22 @@ class ComposerPolicy {
   /// How much one point of explicit evidence counts.
   final double evidenceWeight;
 
-  /// The main piece's evidence counts this much more.
+  /// The most evidence one part counts for: past "clearly useful", more
+  /// answers make it no more dominant — so one well-liked element never
+  /// crowds out everything else.
+  final double evidenceCap;
+
+  /// The main piece's evidence counts this much…
   final double mainEvidenceFactor;
 
-  /// An answer about a whole composed Circle counts this much, per part,
-  /// against an answer about the element's own activity.
+  /// …and every other part's this much: a session is relevant when it holds
+  /// something the user values, not when it stacks everything they value
+  /// into the same session every day.
+  final double supportEvidenceFactor;
+
+  /// An answer about a whole composed Circle (or a routine, positive only)
+  /// counts this much, per part, against an answer about the element's own
+  /// activity.
   final double composedEvidenceFactor;
 
   final double targetUseBonus;
@@ -85,9 +100,20 @@ class ComposerPolicy {
   final double recentPartCost;
   final double recentMainCost;
 
-  /// A main piece offered more than this in 7 days counts against itself.
-  final int mainWeeklySoftCap;
-  final double mainWeeklyCost;
+  /// A main piece offered this often in 7 days (composed, or as Free's
+  /// activity) is not a main piece again that week — the composer's version
+  /// of Free's weekly cap. Relaxed only if nothing else passes the gate.
+  final int mainWeeklyCap;
+
+  /// A part composed this often in 7 days, in any role, rests that week —
+  /// relaxed only if nothing else passes the gate.
+  final int partWeeklyCap;
+
+  /// The same main and second piece together within this many days count
+  /// against themselves: the session's substance, not its edges, is what
+  /// must not loop.
+  final int coreRepeatDays;
+  final double coreRepeatCost;
 
   /// The same set of elements within this many days counts against itself.
   final int samePlanDays;

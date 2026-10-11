@@ -17,6 +17,7 @@ import '../domain/maintenance.dart';
 import '../domain/path_catalog.dart';
 import '../domain/path_engine.dart';
 import '../domain/toolkit_model.dart';
+import '../../personal_circle/presentation/kept_circle_page.dart';
 import 'choose_path_page.dart';
 import 'path_review_page.dart';
 import 'path_start_page.dart';
@@ -24,19 +25,21 @@ import 'routine_detail_page.dart';
 import 'widgets/toolkit_header_art.dart';
 import 'widgets/toolkit_parts.dart';
 
-/// The Toolkit (V2 Phase D, ADR-022): the one Premium destination. A
-/// Path under way, the one thing worth changing (if any), and the user's
-/// own routines — small, personal, owned.
+/// The Toolkit (V2 Phase D, ADR-022; repositioned in Phase D2, ADR-023 §9):
+/// what the user owns — their routines and the Circles they kept — and the
+/// optional ways to build more: a Path under way, the one thing worth
+/// changing (if any). Premium's daily value lives on Today; this is the
+/// supporting place, never an administration dashboard.
 ///
-/// It reads the same for everyone who has routines: they are the user's,
-/// usable in Free, whatever Premium's state. What Premium adds — starting
+/// It reads the same for everyone who owns something: it is theirs, usable
+/// in Free, whatever Premium's state. What Premium adds here — starting
 /// Paths, tuning, shorter versions — is offered, never pressed.
 class ToolkitPage extends ConsumerWidget {
   const ToolkitPage({super.key});
 
   static const location = '/toolkit';
   static const title = 'Toolkit';
-  static const subtitle = 'Routines that are yours.';
+  static const subtitle = 'Routines and Circles that are yours.';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,6 +65,8 @@ class ToolkitPage extends ConsumerWidget {
         )
       else if (toolkit.path == null)
         entitled ? const _FirstPath() : const _WhatPremiumBuilds(),
+      // V2 Phase D2: Circles the user kept — theirs, used when they choose.
+      if (toolkit.kept.isNotEmpty) _KeptCircles(kept: toolkit.kept),
     ];
 
     return Scaffold(
@@ -461,7 +466,8 @@ class _Routines extends StatelessWidget {
         else ...[
           const ToolkitNote(
             'Routines you built stay yours — THIRTY still offers them on '
-            'Today. Building and tuning routines is Premium.',
+            'Today, and you can use one today from its page. Building and '
+            'tuning routines is Premium.',
           ),
           if (!premiumShownAbove) ...[
             const SizedBox(height: AppSpacing.xs),
@@ -479,8 +485,33 @@ class _Routines extends StatelessWidget {
   }
 }
 
-/// Free, with nothing built: what Premium builds — without making Free
-/// look unfinished.
+/// The Circles the user kept (V2 Phase D2): each opens its own page, where
+/// it can be used today, renamed or removed.
+class _KeptCircles extends StatelessWidget {
+  const _KeptCircles({required this.kept});
+
+  final List<KeptCircle> kept;
+
+  @override
+  Widget build(BuildContext context) {
+    return ToolkitSection(
+      title: 'Circles you kept',
+      child: ToolkitRows(
+        rows: [
+          for (final circle in kept)
+            ToolkitRow(
+              title: circle.name,
+              detail: keptCircleLine(circle),
+              onTap: () => context.push(KeptCirclePage.locationFor(circle.id)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Free, with nothing built: what Premium does — without making Free look
+/// unfinished.
 class _WhatPremiumBuilds extends StatelessWidget {
   const _WhatPremiumBuilds();
 
@@ -496,7 +527,7 @@ class _WhatPremiumBuilds extends StatelessWidget {
           Semantics(
             header: true,
             child: Text(
-              'A few routines of your own',
+              'A Circle made for your day',
               style: AppTypography.editorialDisplay(
                 colors,
               ).copyWith(fontSize: 22),
@@ -504,16 +535,16 @@ class _WhatPremiumBuilds extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.s),
           Text(
-            'With Premium, a Path tries a few pieces with you over seven '
-            'Circles — short, then in full, then together — and ends with a '
-            'routine you keep. When your days change, THIRTY offers to tune '
-            'it.',
+            'With Premium, THIRTY turns the time you have each day into one '
+            'guided Circle of a few small parts, built from what you’ve found '
+            'useful. Along the way, Paths can help you build routines of your '
+            'own.',
             style: textTheme.bodyMedium,
           ),
           const SizedBox(height: AppSpacing.s),
           Text(
-            'Routines you build stay yours, with or without Premium. Free '
-            'stays complete: THIRTY still chooses one thing for today.',
+            'What you build or keep stays yours, with or without Premium. '
+            'Free stays complete: THIRTY still chooses one thing for today.',
             style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.m),
@@ -540,7 +571,7 @@ class _FirstPath extends ConsumerWidget {
     final suggestion = ref.watch(suggestedPathProvider);
     final template = pathTemplate(suggestion.template);
     return ToolkitSection(
-      title: 'Your first Path',
+      title: 'Build a routine — if you like',
       child: ThirtyCard(
         padding: const EdgeInsets.all(AppSpacing.featuredCard),
         child: Column(
@@ -564,6 +595,12 @@ class _FirstPath extends ConsumerWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               suggestion.reason,
+              style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Optional: your Circle on Today doesn’t need it. A Path tries a '
+              'few pieces with you and ends with a routine you keep.',
               style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.m),

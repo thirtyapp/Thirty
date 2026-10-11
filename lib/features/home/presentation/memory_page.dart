@@ -12,6 +12,7 @@ import '../../../core/widgets/thirty_text_action.dart';
 import '../application/activity_catalog.dart';
 import '../application/circle_journal.dart';
 import '../application/recommendation_provider.dart';
+import '../../personal_circle/domain/circle_elements.dart';
 import '../application/suggestion_preferences.dart';
 import '../domain/memory_overview.dart';
 import '../domain/recommendation_engine.dart';
@@ -94,6 +95,18 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
             ),
             const SizedBox(height: AppSpacing.l),
             ..._needSections(context, memory),
+            // V2 Phase D2: parts left out of Personal Guided Circles — for
+            // every need, each with its own way back.
+            if (preferences.elementsLeftOut.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.section),
+              _Section(
+                title: 'Left out of your Circles',
+                rows: [
+                  for (final left in preferences.elementsLeftOut)
+                    _LeftOutRow(left: left),
+                ],
+              ),
+            ],
             // Its own control, shown only while there is something to reset.
             if (!preferences.isEmpty) ...[
               const SizedBox(height: AppSpacing.section),
@@ -423,6 +436,67 @@ class _MemoryRow extends StatelessWidget {
   }
 }
 
+/// One part the user left out of their Circles, with "Put it back" — the
+/// reversal of "Leave it out next time" (ADR-023 §7).
+class _LeftOutRow extends ConsumerWidget {
+  const _LeftOutRow({required this.left});
+
+  final ElementLeftOut left;
+
+  static const putBack = 'Put it back';
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final name = elementOf(left.element).name;
+    final detail = 'You asked THIRTY to leave it out · ${_date(left.since)}';
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
+        child: Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                container: true,
+                label: '$name. $detail',
+                excludeSemantics: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: textTheme.bodyLarge?.copyWith(
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      detail,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s),
+            TextButton(
+              style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              onPressed: () => ref
+                  .read(suggestionPreferencesProvider.notifier)
+                  .putBack(left.element),
+              child: Text(putBack, semanticsLabel: '$putBack: $name'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// One remembered activity, for one need: what the user told THIRTY, what
 /// THIRTY does with it, and the corrections that apply — "Suggest again",
 /// "Don't suggest", and removing an answer.
@@ -639,8 +713,8 @@ class _AnswerLine extends StatelessWidget {
   }
 }
 
-/// "Reset suggestion preferences": clears every "Don't suggest" and lifted
-/// rest. Circle history and its answers stay.
+/// "Reset suggestion preferences": clears every "Don't suggest", lifted rest
+/// and left-out part. Circle history and its answers stay.
 class _ResetPreferences extends ConsumerWidget {
   const _ResetPreferences();
 
@@ -657,8 +731,8 @@ class _ResetPreferences extends ConsumerWidget {
           title: 'Reset suggestion preferences?',
           body:
               'THIRTY will forget which activities you asked it not to '
-              'suggest, and any rests you lifted. Your Circle history and '
-              'your answers stay.',
+              'suggest, any rests you lifted, and any parts you left out of '
+              'your Circles. Your Circle history and your answers stay.',
           cancelLabel: 'Keep them',
           confirmLabel: 'Reset',
           destructive: true,

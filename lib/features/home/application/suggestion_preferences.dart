@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
+import '../../personal_circle/domain/circle_elements.dart';
 import '../domain/recommendation_engine.dart';
 import 'activity_catalog.dart';
 
@@ -104,11 +105,36 @@ class RoutineNotSuggested {
   }
 }
 
+/// V2 Phase D2 (ADR-023 §7): "Leave this out next time" — an element the
+/// user asked THIRTY not to put in their Personal Guided Circles again,
+/// chosen on [since]. An explicit preference about future composition,
+/// never a usefulness answer, and reversible in Memory.
+class ElementLeftOut {
+  const ElementLeftOut({required this.element, required this.since});
+
+  final ElementId element;
+  final DateTime since;
+
+  Map<String, Object?> toJson() => {
+    'elementId': element.name,
+    'since': since.toIso8601String(),
+  };
+
+  static ElementLeftOut? fromJson(Object? json) {
+    if (json is! Map<String, Object?>) return null;
+    final element = ElementId.values.asNameMap()[json['elementId']];
+    final since = DateTime.tryParse('${json['since']}');
+    if (element == null || since == null) return null;
+    return ElementLeftOut(element: element, since: since);
+  }
+}
+
 class SuggestionPreferences {
   const SuggestionPreferences({
     this.notSuggested = const [],
     this.restsLifted = const [],
     this.routinesNotSuggested = const [],
+    this.elementsLeftOut = const [],
   });
 
   static const empty = SuggestionPreferences();
@@ -119,10 +145,32 @@ class SuggestionPreferences {
   /// V2 Phase D.
   final List<RoutineNotSuggested> routinesNotSuggested;
 
+  /// V2 Phase D2.
+  final List<ElementLeftOut> elementsLeftOut;
+
   bool get isEmpty =>
       notSuggested.isEmpty &&
       restsLifted.isEmpty &&
-      routinesNotSuggested.isEmpty;
+      routinesNotSuggested.isEmpty &&
+      elementsLeftOut.isEmpty;
+
+  /// What the Personal Guided Circle composer reads.
+  Set<ElementId> get leftOut => {for (final e in elementsLeftOut) e.element};
+
+  bool isLeftOut(ElementId element) =>
+      elementsLeftOut.any((e) => e.element == element);
+
+  SuggestionPreferences copyWith({
+    List<NotSuggested>? notSuggested,
+    List<RestLifted>? restsLifted,
+    List<RoutineNotSuggested>? routinesNotSuggested,
+    List<ElementLeftOut>? elementsLeftOut,
+  }) => SuggestionPreferences(
+    notSuggested: notSuggested ?? this.notSuggested,
+    restsLifted: restsLifted ?? this.restsLifted,
+    routinesNotSuggested: routinesNotSuggested ?? this.routinesNotSuggested,
+    elementsLeftOut: elementsLeftOut ?? this.elementsLeftOut,
+  );
 
   bool isRoutineNotSuggested(String routineId, Intention need) =>
       routinesNotSuggested.any(
@@ -146,6 +194,7 @@ class SuggestionPreferences {
     'notSuggested': [for (final n in notSuggested) n.toJson()],
     'restsLifted': [for (final r in restsLifted) r.toJson()],
     'routinesNotSuggested': [for (final n in routinesNotSuggested) n.toJson()],
+    'elementsLeftOut': [for (final e in elementsLeftOut) e.toJson()],
   };
 
   /// Reads [raw], failing safe to [empty] for anything unreadable; a single
@@ -169,6 +218,10 @@ class SuggestionPreferences {
         routinesNotSuggested: items(
           decoded['routinesNotSuggested'],
           RoutineNotSuggested.fromJson,
+        ),
+        elementsLeftOut: items(
+          decoded['elementsLeftOut'],
+          ElementLeftOut.fromJson,
         ),
       );
     } catch (_) {
@@ -201,7 +254,7 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
   Future<void> dontSuggest(ActivityId activity, Intention need) {
     if (state.isNotSuggested(activity, need)) return Future.value();
     return _save(
-      SuggestionPreferences(
+      state.copyWith(
         notSuggested: [
           ...state.notSuggested,
           NotSuggested(
@@ -210,8 +263,6 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
             since: ref.read(eventClockProvider)(),
           ),
         ],
-        restsLifted: state.restsLifted,
-        routinesNotSuggested: state.routinesNotSuggested,
       ),
     );
   }
@@ -219,21 +270,18 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
   /// "Suggest again" for an activity the user asked THIRTY not to suggest:
   /// it is eligible under the normal rules again — nothing more.
   Future<void> allowAgain(ActivityId activity, Intention need) => _save(
-    SuggestionPreferences(
+    state.copyWith(
       notSuggested: [
         for (final n in state.notSuggested)
           if (n.activity != activity || n.need != need) n,
       ],
-      restsLifted: state.restsLifted,
-      routinesNotSuggested: state.routinesNotSuggested,
     ),
   );
 
   /// "Suggest again" for an activity resting after "Not useful": the
   /// current rest ends now. The answer is kept.
   Future<void> liftRest(ActivityId activity, Intention need) => _save(
-    SuggestionPreferences(
-      notSuggested: state.notSuggested,
+    state.copyWith(
       restsLifted: [
         for (final r in state.restsLifted)
           if (r.activity != activity || r.need != need) r,
@@ -243,7 +291,6 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
           at: ref.read(eventClockProvider)(),
         ),
       ],
-      routinesNotSuggested: state.routinesNotSuggested,
     ),
   );
 
@@ -251,9 +298,7 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
   Future<void> dontSuggestRoutine(String routineId, Intention need) {
     if (state.isRoutineNotSuggested(routineId, need)) return Future.value();
     return _save(
-      SuggestionPreferences(
-        notSuggested: state.notSuggested,
-        restsLifted: state.restsLifted,
+      state.copyWith(
         routinesNotSuggested: [
           ...state.routinesNotSuggested,
           RoutineNotSuggested(
@@ -269,9 +314,7 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
   /// V2 Phase D: "Suggest again" for [routineId] — for [need], or for every
   /// need when [need] is `null` (the routine was deleted).
   Future<void> allowRoutineAgain(String routineId, {Intention? need}) => _save(
-    SuggestionPreferences(
-      notSuggested: state.notSuggested,
-      restsLifted: state.restsLifted,
+    state.copyWith(
       routinesNotSuggested: [
         for (final n in state.routinesNotSuggested)
           if (n.routineId != routineId || (need != null && n.need != need)) n,
@@ -279,8 +322,35 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
     ),
   );
 
-  /// "Reset suggestion preferences": every "Don't suggest" and lifted rest
-  /// goes. Circle history and its answers stay.
+  /// V2 Phase D2: "Leave this out next time" — [element] stays out of the
+  /// user's Personal Guided Circles until they put it back.
+  Future<void> leaveOut(ElementId element) {
+    if (state.isLeftOut(element)) return Future.value();
+    return _save(
+      state.copyWith(
+        elementsLeftOut: [
+          ...state.elementsLeftOut,
+          ElementLeftOut(
+            element: element,
+            since: ref.read(eventClockProvider)(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// V2 Phase D2: "Put it back" — [element] may be composed again.
+  Future<void> putBack(ElementId element) => _save(
+    state.copyWith(
+      elementsLeftOut: [
+        for (final e in state.elementsLeftOut)
+          if (e.element != element) e,
+      ],
+    ),
+  );
+
+  /// "Reset suggestion preferences": every "Don't suggest", lifted rest and
+  /// left-out part goes. Circle history and its answers stay.
   Future<void> reset() => _save(SuggestionPreferences.empty);
 }
 

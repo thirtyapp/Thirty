@@ -218,7 +218,9 @@ void main() {
         seed: _twoClosedDays,
       );
       expect(
-        find.text('THIRTY Premium helps you build a few routines of your own.'),
+        find.text(
+          'THIRTY Premium makes you a guided Circle each day, around the time you have.',
+        ),
         findsOneWidget,
       );
 
@@ -262,7 +264,7 @@ void main() {
         'Premium invitation',
         {..._closedReflected, reminderInvitationShownKey: true},
         _twoClosedDays,
-        'THIRTY Premium helps you build a few routines of your own.',
+        'THIRTY Premium makes you a guided Circle each day, around the time you have.',
       ),
     ]) {
       testWidgets('$name: below the fold at 320x568, scrolled into view by '

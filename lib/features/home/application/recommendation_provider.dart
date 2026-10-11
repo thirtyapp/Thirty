@@ -17,9 +17,12 @@ import '../../toolkit/domain/module_library.dart';
 import '../../toolkit/domain/path_catalog.dart';
 import '../../toolkit/domain/path_engine.dart';
 import '../../toolkit/domain/toolkit_model.dart';
+import '../../personal_circle/domain/circle_composer.dart';
 import '../../personal_circle/domain/circle_elements.dart';
+import '../../personal_circle/domain/composed_session.dart';
 import '../domain/circle_session.dart';
 import '../domain/recommendation_engine.dart';
+import '../domain/recommendation_policy.dart';
 import 'activity_catalog.dart';
 import 'circle_journal.dart';
 import 'suggestion_preferences.dart';
@@ -54,6 +57,8 @@ class Recommendation {
     this.session,
     this.replacedFromTitle,
     this.replacedFromRoutineId,
+    this.composed,
+    this.composerFellBack = false,
   });
 
   final String intent;
@@ -121,15 +126,29 @@ class Recommendation {
   final String? replacedFromTitle;
   final String? replacedFromRoutineId;
 
+  /// V2 Phase D2: today's Personal Guided Circle, or a kept Circle the user
+  /// chose for today — `null` otherwise.
+  final ComposedSession? composed;
+
+  /// V2 Phase D2: a Premium day on which no honest composition existed, so
+  /// Today is Free's one activity (ADR-023 §4).
+  final bool composerFellBack;
+
   /// Whether "Not this one today" is still available: once a day — for an
-  /// activity, a routine or a Path step alike.
-  bool get canReplace => replacedFrom == null;
+  /// activity, a routine, a Path step or a composed Circle alike — and never
+  /// for something the user chose themselves ("Use it today").
+  bool get canReplace =>
+      replacedFrom == null && reason != RecommendationReason.ownChoice;
 
   /// The session today's Circle runs: the activity as authored; for a
   /// routine or a joined Path step, its pieces one after the other on the
   /// Guided runtime (`sessionFor`); for a single-piece Path step, that
   /// piece's activity.
   ActivityDefinition get sessionDefinition {
+    final composed = this.composed;
+    if (composed != null) {
+      return sessionForPlan(composed.plan, title: composed.title);
+    }
     final uses = session?.composition.uses;
     if (uses == null) return activityDefinition(activityId);
     if (uses.length == 1) return uses.single.definition.activity;
@@ -143,25 +162,38 @@ class Recommendation {
   }
 
   /// What this offer records in the Circle journal.
-  CircleOffer get journalOffer => CircleOffer(
-    timeWindow: timeWindow.name,
-    offeredMinutes: offeredMinutes,
-    reasonCode: reason.name,
-    replacedFrom: replacedFrom,
-    replacementReason: replacementReason?.name,
-    session:
-        session?.toRecord(
-          replacedFromTitle: replacedFromTitle,
-          replacedFromRoutineId: replacedFromRoutineId,
-        ) ??
-        (replacedFromTitle == null
-            ? null
-            : CircleSessionRecord(
-                title: activity,
+  CircleOffer get journalOffer => journalOfferWith();
+
+  /// What this offer records in the Circle journal, with the parts the user
+  /// skipped so far (V2 Phase D2) — a fact about the day, never an answer.
+  CircleOffer journalOfferWith({List<ElementId> skipped = const []}) =>
+      CircleOffer(
+        timeWindow: timeWindow.name,
+        offeredMinutes: offeredMinutes,
+        reasonCode: reason.name,
+        replacedFrom: replacedFrom,
+        replacementReason: replacementReason?.name,
+        session: composed != null
+            ? CircleSessionRecord(
+                title: composed!.title,
+                parts: composed!.plan.toWire(),
+                skipped: [for (final e in skipped) e.name],
+                keptCircleId: composed!.keptCircleId,
                 replacedFromTitle: replacedFromTitle,
                 replacedFromRoutineId: replacedFromRoutineId,
-              )),
-  );
+              )
+            : session?.toRecord(
+                    replacedFromTitle: replacedFromTitle,
+                    replacedFromRoutineId: replacedFromRoutineId,
+                  ) ??
+                  (replacedFromTitle == null
+                      ? null
+                      : CircleSessionRecord(
+                          title: activity,
+                          replacedFromTitle: replacedFromTitle,
+                          replacedFromRoutineId: replacedFromRoutineId,
+                        )),
+      );
 }
 
 /// V2 Phase D: today's routine or Path step — what it is made of, and
@@ -414,6 +446,35 @@ const recommendationSessionKey = 'recommendation_session';
 const recommendationReplacedTitleKey = 'recommendation_replaced_title';
 const recommendationReplacedRoutineKey = 'recommendation_replaced_routine';
 
+/// V2 Phase D2: today's composed Circle ([ComposedSession]), as JSON —
+/// absent unless today's Circle is a Personal Guided Circle or a kept one.
+const recommendationComposedKey = 'recommendation_composed';
+
+/// V2 Phase D2: present when today was a Premium day on which no honest
+/// composition existed (ADR-023 §4).
+const recommendationComposerFallbackKey = 'recommendation_composer_fallback';
+
+/// V2 Phase D2: a composed Circle's runtime — the active milliseconds at
+/// which its current part was last placed (Start, Next, Back or Skip); the
+/// part itself is [recommendationGuidedPositionKey].
+const recommendationPartAnchorMsKey = 'recommendation_part_anchor_ms';
+
+/// V2 Phase D2: the elements skipped today, by name.
+const recommendationSkippedKey = 'recommendation_skipped';
+
+/// What "Use it today" did (V2 Phase D2, ADR-023 §8).
+enum UseTodayResult {
+  /// Today's Circle is now the user's own routine or kept Circle.
+  used,
+
+  /// Today's Circle has already started or closed: one Circle a day.
+  alreadyStarted,
+
+  /// Nothing by that id, or it can't be offered (turned off, a piece the
+  /// user asked THIRTY not to suggest, or content that isn't offerable).
+  unavailable,
+}
+
 /// Today's Circle: its content ([recommendation]) plus its session/
 /// lifecycle state.
 ///
@@ -440,6 +501,8 @@ class RecommendationState {
     this.pausedTotal = Duration.zero,
     this.guidedPosition = 0,
     this.noCandidateFor,
+    this.partAnchor = Duration.zero,
+    this.skipped = const [],
   }) : assert(
          recommendation != null ||
              (status == RecommendationStatus.notStarted &&
@@ -495,6 +558,26 @@ class RecommendationState {
   /// "Don't suggest" choices left nothing to offer. Not persisted.
   final (Intention, TimeWindow)? noCandidateFor;
 
+  /// V2 Phase D2 — a composed Circle's part anchor: the active time at
+  /// which [guidedPosition] was last placed. The part on show is derived
+  /// from it ([partMomentFor]).
+  final Duration partAnchor;
+
+  /// V2 Phase D2 — the elements skipped today. Never a usefulness answer.
+  final List<ElementId> skipped;
+
+  /// V2 Phase D2 — a composed Circle's part on show at [now].
+  PartMoment? partMomentAt(DateTime now) {
+    final composed = recommendation?.composed;
+    if (composed == null) return null;
+    return partMomentFor(
+      composed.plan,
+      anchorPosition: guidedPosition,
+      anchorElapsed: partAnchor,
+      elapsed: activeElapsedAt(now),
+    );
+  }
+
   bool get isPaused =>
       status == RecommendationStatus.started && pausedAt != null;
 
@@ -525,6 +608,8 @@ class RecommendationState {
     bool clearAttempt = false,
     CircleUsefulnessResponse? usefulnessResponse,
     bool clearUsefulness = false,
+    Duration? partAnchor,
+    List<ElementId>? skipped,
   }) => RecommendationState(
     recommendation: recommendation ?? this.recommendation,
     status: status ?? this.status,
@@ -539,6 +624,8 @@ class RecommendationState {
     usefulnessResponse: clearUsefulness || clearAttempt
         ? null
         : (usefulnessResponse ?? this.usefulnessResponse),
+    partAnchor: partAnchor ?? this.partAnchor,
+    skipped: skipped ?? this.skipped,
   );
 }
 
@@ -649,6 +736,17 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       recommendation.sessionDefinition,
       prefs.getInt(recommendationGuidedPositionKey) ?? 0,
     );
+    // V2 Phase D2: a composed Circle's part anchor and today's skips.
+    final storedAnchor = Duration(
+      milliseconds: (prefs.getInt(recommendationPartAnchorMsKey) ?? 0).clamp(
+        0,
+        1 << 40,
+      ),
+    );
+    final storedSkipped = [
+      for (final name in prefs.getStringList(recommendationSkippedKey) ?? [])
+        ?ElementId.values.asNameMap()[name],
+    ];
 
     switch (storedStatus) {
       case RecommendationStatus.started:
@@ -662,6 +760,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           pausedAt: storedPausedAt,
           pausedTotal: storedPausedTotal,
           guidedPosition: storedPosition,
+          partAnchor: storedAnchor,
+          skipped: storedSkipped,
         );
 
       case RecommendationStatus.closed:
@@ -701,6 +801,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           pausedAt: storedPausedAt,
           pausedTotal: storedPausedTotal,
           guidedPosition: storedPosition,
+          partAnchor: storedAnchor,
+          skipped: storedSkipped,
         );
 
       case RecommendationStatus.notStarted:
@@ -746,6 +848,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     if (pathStep != null) {
       recommendation = pathStep;
     } else {
+      final history = ref.read(toolkitHistoryProvider);
+      final preferences = ref.read(suggestionPreferencesProvider);
       final decision = recommend(
         RecommendationContext(
           date: now,
@@ -754,10 +858,41 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           allowSafetyPending: ref.read(safetyPendingAllowedProvider),
           routines: ref.read(routineCandidatesProvider),
         ),
-        ref.read(toolkitHistoryProvider),
-        controls: ref.read(suggestionPreferencesProvider).controls,
+        history,
+        controls: preferences.controls,
       );
-      if (decision == null) {
+      // V2 Phase D2 (ADR-023 §4): with Premium, THIRTY composes today's
+      // Personal Guided Circle — unless Free's choice is one of the user's
+      // own routines with positive evidence for this need (Premium never
+      // crowds out what the user built and found useful; routines keep
+      // exactly Free's frequency), or no honest composition exists (then
+      // Free's one activity, said plainly).
+      final premium = ref.read(premiumEntitlementProvider);
+      final provenRoutine =
+          decision?.routineId != null &&
+          RecommendationMemory.of(
+                now,
+                history,
+                RecommendationPolicy.initial,
+                restsLifted: preferences.controls.restsLifted,
+              ).routineStrength(decision!.routineId!, intention) >=
+              RecommendationPolicy.initial.usefulThreshold;
+      final composed = premium && !provenRoutine
+          ? composeCircle(
+              ComposerContext(date: now, need: intention, window: timeWindow),
+              history,
+              controls: preferences.controls,
+              leftOut: preferences.leftOut,
+            )
+          : null;
+      if (composed != null) {
+        recommendation = _fromComposed(
+          intention,
+          ComposedSession(plan: composed.plan, basis: composed.basis),
+          today,
+          timeWindow,
+        );
+      } else if (decision == null) {
         // V2 Phase C: the user's own "Don't suggest" choices leave nothing
         // that fits. Say so; never override them.
         state = RecommendationState(
@@ -766,8 +901,15 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           noCandidateFor: (intention, timeWindow),
         );
         return;
+      } else {
+        recommendation = _fromDecision(
+          intention,
+          decision,
+          today,
+          timeWindow,
+          composerFellBack: premium && !provenRoutine,
+        );
       }
-      recommendation = _fromDecision(intention, decision, today, timeWindow);
     }
 
     state = RecommendationState(
@@ -874,6 +1016,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     TimeWindow window, {
     Recommendation? replacing,
     ReplacementReason? replacementReason,
+    bool composerFellBack = false,
   }) {
     final routineId = decision.routineId;
     final routine = routineId == null
@@ -889,8 +1032,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       reason: decision.reason,
       replacedFrom: replacing?.activityId,
       replacementReason: replacementReason,
-      replacedFromTitle: replacing?.session?.title,
+      replacedFromTitle: replacing == null ? null : _replacedTitle(replacing),
       replacedFromRoutineId: replacing?.session?.routineId,
+      composerFellBack: composerFellBack,
       session: routine == null || version == null
           ? null
           : TodaySession(
@@ -902,6 +1046,36 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
             ),
     );
   }
+
+  /// V2 Phase D2: [composed] as today's Circle — its main piece's art and
+  /// category stand for it; its one line says only what is true.
+  Recommendation _fromComposed(
+    Intention intention,
+    ComposedSession composed,
+    String circleId,
+    TimeWindow window, {
+    Recommendation? replacing,
+    ReplacementReason? replacementReason,
+    RecommendationReason reason = RecommendationReason.personalCircle,
+  }) => _buildRecommendation(
+    intention,
+    composed.plan.main.definition.art,
+    circleId,
+    window: window,
+    offeredMinutes: composed.plan.minutes,
+    reason: reason,
+    replacedFrom: replacing?.activityId,
+    replacementReason: replacementReason,
+    replacedFromTitle: replacing == null ? null : _replacedTitle(replacing),
+    replacedFromRoutineId: replacing?.session?.routineId,
+    composed: composed,
+  );
+
+  /// How a replaced Circle is named in History: a routine or Path step by
+  /// its title, a composed Circle by its main piece, a single activity by
+  /// nothing extra (its own label is used).
+  static String? _replacedTitle(Recommendation replaced) =>
+      replaced.composed?.plan.main.definition.name ?? replaced.session?.title;
 
   /// "Not this one today" (V2 Phase B): re-selects today's activity once,
   /// under [reason] as a hard constraint for today. Returns `false` — and
@@ -922,6 +1096,45 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     if (state.status != RecommendationStatus.notStarted) return false;
 
     final now = ref.read(nowProvider);
+    // V2 Phase D2: a Personal Guided Circle is recomposed under today's
+    // constraint while Premium lasts; only if nothing honest fits does the
+    // engine pick one activity instead.
+    final composedToday = current.composed;
+    if (composedToday != null &&
+        !composedToday.isKept &&
+        ref.read(premiumEntitlementProvider)) {
+      final preferences = ref.read(suggestionPreferencesProvider);
+      final recomposed = composeCircle(
+        ComposerContext(
+          date: now,
+          need: current.intention,
+          window: current.timeWindow,
+          constraint: CompositionConstraint(
+            reason: reason,
+            replacing: composedToday.plan,
+          ),
+        ),
+        ref.read(toolkitHistoryProvider),
+        controls: preferences.controls,
+        leftOut: preferences.leftOut,
+      );
+      if (recomposed != null) {
+        final replacement = _fromComposed(
+          current.intention,
+          ComposedSession(plan: recomposed.plan, basis: recomposed.basis),
+          current.circleId,
+          current.timeWindow,
+          replacing: current,
+          replacementReason: reason,
+        );
+        state = RecommendationState(
+          recommendation: replacement,
+          status: RecommendationStatus.notStarted,
+        );
+        _enqueue(() => _persistReplacement(replacement, now));
+        return true;
+      }
+    }
     final decision = recommend(
       RecommendationContext(
         date: now,
@@ -932,7 +1145,10 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           replacing: current.activityId,
           replacingMinutes: current.offeredMinutes,
           replacingRoutineId: current.session?.routineId,
-          replacingComponents: current.session?.composition.activities ?? [],
+          replacingComponents:
+              current.composed?.plan.activities ??
+              current.session?.composition.activities ??
+              [],
         ),
         allowSafetyPending: ref.read(safetyPendingAllowedProvider),
         routines: ref.read(routineCandidatesProvider),
@@ -1024,6 +1240,153 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final snapshot = state;
     _enqueue(() => _persist(snapshot));
   }
+
+  /// V2 Phase D2: places a composed Circle at [position] now — Next, Back,
+  /// or after a skip. From here the parts move on by themselves again.
+  /// Orientation only: it never records that a part was done.
+  void movePart(int position) {
+    final composed = state.recommendation?.composed;
+    if (composed == null) return;
+    if (state.status != RecommendationStatus.started) return;
+    final clamped = position.clamp(0, composed.plan.parts.length);
+    state = state.copyWith(
+      guidedPosition: clamped,
+      partAnchor: state.activeElapsedAt(ref.read(eventClockProvider)()),
+    );
+    final snapshot = state;
+    _enqueue(() => _persist(snapshot));
+  }
+
+  /// V2 Phase D2 (ADR-023 §7): "Skip this step" — the part on show is set
+  /// aside for today and the next one begins. A skip is never a usefulness
+  /// answer: it only keeps that part from sharing the day's answer. With
+  /// [leaveOut], the user also asks THIRTY to leave it out of their Circles
+  /// from now on — an explicit preference, reversible in Memory.
+  void skipPart({bool leaveOut = false}) {
+    final now = ref.read(eventClockProvider)();
+    final moment = state.partMomentAt(now);
+    final composed = state.recommendation?.composed;
+    if (moment == null || composed == null || moment.finished) return;
+    if (state.status != RecommendationStatus.started) return;
+    final element = composed.plan.parts[moment.position].element;
+    state = state.copyWith(
+      guidedPosition: moment.position + 1,
+      partAnchor: state.activeElapsedAt(now),
+      skipped: state.skipped.contains(element)
+          ? state.skipped
+          : [...state.skipped, element],
+    );
+    final snapshot = state;
+    _enqueue(() => _persist(snapshot));
+    if (leaveOut) {
+      unawaited(
+        ref.read(suggestionPreferencesProvider.notifier).leaveOut(element),
+      );
+    }
+  }
+
+  /// V2 Phase D2 (ADR-023 §8): "Use it today" — today's Circle becomes one
+  /// of the user's own routines ([routineId]) or kept Circles
+  /// ([keptCircleId]). Free: what the user owns is theirs to use. Only
+  /// before today's Circle has started; still one Circle a day, replacing
+  /// today's not-started choice. Today's need stays the one the user chose;
+  /// before any choice, it is the routine's or the kept Circle's own. It is
+  /// the user's choice, not a "Not this one today": nothing is recorded as
+  /// declined, and no replacement is offered after it.
+  UseTodayResult useOwnedToday({String? routineId, String? keptCircleId}) {
+    if (state.status != RecommendationStatus.notStarted) {
+      return UseTodayResult.alreadyStarted;
+    }
+    final toolkit = ref.read(toolkitProvider);
+    final controls = ref.read(suggestionPreferencesProvider).controls;
+    final allowSafetyPending = ref.read(safetyPendingAllowedProvider);
+    final current = state.recommendation;
+    final now = ref.read(nowProvider);
+    final today = dateKey(now);
+
+    final Recommendation chosen;
+    if (routineId != null) {
+      final routine = toolkit.routineById(routineId);
+      if (routine == null || !routine.enabled) {
+        return UseTodayResult.unavailable;
+      }
+      final need = current?.intention ?? routine.need;
+      // Today's time decides the version, as it would for Free: the longest
+      // that fits, else the one THIRTY uses now — the user asked for it.
+      final window = current?.timeWindow;
+      final version = window == null
+          ? routine.active
+          : routine.offerableVersions.firstWhere(
+              (v) => v.minutes <= window.maxMinutes,
+              orElse: () => routine.active,
+            );
+      final pieces = version.composition.activities;
+      if (pieces.any((a) => controls.notSuggested.contains((a, need))) ||
+          !version.composition.offerable(
+            allowSafetyPending: allowSafetyPending,
+          )) {
+        return UseTodayResult.unavailable;
+      }
+      chosen = _buildRecommendation(
+        need,
+        version.composition.anchor,
+        today,
+        window: current?.timeWindow ?? _windowFor(version.minutes),
+        offeredMinutes: version.minutes,
+        reason: RecommendationReason.ownChoice,
+        session: TodaySession(
+          composition: version.composition,
+          title: routine.name,
+          routineId: routine.id,
+          routineVersionId: version.id,
+          routineVersionNumber: version.number,
+        ),
+      );
+    } else if (keptCircleId != null) {
+      final kept = toolkit.keptById(keptCircleId);
+      if (kept == null) return UseTodayResult.unavailable;
+      final need = current?.intention ?? kept.need;
+      if (!kept.plan.parts.every((p) => isElementOfferable(p.definition)) ||
+          kept.plan.activities.any(
+            (a) => controls.notSuggested.contains((a, need)),
+          )) {
+        return UseTodayResult.unavailable;
+      }
+      chosen = _fromComposed(
+        need,
+        ComposedSession(
+          plan: kept.plan,
+          keptCircleId: kept.id,
+          keptName: kept.name,
+        ),
+        today,
+        current?.timeWindow ?? _windowFor(kept.minutes),
+        reason: RecommendationReason.ownChoice,
+      );
+    } else {
+      return UseTodayResult.unavailable;
+    }
+
+    state = RecommendationState(
+      recommendation: chosen,
+      status: RecommendationStatus.notStarted,
+    );
+    if (current == null) {
+      _enqueue(
+        () =>
+            _persistChoice(today: today, recommendation: chosen, shownAt: now),
+      );
+    } else {
+      _enqueue(() => _persistReplacement(chosen, now));
+    }
+    return UseTodayResult.used;
+  }
+
+  /// The smallest time window [minutes] fits in.
+  static TimeWindow _windowFor(int minutes) => TimeWindow.values.firstWhere(
+    (w) => minutes <= w.maxMinutes,
+    orElse: () => TimeWindow.upTo30,
+  );
 
   /// Closes today's Circle. A no-op unless [RecommendationState.status] is
   /// currently [RecommendationStatus.started] — calling this before a
@@ -1187,19 +1550,31 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     TodaySession? session,
     String? replacedFromTitle,
     String? replacedFromRoutineId,
+    ComposedSession? composed,
+    bool composerFellBack = false,
   }) {
     final minutes =
         offeredMinutes ??
+        composed?.plan.minutes ??
         session?.composition.minutes ??
         activityTypicalMinutes(activityId);
     return Recommendation(
       intent: intentionLabel(intention),
-      activity: session?.title ?? activityLabel(activityId),
+      // A composed Circle's row is its parts, in order.
+      activity:
+          composed?.plan.line ?? session?.title ?? activityLabel(activityId),
       duration: '$minutes minutes',
-      why: switch (session) {
-        null => activityReasonFor(intention, activityId),
-        TodaySession(:final pathExplanation?) => pathExplanation,
-        final routine => _piecesLine(routine.composition),
+      why: switch ((composed, session)) {
+        (ComposedSession(isKept: true), _) => ComposedCopy.keptLine,
+        (ComposedSession(:final basis?), _) => ComposedCopy.basisLine(
+          basis,
+          window,
+        ),
+        (_, TodaySession(:final pathExplanation?)) => pathExplanation,
+        (_, final TodaySession routine) => _piecesLine(routine.composition),
+        _ when composerFellBack && reason.visibleCopy == null =>
+          ComposedCopy.fallbackLine,
+        _ => activityReasonFor(intention, activityId),
       },
       category: activityCategory(activityId),
       activityId: activityId,
@@ -1214,6 +1589,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       session: session,
       replacedFromTitle: replacedFromTitle,
       replacedFromRoutineId: replacedFromRoutineId,
+      composed: composed,
+      composerFellBack: composerFellBack,
     );
   }
 
@@ -1280,6 +1657,16 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       }
     }
 
+    ComposedSession? composed;
+    final rawComposed = prefs.getString(recommendationComposedKey);
+    if (rawComposed != null) {
+      try {
+        composed = ComposedSession.fromJson(jsonDecode(rawComposed));
+      } catch (_) {
+        composed = null;
+      }
+    }
+
     return _buildRecommendation(
       intention,
       activityId,
@@ -1289,9 +1676,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       reason: reason,
       replacedFrom: replacedFrom,
       replacementReason: replacementReason,
-      session: session,
+      session: composed == null ? session : null,
       replacedFromTitle: prefs.getString(recommendationReplacedTitleKey),
       replacedFromRoutineId: prefs.getString(recommendationReplacedRoutineKey),
+      composed: composed,
+      composerFellBack:
+          prefs.getBool(recommendationComposerFallbackKey) ?? false,
     );
   }
 
@@ -1322,6 +1712,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     await prefs.remove(recommendationPausedAtKey);
     await prefs.remove(recommendationPausedMsKey);
     await prefs.remove(recommendationGuidedPositionKey);
+    await prefs.remove(recommendationPartAnchorMsKey);
+    await prefs.remove(recommendationSkippedKey);
     await _persistOffer(prefs, recommendation);
     // V1 selector history is retired: Engine V2 reads the journal.
     await prefs.remove(recommendationLastFamilyKey);
@@ -1388,6 +1780,20 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       );
     } else {
       await prefs.remove(recommendationSessionKey);
+    }
+    final composed = recommendation.composed;
+    if (composed != null) {
+      await prefs.setString(
+        recommendationComposedKey,
+        jsonEncode(composed.toJson()),
+      );
+    } else {
+      await prefs.remove(recommendationComposedKey);
+    }
+    if (recommendation.composerFellBack) {
+      await prefs.setBool(recommendationComposerFallbackKey, true);
+    } else {
+      await prefs.remove(recommendationComposerFallbackKey);
     }
     final replacedTitle = recommendation.replacedFromTitle;
     if (replacedTitle != null) {
@@ -1520,6 +1926,21 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     } else {
       await prefs.remove(recommendationGuidedPositionKey);
     }
+    if (state.partAnchor > Duration.zero) {
+      await prefs.setInt(
+        recommendationPartAnchorMsKey,
+        state.partAnchor.inMilliseconds,
+      );
+    } else {
+      await prefs.remove(recommendationPartAnchorMsKey);
+    }
+    if (state.skipped.isNotEmpty) {
+      await prefs.setStringList(recommendationSkippedKey, [
+        for (final e in state.skipped) e.name,
+      ]);
+    } else {
+      await prefs.remove(recommendationSkippedKey);
+    }
 
     if (recommendation == null) return;
     // See _persistChoice's matching comment — this read also happens after
@@ -1529,7 +1950,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final circleId = recommendation.circleId;
     final direction = recommendation.intention;
     final activityId = recommendation.activityId;
-    final offer = recommendation.journalOffer;
+    final offer = recommendation.journalOfferWith(skipped: state.skipped);
 
     var journalChanged = false;
     switch (state.status) {
@@ -1559,6 +1980,14 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         break;
     }
 
+    // V2 Phase D2: today's skips, as they happen.
+    if (recommendation.composed != null && state.skipped.isNotEmpty) {
+      await journal.recordSkipped(
+        circleId: circleId,
+        skipped: [for (final e in state.skipped) e.name],
+      );
+      journalChanged = true;
+    }
     if (attemptResponse != null) {
       await journal.recordAttempt(
         circleId: circleId,
@@ -1649,6 +2078,10 @@ Future<void> clearRecordedCircleState(SharedPreferences prefs) async {
     recommendationSessionKey,
     recommendationReplacedTitleKey,
     recommendationReplacedRoutineKey,
+    recommendationComposedKey,
+    recommendationComposerFallbackKey,
+    recommendationPartAnchorMsKey,
+    recommendationSkippedKey,
     for (final intention in Intention.values)
       recommendationHistoryKeyFor(intention),
   ]) {

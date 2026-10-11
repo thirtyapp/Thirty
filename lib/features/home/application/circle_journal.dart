@@ -152,6 +152,26 @@ class CircleSessionRecord {
   /// V2 Phase D2: the kept Circle this Circle ran, when it was one.
   final String? keptCircleId;
 
+  /// This record with [skipped] as the day's skips.
+  CircleSessionRecord withSkipped(List<String> skipped) => CircleSessionRecord(
+    title: title,
+    modules: modules,
+    routineId: routineId,
+    routineVersionId: routineVersionId,
+    routineVersionNumber: routineVersionNumber,
+    pathRunId: pathRunId,
+    pathKind: pathKind,
+    pathName: pathName,
+    pathCircle: pathCircle,
+    pathCircles: pathCircles,
+    pathReason: pathReason,
+    replacedFromTitle: replacedFromTitle,
+    replacedFromRoutineId: replacedFromRoutineId,
+    parts: parts,
+    skipped: skipped,
+    keptCircleId: keptCircleId,
+  );
+
   Map<String, Object?> toJson() => {
     'title': title,
     'modules': modules,
@@ -856,6 +876,25 @@ class CircleJournalRepository {
     takeCurrentTreatment: false,
     update: (entry) => entry.copyWith(activityId: activityId, offer: offer),
   );
+
+  /// V2 Phase D2: the parts skipped so far in [circleId]'s composed Circle
+  /// — a fact about the day, never an answer. Only an entry that is a
+  /// composed Circle changes.
+  Future<void> recordSkipped({
+    required String circleId,
+    required List<String> skipped,
+  }) async {
+    final entries = _readRaw();
+    final index = entries.indexWhere((entry) => entry.circleId == circleId);
+    if (index == -1) return;
+    final entry = entries[index];
+    final session = entry.session;
+    if (session == null || session.parts.isEmpty) return;
+    entries[index] = entry.copyWith(
+      offer: CircleOffer(session: session.withSkipped(skipped)),
+    );
+    await _save(entries);
+  }
 
   /// "Remove this answer" (V2 Phase C): removes [circleId]'s usefulness
   /// answer — and, with [includingAttempt], its "Did you try it?" answer

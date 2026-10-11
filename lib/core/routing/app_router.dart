@@ -15,6 +15,7 @@ import '../../features/toolkit/domain/path_catalog.dart';
 import '../../features/toolkit/presentation/choose_path_page.dart';
 import '../../features/toolkit/presentation/path_review_page.dart';
 import '../../features/toolkit/presentation/path_start_page.dart';
+import '../../features/personal_circle/presentation/kept_circle_page.dart';
 import '../../features/toolkit/presentation/routine_detail_page.dart';
 import '../../features/toolkit/presentation/toolkit_page.dart';
 import '../dev_preview/paced_qa_bench_page.dart';
@@ -88,6 +89,12 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
                   path: 'routine/:id',
                   builder: (context, state) =>
                       RoutineDetailPage(routineId: state.pathParameters['id']!),
+                ),
+                // V2 Phase D2: a Circle the user kept.
+                GoRoute(
+                  path: 'kept/:id',
+                  builder: (context, state) =>
+                      KeptCirclePage(keptId: state.pathParameters['id']!),
                 ),
               ],
             ),

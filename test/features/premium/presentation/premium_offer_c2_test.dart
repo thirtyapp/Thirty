@@ -105,15 +105,14 @@ void main() {
       final order = [
         find.text(PremiumOfferPage.headline),
         find.text(PremiumOfferPage.promise),
-        find.textContaining('Paths', findRichText: true),
-        find.textContaining('Your routines', findRichText: true),
-        find.textContaining('Upkeep', findRichText: true),
+        for (final (name, _) in PremiumOfferPage.points)
+          find.textContaining(name, findRichText: true),
         find.text(PremiumOfferPage.freeLine),
         find.text(r'$9.99 / month'),
         find.text('Billed monthly. Renews automatically until you cancel.'),
         _cta,
         find.text('Not now'),
-        find.text('Routines you build stay yours.'),
+        find.text('What you keep stays yours, with or without Premium.'),
         find.text('Restore purchases'),
         find.textContaining('You can cancel anytime in Google Play.'),
       ];
@@ -140,23 +139,7 @@ void main() {
         'mark is decorative', (tester) async {
       final semantics = tester.ensureSemantics();
       await _pump(tester, _FakeEntitlementGateway());
-      for (final (name, line) in [
-        (
-          'Paths',
-          'seven Circles that try a few pieces with you and build one '
-              'routine, shaped by what you tell THIRTY',
-        ),
-        (
-          'Your routines',
-          'THIRTY offers them on the days they fit — and they stay yours, '
-              'with or without Premium',
-        ),
-        (
-          'Upkeep',
-          'when a routine stops fitting your time or your days, THIRTY '
-              'offers to tune it — and says so when nothing needs changing',
-        ),
-      ]) {
+      for (final (name, line) in PremiumOfferPage.points) {
         expect(find.bySemanticsLabel('$name: $line'), findsOneWidget);
       }
       semantics.dispose();

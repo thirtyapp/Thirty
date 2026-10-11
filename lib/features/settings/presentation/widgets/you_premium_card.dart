@@ -31,10 +31,10 @@ import '../../../premium/presentation/widgets/manage_subscription.dart';
 class YouPremiumCard extends ConsumerWidget {
   const YouPremiumCard({super.key});
 
-  /// V2 Phase D: what Premium actually does.
+  /// V2 Phase D2: what Premium does each day.
   static const body =
-      'Build a few routines of your own, and keep them fitting as your days '
-      'change.';
+      'A guided Circle made for your day, from the time you have and what '
+      'you’ve found useful.';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

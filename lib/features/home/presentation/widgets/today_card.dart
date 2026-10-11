@@ -4,6 +4,7 @@ import '../../../../core/activity_category.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/utils/daypart_greeting.dart';
 import '../../../../core/widgets/thirty_card.dart';
+import '../../../personal_circle/domain/composed_session.dart';
 import 'home_rhythm_column.dart';
 
 /// What the activity row says beneath the activity's name (V2 Phase B).
@@ -21,6 +22,16 @@ enum ActivityRowCue {
     'How to do it · Not this one?',
     'Not this one?',
     'How to do it, or not this one today',
+  ),
+
+  /// V2 Phase D2, before Start: a composed Circle's row opens its parts.
+  parts('See the parts', 'See the parts', 'See the parts'),
+
+  /// V2 Phase D2, before Start, while it can still be swapped once.
+  partsOrNotThisOne(
+    'See the parts · Not this one?',
+    'Not this one?',
+    'See the parts, or not this one today',
   );
 
   const ActivityRowCue(this.text, this.shortText, this.hint);
@@ -45,8 +56,15 @@ String homeGreeting(DateTime now, {String? firstName}) =>
 /// The line under the greeting while today's Circle is still open: an
 /// invitation to begin before Start Circle, then a calm note that closing
 /// is the user's call once it is running.
-String homeGreetingSubline({required bool started}) =>
-    started ? 'Close it whenever you’re ready.' : 'Here’s one thing for today.';
+///
+/// V2 Phase D2: before a composed Circle starts, the line says what it is —
+/// one Circle made of a few parts — never "one thing".
+String homeGreetingSubline({required bool started, bool composed = false}) =>
+    started
+    ? 'Close it whenever you’re ready.'
+    : composed
+    ? ComposedCopy.greetingSubline
+    : 'Here’s one thing for today.';
 
 /// The Today card (Phase D1, Design vision): TODAY, today's direction in
 /// the editorial serif, the activity with its icon, a divider, and up to

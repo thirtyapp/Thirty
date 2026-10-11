@@ -173,16 +173,19 @@ void main() {
     testWidgets('A — Free, nothing built: what Premium builds, without '
         'making Free look unfinished', (tester) async {
       await _pump(tester, const ToolkitPage(), entitled: false);
-      expect(find.text('A few routines of your own'), findsOneWidget);
+      expect(find.text('A Circle made for your day'), findsOneWidget);
       expect(find.textContaining('Free stays complete'), findsOneWidget);
-      expect(find.textContaining('stay yours'), findsOneWidget);
+      expect(find.textContaining('stays yours'), findsOneWidget);
       expect(find.text('See Premium'), findsOneWidget);
     });
 
     testWidgets('B — Premium, nothing built: one sensible first Path, with '
         'nothing claimed without evidence', (tester) async {
       await _pump(tester, const ToolkitPage());
-      expect(find.text('Your first Path'.toUpperCase()), findsOneWidget);
+      expect(
+        find.text('Build a routine — if you like'.toUpperCase()),
+        findsOneWidget,
+      );
       expect(find.text(pathCatalog.first.name), findsOneWidget);
       expect(
         find.text('A simple place to start. You can choose another Path.'),

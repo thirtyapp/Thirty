@@ -14,6 +14,9 @@ import '../../../../core/world_rendering/world_hero_art_view.dart';
 import '../../../settings/application/first_name_provider.dart';
 import '../../application/activity_catalog.dart';
 import '../../application/first_breath_provider.dart';
+import '../../../personal_circle/domain/circle_elements.dart';
+import '../../../personal_circle/domain/composed_session.dart';
+import '../../../personal_circle/presentation/skip_part_sheet.dart';
 import '../../application/recommendation_provider.dart';
 import '../../application/world_scene_resolution.dart';
 import '../../domain/circle_session.dart';
@@ -537,6 +540,17 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     super.dispose();
   }
 
+  /// V2 Phase D2 (ADR-023 §7): "Skip this step" — skip the part on show
+  /// for today, or also leave it out of future Circles. Neither is a
+  /// usefulness answer.
+  Future<void> _skipPart() async {
+    final choice = await showSkipPartSheet(context);
+    if (choice == null || !mounted) return;
+    ref
+        .read(recommendationProvider.notifier)
+        .skipPart(leaveOut: choice == SkipChoice.leaveOut);
+  }
+
   /// "Not this one today": asks why, then replaces today's Circle once.
   Future<void> _notThisOne(Recommendation recommendation) async {
     final reason = await showNotThisOneSheet(
@@ -589,16 +603,20 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     // same Guided runtime; a single activity runs as authored.
     final activity = recommendation.sessionDefinition;
     final offered = circleDurationFor(recommendation);
-    final elapsed = recommendationState.activeElapsedAt(
-      ref.read(eventClockProvider)(),
-    );
+    final clockNow = ref.read(eventClockProvider)();
+    final elapsed = recommendationState.activeElapsedAt(clockNow);
+    // V2 Phase D2: a composed Circle's part on show, derived from the clock.
+    final composed = recommendation.composed;
+    final partMoment = recommendationState.partMomentAt(clockNow);
     final timerProgress = _timerProgress(elapsed, offered);
     final ended =
         status != RecommendationStatus.notStarted &&
         naturalEndReached(elapsed, offered);
     _noticeNaturalEnd(ended, running: status == RecommendationStatus.started);
     final paused = recommendationState.isPaused;
-    final body = sessionBodyFor(activity, activity.pace);
+    final body = composed != null
+        ? SessionBody.composed
+        : sessionBodyFor(activity, activity.pace);
     // One filled action at a time: Start before the Circle; while it runs,
     // Close stays quiet — the session's own action leads — until the time
     // set aside is reached or a Guided Circle reaches "To finish".
@@ -607,7 +625,8 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         ended ||
         (body == SessionBody.guided &&
             recommendationState.guidedPosition >=
-                guidedFinishPosition(activity));
+                guidedFinishPosition(activity)) ||
+        (body == SessionBody.composed && (partMoment?.finished ?? false));
     _noticeCloseLead(
       closeLeads,
       running: status == RecommendationStatus.started,
@@ -695,7 +714,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
           ref.watch(nowProvider),
           firstName: ref.watch(firstNameProvider),
         ),
-        detail: homeGreetingSubline(started: false),
+        detail: homeGreetingSubline(started: false, composed: composed != null),
       ),
       RecommendationStatus.started => sessionHeadingFor(
         activity: activity,
@@ -705,6 +724,11 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         ended: ended,
         paused: paused,
         guidedPosition: recommendationState.guidedPosition,
+        partMoment: partMoment,
+        partNames: [
+          for (final part in composed?.plan.parts ?? const <CirclePart>[])
+            part.definition.name,
+        ],
       ),
       RecommendationStatus.closed => (
         title: CircleHero.closedHeading,
@@ -970,10 +994,15 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                     category: recommendation.category,
                     minutes: recommendation.offeredMinutes,
                     firstAction: activity.firstAction,
-                    label: switch (recommendation.session) {
-                      TodaySession(:final pathCircle?, :final pathCircles?) =>
+                    label: switch ((composed, recommendation.session)) {
+                      (ComposedSession(isKept: true), _) => composed!.title,
+                      (ComposedSession(), _) => ComposedCopy.title,
+                      (
+                        _,
+                        TodaySession(:final pathCircle?, :final pathCircles?),
+                      ) =>
                         'Path · $pathCircle of $pathCircles',
-                      TodaySession(isRoutine: true) => 'Your routine',
+                      (_, TodaySession(isRoutine: true)) => 'Your routine',
                       _ => 'Today',
                     },
                     spokenLabel: switch (recommendation.session) {
@@ -1007,6 +1036,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                         recommendationState.status !=
                             RecommendationStatus.notStarted
                         ? ActivityRowCue.none
+                        : composed != null
+                        ? (recommendation.canReplace
+                              ? ActivityRowCue.partsOrNotThisOne
+                              : ActivityRowCue.parts)
                         : recommendation.canReplace
                         ? ActivityRowCue.howToOrNotThisOne
                         : ActivityRowCue.howTo,
@@ -1038,11 +1071,15 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                               offeredMinutes: recommendation.offeredMinutes,
                               definition: activity,
                             ),
-                      onMoveTo: notifier.moveTo,
+                      onMoveTo: composed != null
+                          ? notifier.movePart
+                          : notifier.moveTo,
                       onPause: notifier.pause,
                       onResume: notifier.resume,
                       cardAsset: _art.cardAsset,
                       artSwitchDuration: artSwitchDuration,
+                      partMoment: partMoment,
+                      onSkip: composed == null ? null : _skipPart,
                     ),
                   ),
                   // V2 Phase C: the reflection, inline — no hunting for it.

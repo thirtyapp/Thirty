@@ -22,7 +22,14 @@ import 'package:thirty/features/toolkit/presentation/toolkit_page.dart';
 /// local days through the production providers (engine, Toolkit, journal,
 /// preferences) with a scripted user who answers according to what they
 /// were actually offered. Assertions hold the behaviour; the traces are for
-/// reading:
+/// reading.
+///
+/// **V2 Phase D2 (ADR-023):** on a Premium day that isn't a Path step,
+/// Today is the user's Personal Guided Circle — or their own routine, when
+/// Free's choice is a routine with positive evidence. So these users use
+/// their routines the D2 way too: on their own days ("Use it today"), or as
+/// Free's picks once Premium has lapsed. Gap evidence comes only from
+/// Free's own picks, made while the user is on Free.
 ///
 /// ```
 /// flutter test test/features/toolkit/premium_simulation_test.dart \
@@ -103,6 +110,7 @@ class Sim {
     ReplacementReason? replace,
     bool keep = true,
     String? keepName,
+    String? Function(ToolkitState toolkit)? use,
   }) async {
     final c = open(n);
     try {
@@ -118,6 +126,9 @@ class Sim {
         final circle = c.read(recommendationProvider.notifier);
         circle.chooseIntention(need, window: window);
         if (replace != null) circle.replaceToday(replace);
+        // The user's own day: one of their routines, chosen for today.
+        final own = use?.call(c.read(toolkitProvider));
+        if (own != null) circle.useOwnedToday(routineId: own);
         today = c.read(recommendationProvider).recommendation;
         if (today != null) {
           circle.start();
@@ -164,6 +175,9 @@ class Sim {
         : today.session?.isRoutine ?? false
         ? '[ROUTINE] ${today.activity} v${today.session!.routineVersionNumber} '
               '${today.offeredMinutes}m · ${today.reason.name}'
+        : today.composed != null
+        ? '[CIRCLE] ${today.activity} ${today.offeredMinutes}m · '
+              '${today.composed!.basis?.name ?? today.reason.name}'
         : '${today.activity} ${today.offeredMinutes}m · ${today.reason.name}';
     final premium = entitled ? 'P' : 'F';
     final routines = [
@@ -377,7 +391,8 @@ void main() {
         answer: (r) => _s,
       );
     }
-    // Week 6 on: about 20 minutes most days.
+    // Week 6 on: about 20 minutes most days — and, once a shorter version
+    // exists, the user chooses their routine on some of those days.
     var offeredOn = -1;
     for (; n < 63; n++) {
       if (n.isOdd) continue;
@@ -386,6 +401,12 @@ void main() {
         need: _head,
         window: TimeWindow.about20,
         answer: (r) => _s,
+        use: (toolkit) =>
+            n % 4 == 0 &&
+                toolkit.path == null &&
+                toolkit.routines.single.shortVersion != null
+            ? toolkit.routines.single.id
+            : null,
         before: (c) {
           final offer = c.read(primaryOfferProvider);
           if (offer?.kind == OfferKind.timeMisfit && offeredOn < 0) {
@@ -434,12 +455,16 @@ void main() {
       var n = await _buildThrough(sim, 15, _energy);
       var lowAnswers = 0;
       var offeredOn = -1;
-      // Ten weeks: a "Not useful" rests the routine for two weeks, so its
-      // next answer takes that long to come.
+      // Ten weeks. Under D2 the routine's answers come from the user's own
+      // days with it ("Use it today", every fourth day) — a "Not useful"
+      // rests it from THIRTY's choices, never from the user's own.
       for (; n < 70; n++) {
         await sim.day(
           n,
           need: n.isEven ? _energy : _head,
+          use: (toolkit) => n % 4 == 0 && toolkit.path == null
+              ? toolkit.routines.single.id
+              : null,
           answer: (r) {
             if (!(r.session?.isRoutine ?? false)) return _s;
             lowAnswers++;
@@ -469,7 +494,20 @@ void main() {
   /// [freeAnswer]. Returns the day the gap build was offered (or -1).
   Future<int> gapUser(Sim sim, Answer Function(int n) freeAnswer) async {
     await sim.init();
-    await _freeWeeks(sim, [_energy]);
+    // Two weeks on Free: Clearer Head most days, Free's picks for it
+    // answered by [freeAnswer] — the only evidence a gap can stand on.
+    for (var n = 0; n < 14; n++) {
+      await sim.day(
+        n,
+        need: n % 3 == 0 ? _energy : _head,
+        window: TimeWindow.upTo30,
+        answer: (r) => n % 5 == 4
+            ? null
+            : n % 3 == 0
+            ? _likesMovement(r, n)
+            : freeAnswer(n),
+      );
+    }
     sim.entitled = true;
     await sim.day(
       14,
@@ -547,6 +585,10 @@ void main() {
         n,
         need: n % 7 == 3 ? _head : _energy,
         answer: (r) => n % 4 == 0 ? _s : _v,
+        // The user's own day with their routine, about twice a week.
+        use: (toolkit) => n % 3 == 0 && toolkit.path == null
+            ? toolkit.routines.single.id
+            : null,
         before: (c) => check ??= c.read(toolkitCheckProvider),
       );
     }
@@ -818,8 +860,9 @@ void main() {
           .startBuild(PathTemplateId.wakeUpIndoors),
     );
     var n = await _buildThrough(sim, 15, _energy);
-    // Clearer Head most days, Free's picks for it rated weak: by week 7
-    // THIRTY has derived a gap from those answers.
+    // Then a lapse: Clearer Head most days on Free, Free's picks for it
+    // rated weak — by week 7 THIRTY has derived a gap from those answers.
+    sim.entitled = false;
     for (; n < 44; n++) {
       if (n.isOdd) continue;
       await sim.day(

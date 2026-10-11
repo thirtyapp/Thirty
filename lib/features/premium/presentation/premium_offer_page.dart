@@ -21,8 +21,8 @@ import 'widgets/premium_restore_footer.dart';
 /// second closed Circle on a distinct date (frozen architecture §26). No
 /// interstitial, no forced paywall on Free Circle launch (§12).
 ///
-/// Answers, in order and without clutter: what you get (the value card:
-/// Plans, Coach and Insights — the actual V1 Premium value), what it costs
+/// Answers, in order and without clutter: what you get (the value card —
+/// since V2 Phase D2, the Personal Guided Circle each day), what it costs
 /// (the store's own localized monthly price, never a hardcoded figure),
 /// that it renews monthly until cancelled (the disclosure directly under
 /// the price), that Free stays complete (next to the quiet "Not now"
@@ -37,36 +37,49 @@ import 'widgets/premium_restore_footer.dart';
 class PremiumOfferPage extends ConsumerStatefulWidget {
   const PremiumOfferPage({super.key});
 
-  /// V2 Phase D: what Premium is.
-  static const headline = 'Routines of your own';
+  /// V2 Phase D2 (ADR-023 §11): what Premium does — every day it is used.
+  /// Draft for founder review; no outcome is promised.
+  static const headline = 'A Circle made for your day';
   static const promise =
-      'Build a few personal routines, then keep them fitting when your days '
-      'change.';
+      'Each day, THIRTY turns the time you have into one guided Circle — a '
+      'few small parts, built from what you’ve found useful — and takes you '
+      'through it.';
 
   /// What stays Free — complete, and never weakened.
   static const freeLine =
-      'Free stays complete: THIRTY chooses one thing for today, and learns '
-      'from what you tell it.';
+      'Free stays complete: THIRTY chooses one good thing for today, and '
+      'learns from what you tell it.';
 
-  /// V2 Phase D: the paid job, in three points (PRODUCT_V2_CONTRACT —
-  /// Premium sells a process: Paths → routines → Toolkit → maintenance).
+  /// V2 Phase D2: the recurring job first; owning things is a supporting
+  /// benefit, and upkeep is no reason to subscribe.
   static const points = [
     (
-      'Paths',
-      'seven Circles that try a few pieces with you and build one routine, '
-          'shaped by what you tell THIRTY',
+      'Made each day',
+      'tell THIRTY what you need and how much time you have, and it puts '
+          'together one Circle for today, sized to that time',
     ),
     (
-      'Your routines',
-      'THIRTY offers them on the days they fit — and they stay yours, with '
-          'or without Premium',
+      'Guided through',
+      'one part at a time, moving on when each part’s time is up — nothing '
+          'to plan or keep track of',
     ),
     (
-      'Upkeep',
-      'when a routine stops fitting your time or your days, THIRTY offers '
-          'to tune it — and says so when nothing needs changing',
+      'Shaped by your answers',
+      'what you find useful comes back, and what you leave out stays out — '
+          'all of it visible in What THIRTY remembers',
+    ),
+    (
+      'Yours to keep',
+      'keep a Circle you like, or build a routine with a Path — what you '
+          'keep stays yours, with or without Premium',
     ),
   ];
+
+  /// What changes, truthfully, if Premium ends.
+  static const lapseLine =
+      'You can cancel anytime in Google Play. Premium stays active until the '
+      'end of your current billing period. After that, Today goes back to '
+      'one good thing a day, and everything you kept stays yours.';
 
   @override
   ConsumerState<PremiumOfferPage> createState() => _PremiumOfferPageState();
@@ -159,11 +172,7 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
             const SizedBox(height: AppSpacing.l),
             PremiumRestoreFooter(horizontalInset: 0, enabled: !_isPurchasing),
             const SizedBox(height: AppSpacing.s),
-            Text(
-              'You can cancel anytime in Google Play. Premium stays active '
-              'until the end of your current billing period.',
-              style: quiet,
-            ),
+            Text(PremiumOfferPage.lapseLine, style: quiet),
           ],
         ),
       ),
@@ -288,7 +297,7 @@ class _PurchaseBlock extends ConsumerWidget {
           child: const Text('Not now'),
         ),
         Text(
-          'Routines you build stay yours.',
+          'What you keep stays yours, with or without Premium.',
           style: quiet,
           textAlign: TextAlign.center,
         ),

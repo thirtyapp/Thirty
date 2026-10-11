@@ -99,7 +99,7 @@ void main() {
   Future<void> expectFreshSession(WidgetTester tester) async {
     expect(find.text("Begin today's Circle"), findsOneWidget);
     await openTab(tester, 'Toolkit');
-    expect(find.text('Routines that are yours.'), findsOneWidget);
+    expect(find.text('Routines and Circles that are yours.'), findsOneWidget);
     expect(find.text('What’s in it'.toUpperCase()), findsNothing);
   }
 

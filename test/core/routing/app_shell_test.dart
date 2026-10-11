@@ -94,7 +94,7 @@ void main() {
     await tester.tap(navDestination('Toolkit'));
     await tester.pumpAndSettle();
     expect(find.byType(ToolkitPage), findsOneWidget);
-    expect(find.text('A few routines of your own'), findsOneWidget);
+    expect(find.text('A Circle made for your day'), findsOneWidget);
   });
 
   for (final old in ['/plans', '/plans/moreEnergyPath', '/insights']) {

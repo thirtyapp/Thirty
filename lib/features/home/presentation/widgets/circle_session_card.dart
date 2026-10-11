@@ -6,14 +6,17 @@ import 'package:flutter/scheduler.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_text_action.dart';
+import '../../../personal_circle/domain/composed_session.dart';
 import '../../application/activity_catalog.dart';
 import '../../domain/circle_session.dart';
 import 'today_card.dart';
 
 /// How today's Circle runs (V2 Phase C, ADR-021): one shared Circle shell —
 /// the World and its ring, a heading pair, one card, Close — with the body
-/// its activity's mode needs.
-enum SessionBody { open, guided, paced }
+/// its activity's mode needs. V2 Phase D2 (ADR-023 §5): a composed Circle
+/// runs its parts one at a time, each for its authored time, moving on by
+/// itself — THIRTY holds the structure.
+enum SessionBody { open, guided, paced, composed }
 
 /// The body [activity] runs with. A Paced activity paces only with a
 /// reviewed [pace]; without one — every catalogue activity today — and a
@@ -41,6 +44,8 @@ SessionHeading sessionHeadingFor({
   required bool ended,
   required bool paused,
   required int guidedPosition,
+  PartMoment? partMoment,
+  List<String> partNames = const [],
 }) {
   final time = ended
       ? 'That’s your $offeredMinutes minutes'
@@ -50,6 +55,29 @@ SessionHeading sessionHeadingFor({
       return (title: activity.title, detail: time);
     case SessionBody.paced:
       return (title: activity.title, detail: paused ? 'Paused · $time' : time);
+    case SessionBody.composed:
+      final moment = partMoment;
+      if (ended || moment == null) return (title: activity.title, detail: time);
+      if (moment.finished) {
+        return (
+          title: SessionCopy.toFinishTitle,
+          detail: paused ? 'Paused · ${activity.title}' : activity.title,
+        );
+      }
+      final position = moment.position;
+      final part = 'Part ${position + 1} of ${moment.parts}';
+      return (
+        title: partNames[position],
+        detail: paused
+            ? 'Paused · $part'
+            : ComposedCopy.partDetail(
+                position,
+                moment.parts,
+                position + 1 < partNames.length
+                    ? partNames[position + 1]
+                    : null,
+              ),
+      );
     case SessionBody.guided:
       // Time reaching its end says nothing about the steps: the step on show
       // is never turned into "Step 5 of 5" — the end simply takes over.
@@ -105,6 +133,8 @@ class CircleSessionCard extends StatelessWidget {
     this.pace,
     this.cardAsset,
     this.artSwitchDuration = Duration.zero,
+    this.partMoment,
+    this.onSkip,
     super.key,
   });
 
@@ -130,9 +160,37 @@ class CircleSessionCard extends StatelessWidget {
   final String? cardAsset;
   final Duration artSwitchDuration;
 
+  /// A composed Circle's part on show ([SessionBody.composed]).
+  final PartMoment? partMoment;
+
+  /// "Skip this step" on a composed Circle's part on show.
+  final VoidCallback? onSkip;
+
   @override
   Widget build(BuildContext context) {
+    final moment = partMoment;
     return switch (body) {
+      // Past the last part, or at the time set aside: the ending takes
+      // over — it never claims the parts were done.
+      SessionBody.composed when ended || moment == null || moment.finished =>
+        HomeCardShell(
+          first: _OpenMomentText(
+            activity: activity,
+            moment: const OpenMoment(OpenPhase.ending),
+          ),
+          second: const SizedBox.shrink(),
+        ),
+      // Not past the last part: the case above takes every other one.
+      SessionBody.composed => HomeCardShell(
+        first: _ComposedPartText(activity: activity, moment: moment!),
+        second: _ComposedControls(
+          paused: paused,
+          onSkip: onSkip,
+          onNext: () => onMoveTo(moment.position + 1),
+          onPause: onPause,
+          onResume: onResume,
+        ),
+      ),
       SessionBody.open => HomeCardShell(
         cardAsset: cardAsset,
         artSwitchDuration: artSwitchDuration,
@@ -503,6 +561,116 @@ class _QuietControl extends StatelessWidget {
         minimumSize: const Size(48, 48),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s),
       ),
+    );
+  }
+}
+
+/// Composed (ADR-023 §5): the part on show — its instruction and its time.
+/// Its name is the heading above the card. Read out whenever it changes,
+/// including when the part moves on by itself: the user need not watch the
+/// screen to know a new part has begun.
+class _ComposedPartText extends StatelessWidget {
+  const _ComposedPartText({required this.activity, required this.moment});
+
+  final ActivityDefinition activity;
+  final PartMoment moment;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).extension<AppColors>()!;
+    final step = activity.steps[moment.position];
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label:
+          'Part ${moment.position + 1} of ${moment.parts}. ${step.name}. '
+          '${step.instruction} ${step.cue}.',
+      child: ExcludeSemantics(
+        child: AnimatedSwitcher(
+          duration: _switchDuration(context),
+          layoutBuilder: (current, previous) => Stack(
+            alignment: AlignmentDirectional.topStart,
+            children: [...previous, ?current],
+          ),
+          child: Column(
+            key: ValueKey(moment.position),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                step.instruction,
+                style: textTheme.bodyLarge?.copyWith(color: colors.textPrimary),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                children: [
+                  Icon(
+                    Icons.schedule_rounded,
+                    size: 16,
+                    color: colors.textSecondary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Flexible(
+                    child: Text(
+                      step.cue,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Composed's controls: Skip, Pause or Resume, and Next — the same row as
+/// Guided's, so nothing new to learn. Next is the one filled control.
+class _ComposedControls extends StatelessWidget {
+  const _ComposedControls({
+    required this.paused,
+    required this.onSkip,
+    required this.onNext,
+    required this.onPause,
+    required this.onResume,
+  });
+
+  final bool paused;
+  final VoidCallback? onSkip;
+  final VoidCallback onNext;
+  final VoidCallback onPause;
+  final VoidCallback onResume;
+
+  @override
+  Widget build(BuildContext context) {
+    return OverflowBar(
+      alignment: MainAxisAlignment.spaceBetween,
+      overflowAlignment: OverflowBarAlignment.center,
+      overflowDirection: VerticalDirection.up,
+      children: [
+        _QuietControl(
+          label: ComposedCopy.skip,
+          icon: Icons.skip_next_rounded,
+          onPressed: onSkip,
+        ),
+        _PauseToggle(
+          paused: paused,
+          onPause: onPause,
+          onResume: onResume,
+          labelled: false,
+        ),
+        ThirtyButton(
+          label: SessionCopy.next,
+          variant: ThirtyButtonVariant.primary,
+          trailingIcon: Icons.chevron_right_rounded,
+          onPressed: onNext,
+        ),
+      ],
     );
   }
 }
