@@ -78,15 +78,26 @@ class ComposedCircle {
   final String trace;
 }
 
-/// Whether a past Circle composed [element] and the user didn't skip it —
-/// the only composed Circles whose answer is evidence about that element.
-bool Function(PastCircle) composedWith(ElementId element) {
-  final prefix = '${element.name}:';
-  return (c) =>
-      c.composed &&
-      !c.skipped.contains(element.name) &&
-      c.parts.any((p) => p.startsWith(prefix));
-}
+/// A past composed Circle's substance — its main and second piece — the
+/// parts its answer is about. Read once per Circle.
+final _substance = Expando<Set<String>>('substance');
+
+Set<String> _substanceOf(PastCircle circle) => _substance[circle] ??= () {
+  final plan = CirclePlan.fromWire(circle.parts);
+  if (plan == null) return const <String>{};
+  final core = _coreOf(plan);
+  return {core.$1.name, ?core.$2?.name};
+}();
+
+/// Whether a past composed Circle's answer is evidence about [element]: it
+/// was that Circle's main or second piece, and the user didn't skip it. An
+/// arrival or a close never takes credit for a day's answer — the answer is
+/// about what the session was made of.
+bool Function(PastCircle) composedWith(ElementId element) =>
+    (c) =>
+        c.composed &&
+        !c.skipped.contains(element.name) &&
+        _substanceOf(c).contains(element.name);
 
 /// How one element stands for one need today, derived fresh from the
 /// journal — never stored.
@@ -104,10 +115,12 @@ class ElementStanding {
   /// Whether it may be composed today at all.
   final bool allowed;
 
-  /// Its explicit evidence: answers about its own activity (only where it
-  /// carries that activity's evidence), plus a fraction of the answers about
-  /// composed Circles it was part of, unskipped, and of the positive
-  /// answers about the user's routines that hold its activity.
+  /// Its explicit evidence, from −2 to 2: the confidence-weighted mean of
+  /// the answers about its own activity (only where it carries that
+  /// activity's evidence), about composed Circles it was the substance of
+  /// (unskipped, at half weight), and the positive answers about the user's
+  /// routines that hold its activity (half weight). A mean, not a sum: how
+  /// often a part was offered never compounds into how much it is liked.
   final double evidence;
 
   /// Whether "things you've found useful" may name it.
@@ -142,16 +155,18 @@ ElementStanding elementStanding(
     if (days != null && days <= policy.restDays) excluded = 'resting';
   }
 
-  final own = element.carriesEvidence && from != null
-      ? memory.strengthFor(from, need)
-      : 0.0;
+  const none = (sum: 0.0, weight: 0.0);
+  final carries = element.carriesEvidence && from != null;
+  final own = carries
+      ? memory.answersWhere((c) => !c.composite && c.activityId == from, need)
+      : none;
   final about = composedWith(element.id);
-  final composed = memory.strengthWhere(about, need);
+  final composed = memory.answersWhere(about, need);
   // The user's own routine, used and found useful, speaks for its pieces'
   // elements too — positive answers only: a routine's "Not useful" may be
   // about the combination, never about each part (ADR-022 §5).
-  final routine = element.carriesEvidence && from != null
-      ? memory.strengthWhere(
+  final routine = carries
+      ? memory.answersWhere(
           (c) =>
               c.routineId != null &&
               c.touches(from) &&
@@ -159,19 +174,21 @@ ElementStanding elementStanding(
                   c.usefulness == PastUsefulness.somewhatUseful),
           need,
         )
-      : 0.0;
-  final evidence =
-      own + composerPolicy.composedEvidenceFactor * (composed + routine);
+      : none;
+  final half = composerPolicy.composedEvidenceFactor;
+  final sum = own.sum + half * (composed.sum + routine.sum);
+  final weight = own.weight + half * (composed.weight + routine.weight);
+  final mean = weight == 0 ? 0.0 : sum / weight;
+  // Little evidence counts for little: the mean, scaled by confidence.
+  final evidence = mean * weight / (weight + 1);
   final veryUseful =
-      (element.carriesEvidence &&
-          from != null &&
-          memory.veryUsefulFor(from, need)) ||
+      (carries && memory.veryUsefulFor(from, need)) ||
       memory.veryUsefulWhere(about, need);
   return ElementStanding(
     element: element,
     allowed: excluded == null,
     evidence: evidence,
-    provenUseful: veryUseful && evidence >= policy.usefulThreshold,
+    provenUseful: veryUseful && mean >= 1 && weight >= 1,
     excludedBecause: excluded,
   );
 }
@@ -446,6 +463,26 @@ ComposedCircle? composeCircle(
     (seen) => seen.length == elements.length && seen.containsAll(elements),
   );
 
+  // The main pieces composed for this need in the last month.
+  final mainsThisMonth = {
+    for (final c in recent)
+      if (c.composed &&
+          c.need == need &&
+          memory.ageOf(c) <= composerPolicy.untriedMainDays)
+        ?_mainOf(c),
+  };
+
+  // Identical sessions within the week: not composed again while anything
+  // else passes the gate.
+  final weekPlans = [
+    for (final c in recent)
+      if (c.composed && memory.ageOf(c) <= composerPolicy.identicalPlanDays)
+        ?CirclePlan.fromWire(c.parts)?.elements,
+  ];
+  bool identicalThisWeek(Set<ElementId> elements) => weekPlans.any(
+    (seen) => seen.length == elements.length && seen.containsAll(elements),
+  );
+
   // The session's substance — its main and second piece — within the week.
   final recentCores = <(ElementId, ElementId?)>{};
   for (final c in recent) {
@@ -459,16 +496,20 @@ ComposedCircle? composeCircle(
   double scorePart(CirclePart part, {required bool main}) {
     final element = part.definition;
     final standing = standings[element.id]!;
-    final evidence = standing.evidence > composerPolicy.evidenceCap
-        ? composerPolicy.evidenceCap
-        : standing.evidence;
     var score =
         composerPolicy.evidenceWeight *
-        evidence *
+        standing.evidence *
         (main
             ? composerPolicy.mainEvidenceFactor
             : composerPolicy.supportEvidenceFactor);
     if (part.minutes < element.minutes) score -= composerPolicy.shortFormCost;
+    // Something not yet tried as the main piece for this need lately — so a
+    // few early favourites never stop everything else from being met.
+    if (main &&
+        standing.evidence >= 0 &&
+        !mainsThisMonth.contains(element.id)) {
+      score += composerPolicy.untriedMainBonus;
+    }
     final since = daysSinceComposed[element.id];
     if (since != null && since <= composerPolicy.recentPartDays) {
       score -= main
@@ -515,8 +556,9 @@ ComposedCircle? composeCircle(
               mainOffersThisWeek(element) < composerPolicy.mainWeeklyCap),
       policy: composerPolicy,
     )) {
-      considered++;
       final plan = CirclePlan(parts);
+      if (capped && identicalThisWeek(plan.elements)) continue;
+      considered++;
       final main = plan.main;
       var score = 0.0;
       for (final part in parts) {
@@ -525,13 +567,13 @@ ComposedCircle? composeCircle(
       final total = plan.minutes;
       final use = total / window;
       score += composerPolicy.fillWeight * use;
-      if (use >= composerPolicy.targetUtilization) {
-        score += composerPolicy.targetUseBonus;
-      } else if (use >=
-          (composerPolicy.minUtilization + composerPolicy.targetUtilization) /
-              2) {
-        score += composerPolicy.partialUseBonus;
-      }
+      // At or above the target, a bonus; below it, a cost that grows with
+      // what is left unused — a short session must earn its place.
+      score += use >= composerPolicy.targetUtilization
+          ? composerPolicy.targetUseBonus
+          : composerPolicy.targetUseBonus -
+                (composerPolicy.targetUtilization - use) *
+                    composerPolicy.underUseCost;
       bool has(ElementRole role) =>
           parts.any((p) => p != main && _roleIn(parts, p) == role);
       if (has(ElementRole.settle)) score += composerPolicy.settleBonus;

@@ -9,6 +9,9 @@ import '../../features/home/application/circle_journal.dart';
 import '../../features/home/application/first_breath_provider.dart';
 import '../../features/home/application/recommendation_provider.dart';
 import '../../features/home/application/suggestion_preferences.dart';
+import '../../features/personal_circle/domain/circle_composer.dart';
+import '../../features/personal_circle/domain/circle_elements.dart';
+import '../../features/personal_circle/domain/composed_session.dart';
 import '../../features/home/domain/recommendation_engine.dart';
 import '../../features/settings/application/first_name_provider.dart';
 import '../../features/toolkit/application/toolkit_provider.dart';
@@ -177,7 +180,27 @@ enum QaScenario {
 
   /// Clearer Head chosen just as often, but Free's picks for it rated
   /// "Somewhat useful" every time: Free serves it — no gap offer.
-  dServedWell('d_served_well', 'D-N2 · Served well, no gap');
+  dServedWell('d_served_well', 'D-N2 · Served well, no gap'),
+
+  /// V2 Phase D2 (ADR-023): two weeks of Free, and Premium today — the
+  /// first Personal Guided Circle is one choice of need and time away.
+  d2FirstPremium('d2_first_premium', 'D2-A · First Premium Today'),
+
+  /// A month of Personal Guided Circles: answers, a skipped part, a part
+  /// left out (Memory shows it), a kept Circle (Toolkit shows it).
+  d2Month('d2_month', 'D2-B · A month of Circles'),
+
+  /// Today's composed Circle, started a few minutes ago: its second part
+  /// is on show — Skip, Pause, Next, and the parts moving on by
+  /// themselves.
+  d2Running('d2_running', 'D2-C · Composed Circle running'),
+
+  /// Premium ended after a month of Circles, a routine and a kept Circle:
+  /// Today is Free's, and what the user owns is theirs to use today.
+  d2Lapsed('d2_lapsed', 'D2-D · Lapsed, kept Circle and routine'),
+
+  /// The same user, subscribed again: composition returns.
+  d2Back('d2_back', 'D2-E · Back on Premium');
 
   const QaScenario(this.wireName, this.label);
 
@@ -192,7 +215,9 @@ enum QaScenario {
   /// The entitlement this scenario is defined by, if any — a lapsed
   /// subscriber is inactive by definition.
   QaEntitlement? get fixedEntitlement =>
-      this == QaScenario.dLapsed ? QaEntitlement.inactive : null;
+      this == QaScenario.dLapsed || this == QaScenario.d2Lapsed
+      ? QaEntitlement.inactive
+      : null;
 }
 
 /// One applied QA session: the simulated entitlement and the isolated store
@@ -259,8 +284,24 @@ class QaToday {
     this.guidedPosition = 0,
     this.attempt,
     this.usefulness,
+    this.plan,
   });
 
+  /// V2 Phase D2: today's composed Circle, when the scenario needs one —
+  /// [activity] is then its main piece's art.
+  QaToday.composed(
+    this.need,
+    CirclePlan this.plan, {
+    this.window = TimeWindow.about20,
+    this.startedMinutesAgo,
+    this.closedMinutesAgo,
+    this.pausedMinutesAgo,
+    this.attempt,
+    this.usefulness,
+  }) : activity = plan.main.definition.art,
+       guidedPosition = 0;
+
+  final CirclePlan? plan;
   final Intention need;
   final ActivityId activity;
   final TimeWindow window;
@@ -337,6 +378,16 @@ QaToday? qaTodayFor(QaScenario scenario) => switch (scenario) {
     closedMinutesAgo: 3,
     attempt: _yes,
     usefulness: _not,
+  ),
+  QaScenario.d2Running => QaToday.composed(
+    _head,
+    CirclePlan(const [
+      CirclePart(ElementId.standAndReach, 1),
+      CirclePart(ElementId.clearCorner, 8),
+      CirclePart(ElementId.getItOut, 6),
+      CirclePart(ElementId.chooseOne, 1),
+    ]),
+    startedMinutesAgo: 2,
   ),
   _ => null,
 };
@@ -438,8 +489,14 @@ Future<void> _seedToday(
 ) async {
   final date = dateKey(referenceNow);
   final activity = activityDefinition(today.activity);
+  final plan = today.plan;
   final minutes =
-      offeredMinutesFor(activity, today.window) ?? activity.typicalMinutes;
+      plan?.minutes ??
+      offeredMinutesFor(activity, today.window) ??
+      activity.typicalMinutes;
+  final reason = plan == null
+      ? RecommendationReason.bestFit
+      : RecommendationReason.personalCircle;
   DateTime ago(int minutes) =>
       referenceNow.subtract(Duration(minutes: minutes));
   final startedAt = today.startedMinutesAgo == null
@@ -461,10 +518,15 @@ Future<void> _seedToday(
   await store.setString(recommendationActivityIdKey, today.activity.name);
   await store.setString(recommendationTimeWindowKey, today.window.name);
   await store.setInt(recommendationOfferedMinutesKey, minutes);
-  await store.setString(
-    recommendationReasonKey,
-    RecommendationReason.bestFit.name,
-  );
+  await store.setString(recommendationReasonKey, reason.name);
+  if (plan != null) {
+    await store.setString(
+      recommendationComposedKey,
+      jsonEncode(
+        ComposedSession(plan: plan, basis: CompositionBasis.sized).toJson(),
+      ),
+    );
+  }
   await store.setString(
     recommendationStatusKey,
     closedAt != null
@@ -517,10 +579,16 @@ Future<void> _seedToday(
         usefulnessResponse: today.usefulness,
         timeWindow: today.window.name,
         offeredMinutes: minutes,
-        reasonCode: RecommendationReason.bestFit.name,
+        reasonCode: reason.name,
         minutesAtClose: startedAt == null || closedAt == null
             ? null
             : closedAt.difference(startedAt).inMinutes,
+        session: plan == null
+            ? null
+            : CircleSessionRecord(
+                title: ComposedCopy.title,
+                parts: plan.toWire(),
+              ),
       ),
     );
   await store.setString(
@@ -557,6 +625,9 @@ class QaScenarioDay {
     this.routine,
     this.shortVersion = false,
     this.noCircle = false,
+    this.skipFirst = false,
+    this.leaveOutFirst = false,
+    this.keepCircle = false,
   });
 
   /// Days relative to the reference date (negative: before it).
@@ -606,6 +677,14 @@ class QaScenarioDay {
 
   /// V2 Phase D: Toolkit actions only — no Circle that day.
   final bool noCircle;
+
+  /// V2 Phase D2: on a composed Circle, skip its first part — or skip it
+  /// and leave it out of future Circles.
+  final bool skipFirst;
+  final bool leaveOutFirst;
+
+  /// V2 Phase D2: after Close, keep the day's composed Circle.
+  final bool keepCircle;
 }
 
 const _currentCatalogVersion = catalogVersion;
@@ -1126,7 +1205,60 @@ List<QaScenarioDay> qaScenarioDays(QaScenario scenario) => switch (scenario) {
     _somewhat,
     _somewhat,
   ]),
+  QaScenario.d2FirstPremium => [
+    for (final day in _freeHistory(-15))
+      QaScenarioDay(
+        day.offsetDays,
+        day.direction,
+        entitled: false,
+        seeded: day.seeded,
+        window: day.window,
+        attempt: day.attempt,
+        usefulness: day.usefulness,
+      ),
+  ],
+  QaScenario.d2Month ||
+  QaScenario.d2Running => [..._freeHistory(-45), ..._composedMonth(-29)],
+  QaScenario.d2Lapsed || QaScenario.d2Back => [
+    ..._freeHistory(-72),
+    ..._wakeUpBuild(-58, _buildAnswers, keep: true),
+    ..._composedMonth(-34),
+    // Premium ended: Free days since.
+    const QaScenarioDay(-3, _head, entitled: false, attempt: _yes),
+    const QaScenarioDay(
+      -1,
+      _energy,
+      entitled: false,
+      attempt: _yes,
+      usefulness: _somewhat,
+    ),
+  ],
 };
+
+/// V2 Phase D2: a month of Personal Guided Circles from [start] — needs and
+/// times varied as a real month would, most answered, a part skipped once,
+/// a part left out once, and one Circle kept.
+List<QaScenarioDay> _composedMonth(int start) => [
+  for (var i = 0; i < 26; i++)
+    if (i % 4 != 3)
+      QaScenarioDay(
+        start + i,
+        const [_head, _energy, _head, _gentle][i % 4],
+        window: const [
+          TimeWindow.about20,
+          TimeWindow.about10,
+          TimeWindow.upTo30,
+          TimeWindow.about20,
+        ][(i ~/ 2) % 4],
+        attempt: i % 5 == 4 ? null : _yes,
+        usefulness: i % 5 == 4
+            ? null
+            : const [_very, _somewhat, _very, _not, _somewhat][i % 5],
+        skipFirst: i == 6,
+        leaveOutFirst: i == 13,
+        keepCircle: i == 20,
+      ),
+];
 
 /// A pick-me-up built and kept, then ordinary More Energy days: something
 /// new, then Move to music (answered [musicAnswer]), then the stretch — so
@@ -1469,6 +1601,10 @@ Future<void> simulateQaDay(
       clock = morning.add(const Duration(minutes: 2));
       circle.start();
       await _settle();
+      if (day.skipFirst || day.leaveOutFirst) {
+        circle.skipPart(leaveOut: day.leaveOutFirst);
+        await _settle();
+      }
       clock = morning.add(const Duration(minutes: 32));
       circle.close();
       await _settle();
@@ -1483,6 +1619,18 @@ Future<void> simulateQaDay(
       }
     }
 
+    final composed = container
+        .read(recommendationProvider)
+        .recommendation
+        ?.composed;
+    if (day.keepCircle && composed != null && !composed.isKept) {
+      toolkit.keepCircle(
+        plan: composed.plan,
+        need: day.direction,
+        circleId: dateKey(morning),
+      );
+      await _settle();
+    }
     if (day.keepProposal &&
         (container.read(toolkitProvider).path?.finished ?? false)) {
       toolkit.keepProposal(name: day.keepName);

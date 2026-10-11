@@ -528,6 +528,30 @@ class RecommendationMemory {
   double strengthWhere(bool Function(PastCircle) about, Intention need) =>
       _strength(about, need);
 
+  /// V2 Phase D2: the same answers as [strengthWhere], with how much they
+  /// weigh in all (each counted answer 1, or ½ past the half-life) — so a
+  /// caller can read their mean rather than their sum.
+  ({double sum, double weight}) answersWhere(
+    bool Function(PastCircle) about,
+    Intention need,
+  ) {
+    var sum = 0.0;
+    var weight = 0.0;
+    for (final c in _past) {
+      if (!about(c) || c.need != need || !_counts(c)) continue;
+      final w = _weight(c);
+      weight += w;
+      sum +=
+          w *
+          switch (c.usefulness!) {
+            PastUsefulness.veryUseful => 2,
+            PastUsefulness.somewhatUseful => 1,
+            PastUsefulness.notUseful => -2,
+          };
+    }
+    return (sum: sum, weight: weight);
+  }
+
   /// V2 Phase D2: whether a "Very useful" answer within the window is among
   /// the Circles [about] selects, for [need].
   bool veryUsefulWhere(bool Function(PastCircle) about, Intention need) =>

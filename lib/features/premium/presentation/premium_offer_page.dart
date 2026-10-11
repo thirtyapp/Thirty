@@ -55,8 +55,8 @@ class PremiumOfferPage extends ConsumerStatefulWidget {
   static const points = [
     (
       'Made each day',
-      'tell THIRTY what you need and how much time you have, and it puts '
-          'together one Circle for today, sized to that time',
+      'tell THIRTY what would help most and how much time you have, and it '
+          'puts together one Circle for today, sized to that time',
     ),
     (
       'Guided through',

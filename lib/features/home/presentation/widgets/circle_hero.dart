@@ -14,8 +14,10 @@ import '../../../../core/world_rendering/world_hero_art_view.dart';
 import '../../../settings/application/first_name_provider.dart';
 import '../../application/activity_catalog.dart';
 import '../../application/first_breath_provider.dart';
+import '../../../personal_circle/application/guidance_voice.dart';
 import '../../../personal_circle/domain/circle_elements.dart';
 import '../../../personal_circle/domain/composed_session.dart';
+import '../../../personal_circle/domain/spoken_cues.dart';
 import '../../../personal_circle/presentation/skip_part_sheet.dart';
 import '../../application/recommendation_provider.dart';
 import '../../application/world_scene_resolution.dart';
@@ -386,6 +388,36 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       ? 0
       : (elapsed.inMilliseconds / offered.inMilliseconds).clamp(0.0, 1.0);
 
+  /// V2 Phase D2: the composed part last handed to the voice.
+  int? _spokenPart;
+
+  /// V2 Phase D2 (ADR-023 §6): when a composed Circle's part begins while
+  /// the user is in it, the voice says that part's cue — and the ending
+  /// after the last. Silent until a voice is approved; never on a first
+  /// look into a Circle already under way, never while paused.
+  void _speakPart(
+    ComposedSession? composed,
+    PartMoment? moment, {
+    required bool running,
+    required bool paused,
+  }) {
+    if (composed == null || moment == null) return;
+    final before = _spokenPart;
+    _spokenPart = moment.position;
+    if (before == moment.position || !running || paused) return;
+    if (before == null && moment.partElapsed > const Duration(seconds: 2)) {
+      return;
+    }
+    final voice = ref.read(guidanceVoiceProvider);
+    if (!voice.available) return;
+    final text = moment.finished
+        ? spokenEnding
+        : spokenCueFor(composed.plan, moment.position);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(voice.say(text));
+    });
+  }
+
   /// Moves focus to Close the moment it takes the lead in a running Circle
   /// seen live — never on a first look, a return or a restart.
   void _noticeCloseLead(bool leads, {required bool running}) {
@@ -614,6 +646,12 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         naturalEndReached(elapsed, offered);
     _noticeNaturalEnd(ended, running: status == RecommendationStatus.started);
     final paused = recommendationState.isPaused;
+    _speakPart(
+      composed,
+      partMoment,
+      running: status == RecommendationStatus.started,
+      paused: paused,
+    );
     final body = composed != null
         ? SessionBody.composed
         : sessionBodyFor(activity, activity.pace);

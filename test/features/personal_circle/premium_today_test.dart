@@ -422,6 +422,58 @@ void main() {
       );
     });
 
+    test('export includes composed parts and skips, kept Circles and '
+        'left-out parts — the user’s own data', () async {
+      final c = open(entitled: true);
+      final notifier = c.read(recommendationProvider.notifier);
+      notifier.chooseIntention(
+        Intention.clearerHead,
+        window: TimeWindow.about20,
+      );
+      final plan = c
+          .read(recommendationProvider)
+          .recommendation!
+          .composed!
+          .plan;
+      notifier.start();
+      notifier.skipPart(leaveOut: true);
+      notifier.close();
+      c
+          .read(toolkitProvider.notifier)
+          .keepCircle(
+            plan: plan,
+            need: Intention.clearerHead,
+            circleId: '2026-10-11',
+          );
+      await settle();
+      final exported =
+          jsonDecode(
+                c
+                    .read(circleJournalRepositoryProvider)
+                    .exportAsJson(
+                      suggestionPreferences: c
+                          .read(suggestionPreferencesProvider)
+                          .toJson(),
+                      toolkit: c.read(toolkitProvider).toJson(),
+                    ),
+              )
+              as Map<String, Object?>;
+      final entry = (exported['entries']! as List).single as Map;
+      expect((entry['session'] as Map)['parts'], plan.toWire());
+      expect((entry['session'] as Map)['skipped'], [
+        plan.parts.first.element.name,
+      ]);
+      expect(
+        ((exported['toolkit']! as Map)['kept'] as List).single,
+        containsPair('parts', plan.toWire()),
+      );
+      expect(
+        ((exported['suggestionPreferences']! as Map)['elementsLeftOut'] as List)
+            .single,
+        containsPair('elementId', plan.parts.first.element.name),
+      );
+    });
+
     test('one Circle a day: choosing again changes nothing', () {
       final c = open(entitled: true);
       final notifier = c.read(recommendationProvider.notifier);

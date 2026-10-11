@@ -269,45 +269,61 @@ void main() {
         ).evidence,
         0,
       );
+      // One "Very useful" (2): a mean of 2 at a confidence of ½ (ADR-023 §3).
       expect(
         elementStanding(
           elementOf(ElementId.gentleStretch),
           head,
           memory,
         ).evidence,
-        2,
+        1.0,
       );
     });
 
-    test('a composed Circle’s answer counts for its unskipped parts only', () {
-      final plan = CirclePlan(const [
-        CirclePart(ElementId.nameWhatsOn, 1),
-        CirclePart(ElementId.getItOut, 6),
-        CirclePart(ElementId.chooseOne, 1),
-      ]);
-      final history = [
-        composed(
-          3,
-          head,
-          plan,
-          answer: PastUsefulness.veryUseful,
-          skipped: [ElementId.nameWhatsOn],
-        ),
-      ];
-      final memory = RecommendationMemory.of(today, history, _policy);
-      expect(
-        elementStanding(elementOf(ElementId.getItOut), head, memory).evidence,
-        ComposerPolicy.initial.composedEvidenceFactor * 2,
-      );
-      expect(
-        elementStanding(
-          elementOf(ElementId.nameWhatsOn),
-          head,
-          memory,
-        ).evidence,
-        0,
-      );
-    });
+    test(
+      'a composed Circle’s answer counts for its unskipped substance only',
+      () {
+        final plan = CirclePlan(const [
+          CirclePart(ElementId.nameWhatsOn, 1),
+          CirclePart(ElementId.getItOut, 6),
+          CirclePart(ElementId.chooseOne, 1),
+        ]);
+        final history = [
+          composed(
+            3,
+            head,
+            plan,
+            answer: PastUsefulness.veryUseful,
+            skipped: [ElementId.nameWhatsOn],
+          ),
+        ];
+        final memory = RecommendationMemory.of(today, history, _policy);
+        // Half weight (½), a mean of 2, at a confidence of ⅓.
+        expect(
+          elementStanding(elementOf(ElementId.getItOut), head, memory).evidence,
+          closeTo(2 / 3, 1e-9),
+        );
+        // Skipped: no credit.
+        expect(
+          elementStanding(
+            elementOf(ElementId.nameWhatsOn),
+            head,
+            memory,
+          ).evidence,
+          0,
+        );
+        // Not skipped, but a close: the day's answer is about the session's
+        // substance, never its edges.
+        expect(
+          elementStanding(
+            elementOf(ElementId.chooseOne),
+            head,
+            memory,
+          ).evidence,
+          0,
+        );
+      },
+    );
 
     test(
       'a skip is never a "Not useful": a skipped part keeps its standing',

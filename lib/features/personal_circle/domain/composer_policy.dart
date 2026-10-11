@@ -13,12 +13,11 @@ class ComposerPolicy {
     this.targetUtilization = 0.8,
     this.minMainShare = 0.4,
     this.evidenceWeight = 3,
-    this.evidenceCap = 4,
     this.mainEvidenceFactor = 1.5,
     this.supportEvidenceFactor = 0.5,
     this.composedEvidenceFactor = 0.5,
     this.targetUseBonus = 3,
-    this.partialUseBonus = 1.5,
+    this.underUseCost = 20,
     this.fillWeight = 1,
     this.settleBonus = 1,
     this.arriveBonus = 0.5,
@@ -28,7 +27,10 @@ class ComposerPolicy {
     this.recentPartCost = 1,
     this.recentMainCost = 2,
     this.mainWeeklyCap = 2,
-    this.partWeeklyCap = 4,
+    this.partWeeklyCap = 3,
+    this.untriedMainDays = 30,
+    this.untriedMainBonus = 3,
+    this.identicalPlanDays = 7,
     this.coreRepeatDays = 7,
     this.coreRepeatCost = 4,
     this.samePlanDays = 14,
@@ -59,13 +61,9 @@ class ComposerPolicy {
   /// keeps arrive and settle from becoming filler.
   final double minMainShare;
 
-  /// How much one point of explicit evidence counts.
+  /// How much one point of explicit evidence counts. An element's evidence
+  /// is a confidence-weighted mean from −2 to 2 (`ElementStanding.evidence`).
   final double evidenceWeight;
-
-  /// The most evidence one part counts for: past "clearly useful", more
-  /// answers make it no more dominant — so one well-liked element never
-  /// crowds out everything else.
-  final double evidenceCap;
 
   /// The main piece's evidence counts this much…
   final double mainEvidenceFactor;
@@ -81,7 +79,11 @@ class ComposerPolicy {
   final double composedEvidenceFactor;
 
   final double targetUseBonus;
-  final double partialUseBonus;
+
+  /// Below [targetUtilization], this much less per whole window unused: a
+  /// 12-of-20-minute session costs 4 against a 16-minute one — never more
+  /// than a clearly better-liked main piece is worth.
+  final double underUseCost;
 
   /// Per whole window used: among sessions otherwise alike, the one using
   /// more of the user's time — never enough to outweigh evidence.
@@ -108,6 +110,16 @@ class ComposerPolicy {
   /// A part composed this often in 7 days, in any role, rests that week —
   /// relaxed only if nothing else passes the gate.
   final int partWeeklyCap;
+
+  /// A main piece not composed as the main piece for this need within this
+  /// many days earns [untriedMainBonus] — the composer's version of Free's
+  /// honest exploration, never enough to beat clear evidence.
+  final int untriedMainDays;
+  final double untriedMainBonus;
+
+  /// The same set of elements is not composed again within this many days
+  /// while anything else passes the gate.
+  final int identicalPlanDays;
 
   /// The same main and second piece together within this many days count
   /// against themselves: the session's substance, not its edges, is what

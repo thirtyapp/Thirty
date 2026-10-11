@@ -10,6 +10,7 @@ import 'package:thirty/core/qa/qa_shared_preferences.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/application/suggestion_preferences.dart';
 import 'package:thirty/features/home/domain/recommendation_engine.dart';
 import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
 import 'package:thirty/features/toolkit/domain/maintenance.dart';
@@ -63,11 +64,13 @@ void main() {
   List<CircleJournalEntry> journalOf(ProviderContainer container) =>
       container.read(circleJournalRepositoryProvider).readAll();
 
-  test('only d_lapsed fixes its entitlement (inactive)', () {
+  test('only the lapsed scenarios fix their entitlement (inactive)', () {
     for (final scenario in QaScenario.values) {
       expect(
         scenario.fixedEntitlement,
-        scenario == QaScenario.dLapsed ? QaEntitlement.inactive : isNull,
+        scenario == QaScenario.dLapsed || scenario == QaScenario.d2Lapsed
+            ? QaEntitlement.inactive
+            : isNull,
       );
     }
   });
@@ -116,6 +119,11 @@ void main() {
       'd_month_two',
       'd_gap',
       'd_served_well',
+      'd2_first_premium',
+      'd2_month',
+      'd2_running',
+      'd2_lapsed',
+      'd2_back',
     ]);
   });
 
@@ -499,6 +507,95 @@ void main() {
       expect(offer.kind, OfferKind.gap);
       expect(offer.need, Intention.clearerHead);
       expect(offer.template, PathTemplateId.clearTheDecks);
+    });
+  });
+
+  group('V2 Phase D2 — recurring Premium proofs', () {
+    test('D2-A — d2_first_premium: two weeks of Free, then the first '
+        'Personal Guided Circle is one choice away', () async {
+      final c = await open(QaScenario.d2FirstPremium);
+      addTearDown(c.dispose);
+      expect(journalOf(c).every((e) => e.session == null), isTrue);
+      c
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+      final today = c.read(recommendationProvider).recommendation!;
+      expect(today.composed, isNotNull);
+      expect(today.reason, RecommendationReason.personalCircle);
+      expect(today.offeredMinutes, lessThanOrEqualTo(20));
+    });
+
+    test('D2-B — d2_month: composed days, a skip, a part left out, a kept '
+        'Circle', () async {
+      final c = await open(QaScenario.d2Month);
+      addTearDown(c.dispose);
+      final composed = journalOf(
+        c,
+      ).where((e) => e.session?.parts.isNotEmpty ?? false).toList();
+      expect(composed.length, greaterThanOrEqualTo(15));
+      expect(
+        composed.where((e) => e.session!.skipped.isNotEmpty),
+        hasLength(2),
+        reason: 'one skip, one skip that also left the part out',
+      );
+      expect(
+        c.read(suggestionPreferencesProvider).elementsLeftOut,
+        hasLength(1),
+      );
+      expect(c.read(toolkitProvider).kept, hasLength(1));
+      // A composed answer never becomes activity evidence.
+      for (final entry in composed) {
+        expect(pastCirclesFrom([entry]).single.composite, isTrue);
+      }
+    });
+
+    test('D2-C — d2_running: today’s composed Circle on its second part, '
+        'moving on by itself', () async {
+      final c = await open(QaScenario.d2Running);
+      addTearDown(c.dispose);
+      final state = c.read(recommendationProvider);
+      expect(state.status, RecommendationStatus.started);
+      final composed = state.recommendation!.composed!;
+      expect(composed.plan.parts, hasLength(4));
+      final moment = state.partMomentAt(reference)!;
+      expect(moment.position, 1);
+      expect(state.recommendation!.sessionDefinition.steps, hasLength(4));
+    });
+
+    test('D2-D — d2_lapsed: Today is Free’s; the routine and the kept Circle '
+        'are the user’s to use today', () async {
+      final c = await open(QaScenario.d2Lapsed);
+      addTearDown(c.dispose);
+      final toolkit = c.read(toolkitProvider);
+      expect(toolkit.routines, hasLength(1));
+      expect(toolkit.kept, hasLength(1));
+      final notifier = c.read(recommendationProvider.notifier);
+      notifier.chooseIntention(
+        Intention.gentlerPace,
+        window: TimeWindow.about20,
+      );
+      expect(c.read(recommendationProvider).recommendation!.composed, isNull);
+      expect(
+        notifier.useOwnedToday(keptCircleId: toolkit.kept.single.id),
+        UseTodayResult.used,
+      );
+      expect(
+        c.read(recommendationProvider).recommendation!.composed!.isKept,
+        isTrue,
+      );
+    });
+
+    test('D2-E — d2_back: subscribed again, composition returns (on a need '
+        'without a routine of its own)', () async {
+      final c = await open(QaScenario.d2Back);
+      addTearDown(c.dispose);
+      c
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+      expect(
+        c.read(recommendationProvider).recommendation!.composed,
+        isNotNull,
+      );
     });
   });
 }
