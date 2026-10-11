@@ -102,11 +102,11 @@ void main() {
       final composed = today.composed!;
       expect(composed.plan.minutes, lessThanOrEqualTo(20));
       expect(today.offeredMinutes, composed.plan.minutes);
-      expect(today.activity, composed.plan.line);
+      expect(today.activity, composed.plan.substanceLine);
       // New user: nothing personal is claimed.
       expect(
         today.why,
-        'Small parts, one after another, to fit your 20 minutes.',
+        'Small parts, one after another, to fit your 20 minutes.',
       );
       expect(today.canReplace, isTrue);
       final session = today.sessionDefinition;
@@ -378,7 +378,7 @@ void main() {
       final today = free.read(recommendationProvider).recommendation!;
       expect(today.composed!.isKept, isTrue);
       expect(today.composed!.plan, composed.plan);
-      expect(today.activity, composed.plan.line);
+      expect(today.activity, composed.plan.substanceLine);
       expect(today.why, ComposedCopy.keptLine);
     });
 

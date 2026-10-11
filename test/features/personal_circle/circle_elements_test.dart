@@ -252,6 +252,27 @@ void main() {
       }
     });
 
+    test('the Today card names a composed Circle by its substance, always '
+        'short enough for two lines (S25 finding)', () {
+      for (final need in Intention.values) {
+        for (final window in TimeWindow.values) {
+          for (final parts in gatePassingShapes([
+            for (final e in elementLibrary.values)
+              if (isElementOfferable(e) && e.fits(need)) e,
+          ], window: window.maxMinutes)) {
+            final plan = CirclePlan(parts);
+            expect(plan.substance.first, plan.main);
+            expect(plan.substance.length, inInclusiveRange(1, 2));
+            expect(
+              plan.substanceLine.length,
+              lessThanOrEqualTo(46),
+              reason: plan.substanceLine,
+            );
+          }
+        }
+      }
+    });
+
     test('the longest composed line fits two lines of the Today card', () {
       for (final need in Intention.values) {
         final allowed = [

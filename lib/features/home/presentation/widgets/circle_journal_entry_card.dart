@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_card.dart';
 import '../../../../core/widgets/thirty_text_action.dart';
+import '../../../personal_circle/domain/circle_elements.dart';
 import '../../application/activity_catalog.dart';
 import '../../domain/v1_plan_history.dart';
 import '../../application/circle_journal.dart';
@@ -133,6 +134,10 @@ class CircleJournalEntryCard extends StatelessWidget {
       return circle == null || circles == null
           ? session.pathName
           : '${session.pathName} · Circle $circle of $circles';
+    }
+    // V2 Phase D2: a composed Circle's parts, as they were that day.
+    if (session != null && session.parts.isNotEmpty) {
+      return CirclePlan.fromWire(session.parts)?.line;
     }
     if (session != null && session.routineId != null) {
       final version = session.routineVersionNumber;

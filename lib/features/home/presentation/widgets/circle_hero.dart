@@ -1081,7 +1081,11 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                         : recommendation.canReplace
                         ? ActivityRowCue.howToOrNotThisOne
                         : ActivityRowCue.howTo,
-                    cardAsset: _art.cardAsset,
+                    // A composed Circle's parts need the card's full width: beside
+                    // the art they wrap to a third line and push Start Circle off the
+                    // first screen (S25 finding, D2). The art is decorative and shows
+                    // only where the text has room.
+                    cardAsset: composed != null ? null : _art.cardAsset,
                     artSwitchDuration: artSwitchDuration,
                     intentOpacity: _intentOpacity,
                     detailOpacity: _activityWhyOpacity,

@@ -1560,9 +1560,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         activityTypicalMinutes(activityId);
     return Recommendation(
       intent: intentionLabel(intention),
-      // A composed Circle's row is its parts, in order.
+      // A composed Circle's row names its substance; every part is in its
+      // how-to (S25 finding, D2).
       activity:
-          composed?.plan.line ?? session?.title ?? activityLabel(activityId),
+          composed?.plan.substanceLine ??
+          session?.title ??
+          activityLabel(activityId),
       duration: '$minutes minutes',
       why: switch ((composed, session)) {
         (ComposedSession(isKept: true), _) => ComposedCopy.keptLine,

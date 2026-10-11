@@ -127,7 +127,9 @@ class TodayCard extends StatelessWidget {
   /// words ("Path · Circle 3 of 7"); `null` reads [label].
   final String? spokenLabel;
 
-  final String cardAsset;
+  /// `null`: a card of text alone (V2 Phase D2 — a composed Circle's parts
+  /// take the card's full width, so Start Circle keeps its place).
+  final String? cardAsset;
   final Duration artSwitchDuration;
   final Animation<double> intentOpacity;
   final Animation<double> detailOpacity;

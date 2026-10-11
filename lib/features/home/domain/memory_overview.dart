@@ -89,8 +89,12 @@ NeedMemory needMemoryOf({
   RecommendationPolicy policy = RecommendationPolicy.initial,
   bool allowSafetyPending = safetyPendingContentAllowed,
 }) {
+  // Only an answer about an activity on its own: an answer about a routine,
+  // a joined Path step or a composed Circle is never shown — or counted —
+  // as the user's word about one activity inside it (ADR-023 §7).
   bool counts(PastCircle c) =>
       c.usefulness != null &&
+      !c.composite &&
       _ageInDays(c.date, today) <= policy.evidenceWindowDays &&
       historicalEvidenceEligible(c.activityId, c.catalogVersion);
 
@@ -155,7 +159,7 @@ NeedMemory needMemoryOf({
 
   final offered = {
     for (final c in history)
-      if (c.need == need) ...[c.activityId, ?c.replacedFrom],
+      if (c.need == need) ...[c.activityId, ...c.components, ?c.replacedFrom],
   };
   final notOfferedYet = ActivityId.values.where((id) {
     final activity = activityDefinition(id);

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/domain/memory_overview.dart';
 import 'package:thirty/features/home/domain/recommendation_engine.dart';
 import 'package:thirty/features/home/domain/recommendation_policy.dart';
 import 'package:thirty/features/personal_circle/domain/circle_composer.dart';
@@ -360,6 +361,22 @@ void main() {
         isNull,
       );
     });
+  });
+
+  test('Memory never shows a composed Circle’s answer as the user’s word '
+      'about one activity (S25 finding, D2)', () {
+    final plan = CirclePlan(const [
+      CirclePart(ElementId.activeJob, 12),
+      CirclePart(ElementId.shakeOut, 1),
+    ]);
+    final memory = needMemoryOf(
+      today: today,
+      need: energy,
+      history: [composed(3, energy, plan, answer: PastUsefulness.notUseful)],
+    );
+    expect(memory.notUsefulBefore, isEmpty);
+    expect(memory.resting, isEmpty);
+    expect(memory.usefulBefore, isEmpty);
   });
 
   group('user control', () {

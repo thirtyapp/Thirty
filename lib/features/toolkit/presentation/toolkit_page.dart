@@ -62,11 +62,12 @@ class ToolkitPage extends ConsumerWidget {
           routines: toolkit.routines,
           entitled: entitled,
           premiumShownAbove: toolkit.path != null,
-        )
-      else if (toolkit.path == null)
-        entitled ? const _FirstPath() : const _WhatPremiumBuilds(),
+        ),
       // V2 Phase D2: Circles the user kept — theirs, used when they choose.
+      // What the user owns comes before the optional ways to build more.
       if (toolkit.kept.isNotEmpty) _KeptCircles(kept: toolkit.kept),
+      if (toolkit.routines.isEmpty && toolkit.path == null)
+        entitled ? const _FirstPath() : const _WhatPremiumBuilds(),
     ];
 
     return Scaffold(
@@ -665,9 +666,13 @@ final suggestedPathProvider = Provider<PathSuggestion>((ref) {
     (t) => _shortestJoined(t) <= usualMax,
     orElse: () => options.first,
   );
+  // Exactly what THIRTY saw: the days the user chose this need (ADR-023
+  // §10) — never "often" or "lately".
   return (
     template: fitting.id,
-    reason: 'You’ve often chosen ${intentionLabel(need)} lately.',
+    reason:
+        'You chose ${intentionLabel(need)} on ${ranked.first.value} of the '
+        'last 28 days.',
   );
 });
 

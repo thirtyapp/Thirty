@@ -831,8 +831,29 @@ class CirclePlan {
     for (final p in parts) ?p.definition.from,
   ];
 
-  /// "Get it out · Choose one thing · Sit for a minute".
+  /// "Get it out · Choose one thing · Sit for a minute" — every part.
   String get line => parts.map((p) => p.definition.name).join(' · ');
+
+  /// The session's substance: its main piece and, when there is one, the
+  /// second piece after it — never the arrival or the close.
+  List<CirclePart> get substance {
+    final mainIndex = parts.indexOf(main);
+    final after = parts.skip(mainIndex + 1).toList();
+    // The last part is the close when it can close; anything before it
+    // that can be a second piece is the second piece.
+    final second = after.where((p) {
+      final roles = p.definition.roles;
+      final isClose = p == parts.last && roles.contains(ElementRole.settle);
+      return roles.contains(ElementRole.second) && !isClose;
+    }).firstOrNull;
+    return [main, ?second];
+  }
+
+  /// "Easy walk · Read a few pages" — what Today's card names: always short
+  /// enough for two lines, so Start Circle keeps its place (S25 finding,
+  /// D2). Every part, with its time, is one tap away.
+  String get substanceLine =>
+      substance.map((p) => p.definition.name).join(' · ');
 
   List<String> toWire() => [for (final p in parts) p.wire];
 

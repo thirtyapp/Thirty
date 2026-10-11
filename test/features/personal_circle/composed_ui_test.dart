@@ -143,10 +143,11 @@ void main() {
         find.bySemanticsLabel('Your Circle, about 16 minutes'),
         findsOneWidget,
       );
-      expect(find.text(_plan.line), findsOneWidget);
+      expect(find.text(_plan.substanceLine), findsOneWidget);
+      expect(_plan.substanceLine, 'Clear one corner · Get it out');
       expect(
         find.text(
-          'Built from things you’ve found useful, to fit your 20 minutes.',
+          'Built from things you’ve found useful, to fit your 20 minutes.',
         ),
         findsOneWidget,
       );
@@ -158,7 +159,7 @@ void main() {
     testWidgets('a sparse start claims nothing personal', (tester) async {
       await _pump(tester, _today(basis: CompositionBasis.sized), width: 900);
       expect(
-        find.text('Small parts, one after another, to fit your 20 minutes.'),
+        find.text('Small parts, one after another, to fit your 20 minutes.'),
         findsOneWidget,
       );
       expect(find.textContaining('found useful'), findsNothing);

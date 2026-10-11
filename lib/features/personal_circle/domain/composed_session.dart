@@ -25,12 +25,15 @@ abstract final class ComposedCopy {
   static String basisLine(CompositionBasis basis, TimeWindow window) =>
       switch (basis) {
         CompositionBasis.foundUseful =>
-          'Built from things you’ve found useful, to fit your '
-              '${window.maxMinutes} minutes.',
+          'Built from things you’ve found useful, to fit '
+              '${_keepTogether('your ${window.maxMinutes} minutes.')}',
         CompositionBasis.sized =>
-          'Small parts, one after another, to fit your '
-              '${window.maxMinutes} minutes.',
+          'Small parts, one after another, to fit '
+              '${_keepTogether('your ${window.maxMinutes} minutes.')}',
       };
+
+  /// [words] kept on one line: never an orphaned "minutes." (S25, D2).
+  static String _keepTogether(String words) => words.replaceAll(' ', ' ');
 
   /// The line under a kept Circle the user chose for today.
   static const keptLine = 'A Circle you kept.';
@@ -55,8 +58,7 @@ abstract final class ComposedCopy {
   static const skipTitle = 'Skip this part?';
   static const skipToday = 'Skip it for today';
   static const skipTodayDetail =
-      'The next part begins. Nothing is recorded '
-      'against this one.';
+      'The next part begins. Nothing is recorded against this one.';
   static const leaveOut = 'Leave it out next time';
   static const leaveOutDetail =
       'THIRTY won’t put it in your Circles again. You can bring it back in '
