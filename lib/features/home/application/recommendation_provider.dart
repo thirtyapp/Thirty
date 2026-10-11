@@ -1261,20 +1261,30 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// aside for today and the next one begins. A skip is never a usefulness
   /// answer: it only keeps that part from sharing the day's answer. With
   /// [leaveOut], the user also asks THIRTY to leave it out of their Circles
-  /// from now on — an explicit preference, reversible in Memory.
+  /// from now on — an explicit preference, reversible in Memory. The parts
+  /// that build on it ("Choose one thing" after "Get it out") are skipped
+  /// with it, so no part ever refers to something that didn't happen.
   void skipPart({bool leaveOut = false}) {
     final now = ref.read(eventClockProvider)();
     final moment = state.partMomentAt(now);
     final composed = state.recommendation?.composed;
     if (moment == null || composed == null || moment.finished) return;
     if (state.status != RecommendationStatus.started) return;
-    final element = composed.plan.parts[moment.position].element;
+    final plan = composed.plan;
+    final element = plan.parts[moment.position].element;
+    final through = moment.position + plan.partsBuildingOn(moment.position);
+    final skippedNow = [
+      for (final part in plan.parts.sublist(moment.position, through + 1))
+        part.element,
+    ];
     state = state.copyWith(
-      guidedPosition: moment.position + 1,
+      guidedPosition: through + 1,
       partAnchor: state.activeElapsedAt(now),
-      skipped: state.skipped.contains(element)
-          ? state.skipped
-          : [...state.skipped, element],
+      skipped: [
+        ...state.skipped,
+        for (final id in skippedNow)
+          if (!state.skipped.contains(id)) id,
+      ],
     );
     final snapshot = state;
     _enqueue(() => _persist(snapshot));

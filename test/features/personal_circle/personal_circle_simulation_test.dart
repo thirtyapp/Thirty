@@ -76,6 +76,7 @@ class Profile {
     this.buildsRoutine = false,
     this.skipsDisliked = false,
     this.restDays = const {},
+    this.reportNeed,
   });
 
   final String name;
@@ -107,6 +108,9 @@ class Profile {
 
   /// Days with no Circle at all.
   final Set<int> restDays;
+
+  /// Reports only this need's days, when set.
+  final Intention? reportNeed;
 
   bool entitled(int day) => entitledOn?.call(day) ?? true;
 }
@@ -279,7 +283,10 @@ class Simulation {
 
   /// The behaviour report at [upTo] — counts and intervals, never a score.
   Map<String, Object?> report(int upTo) {
-    final within = days.where((d) => d.day <= upTo).toList();
+    final need = profile.reportNeed;
+    final within = days
+        .where((d) => d.day <= upTo && (need == null || d.need == need))
+        .toList();
     final premiumDays = within.where((d) => d.entitled).toList();
     final composed = within.where((d) => d.composed).toList();
     final fallback = premiumDays
@@ -334,7 +341,21 @@ class Simulation {
               d.recommendation.composed!.basis == CompositionBasis.foundUseful,
         )
         .length;
+    // Evidence-driven adaptation: how the main pieces of the kinds this
+    // user answers "Very useful" / "Not useful" about move over time.
+    String? share(Iterable<SimDay> span, Set<ElementKind> kinds) {
+      final list = span.toList();
+      if (kinds.isEmpty || list.isEmpty) return null;
+      final hits = list
+          .where((d) => kinds.contains(d.plan!.main.definition.kind))
+          .length;
+      return '$hits/${list.length}';
+    }
+
+    final early = composed.where((d) => d.day <= 30);
+    final late = composed.where((d) => d.day > 60);
     return {
+      if (need != null) 'reported need': need.name,
       'days with a Circle': within.length,
       'Premium days': premiumDays.length,
       'Personal Guided Circles': composed.length,
@@ -368,6 +389,10 @@ class Simulation {
           ? null
           : uses[uses.length ~/ 2].toStringAsFixed(2),
       'lowest time use': uses.isEmpty ? null : uses.first.toStringAsFixed(2),
+      'liked-kind mains, days 1–30': share(early, profile.likes),
+      'liked-kind mains, after day 60': share(late, profile.likes),
+      'disliked-kind mains, days 1–30': share(early, profile.dislikes),
+      'disliked-kind mains, after day 60': share(late, profile.dislikes),
     };
   }
 
@@ -497,6 +522,26 @@ final profiles = <Profile>[
     windowOn: (d) => TimeWindow.upTo30,
     likes: const {ElementKind.writing, ElementKind.tidying},
   ),
+  // Correction pass (2026-10-11): the thinnest need, on most days, under
+  // real answers — liking music and movement, finding tidying not useful.
+  Profile(
+    name: 'p14_more_energy_dominant',
+    needOn: (d) => d % 7 == 0
+        ? _head
+        : d % 11 == 0
+        ? _gentle
+        : _energy,
+    windowOn: (d) => const [
+      TimeWindow.about10,
+      TimeWindow.about20,
+      TimeWindow.upTo30,
+      TimeWindow.about20,
+      TimeWindow.about10,
+    ][(d * 3) % 5],
+    likes: const {ElementKind.music, ElementKind.movement},
+    dislikes: const {ElementKind.tidying},
+    reportNeed: _energy,
+  ),
 ];
 
 void main() {
@@ -586,6 +631,30 @@ void main() {
           expect(lapsed, isNotEmpty);
           expect(lapsed.every((d) => !d.composed), isTrue);
           expect(sim.days.where((d) => d.day > 120 && d.composed), isNotEmpty);
+        }
+        // The thinnest need, under real answers, still moves with them: the
+        // kinds found useful lead more Circles later than early on, and the
+        // kind found not useful fewer.
+        if (profile.reportNeed != null) {
+          double share(String key) {
+            final [hits, of] = (report[key]! as String).split('/');
+            return int.parse(hits) / int.parse(of);
+          }
+
+          final early = sim.report(30);
+          double earlyShare(String key) {
+            final [hits, of] = (early[key]! as String).split('/');
+            return int.parse(hits) / int.parse(of);
+          }
+
+          expect(
+            share('liked-kind mains, after day 60'),
+            greaterThan(earlyShare('liked-kind mains, days 1–30')),
+          );
+          expect(
+            share('disliked-kind mains, after day 60'),
+            lessThan(earlyShare('disliked-kind mains, days 1–30')),
+          );
         }
         // Sparse evidence stays neutral at first.
         expect(

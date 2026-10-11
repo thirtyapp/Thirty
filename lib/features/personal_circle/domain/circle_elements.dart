@@ -162,8 +162,10 @@ class CircleElement {
   /// fragment (a few stretches from a longer sequence) carries none.
   final bool carriesEvidence;
 
-  /// An element that only makes sense after another in the same Circle
-  /// ("Choose one thing" needs "Get it out" first).
+  /// The part this element builds on: its words refer to what that part
+  /// left behind ("Look over what you wrote" needs "Get it out"). It is
+  /// only ever composed directly after that part, and skipping that part
+  /// skips it too — so its words are always true.
   final ElementId? after;
 
   /// An arrival that only makes sense before a main piece of these kinds
@@ -200,8 +202,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.phoneFaceDown,
     name: 'Phone face down',
     instruction:
-        'Silence your notifications and put your phone face down for the '
-        'rest of this Circle.',
+        'Silence your notifications, and keep your phone face down or in '
+        'your pocket for the rest of this Circle.',
     needs: {_head, _gentle},
     roles: {_arrive},
     minutes: 1,
@@ -239,8 +241,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.standAndReach,
     name: 'Stand and reach',
     instruction:
-        'Stand up, reach both arms overhead and stretch tall, then lower '
-        'them slowly. Three or four times.',
+        'Stand up and reach both arms overhead, only as high as is '
+        'comfortable, then lower them slowly. Three or four times.',
     needs: {_energy, _head},
     roles: {_arrive},
     minutes: 1,
@@ -253,8 +255,7 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.songOn,
     name: 'Put a song on',
     instruction:
-        'Put on a song you really like, a little louder than usual, and let '
-        'it play while you start.',
+        'Put on a song you really like, and let it play while you start.',
     needs: {_energy},
     roles: {_arrive},
     minutes: 1,
@@ -280,7 +281,6 @@ const Map<ElementId, CircleElement> elementLibrary = {
       ElementKind.reading,
       ElementKind.writing,
       ElementKind.focus,
-      ElementKind.ritual,
     },
   ),
   ElementId.lookAround: CircleElement(
@@ -302,8 +302,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.moveToMusic,
     name: 'Move to music',
     instruction:
-        'Put on songs you like and move however feels good — sway, step, '
-        'walk around the room. Let each song be a little livelier.',
+        'Put on songs with a bit of life in them, and move however feels '
+        'good — sway, step, walk around the room.',
     needs: {_energy},
     roles: {_main, _second},
     minutes: 8,
@@ -334,7 +334,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.activeJob,
     name: 'One active job',
     instruction:
-        'One job that keeps you on your feet — sweeping, hoovering, carrying — a little quicker than usual.',
+        'One job that keeps you on your feet — sweeping, hoovering, carrying '
+        'things — at a pace that feels comfortable.',
     needs: {_energy},
     roles: {_main},
     minutes: 12,
@@ -350,8 +351,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.briskWalk,
     name: 'A brisk walk',
     instruction:
-        'Head out. Start easy, then walk a little quicker — brisk, but '
-        'still able to talk. Turn back about halfway.',
+        'Head out. Start easy, then walk briskly — at a pace you can still '
+        'talk at. Turn back about halfway.',
     needs: {_energy},
     roles: {_main},
     minutes: 20,
@@ -381,8 +382,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.quickClearUp,
     name: 'Quick clear-up',
     instruction:
-        'Pick one room and put away as many things as you can. Don’t sort — '
-        'just put things back where they live.',
+        'Pick one room and put things back where they live. Don’t sort — '
+        'just put away what’s out.',
     needs: {_energy, _head},
     roles: {_main, _second},
     minutes: 5,
@@ -393,10 +394,10 @@ const Map<ElementId, CircleElement> elementLibrary = {
   ),
   ElementId.daylight: CircleElement(
     id: ElementId.daylight,
-    name: 'Into the daylight',
+    name: 'Some fresh air',
     instruction:
-        'Step outside, or stand at an open door or window, and spend a few '
-        'minutes in the daylight.',
+        'Step outside, or stand at an open door or window, for a few '
+        'minutes. Look around and take in what’s there.',
     needs: {_energy, _head, _gentle},
     roles: {_second},
     minutes: 4,
@@ -440,7 +441,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.oneTask,
     name: 'One task, no switching',
     instruction:
-        'Pick one task on your mind and close everything else. Stay with it until the time’s up — finished or not.',
+        'Pick one task on your mind and put everything else out of sight. '
+        'Stay with it until the time’s up — finished or not.',
     needs: {_head},
     roles: {_main},
     minutes: 15,
@@ -455,7 +457,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.listenOne,
     name: 'Listen to one thing',
     instruction:
-        'Put on one album, episode or recording. Phone face down, and nothing else to do but listen.',
+        'Put on one album, episode or recording, then put your phone face '
+        'down. Nothing else to do but listen.',
     needs: {_head, _gentle},
     roles: {_main},
     minutes: 12,
@@ -483,10 +486,10 @@ const Map<ElementId, CircleElement> elementLibrary = {
   ),
   ElementId.phoneFreeWalk: CircleElement(
     id: ElementId.phoneFreeWalk,
-    name: 'Phone-free walk',
+    name: 'Screen-free walk',
     instruction:
-        'Phone on silent and out of sight. Walk easily, and notice three '
-        'things you haven’t noticed before.',
+        'Silence your notifications and keep your phone in your pocket. '
+        'Walk easily, and look around you rather than at a screen.',
     needs: {_head, _gentle, _energy},
     roles: {_main},
     minutes: 15,
@@ -499,10 +502,10 @@ const Map<ElementId, CircleElement> elementLibrary = {
   ),
   ElementId.closeWhatsOpen: CircleElement(
     id: ElementId.closeWhatsOpen,
-    name: 'Close what’s open',
+    name: 'Set screens aside',
     instruction:
-        'Close every tab, window and app you don’t need right now. Leave '
-        'only what the next thing needs.',
+        'Minimise what you don’t need on your screens — nothing needs '
+        'closing. Keep in view only what comes next.',
     needs: {_head},
     roles: {_arrive},
     minutes: 3,
@@ -534,7 +537,7 @@ const Map<ElementId, CircleElement> elementLibrary = {
     name: 'A slow warm drink',
     instruction:
         'Make a warm drink you’d enjoy. Hold the cup in both hands, and drink '
-        'it slowly, phone out of reach.',
+        'it slowly, with your phone face down.',
     needs: {_gentle, _head},
     roles: {_main},
     minutes: 10,
@@ -548,7 +551,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.gentleStretch,
     name: 'Gentle stretch',
     instruction:
-        'Slowly: neck, shoulders, open the chest, a seated twist, then fold forward. Only what’s comfortable.',
+        'Slowly: neck, shoulders, open the chest, a seated twist, then fold '
+        'forward and come up slowly. Only what’s comfortable.',
     needs: {_gentle, _head, _energy},
     roles: {_main, _second},
     minutes: 8,
@@ -562,7 +566,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.neckAndShoulders,
     name: 'Neck and shoulders',
     instruction:
-        'Tip your head slowly towards each shoulder. Then lift your shoulders to your ears and let them drop.',
+        'Gently tip your head towards each shoulder. Then lift your '
+        'shoulders to your ears and let them drop.',
     needs: {_gentle, _head, _energy},
     roles: {_arrive, _second},
     minutes: 2,
@@ -607,8 +612,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.sitOutside,
     name: 'Sit outside',
     instruction:
-        'Find somewhere outside to sit, phone left inside. Listen to what '
-        'you can hear, near and far.',
+        'Find somewhere outside to sit, with your phone in your pocket. '
+        'Listen to what you can hear, near and far.',
     needs: {_gentle, _head},
     roles: {_main, _second},
     minutes: 10,
@@ -681,12 +686,15 @@ const Map<ElementId, CircleElement> elementLibrary = {
   ElementId.putThingsBack: CircleElement(
     id: ElementId.putThingsBack,
     name: 'Put things back',
-    instruction: 'Put away what you used, and leave the space ready for later.',
+    instruction:
+        'Put back anything that’s out of place nearby, and leave your space '
+        'ready for later.',
     needs: {_gentle, _head, _energy},
     roles: {_settle},
     minutes: 2,
     kind: ElementKind.tidying,
-    setting: _either,
+    // Done indoors: never the close of a Circle spent outside.
+    setting: _indoor,
     art: ActivityId.unhurriedTidyPause,
   ),
   ElementId.glassOfWater: CircleElement(
@@ -703,9 +711,7 @@ const Map<ElementId, CircleElement> elementLibrary = {
   ElementId.shakeOut: CircleElement(
     id: ElementId.shakeOut,
     name: 'Shake it out',
-    instruction:
-        'Shake out your hands and arms loosely, then stand easy for a '
-        'moment.',
+    instruction: 'Shake out your hands and arms loosely, then let them rest.',
     needs: {_energy},
     roles: {_settle},
     minutes: 1,
@@ -739,7 +745,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.oneLongReach,
     name: 'One long reach',
     instruction:
-        'Finish with one long reach overhead, then let your arms drop.',
+        'Finish with one long reach overhead, as far as is comfortable, then '
+        'let your arms drop.',
     needs: {_energy, _head},
     roles: {_settle},
     minutes: 1,
@@ -845,6 +852,17 @@ class CirclePlan {
   /// D2). Every part, with its time, is one tap away.
   String get substanceLine =>
       substance.map((p) => p.definition.name).join(' · ');
+
+  /// How many parts directly after [position] build on it ([CircleElement.
+  /// after]), one on the next: what skipping it skips too.
+  int partsBuildingOn(int position) {
+    var count = 0;
+    for (var i = position + 1; i < parts.length; i++) {
+      if (parts[i].definition.after != parts[i - 1].element) break;
+      count++;
+    }
+    return count;
+  }
 
   List<String> toWire() => [for (final p in parts) p.wire];
 

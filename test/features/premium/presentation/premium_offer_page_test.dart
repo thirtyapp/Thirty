@@ -250,7 +250,7 @@ void main() {
     expect(container.read(premiumEntitlementProvider), isFalse);
   });
 
-  testWidgets('says Free stays complete and that history stays on this '
+  testWidgets('says what Free still gives and that history stays on this '
       'device (Phase C2 copy)', (tester) async {
     _phoneView(tester);
     final (widget, container) = await _wrap(gateway: _FakeEntitlementGateway());

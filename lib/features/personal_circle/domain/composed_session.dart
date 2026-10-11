@@ -59,6 +59,20 @@ abstract final class ComposedCopy {
   static const skipToday = 'Skip it for today';
   static const skipTodayDetail =
       'The next part begins. Nothing is recorded against this one.';
+
+  /// The same, when later parts build on this one ([CirclePlan.
+  /// partsBuildingOn]): they are skipped with it, and the sheet says so.
+  static String skipTodayDetailFor(List<String> buildingOn) =>
+      switch (buildingOn) {
+        [] => skipTodayDetail,
+        [final one] =>
+          '“$one” builds on this part, so it’s skipped too. Nothing is '
+              'recorded against either.',
+        _ =>
+          '${buildingOn.map((name) => '“$name”').join(' and ')} build on '
+              'this part, so they’re skipped too. Nothing is recorded '
+              'against any of them.',
+      };
   static const leaveOut = 'Leave it out next time';
   static const leaveOutDetail =
       'THIRTY won’t put it in your Circles again. You can bring it back in '

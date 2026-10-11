@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:thirty/features/personal_circle/application/guidance_voice.dart';
+import 'package:thirty/features/personal_circle/domain/spoken_cues.dart';
 import 'package:thirty/core/premium/entitlement_gateway.dart';
 import 'package:thirty/core/premium/entitlement_status.dart';
 import 'package:thirty/core/premium/premium_access.dart';
@@ -93,6 +95,7 @@ Future<ProviderContainer> _pump(
   _FakeEntitlementGateway gateway, {
   bool initialize = true,
   bool withJournal = false,
+  bool spokenGuidanceBundled = false,
 }) async {
   tester.view.physicalSize = const Size(412, 2400);
   tester.view.devicePixelRatio = 1.0;
@@ -115,6 +118,7 @@ Future<ProviderContainer> _pump(
       entitlementGatewayProvider.overrideWithValue(gateway),
       sharedPreferencesProvider.overrideWithValue(prefs),
       reminderGatewayProvider.overrideWithValue(_FakeReminderGateway()),
+      spokenGuidanceAvailableProvider.overrideWithValue(spokenGuidanceBundled),
     ],
   );
   addTearDown(container.dispose);
@@ -136,6 +140,35 @@ double _top(WidgetTester tester, String text) =>
     tester.getTopLeft(find.text(text)).dy;
 
 void main() {
+  group('Spoken guidance (V2 Phase D2)', () {
+    testWidgets('no setting while the build bundles no recordings', (
+      tester,
+    ) async {
+      await _pump(tester, _FakeEntitlementGateway());
+      expect(find.text(SpokenGuidanceCopy.title), findsNothing);
+    });
+
+    testWidgets('with the recordings bundled: on by default, and turning it '
+        'off is remembered', (tester) async {
+      final container = await _pump(
+        tester,
+        _FakeEntitlementGateway(),
+        spokenGuidanceBundled: true,
+      );
+      expect(find.text(SpokenGuidanceCopy.title), findsOneWidget);
+      expect(find.text(SpokenGuidanceCopy.detail), findsOneWidget);
+      final toggle = find.descendant(
+        of: find.byKey(const ValueKey('you.spokenGuidance')),
+        matching: find.byType(Switch),
+      );
+      expect(tester.widget<Switch>(toggle).value, isTrue);
+      await tester.tap(toggle);
+      await tester.pump();
+      expect(container.read(spokenGuidanceEnabledProvider), isFalse);
+      expect(container.read(guidanceVoiceProvider).available, isFalse);
+    });
+  });
+
   group('Hierarchy', () {
     testWidgets('North Star order: header → Premium card → Preferences → '
         'Data & privacy → About → Restore purchases, with Restore as the '

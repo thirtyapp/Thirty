@@ -174,7 +174,10 @@ void main() {
         'making Free look unfinished', (tester) async {
       await _pump(tester, const ToolkitPage(), entitled: false);
       expect(find.text('A Circle made for your day'), findsOneWidget);
-      expect(find.textContaining('Free stays complete'), findsOneWidget);
+      expect(
+        find.textContaining('With Free, THIRTY still gives you one good thing'),
+        findsOneWidget,
+      );
       expect(find.textContaining('stays yours'), findsOneWidget);
       expect(find.text('See Premium'), findsOneWidget);
     });

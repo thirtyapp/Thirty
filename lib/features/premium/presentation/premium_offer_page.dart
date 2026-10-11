@@ -25,7 +25,7 @@ import 'widgets/premium_restore_footer.dart';
 /// since V2 Phase D2, the Personal Guided Circle each day), what it costs
 /// (the store's own localized monthly price, never a hardcoded figure),
 /// that it renews monthly until cancelled (the disclosure directly under
-/// the price), that Free stays complete (next to the quiet "Not now"
+/// the price), what Free still gives (next to the quiet "Not now"
 /// exit), and how to restore or cancel (the shared restore footer and the
 /// cancel line). One monthly auto-renewing subscription only — no trial,
 /// annual price, urgency, testimonial or comparison (frozen architecture
@@ -38,16 +38,18 @@ class PremiumOfferPage extends ConsumerStatefulWidget {
   const PremiumOfferPage({super.key});
 
   /// V2 Phase D2 (ADR-023 §11): what Premium does — every day it is used.
-  /// Draft for founder review; no outcome is promised.
+  /// Draft for founder review; no outcome is promised. True from a
+  /// subscriber's first day: it never claims THIRTY already knows what they
+  /// found useful — only Today's Circle says that, and only with evidence.
   static const headline = 'A Circle made for your day';
   static const promise =
-      'Each day, THIRTY turns the time you have into one guided Circle — a '
-      'few small parts, built from what you’ve found useful — and takes you '
+      'From your first day, THIRTY turns the time you have into one guided '
+      'Circle — a few small parts, one after another — and takes you '
       'through it.';
 
-  /// What stays Free — complete, and never weakened.
+  /// What Free still gives — never weakened.
   static const freeLine =
-      'Free stays complete: THIRTY chooses one good thing for today, and '
+      'With Free, THIRTY still gives you one good thing for today, and '
       'learns from what you tell it.';
 
   /// V2 Phase D2: the recurring job first; owning things is a supporting
@@ -65,8 +67,9 @@ class PremiumOfferPage extends ConsumerStatefulWidget {
     ),
     (
       'Shaped by your answers',
-      'what you find useful comes back, and what you leave out stays out — '
-          'all of it visible in What THIRTY remembers',
+      'tell THIRTY what was useful and later Circles can bring it back; '
+          'what you leave out stays out — all of it visible in What THIRTY '
+          'remembers',
     ),
     (
       'Yours to keep',

@@ -70,18 +70,19 @@ class _Clock {
   DateTime now = _morning;
 }
 
-/// A voice that only remembers what it was asked to say.
+/// A voice that only remembers what it was asked to play.
 class _RecordingVoice implements GuidanceVoice {
-  final said = <String>[];
+  final said = <List<SpokenClip>>[];
+  var stops = 0;
 
   @override
   bool get available => true;
 
   @override
-  Future<void> say(String text) async => said.add(text);
+  Future<void> play(List<SpokenClip> clips) async => said.add(clips);
 
   @override
-  Future<void> stop() async {}
+  Future<void> stop() async => stops++;
 }
 
 Future<ProviderContainer> _pump(
@@ -91,6 +92,7 @@ Future<ProviderContainer> _pump(
   double height = 1400,
   double textScale = 1,
   bool reducedMotion = false,
+  bool screenReader = false,
   _Clock? clock,
   Widget? home,
   GuidanceVoice? voice,
@@ -120,6 +122,7 @@ Future<ProviderContainer> _pump(
           size: Size(width, height),
           textScaler: TextScaler.linear(textScale),
           disableAnimations: reducedMotion,
+          accessibleNavigation: screenReader,
         ),
         child: MaterialApp(
           theme: AppTheme.light,
@@ -344,14 +347,112 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       await tester.pump();
       expect(voice.said, [spokenCueFor(_plan, 2)]);
-      expect(voice.said.single, startsWith('Next: Get it out.'));
+      expect(voice.said.single.map((c) => c.script), [
+        'Next.',
+        'Get it out. ${elementOf(ElementId.getItOut).instruction}',
+      ]);
+      // The last part is announced as the last; then the close.
+      clock.now = _morning.add(const Duration(minutes: 13, seconds: 30));
+      await tester.pump(const Duration(seconds: 1));
+      expect(voice.said.last.first, leadLast);
+      clock.now = _morning.add(const Duration(minutes: 15));
+      await tester.pump(const Duration(seconds: 1));
+      expect(voice.said.last, [spokenEnding]);
     });
 
-    test('the silent voice is the default: nothing ships until a voice is '
-        'approved', () {
+    testWidgets('spoken guidance stops at Pause, and says nothing while '
+        'paused', (tester) async {
+      final clock = _Clock();
+      final voice = _RecordingVoice();
+      await _pump(
+        tester,
+        _today(status: 'started', startedMinutesAgo: 0),
+        clock: clock,
+        voice: voice,
+      );
+      expect(voice.said, hasLength(1));
+      expect(voice.said.single, spokenCueFor(_plan, 0));
+      await tester.tap(find.byTooltip('Pause'));
+      await tester.pump();
+      expect(voice.stops, 1);
+      clock.now = _morning.add(const Duration(minutes: 20));
+      await tester.pump(const Duration(seconds: 1));
+      expect(voice.said, hasLength(1));
+      // Paused, the parts hold still: nothing moves on while the user is
+      // away from it.
+      expect(find.text('Stand and reach'), findsOneWidget);
+    });
+
+    testWidgets('with a screen reader on and THIRTY in front, the part’s live '
+        'announcement speaks — never two voices at once', (tester) async {
+      final clock = _Clock();
+      final voice = _RecordingVoice();
+      await _pump(
+        tester,
+        _today(status: 'started', startedMinutesAgo: 2),
+        clock: clock,
+        voice: voice,
+        screenReader: true,
+      );
+      clock.now = _morning.add(const Duration(minutes: 8));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump();
+      expect(find.text('Get it out'), findsOneWidget);
+      expect(voice.said, isEmpty);
+    });
+
+    test('without the bundled recordings the voice is silent — this build '
+        'bundles none', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
       expect(container.read(guidanceVoiceProvider).available, isFalse);
+      expect(await container.read(spokenGuidanceBundledProvider.future), false);
+      expect(container.read(spokenGuidanceAvailableProvider), isFalse);
+    });
+
+    test('with every recording bundled the voice plays them — unless the '
+        'user turned it off', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          spokenGuidanceAvailableProvider.overrideWithValue(true),
+        ],
+      );
+      addTearDown(container.dispose);
+      expect(
+        container.read(guidanceVoiceProvider),
+        isA<BundledGuidanceVoice>(),
+      );
+      container.read(spokenGuidanceEnabledProvider.notifier).set(false);
+      expect(container.read(guidanceVoiceProvider).available, isFalse);
+      expect(prefs.getBool(spokenGuidanceEnabledKey), isFalse);
+    });
+
+    testWidgets('skipping a part skips the parts that build on it, and the '
+        'sheet says so', (tester) async {
+      final clock = _Clock();
+      final container = await _pump(
+        tester,
+        _today(status: 'started', startedMinutesAgo: 2),
+        clock: clock,
+      );
+      clock.now = _morning.add(const Duration(minutes: 8));
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Get it out'), findsOneWidget);
+      await tester.tap(find.text(ComposedCopy.skip));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(ComposedCopy.skipTodayDetailFor(['Choose one thing'])),
+        findsOneWidget,
+      );
+      await tester.tap(find.text(ComposedCopy.skipToday));
+      await tester.pumpAndSettle();
+      final state = container.read(recommendationProvider);
+      // "Look over what you wrote" never follows a skipped "Get it out".
+      expect(state.partMomentAt(clock.now)!.finished, isTrue);
+      expect(state.skipped, [ElementId.getItOut, ElementId.chooseOne]);
     });
 
     testWidgets('reduced motion: the same parts, no movement needed', (

@@ -16,8 +16,12 @@ enum SkipChoice {
 /// "Skip this step" (V2 Phase D2, ADR-023 §7): asks whether to skip the part
 /// on show just for today, or to leave it out of future Circles too — or
 /// `null` if the user keeps going. Neither answer is "Not useful": each says
-/// exactly what it does.
-Future<SkipChoice?> showSkipPartSheet(BuildContext context) {
+/// exactly what it does. [buildingOn] names the later parts that build on
+/// this one and are skipped with it.
+Future<SkipChoice?> showSkipPartSheet(
+  BuildContext context, {
+  List<String> buildingOn = const [],
+}) {
   final colors = Theme.of(context).extension<AppColors>()!;
   return showModalBottomSheet<SkipChoice>(
     context: context,
@@ -33,12 +37,14 @@ Future<SkipChoice?> showSkipPartSheet(BuildContext context) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => const SkipPartSheet(),
+    builder: (_) => SkipPartSheet(buildingOn: buildingOn),
   );
 }
 
 class SkipPartSheet extends StatelessWidget {
-  const SkipPartSheet({super.key});
+  const SkipPartSheet({super.key, this.buildingOn = const []});
+
+  final List<String> buildingOn;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +85,10 @@ class SkipPartSheet extends StatelessWidget {
                 AppSpacing.xs,
                 AppSpacing.m,
               ),
-              child: Text(ComposedCopy.skipTodayDetail, style: detail),
+              child: Text(
+                ComposedCopy.skipTodayDetailFor(buildingOn),
+                style: detail,
+              ),
             ),
           ),
           ThirtyButton(

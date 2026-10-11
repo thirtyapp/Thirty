@@ -375,7 +375,11 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     _ticker?.cancel();
     _ticker = status == RecommendationStatus.started
         ? Timer.periodic(const Duration(seconds: 1), (_) {
-            if (mounted) setState(() {});
+            if (!mounted) return;
+            setState(() {});
+            // Frames stop with the screen; this timer doesn't. A part that
+            // begins with the phone in a pocket is still spoken.
+            _guideFromTimer();
           })
         : null;
   }
@@ -388,34 +392,66 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       ? 0
       : (elapsed.inMilliseconds / offered.inMilliseconds).clamp(0.0, 1.0);
 
-  /// V2 Phase D2: the composed part last handed to the voice.
+  /// V2 Phase D2: the composed part last seen by the voice, and whether
+  /// the voice may still be playing.
   int? _spokenPart;
+  GuidanceVoice? _playingVoice;
+
+  void _stopVoice() {
+    final voice = _playingVoice;
+    _playingVoice = null;
+    if (voice != null) unawaited(voice.stop());
+  }
+
+  void _guideFromTimer() {
+    final state = ref.read(recommendationProvider);
+    _speakPart(
+      state.recommendation?.composed,
+      state.partMomentAt(ref.read(eventClockProvider)()),
+      running: state.status == RecommendationStatus.started,
+      paused: state.isPaused,
+    );
+  }
 
   /// V2 Phase D2 (ADR-023 §6): when a composed Circle's part begins while
-  /// the user is in it, the voice says that part's cue — and the ending
-  /// after the last. Silent until a voice is approved; never on a first
-  /// look into a Circle already under way, never while paused.
+  /// it runs — by itself, or after Next, Back or Skip — the voice plays
+  /// that part's cue, and the ending after the last. Silent without the
+  /// bundled recordings or when the user turned it off; never on a first
+  /// look into a Circle already under way; stopped at Pause and Close.
+  /// While a screen reader is on and THIRTY is in front, the part's live
+  /// announcement speaks instead — never two voices at once.
   void _speakPart(
     ComposedSession? composed,
     PartMoment? moment, {
     required bool running,
     required bool paused,
   }) {
-    if (composed == null || moment == null) return;
+    if (composed == null || moment == null || !running || paused) {
+      if (moment == null) _spokenPart = null;
+      if (moment != null) _spokenPart = moment.position;
+      _stopVoice();
+      return;
+    }
     final before = _spokenPart;
     _spokenPart = moment.position;
-    if (before == moment.position || !running || paused) return;
+    if (before == moment.position) return;
     if (before == null && moment.partElapsed > const Duration(seconds: 2)) {
       return;
     }
     final voice = ref.read(guidanceVoiceProvider);
     if (!voice.available) return;
-    final text = moment.finished
-        ? spokenEnding
-        : spokenCueFor(composed.plan, moment.position);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) unawaited(voice.say(text));
-    });
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    final foreground =
+        lifecycle == null || lifecycle == AppLifecycleState.resumed;
+    if (foreground && MediaQuery.accessibleNavigationOf(context)) return;
+    _playingVoice = voice;
+    unawaited(
+      voice.play(
+        moment.finished
+            ? [spokenEnding]
+            : spokenCueFor(composed.plan, moment.position),
+      ),
+    );
   }
 
   /// Moves focus to Close the moment it takes the lead in a running Circle
@@ -569,6 +605,7 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     _closeFocus.dispose();
     _endAnnouncement?.cancel();
     _ticker?.cancel();
+    _stopVoice();
     super.dispose();
   }
 
@@ -576,7 +613,19 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   /// for today, or also leave it out of future Circles. Neither is a
   /// usefulness answer.
   Future<void> _skipPart() async {
-    final choice = await showSkipPartSheet(context);
+    final state = ref.read(recommendationProvider);
+    final moment = state.partMomentAt(ref.read(eventClockProvider)());
+    final plan = state.recommendation?.composed?.plan;
+    final buildingOn = plan == null || moment == null || moment.finished
+        ? const <String>[]
+        : [
+            for (final part
+                in plan.parts
+                    .skip(moment.position + 1)
+                    .take(plan.partsBuildingOn(moment.position)))
+              part.definition.name,
+          ];
+    final choice = await showSkipPartSheet(context, buildingOn: buildingOn);
     if (choice == null || !mounted) return;
     ref
         .read(recommendationProvider.notifier)

@@ -33,8 +33,8 @@ class YouPremiumCard extends ConsumerWidget {
 
   /// V2 Phase D2: what Premium does each day.
   static const body =
-      'A guided Circle made for your day, from the time you have and what '
-      'you’ve found useful.';
+      'A guided Circle made for your day, from the time you have — and '
+      'shaped by your answers over time.';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

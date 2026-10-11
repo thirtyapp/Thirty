@@ -5,12 +5,15 @@ import '../../../../core/analytics/analytics_consent.dart';
 import '../../../../core/providers/theme_mode_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_confirm_dialog.dart';
+import '../../../personal_circle/application/guidance_voice.dart';
+import '../../../personal_circle/domain/spoken_cues.dart';
 import '../../../reminder/application/reminder_provider.dart';
 import 'theme_mode_choice.dart';
 import 'you_group_card.dart';
 
-/// You's "Preferences" group (Phase C1): the daily reminder, appearance
-/// and analytics consent as rows of one grouped card. Each row's behaviour
+/// You's "Preferences" group (Phase C1): the daily reminder, appearance,
+/// spoken guidance (V2 Phase D2 — only in a build that bundles it) and
+/// analytics consent as rows of one grouped card. Each row's behaviour
 /// is unchanged from before C1 — only the surface around them changed.
 ///
 /// North Star convergence: each row gains a quiet decorative icon and a
@@ -32,6 +35,11 @@ class YouPreferencesCard extends ConsumerWidget {
           icon: Icons.contrast,
           child: _AppearanceRow(themeMode: ref.watch(themeModeProvider)),
         ),
+        if (ref.watch(spokenGuidanceAvailableProvider))
+          const YouRow(
+            key: ValueKey('you.spokenGuidance'),
+            child: _SpokenGuidanceRow(),
+          ),
         const YouRow(
           key: ValueKey('you.analytics'),
           child: _AnalyticsConsentRow(),
@@ -59,6 +67,47 @@ class _AppearanceRow extends ConsumerWidget {
               ref.read(themeModeProvider.notifier).setThemeMode(mode),
         ),
       ],
+    );
+  }
+}
+
+/// V2 Phase D2 (ADR-023 §6): spoken guidance on or off. The Circle is
+/// complete without it.
+class _SpokenGuidanceRow extends ConsumerWidget {
+  const _SpokenGuidanceRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(spokenGuidanceEnabledProvider);
+    return MergeSemantics(
+      child: Row(
+        children: [
+          const Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                YouRowIcon(Icons.record_voice_over_outlined),
+                SizedBox(width: AppSpacing.m),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      YouRowTitle(SpokenGuidanceCopy.title),
+                      SizedBox(height: AppSpacing.xs),
+                      YouRowDetail(SpokenGuidanceCopy.detail),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: enabled,
+            onChanged: (value) =>
+                ref.read(spokenGuidanceEnabledProvider.notifier).set(value),
+          ),
+        ],
+      ),
     );
   }
 }

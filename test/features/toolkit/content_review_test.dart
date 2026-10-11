@@ -72,10 +72,10 @@ const _pageCopy = {
         'and you can use one today from its page. Building and tuning '
         'routines is Premium.',
     'With Premium, THIRTY turns the time you have each day into one guided '
-        'Circle of a few small parts, built from what you’ve found useful. '
+        'Circle of a few small parts, shaped by your answers over time. '
         'Along the way, Paths can help you build routines of your own.',
-    'What you build or keep stays yours, with or without Premium. Free '
-        'stays complete: THIRTY still chooses one thing for today.',
+    'What you build or keep stays yours, with or without Premium. With '
+        'Free, THIRTY still gives you one good thing for today.',
     'Optional: your Circle on Today doesn’t need it. A Path tries a few '
         'pieces with you and ends with a routine you keep.',
     'A simple place to start. You can choose another Path.',

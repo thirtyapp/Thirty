@@ -537,15 +537,15 @@ class _WhatPremiumBuilds extends StatelessWidget {
           const SizedBox(height: AppSpacing.s),
           Text(
             'With Premium, THIRTY turns the time you have each day into one '
-            'guided Circle of a few small parts, built from what you’ve found '
-            'useful. Along the way, Paths can help you build routines of your '
+            'guided Circle of a few small parts, shaped by your answers over '
+            'time. Along the way, Paths can help you build routines of your '
             'own.',
             style: textTheme.bodyMedium,
           ),
           const SizedBox(height: AppSpacing.s),
           Text(
             'What you build or keep stays yours, with or without Premium. '
-            'Free stays complete: THIRTY still chooses one thing for today.',
+            'With Free, THIRTY still gives you one good thing for today.',
             style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.m),

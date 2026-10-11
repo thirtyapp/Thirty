@@ -10,7 +10,7 @@
 /// **Quality gate.** Premium never composes merely because the user pays.
 /// A Circle is composed only when every part is allowed and safe, the parts
 /// make a coherent shape (ARRIVE → MAIN → SECOND → SETTLE, no kind twice,
-/// a part that needs another comes after it, outside never mixed with
+/// a part that builds on another directly after it, outside never mixed with
 /// inside-only), the main piece holds a real share of the time, the whole
 /// fits the window and uses enough of it, and no part repeats. Otherwise
 /// the answer is `null`, and Today is Free's one activity.
@@ -195,7 +195,8 @@ ElementStanding elementStanding(
 
 /// Whether [parts] make a coherent Circle, whatever today's time: at least
 /// two parts with a main piece; no element and no kind twice; a part that
-/// needs another comes after it; an arrival leads only into what it suits;
+/// builds on another comes directly after it; an arrival leads only into
+/// what it suits;
 /// outside never mixed with inside-only.
 bool coherentParts(List<CirclePart> parts, {required int mainIndex}) {
   if (parts.length < 2) return false;
@@ -206,9 +207,9 @@ bool coherentParts(List<CirclePart> parts, {required int mainIndex}) {
   for (final (index, part) in parts.indexed) {
     final element = part.definition;
     if (!ids.add(element.id) || !kinds.add(element.kind)) return false;
+    // A part that builds on another comes directly after it.
     final after = element.after;
-    if (after != null &&
-        !parts.take(index).any((earlier) => earlier.element == after)) {
+    if (after != null && (index == 0 || parts[index - 1].element != after)) {
       return false;
     }
     switch (element.setting) {

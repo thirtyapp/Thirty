@@ -1,6 +1,6 @@
 # ADR-023 — V2 Recurring Premium / Personal Guided Circle
 
-**Status:** Proposed — Phase D2 implemented and S25-verified 2026-10-11 (device QA and live TalkBack pass; `artifacts/v2_phase_d2/DEVICE_QA.md`). Becomes Accepted only when the remaining Phase D2 gates pass: founder content review and the spoken-guidance decision.
+**Status:** Proposed — Phase D2 implemented and S25-verified 2026-10-11 (device QA and live TalkBack pass; `artifacts/v2_phase_d2/DEVICE_QA.md`). Founder correction pass applied 2026-10-11 (semantic dependencies, phone/guidance consistency, offer truth, spoken-guidance architecture). Becomes Accepted only when the remaining Phase D2 gates pass: founder approval of the corrected content, and founder approval of the production voice recordings (§6).
 
 Product authority: [PRODUCT_V2_CONTRACT.md](../PRODUCT_V2_CONTRACT.md), as amended on 2026-10-11 ("Amendment — Recurring Premium (Phase D2)"). This ADR **supersedes the conflicting Premium portions of [ADR-022](ADR-022-v2-phase-d-paths-toolkit-and-maintenance.md)**: Premium's headline job, what Today does for a Premium user, the offer page, and the three defects in §10. ADR-022 stays the historical record of Phase D as built and accepted on 2026-10-10. Free V2 stays governed by the contract and ADR-020/021. Review pack: `artifacts/v2_phase_d2/`.
 
@@ -23,10 +23,16 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
 2. **The element model** (`personal_circle/domain/circle_elements.dart`). An element is one truthful thing to do for a few minutes, and every field serves runtime behaviour:
    - **Composition fields:** `needs`, `roles` (arrive / main / second / settle), `minutes` and an optional authored `shortMinutes`, `setting`, `effort`, `kind`, `after` and `leadsInto` decide what may be composed, in what order and at what length.
      - `kind`: no Circle holds two of one kind.
-     - `after`: e.g. "Choose one thing" only follows "Get it out".
-     - `leadsInto`: e.g. "A comfortable spot" only leads into listening, reading, writing, focus or a ritual — never a walk.
+     - `after` (the part an element builds on): an element whose words refer to what an earlier part left behind ("Look over what you wrote") is composed only *directly* after that part, and skipping that part skips it too (§7). No part ever refers to something that didn't happen. Today: "Choose one thing" builds on "Get it out", and "Write the first step" on "Choose one thing". Words that only hold at the start ("before you begin") or the very end ("Finish with…") take only that role. All 38 elements were audited for this (correction pass, 2026-10-11); tests hold it for every shape the composer can make.
+     - `leadsInto`: e.g. "A comfortable spot" only leads into listening, reading, writing or focus — never a walk, and never a drink that means getting up again.
    - **`from`** ties a piece of a live activity to that activity's safety status, the user's "Don't suggest" for it, and a rest after its "Not useful". `carriesEvidence` says whether the element is materially the same experience, so that the activity's explicit answers count for it; a fragment (a few stretches from a longer sequence) carries none.
-   - **Display:** `name` and `instruction` are what the runtime shows, and what a voice would say. `art` is presentation only.
+   - **Display:** `name` and `instruction` are what the runtime shows, and what the voice says. `art` is presentation only.
+   - **Physically compatible with the guide** (correction pass):
+     - the phone is the guide, so an instruction may have it face down, in a pocket or silenced — never left behind, out of reach or out of earshot;
+     - nothing asks the user to close anything that could lose unsaved work ("Minimise…", not "Close…");
+     - no needless intensity ("louder", "quicker than usual", "livelier", "as many as you can");
+     - no assumed context: THIRTY knows the need and the time, not the light or the weather. Outdoor parts offer an inside alternative where they can, and "Can't go outside" remains the user's control.
+     - Content guards hold all four.
    - **The release library has 38 elements, all live:**
      - 21 are pieces of live Phase A activities (16 carrying their evidence); 17 are new small cues.
      - None breathes, paces or asks for exertion.
@@ -100,21 +106,30 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
      - every control is ≥ 48 pt;
      - reduced motion swaps parts without movement;
      - no overflow at 130 % or at 200 % on a 320 pt screen (tested).
+   - **Auto-advance rule** (reviewed in the correction pass): a part runs for its authored time, then the next begins by itself — for every kind of part, with no per-kind exceptions. This is safe for writing, tidying, walking and reading too, because:
+     - the runtime holds no user input (writing is on paper), so moving on never loses anything;
+     - Next and Pause stay on every running part, and while paused nothing moves on;
+     - the change is perceptible without the screen: a live TalkBack announcement, and the voice's lead ("Next." / "And last.") once the recordings ship (§6);
+     - a part's time includes its natural finish (a walk's time includes the way back; "Stay with it until the time's up — finished or not").
    - The how-to sheet lists the parts with their times and says how the Circle runs.
    - Today's card shows "YOUR CIRCLE · 16 MIN", the need, and the session's substance — its main and second piece ("Clear one corner · Get it out"), guarded to two lines so Start Circle keeps its place on the S25. It opens "See the parts", where every part is listed with its time. The card carries the one basis line, without the decorative art: the text needs the full width. History shows every part.
 
-6. **Spoken guidance: architecture in place, no voice shipped** (`application/guidance_voice.dart`, `domain/spoken_cues.dart`).
-   - Cues are derived from the authored text, never generated. Each is one line as a part begins ("Next: Get it out. Write down everything…") and the ending.
-   - The Circle hero hands a part's cue to `GuidanceVoice` when that part begins live — never on a first look into a running Circle, never while paused. This is tested with a fake voice.
-   - The only implementation is `SilentGuidanceVoice`. Options considered:
-     - **authored pre-recorded cues:** the quality path; they need a chosen voice and a recording session per content change;
-     - **device text-to-speech:** no per-use cost, offline, but quality varies by device; it needs a small Android bridge and a founder audition;
-     - **runtime AI voice:** rejected — recurring API cost without founder approval.
-   - **This is a Phase D2 blocking quality task:** no cheap-sounding voice ships to tick a box. The visual runtime and its TalkBack announcements are complete without a voice.
+6. **Spoken guidance: bundled pre-generated recordings** (founder decision, 2026-10-11; `domain/spoken_cues.dart`, `application/guidance_voice.dart`, Android `GuidanceAudio.kt`).
+   - **Decision:** fixed, high-quality recordings bundled with the app. No runtime generative AI, no voice API or other recurring cost, and no device text-to-speech as the intended Premium experience.
+   - **Deterministic lookup:** when a part begins, the voice plays a lead — "First." for the first part, "And last." for the last, otherwise "Next." — then that element's own clip: its name and instruction, exactly the words on the screen. After the last part it plays the close ("That's your Circle…"). `spokenGuidanceManifest` is the complete recording list: 3 leads, 1 clip per offerable element and the close (42 today). It is exported for the recording session as `SPOKEN_GUIDANCE_MANIFEST.csv`.
+   - **Never stale:** each clip's file name carries a fingerprint of its script (`part_getItOut_<fnv32>.m4a`), so changing an instruction makes its clip missing.
+   - **All or nothing:** the voice is available only when every manifest clip is bundled. A partial set is silent, never patchy.
+   - **Offline playback** goes through a small platform player over a method channel (`com.thirty.app/guidance_audio`). On Android it plays Flutter assets with transient, duckable audio focus, so music the user put on dips under the voice. Without a player (iOS today) or a playable clip, it is silent — never an error.
+   - **Timing without the screen:** the cue fires from the Circle's one-second timer as well as from builds, so a part that begins with the phone in a pocket and the screen off is still spoken.
+   - **Never on a first look** into a running Circle. It stops at Pause, at Close and when leaving the Circle.
+   - **Accessibility stays independent:** the visual runtime and its live TalkBack announcements are complete without audio. While a screen reader is on and THIRTY is in front, the live announcement speaks and the voice stays silent — never two voices at once.
+   - **User control:** You → Preferences → "Spoken guidance", on by default, shown only in a build that bundles the recordings.
+   - **State today:** the architecture, manifest and tests are complete, but **no recording exists**. The build bundles none, so the voice is silent. The production voice and every clip are a final founder gate: they must meet the same quality bar as the rest of THIRTY.
 
 7. **Element controls and evidence boundaries.**
    - **"Skip this step"** (Skip → sheet: "Skip it for today" / "Leave it out next time" / "Keep going"):
      - records the skipped element on the day's journal session (`skipped`) as a fact;
+     - the parts that build on it (`after`) are skipped with it and recorded as skipped too; the sheet names them;
      - the next part begins;
      - a skip is never a usefulness answer: it only keeps that part from sharing the day's positive answer, and never counts against it.
    - **"Leave it out next time":**
@@ -175,6 +190,11 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
     - The offer, the Home invitation and You's Premium card lead with the recurring job:
       - "A Circle made for your day";
       - points: Made each day · Guided through · Shaped by your answers · Yours to keep.
+    - **Offer truth** (correction pass): the offer is true on a subscriber's first day.
+      - It says the guided Circle exists from day one, that answers can shape later Circles, and that what is left out stays out.
+      - It never says THIRTY already knows what the user found useful. Only Today's own line says "Built from things you've found useful", and only with evidence.
+      - Free is described in consumer words ("With Free, THIRTY still gives you one good thing for today"), never as "Free stays complete".
+      - A content guard holds this.
     - Routines are a supporting benefit; "Upkeep" is no reason to subscribe.
     - No efficacy claim.
     - Billing stays the existing monthly auto-renewing subscription, with no lifetime product. No price is hard-coded in domain logic; live pricing is a Phase E decision. All copy is a draft for founder review.
@@ -186,6 +206,9 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
       - maintenance truth tests.
     - **QA scenarios** D2-A first Premium Today, D2-B a month of Circles, D2-C composed Circle running, D2-D lapsed with kept Circle and routine, D2-E back on Premium.
     - **Phase D's 14 eight-week simulations** now run under D2 semantics: routine days via "Use it today" or proven-routine days; gap evidence only from Free days.
+    - **Correction-pass attacks:**
+      - `p14_more_energy_dominant`: More Energy on most days, mixed times, explicit positive and negative answers;
+      - the saved-Circle / lapse attack (`saved_circle_lapse_attack_test.dart`): keep up to the limit, use, lapse, keep using, resubscribe.
     - **13 long-horizon INTERNAL simulations** (day 1 → month 12, production providers) report behaviour only: Circles composed, fallbacks, unique and materially distinct sessions, repeat intervals, concentration, edges and time use. They are architectural checks, **not user validation**. Results: `artifacts/v2_phase_d2/SIMULATION_REVIEW.md`.
     - **Coverage report and founder content pack:** `ELEMENT_COVERAGE.md` and `CONTENT_REVIEW.md` (guards for medical claims, diagnosis, guarantees, invented personalisation, guilt, pressure, achievement and unsafe instructions run in the suite).
 
@@ -193,10 +216,11 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
 
 - Phase D's history, data and Path/Toolkit behaviour are preserved; nothing the user built is migrated away.
 - **Open before D2 can pass:**
-  - founder review of all element and Premium copy;
-  - the spoken-guidance decision (§6).
+  - founder approval of the corrected element and Premium copy;
+  - founder approval of the production voice and its recordings (§6). The decision is made; the recordings don't exist yet.
 - **S25 device QA and live TalkBack passed** after six device findings were fixed (Today card height, Memory showing composite answers, Toolkit order and wording, the running Close clearance, Skip-sheet overflow at 130 %, orphaned words).
 - **More Energy is thin** without its gated exertion and breathing content. Widening it honestly needs the separate safety review, never invented content.
 - **Every composer value is a hypothesis** (`ComposerPolicy`). Read them against pre-release behaviour.
 - **Commercial hypothesis, unproven:** whether a personal guided Circle each day is worth a monthly subscription. The €5–€9 range is a hypothesis, not a finding.
+- **Commercial hypothesis — substitution (post-D2 audit):** up to 8 kept Circles, used free with "Use it today", can stand in for new composition after a lapse (40 of 60 lapsed days in the attack). Ownership is deliberately not weakened. Whether this erodes the subscription is for the post-D2 audit to judge.
 - Phase E stays on hold until Phase D2 passes.

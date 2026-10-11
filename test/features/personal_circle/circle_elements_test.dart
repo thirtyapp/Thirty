@@ -208,6 +208,100 @@ void main() {
     });
   });
 
+  group('semantic dependencies (correction pass, 2026-10-11)', () {
+    // Words that refer to something an earlier part left behind.
+    final refersBack = RegExp(
+      r'(what you wrote|you circled|what you used|you made|you’ve done|'
+      r'the list|that thing)',
+      caseSensitive: false,
+    );
+    // Words that only hold at the start, or at the very end, of a Circle.
+    final opening = RegExp(r'(before you begin|while you start|for the rest)');
+    final closing = RegExp(r'(^Finish|before you move on|before you carry on)');
+
+    test('an element that refers back always names what it builds on', () {
+      for (final e in elementLibrary.values) {
+        if (refersBack.hasMatch(e.instruction)) {
+          expect(e.after, isNotNull, reason: e.id.name);
+        }
+      }
+      expect(elementOf(ElementId.chooseOne).after, ElementId.getItOut);
+      expect(elementOf(ElementId.firstStep).after, ElementId.chooseOne);
+    });
+
+    test('words that only hold at the start or the end take only that '
+        'place', () {
+      for (final e in elementLibrary.values) {
+        if (opening.hasMatch(e.instruction)) {
+          expect(e.roles, {ElementRole.arrive}, reason: e.id.name);
+        }
+        if (closing.hasMatch(e.instruction)) {
+          expect(e.roles, {ElementRole.settle}, reason: e.id.name);
+        }
+      }
+    });
+
+    test('in every Circle the composer can make, a part that builds on '
+        'another comes directly after it — never without it', () {
+      var checked = 0;
+      for (final need in Intention.values) {
+        final allowed = [
+          for (final e in elementLibrary.values)
+            if (isElementOfferable(e) && e.fits(need)) e,
+        ];
+        for (final window in TimeWindow.values) {
+          for (final parts in gatePassingShapes(
+            allowed,
+            window: window.maxMinutes,
+          )) {
+            for (final (i, part) in parts.indexed) {
+              final after = part.definition.after;
+              if (after == null) continue;
+              checked++;
+              expect(i, greaterThan(0));
+              expect(parts[i - 1].element, after, reason: '$parts');
+            }
+          }
+        }
+      }
+      // The dependent parts do appear: the rule is exercised, not vacuous.
+      expect(checked, greaterThan(0));
+    });
+
+    test('without what it builds on, a dependent part never composes', () {
+      final allowed = [
+        for (final e in elementLibrary.values)
+          if (isElementOfferable(e) &&
+              e.fits(Intention.clearerHead) &&
+              e.id != ElementId.getItOut)
+            e,
+      ];
+      for (final window in TimeWindow.values) {
+        for (final parts in gatePassingShapes(
+          allowed,
+          window: window.maxMinutes,
+        )) {
+          final ids = [for (final p in parts) p.element];
+          expect(ids, isNot(contains(ElementId.chooseOne)));
+          expect(ids, isNot(contains(ElementId.firstStep)));
+        }
+      }
+    });
+
+    test('skipping a part takes the parts that build on it along', () {
+      final plan = CirclePlan(const [
+        CirclePart(ElementId.phoneFaceDown, 1),
+        CirclePart(ElementId.getItOut, 6),
+        CirclePart(ElementId.chooseOne, 1),
+        CirclePart(ElementId.firstStep, 2),
+      ]);
+      expect(plan.partsBuildingOn(1), 2);
+      expect(plan.partsBuildingOn(2), 1);
+      expect(plan.partsBuildingOn(3), 0);
+      expect(plan.partsBuildingOn(0), 0);
+    });
+  });
+
   group('content guards', () {
     test('names are short enough for the Today card line', () {
       for (final element in elementLibrary.values) {

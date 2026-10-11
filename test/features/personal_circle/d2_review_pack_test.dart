@@ -95,6 +95,11 @@ Map<String, List<String>> d2Copy() => {
     ComposedCopy.skipTitle,
     ComposedCopy.skipToday,
     ComposedCopy.skipTodayDetail,
+    ComposedCopy.skipTodayDetailFor(['Choose one thing']),
+    ComposedCopy.skipTodayDetailFor([
+      'Choose one thing',
+      'Write the first step',
+    ]),
     ComposedCopy.leaveOut,
     ComposedCopy.leaveOutDetail,
     ComposedCopy.keepGoing,
@@ -135,14 +140,18 @@ Map<String, List<String>> d2Copy() => {
         'have.',
     YouPremiumCard.body,
   ],
+  'You — spoken guidance (shown only when the recordings are bundled)': [
+    SpokenGuidanceCopy.title,
+    SpokenGuidanceCopy.detail,
+  ],
   'Toolkit (repositioned)': [
     'Routines and Circles that are yours.',
     'A Circle made for your day',
     'With Premium, THIRTY turns the time you have each day into one guided '
-        'Circle of a few small parts, built from what you’ve found useful. '
+        'Circle of a few small parts, shaped by your answers over time. '
         'Along the way, Paths can help you build routines of your own.',
-    'What you build or keep stays yours, with or without Premium. Free stays '
-        'complete: THIRTY still chooses one thing for today.',
+    'What you build or keep stays yours, with or without Premium. With '
+        'Free, THIRTY still gives you one good thing for today.',
     'Build a routine — if you like',
     'Optional: your Circle on Today doesn’t need it. A Path tries a few '
         'pieces with you and ends with a routine you keep.',
@@ -184,7 +193,39 @@ final _guards = <String, RegExp>{
     r'(push through|no pain|harder|as fast as|breath|until you can.t)',
     caseSensitive: false,
   ),
+  // Correction pass (2026-10-11): THIRTY needs neither louder audio nor
+  // faster chores to be worth doing.
+  'needless intensity': RegExp(
+    r'(louder|quicker|faster|livelier|as many .* as you can)',
+    caseSensitive: false,
+  ),
+  // The phone is the guide: it may be face down, in a pocket, silenced —
+  // never somewhere the Circle can't be heard.
+  'phone out of earshot': RegExp(
+    r'(phone[^.]*\b(left|out of reach|elsewhere|inside|another room|switched '
+    r'off|turned off|on silent|out of sight)\b|(leave|without) (your|the) '
+    r'phone|airplane mode|flight mode)',
+    caseSensitive: false,
+  ),
+  // Nothing that could lose unsaved work.
+  'destructive closing': RegExp(
+    r'\bclos(e|ing) (every|all|everything|tabs|windows|apps|what)',
+    caseSensitive: false,
+  ),
+  // THIRTY knows the user's need and time — not the weather or the light.
+  'assumed context': RegExp(
+    r'\b(daylight|sunshine|sunlight|sunny|weather|rain|morning|evening|'
+    r'tonight|dark)\b',
+    caseSensitive: false,
+  ),
 };
+
+/// The Premium offer's words: true on a subscriber's first day. Only
+/// Today's own line may say "found useful", and only with evidence.
+final _offerClaims = RegExp(
+  r'(found useful|you.ve found|what you find useful|stays complete|knows what)',
+  caseSensitive: false,
+);
 
 void main() {
   final coverage = [
@@ -217,6 +258,15 @@ void main() {
     for (final line in strings) {
       for (final MapEntry(key: guard, value: pattern) in _guards.entries) {
         expect(pattern.hasMatch(line), isFalse, reason: '$guard: “$line”');
+      }
+    }
+  });
+
+  test('the Premium offer claims nothing a first-day subscriber hasn’t '
+      'given THIRTY', () {
+    for (final place in ['Premium offer', 'Toolkit (repositioned)']) {
+      for (final line in d2Copy()[place]!) {
+        expect(_offerClaims.hasMatch(line), isFalse, reason: '$place: “$line”');
       }
     }
   });
@@ -364,8 +414,43 @@ void main() {
       pack.writeln();
     }
     pack
-      ..writeln('## Spoken cues (if a voice is approved — none ships today)')
+      ..writeln('## Parts that build on another')
+      ..writeln()
+      ..writeln(
+        'Composed only directly after the part they build on; skipping that '
+        'part skips them too (the Skip sheet says so).',
+      )
       ..writeln();
+    for (final e in elementLibrary.values.where((e) => e.after != null)) {
+      pack.writeln(
+        '- **${e.name}** builds on **${elementOf(e.after!).name}**: '
+        '“${e.instruction}”',
+      );
+    }
+    final manifest = spokenGuidanceManifest;
+    pack
+      ..writeln()
+      ..writeln('## Spoken guidance — the recording manifest')
+      ..writeln()
+      ..writeln(
+        'Founder decision: bundled, pre-generated recordings. **No recording '
+        'exists yet** — the voice and every clip need founder approval. '
+        '${manifest.length} clips: three leads, one per element, and the '
+        'close. When a part begins the voice plays its lead (“First.” for '
+        'the first part, “And last.” for the last, otherwise “Next.”), then '
+        'the part’s own clip; after the last part, the close. Each file '
+        'name carries a fingerprint of its script: changing a line makes '
+        'its clip missing, and the voice stays silent until the whole set '
+        'is complete again.',
+      )
+      ..writeln()
+      ..writeln('| Clip | File | Script |')
+      ..writeln('|---|---|---|');
+    for (final clip in manifest) {
+      pack.writeln(
+        '| `${clip.id}` | `${clip.asset.split('/').last}` | ${clip.script} |',
+      );
+    }
     final sample = composeCircle(
       ComposerContext(
         date: DateTime(2026, 10, 11),
@@ -374,12 +459,28 @@ void main() {
       ),
       const [],
     )!.plan;
+    pack
+      ..writeln()
+      ..writeln('### One Circle, as it would be heard (${sample.line})')
+      ..writeln();
     for (var i = 0; i < sample.parts.length; i++) {
-      pack.writeln('- “${spokenCueFor(sample, i)}”');
+      pack.writeln(
+        '- “${spokenCueFor(sample, i).map((c) => c.script).join(' ')}”',
+      );
     }
     pack
-      ..writeln('- “$spokenEnding”')
+      ..writeln('- “${spokenEnding.script}”')
       ..writeln();
     File('build/d2_content_review.md').writeAsStringSync(pack.toString());
+    final csv = StringBuffer()..writeln('clip,role,file,script');
+    for (final clip in manifest) {
+      csv.writeln(
+        '${clip.id},${clip.role.name},${clip.asset},'
+        '"${clip.script.replaceAll('"', '""')}"',
+      );
+    }
+    File(
+      'build/d2_spoken_guidance_manifest.csv',
+    ).writeAsStringSync(csv.toString());
   });
 }
