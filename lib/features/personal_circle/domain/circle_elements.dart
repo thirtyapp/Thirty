@@ -202,8 +202,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.phoneFaceDown,
     name: 'Phone face down',
     instruction:
-        'Silence your notifications, and keep your phone face down or in '
-        'your pocket for the rest of this Circle.',
+        'Silence your notifications, then keep your phone face down or in '
+        'your pocket unless a part asks you to use it.',
     needs: {_head, _gentle},
     roles: {_arrive},
     minutes: 1,
@@ -523,8 +523,8 @@ const Map<ElementId, CircleElement> elementLibrary = {
     id: ElementId.lookFar,
     name: 'Look far away',
     instruction:
-        'Look out of a window, or outside, at the furthest thing you can '
-        'see, and let your eyes rest there.',
+        'Let your eyes settle on the furthest thing you can comfortably '
+        'see — through a window, or across the room.',
     needs: {_head, _gentle},
     roles: {_second, _settle},
     minutes: 2,

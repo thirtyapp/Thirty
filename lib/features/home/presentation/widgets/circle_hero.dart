@@ -14,10 +14,9 @@ import '../../../../core/world_rendering/world_hero_art_view.dart';
 import '../../../settings/application/first_name_provider.dart';
 import '../../application/activity_catalog.dart';
 import '../../application/first_breath_provider.dart';
-import '../../../personal_circle/application/guidance_voice.dart';
+import '../../../personal_circle/application/guidance_conductor.dart';
 import '../../../personal_circle/domain/circle_elements.dart';
 import '../../../personal_circle/domain/composed_session.dart';
-import '../../../personal_circle/domain/spoken_cues.dart';
 import '../../../personal_circle/presentation/skip_part_sheet.dart';
 import '../../application/recommendation_provider.dart';
 import '../../application/world_scene_resolution.dart';
@@ -377,11 +376,6 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         ? Timer.periodic(const Duration(seconds: 1), (_) {
             if (!mounted) return;
             setState(() {});
-            // Frames stop when THIRTY is out of sight; this timer doesn't,
-            // for as long as Android lets THIRTY run. It freezes an app the
-            // user has left (S25), so speaking from there needs more
-            // (ADR-023 §6).
-            _guideFromTimer();
           })
         : null;
   }
@@ -393,71 +387,6 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       offered <= Duration.zero
       ? 0
       : (elapsed.inMilliseconds / offered.inMilliseconds).clamp(0.0, 1.0);
-
-  /// V2 Phase D2: the composed part last seen by the voice, and whether
-  /// the voice may still be playing.
-  int? _spokenPart;
-  GuidanceVoice? _playingVoice;
-
-  void _stopVoice() {
-    final voice = _playingVoice;
-    _playingVoice = null;
-    if (voice != null) unawaited(voice.stop());
-  }
-
-  void _guideFromTimer() {
-    final state = ref.read(recommendationProvider);
-    _speakPart(
-      state.recommendation?.composed,
-      state.partMomentAt(ref.read(eventClockProvider)()),
-      running: state.status == RecommendationStatus.started,
-      paused: state.isPaused,
-    );
-  }
-
-  /// V2 Phase D2 (ADR-023 §6): when a composed Circle's part begins while
-  /// it runs — by itself, or after Next, Back or Skip — the voice plays
-  /// that part's cue, and the ending after the last. Silent without the
-  /// bundled recordings or when the user turned it off; never on a first
-  /// look into a Circle already under way; stopped at Pause and Close.
-  /// While a screen reader is on and THIRTY is in front, the part's live
-  /// announcement speaks instead — never two voices at once. The platform
-  /// player decides that from the screen reader itself: Flutter's
-  /// `accessibleNavigation` is also true for unrelated accessibility
-  /// services (S25 finding, D2 correction pass).
-  void _speakPart(
-    ComposedSession? composed,
-    PartMoment? moment, {
-    required bool running,
-    required bool paused,
-  }) {
-    if (composed == null || moment == null || !running || paused) {
-      if (moment == null) _spokenPart = null;
-      if (moment != null) _spokenPart = moment.position;
-      _stopVoice();
-      return;
-    }
-    final before = _spokenPart;
-    _spokenPart = moment.position;
-    if (before == moment.position) return;
-    if (before == null && moment.partElapsed > const Duration(seconds: 2)) {
-      return;
-    }
-    final voice = ref.read(guidanceVoiceProvider);
-    if (!voice.available) return;
-    final lifecycle = WidgetsBinding.instance.lifecycleState;
-    final foreground =
-        lifecycle == null || lifecycle == AppLifecycleState.resumed;
-    _playingVoice = voice;
-    unawaited(
-      voice.play(
-        moment.finished
-            ? [spokenEnding]
-            : spokenCueFor(composed.plan, moment.position),
-        deferToScreenReader: foreground,
-      ),
-    );
-  }
 
   /// Moves focus to Close the moment it takes the lead in a running Circle
   /// seen live — never on a first look, a return or a restart.
@@ -610,7 +539,6 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     _closeFocus.dispose();
     _endAnnouncement?.cancel();
     _ticker?.cancel();
-    _stopVoice();
     super.dispose();
   }
 
@@ -684,9 +612,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         : _illustrationPhase;
 
     _syncTicker(recommendationState.status);
-    // Watched, not only read: turning spoken guidance on or off in You
-    // applies to a Circle already running.
-    ref.watch(guidanceVoiceProvider);
+    // V2 Phase D2: the conductor speaks a voiced Circle's parts, in front
+    // or out of sight (ADR-023 §6). `main.dart` keeps it for the whole app;
+    // watched here too, wherever a Circle runs.
+    ref.watch(guidanceConductorProvider);
     final status = recommendationState.status;
     // V2 Phase D: a routine or a joined Path step runs its pieces on the
     // same Guided runtime; a single activity runs as authored.
@@ -703,12 +632,6 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         naturalEndReached(elapsed, offered);
     _noticeNaturalEnd(ended, running: status == RecommendationStatus.started);
     final paused = recommendationState.isPaused;
-    _speakPart(
-      composed,
-      partMoment,
-      running: status == RecommendationStatus.started,
-      paused: paused,
-    );
     final body = composed != null
         ? SessionBody.composed
         : sessionBodyFor(activity, activity.pace);

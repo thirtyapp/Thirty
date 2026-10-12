@@ -26,6 +26,13 @@ abstract final class SpokenGuidanceCopy {
   static const detail =
       'A voice tells you when each part of your Circle begins, so you '
       'needn’t watch the screen.';
+
+  // The notification while a voiced Circle runs: functional, no score.
+  static const sessionRunning = 'Circle running';
+  static const sessionPaused = 'Circle paused';
+  static const pause = 'Pause';
+  static const resume = 'Resume';
+  static const next = 'Next';
 }
 
 /// Where the recordings are bundled.

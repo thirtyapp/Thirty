@@ -144,6 +144,14 @@ Map<String, List<String>> d2Copy() => {
     SpokenGuidanceCopy.title,
     SpokenGuidanceCopy.detail,
   ],
+  'Notification while a voiced Circle runs (Android; the part on show is '
+      'its text)': [
+    SpokenGuidanceCopy.sessionRunning,
+    SpokenGuidanceCopy.sessionPaused,
+    SpokenGuidanceCopy.pause,
+    SpokenGuidanceCopy.resume,
+    SpokenGuidanceCopy.next,
+  ],
   'Toolkit (repositioned)': [
     'Routines and Circles that are yours.',
     'A Circle made for your day',

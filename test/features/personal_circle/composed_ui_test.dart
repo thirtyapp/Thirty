@@ -19,6 +19,7 @@ import 'package:thirty/features/home/application/suggestion_preferences.dart';
 import 'package:thirty/features/home/presentation/memory_page.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_session_card.dart';
+import 'package:thirty/features/personal_circle/application/guidance_session.dart';
 import 'package:thirty/features/personal_circle/application/guidance_voice.dart';
 import 'package:thirty/features/personal_circle/domain/circle_composer.dart';
 import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
@@ -108,6 +109,49 @@ class _RecordingPlayer implements GuidanceAudioPlayer {
   Future<void> stop() async {}
 }
 
+/// A background session that only remembers what it was asked to show.
+class _RecordingSession implements GuidanceSession {
+  final shown = <GuidanceSessionStatus>[];
+  final ended = <bool>[];
+  void Function(GuidanceAction action)? _onAction;
+
+  /// The notification's control, as the platform would deliver it.
+  void tap(GuidanceAction action) => _onAction!(action);
+
+  @override
+  Future<void> show(GuidanceSessionStatus status) async => shown.add(status);
+
+  @override
+  Future<void> end({bool afterSpeech = false}) async => ended.add(afterSpeech);
+
+  @override
+  void listen(void Function(GuidanceAction action)? onAction) =>
+      _onAction = onAction;
+}
+
+/// THIRTY leaves the screen (another app, or the display off), as Android
+/// reports it.
+void _goOutOfSight(WidgetTester tester) {
+  for (final state in [
+    AppLifecycleState.inactive,
+    AppLifecycleState.hidden,
+    AppLifecycleState.paused,
+  ]) {
+    tester.binding.handleAppLifecycleStateChanged(state);
+  }
+}
+
+/// …and comes back.
+void _comeBack(WidgetTester tester) {
+  for (final state in [
+    AppLifecycleState.hidden,
+    AppLifecycleState.inactive,
+    AppLifecycleState.resumed,
+  ]) {
+    tester.binding.handleAppLifecycleStateChanged(state);
+  }
+}
+
 Future<ProviderContainer> _pump(
   WidgetTester tester,
   Map<String, Object> stored, {
@@ -158,6 +202,13 @@ Future<ProviderContainer> _pump(
   );
   await tester.pump();
   return container;
+}
+
+/// Ends the app with a voiced Circle still running: the conductor goes with
+/// its container, and so does its once-a-second check.
+Future<void> _leave(WidgetTester tester, ProviderContainer container) async {
+  await tester.pumpWidget(const SizedBox());
+  container.dispose();
 }
 
 void main() {
@@ -390,7 +441,7 @@ void main() {
         'never became available)', (tester) async {
       final clock = _Clock();
       final player = _RecordingPlayer();
-      await _pump(
+      final container = await _pump(
         tester,
         _today(status: 'started', startedMinutesAgo: 2),
         clock: clock,
@@ -406,6 +457,7 @@ void main() {
       expect(player.played, [
         [for (final clip in spokenCueFor(_plan, 2)) clip.asset],
       ]);
+      await _leave(tester, container);
     });
 
     testWidgets('spoken guidance stops at Pause, and says nothing while '
@@ -438,7 +490,7 @@ void main() {
     ) async {
       final clock = _Clock();
       final voice = _RecordingVoice();
-      await _pump(
+      final container = await _pump(
         tester,
         _today(status: 'started', startedMinutesAgo: 2),
         clock: clock,
@@ -453,6 +505,7 @@ void main() {
       // unrelated accessibility service.
       expect(voice.said, [spokenCueFor(_plan, 2)]);
       expect(voice.deferred, [isTrue]);
+      await _leave(tester, container);
     });
 
     test('without the bundled recordings the voice is silent — this build '
@@ -523,6 +576,203 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       expect(find.text('Get it out'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('out of sight — the background session (ADR-023 §6)', () {
+    testWidgets('Start speaks "First." and opens the session, which keeps the '
+        'device awake for the rest of the Circle', (tester) async {
+      final clock = _Clock();
+      final voice = _RecordingVoice();
+      final session = _RecordingSession();
+      final container = await _pump(
+        tester,
+        _today(),
+        clock: clock,
+        voice: voice,
+        extra: [guidanceSessionProvider.overrideWithValue(session)],
+      );
+      expect(session.shown, isEmpty);
+      expect(voice.said, isEmpty);
+      container.read(recommendationProvider.notifier).start();
+      await tester.pump();
+      expect(voice.said, [spokenCueFor(_plan, 0)]);
+      expect(session.shown.single.part, 'Stand and reach');
+      expect(session.shown.single.paused, isFalse);
+      expect(
+        session.shown.single.keepAwakeFor,
+        Duration(minutes: _plan.minutes) + const Duration(minutes: 1),
+      );
+      await _leave(tester, container);
+      expect(session.ended, [false]);
+    });
+
+    testWidgets('out of sight, the next part is spoken on time and once — by '
+        'the voice, not a screen reader, since nothing is on screen — and '
+        'the return shows the right part without saying it again', (
+      tester,
+    ) async {
+      final clock = _Clock();
+      final voice = _RecordingVoice();
+      final session = _RecordingSession();
+      final container = await _pump(
+        tester,
+        _today(status: 'started', startedMinutesAgo: 2),
+        clock: clock,
+        voice: voice,
+        screenReader: true,
+        extra: [guidanceSessionProvider.overrideWithValue(session)],
+      );
+      // A first look into a Circle under way: the session, not a cue.
+      expect(voice.said, isEmpty);
+      expect(session.shown.single.part, 'Clear one corner');
+      _goOutOfSight(tester);
+      clock.now = _morning.add(const Duration(minutes: 6, seconds: 59));
+      await tester.pump(const Duration(seconds: 1));
+      expect(voice.said, isEmpty);
+      clock.now = _morning.add(const Duration(minutes: 7));
+      await tester.pump(const Duration(seconds: 1));
+      expect(voice.said, [spokenCueFor(_plan, 2)]);
+      expect(voice.deferred, [isFalse]);
+      expect(session.shown.last.part, 'Get it out');
+      expect(
+        session.shown.last.keepAwakeFor,
+        const Duration(minutes: 7) + const Duration(minutes: 1),
+      );
+      for (var i = 0; i < 5; i++) {
+        clock.now = clock.now.add(const Duration(seconds: 1));
+        await tester.pump(const Duration(seconds: 1));
+      }
+      _comeBack(tester);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(voice.said, hasLength(1));
+      expect(find.text('Get it out'), findsOneWidget);
+      expect(find.text('Part 3 of 4 · next: Choose one thing'), findsOneWidget);
+      await _leave(tester, container);
+    });
+
+    testWidgets('the notification’s Pause holds the Circle’s time and lets '
+        'the device sleep; Resume carries on where it was; Next moves '
+        'exactly once', (tester) async {
+      final clock = _Clock();
+      final voice = _RecordingVoice();
+      final session = _RecordingSession();
+      final container = await _pump(
+        tester,
+        _today(status: 'started', startedMinutesAgo: 2),
+        clock: clock,
+        voice: voice,
+        extra: [guidanceSessionProvider.overrideWithValue(session)],
+      );
+      _goOutOfSight(tester);
+      RecommendationState state() => container.read(recommendationProvider);
+      final before = state().partMomentAt(clock.now)!;
+      session.tap(GuidanceAction.pause);
+      await tester.pump();
+      expect(state().isPaused, isTrue);
+      expect(session.shown.last.paused, isTrue);
+      expect(session.shown.last.keepAwakeFor, Duration.zero);
+      // Paused for half an hour: nothing moves, nothing is said.
+      clock.now = _morning.add(const Duration(minutes: 30));
+      await tester.pump(const Duration(seconds: 1));
+      expect(voice.said, isEmpty);
+      expect(state().partMomentAt(clock.now)!.partElapsed, before.partElapsed);
+      session.tap(GuidanceAction.resume);
+      await tester.pump();
+      expect(state().isPaused, isFalse);
+      expect(session.shown.last.paused, isFalse);
+      // 7 more minutes of "Clear one corner" before "Get it out".
+      clock.now = clock.now.add(const Duration(minutes: 6, seconds: 59));
+      await tester.pump(const Duration(seconds: 1));
+      expect(voice.said, isEmpty);
+      clock.now = clock.now.add(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      expect(voice.said, [spokenCueFor(_plan, 2)]);
+      session.tap(GuidanceAction.next);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(state().partMomentAt(clock.now)!.position, 3);
+      expect(voice.said, [spokenCueFor(_plan, 2), spokenCueFor(_plan, 3)]);
+      expect(state().skipped, isEmpty);
+      await _leave(tester, container);
+    });
+
+    testWidgets('after the last part the ending is spoken, once, and the '
+        'session ends once it has been said', (tester) async {
+      final clock = _Clock();
+      final voice = _RecordingVoice();
+      final session = _RecordingSession();
+      await _pump(
+        tester,
+        _today(status: 'started', startedMinutesAgo: 14),
+        clock: clock,
+        voice: voice,
+        extra: [guidanceSessionProvider.overrideWithValue(session)],
+      );
+      _goOutOfSight(tester);
+      clock.now = _morning.add(const Duration(minutes: 2));
+      await tester.pump(const Duration(seconds: 1));
+      expect(voice.said, [
+        [spokenEnding],
+      ]);
+      expect(session.ended, [true]);
+      clock.now = _morning.add(const Duration(minutes: 5));
+      await tester.pump(const Duration(seconds: 1));
+      expect(voice.said, hasLength(1));
+      expect(session.ended, [true]);
+    });
+
+    testWidgets('a first look into a Circle already past its last part says '
+        'nothing — not even the ending', (tester) async {
+      final voice = _RecordingVoice();
+      final session = _RecordingSession();
+      await _pump(
+        tester,
+        _today(status: 'started', startedMinutesAgo: 20),
+        voice: voice,
+        extra: [guidanceSessionProvider.overrideWithValue(session)],
+      );
+      await tester.pump(const Duration(seconds: 1));
+      expect(voice.said, isEmpty);
+      expect(session.shown, isEmpty);
+    });
+
+    testWidgets('Close ends the session at once, and so does turning the voice '
+        'off', (tester) async {
+      final session = _RecordingSession();
+      final container = await _pump(
+        tester,
+        _today(status: 'started', startedMinutesAgo: 2),
+        extra: [
+          spokenGuidanceAvailableProvider.overrideWithValue(true),
+          guidanceAudioPlayerProvider.overrideWithValue(_RecordingPlayer()),
+          guidanceSessionProvider.overrideWithValue(session),
+        ],
+      );
+      expect(session.shown, hasLength(1));
+      container.read(spokenGuidanceEnabledProvider.notifier).set(false);
+      await tester.pump();
+      expect(session.ended, [false]);
+      container.read(spokenGuidanceEnabledProvider.notifier).set(true);
+      await tester.pump();
+      expect(session.shown, hasLength(2));
+      container.read(recommendationProvider.notifier).close();
+      await tester.pump();
+      expect(session.ended, [false, false]);
+    });
+
+    testWidgets('without the voice there is no session at all', (tester) async {
+      final session = _RecordingSession();
+      final container = await _pump(
+        tester,
+        _today(),
+        extra: [guidanceSessionProvider.overrideWithValue(session)],
+      );
+      container.read(recommendationProvider.notifier).start();
+      await tester.pump(const Duration(seconds: 3));
+      expect(session.shown, isEmpty);
+      expect(session.ended, isEmpty);
     });
   });
 

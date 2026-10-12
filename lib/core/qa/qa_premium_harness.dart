@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/personal_circle/application/guidance_conductor.dart';
 import '../../features/reminder/application/reminder_provider.dart';
 import '../app/thirty_app.dart';
 import '../premium/premium_access.dart';
@@ -77,6 +78,7 @@ class _QaPremiumHarnessAppState extends State<QaPremiumHarnessApp> {
     );
     unawaited(container.read(entitlementStatusProvider.notifier).initialize());
     unawaited(container.read(reminderProvider.notifier).initialize());
+    keepGuidanceConducting(container);
     return container;
   }
 

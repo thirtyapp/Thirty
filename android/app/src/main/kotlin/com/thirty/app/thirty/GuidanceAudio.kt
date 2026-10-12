@@ -43,6 +43,13 @@ class GuidanceAudio(private val context: Context) {
     private var player: MediaPlayer? = null
     private var queue: List<String> = emptyList()
 
+    /** Called whenever the voice falls silent after playing. */
+    var onIdle: (() -> Unit)? = null
+
+    /** Whether a clip is playing or still queued. */
+    val isPlaying: Boolean
+        get() = player != null || queue.isNotEmpty()
+
     /**
      * Plays [assets] in order, replacing anything still playing. With
      * [deferToScreenReader], nothing plays while a screen reader (touch
@@ -79,6 +86,7 @@ class GuidanceAudio(private val context: Context) {
             return
         }
         abandonFocus()
+        onIdle?.invoke()
     }
 
     private fun open(asset: String): MediaPlayer? {

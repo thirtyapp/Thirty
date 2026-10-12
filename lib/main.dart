@@ -13,6 +13,7 @@ import 'core/providers/shared_preferences_provider.dart';
 import 'core/providers/supabase_availability_provider.dart';
 import 'core/qa/qa_premium_gate.dart';
 import 'core/qa/qa_premium_harness.dart';
+import 'features/personal_circle/application/guidance_conductor.dart';
 import 'features/personal_circle/application/guidance_voice.dart';
 import 'features/reminder/application/reminder_provider.dart';
 import 'features/toolkit/application/v1_premium_retirement.dart';
@@ -81,6 +82,9 @@ Future<void> main() async {
   // never block the first frame or affect the rest of the app (parent
   // §27's own failure behavior — see `ReminderGateway`'s doc comment).
   unawaited(container.read(reminderProvider.notifier).initialize());
+  // V2 Phase D2: a voiced Circle is spoken whatever screen is built, and
+  // out of sight (ADR-023 §6).
+  keepGuidanceConducting(container);
 
   runApp(
     UncontrolledProviderScope(container: container, child: const ThirtyApp()),

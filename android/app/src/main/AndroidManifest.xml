@@ -30,6 +30,15 @@
          closed (schedules nothing) rather than reintroducing the
          proven-bad inexact behavior. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- V2 Phase D2 (ADR-023 §6) — spoken guidance out of sight: while a
+         voiced Circle the user started is running, GuidanceService is a
+         media-playback foreground service holding a partial wake lock,
+         so Android neither freezes THIRTY (S25: the cached-app freezer
+         froze it within a minute of switching apps) nor sleeps the device
+         between cues. It ends with the Circle. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- ADR-013 §7 — THIRTY's Circle journal and recommendation state are
          device-local only, with no account or cloud-sync system (AGENTS.md
          §5). android:allowBackup defaults to true, which would otherwise
@@ -80,9 +89,10 @@
             android:value="2" />
         <!-- Step 5 local closure — flutter_local_notifications' own
              receivers: one fires the scheduled reminder itself, the other
-             re-arms it after a reboot/app update. No exported="true", no
-             action-button receiver and no foreground service are declared
-             — this app uses neither. -->
+             re-arms it after a reboot/app update. No exported="true" and
+             no action-button receiver are declared — this app uses
+             neither. (THIRTY's one foreground service is its own
+             GuidanceService below, not the plugin's.) -->
         <receiver
             android:exported="false"
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
@@ -113,6 +123,13 @@
                 <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"/>
             </intent-filter>
         </receiver>
+        <!-- V2 Phase D2 — see the permissions above. Not exported; ends when
+             THIRTY is removed from Recents. -->
+        <service
+            android:name=".GuidanceService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback"
+            android:stopWithTask="true" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
