@@ -144,7 +144,8 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
   - Full suite and analyze clean.
   - Real-device QA and TalkBack pass.
   - Founder content review passes.
-  - Founder approval of the production voice recordings (spoken guidance: bundled, pre-generated; founder decision 2026-10-11).
+  - Founder approval of the production voice recordings (spoken guidance: bundled, pre-generated; founder decision 2026-10-11), with all 42 clips bundled and QA'd.
+  - Android background playback for a voiced Circle works on the S25, including screen off and locked (founder decision E, 2026-10-12).
   - Documentation matches the implementation.
 - **Device proof:** S25. Free unchanged; Premium 10/20/30-minute guided sessions; skip and leave-out; next-day effect; Use it today; Path; Toolkit; lapse and resubscribe; dark mode, 130 % text and TalkBack.
 - **Commercial question:** does a personal guided Circle every day feel worth a monthly subscription? Unproven until pre-release users try the complete product.
@@ -270,3 +271,29 @@ Public launch requires **all** of the following:
   - **Still open before D2 can pass:**
     - founder approval of the corrected content;
     - founder approval of the production voice recordings, together with the background-playback decision.
+- **2026-10-12** — **Phase D2 final hardening** (audit-candidate pass; D2 still NOT COMPLETE):
+  - **Content:**
+    - **The last two copy fixes:**
+      - "Phone face down" now ends "…unless a part asks you to use it".
+      - "Look far away" no longer assumes a window or the outdoors. Its wording is tighter than the brief's, because the S25 geometry test failed on the longer sentence.
+    - **Content frozen:** `CONTENT_REVIEW.md` §0 carries a machine diff proving nothing else drifted.
+  - **Background playback (founder decision E):**
+    - **The service:** while a voiced Circle runs, a `mediaPlayback` foreground service with a partial wake lock, and a notification ("Circle running" / "Circle paused", the part, Pause/Resume and Next). There is no media session, so headset buttons are never taken from the user's music.
+    - **The conductor:** a new application-level `GuidanceConductor` owns the cues from the Circle's stored facts and the clock, independent of the UI.
+    - **S25-verified:**
+      - timed cues with the screen off and locked, across an app switch, and after Back to the launcher;
+      - ducking of Chrome's music, which keeps playing;
+      - the notification's Next, Pause and Resume;
+      - the ending, then the service stopping itself;
+      - no duplicate cue on return.
+    - **Fixed along the way:**
+      - "First." never played at Start;
+      - the notification's controls could reach nothing after the app's state was rebuilt;
+      - Back on Today finished the activity on Android 16, ending the Circle's cues.
+  - **Voice:**
+    - **Manifest:** regenerated as the recording source of truth; 2 of 42 fingerprints changed.
+    - **Audition:** review-only, 3 voices × 5 clips via the vidIQ voiceover tool (42 add-on credits), not bundled.
+    - **Requirements:** production and mastering requirements written.
+    - **No production clip exists.**
+  - **Audit pack:** `artifacts/v2_phase_d2/final_audit/`, with the commercial hypotheses (kept-Circle substitution: 40 of 60 lapsed days; More Energy is the thinnest need) and release-audit notes.
+  - **Still open before D2 can pass:** founder approval of a production voice and its licence, and the 42 clips produced, bundled and S25-QA'd.

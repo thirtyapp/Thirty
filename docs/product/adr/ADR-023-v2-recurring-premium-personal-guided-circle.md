@@ -1,6 +1,8 @@
 # ADR-023 — V2 Recurring Premium / Personal Guided Circle
 
-**Status:** Proposed — Phase D2 implemented and S25-verified 2026-10-11 (device QA and live TalkBack pass; `artifacts/v2_phase_d2/DEVICE_QA.md`). Founder correction pass applied 2026-10-11 (semantic dependencies, phone/guidance consistency, offer truth, spoken-guidance architecture). Becomes Accepted only when the remaining Phase D2 gates pass: founder approval of the corrected content, and founder approval of the production voice recordings (§6).
+**Status:** Proposed.
+- **History:** Phase D2 was implemented and S25-verified on 2026-10-11 (device QA and live TalkBack; `artifacts/v2_phase_d2/DEVICE_QA.md`). The founder correction pass followed the same day. The final hardening pass on 2026-10-12 added the last two copy fixes, the content freeze, Android background playback (S25-verified, including screen off and locked), and a review-only voice audition.
+- **What Accepted still needs:** founder approval of the production voice, and all 42 production clips bundled and QA'd (§6). Without them, Phase D2 is not complete.
 
 Product authority: [PRODUCT_V2_CONTRACT.md](../PRODUCT_V2_CONTRACT.md), as amended on 2026-10-11 ("Amendment — Recurring Premium (Phase D2)"). This ADR **supersedes the conflicting Premium portions of [ADR-022](ADR-022-v2-phase-d-paths-toolkit-and-maintenance.md)**: Premium's headline job, what Today does for a Premium user, the offer page, and the three defects in §10. ADR-022 stays the historical record of Phase D as built and accepted on 2026-10-10. Free V2 stays governed by the contract and ADR-020/021. Review pack: `artifacts/v2_phase_d2/`.
 
@@ -102,7 +104,7 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
    - **Heading:** the part's name, then "Part 2 of 4 · next: Get it out" or "· the last part" — context, never a countdown.
    - **The finish:** past the last part, "To finish" and the composed ending, and Close leads. The ring still shows the time set aside; nothing claims a part was done.
    - **Accessibility:**
-     - the part text is one TalkBack stop and a live region, so a part that begins by itself is announced;
+     - the part text is one TalkBack stop and a live region, so a part that begins by itself is announced. On the S25 (2026-10-12) TalkBack spoke it at one timed change; at another, right after TalkBack had restarted, no speech was logged. A live founder listen is part of the voice QA, and an explicit announcement per part is the fix if it recurs;
      - every control is ≥ 48 pt;
      - reduced motion swaps parts without movement;
      - no overflow at 130 % or at 200 % on a 320 pt screen (tested).
@@ -114,22 +116,54 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
    - The how-to sheet lists the parts with their times and says how the Circle runs.
    - Today's card shows "YOUR CIRCLE · 16 MIN", the need, and the session's substance — its main and second piece ("Clear one corner · Get it out"), guarded to two lines so Start Circle keeps its place on the S25. It opens "See the parts", where every part is listed with its time. The card carries the one basis line, without the decorative art: the text needs the full width. History shows every part.
 
-6. **Spoken guidance: bundled pre-generated recordings** (founder decision, 2026-10-11; `domain/spoken_cues.dart`, `application/guidance_voice.dart`, Android `GuidanceAudio.kt`).
+6. **Spoken guidance: bundled pre-generated recordings** (founder decision, 2026-10-11; architecture approved 2026-10-12; `domain/spoken_cues.dart`, `application/guidance_voice.dart`, `application/guidance_conductor.dart`, `application/guidance_session.dart`, Android `GuidanceAudio.kt` and `GuidanceService.kt`).
    - **Decision:** fixed, high-quality recordings bundled with the app. No runtime generative AI, no voice API or other recurring cost, and no device text-to-speech as the intended Premium experience.
-   - **Deterministic lookup:** when a part begins, the voice plays a lead — "First." for the first part, "And last." for the last, otherwise "Next." — then that element's own clip: its name and instruction, exactly the words on the screen. After the last part it plays the close ("That's your Circle…"). `spokenGuidanceManifest` is the complete recording list: 3 leads, 1 clip per offerable element and the close (42 today). It is exported for the recording session as `SPOKEN_GUIDANCE_MANIFEST.csv`.
+   - **Deterministic lookup:** when a part begins, the voice plays a lead — "First." for the first part, "And last." for the last, otherwise "Next." — then that element's own clip: its name and instruction, exactly the words on the screen. After the last part it plays the close ("That's your Circle…"). `spokenGuidanceManifest` is the complete recording list: 3 leads, 1 clip per offerable element and the close (42). It is exported as `SPOKEN_GUIDANCE_MANIFEST.csv`, the recording source of truth (regenerated 2026-10-12).
    - **Never stale:** each clip's file name carries a fingerprint of its script (`part_getItOut_<fnv32>.m4a`), so changing an instruction makes its clip missing.
    - **All or nothing:** the voice is available only when every manifest clip is bundled. A partial set is silent, never patchy. This is checked once at start-up (`spokenGuidanceBundled`, overridden into `spokenGuidanceAvailableProvider` by `main.dart` and the QA harness).
-   - **Offline playback** goes through a small platform player over a method channel (`com.thirty.app/guidance_audio`). On Android it plays Flutter assets with transient, duckable audio focus, so music the user put on dips under the voice. Without a player (iOS today) or a playable clip, it is silent — never an error.
-   - **Timing without the screen:** the cue fires from the Circle's one-second timer as well as from builds, so it doesn't depend on frames being drawn.
-     - **S25 finding:** once the user switches to another app, Android's cached-app freezer freezes THIRTY (`isFrozen=true` within about a minute), and no cue fires until they return. No stale cue plays on return.
-     - Screen off with THIRTY still on top was not tested on the device: the S25 has a lock screen, and waking it needs the founder.
-     - **To close before the voice ships:** a media-playback foreground service while a voiced Circle runs, which keeps cues on time in a pocket and across apps. It shows a persistent "Circle running" notification, so it is a founder decision and part of the voice gate.
-   - **Never on a first look** into a running Circle. It stops at Pause, at Close and when leaving the Circle.
-   - **Accessibility stays independent:** the visual runtime and its live TalkBack announcements are complete without audio. While a screen reader is on and THIRTY is in front, the live announcement speaks and the voice stays silent — never two voices at once.
-     - The platform player decides this from the screen reader itself (Android: touch exploration).
-     - Flutter's `accessibleNavigation` is not used: on the S25 it was true with TalkBack off, because an unrelated accessibility service (a cleaner app) was enabled. That would have silenced the voice for anyone with such a service.
-   - **User control:** You → Preferences → "Spoken guidance", on by default, shown only in a build that bundles the recordings.
-   - **State today:** the architecture, manifest and tests are complete, but **no recording exists**. The build bundles none, so the voice is silent. The production voice and every clip are a final founder gate: they must meet the same quality bar as the rest of THIRTY.
+   - **Who decides what is said: `GuidanceConductor`** (final hardening, 2026-10-12). One application-level conductor, kept alive by `main.dart`, speaks a running composed Circle. It replaces the voice code in Today's widget, so the voice never depends on which screen is built, or on the UI being in front.
+     - **It keeps no time of its own.** Every second while a voiced Circle runs, it reads the part on show from the Circle's stored facts and the wall clock (`partMomentAt`).
+     - A cue is due exactly when a part begins, however long THIRTY was out of sight, and a return or a restart lands on the right part.
+     - **Each part is spoken once.** Lifecycle changes, returns and rebuilds never repeat a cue.
+     - **Never on a first look** into a Circle already under way, and never the ending on a first look past the last part.
+     - **Nothing while paused.** It stops at Pause and Close; resuming the same part says nothing new.
+     - **Defect found and fixed:** before this pass, a Circle's first part was never spoken at Start, because the voice had already "seen" part 1 before Start. "First." now plays at Start (tested, and S25-verified).
+   - **Android background playback** (founder decision E, 2026-10-12; `GuidanceService.kt`).
+     - **Service lifecycle:**
+       - **Architecture:** while a voiced Circle runs, THIRTY runs a **foreground service of type `mediaPlayback`** holding a **partial wake lock**. Android then neither freezes THIRTY (the S25's cached-app freezer froze it within a minute of switching apps) nor sleeps the CPU between cues.
+       - **Timeout:** the wake lock is held with a timeout of the Circle's remaining time plus one minute, refreshed at each part. It is released while paused and when the session ends.
+       - **Start:** only from THIRTY in front, after the user's Start (or on reopening a voiced Circle under way).
+       - **End:** after the ending has been spoken (it waits for the voice to fall idle, at most 30 s), at Close, when the voice is turned off, when Flutter goes away, or when THIRTY is removed from Recents (`stopWithTask`).
+       - **Scope:** `START_NOT_STICKY`. No permanent service, no tracking, no data, no other work.
+     - **Why not Media3 / MediaSessionService:**
+       - **A session takes the media buttons:** a media session would become the target of headset and lock-screen media buttons after each cue. During "Move to music" or "Listen to one thing" the user's own player would lose its play/pause buttons to THIRTY — exactly the hijacking the founder brief rules out.
+       - **Wrong model:** a Circle is a timed sequence of short cues with long silences, not a seekable media item.
+       - **No new dependency:** the platform service needs none.
+       - **The cost:** the notification shows as an ordinary notification, not in Samsung's media "Now Bar".
+     - **Notification:** the notification Android requires for the service, on a low-importance channel named "Spoken guidance".
+       - **Content:** "Circle running" or "Circle paused", the name of the part on show, and **Pause/Resume** and **Next**. Tapping it opens THIRTY.
+       - **What it never shows:** no score, progress or congratulation.
+       - **Not Close:** closing is a confirmed, irreversible step taken in THIRTY.
+       - **Not "stop voice":** Pause silences at once, and the switch is in You.
+       - **The controls do exactly what the Circle's own controls do:** Next moves one part, and the skip and journal semantics are unchanged.
+       - **Without notification permission:** Android still runs the service, so the voice continues, but the controls are hidden. THIRTY asks for no new permission.
+     - **Timing ownership:** Dart, from stored facts, as above. The service plays and times nothing.
+     - **Back at the first screen:**
+       - **The defect:** it used to finish the activity — Flutter's default, and on Android 16 the platform's default finish callback — which ended Flutter and the voiced Circle with it.
+       - **The fix:** Back at the root now moves THIRTY to the background, as Android 12+ does for launcher apps. Flutter's own back callback stays on top whenever there is something in THIRTY to go back to (S25-verified: sheets and pushed pages unchanged).
+   - **Offline playback** goes through a small platform player over a method channel (`com.thirty.app/guidance_audio`). On Android it plays Flutter assets with **transient, duckable audio focus** (`USAGE_ASSISTANCE_NAVIGATION_GUIDANCE`, `CONTENT_TYPE_SPEECH`).
+     - **S25-verified with Chrome playing media:** Chrome received `LOSS_TRANSIENT_CAN_DUCK` at the cue and `GAIN` when it ended, and kept playing throughout. Nothing is paused or taken over.
+     - **Spoken content:** a podcast-type player may choose to pause during a cue, as Android's focus rules intend for speech.
+     - Without a player (iOS today) or a playable clip, the voice is silent, never an error.
+   - **Accessibility stays independent:** the visual runtime and its live TalkBack announcements are complete without audio.
+     - **In front, with a screen reader on:** the live announcement speaks and the voice stays silent — never two voices at once.
+     - **Out of sight:** the voice speaks, because nothing is on screen to announce.
+     - **How it decides:** the platform player checks the screen reader itself (Android: touch exploration). Flutter's `accessibleNavigation` is not used: on the S25 it was true with TalkBack off, because an unrelated accessibility service (a cleaner app) was enabled.
+   - **User control:** You → Preferences → "Spoken guidance", on by default, shown only in a build that bundles the recordings. Turning it off ends the background session.
+   - **Owned Circles keep their voice:** a kept Circle used on Free ("Use it today") runs on the same guided runtime and is voiced too (S25-verified). This follows from ownership, and it is part of the substitution hypothesis (Consequences).
+   - **State on 2026-10-12:** the architecture, background playback, manifest and tests are complete, but **no production recording exists**. The build bundles none, so the voice is silent.
+     - **Audition:** a review-only audition — 3 candidate voices × 5 representative clips, generated once through the vidIQ voiceover tool (ElevenLabs premade voices) — is in `artifacts/v2_phase_d2/voice_audition/`. It is not bundled.
+     - **Founder gate:** the production voice, its licence and every clip remain a gate (`final_audit/VOICE_PRODUCTION_REQUIREMENTS.md`).
 
 7. **Element controls and evidence boundaries.**
    - **"Skip this step"** (Skip → sheet: "Skip it for today" / "Leave it out next time" / "Keep going"):
@@ -220,12 +254,12 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
 ## Consequences
 
 - Phase D's history, data and Path/Toolkit behaviour are preserved; nothing the user built is migrated away.
-- **Open before D2 can pass:**
-  - founder approval of the corrected element and Premium copy;
-  - founder approval of the production voice and its recordings (§6). The decision is made; the recordings don't exist yet.
+- **Content is frozen** after the final hardening pass (2026-10-12). The founder approved the corrected content in principle; the final two fixes and the drift proof are in `CONTENT_REVIEW.md` §0.
+- **Open before D2 can pass:** founder approval of a production voice, and all 42 clips produced, bundled and QA'd (§6). The decision and the architecture are approved; the recordings don't exist yet.
 - **S25 device QA and live TalkBack passed** after six device findings were fixed (Today card height, Memory showing composite answers, Toolkit order and wording, the running Close clearance, Skip-sheet overflow at 130 %, orphaned words).
-- **More Energy is thin** without its gated exertion and breathing content. Widening it honestly needs the separate safety review, never invented content.
+- **More Energy is thin**: the thinnest need, with 9 mains against 13–18 for mixed needs (p14, `SIMULATION_REVIEW.md`). The cause is its gated exertion and breathing content. Widening it honestly needs the separate safety review, never invented content.
+- **Older source wording** (Free activities, routine modules) still has "a little quicker than usual", "turn it up a little", "livelier" and "out of sight". It is listed for the final release audit (`final_audit/RELEASE_AUDIT_NOTES.md`). It is not an active defect, because none of it is spoken.
 - **Every composer value is a hypothesis** (`ComposerPolicy`). Read them against pre-release behaviour.
-- **Commercial hypothesis, unproven:** whether a personal guided Circle each day is worth a monthly subscription. The €5–€9 range is a hypothesis, not a finding.
+- **Commercial hypothesis, unproven:** whether a personal guided Circle each day is worth a monthly subscription. No willingness to pay, conversion, retention or acquisition has been measured. The simulations are architectural checks, not user evidence. The €5–€9 range is a hypothesis, not a finding.
 - **Commercial hypothesis — substitution (post-D2 audit):** up to 8 kept Circles, used free with "Use it today", can stand in for new composition after a lapse (40 of 60 lapsed days in the attack). Ownership is deliberately not weakened. Whether this erodes the subscription is for the post-D2 audit to judge.
 - Phase E stays on hold until Phase D2 passes.
