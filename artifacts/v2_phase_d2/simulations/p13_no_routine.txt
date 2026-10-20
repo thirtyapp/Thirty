@@ -1,0 +1,365 @@
+D  1 P moreEnergy ≈30 → [CIRCLE sized] neckAndShoulders:2 activeJob:12 moveToMusic:8 sitAMinute:2 24m · veryUseful
+D  2 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 sitOutside:10 lookFar:2 28m · somewhatUseful
+D  3 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 glassOfWater:2 30m · somewhatUseful
+D  4 P moreEnergy ≈30 → [CIRCLE sized] briskWalk:20 gentleStretch:8 whatsNext:1 29m · somewhatUseful
+D  5 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 sitAMinute:2 24m · somewhatUseful
+D  6 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 easyWalk:15 readPages:10 lookFar:2 28m · somewhatUseful
+D  7 P moreEnergy ≈30 → [CIRCLE sized] openWindow:1 moveToMusic:8 gentleStretch:8 putThingsBack:2 19m · somewhatUseful
+D  8 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 quietMusic:10 sitOutside:10 lookAround:1 22m · somewhatUseful
+D  9 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 clearCorner:8 glassOfWater:2 23m · somewhatUseful
+D 10 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 sitAMinute:2 23m · veryUseful
+D 11 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 easyWalk:15 sitOutside:10 lookFar:2 29m · somewhatUseful
+D 12 P clearerHead ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 readPages:10 whatsNext:1 27m · somewhatUseful
+D 13 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 glassOfWater:2 23m · veryUseful
+D 14 P gentlerPace ≈30 → [CIRCLE sized] comfortableSpot:1 listenOne:12 sitOutside:10 sitAMinute:2 25m · somewhatUseful
+D 15 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 quietMusic:10 readPages:10 putThingsBack:2 25m · somewhatUseful
+D 16 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 gentleStretch:8 moveToMusic:8 whatsNext:1 18m · somewhatUseful
+D 17 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 roundTheBlock:10 sitOutside:10 lookFar:2 24m · somewhatUseful
+D 18 P clearerHead ≈30 → [CIRCLE sized] phoneFaceDown:1 listenOne:12 readPages:10 glassOfWater:2 25m · somewhatUseful
+D 19 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 sitAMinute:2 24m · veryUseful
+D 20 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 warmDrink:10 quietMusic:10 putThingsBack:2 23m · somewhatUseful
+D 21 P clearerHead ≈30 → [CIRCLE sized] nameWhatsOn:1 roundTheBlock:10 readPages:10 lookFar:2 23m · somewhatUseful
+D 22 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 glassOfWater:2 23m · veryUseful
+D 23 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 sitAMinute:2 24m · somewhatUseful
+D 24 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 warmDrink:10 readPages:10 putThingsBack:2 23m · somewhatUseful
+D 25 P moreEnergy ≈30 → [CIRCLE foundUseful] phoneFreeWalk:15 gentleStretch:8 whatsNext:1 24m · somewhatUseful
+D 26 P gentlerPace ≈30 → [CIRCLE sized] comfortableSpot:1 quietMusic:10 sitOutside:10 lookFar:2 23m · somewhatUseful
+D 27 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 clearCorner:8 sitAMinute:2 23m · somewhatUseful
+D 28 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · veryUseful
+D 29 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 sitOutside:10 lookAround:1 27m · somewhatUseful
+D 30 P clearerHead ≈30 → [CIRCLE sized] comfortableSpot:1 readPages:10 quietMusic:10 lookFar:2 23m · somewhatUseful
+D 31 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 sitAMinute:2 23m · veryUseful
+D 32 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 noteOneThing:1 23m · somewhatUseful
+D 33 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 glassOfWater:2 30m · somewhatUseful
+D 34 P moreEnergy ≈30 → [CIRCLE foundUseful] briskWalk:20 gentleStretch:8 whatsNext:1 29m · somewhatUseful
+D 35 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 quietMusic:10 sitOutside:10 sitAMinute:2 23m · somewhatUseful
+D 36 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 readPages:10 clearCorner:8 lookFar:2 22m · somewhatUseful
+D 37 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D 38 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 sitOutside:10 noteOneThing:1 27m · somewhatUseful
+D 39 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 easyWalk:15 readPages:10 sitAMinute:2 28m · somewhatUseful
+D 40 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D 41 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 lookFar:2 24m · somewhatUseful
+D 42 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 putThingsBack:2 30m · somewhatUseful
+D 43 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 moveToMusic:8 gentleStretch:8 glassOfWater:2 19m · somewhatUseful
+D 44 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 easyWalk:15 sitOutside:10 sitAMinute:2 28m · somewhatUseful
+D 45 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 phoneFreeWalk:15 readPages:10 lookFar:2 29m · somewhatUseful
+D 46 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 whatsNext:1 22m · veryUseful
+D 47 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 listenOne:12 sitOutside:10 noteOneThing:1 24m · somewhatUseful
+D 48 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 quietMusic:10 readPages:10 glassOfWater:2 25m · somewhatUseful
+D 49 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 sitAMinute:2 23m · veryUseful
+D 50 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 roundTheBlock:10 sitOutside:10 lookFar:2 24m · somewhatUseful
+D 51 P clearerHead ≈30 → [CIRCLE sized] nameWhatsOn:1 listenOne:12 readPages:10 putThingsBack:2 25m · somewhatUseful
+D 52 P moreEnergy ≈30 → [CIRCLE foundUseful] gentleStretch:8 moveToMusic:8 glassOfWater:2 18m · somewhatUseful
+D 53 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 warmDrink:10 quietMusic:10 sitAMinute:2 23m · somewhatUseful
+D 54 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 roundTheBlock:10 readPages:10 lookFar:2 24m · somewhatUseful
+D 55 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 moveToMusic:8 whatsNext:1 22m · veryUseful
+D 56 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 sitOutside:10 noteOneThing:1 27m · somewhatUseful
+D 57 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 warmDrink:10 readPages:10 putThingsBack:2 23m · somewhatUseful
+D 58 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 sitAMinute:2 23m · veryUseful
+D 59 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 lookFar:2 24m · somewhatUseful
+D 60 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 clearCorner:8 glassOfWater:2 23m · somewhatUseful
+D 61 P moreEnergy ≈30 → [CIRCLE foundUseful] phoneFreeWalk:15 gentleStretch:8 whatsNext:1 24m · somewhatUseful
+D 62 P gentlerPace ≈30 → [CIRCLE sized] comfortableSpot:1 quietMusic:10 sitOutside:10 sitAMinute:2 23m · somewhatUseful
+D 63 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 oneTask:15 readPages:10 lookFar:2 29m · somewhatUseful
+D 64 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D 65 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 sitOutside:10 lookAround:1 27m · somewhatUseful
+D 66 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 quietMusic:10 sitAMinute:2 25m · somewhatUseful
+D 67 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D 68 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 noteOneThing:1 23m · somewhatUseful
+D 69 P clearerHead ≈30 → [CIRCLE sized] nameWhatsOn:1 oneTask:15 clearCorner:8 glassOfWater:2 26m · somewhatUseful
+D 70 P moreEnergy ≈30 → [CIRCLE foundUseful] briskWalk:20 gentleStretch:8 sitAMinute:2 30m · somewhatUseful
+D 71 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 quietMusic:10 lookFar:2 28m · somewhatUseful
+D 72 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 easyWalk:15 readPages:10 noteOneThing:1 28m · somewhatUseful
+D 73 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D 74 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 sitOutside:10 sitAMinute:2 28m · somewhatUseful
+D 75 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 quietMusic:10 putThingsBack:2 25m · somewhatUseful
+D 76 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D 77 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 easyWalk:15 sitOutside:10 lookFar:2 29m · somewhatUseful
+D 78 P clearerHead ≈30 → [CIRCLE sized] lookAround:1 oneTask:15 readPages:10 glassOfWater:2 28m · somewhatUseful
+D 79 P moreEnergy ≈30 → [CIRCLE foundUseful] moveToMusic:8 gentleStretch:8 putThingsBack:2 18m · somewhatUseful
+D 80 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 listenOne:12 sitOutside:10 sitAMinute:2 25m · somewhatUseful
+D 81 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 quietMusic:10 readPages:10 lookFar:2 25m · somewhatUseful
+D 82 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · veryUseful
+D 83 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 roundTheBlock:10 sitOutside:10 noteOneThing:1 22m · somewhatUseful
+D 84 P clearerHead ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 readPages:10 sitAMinute:2 28m · somewhatUseful
+D 85 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D 86 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 warmDrink:10 quietMusic:10 lookFar:2 24m · somewhatUseful
+D 87 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 listenOne:12 readPages:10 putThingsBack:2 27m · somewhatUseful
+D 88 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 gentleStretch:8 moveToMusic:8 sitAMinute:2 19m · somewhatUseful
+D 89 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 sitOutside:10 noteOneThing:1 27m · somewhatUseful
+D 90 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 roundTheBlock:10 readPages:10 lookFar:2 24m · somewhatUseful
+D 91 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D 92 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 quietMusic:10 sitAMinute:2 28m · somewhatUseful
+D 93 P clearerHead ≈30 → [CIRCLE sized] openWindow:1 warmDrink:10 readPages:10 putThingsBack:2 23m · somewhatUseful
+D 94 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 sitAMinute:2 23m · veryUseful
+D 95 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 quietMusic:10 sitOutside:10 lookFar:2 24m · somewhatUseful
+D 96 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 glassOfWater:2 30m · somewhatUseful
+D 97 P moreEnergy ≈30 → [CIRCLE foundUseful] phoneFreeWalk:15 gentleStretch:8 whatsNext:1 24m · somewhatUseful
+D 98 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 sitOutside:10 quietMusic:10 sitAMinute:2 23m · somewhatUseful
+D 99 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 oneTask:15 clearCorner:8 lookFar:2 27m · somewhatUseful
+D100 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D101 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 sitOutside:10 noteOneThing:1 27m · somewhatUseful
+D102 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 quietMusic:10 sitAMinute:2 25m · somewhatUseful
+D103 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D104 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 listenOne:12 sitOutside:10 lookFar:2 26m · somewhatUseful
+D105 P clearerHead ≈30 → [CIRCLE sized] nameWhatsOn:1 easyWalk:15 readPages:10 oneLongReach:1 27m · somewhatUseful
+D106 P moreEnergy ≈30 → [CIRCLE foundUseful] briskWalk:20 gentleStretch:8 sitAMinute:2 30m · somewhatUseful
+D107 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 quietMusic:10 noteOneThing:1 27m · somewhatUseful
+D108 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 lookFar:2 30m · somewhatUseful
+D109 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · veryUseful
+D110 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 easyWalk:15 sitOutside:10 sitAMinute:2 28m · somewhatUseful
+D111 P clearerHead ≈30 → [CIRCLE sized] comfortableSpot:1 oneTask:15 quietMusic:10 putThingsBack:2 28m · somewhatUseful
+D112 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D113 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 phoneFreeWalk:15 sitOutside:10 lookFar:2 29m · somewhatUseful
+D114 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 quietMusic:10 readPages:10 glassOfWater:2 25m · somewhatUseful
+D115 P moreEnergy ≈30 → [CIRCLE foundUseful] moveToMusic:8 gentleStretch:8 sitAMinute:2 18m · somewhatUseful
+D116 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 roundTheBlock:10 sitOutside:10 noteOneThing:1 22m · somewhatUseful
+D117 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 phoneFreeWalk:15 readPages:10 lookFar:2 29m · somewhatUseful
+D118 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D119 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 warmDrink:10 quietMusic:10 sitAMinute:2 23m · somewhatUseful
+D120 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 listenOne:12 readPages:10 putThingsBack:2 27m · somewhatUseful
+D121 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D122 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 lookFar:2 24m · somewhatUseful
+D123 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 roundTheBlock:10 readPages:10 sitAMinute:2 23m · somewhatUseful
+D124 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 gentleStretch:8 moveToMusic:8 glassOfWater:2 19m · somewhatUseful
+D125 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 sitOutside:10 lookAround:1 27m · somewhatUseful
+D126 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 warmDrink:10 readPages:10 putThingsBack:2 24m · somewhatUseful
+D127 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 sitAMinute:2 23m · veryUseful
+D128 P gentlerPace ≈30 → [CIRCLE sized] comfortableSpot:1 quietMusic:10 sitOutside:10 lookFar:2 23m · somewhatUseful
+D129 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 glassOfWater:2 30m · somewhatUseful
+D130 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D131 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 sitAMinute:2 24m · somewhatUseful
+D132 P clearerHead ≈30 → [CIRCLE sized] phoneFaceDown:1 oneTask:15 clearCorner:8 lookFar:2 26m · somewhatUseful
+D133 P moreEnergy ≈30 → [CIRCLE foundUseful] phoneFreeWalk:15 gentleStretch:8 sitAMinute:2 25m · somewhatUseful
+D134 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 easyWalk:15 sitOutside:10 noteOneThing:1 27m · somewhatUseful
+D135 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 quietMusic:10 putThingsBack:2 25m · somewhatUseful
+D136 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · veryUseful
+D137 P gentlerPace ≈30 → [CIRCLE sized] comfortableSpot:1 listenOne:12 sitOutside:10 sitAMinute:2 25m · somewhatUseful
+D138 P clearerHead ≈30 → [CIRCLE sized] phoneFaceDown:1 easyWalk:15 readPages:10 lookFar:2 28m · somewhatUseful
+D139 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D140 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 phoneFreeWalk:15 sitOutside:10 lookAround:1 28m · somewhatUseful
+D141 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 putThingsBack:2 30m · somewhatUseful
+D142 P moreEnergy ≈30 → [CIRCLE foundUseful] briskWalk:20 gentleStretch:8 sitAMinute:2 30m · somewhatUseful
+D143 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 quietMusic:10 lookFar:2 28m · somewhatUseful
+D144 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 oneTask:15 clearCorner:8 glassOfWater:2 27m · somewhatUseful
+D145 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 moveToMusic:8 whatsNext:1 22m · veryUseful
+D146 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 sitOutside:10 quietMusic:10 sitAMinute:2 23m · somewhatUseful
+D147 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 quietMusic:10 readPages:10 lookFar:2 25m · somewhatUseful
+D148 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 glassOfWater:2 23m · veryUseful
+D149 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 roundTheBlock:10 sitOutside:10 noteOneThing:1 23m · somewhatUseful
+D150 P clearerHead ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 readPages:10 sitAMinute:2 28m · somewhatUseful
+D151 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 moveToMusic:8 gentleStretch:8 putThingsBack:2 19m · somewhatUseful
+D152 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 warmDrink:10 quietMusic:10 lookFar:2 24m · somewhatUseful
+D153 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 listenOne:12 readPages:10 glassOfWater:2 27m · somewhatUseful
+D154 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 sitAMinute:2 23m · veryUseful
+D155 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 sitOutside:10 lookAround:1 27m · somewhatUseful
+D156 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 roundTheBlock:10 readPages:10 lookFar:2 24m · somewhatUseful
+D157 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 glassOfWater:2 23m · veryUseful
+D158 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 quietMusic:10 sitAMinute:2 28m · somewhatUseful
+D159 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 warmDrink:10 readPages:10 putThingsBack:2 23m · somewhatUseful
+D160 P moreEnergy ≈30 → [CIRCLE foundUseful] gentleStretch:8 moveToMusic:8 sitAMinute:2 18m · somewhatUseful
+D161 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 quietMusic:10 sitOutside:10 lookFar:2 24m · somewhatUseful
+D162 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 glassOfWater:2 30m · somewhatUseful
+D163 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 whatsNext:1 22m · veryUseful
+D164 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 sitOutside:10 sitAMinute:2 28m · somewhatUseful
+D165 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 readPages:10 quietMusic:10 putThingsBack:2 24m · somewhatUseful
+D166 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 glassOfWater:2 23m · veryUseful
+D167 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 easyWalk:15 sitOutside:10 noteOneThing:1 27m · somewhatUseful
+D168 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 quietMusic:10 lookFar:2 30m · somewhatUseful
+D169 P moreEnergy ≈30 → [CIRCLE foundUseful] phoneFreeWalk:15 gentleStretch:8 sitAMinute:2 25m · somewhatUseful
+D170 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 listenOne:12 sitOutside:10 lookAround:1 25m · somewhatUseful
+D171 P clearerHead ≈30 → [CIRCLE sized] phoneFaceDown:1 easyWalk:15 readPages:10 whatsNext:1 27m · somewhatUseful
+D172 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D173 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 sitOutside:10 sitAMinute:2 28m · somewhatUseful
+D174 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 quietMusic:10 putThingsBack:2 25m · somewhatUseful
+D175 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D176 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 lookFar:2 24m · somewhatUseful
+D177 P clearerHead ≈30 → [CIRCLE sized] lookAround:1 oneTask:15 readPages:10 sitAMinute:2 28m · somewhatUseful
+D178 P moreEnergy ≈30 → [CIRCLE foundUseful] briskWalk:20 gentleStretch:8 sitAMinute:2 30m · somewhatUseful
+D179 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 quietMusic:10 noteOneThing:1 27m · somewhatUseful
+D180 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 clearCorner:8 lookFar:2 28m · somewhatUseful
+D181 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · veryUseful
+D182 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 roundTheBlock:10 sitOutside:10 sitAMinute:2 23m · somewhatUseful
+D183 P clearerHead ≈30 → [CIRCLE sized] openWindow:1 quietMusic:10 readPages:10 putThingsBack:2 23m · somewhatUseful
+D184 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 glassOfWater:2 23m · veryUseful
+D185 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 phoneFreeWalk:15 sitOutside:10 lookFar:2 29m · somewhatUseful
+D186 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 listenOne:12 readPages:10 sitAMinute:2 27m · somewhatUseful
+D187 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 moveToMusic:8 gentleStretch:8 putThingsBack:2 19m · somewhatUseful
+D188 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 quietMusic:10 lookAround:1 27m · somewhatUseful
+D189 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 roundTheBlock:10 readPages:10 lookFar:2 24m · somewhatUseful
+D190 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 sitAMinute:2 23m · veryUseful
+D191 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 warmDrink:10 quietMusic:10 putThingsBack:2 23m · somewhatUseful
+D192 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 glassOfWater:2 30m · somewhatUseful
+D193 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D194 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 quietMusic:10 sitOutside:10 lookFar:2 24m · somewhatUseful
+D195 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 phoneFreeWalk:15 readPages:10 sitAMinute:2 28m · somewhatUseful
+D196 P moreEnergy ≈30 → [CIRCLE foundUseful] gentleStretch:8 moveToMusic:8 glassOfWater:2 18m · somewhatUseful
+D197 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 sitOutside:10 quietMusic:10 noteOneThing:1 22m · somewhatUseful
+D198 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 warmDrink:10 readPages:10 putThingsBack:2 24m · somewhatUseful
+D199 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 moveToMusic:8 sitAMinute:2 23m · veryUseful
+D200 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 easyWalk:15 sitOutside:10 lookFar:2 28m · somewhatUseful
+D201 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 quietMusic:10 glassOfWater:2 25m · somewhatUseful
+D202 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D203 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 listenOne:12 sitOutside:10 sitAMinute:2 26m · somewhatUseful
+D204 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 easyWalk:15 readPages:10 lookFar:2 28m · somewhatUseful
+D205 P moreEnergy ≈30 → [CIRCLE foundUseful] phoneFreeWalk:15 gentleStretch:8 sitAMinute:2 25m · somewhatUseful
+D206 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 sitOutside:10 quietMusic:10 noteOneThing:1 22m · somewhatUseful
+D207 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 putThingsBack:2 30m · somewhatUseful
+D208 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · veryUseful
+D209 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 sitOutside:10 sitAMinute:2 28m · somewhatUseful
+D210 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 oneTask:15 quietMusic:10 lookFar:2 28m · somewhatUseful
+D211 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D212 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 easyWalk:15 sitOutside:10 noteOneThing:1 28m · somewhatUseful
+D213 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 quietMusic:10 putThingsBack:2 25m · somewhatUseful
+D214 P moreEnergy ≈30 → [CIRCLE foundUseful] briskWalk:20 gentleStretch:8 sitAMinute:2 30m · somewhatUseful
+D215 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 roundTheBlock:10 sitOutside:10 lookFar:2 23m · somewhatUseful
+D216 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 quietMusic:10 readPages:10 glassOfWater:2 24m · somewhatUseful
+D217 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 moveToMusic:8 whatsNext:1 22m · veryUseful
+D218 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 sitOutside:10 noteOneThing:1 27m · somewhatUseful
+D219 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 listenOne:12 readPages:10 lookFar:2 27m · somewhatUseful
+D220 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 sitAMinute:2 23m · veryUseful
+D221 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 phoneFreeWalk:15 quietMusic:10 lookAround:1 28m · somewhatUseful
+D222 P clearerHead ≈30 → [CIRCLE sized] phoneFaceDown:1 oneTask:15 readPages:10 putThingsBack:2 28m · somewhatUseful
+D223 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 moveToMusic:8 gentleStretch:8 glassOfWater:2 19m · somewhatUseful
+D224 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 warmDrink:10 quietMusic:10 sitAMinute:2 23m · somewhatUseful
+D225 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 roundTheBlock:10 readPages:10 lookFar:2 24m · somewhatUseful
+D226 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 whatsNext:1 22m · veryUseful
+D227 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 quietMusic:10 sitOutside:10 lookAround:1 22m · somewhatUseful
+D228 P clearerHead ≈30 → [CIRCLE sized] nameWhatsOn:1 phoneFreeWalk:15 readPages:10 sitAMinute:2 28m · somewhatUseful
+D229 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 glassOfWater:2 23m · veryUseful
+D230 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 lookFar:2 24m · somewhatUseful
+D231 P clearerHead ≈30 → [CIRCLE sized] lookAround:1 warmDrink:10 readPages:10 putThingsBack:2 23m · somewhatUseful
+D232 P moreEnergy ≈30 → [CIRCLE foundUseful] gentleStretch:8 moveToMusic:8 sitAMinute:2 18m · somewhatUseful
+D233 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 sitOutside:10 noteOneThing:1 27m · somewhatUseful
+D234 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 quietMusic:10 lookFar:2 25m · somewhatUseful
+D235 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · veryUseful
+D236 P gentlerPace ≈30 → [CIRCLE sized] comfortableSpot:1 listenOne:12 sitOutside:10 sitAMinute:2 25m · somewhatUseful
+D237 P clearerHead ≈30 → [CIRCLE sized] lookAround:1 easyWalk:15 readPages:10 whatsNext:1 27m · somewhatUseful
+D238 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 sitAMinute:2 23m · veryUseful
+D239 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 phoneFreeWalk:15 quietMusic:10 lookFar:2 29m · somewhatUseful
+D240 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 putThingsBack:2 30m · somewhatUseful
+D241 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 moveToMusic:8 gentleStretch:8 glassOfWater:2 19m · somewhatUseful
+D242 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 sitOutside:10 sitAMinute:2 28m · somewhatUseful
+D243 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 readPages:10 quietMusic:10 lookFar:2 24m · somewhatUseful
+D244 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 whatsNext:1 22m · veryUseful
+D245 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 easyWalk:15 sitOutside:10 noteOneThing:1 27m · somewhatUseful
+D246 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 quietMusic:10 readPages:10 sitAMinute:2 25m · somewhatUseful
+D247 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 glassOfWater:2 23m · veryUseful
+D248 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 roundTheBlock:10 sitOutside:10 lookFar:2 24m · somewhatUseful
+D249 P clearerHead ≈30 → [CIRCLE sized] nameWhatsOn:1 oneTask:15 readPages:10 putThingsBack:2 28m · somewhatUseful
+D250 P moreEnergy ≈30 → [CIRCLE foundUseful] briskWalk:20 gentleStretch:8 sitAMinute:2 30m · somewhatUseful
+D251 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 sitOutside:10 noteOneThing:1 27m · somewhatUseful
+D252 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 listenOne:12 readPages:10 glassOfWater:2 27m · somewhatUseful
+D253 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 whatsNext:1 23m · veryUseful
+D254 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 quietMusic:10 sitAMinute:2 28m · somewhatUseful
+D255 P clearerHead ≈30 → [CIRCLE sized] nameWhatsOn:1 oneTask:15 clearCorner:8 lookFar:2 26m · somewhatUseful
+D256 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 glassOfWater:2 23m · veryUseful
+D257 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 warmDrink:10 quietMusic:10 putThingsBack:2 24m · somewhatUseful
+D258 P clearerHead ≈30 → [CIRCLE sized] phoneFaceDown:1 roundTheBlock:10 readPages:10 sitAMinute:2 23m · somewhatUseful
+D259 P moreEnergy ≈30 → [CIRCLE foundUseful] phoneFreeWalk:15 gentleStretch:8 whatsNext:1 24m · somewhatUseful
+D260 P gentlerPace ≈30 → [CIRCLE sized] comfortableSpot:1 quietMusic:10 sitOutside:10 lookFar:2 23m · somewhatUseful
+D261 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 putThingsBack:2 30m · somewhatUseful
+D262 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 sitAMinute:2 24m · veryUseful
+D263 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 sitOutside:10 quietMusic:10 noteOneThing:1 22m · somewhatUseful
+D264 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 phoneFreeWalk:15 readPages:10 lookFar:2 28m · somewhatUseful
+D265 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 glassOfWater:2 23m · veryUseful
+D266 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 warmDrink:10 quietMusic:10 sitAMinute:2 24m · somewhatUseful
+D267 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 clearCorner:8 whatsNext:1 27m · somewhatUseful
+D268 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 gentleStretch:8 moveToMusic:8 putThingsBack:2 19m · somewhatUseful
+D269 P gentlerPace ≈30 → [CIRCLE sized] comfortableSpot:1 listenOne:12 sitOutside:10 lookFar:2 25m · somewhatUseful
+D270 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 easyWalk:15 readPages:10 sitAMinute:2 29m · somewhatUseful
+D271 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D272 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 sitOutside:10 noteOneThing:1 27m · somewhatUseful
+D273 P clearerHead ≈30 → [CIRCLE sized] openWindow:1 warmDrink:10 readPages:10 putThingsBack:2 23m · somewhatUseful
+D274 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 sitAMinute:2 23m · veryUseful
+D275 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 lookFar:2 24m · somewhatUseful
+D276 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 quietMusic:10 glassOfWater:2 25m · somewhatUseful
+D277 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 moveToMusic:8 gentleStretch:8 whatsNext:1 18m · somewhatUseful
+D278 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 easyWalk:15 sitOutside:10 sitAMinute:2 28m · somewhatUseful
+D279 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 quietMusic:10 readPages:10 putThingsBack:2 24m · somewhatUseful
+D280 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · veryUseful
+D281 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 roundTheBlock:10 sitOutside:10 noteOneThing:1 22m · somewhatUseful
+D282 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 lookFar:2 30m · somewhatUseful
+D283 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 sitAMinute:2 23m · veryUseful
+D284 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 phoneFreeWalk:15 sitOutside:10 lookAround:1 28m · somewhatUseful
+D285 P clearerHead ≈30 → [CIRCLE sized] comfortableSpot:1 listenOne:12 readPages:10 glassOfWater:2 25m · somewhatUseful
+D286 P moreEnergy ≈30 → [CIRCLE foundUseful] briskWalk:20 gentleStretch:8 whatsNext:1 29m · somewhatUseful
+D287 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 quietMusic:10 sitAMinute:2 28m · somewhatUseful
+D288 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 clearCorner:8 lookFar:2 28m · somewhatUseful
+D289 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D290 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 noteOneThing:1 23m · somewhatUseful
+D291 P clearerHead ≈30 → [CIRCLE sized] phoneFaceDown:1 roundTheBlock:10 readPages:10 sitAMinute:2 23m · somewhatUseful
+D292 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D293 P gentlerPace ≈30 → [CIRCLE sized] comfortableSpot:1 quietMusic:10 sitOutside:10 lookFar:2 23m · somewhatUseful
+D294 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 glassOfWater:2 30m · somewhatUseful
+D295 P moreEnergy ≈30 → [CIRCLE foundUseful] phoneFreeWalk:15 gentleStretch:8 sitAMinute:2 25m · somewhatUseful
+D296 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 warmDrink:10 quietMusic:10 putThingsBack:2 24m · somewhatUseful
+D297 P clearerHead ≈30 → [CIRCLE sized] comfortableSpot:1 oneTask:15 clearCorner:8 lookFar:2 26m · somewhatUseful
+D298 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D299 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 sitOutside:10 sitAMinute:2 28m · somewhatUseful
+D300 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 quietMusic:10 putThingsBack:2 25m · somewhatUseful
+D301 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D302 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 listenOne:12 sitOutside:10 lookFar:2 26m · somewhatUseful
+D303 P clearerHead ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 readPages:10 sitAMinute:2 28m · somewhatUseful
+D304 P moreEnergy ≈30 → [CIRCLE foundUseful] gentleStretch:8 moveToMusic:8 putThingsBack:2 18m · somewhatUseful
+D305 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 sitOutside:10 quietMusic:10 noteOneThing:1 22m · somewhatUseful
+D306 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 easyWalk:15 readPages:10 lookFar:2 29m · somewhatUseful
+D307 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 sitAMinute:2 23m · veryUseful
+D308 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 sitOutside:10 lookAround:1 27m · somewhatUseful
+D309 P clearerHead ≈30 → [CIRCLE sized] openWindow:1 warmDrink:10 readPages:10 putThingsBack:2 23m · somewhatUseful
+D310 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 glassOfWater:2 23m · veryUseful
+D311 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 easyWalk:15 sitOutside:10 sitAMinute:2 29m · somewhatUseful
+D312 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 quietMusic:10 readPages:10 lookFar:2 25m · somewhatUseful
+D313 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 moveToMusic:8 gentleStretch:8 putThingsBack:2 19m · somewhatUseful
+D314 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 roundTheBlock:10 sitOutside:10 noteOneThing:1 22m · somewhatUseful
+D315 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 readPages:10 quietMusic:10 sitAMinute:2 24m · somewhatUseful
+D316 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D317 P gentlerPace ≈30 → [CIRCLE sized] phoneFreeWalk:15 sitOutside:10 lookFar:2 27m · somewhatUseful
+D318 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 listenOne:12 readPages:10 putThingsBack:2 27m · somewhatUseful
+D319 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 sitAMinute:2 23m · veryUseful
+D320 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 phoneFreeWalk:15 quietMusic:10 lookAround:1 28m · somewhatUseful
+D321 P clearerHead ≈30 → [CIRCLE sized] comfortableSpot:1 oneTask:15 readPages:10 glassOfWater:2 28m · somewhatUseful
+D322 P moreEnergy ≈30 → [CIRCLE foundUseful] briskWalk:20 gentleStretch:8 whatsNext:1 29m · somewhatUseful
+D323 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 sitOutside:10 quietMusic:10 lookFar:2 23m · somewhatUseful
+D324 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 roundTheBlock:10 readPages:10 sitAMinute:2 24m · somewhatUseful
+D325 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D326 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 quietMusic:10 sitOutside:10 noteOneThing:1 22m · somewhatUseful
+D327 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 clearCorner:8 lookFar:2 28m · somewhatUseful
+D328 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 sitAMinute:2 23m · veryUseful
+D329 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 warmDrink:10 quietMusic:10 putThingsBack:2 24m · somewhatUseful
+D330 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 oneTask:15 readPages:10 glassOfWater:2 28m · somewhatUseful
+D331 P moreEnergy ≈30 → [CIRCLE foundUseful] phoneFreeWalk:15 gentleStretch:8 whatsNext:1 24m · somewhatUseful
+D332 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 sitOutside:10 quietMusic:10 sitAMinute:2 23m · somewhatUseful
+D333 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 readPages:10 clearCorner:8 lookFar:2 23m · somewhatUseful
+D334 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · veryUseful
+D335 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 listenOne:12 sitOutside:10 noteOneThing:1 24m · somewhatUseful
+D336 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 phoneFreeWalk:15 readPages:10 sitAMinute:2 28m · somewhatUseful
+D337 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D338 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 quietMusic:10 sitOutside:10 lookFar:2 24m · somewhatUseful
+D339 P clearerHead ≈30 → [CIRCLE sized] nameWhatsOn:1 easyWalk:15 readPages:10 lookAround:1 27m · somewhatUseful
+D340 P moreEnergy ≈30 → [CIRCLE foundUseful] gentleStretch:8 moveToMusic:8 sitAMinute:2 18m · somewhatUseful
+D341 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 sitOutside:10 noteOneThing:1 27m · somewhatUseful
+D342 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 warmDrink:10 readPages:10 putThingsBack:2 24m · somewhatUseful
+D343 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D344 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 easyWalk:15 sitOutside:10 sitAMinute:2 28m · somewhatUseful
+D345 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 quietMusic:10 readPages:10 lookFar:2 25m · somewhatUseful
+D346 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D347 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 roundTheBlock:10 sitOutside:10 lookAround:1 23m · somewhatUseful
+D348 P clearerHead ≈30 → [CIRCLE sized] standAndReach:1 oneTask:15 readPages:10 glassOfWater:2 28m · somewhatUseful
+D349 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 moveToMusic:8 gentleStretch:8 sitAMinute:2 19m · somewhatUseful
+D350 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 phoneFreeWalk:15 sitOutside:10 lookFar:2 28m · somewhatUseful
+D351 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 listenOne:12 readPages:10 putThingsBack:2 27m · somewhatUseful
+D352 P moreEnergy ≈30 → [CIRCLE foundUseful] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · veryUseful
+D353 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 quietMusic:10 sitAMinute:2 28m · somewhatUseful
+D354 P clearerHead ≈30 → [CIRCLE sized] openWindow:1 oneTask:15 clearCorner:8 lookFar:2 26m · somewhatUseful
+D355 P moreEnergy ≈30 → [CIRCLE foundUseful] songOn:1 activeJob:12 gentleStretch:8 sitAMinute:2 23m · veryUseful
+D356 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 noteOneThing:1 23m · somewhatUseful
+D357 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 readPages:10 glassOfWater:2 30m · somewhatUseful
+D358 P moreEnergy ≈30 → [CIRCLE foundUseful] briskWalk:20 gentleStretch:8 whatsNext:1 29m · somewhatUseful
+D359 P gentlerPace ≈30 → [CIRCLE sized] lookAround:1 phoneFreeWalk:15 sitOutside:10 sitAMinute:2 28m · somewhatUseful
+D360 P clearerHead ≈30 → [CIRCLE sized] neckAndShoulders:2 roundTheBlock:10 readPages:10 lookFar:2 24m · somewhatUseful
+D361 P moreEnergy ≈30 → [CIRCLE foundUseful] standAndReach:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · veryUseful
+D362 P gentlerPace ≈30 → [CIRCLE sized] phoneFaceDown:1 warmDrink:10 quietMusic:10 putThingsBack:2 23m · somewhatUseful
+D363 P clearerHead ≈30 → [CIRCLE sized] closeWhatsOpen:3 oneTask:15 clearCorner:8 sitAMinute:2 28m · somewhatUseful
+D364 P moreEnergy ≈30 → [CIRCLE foundUseful] openWindow:1 activeJob:12 gentleStretch:8 whatsNext:1 22m · veryUseful
+D365 P gentlerPace ≈30 → [CIRCLE sized] neckAndShoulders:2 sitOutside:10 quietMusic:10 lookFar:2 24m · somewhatUseful

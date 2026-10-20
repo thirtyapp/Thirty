@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/design_tokens.dart';
 import '../../personal_circle/presentation/keep_circle_card.dart';
+import '../../plans/presentation/plan_end_card.dart';
 import '../../premium/presentation/widgets/premium_offer_invitation_card.dart';
 import '../../reminder/presentation/widgets/reminder_invitation_card.dart';
 import '../application/first_breath_provider.dart';
@@ -39,10 +40,10 @@ import 'widgets/later_today_label.dart';
 /// prompt-priority order: reflection, then reminder invitation, then
 /// Premium invitation, never stacked (Step 5 local closure).
 ///
-/// **IA (V2 Phase D):** Today | Toolkit | You are the primary destinations
-/// of `../../../core/routing/app_shell.dart`; history is reached from You.
-/// Today carries no shortcut icons of its own. A Path step or a routine is
-/// today's Circle itself — nothing extra is stacked under it.
+/// **IA (ADR-024 §2):** Today is the first of the four tabs — Today | Plans
+/// | Insights | You (`../../../core/routing/app_shell.dart`); history and
+/// Yours are reached from You, history also from Insights. Today carries no
+/// shortcut icons of its own.
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
@@ -98,6 +99,9 @@ class HomePage extends ConsumerWidget {
                         // V2 Phase D2: after Close, a composed Circle can be
                         // kept — the user's own from then on.
                         KeepCircleCard(),
+                        // ADR-024 B4: a Plan that reached its end today —
+                        // its review is in Plans, never forced.
+                        PlanEndCard(),
                         LaterTodayLabel(),
                         ReminderInvitationCard(),
                         PremiumOfferInvitationCard(),

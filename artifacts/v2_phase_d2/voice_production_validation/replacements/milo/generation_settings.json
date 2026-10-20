@@ -1,0 +1,77 @@
+{
+ "generated_at": "2026-10-14T08:43:45+02:00",
+ "model_id": "eleven_multilingual_v2",
+ "voice_settings": {
+  "stability": 0.5,
+  "similarity_boost": 0.75,
+  "style": 0.0,
+  "use_speaker_boost": true,
+  "speed": 1.0
+ },
+ "seed": 30,
+ "output_format": "mp3_44100_128",
+ "same_as": "generate_validation.py (2026-10-12 batch)",
+ "voice": "Milo",
+ "voice_id": "GUDYcgRAONiI1nXDcNQQ",
+ "route": "direct ElevenLabs API, founder's paid account",
+ "endpoint": "POST /v1/text-to-speech/GUDYcgRAONiI1nXDcNQQ?output_format=mp3_44100_128",
+ "context_stitching": false,
+ "clips": [
+  {
+   "voice": "Milo",
+   "voice_id": "GUDYcgRAONiI1nXDcNQQ",
+   "clip": "lead_first",
+   "file": "lead_first_d97b30dd.m4a",
+   "script": "First.",
+   "bytes": 12164,
+   "characters": 6,
+   "request_id": "Pm1yi59ekcwUQ4y6GwAr",
+   "character_count_header": null
+  },
+  {
+   "voice": "Milo",
+   "voice_id": "GUDYcgRAONiI1nXDcNQQ",
+   "clip": "part_getItOut",
+   "file": "part_getItOut_a239320e.m4a",
+   "script": "Get it out. Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.",
+   "bytes": 134208,
+   "characters": 115,
+   "request_id": "2RADh9Eh0LhD10t0IbPG",
+   "character_count_header": null
+  },
+  {
+   "voice": "Milo",
+   "voice_id": "GUDYcgRAONiI1nXDcNQQ",
+   "clip": "part_briskWalk",
+   "file": "part_briskWalk_e3125526.m4a",
+   "script": "A brisk walk. Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+   "bytes": 158450,
+   "characters": 113,
+   "request_id": "OzPdh8aMCCAuRK2dnsXL",
+   "character_count_header": null
+  },
+  {
+   "voice": "Milo",
+   "voice_id": "GUDYcgRAONiI1nXDcNQQ",
+   "clip": "part_warmDrink",
+   "file": "part_warmDrink_db4bc51f.m4a",
+   "script": "A slow warm drink. Make a warm drink you’d enjoy. Hold the cup in both hands, and drink it slowly, with your phone face down.",
+   "bytes": 156360,
+   "characters": 125,
+   "request_id": "77odOgSB9U4oCioEJ585",
+   "character_count_header": null
+  },
+  {
+   "voice": "Milo",
+   "voice_id": "GUDYcgRAONiI1nXDcNQQ",
+   "clip": "close",
+   "file": "close_3b06cf13.m4a",
+   "script": "That’s your Circle. Take a moment before you move on.",
+   "bytes": 58140,
+   "characters": 53,
+   "request_id": "xV3QrhzKVbk4r2pV1KgV",
+   "character_count_header": null
+  }
+ ],
+ "characters_total": 412
+}

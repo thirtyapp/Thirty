@@ -16,7 +16,8 @@ import 'core/qa/qa_premium_harness.dart';
 import 'features/personal_circle/application/guidance_conductor.dart';
 import 'features/personal_circle/application/guidance_voice.dart';
 import 'features/reminder/application/reminder_provider.dart';
-import 'features/toolkit/application/v1_premium_retirement.dart';
+import 'features/home/application/phase_d_retirement.dart';
+import 'features/home/application/v1_premium_retirement.dart';
 
 /// ADR-013 §8 — optional analytics must never own the local product's own
 /// startup availability. Missing configuration (`!config.isConfigured`)
@@ -48,8 +49,11 @@ Future<void> main() async {
   // V2 Phase D: V1 Plans and Insights are retired before anything reads
   // the store (once; idempotent).
   await retireV1Premium(sharedPreferences);
-  // V2 Phase D2: whether this build bundles the spoken-guidance recordings.
-  final spokenGuidance = await spokenGuidanceBundled(rootBundle);
+  // ADR-024: Phase D's Paths, routines and maintenance are retired before
+  // public release — kept Circles stay exactly as kept (once; idempotent).
+  await retirePhaseDPremium(sharedPreferences);
+  // V2 Phase D2: which of THIRTY's voices this build bundles.
+  final guidanceVoices = await bundledGuidanceVoices(rootBundle);
 
   // QA-1: a debug build launched with THIRTY_QA_PREMIUM=true runs the
   // Premium QA harness instead. Compile-time false in profile and release.
@@ -58,7 +62,7 @@ Future<void> main() async {
       QaPremiumHarnessApp(
         genuinePreferences: sharedPreferences,
         supabaseAvailable: supabaseAvailable,
-        spokenGuidanceAvailable: spokenGuidance,
+        guidanceVoices: guidanceVoices,
       ),
     );
     return;
@@ -68,7 +72,7 @@ Future<void> main() async {
     overrides: [
       sharedPreferencesProvider.overrideWithValue(sharedPreferences),
       supabaseAvailableProvider.overrideWithValue(supabaseAvailable),
-      spokenGuidanceAvailableProvider.overrideWithValue(spokenGuidance),
+      bundledGuidanceVoicesProvider.overrideWithValue(guidanceVoices),
     ],
   );
 

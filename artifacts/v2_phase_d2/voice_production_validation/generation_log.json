@@ -1,0 +1,235 @@
+{
+ "generated_at": "2026-10-12T19:22:31+02:00",
+ "model_id": "eleven_multilingual_v2",
+ "voice_settings": {
+  "stability": 0.5,
+  "similarity_boost": 0.75,
+  "style": 0.0,
+  "use_speaker_boost": true,
+  "speed": 1.0
+ },
+ "seed": 30,
+ "clips": [
+  {
+   "voice": "Locke",
+   "voice_id": "oaLGpwm7fYWDEFmlRuQk",
+   "clip": "lead_first",
+   "file": "lead_first_d97b30dd.m4a",
+   "script": "First.",
+   "output_format": "mp3_44100_128",
+   "bytes": 13836,
+   "request_id": "YT3bgBQB62DF8NGUejBe",
+   "character_count": null
+  },
+  {
+   "voice": "Locke",
+   "voice_id": "oaLGpwm7fYWDEFmlRuQk",
+   "clip": "part_getItOut",
+   "file": "part_getItOut_a239320e.m4a",
+   "script": "Get it out. Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.",
+   "output_format": "mp3_44100_128",
+   "bytes": 164719,
+   "request_id": "B0lcqfAAFXvhgNse6SKT",
+   "character_count": null
+  },
+  {
+   "voice": "Locke",
+   "voice_id": "oaLGpwm7fYWDEFmlRuQk",
+   "clip": "part_briskWalk",
+   "file": "part_briskWalk_e3125526.m4a",
+   "script": "A brisk walk. Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+   "output_format": "mp3_44100_128",
+   "bytes": 145075,
+   "request_id": "yYW4ZNpfvAMaEecsmW83",
+   "character_count": null
+  },
+  {
+   "voice": "Locke",
+   "voice_id": "oaLGpwm7fYWDEFmlRuQk",
+   "clip": "part_warmDrink",
+   "file": "part_warmDrink_db4bc51f.m4a",
+   "script": "A slow warm drink. Make a warm drink you’d enjoy. Hold the cup in both hands, and drink it slowly, with your phone face down.",
+   "output_format": "mp3_44100_128",
+   "bytes": 170571,
+   "request_id": "BxVGny9qRdmJSTr3byqu",
+   "character_count": null
+  },
+  {
+   "voice": "Locke",
+   "voice_id": "oaLGpwm7fYWDEFmlRuQk",
+   "clip": "close",
+   "file": "close_3b06cf13.m4a",
+   "script": "That’s your Circle. Take a moment before you move on.",
+   "output_format": "mp3_44100_128",
+   "bytes": 57722,
+   "request_id": "UvcYBGUGohwVJatwheR3",
+   "character_count": null
+  },
+  {
+   "voice": "Andre Leone",
+   "voice_id": "kXuFAM1KXqJVbauKJc2Z",
+   "clip": "lead_first",
+   "file": "lead_first_d97b30dd.m4a",
+   "script": "First.",
+   "output_format": "mp3_44100_128",
+   "bytes": 14254,
+   "request_id": "ln7eyPGqFzwcIJn27OBs",
+   "character_count": null
+  },
+  {
+   "voice": "Andre Leone",
+   "voice_id": "kXuFAM1KXqJVbauKJc2Z",
+   "clip": "part_getItOut",
+   "file": "part_getItOut_a239320e.m4a",
+   "script": "Get it out. Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.",
+   "output_format": "mp3_44100_128",
+   "bytes": 140060,
+   "request_id": "wOSYRBHOGRxLUrLkr68J",
+   "character_count": null
+  },
+  {
+   "voice": "Andre Leone",
+   "voice_id": "kXuFAM1KXqJVbauKJc2Z",
+   "clip": "part_briskWalk",
+   "file": "part_briskWalk_e3125526.m4a",
+   "script": "A brisk walk. Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+   "output_format": "mp3_44100_128",
+   "bytes": 199410,
+   "request_id": "sGIyxwA2G5AmzONyGRoo",
+   "character_count": null
+  },
+  {
+   "voice": "Andre Leone",
+   "voice_id": "kXuFAM1KXqJVbauKJc2Z",
+   "clip": "part_warmDrink",
+   "file": "part_warmDrink_db4bc51f.m4a",
+   "script": "A slow warm drink. Make a warm drink you’d enjoy. Hold the cup in both hands, and drink it slowly, with your phone face down.",
+   "output_format": "mp3_44100_128",
+   "bytes": 188961,
+   "request_id": "Iur1pVhA5S1qT14889lT",
+   "character_count": null
+  },
+  {
+   "voice": "Andre Leone",
+   "voice_id": "kXuFAM1KXqJVbauKJc2Z",
+   "clip": "close",
+   "file": "close_3b06cf13.m4a",
+   "script": "That’s your Circle. Take a moment before you move on.",
+   "output_format": "mp3_44100_128",
+   "bytes": 77784,
+   "request_id": "BwIliOgEm83C5vEGqqAz",
+   "character_count": null
+  },
+  {
+   "voice": "Lunaria",
+   "voice_id": "Nyip1VgoS6bg9Vl30y8v",
+   "clip": "lead_first",
+   "file": "lead_first_d97b30dd.m4a",
+   "script": "First.",
+   "output_format": "mp3_44100_128",
+   "bytes": 17598,
+   "request_id": "UHCfB7XERfCDSHOo7EEX",
+   "character_count": null
+  },
+  {
+   "voice": "Lunaria",
+   "voice_id": "Nyip1VgoS6bg9Vl30y8v",
+   "clip": "part_getItOut",
+   "file": "part_getItOut_a239320e.m4a",
+   "script": "Get it out. Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.",
+   "output_format": "mp3_44100_128",
+   "bytes": 160122,
+   "request_id": "Lrq5wOAdJmle1xzWplLw",
+   "character_count": null
+  },
+  {
+   "voice": "Lunaria",
+   "voice_id": "Nyip1VgoS6bg9Vl30y8v",
+   "clip": "part_briskWalk",
+   "file": "part_briskWalk_e3125526.m4a",
+   "script": "A brisk walk. Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+   "output_format": "mp3_44100_128",
+   "bytes": 204844,
+   "request_id": "jk1rtNGQicX7vUbDvbNU",
+   "character_count": null
+  },
+  {
+   "voice": "Lunaria",
+   "voice_id": "Nyip1VgoS6bg9Vl30y8v",
+   "clip": "part_warmDrink",
+   "file": "part_warmDrink_db4bc51f.m4a",
+   "script": "A slow warm drink. Make a warm drink you’d enjoy. Hold the cup in both hands, and drink it slowly, with your phone face down.",
+   "output_format": "mp3_44100_128",
+   "bytes": 190633,
+   "request_id": "i5axt3OXYbe0xRTXvDuX",
+   "character_count": null
+  },
+  {
+   "voice": "Lunaria",
+   "voice_id": "Nyip1VgoS6bg9Vl30y8v",
+   "clip": "close",
+   "file": "close_3b06cf13.m4a",
+   "script": "That’s your Circle. Take a moment before you move on.",
+   "output_format": "mp3_44100_128",
+   "bytes": 73186,
+   "request_id": "cAiFrx8fPIt9pPi4Z00V",
+   "character_count": null
+  },
+  {
+   "voice": "Heather",
+   "voice_id": "plP9aw1rizYgjFfuvLQ7",
+   "clip": "lead_first",
+   "file": "lead_first_d97b30dd.m4a",
+   "script": "First.",
+   "output_format": "mp3_44100_128",
+   "bytes": 16762,
+   "request_id": "QSOERQxc5jC7EHfiTmBr",
+   "character_count": null
+  },
+  {
+   "voice": "Heather",
+   "voice_id": "plP9aw1rizYgjFfuvLQ7",
+   "clip": "part_getItOut",
+   "file": "part_getItOut_a239320e.m4a",
+   "script": "Get it out. Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.",
+   "output_format": "mp3_44100_128",
+   "bytes": 139224,
+   "request_id": "3CyVA0h7AliTZNxbL73O",
+   "character_count": null
+  },
+  {
+   "voice": "Heather",
+   "voice_id": "plP9aw1rizYgjFfuvLQ7",
+   "clip": "part_briskWalk",
+   "file": "part_briskWalk_e3125526.m4a",
+   "script": "A brisk walk. Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+   "output_format": "mp3_44100_128",
+   "bytes": 166809,
+   "request_id": "bgYAUDIBo9jfJbqQjIt9",
+   "character_count": null
+  },
+  {
+   "voice": "Heather",
+   "voice_id": "plP9aw1rizYgjFfuvLQ7",
+   "clip": "part_warmDrink",
+   "file": "part_warmDrink_db4bc51f.m4a",
+   "script": "A slow warm drink. Make a warm drink you’d enjoy. Hold the cup in both hands, and drink it slowly, with your phone face down.",
+   "output_format": "mp3_44100_128",
+   "bytes": 180184,
+   "request_id": "Suh8QH1PsWgXxiiC7F13",
+   "character_count": null
+  },
+  {
+   "voice": "Heather",
+   "voice_id": "plP9aw1rizYgjFfuvLQ7",
+   "clip": "close",
+   "file": "close_3b06cf13.m4a",
+   "script": "That’s your Circle. Take a moment before you move on.",
+   "output_format": "mp3_44100_128",
+   "bytes": 67335,
+   "request_id": "0DHqHDKMsFYeiaRHBwZ9",
+   "character_count": null
+  }
+ ],
+ "output_format": "mp3_44100_128"
+}

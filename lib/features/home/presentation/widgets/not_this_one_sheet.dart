@@ -10,7 +10,7 @@ import '../../domain/recommendation_engine.dart';
 /// answer gives one replacement; there is no list and no browsing.
 ///
 /// "Can't go outside" is only offered when [current] is an outdoor activity —
-/// or, for a routine or a joined Path step, when [outdoor] says so.
+/// or, for a composed Circle, when [outdoor] says so.
 Future<ReplacementReason?> showNotThisOneSheet(
   BuildContext context, {
   required ActivityId current,
@@ -55,7 +55,7 @@ class NotThisOneSheet extends StatelessWidget {
 
   final ActivityId current;
 
-  /// Whether today's routine or joined Path step happens outside.
+  /// Whether today's composed Circle happens outside.
   final bool? outdoor;
 
   @override

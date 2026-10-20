@@ -3,12 +3,18 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/premium/premium_access.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../domain/spoken_cues.dart';
 
 /// The voice that speaks a composed Circle's cues (V2 Phase D2, ADR-023
 /// §6): bundled recordings, played offline — no runtime generative AI, no
 /// voice API, no per-use cost.
+///
+/// THIRTY's voice is a Premium service layer (founder decision,
+/// 2026-10-12). Accessibility is not: a screen reader's announcements of
+/// the Circle come from its semantics, whatever the entitlement, and
+/// never from here.
 ///
 /// Spoken guidance is an addition, never a dependency: the Circle's
 /// on-screen guidance and its TalkBack announcements are complete without
@@ -44,11 +50,12 @@ class SilentGuidanceVoice implements GuidanceVoice {
   Future<void> stop() async {}
 }
 
-/// Plays bundled recordings through [player].
+/// Plays [voice]'s bundled recordings through [player].
 class BundledGuidanceVoice implements GuidanceVoice {
-  const BundledGuidanceVoice(this.player);
+  const BundledGuidanceVoice(this.player, this.voice);
 
   final GuidanceAudioPlayer player;
+  final ThirtyVoice voice;
 
   @override
   bool get available => true;
@@ -58,7 +65,7 @@ class BundledGuidanceVoice implements GuidanceVoice {
     List<SpokenClip> clips, {
     bool deferToScreenReader = false,
   }) => player.play([
-    for (final clip in clips) clip.asset,
+    for (final clip in clips) clip.assetFor(voice),
   ], deferToScreenReader: deferToScreenReader);
 
   @override
@@ -101,20 +108,51 @@ class PlatformGuidanceAudioPlayer implements GuidanceAudioPlayer {
   }
 }
 
-/// Whether [bundle] holds every clip in [spokenGuidanceManifest]. A partial
-/// set is no set: the voice never speaks some parts and not others. Read
-/// once at start-up (`main.dart`), so nothing waits on it later.
-Future<bool> spokenGuidanceBundled(AssetBundle bundle) async {
+/// The voices whose every clip in [spokenGuidanceManifest], and whose
+/// preview, [bundle] holds.
+/// A partial set is no set: a voice never speaks some parts and not
+/// others. Read once at start-up (`main.dart`), so nothing waits on it
+/// later.
+Future<Set<ThirtyVoice>> bundledGuidanceVoices(AssetBundle bundle) async {
   final manifest = await AssetManifest.loadFromAssetBundle(bundle);
-  final bundled = manifest.listAssets().toSet();
-  return spokenGuidanceManifest.every((clip) => bundled.contains(clip.asset));
+  return completeGuidanceVoices(manifest.listAssets().toSet());
 }
 
-/// Whether spoken guidance exists in this build — the You setting shows
-/// only then. Overridden at start-up with [spokenGuidanceBundled]; `false`
-/// wherever it isn't (S25 finding: an asynchronous provider that was only
-/// read never settled, D2 correction pass).
-final spokenGuidanceAvailableProvider = Provider<bool>((ref) => false);
+/// The voices with every clip of [spokenGuidanceManifest], and their own
+/// preview, among [assets]. A clip recorded for an older script has another
+/// file name, so it never counts.
+Set<ThirtyVoice> completeGuidanceVoices(Set<String> assets) => {
+  for (final voice in ThirtyVoice.values)
+    if ([
+      ...spokenGuidanceManifest,
+      spokenPreviewFor(voice),
+    ].every((clip) => assets.contains(clip.assetFor(voice))))
+      voice,
+};
+
+/// The voices this build bundles. Overridden at start-up with
+/// [bundledGuidanceVoices]; none wherever it isn't (S25 finding: an
+/// asynchronous provider that was only read never settled, D2 correction
+/// pass).
+final bundledGuidanceVoicesProvider = Provider<Set<ThirtyVoice>>(
+  (ref) => const {},
+);
+
+/// Whether spoken guidance exists in this build at all.
+final spokenGuidanceAvailableProvider = Provider<bool>(
+  (ref) => ref.watch(bundledGuidanceVoicesProvider).isNotEmpty,
+);
+
+/// Whether this user may hear THIRTY's voice now: Premium is active and
+/// the build bundles a voice. On Free — a kept Circle included — the
+/// Circle runs complete without it, on screen and through the screen
+/// reader. Follows the entitlement: a lapse silences the voice, a
+/// resubscription brings it back, with the user's choices as they were.
+final spokenGuidanceOfferedProvider = Provider<bool>(
+  (ref) =>
+      ref.watch(spokenGuidanceAvailableProvider) &&
+      ref.watch(premiumEntitlementProvider),
+);
 
 /// The SharedPreferences key for the user's choice.
 const spokenGuidanceEnabledKey = 'spoken_guidance_enabled_v1';
@@ -142,16 +180,58 @@ class SpokenGuidanceEnabled extends Notifier<bool> {
 final spokenGuidanceEnabledProvider =
     NotifierProvider<SpokenGuidanceEnabled, bool>(SpokenGuidanceEnabled.new);
 
+/// The SharedPreferences key for the user's choice of voice.
+const thirtyVoiceKey = 'spoken_guidance_voice_v1';
+
+/// The user's choice of voice — a local preference, never asked during
+/// onboarding. Kept through a lapse and never erased by one, so a
+/// resubscription speaks in the voice chosen before.
+class ThirtyVoiceChoice extends Notifier<ThirtyVoice> {
+  @override
+  ThirtyVoice build() =>
+      ThirtyVoice.fromId(
+        ref.read(sharedPreferencesProvider).get(thirtyVoiceKey),
+      ) ??
+      ThirtyVoice.values.first;
+
+  void set(ThirtyVoice voice) {
+    state = voice;
+    unawaited(
+      ref.read(sharedPreferencesProvider).setString(thirtyVoiceKey, voice.id),
+    );
+  }
+}
+
+final thirtyVoiceChoiceProvider =
+    NotifierProvider<ThirtyVoiceChoice, ThirtyVoice>(ThirtyVoiceChoice.new);
+
+/// The voice that speaks: the user's choice when this build bundles it,
+/// otherwise the first bundled one; none when nothing is bundled.
+final thirtyVoiceProvider = Provider<ThirtyVoice?>((ref) {
+  final bundled = ref.watch(bundledGuidanceVoicesProvider);
+  if (bundled.isEmpty) return null;
+  final chosen = ref.watch(thirtyVoiceChoiceProvider);
+  if (bundled.contains(chosen)) return chosen;
+  for (final voice in ThirtyVoice.values) {
+    if (bundled.contains(voice)) return voice;
+  }
+  return null;
+});
+
 final guidanceAudioPlayerProvider = Provider<GuidanceAudioPlayer>(
   (ref) => const PlatformGuidanceAudioPlayer(),
 );
 
-/// The voice a composed Circle uses: the bundled recordings when every
-/// clip is present and the user hasn't turned it off; otherwise silent.
+/// The voice a composed Circle uses: the bundled recordings of the user's
+/// voice while Premium is active and the user hasn't turned it off;
+/// otherwise silent. Silent means no session either — the conductor opens
+/// the background service only for a voice that is available.
 final guidanceVoiceProvider = Provider<GuidanceVoice>((ref) {
-  if (!ref.watch(spokenGuidanceAvailableProvider) ||
+  if (!ref.watch(spokenGuidanceOfferedProvider) ||
       !ref.watch(spokenGuidanceEnabledProvider)) {
     return const SilentGuidanceVoice();
   }
-  return BundledGuidanceVoice(ref.watch(guidanceAudioPlayerProvider));
+  final voice = ref.watch(thirtyVoiceProvider);
+  if (voice == null) return const SilentGuidanceVoice();
+  return BundledGuidanceVoice(ref.watch(guidanceAudioPlayerProvider), voice);
 });

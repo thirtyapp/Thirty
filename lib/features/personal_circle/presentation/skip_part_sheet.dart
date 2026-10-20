@@ -17,10 +17,13 @@ enum SkipChoice {
 /// on show just for today, or to leave it out of future Circles too — or
 /// `null` if the user keeps going. Neither answer is "Not useful": each says
 /// exactly what it does. [buildingOn] names the later parts that build on
-/// this one and are skipped with it.
+/// this one and are skipped with it. [offerLeaveOut] is false without
+/// Premium: Leave it out is a composer control, so a Free day's kept Circle
+/// offers only today's skip.
 Future<SkipChoice?> showSkipPartSheet(
   BuildContext context, {
   List<String> buildingOn = const [],
+  bool offerLeaveOut = true,
 }) {
   final colors = Theme.of(context).extension<AppColors>()!;
   return showModalBottomSheet<SkipChoice>(
@@ -37,14 +40,20 @@ Future<SkipChoice?> showSkipPartSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => SkipPartSheet(buildingOn: buildingOn),
+    builder: (_) =>
+        SkipPartSheet(buildingOn: buildingOn, offerLeaveOut: offerLeaveOut),
   );
 }
 
 class SkipPartSheet extends StatelessWidget {
-  const SkipPartSheet({super.key, this.buildingOn = const []});
+  const SkipPartSheet({
+    super.key,
+    this.buildingOn = const [],
+    this.offerLeaveOut = true,
+  });
 
   final List<String> buildingOn;
+  final bool offerLeaveOut;
 
   @override
   Widget build(BuildContext context) {
@@ -91,23 +100,25 @@ class SkipPartSheet extends StatelessWidget {
               ),
             ),
           ),
-          ThirtyButton(
-            label: ComposedCopy.leaveOut,
-            variant: ThirtyButtonVariant.secondary,
-            onPressed: () => Navigator.of(context).pop(SkipChoice.leaveOut),
-          ),
-          Semantics(
-            container: true,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.xs,
-                AppSpacing.xs,
-                AppSpacing.xs,
-                AppSpacing.m,
-              ),
-              child: Text(ComposedCopy.leaveOutDetail, style: detail),
+          if (offerLeaveOut) ...[
+            ThirtyButton(
+              label: ComposedCopy.leaveOut,
+              variant: ThirtyButtonVariant.secondary,
+              onPressed: () => Navigator.of(context).pop(SkipChoice.leaveOut),
             ),
-          ),
+            Semantics(
+              container: true,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xs,
+                  AppSpacing.xs,
+                  AppSpacing.xs,
+                  AppSpacing.m,
+                ),
+                child: Text(ComposedCopy.leaveOutDetail, style: detail),
+              ),
+            ),
+          ],
           ThirtyButton(
             label: ComposedCopy.keepGoing,
             variant: ThirtyButtonVariant.secondary,

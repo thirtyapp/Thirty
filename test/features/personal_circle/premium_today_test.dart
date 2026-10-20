@@ -15,9 +15,8 @@ import 'package:thirty/features/home/domain/recommendation_policy.dart';
 import 'package:thirty/features/personal_circle/domain/circle_composer.dart';
 import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
 import 'package:thirty/features/personal_circle/domain/composed_session.dart';
-import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
-import 'package:thirty/features/toolkit/domain/module_library.dart';
-import 'package:thirty/features/toolkit/domain/toolkit_model.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/kept_circle.dart';
 
 /// V2 Phase D2 (ADR-023 §4, §7, §8) — Premium Today through the production
 /// providers: composition, fallback, lapse and resubscription, "Use it
@@ -56,40 +55,56 @@ void main() {
     }
   }
 
-  Routine routine() {
-    final composition = Composition(const [
-      ModuleUse(ModuleId.writeDown, short: false),
-      ModuleUse(ModuleId.clearSurface, short: false),
-    ]);
-    final short = Composition(const [
-      ModuleUse(ModuleId.writeDown, short: true),
-      ModuleUse(ModuleId.clearSurface, short: true),
-    ]);
-    return Routine(
-      id: 'reset',
-      name: 'My reset',
-      need: Intention.clearerHead,
-      versions: [
-        RoutineVersion(
-          id: 'reset-v1',
-          number: 1,
-          composition: composition,
-          createdAt: morning.subtract(const Duration(days: 30)),
-          origin: VersionOrigin.path,
-        ),
-        RoutineVersion(
-          id: 'reset-v2',
-          number: 1,
-          composition: short,
-          createdAt: morning.subtract(const Duration(days: 30)),
-          origin: VersionOrigin.shorter,
-        ),
-      ],
-      activeVersionId: 'reset-v1',
-      shortVersionId: 'reset-v2',
-      createdAt: morning.subtract(const Duration(days: 30)),
-    );
-  }
+  /// A Circle the user kept a month ago.
+  KeptCircle keptReset() => KeptCircle(
+    id: 'kept-reset',
+    name: 'My reset',
+    need: Intention.clearerHead,
+    plan: CirclePlan.fromWire(const [
+      'getItOut:6',
+      'chooseOne:1',
+      'clearCorner:8',
+    ])!,
+    createdAt: morning.subtract(const Duration(days: 30)),
+    fromCircleId: '2026-09-11',
+  );
+
+  /// The Phase D record a development install may hold: a Clearer Head
+  /// routine, a Clearer Head Path under way — retired by ADR-024 — beside
+  /// [keptReset].
+  String legacyRecord() => jsonEncode({
+    'schemaVersion': 1,
+    'routines': [
+      {
+        'id': 'routine-1',
+        'name': 'My old reset',
+        'need': 'clearerHead',
+        'versions': [
+          {
+            'id': 'routine-1-v1',
+            'number': 1,
+            'modules': ['writeDown:full', 'clearSurface:full'],
+            'createdAt': '2026-09-01T09:00:00.000',
+            'origin': 'path',
+          },
+        ],
+        'activeVersionId': 'routine-1-v1',
+        'createdAt': '2026-09-01T09:00:00.000',
+        'enabled': true,
+      },
+    ],
+    'path': {
+      'id': 'path-2',
+      'kind': 'build',
+      'need': 'clearerHead',
+      'startedAt': '2026-10-05T09:00:00.000',
+      'pool': ['writeDown', 'clearSurface', 'standingStretch'],
+      'seed': 'sparseStart',
+      'template': 'clearTheDecks',
+      'circles': <Object>[],
+    },
+    'kept': [keptReset().toJson()],
+  });
 
   group('Premium Today', () {
     test('Premium composes one Personal Guided Circle for need and time', () {
@@ -297,8 +312,8 @@ void main() {
     test('Use it today is Free, replaces today’s not-started choice, and '
         'records no decline', () async {
       await prefs.setString(
-        toolkitStateKey,
-        '{"schemaVersion":1,"routines":[${_json(routine())}]}',
+        keptCirclesKey,
+        jsonEncode(keptCirclesRecord([keptReset()])),
       );
       final c = open(entitled: false);
       final notifier = c.read(recommendationProvider.notifier);
@@ -306,22 +321,27 @@ void main() {
         Intention.clearerHead,
         window: TimeWindow.about20,
       );
-      expect(notifier.useOwnedToday(routineId: 'reset'), UseTodayResult.used);
+      expect(
+        notifier.useOwnedToday(keptCircleId: 'kept-reset'),
+        UseTodayResult.used,
+      );
       final today = c.read(recommendationProvider).recommendation!;
       expect(today.reason, RecommendationReason.ownChoice);
-      expect(today.session!.routineId, 'reset');
-      // Today's 20 minutes choose the version that fits: the shorter one.
-      expect(today.session!.routineVersionId, 'reset-v2');
+      expect(today.composed!.keptCircleId, 'kept-reset');
+      // Fixed parts, at the lengths they were kept at — never shortened.
+      expect(today.composed!.plan, keptReset().plan);
+      expect(today.offeredMinutes, 15);
       expect(today.replacedFrom, isNull);
       expect(today.canReplace, isFalse);
       notifier.start();
       expect(
-        notifier.useOwnedToday(routineId: 'reset'),
+        notifier.useOwnedToday(keptCircleId: 'kept-reset'),
         UseTodayResult.alreadyStarted,
       );
       await settle();
       final entry = c.read(circleJournalRepositoryProvider).readAll().single;
-      expect(entry.session!.routineId, 'reset');
+      expect(entry.session!.keptCircleId, 'kept-reset');
+      expect(entry.session!.routineId, isNull);
       expect(entry.replacedFrom, isNull);
     });
 
@@ -338,7 +358,7 @@ void main() {
           .recommendation!
           .composed!;
       final kept = premium
-          .read(toolkitProvider.notifier)
+          .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: composed.plan,
             need: Intention.gentlerPace,
@@ -348,7 +368,7 @@ void main() {
       // The same day's Circle is kept once.
       expect(
         premium
-            .read(toolkitProvider.notifier)
+            .read(keptCirclesProvider.notifier)
             .keepCircle(
               plan: composed.plan,
               need: Intention.gentlerPace,
@@ -439,7 +459,7 @@ void main() {
       notifier.skipPart(leaveOut: true);
       notifier.close();
       c
-          .read(toolkitProvider.notifier)
+          .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: plan,
             need: Intention.clearerHead,
@@ -454,7 +474,10 @@ void main() {
                       suggestionPreferences: c
                           .read(suggestionPreferencesProvider)
                           .toJson(),
-                      toolkit: c.read(toolkitProvider).toJson(),
+                      keptCircles: [
+                        for (final k in c.read(keptCirclesProvider).kept)
+                          k.toJson(),
+                      ],
                     ),
               )
               as Map<String, Object?>;
@@ -464,7 +487,7 @@ void main() {
         plan.parts.first.element.name,
       ]);
       expect(
-        ((exported['toolkit']! as Map)['kept'] as List).single,
+        (exported['keptCircles']! as List).single,
         containsPair('parts', plan.toWire()),
       );
       expect(
@@ -486,8 +509,65 @@ void main() {
       expect(c.read(recommendationProvider).recommendation, same(first));
     });
   });
+
+  group('B1 — retired Paths and routines (ADR-024)', () {
+    test('a Path under way for today’s need never takes Today: Premium '
+        'composes, as on any day', () async {
+      await prefs.setString(keptCirclesKey, legacyRecord());
+      final c = open(entitled: true);
+      c
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.clearerHead, window: TimeWindow.upTo30);
+      final today = c.read(recommendationProvider).recommendation!;
+      expect(today.composed, isNotNull);
+      expect(today.composed!.isKept, isFalse);
+      expect(today.reason, RecommendationReason.personalCircle);
+      await settle();
+      final entry = c.read(circleJournalRepositoryProvider).readAll().single;
+      expect(entry.session!.pathRunId, isNull);
+      expect(entry.session!.routineId, isNull);
+    });
+
+    test('a stored routine is never a candidate — not on Free, whatever the '
+        'day', () async {
+      await prefs.setString(keptCirclesKey, legacyRecord());
+      for (var day = 0; day < 6; day++) {
+        final c = open(entitled: false, at: morning.add(Duration(days: day)));
+        c
+            .read(recommendationProvider.notifier)
+            .chooseIntention(Intention.clearerHead, window: TimeWindow.upTo30);
+        final today = c.read(recommendationProvider).recommendation!;
+        expect(today.composed, isNull);
+        expect(today.retiredSession, isNull);
+        expect(today.reason, isNot(RecommendationReason.ownChoice));
+        expect(today.activity, isNot('My old reset'));
+        await settle();
+      }
+      final journal = open(
+        entitled: false,
+      ).read(circleJournalRepositoryProvider).readAll();
+      expect(journal, hasLength(6));
+      for (final entry in journal) {
+        expect(entry.session?.routineId, isNull);
+        expect(entry.session?.pathRunId, isNull);
+      }
+    });
+
+    test('the kept Circle beside them survives, unchanged, and nothing '
+        'makes a routine of it', () async {
+      await prefs.setString(keptCirclesKey, legacyRecord());
+      final c = open(entitled: false);
+      final kept = c.read(keptCirclesProvider).kept.single;
+      expect(kept.id, 'kept-reset');
+      expect(kept.plan, keptReset().plan);
+      c.read(keptCirclesProvider.notifier).renameKept(kept.id, 'Mine');
+      await settle();
+      final record = jsonDecode(prefs.getString(keptCirclesKey)!) as Map;
+      expect(record.containsKey('routines'), isFalse);
+      expect(record.containsKey('path'), isFalse);
+      expect(c.read(keptCirclesProvider).kept.single.name, 'Mine');
+    });
+  });
 }
 
 const _p = RecommendationPolicy.initial;
-
-String _json(Routine routine) => jsonEncode(routine.toJson());

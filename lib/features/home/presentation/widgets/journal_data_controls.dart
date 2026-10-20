@@ -6,8 +6,11 @@ import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_confirm_dialog.dart';
-import '../../../toolkit/application/toolkit_provider.dart';
-import '../../../toolkit/domain/toolkit_model.dart';
+import '../../../insights/application/insights_provider.dart';
+import '../../../insights/domain/insight.dart';
+import '../../../personal_circle/application/kept_circles_provider.dart';
+import '../../../plans/application/circle_plans_provider.dart';
+import '../../../plans/domain/circle_plan.dart';
 import '../../application/circle_journal.dart';
 import '../../application/recommendation_provider.dart';
 import '../../application/suggestion_preferences.dart';
@@ -29,7 +32,9 @@ class JournalDataControls extends ConsumerWidget {
     final journal = ref.watch(circleJournalRepositoryProvider);
     final hasEntries = journal.readAll().isNotEmpty;
     final preferences = ref.watch(suggestionPreferencesProvider);
-    final toolkit = ref.watch(toolkitProvider);
+    final kept = ref.watch(keptCirclesProvider);
+    final plans = ref.watch(circlePlansProvider);
+    final insights = ref.watch(insightsProvider);
 
     // Paired buttons share one height: if large text wraps one label onto
     // a second line, both grow together (IntrinsicHeight + stretch). At
@@ -42,12 +47,18 @@ class JournalDataControls extends ConsumerWidget {
             child: ThirtyButton(
               label: 'Copy as text',
               variant: ThirtyButtonVariant.secondary,
-              onPressed: hasEntries || !preferences.isEmpty || !toolkit.isEmpty
+              onPressed:
+                  hasEntries ||
+                      !preferences.isEmpty ||
+                      !kept.isEmpty ||
+                      plans.plans.isNotEmpty
                   ? () => exportToClipboard(
                       context,
                       journal,
                       preferences: preferences,
-                      toolkit: toolkit,
+                      kept: kept,
+                      plans: plans,
+                      insights: insights,
                     )
                   : null,
             ),
@@ -76,7 +87,9 @@ class JournalDataControls extends ConsumerWidget {
     BuildContext context,
     CircleJournalRepository journal, {
     SuggestionPreferences preferences = SuggestionPreferences.empty,
-    ToolkitState toolkit = ToolkitState.empty,
+    KeptCircles kept = KeptCircles.empty,
+    CirclePlansState plans = CirclePlansState.empty,
+    InsightsState insights = InsightsState.empty,
   }) async {
     await Clipboard.setData(
       ClipboardData(
@@ -84,9 +97,14 @@ class JournalDataControls extends ConsumerWidget {
           suggestionPreferences: preferences.isEmpty
               ? null
               : preferences.toJson(),
-          // V2 Phase D: the user's routines, their versions and any Path —
-          // never a derived score.
-          toolkit: toolkit.isEmpty ? null : toolkit.toJson(),
+          // The Circles the user kept — never a derived score.
+          keptCircles: kept.isEmpty
+              ? null
+              : [for (final circle in kept.kept) circle.toJson()],
+          // Each Circle Plan's place, cycles and stage records (B3).
+          circlePlans: plans.plans.isEmpty ? null : plans.toJson(),
+          // The Insights THIRTY showed, as shown (B5) — no profile.
+          insights: insights.isEmpty ? null : insights.toJson(),
         ),
       ),
     );
@@ -102,10 +120,11 @@ class JournalDataControls extends ConsumerWidget {
   /// is then re-derived from the empty store, so no deleted Circle stays on
   /// screen. Shared with You's "Your data" rows.
   ///
-  /// V2 Phase D: the user's routines, any Path under way and their
-  /// suggestion preferences are kept — they have their own controls — but
-  /// no maintenance claim survives the evidence it came from: everything
-  /// the Toolkit says is recomputed from the (now empty) journal.
+  /// Kept Circles and suggestion preferences are kept — they have their own
+  /// controls — but nothing learned survives the evidence it came from.
+  /// A Circle Plan keeps its place; its stage evidence and reviews go with
+  /// the journal (contract, Delete / Export), and so does every Insight
+  /// snapshot — each is derived from it.
   static Future<void> confirmAndClear(
     BuildContext context,
     CircleJournalRepository journal,
@@ -118,9 +137,10 @@ class JournalDataControls extends ConsumerWidget {
         title: 'Delete your Circle history?',
         body:
             'This permanently deletes every recorded Circle on this device, '
-            'and everything THIRTY has learned from them. Your routines, any '
-            'Path under way and your suggestion preferences are kept — you '
-            'can change those yourself. It cannot be undone, and nothing is '
+            'and everything THIRTY has learned from them, Insights and Plan '
+            'reviews included. Your kept Circles, each Plan’s place and '
+            'your suggestion preferences are kept — you can change those '
+            'yourself. It cannot be undone, and nothing is '
             'stored anywhere else to restore it from.',
         cancelLabel: 'Keep my history',
         confirmLabel: 'Delete permanently',
@@ -129,9 +149,14 @@ class JournalDataControls extends ConsumerWidget {
     );
     if (confirmed != true) return;
 
+    final plans = ref.read(circlePlansProvider.notifier);
     await journal.clearAll();
     await clearRecordedCircleState(ref.read(sharedPreferencesProvider));
+    final forgotten = plans.forgetStageEvidence();
+    final insightsForgotten = ref.read(insightsProvider.notifier).forgetAll();
     ref.invalidate(circleJournalRepositoryProvider);
     ref.invalidate(recommendationProvider);
+    await forgotten;
+    await insightsForgotten;
   }
 }

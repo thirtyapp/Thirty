@@ -28,7 +28,7 @@ import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/presentation/widgets/home_header.dart'
     show HomeProfileButton;
-import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
 import 'package:thirty/features/reminder/application/reminder_provider.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
@@ -265,7 +265,7 @@ void main() {
     });
 
     test('every asset is a bundled WebP of the declared size, and its own — '
-        'never the Toolkit band or a World scene', () {
+        'never another page’s band or a World scene', () {
       final assets = <String>{};
       for (final daypart in Daypart.values) {
         final image = youHeaderArt.at(daypart);
@@ -356,8 +356,12 @@ void main() {
       ) async {
         await _pump(tester, status: status);
         expect(find.text(YouPremiumCard.body), findsOneWidget);
-        // V2 Phase D: no retired pillar is sold.
-        for (final retired in ['Plans', 'Coach', 'Insights']) {
+        // B7: the card names the three jobs as built — the guided Circle,
+        // Plans and Insights; V1's Coach is never sold.
+        expect(YouPremiumCard.body, contains('guided Circle'));
+        expect(YouPremiumCard.body, contains('Plans'));
+        expect(YouPremiumCard.body, contains('Insights'));
+        for (final retired in ['Coach', 'Toolkit', 'routine', 'Path']) {
           expect(find.textContaining(retired), findsNothing, reason: retired);
         }
         expect(find.textContaining('Unlock'), findsNothing);
@@ -462,14 +466,14 @@ void main() {
 
   group('Data & privacy', () {
     testWidgets('"Delete Circle history" deletes the journal only — the '
-        'Toolkit, reminder, appearance, analytics consent and other '
+        'kept Circles, reminder, appearance, analytics consent and other '
         'preferences are kept', (tester) async {
       final (container, prefs) = await _pump(
         tester,
         size: const Size(412, 3000),
         withJournal: true,
         prefsValues: {
-          toolkitStateKey: 'toolkit-sentinel',
+          keptCirclesKey: 'kept-sentinel',
           reminderEnabledKey: true,
           reminderHourKey: 18,
           reminderMinuteKey: 5,
@@ -494,7 +498,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(prefs.getString(circleJournalKey), isNull);
-      expect(prefs.getString(toolkitStateKey), 'toolkit-sentinel');
+      expect(prefs.getString(keptCirclesKey), 'kept-sentinel');
       expect(prefs.getBool(reminderEnabledKey), isTrue);
       expect(prefs.getInt(reminderHourKey), 18);
       expect(prefs.getInt(reminderMinuteKey), 5);

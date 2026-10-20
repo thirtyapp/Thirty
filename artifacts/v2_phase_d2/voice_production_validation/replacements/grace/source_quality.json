@@ -1,0 +1,289 @@
+{
+ "voice": "Grace",
+ "verification": {
+  "voice_id": "mZTVERjx1WQkdAWt1Lcm",
+  "voices_endpoint_status": 200,
+  "voice": {
+   "voice_id": "mZTVERjx1WQkdAWt1Lcm",
+   "name": "Grace - warm, velvety meditation voice",
+   "category": "professional",
+   "is_owner": null,
+   "available_for_tiers": [],
+   "high_quality_base_model_ids": [
+    "eleven_turbo_v2_5",
+    "eleven_flash_v2_5",
+    "eleven_multilingual_v2",
+    "eleven_turbo_v2",
+    "eleven_flash_v2"
+   ],
+   "safety_control": null,
+   "is_legacy": false,
+   "labels": {
+    "use_case": "conversational",
+    "age": "young",
+    "gender": "female",
+    "accent": "american",
+    "language": "en",
+    "descriptive": "calm"
+   },
+   "description": "A warm, velvety alto with a slow, unhurried cadence and gentle, rounded tones. Her voice carries a natural stillness. Deeply grounding and soothing, ideal for guided meditation, breathwork, affirmations, and wellness content.",
+   "sharing.status": "copied",
+   "sharing.free_users_allowed": false,
+   "sharing.rate": 1.0,
+   "sharing.notice_period": 730,
+   "sharing.disable_at_unix": null,
+   "sharing.live_moderation_enabled": false,
+   "verified_languages": [
+    [
+     "en",
+     "eleven_turbo_v2_5"
+    ],
+    [
+     "en",
+     "eleven_v2_5_flash"
+    ],
+    [
+     "en",
+     "eleven_flash_v2_5"
+    ],
+    [
+     "en",
+     "eleven_multilingual_v2"
+    ],
+    [
+     "en",
+     "eleven_turbo_v2"
+    ],
+    [
+     "en",
+     "eleven_v2_flash"
+    ],
+    [
+     "en",
+     "eleven_flash_v2"
+    ]
+   ]
+  },
+  "library_status": 200,
+  "library": [
+   {
+    "name": "Grace - warm, velvety meditation voice",
+    "category": "high_quality",
+    "rate": 1.0,
+    "fiat_rate": null,
+    "free_users_allowed": false,
+    "notice_period": 730,
+    "live_moderation_enabled": false,
+    "is_added_by_user": true,
+    "language": "en",
+    "accent": "american",
+    "gender": "female",
+    "age": "young",
+    "use_case": "conversational",
+    "descriptive": "calm",
+    "description": "A warm, velvety alto with a slow, unhurried cadence and gentle, rounded tones. Her voice carries a natural stillness. Deeply grounding and soothing, ideal for guided meditation, breathwork, affirmations, and wellness content.",
+    "date_unix": 1777068710,
+    "featured": false
+   }
+  ]
+ },
+ "raw_source_gate_per_clip": {
+  "voice": "Grace",
+  "status": "candidate",
+  "clips": {
+   "lead_first": {
+    "duration_s": 0.88,
+    "trimmed_lufs": -40.65,
+    "raw_true_peak_dbtp": -24.81,
+    "sample_peak_dbfs": -24.83,
+    "clipped_samples": 0,
+    "floor_p5_dbfs": -63.0,
+    "pause_frame_spread_db": 10.6,
+    "digital_silence_share": 0.0,
+    "noise_octaves_db_rel_total": {
+     "31.5": -200.0,
+     "63": -11.8,
+     "125": -14.1,
+     "250": -17.1,
+     "500": -12.1,
+     "1000": -12.7,
+     "2000": -6.2,
+     "4000": -4.7,
+     "8000": -8.0,
+     "16000": -15.9
+    },
+    "noise_hiss_share_above_4k_db": -3.2,
+    "raw_head_s": 0.12,
+    "raw_tail_s": 0.402,
+    "raw_head_level_dbfs": -59.5,
+    "raw_tail_level_dbfs": -61.4,
+    "first_10ms_dbfs": -69.1,
+    "last_10ms_dbfs": -86.7,
+    "onset_within_40ms_of_file_start": false,
+    "offset_within_40ms_of_file_end": false
+   },
+   "part_getItOut": {
+    "duration_s": 10.77,
+    "trimmed_lufs": -43.17,
+    "raw_true_peak_dbtp": -25.41,
+    "sample_peak_dbfs": -25.45,
+    "clipped_samples": 0,
+    "floor_p5_dbfs": -75.7,
+    "pause_frame_spread_db": 5.8,
+    "digital_silence_share": 0.0,
+    "noise_octaves_db_rel_total": {
+     "31.5": -200.0,
+     "63": -7.7,
+     "125": -7.2,
+     "250": -9.2,
+     "500": -10.4,
+     "1000": -10.4,
+     "2000": -10.6,
+     "4000": -10.8,
+     "8000": -9.8,
+     "16000": -12.5
+    },
+    "noise_hiss_share_above_4k_db": -7.0,
+    "raw_head_s": 0.08,
+    "raw_tail_s": 0.404,
+    "raw_head_level_dbfs": -68.5,
+    "raw_tail_level_dbfs": -60.5,
+    "first_10ms_dbfs": -74.3,
+    "last_10ms_dbfs": -87.6,
+    "onset_within_40ms_of_file_start": false,
+    "offset_within_40ms_of_file_end": false
+   },
+   "part_briskWalk": {
+    "duration_s": 15.42,
+    "trimmed_lufs": -42.72,
+    "raw_true_peak_dbtp": -25.0,
+    "sample_peak_dbfs": -25.01,
+    "clipped_samples": 0,
+    "floor_p5_dbfs": -77.4,
+    "pause_frame_spread_db": 1.9,
+    "digital_silence_share": 0.0,
+    "noise_octaves_db_rel_total": {
+     "31.5": -200.0,
+     "63": -6.5,
+     "125": -9.2,
+     "250": -9.4,
+     "500": -10.4,
+     "1000": -9.7,
+     "2000": -12.3,
+     "4000": -10.8,
+     "8000": -9.3,
+     "16000": -10.7
+    },
+    "noise_hiss_share_above_4k_db": -6.1,
+    "raw_head_s": 0.02,
+    "raw_tail_s": 0.448,
+    "raw_head_level_dbfs": -72.1,
+    "raw_tail_level_dbfs": -57.9,
+    "first_10ms_dbfs": -78.6,
+    "last_10ms_dbfs": -87.3,
+    "onset_within_40ms_of_file_start": true,
+    "offset_within_40ms_of_file_end": false
+   },
+   "part_warmDrink": {
+    "duration_s": 14.91,
+    "trimmed_lufs": -43.89,
+    "raw_true_peak_dbtp": -26.64,
+    "sample_peak_dbfs": -26.75,
+    "clipped_samples": 0,
+    "floor_p5_dbfs": -76.5,
+    "pause_frame_spread_db": 3.7,
+    "digital_silence_share": 0.0,
+    "noise_octaves_db_rel_total": {
+     "31.5": -200.0,
+     "63": -6.9,
+     "125": -7.4,
+     "250": -8.7,
+     "500": -10.3,
+     "1000": -10.5,
+     "2000": -11.3,
+     "4000": -11.5,
+     "8000": -10.4,
+     "16000": -12.2
+    },
+    "noise_hiss_share_above_4k_db": -7.3,
+    "raw_head_s": 0.03,
+    "raw_tail_s": 0.397,
+    "raw_head_level_dbfs": -75.0,
+    "raw_tail_level_dbfs": -60.8,
+    "first_10ms_dbfs": -78.3,
+    "last_10ms_dbfs": -87.8,
+    "onset_within_40ms_of_file_start": true,
+    "offset_within_40ms_of_file_end": false
+   },
+   "close": {
+    "duration_s": 4.69,
+    "trimmed_lufs": -42.96,
+    "raw_true_peak_dbtp": -25.23,
+    "sample_peak_dbfs": -25.31,
+    "clipped_samples": 0,
+    "floor_p5_dbfs": -74.0,
+    "pause_frame_spread_db": 16.2,
+    "digital_silence_share": 0.0,
+    "noise_octaves_db_rel_total": {
+     "31.5": -200.0,
+     "63": -4.8,
+     "125": -7.5,
+     "250": -9.6,
+     "500": -10.2,
+     "1000": -11.5,
+     "2000": -11.8,
+     "4000": -12.4,
+     "8000": -12.6,
+     "16000": -13.9
+    },
+    "noise_hiss_share_above_4k_db": -9.1,
+    "raw_head_s": 0.01,
+    "raw_tail_s": 0.42,
+    "raw_head_level_dbfs": -64.7,
+    "raw_tail_level_dbfs": -60.8,
+    "first_10ms_dbfs": -64.7,
+    "last_10ms_dbfs": -87.8,
+    "onset_within_40ms_of_file_start": true,
+    "offset_within_40ms_of_file_end": false
+   }
+  },
+  "mean_lufs_spoken": -43.19,
+  "floor_median_dbfs": -75.7,
+  "floor_range_dbfs": [
+   -77.4,
+   -63.0
+  ],
+  "loudness_to_floor_db": 32.5
+ },
+ "pooled_floor_and_pauses": {
+  "mean_lufs_parts_close": -43.19,
+  "pooled_p5_floor_dbfs": -76.9,
+  "pooled_ratio_db": 33.7,
+  "pause_total_ms": 0,
+  "pause_runs": 0,
+  "pause_noise_median_dbfs": null,
+  "pause_noise_below_loudness_db": null,
+  "per_clip": {
+   "lead_first": {
+    "pause_runs": 0,
+    "pause_levels_dbfs": []
+   },
+   "part_getItOut": {
+    "pause_runs": 0,
+    "pause_levels_dbfs": []
+   },
+   "part_briskWalk": {
+    "pause_runs": 0,
+    "pause_levels_dbfs": []
+   },
+   "part_warmDrink": {
+    "pause_runs": 0,
+    "pause_levels_dbfs": []
+   },
+   "close": {
+    "pause_runs": 0,
+    "pause_levels_dbfs": []
+   }
+  }
+ }
+}

@@ -6,6 +6,7 @@ library;
 
 import '../../home/application/activity_catalog.dart';
 import '../../home/domain/recommendation_engine.dart';
+import '../../plans/domain/plan_stage_provenance.dart';
 import 'circle_composer.dart';
 import 'circle_elements.dart';
 
@@ -91,6 +92,7 @@ class ComposedSession {
     this.basis,
     this.keptCircleId,
     this.keptName,
+    this.stage,
   });
 
   final CirclePlan plan;
@@ -102,6 +104,10 @@ class ComposedSession {
   final String? keptCircleId;
   final String? keptName;
 
+  /// ADR-024 B3: the Circle Plan stage it was composed for, when it is a
+  /// stage Circle.
+  final PlanStageProvenance? stage;
+
   bool get isKept => keptCircleId != null;
 
   /// What it is called: "Your Circle", or the kept Circle's name.
@@ -112,6 +118,7 @@ class ComposedSession {
     'basis': basis?.name,
     'keptCircleId': keptCircleId,
     'keptName': keptName,
+    'stage': ?stage?.toJson(),
   };
 
   static ComposedSession? fromJson(Object? raw) {
@@ -131,6 +138,7 @@ class ComposedSession {
       keptName: keptName is String && keptName.trim().isNotEmpty
           ? keptName
           : null,
+      stage: PlanStageProvenance.fromJson(raw['stage']),
     );
   }
 }

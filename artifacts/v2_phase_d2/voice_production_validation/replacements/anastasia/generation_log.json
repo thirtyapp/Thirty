@@ -1,0 +1,71 @@
+{
+ "generated_at": "2026-10-16T11:18:03+02:00",
+ "model_id": "eleven_multilingual_v2",
+ "voice_settings": {
+  "stability": 0.5,
+  "similarity_boost": 0.75,
+  "style": 0.0,
+  "use_speaker_boost": true,
+  "speed": 1.0
+ },
+ "seed": 30,
+ "output_format": "mp3_44100_128",
+ "same_as": "generate_validation.py (2026-10-12) and generate_replacements.py (2026-10-14)",
+ "clips": [
+  {
+   "voice": "Anastasia",
+   "voice_id": "ckKmfA55w4oOeREP60LL",
+   "clip": "lead_first",
+   "file": "lead_first_d97b30dd.m4a",
+   "script": "First.",
+   "bytes": 14253,
+   "characters": 6,
+   "request_id": "mG2lT7L6fJhb1jfgXiFm",
+   "character_count_header": null
+  },
+  {
+   "voice": "Anastasia",
+   "voice_id": "ckKmfA55w4oOeREP60LL",
+   "clip": "part_getItOut",
+   "file": "part_getItOut_a239320e.m4a",
+   "script": "Get it out. Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.",
+   "bytes": 145910,
+   "characters": 115,
+   "request_id": "E4Rm1xiFkdhHYDao6ZCq",
+   "character_count_header": null
+  },
+  {
+   "voice": "Anastasia",
+   "voice_id": "ckKmfA55w4oOeREP60LL",
+   "clip": "part_briskWalk",
+   "file": "part_briskWalk_e3125526.m4a",
+   "script": "A brisk walk. Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+   "bytes": 175585,
+   "characters": 113,
+   "request_id": "LJzyB8dHs735xOnaEqao",
+   "character_count_header": null
+  },
+  {
+   "voice": "Anastasia",
+   "voice_id": "ckKmfA55w4oOeREP60LL",
+   "clip": "part_warmDrink",
+   "file": "part_warmDrink_db4bc51f.m4a",
+   "script": "A slow warm drink. Make a warm drink you’d enjoy. Hold the cup in both hands, and drink it slowly, with your phone face down.",
+   "bytes": 193558,
+   "characters": 125,
+   "request_id": "LVbukM53j2UbWVinHaNn",
+   "character_count_header": null
+  },
+  {
+   "voice": "Anastasia",
+   "voice_id": "ckKmfA55w4oOeREP60LL",
+   "clip": "close",
+   "file": "close_3b06cf13.m4a",
+   "script": "That’s your Circle. Take a moment before you move on.",
+   "bytes": 68588,
+   "characters": 53,
+   "request_id": "k5zWyPpkaPiMeYn24gId",
+   "character_count_header": null
+  }
+ ]
+}

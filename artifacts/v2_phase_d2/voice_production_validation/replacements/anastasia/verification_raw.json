@@ -1,0 +1,127 @@
+{
+ "voice_id": "ckKmfA55w4oOeREP60LL",
+ "voices_endpoint_status": 400,
+ "voices_endpoint_body": "{\"detail\": {\"type\": \"not_found\", \"code\": \"voice_not_found\", \"message\": \"A voice with ID 'ckKmfA55w4oOeREP60LL' was not found.\", \"status\": \"voice_not_found\", \"request_id\": \"da09ed23fa74177ca4c900dd044cfe6b\"}}",
+ "library_status": 200,
+ "library": [
+  {
+   "name": "Anastasia - Soft Soothing Meditation",
+   "category": "professional",
+   "rate": 1.0,
+   "fiat_rate": null,
+   "free_users_allowed": true,
+   "notice_period": 730,
+   "live_moderation_enabled": false,
+   "is_added_by_user": false,
+   "language": "en",
+   "accent": "american",
+   "gender": "female",
+   "age": "young",
+   "use_case": "narrative_story",
+   "descriptive": "gentle",
+   "description": "A calm, warm, and grounding female voice with a soft, inviting presence and natural sense of ease. Clear, articulate delivery creates a soothing and trustworthy listening experience. Ideal for guided meditation, sleep stories, audiobooks, storytelling, mindfulness content, and wellness apps. Designed to calm the mind, build trust, and support relaxed, focused listening.",
+   "date_unix": 1781299200,
+   "featured": false,
+   "verified_languages": [
+    {
+     "language": "en",
+     "model_id": "eleven_turbo_v2",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_v2_flash",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_flash_v2",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_turbo_v2_5",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_v2_5_flash",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_flash_v2_5",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_multilingual_v2",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_v4",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_v4_eval",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_v4_exp",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_v4_hq",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_v4_post_trained",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_v4_turbo",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    },
+    {
+     "language": "en",
+     "model_id": "eleven_v4_turbo_exp",
+     "accent": "american",
+     "locale": "en-US",
+     "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/0a4cebadcd2e4dfd9b0da7dc6efb2c3d/voices/ckKmfA55w4oOeREP60LL/yQ0QY1GABu4Hgdvbx4XV.mp3"
+    }
+   ]
+  }
+ ]
+}

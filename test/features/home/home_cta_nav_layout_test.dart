@@ -282,50 +282,6 @@ void main() {
       await _expectCtaReachableClearOfNav(tester);
     });
 
-    // V2 Phase D: a joined Path step and a routine take the same card.
-    for (final (label, session) in [
-      (
-        'Path step',
-        {
-          'modules': ['standingStretch:full', 'musicMove:full'],
-          'title': 'Standing stretch + Move to music',
-          'pathRunId': 'path-1',
-          'pathKind': 'build',
-          'pathName': 'A lift at home',
-          'pathCircle': 4,
-          'pathCircles': 7,
-          'pathReason': 'together',
-          'pathExplanation': 'Now the two together.',
-        },
-      ),
-      (
-        'routine',
-        {
-          'modules': ['standingStretch:full', 'musicMove:full'],
-          'title': 'My pick-me-up',
-          'routineId': 'routine-1',
-          'routineVersionId': 'routine-1-v1',
-          'routineVersionNumber': 1,
-        },
-      ),
-    ]) {
-      testWidgets('$label day: Start Circle comes after the Today card, '
-          'reachable and clear of the nav', (tester) async {
-        await _pumpHome(
-          tester,
-          prefs: {
-            ..._assigned('moreEnergy', 'energisingStretchFlow'),
-            recommendationSessionKey: jsonEncode(session),
-          },
-        );
-        expect(
-          tester.getRect(_cta).top,
-          greaterThan(tester.getRect(find.byType(TodayCard)).bottom),
-        );
-        await _expectCtaReachableClearOfNav(tester);
-      });
-    }
-
     testWidgets('small phone (360×740), tend: large overflow keeps the usual '
         'rhythm and scrolls naturally', (tester) async {
       await _pumpHome(

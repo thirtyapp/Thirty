@@ -3,24 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/design_tokens.dart';
 import '../../home/application/recommendation_provider.dart';
-import '../../toolkit/application/toolkit_provider.dart';
-import '../../toolkit/domain/toolkit_model.dart';
+import '../application/kept_circles_provider.dart';
+import '../domain/kept_circle.dart';
 
 /// The words of [KeepCircleCard], in one place.
 abstract final class KeepCircleCopy {
   static const offer = 'Keep this Circle to use again on a day you choose.';
   static const action = 'Keep it';
-  static String kept(String name) => 'Kept as $name. It’s in your Toolkit.';
+  static String kept(String name) => 'Kept as $name. It’s in Yours, under You.';
   static const full =
-      'You keep $maxKeptCircles Circles already. Remove one in Toolkit to '
-      'keep this one.';
+      'You have $maxKeptCircles kept Circles. Remove one in Yours to keep '
+      'another.';
 }
 
 /// "Keep this Circle" (V2 Phase D2, ADR-023 §8): once today's Personal
 /// Guided Circle is closed, one quiet row below the Circle lets the user
 /// keep it as their own — usable on any later day ("Use it today"), with
 /// or without Premium. Never on a kept Circle being used again, never
-/// before Close, never more than the Toolkit keeps.
+/// before Close, never more than [maxKeptCircles].
 class KeepCircleCard extends ConsumerWidget {
   const KeepCircleCard({super.key});
 
@@ -35,11 +35,11 @@ class KeepCircleCard extends ConsumerWidget {
         state.status != RecommendationStatus.closed) {
       return const SizedBox.shrink();
     }
-    final toolkit = ref.watch(toolkitProvider);
-    final kept = toolkit.kept
+    final owned = ref.watch(keptCirclesProvider).kept;
+    final kept = owned
         .where((k) => k.fromCircleId == recommendation.circleId)
         .firstOrNull;
-    final full = kept == null && toolkit.kept.length >= maxKeptCircles;
+    final full = kept == null && owned.length >= maxKeptCircles;
 
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
@@ -94,7 +94,7 @@ class KeepCircleCard extends ConsumerWidget {
                       minimumSize: const Size(48, 48),
                     ),
                     onPressed: () => ref
-                        .read(toolkitProvider.notifier)
+                        .read(keptCirclesProvider.notifier)
                         .keepCircle(
                           plan: composed.plan,
                           need: recommendation.intention,

@@ -75,35 +75,10 @@ class RestLifted {
   }
 }
 
-/// V2 Phase D: "Don't suggest" for one of the user's routines, for one
-/// need — the same explicit control as for an activity, kept in the same
-/// place.
-class RoutineNotSuggested {
-  const RoutineNotSuggested({
-    required this.routineId,
-    required this.need,
-    required this.since,
-  });
-
-  final String routineId;
-  final Intention need;
-  final DateTime since;
-
-  Map<String, Object?> toJson() => {
-    'routineId': routineId,
-    'need': need.name,
-    'since': since.toIso8601String(),
-  };
-
-  static RoutineNotSuggested? fromJson(Object? json) {
-    if (json is! Map<String, Object?>) return null;
-    final routineId = json['routineId'];
-    final need = Intention.values.asNameMap()[json['need']];
-    final since = DateTime.tryParse('${json['since']}');
-    if (routineId is! String || need == null || since == null) return null;
-    return RoutineNotSuggested(routineId: routineId, need: need, since: since);
-  }
-}
+/// The retired Phase D field for "Don't suggest" on a routine. Routines are
+/// retired before release (ADR-024): it is never read, and the pre-release
+/// migration (`phase_d_retirement.dart`) and the next save drop it.
+const retiredRoutinesNotSuggestedField = 'routinesNotSuggested';
 
 /// V2 Phase D2 (ADR-023 §7): "Leave this out next time" — an element the
 /// user asked THIRTY not to put in their Personal Guided Circles again,
@@ -133,7 +108,6 @@ class SuggestionPreferences {
   const SuggestionPreferences({
     this.notSuggested = const [],
     this.restsLifted = const [],
-    this.routinesNotSuggested = const [],
     this.elementsLeftOut = const [],
   });
 
@@ -142,17 +116,11 @@ class SuggestionPreferences {
   final List<NotSuggested> notSuggested;
   final List<RestLifted> restsLifted;
 
-  /// V2 Phase D.
-  final List<RoutineNotSuggested> routinesNotSuggested;
-
   /// V2 Phase D2.
   final List<ElementLeftOut> elementsLeftOut;
 
   bool get isEmpty =>
-      notSuggested.isEmpty &&
-      restsLifted.isEmpty &&
-      routinesNotSuggested.isEmpty &&
-      elementsLeftOut.isEmpty;
+      notSuggested.isEmpty && restsLifted.isEmpty && elementsLeftOut.isEmpty;
 
   /// What the Personal Guided Circle composer reads.
   Set<ElementId> get leftOut => {for (final e in elementsLeftOut) e.element};
@@ -163,19 +131,12 @@ class SuggestionPreferences {
   SuggestionPreferences copyWith({
     List<NotSuggested>? notSuggested,
     List<RestLifted>? restsLifted,
-    List<RoutineNotSuggested>? routinesNotSuggested,
     List<ElementLeftOut>? elementsLeftOut,
   }) => SuggestionPreferences(
     notSuggested: notSuggested ?? this.notSuggested,
     restsLifted: restsLifted ?? this.restsLifted,
-    routinesNotSuggested: routinesNotSuggested ?? this.routinesNotSuggested,
     elementsLeftOut: elementsLeftOut ?? this.elementsLeftOut,
   );
-
-  bool isRoutineNotSuggested(String routineId, Intention need) =>
-      routinesNotSuggested.any(
-        (n) => n.routineId == routineId && n.need == need,
-      );
 
   bool isNotSuggested(ActivityId activity, Intention need) =>
       notSuggested.any((n) => n.activity == activity && n.need == need);
@@ -184,16 +145,12 @@ class SuggestionPreferences {
   SuggestionControls get controls => SuggestionControls(
     notSuggested: {for (final n in notSuggested) (n.activity, n.need)},
     restsLifted: {for (final r in restsLifted) (r.activity, r.need): r.at},
-    routinesNotSuggested: {
-      for (final n in routinesNotSuggested) (n.routineId, n.need),
-    },
   );
 
   Map<String, Object?> toJson() => {
     'schemaVersion': suggestionPreferencesSchemaVersion,
     'notSuggested': [for (final n in notSuggested) n.toJson()],
     'restsLifted': [for (final r in restsLifted) r.toJson()],
-    'routinesNotSuggested': [for (final n in routinesNotSuggested) n.toJson()],
     'elementsLeftOut': [for (final e in elementsLeftOut) e.toJson()],
   };
 
@@ -215,10 +172,6 @@ class SuggestionPreferences {
       return SuggestionPreferences(
         notSuggested: items(decoded['notSuggested'], NotSuggested.fromJson),
         restsLifted: items(decoded['restsLifted'], RestLifted.fromJson),
-        routinesNotSuggested: items(
-          decoded['routinesNotSuggested'],
-          RoutineNotSuggested.fromJson,
-        ),
         elementsLeftOut: items(
           decoded['elementsLeftOut'],
           ElementLeftOut.fromJson,
@@ -290,34 +243,6 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
           need: need,
           at: ref.read(eventClockProvider)(),
         ),
-      ],
-    ),
-  );
-
-  /// V2 Phase D: "Don't suggest" [routineId] for [need].
-  Future<void> dontSuggestRoutine(String routineId, Intention need) {
-    if (state.isRoutineNotSuggested(routineId, need)) return Future.value();
-    return _save(
-      state.copyWith(
-        routinesNotSuggested: [
-          ...state.routinesNotSuggested,
-          RoutineNotSuggested(
-            routineId: routineId,
-            need: need,
-            since: ref.read(eventClockProvider)(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// V2 Phase D: "Suggest again" for [routineId] — for [need], or for every
-  /// need when [need] is `null` (the routine was deleted).
-  Future<void> allowRoutineAgain(String routineId, {Intention? need}) => _save(
-    state.copyWith(
-      routinesNotSuggested: [
-        for (final n in state.routinesNotSuggested)
-          if (n.routineId != routineId || (need != null && n.need != need)) n,
       ],
     ),
   );

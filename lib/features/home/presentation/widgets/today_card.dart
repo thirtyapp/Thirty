@@ -119,12 +119,12 @@ class TodayCard extends StatelessWidget {
   /// The quiet line beneath the activity's name, saying what the row opens.
   final ActivityRowCue guideCue;
 
-  /// V2 Phase D: what today's Circle is, on the label line — "Today", "Your
-  /// routine", or "Path · 3 of 7".
+  /// What today's Circle is, on the label line — "Today", "Your Circle", or
+  /// a kept Circle's name.
   final String label;
 
   /// [label] as TalkBack reads it, where the line's short form needs more
-  /// words ("Path · Circle 3 of 7"); `null` reads [label].
+  /// words; `null` reads [label].
   final String? spokenLabel;
 
   /// `null`: a card of text alone (V2 Phase D2 — a composed Circle's parts
@@ -582,7 +582,7 @@ class _CueLine extends StatelessWidget {
 /// [text] with its spaces made non-breaking.
 String _unbroken(String text) => text.replaceAll(' ', '\u00A0');
 
-/// "PATH · 3 OF 7  ·  15 MIN" on one line when it fits. When it doesn't
+/// "YOUR CIRCLE  ·  16 MIN" on one line when it fits. When it doesn't
 /// (larger text), the two parts take a line each and the separator goes —
 /// never a dangling "·", never "MIN" on its own (S25 finding).
 class _LabelLine extends StatelessWidget {
@@ -600,7 +600,9 @@ class _LabelLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = _unbroken(label.toUpperCase());
+    // Each part of a two-part label ("GETTING GOING · STAGE 2 OF 5") stays
+    // whole; the line may break only between them.
+    final name = label.toUpperCase().split(' · ').map(_unbroken).join(' · ');
     final length = '$minutes MIN';
     final oneLine = '$name  ·  $length';
     return LayoutBuilder(

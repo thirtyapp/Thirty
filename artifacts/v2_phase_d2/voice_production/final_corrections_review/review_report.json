@@ -1,0 +1,546 @@
+{
+ "rule": "Founder perceptual QA corrections (2026-10-17), REVIEW ONLY. Builds\nfinal_corrections_review/ and never writes to assets/, raw/, raw_retakes/\nor any production log.\n\n1. Chain check: the production master chain, re-run here on each targeted\n   clip's shipping raw with no change, must reproduce the shipping .m4a\n   byte-for-byte; so every candidate below differs from shipping only in\n   what is stated.\n2. Regenerated clips (Brittney part_sitAMinute, Heather part_gentleStretch),\n   seeds 31-33 from generate_candidates.py: the normal raw checks\n   (provenance, script by offline ASR, onset/ending, sample clipping, inner\n   stalls, pace) and the frozen perceptual pause-bed check (A-weighted, at\n   the voice's matched level, against the voice's own per-clip spread; no\n   threshold). Plus a timbre diagnostic: the level-free long-term speech\n   spectrum (1/3 octave, 100 Hz-10 kHz) and median pitch, against the\n   voice's other 41 shipping takes. Diagnostic only; the founder's ear\n   decides which take is the same person.\n   Each candidate is mastered by the frozen production rule exactly as it\n   would ship: the voice's frozen median and voice-wide gain (from\n   mastering_report.json; the other 41 clips are not re-mastered), the\n   outlier window, edge fades, limiter only if needed, lead-in and tail.\n3. Level corrections (Heather part_getItOut, part_oneTask; the takes are\n   kept): the production chain from the same raw with ONE extra static gain.\n   The gain is the mean excess of the clip's integrated, maximum momentary\n   and maximum short-term loudness over the median of Heather's parts, so\n   its loudest phrases land at her typical level instead of above it. No\n   compression, EQ, denoise or limiter change.\nUsage: python -I review_pack.py <repo>",
+ "chain_check": {
+  "voice_brittney_v1/part_sitAMinute": true,
+  "voice_heather_v1/part_gentleStretch": true,
+  "voice_heather_v1/part_getItOut": true,
+  "voice_heather_v1/part_oneTask": true
+ },
+ "regenerated": {
+  "voice_brittney_v1/part_sitAMinute": {
+   "canonical_entry": {
+    "clip": "part_sitAMinute",
+    "role": "part",
+    "file": "part_sitAMinute_c80c3b07.m4a",
+    "script": "Sit for a minute. Sit still for a minute or two before you move on. There’s nothing to do."
+   },
+   "voice_id": "pjcYQlDFKMbcOUp6F5GD",
+   "shipping_raw": "raw/voice_brittney_v1/part_sitAMinute.mp3",
+   "voice_reference": {
+    "median_part_words_per_s": 1.98,
+    "pause_bed_per_clip_spread_dba": {
+     "min": -91.8,
+     "median": -82.4,
+     "max": -79.2
+    },
+    "pause_bed_voice_quietest10_dba": -89.4,
+    "timbre_leave_one_out_spread_db": {
+     "median": 2.39,
+     "p90": 3.3,
+     "max": 4.59
+    },
+    "median_f0_hz": 214.3,
+    "f0_p5_p95_hz": [
+     204.1,
+     249.5
+    ]
+   },
+   "takes": {
+    "CURRENT_seed30": {
+     "duration_s": 7.523,
+     "speech_onset_s": 0.01,
+     "tail_after_speech_s": 0.373,
+     "first_10ms_dbfs": -52.6,
+     "last_10ms_dbfs": -87.8,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -12.86,
+     "longest_inner_silence_s": 1.04,
+     "speech_span_s": 7.14,
+     "words_per_s": 2.66,
+     "pace_vs_voice_median": 1.34,
+     "asr": "Sit for a minute. Sit still for a minute or two before you move on. There's nothing to do.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -91.1,
+     "timbre": {
+      "spectrum_distance_db": 4.44,
+      "spectrum_distance_percentile_vs_voice": 97.0,
+      "median_f0_hz": 211.0,
+      "f0_vs_voice_median_semitones": -0.27
+     },
+     "provenance_ok": true,
+     "raw_sha1": "30f65698c6db41c2406aa3c7638eb140a5863ba9",
+     "mastering": 8.45,
+     "final": {
+      "I": -20.1,
+      "M_max": -16.4,
+      "S_max": -19.6,
+      "speech_p90_dbfs": -15.7,
+      "duration_s": 7.74,
+      "true_peak_dbtp": -3.99
+     },
+     "file": "CURRENT_seed30.m4a"
+    },
+    "candidate1_seed31": {
+     "duration_s": 6.966,
+     "speech_onset_s": 0.0,
+     "tail_after_speech_s": 0.236,
+     "first_10ms_dbfs": -38.6,
+     "last_10ms_dbfs": -85.2,
+     "clipped_onset": true,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -14.34,
+     "longest_inner_silence_s": 0.7,
+     "speech_span_s": 6.73,
+     "words_per_s": 2.82,
+     "pace_vs_voice_median": 1.42,
+     "asr": "Sit for a minute. Sit still for a minute or two before you move on. There's nothing to do.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -80.8,
+     "timbre": {
+      "spectrum_distance_db": 3.1,
+      "spectrum_distance_percentile_vs_voice": 79.0,
+      "median_f0_hz": 186.1,
+      "f0_vs_voice_median_semitones": -2.45
+     },
+     "provenance_ok": true,
+     "request_id": "W1W8jySfVBW9Z978TdV2",
+     "raw_sha1": "b35426b3abebec40bec54f16ee2b263fad5a6f2b",
+     "mastering": {
+      "raw_trimmed_lufs": -31.86,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": 8.78,
+      "extra_gain_db": 0.0,
+      "total_gain_db": 8.78,
+      "limiter_db": 0.0,
+      "head_fade_ms": 2.0
+     },
+     "final": {
+      "I": -22.7,
+      "M_max": -18.2,
+      "S_max": -22.1,
+      "speech_p90_dbfs": -18.9,
+      "duration_s": 7.32,
+      "true_peak_dbtp": -5.61
+     },
+     "file": "candidate1_seed31.m4a"
+    },
+    "candidate2_seed32": {
+     "duration_s": 6.966,
+     "speech_onset_s": 0.01,
+     "tail_after_speech_s": 0.186,
+     "first_10ms_dbfs": -64.7,
+     "last_10ms_dbfs": -84.4,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -14.16,
+     "longest_inner_silence_s": 0.91,
+     "speech_span_s": 6.77,
+     "words_per_s": 2.81,
+     "pace_vs_voice_median": 1.42,
+     "asr": "Sit for a minute. Sit still for a minute or two before you move on. There's nothing to do.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -81.8,
+     "timbre": {
+      "spectrum_distance_db": 2.56,
+      "spectrum_distance_percentile_vs_voice": 53.0,
+      "median_f0_hz": 209.0,
+      "f0_vs_voice_median_semitones": -0.44
+     },
+     "provenance_ok": true,
+     "request_id": "DhMo5pyYsjtrb9r1wfwv",
+     "raw_sha1": "c916f0a1239196722f17b69b26209e6dc3178620",
+     "mastering": {
+      "raw_trimmed_lufs": -29.89,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": 8.78,
+      "extra_gain_db": 0.0,
+      "total_gain_db": 8.78,
+      "limiter_db": 0.0,
+      "head_fade_ms": 10.0
+     },
+     "final": {
+      "I": -21.1,
+      "M_max": -17.9,
+      "S_max": -21.1,
+      "speech_p90_dbfs": -17.11,
+      "duration_s": 7.37,
+      "true_peak_dbtp": -4.85
+     },
+     "file": "candidate2_seed32.m4a"
+    },
+    "candidate3_seed33": {
+     "duration_s": 7.245,
+     "speech_onset_s": 0.0,
+     "tail_after_speech_s": 0.355,
+     "first_10ms_dbfs": -35.6,
+     "last_10ms_dbfs": -85.6,
+     "clipped_onset": true,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -15.89,
+     "longest_inner_silence_s": 0.87,
+     "speech_span_s": 6.89,
+     "words_per_s": 2.76,
+     "pace_vs_voice_median": 1.39,
+     "asr": "Sit for a minute. Sit still for a minute or two before you move on. There's nothing to do.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -84.9,
+     "timbre": {
+      "spectrum_distance_db": 2.51,
+      "spectrum_distance_percentile_vs_voice": 53.0,
+      "median_f0_hz": 188.5,
+      "f0_vs_voice_median_semitones": -2.23
+     },
+     "provenance_ok": true,
+     "request_id": "5TMVpk8vaaRpBHPui6SR",
+     "raw_sha1": "b1e311375fe9c757fa0bc20db0a3decc1afc0c84",
+     "mastering": {
+      "raw_trimmed_lufs": -30.91,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": 8.78,
+      "extra_gain_db": 0.0,
+      "total_gain_db": 8.78,
+      "limiter_db": 0.0,
+      "head_fade_ms": 2.0
+     },
+     "final": {
+      "I": -22.2,
+      "M_max": -16.8,
+      "S_max": -22.1,
+      "speech_p90_dbfs": -18.39,
+      "duration_s": 7.48,
+      "true_peak_dbtp": -7.13
+     },
+     "file": "candidate3_seed33.m4a"
+    }
+   },
+   "comparison_order": [
+    "part_firstStep (normal shipping clip) -> CURRENT_seed30",
+    "part_firstStep (normal shipping clip) -> candidate1_seed31",
+    "part_firstStep (normal shipping clip) -> candidate2_seed32",
+    "part_firstStep (normal shipping clip) -> candidate3_seed33"
+   ]
+  },
+  "voice_heather_v1/part_gentleStretch": {
+   "canonical_entry": {
+    "clip": "part_gentleStretch",
+    "role": "part",
+    "file": "part_gentleStretch_052b8910.m4a",
+    "script": "Gentle stretch. Slowly: neck, shoulders, open the chest, a seated twist, then fold forward and come up slowly. Only what’s comfortable."
+   },
+   "voice_id": "plP9aw1rizYgjFfuvLQ7",
+   "shipping_raw": "raw/voice_heather_v1/part_gentleStretch.mp3",
+   "voice_reference": {
+    "median_part_words_per_s": 2.29,
+    "pause_bed_per_clip_spread_dba": {
+     "min": -108.1,
+     "median": -85.65,
+     "max": -61.2
+    },
+    "pause_bed_voice_quietest10_dba": -101.0,
+    "timbre_leave_one_out_spread_db": {
+     "median": 2.5,
+     "p90": 3.38,
+     "max": 4.62
+    },
+    "median_f0_hz": 142.7,
+    "f0_p5_p95_hz": [
+     136.0,
+     156.1
+    ]
+   },
+   "takes": {
+    "CURRENT_seed30": {
+     "duration_s": 16.672,
+     "speech_onset_s": 0.0,
+     "tail_after_speech_s": 0.052,
+     "first_10ms_dbfs": -41.1,
+     "last_10ms_dbfs": -88.9,
+     "clipped_onset": true,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -1.81,
+     "longest_inner_silence_s": 0.04,
+     "speech_span_s": 16.62,
+     "words_per_s": 1.26,
+     "pace_vs_voice_median": 0.55,
+     "asr": "gentle stretch, slowly, neck, shoulders, open the chest, a seated twist, then fold forward and come up slowly, only what's comfortable.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -61.2,
+     "timbre": {
+      "spectrum_distance_db": 2.86,
+      "spectrum_distance_percentile_vs_voice": 74.0,
+      "median_f0_hz": 139.1,
+      "f0_vs_voice_median_semitones": -0.44
+     },
+     "provenance_ok": true,
+     "raw_sha1": "c6e6aa33364ef750eb3d38b7dcb5a46fdb0d5a94",
+     "mastering": -2.89,
+     "final": {
+      "I": -22.4,
+      "M_max": -17.7,
+      "S_max": -21.7,
+      "speech_p90_dbfs": -17.02,
+      "duration_s": 17.21,
+      "true_peak_dbtp": -4.72
+     },
+     "file": "CURRENT_seed30.m4a"
+    },
+    "candidate1_seed31": {
+     "duration_s": 13.839,
+     "speech_onset_s": 0.0,
+     "tail_after_speech_s": 0.279,
+     "first_10ms_dbfs": -46.8,
+     "last_10ms_dbfs": -87.3,
+     "clipped_onset": true,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -1.78,
+     "longest_inner_silence_s": 1.31,
+     "speech_span_s": 13.56,
+     "words_per_s": 1.55,
+     "pace_vs_voice_median": 0.68,
+     "asr": "gentle stretch slowly neck shoulders open the chest a seated twist then fold forward and come up slowly only what's comfortable",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -101.5,
+     "timbre": {
+      "spectrum_distance_db": 2.95,
+      "spectrum_distance_percentile_vs_voice": 76.0,
+      "median_f0_hz": 138.2,
+      "f0_vs_voice_median_semitones": -0.55
+     },
+     "provenance_ok": true,
+     "request_id": "Z4jZTvVrNAcKXa6EHetc",
+     "raw_sha1": "4698c69c8def2d99f80ae12745c8706798045fe3",
+     "mastering": {
+      "raw_trimmed_lufs": -18.68,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": -2.89,
+      "extra_gain_db": 0.0,
+      "total_gain_db": -2.89,
+      "limiter_db": 0.0,
+      "head_fade_ms": 5.0
+     },
+     "final": {
+      "I": -21.5,
+      "M_max": -18.5,
+      "S_max": -20.8,
+      "speech_p90_dbfs": -15.82,
+      "duration_s": 14.15,
+      "true_peak_dbtp": -4.67
+     },
+     "file": "candidate1_seed31.m4a"
+    },
+    "candidate2_seed32": {
+     "duration_s": 13.978,
+     "speech_onset_s": 0.02,
+     "tail_after_speech_s": 0.278,
+     "first_10ms_dbfs": -81.3,
+     "last_10ms_dbfs": -87.8,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -1.28,
+     "longest_inner_silence_s": 1.12,
+     "speech_span_s": 13.68,
+     "words_per_s": 1.54,
+     "pace_vs_voice_median": 0.67,
+     "asr": "gentle stretch, slowly, neck, shoulders, open the chest, a seated twist, then fold forward and come up slowly, only what's comfortable.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -98.4,
+     "timbre": {
+      "spectrum_distance_db": 2.15,
+      "spectrum_distance_percentile_vs_voice": 24.0,
+      "median_f0_hz": 133.2,
+      "f0_vs_voice_median_semitones": -1.19
+     },
+     "provenance_ok": true,
+     "request_id": "pGoBt3xZ27DkICRADmYk",
+     "raw_sha1": "e87d8f25c73dca8d006ff6df155edb68e617f8bd",
+     "mastering": {
+      "raw_trimmed_lufs": -18.53,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": -2.89,
+      "extra_gain_db": 0.0,
+      "total_gain_db": -2.89,
+      "limiter_db": 0.0,
+      "head_fade_ms": 10.0
+     },
+     "final": {
+      "I": -21.3,
+      "M_max": -18.1,
+      "S_max": -20.2,
+      "speech_p90_dbfs": -15.56,
+      "duration_s": 14.29,
+      "true_peak_dbtp": -4.18
+     },
+     "file": "candidate2_seed32.m4a"
+    },
+    "candidate3_seed33": {
+     "duration_s": 15.743,
+     "speech_onset_s": 0.0,
+     "tail_after_speech_s": 0.303,
+     "first_10ms_dbfs": -10.3,
+     "last_10ms_dbfs": -87.8,
+     "clipped_onset": true,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -1.47,
+     "longest_inner_silence_s": 1.49,
+     "speech_span_s": 15.44,
+     "words_per_s": 1.36,
+     "pace_vs_voice_median": 0.59,
+     "asr": "gentle stretch, slowly. Neck shoulders, open the chest, a seated twist, then fold forward and come up slowly. Only what's comfortable.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -101.2,
+     "timbre": {
+      "spectrum_distance_db": 2.03,
+      "spectrum_distance_percentile_vs_voice": 18.0,
+      "median_f0_hz": 145.5,
+      "f0_vs_voice_median_semitones": 0.34
+     },
+     "provenance_ok": true,
+     "request_id": "aCTHP1IqOiosFRkxTvx9",
+     "raw_sha1": "00f764e3c6e8c72a62ddbdce4d0115995b41f066",
+     "mastering": {
+      "raw_trimmed_lufs": -17.91,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": -2.89,
+      "extra_gain_db": 0.0,
+      "total_gain_db": -2.89,
+      "limiter_db": 0.0,
+      "head_fade_ms": 2.0
+     },
+     "final": {
+      "I": -20.7,
+      "M_max": -17.5,
+      "S_max": -19.9,
+      "speech_p90_dbfs": -14.98,
+      "duration_s": 16.03,
+      "true_peak_dbtp": -4.38
+     },
+     "file": "candidate3_seed33.m4a"
+    }
+   },
+   "comparison_order": [
+    "part_warmDrink (normal shipping clip) -> CURRENT_seed30",
+    "part_warmDrink (normal shipping clip) -> candidate1_seed31",
+    "part_warmDrink (normal shipping clip) -> candidate2_seed32",
+    "part_warmDrink (normal shipping clip) -> candidate3_seed33"
+   ]
+  }
+ },
+ "level_corrected": {
+  "voice_heather_v1/part_getItOut": {
+   "canonical_entry": {
+    "clip": "part_getItOut",
+    "role": "part",
+    "file": "part_getItOut_a239320e.m4a",
+    "script": "Get it out. Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you."
+   },
+   "heather_part_median": {
+    "I": -22.1,
+    "M_max": -17.8,
+    "S_max": -21.7,
+    "speech_p90_dbfs": -16.49
+   },
+   "current": {
+    "I": -20.4,
+    "M_max": -15.8,
+    "S_max": -19.9,
+    "speech_p90_dbfs": -15.06,
+    "duration_s": 8.9,
+    "true_peak_dbtp": -5.48,
+    "production_gain_db": -3.79
+   },
+   "excess_over_median": {
+    "I": 1.7,
+    "M_max": 2.0,
+    "S_max": 1.8
+   },
+   "extra_gain_db": -1.8,
+   "mastering": {
+    "raw_trimmed_lufs": -16.6,
+    "outlier_correction_db": -0.9,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": -1.8,
+    "total_gain_db": -5.59,
+    "limiter_db": 0.0,
+    "head_fade_ms": 2.0
+   },
+   "corrected": {
+    "I": -22.2,
+    "M_max": -17.6,
+    "S_max": -21.7,
+    "speech_p90_dbfs": -16.83,
+    "duration_s": 8.9,
+    "true_peak_dbtp": -7.26
+   },
+   "files": [
+    "CURRENT.m4a",
+    "CORRECTED_-1.8dB.m4a"
+   ]
+  },
+  "voice_heather_v1/part_oneTask": {
+   "canonical_entry": {
+    "clip": "part_oneTask",
+    "role": "part",
+    "file": "part_oneTask_80701d4c.m4a",
+    "script": "One task, no switching. Pick one task on your mind and put everything else out of sight. Stay with it until the time’s up — finished or not."
+   },
+   "heather_part_median": {
+    "I": -22.1,
+    "M_max": -17.8,
+    "S_max": -21.7,
+    "speech_p90_dbfs": -16.49
+   },
+   "current": {
+    "I": -19.9,
+    "M_max": -14.9,
+    "S_max": -18.8,
+    "speech_p90_dbfs": -14.87,
+    "duration_s": 13.03,
+    "true_peak_dbtp": -4.79,
+    "production_gain_db": -3.45
+   },
+   "excess_over_median": {
+    "I": 2.2,
+    "M_max": 2.9,
+    "S_max": 2.9
+   },
+   "extra_gain_db": -2.7,
+   "mastering": {
+    "raw_trimmed_lufs": -16.94,
+    "outlier_correction_db": -0.56,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": -2.7,
+    "total_gain_db": -6.15,
+    "limiter_db": 0.0,
+    "head_fade_ms": 2.0
+   },
+   "corrected": {
+    "I": -22.6,
+    "M_max": -17.6,
+    "S_max": -21.5,
+    "speech_p90_dbfs": -17.47,
+    "duration_s": 13.03,
+    "true_peak_dbtp": -7.5
+   },
+   "files": [
+    "CURRENT.m4a",
+    "CORRECTED_-2.7dB.m4a"
+   ]
+  }
+ },
+ "context_sequence": [
+  "part_quickClearUp",
+  "part_daylight",
+  "part_getItOut",
+  "part_clearCorner",
+  "part_oneTask",
+  "part_listenOne",
+  "part_readPages"
+ ]
+}

@@ -1,0 +1,105 @@
+{
+ "rule": "Restrained validation master for the replacement candidates — ONLY for a\nvoice whose raw source passed the gate (raw_source_gate.py / pause_floor.py).\n\nRule (the Oct 13 'Guarded' shape plus the two approved refinements):\n1. trim to speech (-50 dBFS envelope, 40 ms margin) — unchanged;\n2. 10 ms raised-cosine fade at each trim edge (refinement 2);\n3. outlier correction only: a part/close clip more than 2 LU from the voice's\n   median part level is moved just to the edge of that window; every clip\n   inside the window keeps its generated level;\n4. ONE voice-wide gain so the five-clip take reads -22 LUFS, the level of the\n   approved Locke/Heather masters (comparison at equal loudness);\n5. peak safety only: 4x-oversampled look-ahead limiter at -2 dBFS, engaged\n   only where a clip's true peak would exceed it, delay-compensated\n   (alimiter latency=1, refinement 1). Every engagement is reported;\n6. 150 ms lead-in; 700 ms tail after a lead, 400 ms after a part/close;\n7. AAC-LC .m4a, mono, 44.1 kHz, 128 kbit/s, fingerprinted names.\nNo denoise, no spectral processing, no expander, no compression, no EQ.\n\nA voice that FAILED the gate gets no master: only its as-generated file and\na gain-only, level-matched copy of it (one linear gain for the whole take, no\nlimiter, nothing else) so the gate can be confirmed by ear at the same\nplayback level as the approved voices.\nUsage: python -I master_replacements.py <repo>",
+ "limiter_selfcheck_lag_samples": 0,
+ "voices": [
+  {
+   "voice": "Milo",
+   "voice_id": "GUDYcgRAONiI1nXDcNQQ",
+   "raw_gate": "PASS",
+   "listen_as_generated_lufs": -20.17,
+   "listen_as_generated_tp": -2.07,
+   "median_part_lufs": -19.97,
+   "voice_gain_db": -1.99,
+   "clips": [
+    {
+     "clip": "lead_first",
+     "file": "lead_first_d97b30dd.m4a",
+     "raw_trimmed_lufs": -18.1,
+     "outlier_correction_db": 0.0,
+     "total_gain_db": -1.99,
+     "pre_limit_tp_dbtp": -4.04,
+     "limiter_db": 0.0,
+     "trimmed_head_tail_s": [
+      0.0,
+      0.117
+     ],
+     "final_lufs": -22.03,
+     "final_tp_dbtp": -4.08
+    },
+    {
+     "clip": "part_getItOut",
+     "file": "part_getItOut_a239320e.m4a",
+     "raw_trimmed_lufs": -19.78,
+     "outlier_correction_db": 0.0,
+     "total_gain_db": -1.99,
+     "pre_limit_tp_dbtp": -4.27,
+     "limiter_db": 0.0,
+     "trimmed_head_tail_s": [
+      0.0,
+      0.183
+     ],
+     "final_lufs": -21.84,
+     "final_tp_dbtp": -4.27
+    },
+    {
+     "clip": "part_briskWalk",
+     "file": "part_briskWalk_e3125526.m4a",
+     "raw_trimmed_lufs": -21.37,
+     "outlier_correction_db": 0.0,
+     "total_gain_db": -1.99,
+     "pre_limit_tp_dbtp": -4.51,
+     "limiter_db": 0.0,
+     "trimmed_head_tail_s": [
+      0.0,
+      0.195
+     ],
+     "final_lufs": -23.64,
+     "final_tp_dbtp": -4.48
+    },
+    {
+     "clip": "part_warmDrink",
+     "file": "part_warmDrink_db4bc51f.m4a",
+     "raw_trimmed_lufs": -20.16,
+     "outlier_correction_db": 0.0,
+     "total_gain_db": -1.99,
+     "pre_limit_tp_dbtp": -6.12,
+     "limiter_db": 0.0,
+     "trimmed_head_tail_s": [
+      0.0,
+      0.136
+     ],
+     "final_lufs": -22.38,
+     "final_tp_dbtp": -6.14
+    },
+    {
+     "clip": "close",
+     "file": "close_3b06cf13.m4a",
+     "raw_trimmed_lufs": -19.33,
+     "outlier_correction_db": 0.0,
+     "total_gain_db": -1.99,
+     "pre_limit_tp_dbtp": -5.21,
+     "limiter_db": 0.0,
+     "trimmed_head_tail_s": [
+      0.0,
+      0.126
+     ],
+     "final_lufs": -21.19,
+     "final_tp_dbtp": -5.22
+    }
+   ],
+   "listen_mastered_lufs": -22.15,
+   "listen_mastered_tp": -4.08
+  },
+  {
+   "voice": "Grace",
+   "voice_id": "mZTVERjx1WQkdAWt1Lcm",
+   "raw_gate": "FAIL",
+   "listen_as_generated_lufs": -43.33,
+   "listen_as_generated_tp": -24.79,
+   "master": "NOT CREATED (raw source gate FAILED)",
+   "diagnostic_gain_only_db": 21.31,
+   "diagnostic_lufs": -22.03,
+   "diagnostic_tp": -3.45
+  }
+ ]
+}

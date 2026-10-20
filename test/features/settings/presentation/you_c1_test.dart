@@ -118,7 +118,9 @@ Future<ProviderContainer> _pump(
       entitlementGatewayProvider.overrideWithValue(gateway),
       sharedPreferencesProvider.overrideWithValue(prefs),
       reminderGatewayProvider.overrideWithValue(_FakeReminderGateway()),
-      spokenGuidanceAvailableProvider.overrideWithValue(spokenGuidanceBundled),
+      bundledGuidanceVoicesProvider.overrideWithValue(
+        spokenGuidanceBundled ? ThirtyVoice.values.toSet() : const {},
+      ),
     ],
   );
   addTearDown(container.dispose);
@@ -148,11 +150,21 @@ void main() {
       expect(find.text(SpokenGuidanceCopy.title), findsNothing);
     });
 
-    testWidgets('with the recordings bundled: on by default, and turning it '
-        'off is remembered', (tester) async {
-      final container = await _pump(
+    testWidgets('with the recordings bundled, on Free: no setting — THIRTY’s '
+        'voice is Premium', (tester) async {
+      await _pump(
         tester,
         _FakeEntitlementGateway(),
+        spokenGuidanceBundled: true,
+      );
+      expect(find.text(SpokenGuidanceCopy.title), findsNothing);
+    });
+
+    testWidgets('with the recordings bundled, on Premium: on by default, and '
+        'turning it off is remembered', (tester) async {
+      final container = await _pump(
+        tester,
+        _FakeEntitlementGateway(status: EntitlementStatus.active),
         spokenGuidanceBundled: true,
       );
       expect(find.text(SpokenGuidanceCopy.title), findsOneWidget);
@@ -188,8 +200,9 @@ void main() {
         'Preferences',
         'Daily reminder',
         'Appearance',
-        'Share anonymous usage data',
         'Data & privacy',
+        // Founder decision (B7): analytics consent is a privacy control.
+        'Share anonymous usage data',
         'Copy as text',
         'Delete Circle history',
         'About',

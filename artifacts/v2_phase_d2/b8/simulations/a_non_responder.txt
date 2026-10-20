@@ -1,0 +1,311 @@
+D  1 P clearerHead ≈10 → [STAGE 1] neckAndShoulders:2 getItOut:6 lookFar:2 10m · no answer
+D  2 P gentlerPace ≈30 → [CIRCLE] phoneFaceDown:1 easyWalk:15 quietMusic:10 sitAMinute:2 28m · no answer
+D  3 P clearerHead ≈20 → [STAGE 2] standAndReach:1 readPages:10 clearCorner:8 lookAround:1 20m · no answer
+D  4 P clearerHead ≈10 → [STAGE 3] quickClearUp:5 getItOut:4 chooseOne:1 10m · not closed
+D  5 P clearerHead ≈20 → [STAGE 3] comfortableSpot:1 oneTask:15 lookFar:2 putThingsBack:2 20m · no answer
+D  6 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 phoneFreeWalk:15 quietMusic:10 noteOneThing:1 28m · not closed
+D  7 P moreEnergy ≈20 → [CIRCLE] openWindow:1 activeJob:12 standingStretch:5 glassOfWater:2 20m · no answer
+D  8 P moreEnergy ≈10 → [CIRCLE] standAndReach:1 moveToMusic:8 whatsNext:1 10m · no answer
+D  9 P gentlerPace ≈10 → [CIRCLE] phoneFaceDown:1 gentleStretch:8 lookAround:1 10m · not closed
+D 10 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 standingStretch:5 sitAMinute:2 27m · no answer
+D 11 P clearerHead ≈20 → [STAGE 4] neckAndShoulders:2 phoneFreeWalk:15 lookFar:2 noteOneThing:1 20m · no answer
+D 15 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 listenOne:12 readPages:10 sitAMinute:2 26m · no answer
+D 16 P clearerHead ≈10 → [STAGE 5] clearCorner:5 getItOut:4 oneLongReach:1 10m · no answer
+D 17 P clearerHead ≈30 → [STAGE 1] standAndReach:1 easyWalk:15 getItOut:6 lookFar:2 24m · no answer
+D 18 P clearerHead ≈30 → [STAGE 2] closeWhatsOpen:3 listenOne:12 tendOne:8 sitAMinute:2 25m · no answer
+D 19 P gentlerPace ≈30 → [CIRCLE] lookAround:1 quietMusic:10 readPages:10 putThingsBack:2 23m · no answer
+D 20 P gentlerPace ≈20 → [CIRCLE] neckAndShoulders:2 sitOutside:10 getItOut:6 lookFar:2 20m · no answer
+D 21 P moreEnergy ≈10 → [CIRCLE] openWindow:1 gentleStretch:8 whatsNext:1 10m · not closed
+D 22 P clearerHead ≈30 → [STAGE 3] phoneFaceDown:1 oneTask:15 quietMusic:10 putThingsBack:2 28m · no answer
+D 23 P moreEnergy ≈10 → [CIRCLE] songOn:1 clearCorner:8 shakeOut:1 10m · not closed
+D 24 P clearerHead ≈10 → [STAGE 4] closeWhatsOpen:3 quietMusic:6 whatsNext:1 10m · no answer
+D 25 P clearerHead ≈10 → [STAGE 5] tendOne:5 getItOut:4 oneLongReach:1 10m · no answer
+D 26 P moreEnergy ≈30 → [CIRCLE] phoneFreeWalk:15 gentleStretch:8 sitAMinute:2 25m · no answer
+D 27 P moreEnergy ≈20 → [CIRCLE] roundTheBlock:10 standingStretch:5 whatsNext:1 16m · no answer
+D 28 P moreEnergy ≈20 → [CIRCLE] neckAndShoulders:2 moveToMusic:8 clearCorner:8 glassOfWater:2 20m · no answer
+D 29 P moreEnergy ≈10 → [CIRCLE] standAndReach:1 quickClearUp:5 sitAMinute:2 8m · no answer
+D 30 P moreEnergy ≈20 → [CIRCLE] songOn:1 activeJob:12 standingStretch:5 whatsNext:1 19m · no answer
+D 32 P gentlerPace ≈30 → [CIRCLE] comfortableSpot:1 readPages:10 sitOutside:10 sitAMinute:2 23m · no answer
+D 33 P moreEnergy ≈10 → [CIRCLE] openWindow:1 standingStretch:5 putThingsBack:2 8m · no answer
+D 34 P gentlerPace ≈10 → [CIRCLE] neckAndShoulders:2 getItOut:6 lookFar:2 10m · no answer
+D 35 P gentlerPace ≈20 → [CIRCLE] phoneFaceDown:1 roundTheBlock:10 gentleStretch:8 noteOneThing:1 20m · no answer
+D 36 P clearerHead ≈30 → [STAGE 1] closeWhatsOpen:3 readPages:10 getItOut:6 sitAMinute:2 21m · no answer
+D 37 P clearerHead ≈30 → [STAGE 2] neckAndShoulders:2 warmDrink:10 tendOne:8 putThingsBack:2 22m · no answer
+D 38 P gentlerPace ≈10 → [CIRCLE] tendOne:8 lookFar:2 10m · not closed
+D 40 P moreEnergy ≈10 → [CIRCLE] standAndReach:1 moveToMusic:8 whatsNext:1 10m · no answer
+D 41 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 gentleStretch:8 sitAMinute:2 30m · no answer
+D 42 P moreEnergy ≈20 → [CIRCLE] songOn:1 activeJob:12 standingStretch:5 glassOfWater:2 20m · no answer
+D 43 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 phoneFreeWalk:15 readPages:10 lookAround:1 28m · no answer
+D 44 P gentlerPace ≈10 → [CIRCLE] phoneFaceDown:1 gentleStretch:8 noteOneThing:1 10m · not closed
+D 45 P clearerHead ≈20 → [STAGE 3] standAndReach:1 sitOutside:10 getItOut:6 chooseOne:1 18m · not closed
+D 46 P clearerHead ≈10 → [STAGE 3] getItOut:6 chooseOne:1 putThingsBack:2 9m · no answer
+D 47 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 easyWalk:15 quietMusic:10 sitAMinute:2 29m · not closed
+D 48 P clearerHead ≈10 → [STAGE 4] closeWhatsOpen:3 readPages:6 oneLongReach:1 10m · no answer
+D 50 P clearerHead ≈30 → [STAGE 5] neckAndShoulders:2 phoneFreeWalk:15 getItOut:6 sitAMinute:2 25m · no answer
+D 51 P moreEnergy ≈10 → [CIRCLE] standAndReach:1 clearCorner:8 whatsNext:1 10m · no answer
+D 52 P moreEnergy ≈10 → [CIRCLE] gentleStretch:8 putThingsBack:2 10m · no answer
+D 53 P clearerHead ≈10 → [STAGE 1] quickClearUp:5 getItOut:4 oneLongReach:1 10m · no answer
+D 54 P clearerHead ≈10 → [STAGE 2] clearCorner:5 daylight:4 lookAround:1 10m · no answer
+D 55 P moreEnergy ≈10 → [CIRCLE] standAndReach:1 moveToMusic:8 whatsNext:1 10m · no answer
+D 57 P gentlerPace ≈10 → [CIRCLE] phoneFaceDown:1 listenOne:8 noteOneThing:1 10m · no answer
+D 58 P moreEnergy ≈20 → [CIRCLE] roundTheBlock:10 gentleStretch:8 sitAMinute:2 20m · no answer
+D 60 P clearerHead ≈30 → [STAGE 3] closeWhatsOpen:3 oneTask:15 quietMusic:10 putThingsBack:2 30m · no answer
+D 62 P moreEnergy ≈10 → [CIRCLE] neckAndShoulders:2 quickClearUp:5 glassOfWater:2 9m · no answer
+D 64 P gentlerPace ≈20 → [CIRCLE] comfortableSpot:1 quietMusic:10 tendOne:8 lookAround:1 20m · no answer
+D 67 P moreEnergy ≈20 → [CIRCLE] phoneFreeWalk:15 neckAndShoulders:2 sitAMinute:2 19m · no answer
+D 68 P clearerHead ≈20 → [STAGE 4] phoneFaceDown:1 listenOne:12 standingStretch:5 lookFar:2 20m · no answer
+D 69 P clearerHead ≈20 → [STAGE 5] closeWhatsOpen:3 quietMusic:10 getItOut:6 whatsNext:1 20m · no answer
+D 70 P moreEnergy ≈30 → [CIRCLE] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · no answer
+D 71 P moreEnergy ≈10 → [CIRCLE] songOn:1 standingStretch:5 putThingsBack:2 8m · no answer
+D 72 P moreEnergy ≈20 → [CIRCLE] standAndReach:1 briskWalk:15 sitAMinute:2 18m · no answer
+D 73 P clearerHead ≈30 → [STAGE 1] neckAndShoulders:2 easyWalk:15 getItOut:6 lookFar:2 25m · no answer
+D 74 P gentlerPace ≈10 → [CIRCLE] phoneFaceDown:1 tendOne:8 noteOneThing:1 10m · not closed
+D 75 P moreEnergy ≈10 → [CIRCLE] openWindow:1 moveToMusic:8 whatsNext:1 10m · no answer
+D 76 P moreEnergy ≈10 → [CIRCLE] songOn:1 clearCorner:8 oneLongReach:1 10m · no answer
+D 77 P clearerHead ≈10 → [STAGE 2] tendOne:5 daylight:4 lookAround:1 10m · no answer
+D 78 P clearerHead ≈30 → [STAGE 3] closeWhatsOpen:3 oneTask:15 sitOutside:10 lookFar:2 30m · no answer
+D 79 P gentlerPace ≈20 → [CIRCLE] neckAndShoulders:2 warmDrink:10 getItOut:6 putThingsBack:2 20m · no answer
+D 80 P gentlerPace ≈20 → [CIRCLE] phoneFaceDown:1 readPages:10 tendOne:8 noteOneThing:1 20m · no answer
+D 81 P gentlerPace ≈20 → [CIRCLE] lookAround:1 roundTheBlock:10 quietMusic:6 sitAMinute:2 19m · no answer
+D 82 P clearerHead ≈20 → [STAGE 4] neckAndShoulders:2 phoneFreeWalk:15 lookFar:2 whatsNext:1 20m · no answer
+D 83 P clearerHead ≈20 → [STAGE 5] phoneFaceDown:1 readPages:10 clearCorner:8 noteOneThing:1 20m · not closed
+D 84 P gentlerPace ≈30 → [CIRCLE] easyWalk:15 sitOutside:10 lookAround:1 26m · no answer
+D 85 P clearerHead ≈10 → [STAGE 5] quickClearUp:5 getItOut:4 whatsNext:1 10m · no answer
+D 86 P gentlerPace ≈20 → [CIRCLE] phoneFaceDown:1 phoneFreeWalk:15 neckAndShoulders:2 lookFar:2 20m · no answer
+D 87 P gentlerPace ≈20 → [CIRCLE] lookAround:1 sitOutside:10 gentleStretch:8 noteOneThing:1 20m · no answer
+D 88 P moreEnergy ≈10 → [CIRCLE] openWindow:1 gentleStretch:8 whatsNext:1 10m · no answer
+D 89 P moreEnergy ≈20 → [CIRCLE] roundTheBlock:10 standingStretch:5 sitAMinute:2 17m · no answer
+D 90 P moreEnergy ≈20 → [CIRCLE] neckAndShoulders:2 activeJob:12 daylight:4 glassOfWater:2 20m · not closed
+D 91 P clearerHead ≈10 → [STAGE 1] closeWhatsOpen:3 getItOut:6 lookAround:1 10m · no answer
+D 92 P moreEnergy ≈10 → [CIRCLE] standAndReach:1 clearCorner:8 whatsNext:1 10m · no answer
+D 93 P clearerHead ≈10 → [STAGE 2] standingStretch:5 quickClearUp:5 10m · no answer
+D 94 P clearerHead ≈10 → [STAGE 3] sitOutside:5 getItOut:4 chooseOne:1 10m · no answer
+D 95 P clearerHead ≈20 → [STAGE 4] phoneFaceDown:1 readPages:10 tendOne:8 whatsNext:1 20m · no answer
+D 96 P clearerHead ≈10 → [STAGE 5] clearCorner:5 getItOut:4 lookAround:1 10m · no answer
+D 97 P moreEnergy ≈20 → [CIRCLE] songOn:1 activeJob:12 standingStretch:5 sitAMinute:2 20m · no answer
+D 98 P moreEnergy ≈10 → [CIRCLE] neckAndShoulders:2 quickClearUp:5 glassOfWater:2 9m · no answer
+D 99 P gentlerPace ≈20 → [CIRCLE] comfortableSpot:1 quietMusic:10 gentleStretch:8 lookAround:1 20m · no answer
+D100 P clearerHead ≈30 → [STAGE 1] closeWhatsOpen:3 listenOne:12 getItOut:6 lookFar:2 23m · no answer
+D101 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 phoneFreeWalk:15 sitOutside:10 sitAMinute:2 29m · no answer
+D102 P clearerHead ≈30 → [STAGE 2] standAndReach:1 quietMusic:10 tendOne:8 putThingsBack:2 21m · no answer
+D103 P clearerHead ≈10 → [STAGE 3] closeWhatsOpen:3 getItOut:6 chooseOne:1 10m · no answer
+D104 P moreEnergy ≈20 → [CIRCLE] phoneFreeWalk:15 neckAndShoulders:2 sitAMinute:2 19m · no answer
+D105 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 gentleStretch:8 whatsNext:1 29m · not closed
+D106 P moreEnergy ≈20 → [CIRCLE] standAndReach:1 moveToMusic:8 clearCorner:8 glassOfWater:2 19m · no answer
+D107 P clearerHead ≈20 → [STAGE 4] phoneFaceDown:1 listenOne:12 standingStretch:5 sitAMinute:2 20m · no answer
+D109 P moreEnergy ≈10 → [CIRCLE] songOn:1 standingStretch:5 putThingsBack:2 8m · no answer
+D110 P clearerHead ≈20 → [STAGE 5] neckAndShoulders:2 tendOne:8 getItOut:6 glassOfWater:2 18m · not closed
+D113 P clearerHead ≈30 → [STAGE 5] closeWhatsOpen:3 oneTask:15 clearCorner:8 lookFar:2 28m · no answer
+D114 P clearerHead ≈30 → [STAGE 1] neckAndShoulders:2 phoneFreeWalk:15 getItOut:6 sitAMinute:2 25m · no answer
+D115 P clearerHead ≈10 → [STAGE 2] phoneFaceDown:1 tendOne:8 oneLongReach:1 10m · no answer
+D116 P gentlerPace ≈20 → [CIRCLE] lookAround:1 readPages:10 gentleStretch:8 noteOneThing:1 20m · not closed
+D117 P moreEnergy ≈30 → [CIRCLE] neckAndShoulders:2 activeJob:12 moveToMusic:8 sitAMinute:2 24m · no answer
+D118 P clearerHead ≈30 → [STAGE 3] standAndReach:1 easyWalk:15 getItOut:6 chooseOne:1 23m · no answer
+D121 P moreEnergy ≈20 → [CIRCLE] openWindow:1 gentleStretch:8 clearCorner:8 glassOfWater:2 19m · no answer
+D123 P clearerHead ≈10 → [STAGE 4] phoneFaceDown:1 listenOne:8 whatsNext:1 10m · no answer
+D124 P clearerHead ≈20 → [STAGE 5] closeWhatsOpen:3 quietMusic:10 quickClearUp:5 lookFar:2 20m · not closed
+D125 P clearerHead ≈20 → [STAGE 5] phoneFaceDown:1 sitOutside:10 getItOut:6 sitAMinute:2 19m · no answer
+D126 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 gentleStretch:8 whatsNext:1 29m · not closed
+D127 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 easyWalk:15 readPages:10 lookFar:2 29m · no answer
+D128 P clearerHead ≈10 → [STAGE 1] quickClearUp:5 getItOut:4 lookAround:1 10m · not closed
+D129 P gentlerPace ≈30 → [CIRCLE] phoneFaceDown:1 listenOne:12 sitOutside:10 sitAMinute:2 25m · not closed
+D131 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 warmDrink:10 quietMusic:10 putThingsBack:2 24m · not closed
+D132 P clearerHead ≈10 → [STAGE 1] standingStretch:5 getItOut:4 whatsNext:1 10m · no answer
+D133 P clearerHead ≈30 → [STAGE 2] closeWhatsOpen:3 readPages:10 tendOne:8 glassOfWater:2 23m · no answer
+D134 P clearerHead ≈20 → [STAGE 3] neckAndShoulders:2 roundTheBlock:10 getItOut:6 chooseOne:1 19m · no answer
+D135 P moreEnergy ≈30 → [CIRCLE] phoneFreeWalk:15 gentleStretch:8 sitAMinute:2 25m · no answer
+D136 P clearerHead ≈20 → [STAGE 4] closeWhatsOpen:3 readPages:10 quickClearUp:5 glassOfWater:2 20m · no answer
+D137 P clearerHead ≈20 → [STAGE 5] neckAndShoulders:2 clearCorner:8 getItOut:6 lookFar:2 18m · no answer
+D138 P clearerHead ≈30 → [STAGE 1] openWindow:1 oneTask:15 getItOut:6 sitAMinute:2 24m · no answer
+D139 P clearerHead ≈20 → [STAGE 2] lookAround:1 warmDrink:10 tendOne:8 whatsNext:1 20m · no answer
+D140 P moreEnergy ≈30 → [CIRCLE] neckAndShoulders:2 moveToMusic:8 clearCorner:8 glassOfWater:2 20m · no answer
+D141 P moreEnergy ≈20 → [CIRCLE] roundTheBlock:10 gentleStretch:8 sitAMinute:2 20m · no answer
+D143 P moreEnergy ≈10 → [CIRCLE] openWindow:1 clearCorner:8 oneLongReach:1 10m · not closed
+D145 P clearerHead ≈20 → [STAGE 3] phoneFaceDown:1 gentleStretch:8 getItOut:6 chooseOne:1 16m · no answer
+D146 P clearerHead ≈20 → [STAGE 4] nameWhatsOn:1 phoneFreeWalk:15 neckAndShoulders:2 lookFar:2 20m · no answer
+D147 P clearerHead ≈10 → [STAGE 5] tendOne:5 getItOut:4 whatsNext:1 10m · not closed
+D148 P clearerHead ≈10 → [STAGE 5] quickClearUp:5 getItOut:4 lookAround:1 10m · no answer
+D149 P moreEnergy ≈30 → [CIRCLE] neckAndShoulders:2 activeJob:12 moveToMusic:8 sitAMinute:2 24m · no answer
+D150 P clearerHead ≈30 → [STAGE 1] standAndReach:1 easyWalk:15 getItOut:6 lookFar:2 24m · not closed
+D151 P moreEnergy ≈10 → [CIRCLE] openWindow:1 quickClearUp:5 glassOfWater:2 8m · no answer
+D152 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 gentleStretch:8 sitAMinute:2 30m · no answer
+D153 P moreEnergy ≈10 → [CIRCLE] songOn:1 standingStretch:5 putThingsBack:2 8m · no answer
+D154 P moreEnergy ≈20 → [CIRCLE] openWindow:1 gentleStretch:8 clearCorner:8 glassOfWater:2 19m · no answer
+D155 P clearerHead ≈30 → [STAGE 1] closeWhatsOpen:3 listenOne:12 getItOut:6 sitAMinute:2 23m · no answer
+D156 P clearerHead ≈30 → [STAGE 2] neckAndShoulders:2 quietMusic:10 tendOne:8 putThingsBack:2 22m · not closed
+D157 P gentlerPace ≈20 → [CIRCLE] lookAround:1 sitOutside:10 gentleStretch:8 noteOneThing:1 20m · no answer
+D158 P moreEnergy ≈20 → [CIRCLE] songOn:1 activeJob:12 standingStretch:5 sitAMinute:2 20m · not closed
+D159 P moreEnergy ≈20 → [CIRCLE] neckAndShoulders:2 clearCorner:8 moveToMusic:8 glassOfWater:2 20m · no answer
+D160 P clearerHead ≈20 → [STAGE 2] closeWhatsOpen:3 getItOut:6 quickClearUp:5 whatsNext:1 15m · not closed
+D161 P clearerHead ≈20 → [STAGE 2] phoneFaceDown:1 warmDrink:10 tendOne:8 lookAround:1 20m · not closed
+D162 P moreEnergy ≈20 → [CIRCLE] openWindow:1 activeJob:12 daylight:4 sitAMinute:2 19m · no answer
+D163 P clearerHead ≈10 → [STAGE 2] standingStretch:5 quickClearUp:5 10m · no answer
+D164 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 easyWalk:15 quietMusic:10 lookFar:2 29m · not closed
+D165 P clearerHead ≈10 → [STAGE 3] sitOutside:5 getItOut:4 chooseOne:1 10m · no answer
+D166 P clearerHead ≈20 → [STAGE 4] phoneFaceDown:1 readPages:10 clearCorner:8 oneLongReach:1 20m · no answer
+D167 P moreEnergy ≈30 → [CIRCLE] phoneFreeWalk:15 gentleStretch:8 whatsNext:1 24m · not closed
+D168 P clearerHead ≈10 → [STAGE 5] clearCorner:5 getItOut:4 lookAround:1 10m · no answer
+D169 P gentlerPace ≈30 → [CIRCLE] phoneFaceDown:1 listenOne:12 readPages:10 sitAMinute:2 25m · no answer
+D170 P clearerHead ≈10 → [STAGE 1] quickClearUp:5 getItOut:4 oneLongReach:1 10m · no answer
+D172 P clearerHead ≈20 → [STAGE 2] standAndReach:1 oneTask:10 clearCorner:8 whatsNext:1 20m · no answer
+D173 P moreEnergy ≈30 → [CIRCLE] neckAndShoulders:2 activeJob:12 moveToMusic:8 sitAMinute:2 24m · not closed
+D174 P gentlerPace ≈20 → [CIRCLE] lookAround:1 quietMusic:10 tendOne:8 noteOneThing:1 20m · no answer
+D175 P moreEnergy ≈20 → [CIRCLE] roundTheBlock:10 gentleStretch:8 whatsNext:1 19m · not closed
+D176 P clearerHead ≈20 → [STAGE 3] phoneFaceDown:1 gentleStretch:8 getItOut:6 chooseOne:1 16m · no answer
+D177 P moreEnergy ≈20 → [CIRCLE] neckAndShoulders:2 moveToMusic:8 clearCorner:8 sitAMinute:2 20m · not closed
+D178 P clearerHead ≈20 → [STAGE 4] standAndReach:1 phoneFreeWalk:15 lookFar:2 whatsNext:1 19m · no answer
+D179 P clearerHead ≈20 → [STAGE 5] openWindow:1 tendOne:8 getItOut:6 putThingsBack:2 17m · not closed
+D180 P clearerHead ≈30 → [STAGE 5] closeWhatsOpen:3 oneTask:15 clearCorner:8 glassOfWater:2 28m · no answer
+D181 P gentlerPace ≈10 → [CIRCLE] phoneFaceDown:1 gentleStretch:8 lookAround:1 10m · no answer
+D182 P moreEnergy ≈10 → [CIRCLE] quickClearUp:5 daylight:4 whatsNext:1 10m · no answer
+D183 P clearerHead ≈20 → [STAGE 1] neckAndShoulders:2 roundTheBlock:10 getItOut:6 lookFar:2 20m · no answer
+D184 P moreEnergy ≈20 → [CIRCLE] standAndReach:1 briskWalk:15 sitAMinute:2 18m · no answer
+D185 P clearerHead ≈10 → [STAGE 2] openWindow:1 tendOne:8 oneLongReach:1 10m · no answer
+D188 P clearerHead ≈30 → [STAGE 3] neckAndShoulders:2 easyWalk:15 getItOut:6 chooseOne:1 24m · no answer
+D190 P clearerHead ≈10 → [STAGE 4] closeWhatsOpen:3 quietMusic:6 oneLongReach:1 10m · no answer
+D191 P clearerHead ≈30 → [STAGE 5] phoneFaceDown:1 listenOne:12 clearCorner:8 lookFar:2 23m · no answer
+D193 P clearerHead ≈20 → [STAGE 1] neckAndShoulders:2 warmDrink:10 getItOut:6 putThingsBack:2 20m · not closed
+D194 P gentlerPace ≈30 → [CIRCLE] lookAround:1 phoneFreeWalk:15 sitOutside:10 sitAMinute:2 28m · no answer
+D195 P moreEnergy ≈10 → [CIRCLE] songOn:1 clearCorner:8 oneLongReach:1 10m · no answer
+D196 P gentlerPace ≈20 → [CIRCLE] phoneFaceDown:1 readPages:10 gentleStretch:8 noteOneThing:1 20m · not closed
+D197 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 easyWalk:15 quietMusic:10 lookFar:2 29m · no answer
+D198 P gentlerPace ≈10 → [CIRCLE] lookAround:1 getItOut:6 putThingsBack:2 9m · not closed
+D199 P moreEnergy ≈20 → [CIRCLE] openWindow:1 gentleStretch:8 moveToMusic:8 glassOfWater:2 19m · no answer
+D200 P clearerHead ≈10 → [STAGE 1] standingStretch:5 getItOut:4 whatsNext:1 10m · no answer
+D201 P gentlerPace ≈10 → [CIRCLE] phoneFaceDown:1 tendOne:8 noteOneThing:1 10m · no answer
+D202 P clearerHead ≈30 → [STAGE 2] closeWhatsOpen:3 readPages:10 clearCorner:8 sitAMinute:2 23m · no answer
+D203 P clearerHead ≈10 → [STAGE 3] getItOut:6 chooseOne:1 lookFar:2 9m · no answer
+D204 P clearerHead ≈20 → [STAGE 4] phoneFaceDown:1 sitOutside:10 gentleStretch:8 whatsNext:1 20m · no answer
+D205 P moreEnergy ≈10 → [CIRCLE] songOn:1 standingStretch:5 sitAMinute:2 8m · no answer
+D206 P moreEnergy ≈20 → [CIRCLE] neckAndShoulders:2 activeJob:12 daylight:4 glassOfWater:2 20m · no answer
+D208 P moreEnergy ≈30 → [CIRCLE] phoneFreeWalk:15 gentleStretch:8 sitAMinute:2 25m · no answer
+D209 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 listenOne:12 readPages:10 lookFar:2 26m · no answer
+D210 P clearerHead ≈10 → [STAGE 5] quickClearUp:5 getItOut:4 lookAround:1 10m · not closed
+D211 P gentlerPace ≈30 → [CIRCLE] phoneFaceDown:1 roundTheBlock:10 quietMusic:10 sitAMinute:2 23m · not closed
+D212 P clearerHead ≈30 → [STAGE 5] closeWhatsOpen:3 oneTask:15 tendOne:8 lookFar:2 28m · not closed
+D213 P moreEnergy ≈20 → [CIRCLE] neckAndShoulders:2 moveToMusic:8 clearCorner:8 glassOfWater:2 20m · no answer
+D214 P moreEnergy ≈20 → [CIRCLE] roundTheBlock:10 gentleStretch:8 sitAMinute:2 20m · no answer
+D215 P clearerHead ≈10 → [STAGE 5] clearCorner:5 getItOut:4 lookAround:1 10m · no answer
+D216 P clearerHead ≈20 → [STAGE 1] neckAndShoulders:2 tendOne:8 getItOut:6 glassOfWater:2 18m · no answer
+D217 P clearerHead ≈20 → [STAGE 2] openWindow:1 gentleStretch:8 quickClearUp:5 sitAMinute:2 16m · no answer
+D218 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 standingStretch:5 whatsNext:1 26m · no answer
+D219 P moreEnergy ≈10 → [CIRCLE] neckAndShoulders:2 quickClearUp:5 glassOfWater:2 9m · no answer
+D220 P gentlerPace ≈30 → [CIRCLE] lookAround:1 warmDrink:10 quietMusic:10 putThingsBack:2 23m · no answer
+D221 P clearerHead ≈20 → [STAGE 3] standAndReach:1 roundTheBlock:10 getItOut:6 chooseOne:1 18m · no answer
+D222 P clearerHead ≈20 → [STAGE 4] closeWhatsOpen:3 listenOne:12 daylight:4 whatsNext:1 20m · no answer
+D223 P clearerHead ≈30 → [STAGE 5] neckAndShoulders:2 phoneFreeWalk:15 getItOut:6 lookFar:2 25m · no answer
+D224 P clearerHead ≈10 → [STAGE 1] quietMusic:6 getItOut:4 10m · not closed
+D226 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 phoneFreeWalk:15 sitOutside:10 sitAMinute:2 29m · no answer
+D227 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 gentleStretch:8 whatsNext:1 29m · not closed
+D228 P moreEnergy ≈30 → [CIRCLE] openWindow:1 clearCorner:8 moveToMusic:8 glassOfWater:2 19m · no answer
+D229 P moreEnergy ≈30 → [CIRCLE] neckAndShoulders:2 activeJob:12 moveToMusic:8 sitAMinute:2 24m · no answer
+D230 P moreEnergy ≈20 → [CIRCLE] songOn:1 gentleStretch:8 clearCorner:8 whatsNext:1 18m · not closed
+D231 P moreEnergy ≈20 → [CIRCLE] phoneFreeWalk:15 shakeOut:1 16m · no answer
+D232 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 standingStretch:5 sitAMinute:2 27m · not closed
+D233 P gentlerPace ≈10 → [CIRCLE] phoneFaceDown:1 gentleStretch:8 lookAround:1 10m · not closed
+D234 P clearerHead ≈20 → [STAGE 1] closeWhatsOpen:3 readPages:10 getItOut:6 whatsNext:1 20m · no answer
+D235 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 easyWalk:15 quietMusic:10 lookFar:2 29m · no answer
+D236 P moreEnergy ≈20 → [CIRCLE] songOn:1 activeJob:12 standingStretch:5 glassOfWater:2 20m · no answer
+D237 P clearerHead ≈30 → [STAGE 2] standAndReach:1 warmDrink:10 tendOne:8 sitAMinute:2 21m · no answer
+D238 P moreEnergy ≈20 → [CIRCLE] neckAndShoulders:2 moveToMusic:8 clearCorner:8 whatsNext:1 19m · no answer
+D239 P moreEnergy ≈10 → [CIRCLE] songOn:1 standingStretch:5 glassOfWater:2 8m · no answer
+D240 P moreEnergy ≈10 → [CIRCLE] openWindow:1 quickClearUp:5 sitAMinute:2 8m · no answer
+D241 P moreEnergy ≈30 → [CIRCLE] phoneFreeWalk:15 gentleStretch:8 whatsNext:1 24m · no answer
+D242 P gentlerPace ≈30 → [CIRCLE] phoneFaceDown:1 listenOne:12 readPages:10 putThingsBack:2 25m · no answer
+D243 P moreEnergy ≈30 → [CIRCLE] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · no answer
+D245 P gentlerPace ≈20 → [CIRCLE] lookAround:1 sitOutside:10 gentleStretch:8 noteOneThing:1 20m · no answer
+D246 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 standingStretch:5 whatsNext:1 26m · no answer
+D247 P clearerHead ≈30 → [STAGE 3] closeWhatsOpen:3 oneTask:15 quietMusic:10 lookFar:2 30m · not closed
+D248 P clearerHead ≈10 → [STAGE 3] neckAndShoulders:2 getItOut:6 chooseOne:1 9m · not closed
+D249 P clearerHead ≈30 → [STAGE 3] phoneFaceDown:1 easyWalk:15 getItOut:6 chooseOne:1 23m · no answer
+D250 P clearerHead ≈30 → [STAGE 4] standAndReach:1 phoneFreeWalk:15 readPages:10 sitAMinute:2 28m · no answer
+D253 P clearerHead ≈20 → [STAGE 5] phoneFaceDown:1 listenOne:12 getItOut:6 whatsNext:1 20m · no answer
+D254 P clearerHead ≈30 → [STAGE 1] neckAndShoulders:2 sitOutside:10 getItOut:6 sitAMinute:2 20m · not closed
+D255 P gentlerPace ≈10 → [CIRCLE] comfortableSpot:1 readPages:6 putThingsBack:2 9m · no answer
+D256 P gentlerPace ≈30 → [CIRCLE] phoneFaceDown:1 roundTheBlock:10 quietMusic:10 lookFar:2 23m · not closed
+D257 P clearerHead ≈30 → [STAGE 1] closeWhatsOpen:3 oneTask:15 getItOut:6 glassOfWater:2 26m · no answer
+D258 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 phoneFreeWalk:15 readPages:10 sitAMinute:2 29m · not closed
+D260 P moreEnergy ≈10 → [CIRCLE] openWindow:1 clearCorner:8 shakeOut:1 10m · no answer
+D262 P moreEnergy ≈10 → [CIRCLE] songOn:1 gentleStretch:8 whatsNext:1 10m · no answer
+D263 P clearerHead ≈20 → [STAGE 2] openWindow:1 quietMusic:10 tendOne:8 lookAround:1 20m · no answer
+D264 P moreEnergy ≈30 → [CIRCLE] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · not closed
+D265 P clearerHead ≈30 → [STAGE 3] closeWhatsOpen:3 oneTask:15 sitOutside:10 lookFar:2 30m · no answer
+D266 P clearerHead ≈10 → [STAGE 4] phoneFaceDown:1 readPages:6 sitAMinute:2 9m · no answer
+D267 P clearerHead ≈10 → [STAGE 5] quickClearUp:5 getItOut:4 whatsNext:1 10m · no answer
+D272 P gentlerPace ≈10 → [CIRCLE] phoneFaceDown:1 tendOne:8 lookAround:1 10m · no answer
+D274 P moreEnergy ≈30 → [CIRCLE] phoneFreeWalk:15 gentleStretch:8 sitAMinute:2 25m · no answer
+D275 P moreEnergy ≈20 → [CIRCLE] neckAndShoulders:2 moveToMusic:8 clearCorner:8 glassOfWater:2 20m · no answer
+D277 P moreEnergy ≈10 → [CIRCLE] songOn:1 quickClearUp:5 sitAMinute:2 8m · not closed
+D279 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 gentleStretch:8 whatsNext:1 29m · no answer
+D280 P clearerHead ≈30 → [STAGE 1] neckAndShoulders:2 easyWalk:15 getItOut:6 sitAMinute:2 25m · not closed
+D281 P clearerHead ≈20 → [STAGE 1] lookAround:1 warmDrink:10 getItOut:6 putThingsBack:2 19m · no answer
+D282 P moreEnergy ≈30 → [CIRCLE] openWindow:1 activeJob:12 moveToMusic:8 glassOfWater:2 23m · no answer
+D283 P moreEnergy ≈20 → [CIRCLE] roundTheBlock:10 gentleStretch:8 sitAMinute:2 20m · no answer
+D284 P moreEnergy ≈10 → [CIRCLE] songOn:1 standingStretch:5 putThingsBack:2 8m · no answer
+D285 P clearerHead ≈10 → [STAGE 2] standAndReach:1 clearCorner:8 whatsNext:1 10m · no answer
+D286 P clearerHead ≈20 → [STAGE 3] lookAround:1 listenOne:12 getItOut:6 chooseOne:1 20m · no answer
+D287 P gentlerPace ≈10 → [CIRCLE] neckAndShoulders:2 readPages:6 putThingsBack:2 10m · not closed
+D288 P clearerHead ≈30 → [STAGE 4] phoneFaceDown:1 phoneFreeWalk:15 quietMusic:10 lookFar:2 28m · no answer
+D289 P moreEnergy ≈10 → [CIRCLE] openWindow:1 moveToMusic:8 whatsNext:1 10m · no answer
+D290 P gentlerPace ≈20 → [CIRCLE] lookAround:1 warmDrink:10 tendOne:8 noteOneThing:1 20m · no answer
+D291 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 gentleStretch:8 sitAMinute:2 30m · no answer
+D292 P clearerHead ≈20 → [STAGE 5] closeWhatsOpen:3 getItOut:6 quickClearUp:5 whatsNext:1 15m · no answer
+D293 P moreEnergy ≈10 → [CIRCLE] openWindow:1 clearCorner:8 oneLongReach:1 10m · not closed
+D294 P moreEnergy ≈30 → [CIRCLE] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · no answer
+D295 P clearerHead ≈30 → [STAGE 1] standAndReach:1 phoneFreeWalk:15 getItOut:6 lookFar:2 24m · not closed
+D296 P clearerHead ≈30 → [STAGE 1] closeWhatsOpen:3 oneTask:15 getItOut:6 sitAMinute:2 26m · no answer
+D297 P moreEnergy ≈10 → [CIRCLE] openWindow:1 gentleStretch:8 whatsNext:1 10m · no answer
+D298 P clearerHead ≈20 → [STAGE 2] lookAround:1 quietMusic:10 tendOne:8 noteOneThing:1 20m · no answer
+D299 P clearerHead ≈30 → [STAGE 3] closeWhatsOpen:3 oneTask:15 sitOutside:10 sitAMinute:2 30m · not closed
+D300 P clearerHead ≈20 → [STAGE 3] neckAndShoulders:2 readPages:10 getItOut:6 chooseOne:1 19m · no answer
+D301 P clearerHead ≈20 → [STAGE 4] phoneFaceDown:1 sitOutside:10 gentleStretch:8 lookAround:1 20m · no answer
+D302 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 standingStretch:5 sitAMinute:2 27m · no answer
+D303 P clearerHead ≈20 → [STAGE 5] neckAndShoulders:2 tendOne:8 getItOut:6 putThingsBack:2 18m · no answer
+D304 P moreEnergy ≈20 → [CIRCLE] standAndReach:1 clearCorner:8 moveToMusic:8 glassOfWater:2 19m · not closed
+D305 P clearerHead ≈30 → [STAGE 1] closeWhatsOpen:3 oneTask:15 getItOut:6 lookFar:2 26m · not closed
+D306 P moreEnergy ≈10 → [CIRCLE] songOn:1 gentleStretch:8 whatsNext:1 10m · no answer
+D307 P moreEnergy ≈20 → [CIRCLE] phoneFreeWalk:15 neckAndShoulders:2 sitAMinute:2 19m · not closed
+D308 P gentlerPace ≈10 → [CIRCLE] phoneFaceDown:1 tendOne:8 lookAround:1 10m · no answer
+D309 P moreEnergy ≈10 → [CIRCLE] standAndReach:1 quickClearUp:5 glassOfWater:2 8m · not closed
+D310 P gentlerPace ≈10 → [CIRCLE] neckAndShoulders:2 getItOut:6 lookFar:2 10m · no answer
+D311 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 gentleStretch:8 sitAMinute:2 30m · no answer
+D312 P moreEnergy ≈10 → [CIRCLE] standAndReach:1 moveToMusic:8 whatsNext:1 10m · no answer
+D313 P clearerHead ≈30 → [STAGE 1] neckAndShoulders:2 easyWalk:15 getItOut:6 lookAround:1 24m · no answer
+D314 P moreEnergy ≈10 → [CIRCLE] openWindow:1 clearCorner:8 oneLongReach:1 10m · no answer
+D317 P gentlerPace ≈10 → [CIRCLE] lookAround:1 gentleStretch:8 noteOneThing:1 10m · not closed
+D318 P clearerHead ≈10 → [STAGE 2] nameWhatsOn:1 quickClearUp:5 sitAMinute:2 8m · no answer
+D319 P moreEnergy ≈10 → [CIRCLE] songOn:1 standingStretch:5 putThingsBack:2 8m · no answer
+D320 P gentlerPace ≈20 → [CIRCLE] neckAndShoulders:2 quietMusic:10 getItOut:6 lookFar:2 20m · no answer
+D322 P gentlerPace ≈20 → [CIRCLE] lookAround:1 readPages:10 gentleStretch:8 noteOneThing:1 20m · no answer
+D324 P clearerHead ≈10 → [STAGE 3] closeWhatsOpen:3 getItOut:6 chooseOne:1 10m · no answer
+D326 P moreEnergy ≈30 → [CIRCLE] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · no answer
+D327 P moreEnergy ≈20 → [CIRCLE] roundTheBlock:10 gentleStretch:8 sitAMinute:2 20m · no answer
+D328 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 standingStretch:5 whatsNext:1 26m · not closed
+D329 P moreEnergy ≈10 → [CIRCLE] openWindow:1 clearCorner:8 oneLongReach:1 10m · no answer
+D330 P clearerHead ≈30 → [STAGE 4] neckAndShoulders:2 phoneFreeWalk:15 quietMusic:10 sitAMinute:2 29m · no answer
+D334 P clearerHead ≈10 → [STAGE 5] clearCorner:5 getItOut:4 oneLongReach:1 10m · no answer
+D335 P gentlerPace ≈30 → [CIRCLE] neckAndShoulders:2 easyWalk:15 sitOutside:10 sitAMinute:2 29m · no answer
+D336 P gentlerPace ≈30 → [CIRCLE] phoneFaceDown:1 phoneFreeWalk:15 readPages:10 lookFar:2 28m · no answer
+D337 P clearerHead ≈20 → [STAGE 1] lookAround:1 listenOne:12 getItOut:6 whatsNext:1 20m · no answer
+D338 P moreEnergy ≈30 → [CIRCLE] phoneFreeWalk:15 gentleStretch:8 sitAMinute:2 25m · no answer
+D340 P moreEnergy ≈10 → [CIRCLE] neckAndShoulders:2 quickClearUp:5 glassOfWater:2 9m · not closed
+D341 P gentlerPace ≈20 → [CIRCLE] lookAround:1 sitOutside:10 gentleStretch:8 noteOneThing:1 20m · no answer
+D343 P clearerHead ≈30 → [STAGE 2] closeWhatsOpen:3 oneTask:15 clearCorner:8 lookFar:2 28m · no answer
+D344 P clearerHead ≈20 → [STAGE 3] neckAndShoulders:2 warmDrink:10 getItOut:6 chooseOne:1 19m · not closed
+D345 P clearerHead ≈30 → [STAGE 3] standAndReach:1 easyWalk:15 getItOut:6 chooseOne:1 23m · no answer
+D346 P moreEnergy ≈20 → [CIRCLE] openWindow:1 gentleStretch:8 clearCorner:8 sitAMinute:2 19m · no answer
+D348 P moreEnergy ≈20 → [CIRCLE] neckAndShoulders:2 moveToMusic:8 quickClearUp:5 glassOfWater:2 17m · no answer
+D350 P gentlerPace ≈10 → [CIRCLE] phoneFaceDown:1 gentleStretch:8 lookAround:1 10m · no answer
+D351 P moreEnergy ≈10 → [CIRCLE] openWindow:1 standingStretch:5 sitAMinute:2 8m · no answer
+D352 P moreEnergy ≈30 → [CIRCLE] neckAndShoulders:2 activeJob:12 moveToMusic:8 glassOfWater:2 24m · not closed
+D353 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 gentleStretch:8 whatsNext:1 29m · no answer
+D354 P clearerHead ≈30 → [STAGE 4] closeWhatsOpen:3 readPages:10 quietMusic:10 lookFar:2 25m · no answer
+D355 P moreEnergy ≈20 → [CIRCLE] songOn:1 activeJob:12 standingStretch:5 glassOfWater:2 20m · not closed
+D356 P moreEnergy ≈30 → [CIRCLE] phoneFreeWalk:15 gentleStretch:8 sitAMinute:2 25m · no answer
+D358 P moreEnergy ≈30 → [CIRCLE] briskWalk:20 standingStretch:5 whatsNext:1 26m · no answer
+D360 P clearerHead ≈30 → [STAGE 5] phoneFaceDown:1 quietMusic:10 clearCorner:8 glassOfWater:2 21m · no answer
+D361 P moreEnergy ≈30 → [CIRCLE] neckAndShoulders:2 activeJob:12 moveToMusic:8 sitAMinute:2 24m · no answer
+D362 P clearerHead ≈10 → [STAGE 1] closeWhatsOpen:3 getItOut:6 oneLongReach:1 10m · not closed
+D363 P gentlerPace ≈10 → [CIRCLE] lookAround:1 tendOne:8 noteOneThing:1 10m · not closed
+D364 P clearerHead ≈30 → [STAGE 1] neckAndShoulders:2 phoneFreeWalk:15 getItOut:6 sitAMinute:2 25m · not closed
+D365 P gentlerPace ≈20 → [CIRCLE] phoneFaceDown:1 listenOne:12 daylight:4 lookFar:2 19m · no answer

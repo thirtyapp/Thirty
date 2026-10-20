@@ -83,7 +83,7 @@ void main() {
       ]) {
         testWidgets('${width.toInt()}pt, 200%, $label, $themeName: nothing '
             'truncated or overflowing', (tester) async {
-          tester.view.physicalSize = Size(width, 3200);
+          tester.view.physicalSize = Size(width, 4000);
           tester.view.devicePixelRatio = 1.0;
           addTearDown(tester.view.resetPhysicalSize);
           addTearDown(tester.view.resetDevicePixelRatio);

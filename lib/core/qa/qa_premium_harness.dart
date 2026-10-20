@@ -5,7 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/home/application/recommendation_provider.dart';
 import '../../features/personal_circle/application/guidance_conductor.dart';
+import '../../features/plans/application/circle_plans_provider.dart';
+import '../../features/plans/domain/circle_plan.dart';
+import '../../features/personal_circle/domain/spoken_cues.dart';
 import '../../features/reminder/application/reminder_provider.dart';
 import '../app/thirty_app.dart';
 import '../premium/premium_access.dart';
@@ -30,13 +34,13 @@ class QaPremiumHarnessApp extends StatefulWidget {
     super.key,
     required this.genuinePreferences,
     required this.supabaseAvailable,
-    this.spokenGuidanceAvailable = false,
+    this.guidanceVoices = const {},
     this.clock = DateTime.now,
   });
 
   final SharedPreferences genuinePreferences;
   final bool supabaseAvailable;
-  final bool spokenGuidanceAvailable;
+  final Set<ThirtyVoice> guidanceVoices;
 
   /// The reference moment synthetic history is built back from.
   final DateTime Function() clock;
@@ -72,7 +76,7 @@ class _QaPremiumHarnessAppState extends State<QaPremiumHarnessApp> {
       overrides: qaContainerOverrides(
         genuinePreferences: widget.genuinePreferences,
         supabaseAvailable: widget.supabaseAvailable,
-        spokenGuidanceAvailable: widget.spokenGuidanceAvailable,
+        guidanceVoices: widget.guidanceVoices,
         session: session,
       ),
     );
@@ -167,6 +171,25 @@ class QaHarnessOverlay extends StatefulWidget {
   return ('QA PREMIUM · ${session.entitlement.label}', data);
 }
 
+/// ADR-024 B3: the marker's Circle Plan line — where the active (or last)
+/// Plan stands, and today's stage when today's Circle is one. QA only: the
+/// Plans tab arrives in B4.
+String? qaPlanLine(CirclePlansState plans, Recommendation? today) {
+  final plan =
+      plans.active ?? (plans.plans.isEmpty ? null : plans.plans.values.last);
+  if (plan == null) return null;
+  final cycle = plan.current;
+  final place = cycle.isOver
+      ? 'ended ${cycle.end!.name}'
+      : 'next ${cycle.cursor}';
+  final stage = today?.composed?.stage;
+  return [
+    'PLAN ${plan.planId} · $place · ${plan.lifecycle.name}',
+    '${cycle.guidedStages} guided · ${cycle.setAsideStages} set aside',
+    if (stage != null) 'TODAY stage ${stage.stageNumber}',
+  ].join(' · ');
+}
+
 class _QaHarnessOverlayState extends State<QaHarnessOverlay> {
   var _panelOpen = false;
   late QaEntitlement _entitlement;
@@ -213,9 +236,23 @@ class _QaHarnessOverlayState extends State<QaHarnessOverlay> {
                     decoration: TextDecoration.none,
                   ),
                   textAlign: TextAlign.center,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [Text(title), Text(data)],
+                  child: Consumer(
+                    builder: (context, ref, _) {
+                      final plan = widget.session == null
+                          ? null
+                          : qaPlanLine(
+                              ref.watch(circlePlansProvider),
+                              ref.watch(recommendationProvider).recommendation,
+                            );
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(title),
+                          Text(data),
+                          if (plan != null) Text(plan),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),

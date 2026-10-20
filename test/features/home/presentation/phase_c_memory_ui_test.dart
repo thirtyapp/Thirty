@@ -519,6 +519,8 @@ void main() {
         find.textContaining('your suggestion preferences are kept'),
         findsOneWidget,
       );
+      // B7: the contract's Delete truth — a Plan keeps its place.
+      expect(find.textContaining('each Plan’s place'), findsOneWidget);
       await tester.tap(find.text('Delete permanently'));
       await tester.pumpAndSettle();
 

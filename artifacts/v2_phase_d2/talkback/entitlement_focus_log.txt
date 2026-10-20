@@ -1,0 +1,10 @@
+10-12 15:43:32.459  3044  6430 I MediaFocusControl: requestAudioFocus() from uid/pid 10151/13312 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH 
+10-12 15:43:51.613  3044  7254 I MediaFocusControl: abandonAudioFocus() from uid/pid 10151/13312 
+10-12 15:45:15.216  3044  7690 I MediaFocusControl: requestAudioFocus() from uid/pid 10151/13312 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH 
+10-12 15:45:27.032  3044  6292 I MediaFocusControl: abandonAudioFocus() from uid/pid 10151/13312 
+10-12 15:46:15.731  3044  6431 I MediaFocusControl: requestAudioFocus() from uid/pid 10151/13312 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH 
+10-12 15:46:17.792  3044  4194 I MediaFocusControl: abandonAudioFocus() from uid/pid 10151/13312 
+10-12 15:49:21.262  3044  5455 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/12460 
+10-12 15:49:21.263  3044  5455 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/12460 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH 
+10-12 15:49:25.382  3044  5096 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/12460 
+10-12 15:50:15.245  3044  7199 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/12460 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../theme/design_tokens.dart';
 
@@ -14,10 +15,16 @@ import '../theme/design_tokens.dart';
 ///
 /// Home keeps its plain [AppBar] on purpose: its fading wordmark header is
 /// part of the accepted Home composition.
+///
+/// [parentLocation] (B7): a page pushed over the shell can also be opened by
+/// its own location, with nothing beneath it. Then Back — the arrow and the
+/// system gesture alike — leads to this parent surface instead of out of
+/// the app. A page opened from somewhere still returns there.
 class ThirtyAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const ThirtyAppBar({required this.title, super.key});
+  const ThirtyAppBar({required this.title, this.parentLocation, super.key});
 
   final Widget title;
+  final String? parentLocation;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -63,13 +70,29 @@ class _ThirtyAppBarState extends State<ThirtyAppBar> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>()!;
-    return AppBar(
+    final parent = widget.parentLocation;
+    final router = GoRouter.maybeOf(context);
+    final openedDirectly =
+        parent != null &&
+        router != null &&
+        !(ModalRoute.of(context)?.canPop ?? true);
+    void toParent() => router!.go(parent!);
+    final bar = AppBar(
       title: widget.title,
+      leading: openedDirectly ? BackButton(onPressed: toParent) : null,
       shape: Border(
         bottom: _scrolledUnder
             ? BorderSide(color: colors.divider)
             : BorderSide.none,
       ),
+    );
+    if (!openedDirectly) return bar;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) toParent();
+      },
+      child: bar,
     );
   }
 }

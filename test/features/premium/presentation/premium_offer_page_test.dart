@@ -78,7 +78,15 @@ void main() {
     expect(find.textContaining('Upkeep', findRichText: true), findsNothing);
     // What changes on cancellation is said plainly.
     expect(PremiumOfferPage.lapseLine, contains('Today goes back to one good'));
-    for (final retired in ['Plans', 'Coach', 'Insights', 'Worlds']) {
+    // ADR-024 B4: Circle Plans are a Premium job, in the frozen Plan copy;
+    // B7: so are Insights, now built. V1's Coach is not promised.
+    expect(
+      find.textContaining('five Circles with a direction', findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Insights', findRichText: true), findsWidgets);
+    expect(PremiumOfferPage.lapseLine, contains('A Plan keeps its place.'));
+    for (final retired in ['Coach', 'Worlds']) {
       expect(
         find.textContaining(retired, findRichText: true),
         findsNothing,
@@ -260,6 +268,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(PremiumOfferPage.freeLine), findsOneWidget);
+    // Below the points (one more since B4's Plans): scrolled to, as a
+    // reader would.
+    await tester.scrollUntilVisible(
+      find.textContaining('Your Circle history stays on this device'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(
       find.textContaining('Your Circle history stays on this device'),
       findsOneWidget,
@@ -284,9 +299,10 @@ void main() {
 }
 
 /// The S25's logical size, tall enough that the page's messages below the
-/// purchase button are laid out (the page grew with V2 Phase D's copy).
+/// purchase button are laid out (the page grew with V2 Phase D's copy, and
+/// again with B7's three jobs).
 void _phoneView(WidgetTester tester) {
-  tester.view.physicalSize = const Size(412, 1400);
+  tester.view.physicalSize = const Size(412, 2000);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 }

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -22,7 +21,7 @@ import 'package:thirty/features/settings/application/first_name_provider.dart';
 /// The greeting that opens every Circle: THIRTY's daypart greeting with the
 /// user's first name when there is one, from one shared path
 /// (`CircleHero` → `homeGreeting` → `daypartGreeting`) for every direction,
-/// activity, World and Path step.
+/// activity and World.
 
 Map<String, Object> _assigned(
   DateTime day,
@@ -182,32 +181,6 @@ void main() {
       });
     }
 
-    testWidgets('a Path step opens with the same greeting', (tester) async {
-      final now = DateTime(2026, 10, 4, 8);
-      await _pumpHome(
-        tester,
-        now: now,
-        prefsValues: {
-          ..._assigned(now, 'moreEnergy', 'moveToMusic'),
-          recommendationSessionKey: jsonEncode({
-            'modules': ['musicMove:short'],
-            'title': 'Move to music',
-            'pathRunId': 'path-1',
-            'pathKind': 'build',
-            'pathName': 'A lift at home',
-            'pathCircle': 1,
-            'pathCircles': 7,
-            'pathReason': 'firstTry',
-            'pathExplanation': 'A short first try.',
-          }),
-          firstNameKey: 'Thomas',
-        },
-        size: const Size(412, 2400),
-      );
-      expect(find.textContaining('PATH'), findsOneWidget);
-      expect(_greetings(tester), ['Good morning, Thomas.']);
-    });
-
     // One activity per scene type, across all three directions and every
     // World — all through the one shared greeting path.
     for (final (intention, activity) in [
@@ -342,8 +315,11 @@ void main() {
       ('360×740 at 200%', const Size(360, 740), 2.0, AppTheme.light),
       ('Pixel 7 dark', const Size(412, 915), 1.0, AppTheme.dark),
     ]) {
-      testWidgets('$label: a 40-character name wraps; nothing overflows or '
-          'is cut', (tester) async {
+      testWidgets('$label: a 40-character name — nothing overflows, and the '
+          'whole greeting is in semantics; one line with an ellipsis at '
+          'normal text, wrapped whole at 200% (S25 one-line fix)', (
+        tester,
+      ) async {
         final now = DateTime(2026, 10, 4, 14);
         final long = 'Alexandra-Konstantina Wilhelmina-Rosaria';
         expect(long.runes.length, lessThanOrEqualTo(maxFirstNameLength));
@@ -360,12 +336,21 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         expect(find.text('Good afternoon, $long.'), findsOneWidget);
-        // The greeting itself wraps in full (the Today card's own two-line
-        // "why" limit is its existing design, unrelated to the name).
+        // At normal text the greeting keeps to one line, cut with an
+        // ellipsis past its minimum size; with enlarged text, where Today
+        // scrolls, it wraps in full rather than being cut.
         final greeting = tester.renderObject<RenderParagraph>(
           find.text('Good afternoon, $long.'),
         );
-        expect(greeting.didExceedMaxLines, isFalse);
+        expect(greeting.didExceedMaxLines, scale == 1.0);
+        expect(
+          tester.getSemantics(find.text('Good afternoon, $long.')).label,
+          'Good afternoon, $long.',
+        );
+        expect(
+          tester.getRect(find.text('Good afternoon, $long.')).right,
+          lessThanOrEqualTo(size.width),
+        );
       });
     }
   });

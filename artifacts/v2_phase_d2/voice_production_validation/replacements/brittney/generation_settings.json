@@ -1,0 +1,78 @@
+{
+ "generated_at": "2026-10-16T12:27:34+02:00",
+ "model_id": "eleven_multilingual_v2",
+ "voice_settings": {
+  "stability": 0.5,
+  "similarity_boost": 0.75,
+  "style": 0.0,
+  "use_speaker_boost": true,
+  "speed": 1.0
+ },
+ "seed": 30,
+ "output_format": "mp3_44100_128",
+ "same_as": "generate_validation.py (2026-10-12) and generate_replacements.py (2026-10-14), generate_anastasia.py and generate_nicole.py (2026-10-16)",
+ "voice": "Brittney",
+ "voice_id": "pjcYQlDFKMbcOUp6F5GD",
+ "route": "direct ElevenLabs API, founder's paid account",
+ "endpoint": "POST /v1/text-to-speech/pjcYQlDFKMbcOUp6F5GD?output_format=mp3_44100_128",
+ "account_state": "public library voice, NOT in My Voices (key lacks voices_write); TTS by exact ID",
+ "context_stitching": false,
+ "clips": [
+  {
+   "voice": "Brittney",
+   "voice_id": "pjcYQlDFKMbcOUp6F5GD",
+   "clip": "lead_first",
+   "file": "lead_first_d97b30dd.m4a",
+   "script": "First.",
+   "bytes": 15089,
+   "characters": 6,
+   "request_id": "CIWHQp6ENxiYG98ReOYk",
+   "character_count_header": null
+  },
+  {
+   "voice": "Brittney",
+   "voice_id": "pjcYQlDFKMbcOUp6F5GD",
+   "clip": "part_getItOut",
+   "file": "part_getItOut_a239320e.m4a",
+   "script": "Get it out. Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.",
+   "bytes": 175585,
+   "characters": 115,
+   "request_id": "X3N7CjoxqLLrsd7YDlqW",
+   "character_count_header": null
+  },
+  {
+   "voice": "Brittney",
+   "voice_id": "pjcYQlDFKMbcOUp6F5GD",
+   "clip": "part_briskWalk",
+   "file": "part_briskWalk_e3125526.m4a",
+   "script": "A brisk walk. Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+   "bytes": 198155,
+   "characters": 113,
+   "request_id": "qoMDkVH16CL2SB7qbNKP",
+   "character_count_header": null
+  },
+  {
+   "voice": "Brittney",
+   "voice_id": "pjcYQlDFKMbcOUp6F5GD",
+   "clip": "part_warmDrink",
+   "file": "part_warmDrink_db4bc51f.m4a",
+   "script": "A slow warm drink. Make a warm drink you’d enjoy. Hold the cup in both hands, and drink it slowly, with your phone face down.",
+   "bytes": 197319,
+   "characters": 125,
+   "request_id": "5jM5tJ4gjflxX5aGu8x8",
+   "character_count_header": null
+  },
+  {
+   "voice": "Brittney",
+   "voice_id": "pjcYQlDFKMbcOUp6F5GD",
+   "clip": "close",
+   "file": "close_3b06cf13.m4a",
+   "script": "That’s your Circle. Take a moment before you move on.",
+   "bytes": 74439,
+   "characters": 53,
+   "request_id": "4yvbWhbgXfIlnAovqBO8",
+   "character_count_header": null
+  }
+ ],
+ "characters_total": 412
+}

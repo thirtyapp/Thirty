@@ -66,9 +66,9 @@ class ActivityGuideSheet extends StatelessWidget {
   /// once started, or for a Plan stage.
   final VoidCallback? onNotThisOne;
 
-  /// V2 Phase D: the session to describe when today's Circle is a routine
-  /// or a joined Path step (`Recommendation.sessionDefinition`) — its parts
-  /// as steps. `null`: the activity itself.
+  /// The session to describe when today's Circle is composed
+  /// (`Recommendation.sessionDefinition`) — its parts as steps. `null`: the
+  /// activity itself.
   final ActivityDefinition? definition;
 
   @override

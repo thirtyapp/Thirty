@@ -3,14 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/design_tokens.dart';
+import '../../../personal_circle/application/kept_circles_provider.dart';
+import '../../../personal_circle/presentation/yours_page.dart';
 import '../../application/first_name_provider.dart';
 import 'first_name_editor.dart';
 import 'you_group_card.dart';
 
 /// You's "Personal" group: "Your name", showing the stored first name or
-/// "Add your name", which opens [FirstNameEditor]; and "What THIRTY
-/// remembers" (V2 Phase C), the memory page. No avatar and no account: the
-/// name and the memory live on this device only ([firstNameProvider]).
+/// "Add your name", which opens [FirstNameEditor]; "What THIRTY remembers"
+/// (V2 Phase C), the memory page; and "Yours" (ADR-024), the Circles the
+/// user kept. No avatar and no account: the name, the memory and what the
+/// user kept live on this device only ([firstNameProvider]).
 class YouPersonalCard extends ConsumerWidget {
   const YouPersonalCard({super.key});
 
@@ -20,6 +23,14 @@ class YouPersonalCard extends ConsumerWidget {
   static const memoryDetail = 'What you’ve told it, need by need';
   static const historyTitle = 'Your Circles';
   static const historyDetail = 'Every Circle, as it happened';
+  static const yoursTitle = YoursPage.title;
+
+  /// "3 Circles you kept" — what Yours holds, plainly.
+  static String yoursDetail(int kept) => switch (kept) {
+    0 => 'Circles you keep appear here',
+    1 => '1 Circle you kept',
+    _ => '$kept Circles you kept',
+  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,6 +38,7 @@ class YouPersonalCard extends ConsumerWidget {
     final colors = theme.extension<AppColors>()!;
     final name = ref.watch(firstNameProvider);
     final detail = name ?? addPrompt;
+    final kept = ref.watch(keptCirclesProvider).kept.length;
     void open() => showFirstNameEditor(context);
 
     return YouGroupCard(
@@ -79,6 +91,13 @@ class YouPersonalCard extends ConsumerWidget {
           detail: memoryDetail,
           icon: Icons.auto_stories_outlined,
           location: '/memory',
+        ),
+        _LinkRow(
+          key: const ValueKey('you.yours'),
+          title: yoursTitle,
+          detail: yoursDetail(kept),
+          icon: Icons.bookmark_border_rounded,
+          location: YoursPage.location,
         ),
         // V2 Phase D: history, which Insights used to host.
         _LinkRow(

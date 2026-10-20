@@ -1,0 +1,179 @@
+{
+ "rule": "Gentler mastering alternatives for Andre Leone and Lunaria, from the\nEXISTING raw validation clips only (no generation, no credits).\n\nA. as_generated — the raw clips, concatenated (container only).\nB. voice_wide   — production silence handling (trim; 150 ms in; 700/400 ms\n                  tails), then ONE gain for every clip of the voice: all\n                  within-voice level relationships preserved.\nC. guarded      — as B, but first correct only genuine outliers: a clip\n                  more than 2 LU from the voice's median part level is\n                  moved just to the edge of that +/-2 LU window; every clip\n                  inside it is left exactly as generated.\n\nB and C use the same take loudness (-23 LUFS), so they can be compared by\nshape, not level, and sit about 1 LU under the approved Locke and Heather\nmasters (-22). Peak safety for both: the same 4x-oversampled limiter at\n-2 dBFS as before, engaged only where a clip's peaks would exceed it;\nevery engagement is reported. No compression, no EQ.",
+ "take_target_lufs": -23.0,
+ "window_lu": 2.0,
+ "voices": [
+  {
+   "voice": "Andre Leone",
+   "raw_clip_lufs": {
+    "lead_first": -26.9,
+    "part_getItOut": -26.75,
+    "part_briskWalk": -31.51,
+    "part_warmDrink": -32.51,
+    "close": -29.88
+   },
+   "median_part_lufs": -30.7,
+   "voice_wide_gain_db": 6.5,
+   "guarded_outlier_corrections_db": {
+    "lead_first": -1.8,
+    "part_getItOut": -1.95,
+    "part_briskWalk": 0.0,
+    "part_warmDrink": 0.0,
+    "close": 0.0
+   },
+   "guarded_voice_gain_db": 7.42,
+   "voice_wide": {
+    "lead_first": {
+     "gain_db": 6.5,
+     "limiter_db": 0.0
+    },
+    "part_getItOut": {
+     "gain_db": 6.5,
+     "limiter_db": 2.46
+    },
+    "part_briskWalk": {
+     "gain_db": 6.5,
+     "limiter_db": 0.0
+    },
+    "part_warmDrink": {
+     "gain_db": 6.5,
+     "limiter_db": 0.0
+    },
+    "close": {
+     "gain_db": 6.5,
+     "limiter_db": 0.0
+    }
+   },
+   "guarded": {
+    "lead_first": {
+     "gain_db": 5.62,
+     "limiter_db": 0.0
+    },
+    "part_getItOut": {
+     "gain_db": 5.48,
+     "limiter_db": 1.44
+    },
+    "part_briskWalk": {
+     "gain_db": 7.42,
+     "limiter_db": 0.0
+    },
+    "part_warmDrink": {
+     "gain_db": 7.42,
+     "limiter_db": 0.0
+    },
+    "close": {
+     "gain_db": 7.42,
+     "limiter_db": 0.0
+    }
+   },
+   "as_generated_listen_lufs": -29.64,
+   "as_generated_listen_tp": -6.04,
+   "voice_wide_listen_lufs": -23.27,
+   "voice_wide_listen_tp": -1.9,
+   "guarded_listen_lufs": -23.2,
+   "guarded_listen_tp": -1.8,
+   "final_clip_lufs": {
+    "voice_wide": {
+     "lead_first": -21.8,
+     "part_getItOut": -20.59,
+     "part_briskWalk": -25.13,
+     "part_warmDrink": -26.22,
+     "close": -23.76
+    },
+    "guarded": {
+     "lead_first": -22.67,
+     "part_getItOut": -21.51,
+     "part_briskWalk": -24.2,
+     "part_warmDrink": -25.31,
+     "close": -22.82
+    }
+   }
+  },
+  {
+   "voice": "Lunaria",
+   "raw_clip_lufs": {
+    "lead_first": -22.07,
+    "part_getItOut": -28.3,
+    "part_briskWalk": -27.91,
+    "part_warmDrink": -29.27,
+    "close": -27.46
+   },
+   "median_part_lufs": -28.11,
+   "voice_wide_gain_db": 4.76,
+   "guarded_outlier_corrections_db": {
+    "lead_first": -4.04,
+    "part_getItOut": 0.0,
+    "part_briskWalk": 0.0,
+    "part_warmDrink": 0.0,
+    "close": 0.0
+   },
+   "guarded_voice_gain_db": 4.93,
+   "voice_wide": {
+    "lead_first": {
+     "gain_db": 4.76,
+     "limiter_db": 0.0
+    },
+    "part_getItOut": {
+     "gain_db": 4.76,
+     "limiter_db": 1.4
+    },
+    "part_briskWalk": {
+     "gain_db": 4.76,
+     "limiter_db": 0.0
+    },
+    "part_warmDrink": {
+     "gain_db": 4.76,
+     "limiter_db": 1.07
+    },
+    "close": {
+     "gain_db": 4.76,
+     "limiter_db": 0.0
+    }
+   },
+   "guarded": {
+    "lead_first": {
+     "gain_db": 0.89,
+     "limiter_db": 0.0
+    },
+    "part_getItOut": {
+     "gain_db": 4.93,
+     "limiter_db": 1.57
+    },
+    "part_briskWalk": {
+     "gain_db": 4.93,
+     "limiter_db": 0.02
+    },
+    "part_warmDrink": {
+     "gain_db": 4.93,
+     "limiter_db": 1.24
+    },
+    "close": {
+     "gain_db": 4.93,
+     "limiter_db": 0.01
+    }
+   },
+   "as_generated_listen_lufs": -27.86,
+   "as_generated_listen_tp": -5.34,
+   "voice_wide_listen_lufs": -23.15,
+   "voice_wide_listen_tp": -1.97,
+   "guarded_listen_lufs": -23.18,
+   "guarded_listen_tp": -1.98,
+   "final_clip_lufs": {
+    "voice_wide": {
+     "lead_first": -18.36,
+     "part_getItOut": -23.63,
+     "part_briskWalk": -23.08,
+     "part_warmDrink": -24.8,
+     "close": -22.83
+    },
+    "guarded": {
+     "lead_first": -22.21,
+     "part_getItOut": -23.46,
+     "part_briskWalk": -22.95,
+     "part_warmDrink": -24.64,
+     "close": -22.66
+    }
+   }
+  }
+ ]
+}

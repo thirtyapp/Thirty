@@ -11,7 +11,7 @@ import 'package:thirty/core/theme/app_colors.dart';
 import 'package:thirty/core/theme/app_theme.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
-import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
 import 'package:thirty/core/widgets/thirty_button.dart';
 import 'package:thirty/features/home/presentation/circle_history_page.dart';
 
@@ -116,7 +116,8 @@ void main() {
   );
 
   testWidgets(
-    'a Path step and a routine read as what they were that day (V2 Phase D)',
+    'a historical Path step and routine (Phase D, retired by ADR-024) still '
+    'read as what they were that day — no live routine or Path needed',
     (tester) async {
       final (widget, prefs) = await _wrap();
       final journal = CircleJournalRepository(prefs);
@@ -260,8 +261,9 @@ void main() {
     },
   );
 
-  testWidgets('Delete all keeps the Toolkit — routines have their own controls '
-      '(V2 Phase D)', (tester) async {
+  testWidgets('Delete all keeps kept Circles — they have their own controls', (
+    tester,
+  ) async {
     final (widget, prefs) = await _wrap();
     final journal = CircleJournalRepository(prefs);
     await journal.recordShown(
@@ -271,7 +273,7 @@ void main() {
       activityId: ActivityId.thirtyMinuteWalk,
       shownAt: DateTime(2026, 8, 2, 9),
     );
-    await prefs.setString(toolkitStateKey, jsonEncode({'kept': true}));
+    await prefs.setString(keptCirclesKey, jsonEncode({'kept': true}));
 
     await tester.pumpWidget(widget);
     await tester.tap(find.text('Delete all'));
@@ -280,7 +282,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(journal.readAll(), isEmpty);
-    expect(prefs.getString(toolkitStateKey), jsonEncode({'kept': true}));
+    expect(prefs.getString(keptCirclesKey), jsonEncode({'kept': true}));
   });
 
   testWidgets('Copy as text copies the exported journal to the clipboard', (

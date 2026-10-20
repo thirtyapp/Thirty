@@ -1,8 +1,13 @@
 # ADR-023 — V2 Recurring Premium / Personal Guided Circle
 
-**Status:** Proposed.
+**Status:** Accepted — in the D2 closure commit (2026-10-21), together with [ADR-024](ADR-024-v2-circle-plans-insights-and-four-tab-product.md). Founder approval of the B9 closure: 2026-10-21.
 - **History:** Phase D2 was implemented and S25-verified on 2026-10-11 (device QA and live TalkBack; `artifacts/v2_phase_d2/DEVICE_QA.md`). The founder correction pass followed the same day. The final hardening pass on 2026-10-12 added the last two copy fixes, the content freeze, Android background playback (S25-verified, including screen off and locked), and a review-only voice audition.
-- **What Accepted still needs:** founder approval of the production voice, and all 42 production clips bundled and QA'd (§6). Without them, Phase D2 is not complete.
+- **Guided-voice entitlement correction (2026-10-12, founder decision):** THIRTY's spoken guidance is a Premium service layer (§6, §8). The two-voice layout decided that day was superseded on 2026-10-16 (next item).
+- **Production voices (corrected 2026-10-17):** four founder-approved production voices — Locke, Heather, Milo and Brittney (stable IDs `voice_locke_v1`, `voice_heather_v1`, `voice_milo_v1`, `voice_brittney_v1`).
+  - **The pack:** each voice has 43 production files — the 42 guidance cues of the manifest and one Preview — so **172 production audio files** are bundled in `assets/audio/guidance/voice_*_v1/`.
+  - **Status:** generated under a paid ElevenLabs plan with commercial rights (`artifacts/v2_phase_d2/voice_production/PROVENANCE.md`), S25-QA'd, and passed the founder's perceptual QA on 2026-10-17. Production audio is **PASS — FROZEN**.
+- **Amended by [ADR-024](ADR-024-v2-circle-plans-insights-and-four-tab-product.md) (founder decision 2026-10-17; Accepted with this ADR at the D2 closure, 2026-10-21):** Circle Plans, Insights, the four-tab IA, and the pre-release removal of Paths, routines, tune-ups, shorter versions and the Toolkit tab. Where this ADR describes Paths, routines, the Toolkit or maintenance (§4 items 1–2, §8's routine ownership, §9, §10's routine and Toolkit fixes, §11's routine line, §12's routine scenarios), it records Phase D2 **as built**; ADR-024 is the current decision. The Personal Guided Circle, the composer, the guided runtime and spoken guidance decided here are unchanged.
+- **Acceptance conditions met (2026-10-21):** the ADR-024 implementation (batches B1–B9) and the complete D2 gate. Production voices and audio were already closed. Phase D2 is PASS — COMPLETE; the two independent post-D2 audits of the closure commit follow.
 
 Product authority: [PRODUCT_V2_CONTRACT.md](../PRODUCT_V2_CONTRACT.md), as amended on 2026-10-11 ("Amendment — Recurring Premium (Phase D2)"). This ADR **supersedes the conflicting Premium portions of [ADR-022](ADR-022-v2-phase-d-paths-toolkit-and-maintenance.md)**: Premium's headline job, what Today does for a Premium user, the offer page, and the three defects in §10. ADR-022 stays the historical record of Phase D as built and accepted on 2026-10-10. Free V2 stays governed by the contract and ADR-020/021. Review pack: `artifacts/v2_phase_d2/`.
 
@@ -104,7 +109,7 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
    - **Heading:** the part's name, then "Part 2 of 4 · next: Get it out" or "· the last part" — context, never a countdown.
    - **The finish:** past the last part, "To finish" and the composed ending, and Close leads. The ring still shows the time set aside; nothing claims a part was done.
    - **Accessibility:**
-     - the part text is one TalkBack stop and a live region, so a part that begins by itself is announced. On the S25 (2026-10-12) TalkBack spoke it at one timed change; at another, right after TalkBack had restarted, no speech was logged. A live founder listen is part of the voice QA, and an explicit announcement per part is the fix if it recurs;
+     - the part text is one TalkBack stop and a live region, so a part that begins by itself is announced. The closure retest on the S25 (2026-10-12) announced 7 of 7 timed changes, 0 missed, including the earlier unlogged case's exact path. When TalkBack is already speaking, a change is queued and spoken in full, never dropped (`final_audit/CLOSURE_DEVICE_QA.md`). No explicit announcement is added, because it would duplicate the live region;
      - every control is ≥ 48 pt;
      - reduced motion swaps parts without movement;
      - no overflow at 130 % or at 200 % on a 320 pt screen (tested).
@@ -120,7 +125,26 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
    - **Decision:** fixed, high-quality recordings bundled with the app. No runtime generative AI, no voice API or other recurring cost, and no device text-to-speech as the intended Premium experience.
    - **Deterministic lookup:** when a part begins, the voice plays a lead — "First." for the first part, "And last." for the last, otherwise "Next." — then that element's own clip: its name and instruction, exactly the words on the screen. After the last part it plays the close ("That's your Circle…"). `spokenGuidanceManifest` is the complete recording list: 3 leads, 1 clip per offerable element and the close (42). It is exported as `SPOKEN_GUIDANCE_MANIFEST.csv`, the recording source of truth (regenerated 2026-10-12).
    - **Never stale:** each clip's file name carries a fingerprint of its script (`part_getItOut_<fnv32>.m4a`), so changing an instruction makes its clip missing.
-   - **All or nothing:** the voice is available only when every manifest clip is bundled. A partial set is silent, never patchy. This is checked once at start-up (`spokenGuidanceBundled`, overridden into `spokenGuidanceAvailableProvider` by `main.dart` and the QA harness).
+   - **All or nothing, per voice:** a voice is available only when every manifest clip is bundled in its folder (`assets/audio/guidance/<voice>/`). A partial set is silent, never patchy. This is checked once at start-up (`bundledGuidanceVoices`, overridden into `bundledGuidanceVoicesProvider` by `main.dart` and the QA harness).
+   - **Four voices** (founder decision 2026-10-16; supersedes the two-voice decision of 2026-10-12, which used the placeholders `ThirtyVoice.female` and `ThirtyVoice.male`): `ThirtyVoice.locke`, `.heather`, `.milo` and `.brittney`, all Premium.
+     - **Pack:** each records the same 42-cue manifest plus one Preview, so the full pack is **172 production files** (4 × 43).
+     - **Activation:** all-or-nothing per voice (`completeGuidanceVoices` also requires the Preview).
+     - **The choice:** a local preference (`spoken_guidance_voice_v1`). It is never an onboarding question, and is never erased by a lapse. On resubscription the previous choice speaks again, if its voice is still bundled; otherwise the first bundled voice speaks.
+     - **Labels (corrected 2026-10-17):** the voices are labelled by name only, never by gender. "Hear <name>" plays that voice's Preview: "Hi, I’m <Name>. I’ll tell you when each part of your Circle begins, so you can put the screen down."
+       - **Descriptors:** still open, and secondary (a founder decision; names-only is the current state).
+       - **Unchanged:** the choice is never asked during onboarding, is stored locally, and is preserved through a lapse.
+       - *Historical:* on 2026-10-12, "Female voice" / "Male voice" were temporary placeholders.
+   - **Premium service layer (founder decision, 2026-10-12):** THIRTY spoken guidance is a Premium service layer. Accessibility output, including TalkBack, is entitlement-independent and remains available to all users.
+     - **The gate:** `guidanceVoiceProvider` is silent unless Premium is active (`spokenGuidanceOfferedProvider`: a voice is bundled and the entitlement is active), the user's switch is on, and a voice is bundled. Silent means no background service either.
+     - **The service invariant:** "The guidance service may start only for an explicitly started Circle that is eligible for THIRTY spoken guidance, when Premium is active, spoken guidance is enabled, a complete production voice is bundled, and accessibility rules permit THIRTY voice output."
+       - **Eligible:** any Circle that runs as a composed session — today's newly composed Personal Guided Circle, or a kept Circle chosen with "Use it today". On Premium a kept Circle is voiced like a new one; on Free neither is.
+       - **Explicitly started:** the user's Start, or reopening that same Circle while it is under way. Never a Free Today activity, a Circle not yet started, or a closed one.
+       - **Accessibility rule:** in front with a screen reader on (Android: touch exploration), no cue plays and the screen reader's live announcement speaks. Out of sight, THIRTY's voice is permitted, because nothing is on screen to announce. So for an eligible Premium Circle the service also runs while a screen reader is on — it is the out-of-sight route — but plays nothing in front.
+       - **In code:** `GuidanceConductor._conduct` opens the session only when the Circle is started, has a composed session, has a part on show, and `guidanceVoiceProvider` is available (Premium, switch on, a complete voice bundled). The cue-level screen-reader rule is in `GuidanceAudio.kt`.
+       - **Tests:** `guidance_entitlement_test.dart` (a kept Circle voiced with a session on Premium; no voice and no session on Free, at Start, timed parts, out of sight, reopen) and `composed_ui_test.dart` (a new Circle's session, and the screen-reader deferral).
+     - **Never gated:** the Circle's semantics, live regions, focus order, labels and announcements. Tests prove that a Free kept Circle gives a screen reader the same tree and the same announcements as Premium (`guidance_entitlement_test.dart`).
+     - **Lapse during a running voiced Circle:** the voice and its background service stop at once; the Circle runs on, on screen. This follows the existing entitlement semantics: verified, and active through grace and a cancelled-but-paid period, so it lapses only at the end of what was paid. A resubscription during the Circle brings the voice back from the next part, never repeating one under way. No polling is added.
+     - **Not built in D2: a Free voice preview** on the offer page. It is optional Phase E / paywall work. If built, it must play only a fixed preview line, never Circle instructions.
    - **Who decides what is said: `GuidanceConductor`** (final hardening, 2026-10-12). One application-level conductor, kept alive by `main.dart`, speaks a running composed Circle. It replaces the voice code in Today's widget, so the voice never depends on which screen is built, or on the UI being in front.
      - **It keeps no time of its own.** Every second while a voiced Circle runs, it reads the part on show from the Circle's stored facts and the wall clock (`partMomentAt`).
      - A cue is due exactly when a part begins, however long THIRTY was out of sight, and a return or a restart lands on the right part.
@@ -159,11 +183,13 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
      - **In front, with a screen reader on:** the live announcement speaks and the voice stays silent — never two voices at once.
      - **Out of sight:** the voice speaks, because nothing is on screen to announce.
      - **How it decides:** the platform player checks the screen reader itself (Android: touch exploration). Flutter's `accessibleNavigation` is not used: on the S25 it was true with TalkBack off, because an unrelated accessibility service (a cleaner app) was enabled.
-   - **User control:** You → Preferences → "Spoken guidance", on by default, shown only in a build that bundles the recordings. Turning it off ends the background session.
-   - **Owned Circles keep their voice:** a kept Circle used on Free ("Use it today") runs on the same guided runtime and is voiced too (S25-verified). This follows from ownership, and it is part of the substitution hypothesis (Consequences).
-   - **State on 2026-10-12:** the architecture, background playback, manifest and tests are complete, but **no production recording exists**. The build bundles none, so the voice is silent.
+   - **User control:** You → Preferences → "Spoken guidance", on by default. It is shown only on Premium, in a build that bundles a voice, with the voice choice (four names, each with "Hear <name>") when more than one complete voice is bundled. Turning it off ends the background session. On Free the row is hidden, and the stored choices stay as they are.
+   - **Owned Circles on Free (corrected 2026-10-12):** a kept Circle used on Free ("Use it today") runs complete on the same guided runtime: every part, its timing, Skip, Pause and Next, and every TalkBack announcement. It runs **without THIRTY's voice and without the background service**. The earlier behaviour, where a kept Circle stayed voiced on Free, is reversed by the founder's decision; ownership is untouched.
+   - **State on 2026-10-17 (corrected):** the architecture, background playback, the four-voice layout, the Premium gate, the manifest, the tests and **all 172 production files** are complete and frozen.
+     - *Historical — state on 2026-10-12:* no production recording existed yet, and the build bundled none, so the voice was silent.
      - **Audition:** a review-only audition — 3 candidate voices × 5 representative clips, generated once through the vidIQ voiceover tool (ElevenLabs premade voices) — is in `artifacts/v2_phase_d2/voice_audition/`. It is not bundled.
-     - **Founder gate:** the production voice, its licence and every clip remain a gate (`final_audit/VOICE_PRODUCTION_REQUIREMENTS.md`).
+     - **Production route (founder decision, 2026-10-12):** the vidIQ files are an audition only. Production clips are generated directly under a paid ElevenLabs plan with commercial rights. *(Historical: that day's plan for a next audition of two female-presenting and two male-presenting candidates was completed and superseded by the four-voice set of 2026-10-16.)*
+     - **Founder gate:** closed. All four voices, the licence and every file passed (2026-10-16/17; `voice_production/`, `FINAL_VOICE_SET.md`).
 
 7. **Element controls and evidence boundaries.**
    - **"Skip this step"** (Skip → sheet: "Skip it for today" / "Leave it out next time" / "Keep going"):
@@ -183,7 +209,7 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
    - **A routine:** its positive answers count at half weight for the elements of its pieces' activities. Its "Not useful" never does (it may be about the combination, ADR-022 §5).
    - Evidence never crosses needs.
 
-8. **Ownership and lapse.**
+8. **Ownership and lapse.** *(Amended by ADR-024: routines and their versions are retired before public release, and kept Circles are the only owned object. The routine items below record D2 as built. Current ownership and lapse: [PRODUCT_V2_CONTRACT.md, Free / Premium / after lapse](../PRODUCT_V2_CONTRACT.md#free--premium--after-lapse-amended-2026-10-17).)*
    - **"Use it today"** (`useOwnedToday`; on a routine's page and a kept Circle's page) — Free:
      - only before today's Circle starts; still one Circle a day, replacing today's not-started choice;
      - today's need stays the one chosen (before any choice, the routine's own);
@@ -197,12 +223,13 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
      - THIRTY never offers a kept Circle unasked;
      - its page has "Use it today", Rename and Remove;
      - stored additively in the Toolkit record (schema unchanged); export includes it.
-   - **On lapse the user keeps:** routines, versions, names, kept Circles, History, Memory, preferences, export and delete, ordinary Free Today, and "Use it today".
-   - **The user loses:** new Personal Guided Circle composition. Today is Free's one activity again.
-   - **The offer says this:** "After that, Today goes back to one good thing a day, and everything you kept stays yours."
+   - **On lapse the user keeps:** routines, versions, names, kept Circles with all their instructions, structure and visual pacing, History, Memory, preferences (the voice choice included), export and delete, ordinary Free Today, and "Use it today". Every accessibility support stays, TalkBack included.
+   - **The user loses, until resubscribing:** new Personal Guided Circle composition, and THIRTY's spoken guidance. Today is Free's one activity again.
+   - **Owned Circles remain fully owned and visually usable after Premium lapse. Cancellation removes new composition and THIRTY spoken guidance, not owned content.** This is a service boundary, not an ownership boundary.
+   - **The offer says this:** "After that, Today goes back to one good thing a day, and everything you kept stays yours." In a build with THIRTY's voice it adds: "— its parts and timing on screen, without THIRTY's voice." The services read "Made for you" / "Guided for you". The voice is named only when the build bundles it. Accessibility is never claimed as a benefit.
    - Resubscribing restores composition at once (tested in the provider tests and simulation p10).
 
-9. **Paths, Toolkit and maintenance, repositioned.**
+9. **Paths, Toolkit and maintenance, repositioned.** *(Superseded by ADR-024: Paths, routines, tune-ups, shorter versions, Toolkit maintenance and the Toolkit tab are retired before public release. This section records D2 as built.)*
    - **Paths** stay: discovery, calibration, building a routine you keep.
      - The first-Path card reads "Build a routine — if you like · Optional: your Circle on Today doesn't need it."
      - A new Premium user gets the Personal Guided Circle on day one, from whatever Free evidence exists.
@@ -253,13 +280,14 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
 
 ## Consequences
 
-- Phase D's history, data and Path/Toolkit behaviour are preserved; nothing the user built is migrated away.
+- As built in D2, Phase D's history, data and Path/Toolkit behaviour were preserved. *(Amended by ADR-024: Paths and routines are removed by an explicit pre-release migration; kept Circles and journal records are preserved.)*
 - **Content is frozen** after the final hardening pass (2026-10-12). The founder approved the corrected content in principle; the final two fixes and the drift proof are in `CONTENT_REVIEW.md` §0.
-- **Open before D2 can pass:** founder approval of a production voice, and all 42 clips produced, bundled and QA'd (§6). The decision and the architecture are approved; the recordings don't exist yet.
+- **Production audio (corrected 2026-10-17):** all 172 production files (4 voices × 43) were produced via the licensed route, bundled, S25-QA'd and founder-approved. **PASS — FROZEN.** *(Historical: this line once read "both production voices … all 84 clips (42 × 2)"; that two-voice plan was superseded on 2026-10-16.)*
+- **Open before D2 can pass:** the ADR-024 implementation and the complete D2 gate.
 - **S25 device QA and live TalkBack passed** after six device findings were fixed (Today card height, Memory showing composite answers, Toolkit order and wording, the running Close clearance, Skip-sheet overflow at 130 %, orphaned words).
 - **More Energy is thin**: the thinnest need, with 9 mains against 13–18 for mixed needs (p14, `SIMULATION_REVIEW.md`). The cause is its gated exertion and breathing content. Widening it honestly needs the separate safety review, never invented content.
 - **Older source wording** (Free activities, routine modules) still has "a little quicker than usual", "turn it up a little", "livelier" and "out of sight". It is listed for the final release audit (`final_audit/RELEASE_AUDIT_NOTES.md`). It is not an active defect, because none of it is spoken.
 - **Every composer value is a hypothesis** (`ComposerPolicy`). Read them against pre-release behaviour.
 - **Commercial hypothesis, unproven:** whether a personal guided Circle each day is worth a monthly subscription. No willingness to pay, conversion, retention or acquisition has been measured. The simulations are architectural checks, not user evidence. The €5–€9 range is a hypothesis, not a finding.
-- **Commercial hypothesis — substitution (post-D2 audit):** up to 8 kept Circles, used free with "Use it today", can stand in for new composition after a lapse (40 of 60 lapsed days in the attack). Ownership is deliberately not weakened. Whether this erodes the subscription is for the post-D2 audit to judge.
+- **Commercial hypothesis — substitution (post-D2 audit):** up to 8 kept Circles, used free with "Use it today", can stand in for new composition after a lapse: 40 of 60 lapsed days in the attack, re-run 2026-10-12 after the entitlement correction. Those days run visual and paced, with **0** plays of THIRTY's voice and 0 background sessions. Ownership is deliberately not weakened. Whether this erodes the subscription is for the post-D2 audit to judge.
 - Phase E stays on hold until Phase D2 passes.

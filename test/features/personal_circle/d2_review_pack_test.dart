@@ -12,7 +12,9 @@ import 'package:thirty/features/personal_circle/presentation/keep_circle_card.da
 import 'package:thirty/features/personal_circle/presentation/use_today_control.dart';
 import 'package:thirty/features/premium/presentation/premium_offer_page.dart';
 import 'package:thirty/features/settings/presentation/widgets/you_premium_card.dart';
-import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/presentation/yours_page.dart';
+import 'package:thirty/features/settings/presentation/widgets/you_personal_card.dart';
 
 /// V2 Phase D2 (ADR-023 §2, §12) — the element coverage report and the
 /// founder's content review pack, generated from the very library and copy
@@ -111,13 +113,12 @@ Map<String, List<String>> d2Copy() => {
     KeepCircleCopy.full,
     for (final need in Intention.values) keptCircleDefaultName(need),
   ],
-  'Use it today (routine and kept Circle pages)': [
+  'Use it today (the kept Circle page)': [
     UseTodayCopy.action,
     UseTodayCopy.isToday,
     UseTodayCopy.started,
     UseTodayCopy.closed,
     UseTodayCopy.unavailable,
-    'Turn it on to use it today.',
     'THIRTY never offers a kept Circle unasked. It stays yours, with or '
         'without Premium.',
   ],
@@ -133,16 +134,21 @@ Map<String, List<String>> d2Copy() => {
     PremiumOfferPage.headline,
     PremiumOfferPage.promise,
     for (final (name, line) in PremiumOfferPage.points) '$name: $line',
+    'With THIRTY’s voice bundled — ${PremiumOfferPage.voicedPoints[1].$1}: '
+        '${PremiumOfferPage.voicedPoints[1].$2}',
     PremiumOfferPage.freeLine,
     'What you keep stays yours, with or without Premium.',
     PremiumOfferPage.lapseLine,
+    'With THIRTY’s voice bundled: ${PremiumOfferPage.voicedLapseLine}',
     'THIRTY Premium makes you a guided Circle each day, around the time you '
         'have.',
     YouPremiumCard.body,
   ],
-  'You — spoken guidance (shown only when the recordings are bundled)': [
+  'You — spoken guidance (Premium only, when the recordings are bundled)': [
     SpokenGuidanceCopy.title,
     SpokenGuidanceCopy.detail,
+    SpokenGuidanceCopy.voice,
+    for (final voice in ThirtyVoice.values) voice.label,
   ],
   'Notification while a voiced Circle runs (Android; the part on show is '
       'its text)': [
@@ -152,18 +158,18 @@ Map<String, List<String>> d2Copy() => {
     SpokenGuidanceCopy.resume,
     SpokenGuidanceCopy.next,
   ],
-  'Toolkit (repositioned)': [
-    'Routines and Circles that are yours.',
-    'A Circle made for your day',
-    'With Premium, THIRTY turns the time you have each day into one guided '
-        'Circle of a few small parts, shaped by your answers over time. '
-        'Along the way, Paths can help you build routines of your own.',
-    'What you build or keep stays yours, with or without Premium. With '
-        'Free, THIRTY still gives you one good thing for today.',
-    'Build a routine — if you like',
-    'Optional: your Circle on Today doesn’t need it. A Path tries a few '
-        'pieces with you and ends with a routine you keep.',
+  // ADR-024 B1: the Toolkit is retired; kept Circles are managed in Yours,
+  // under You.
+  'Yours (under You)': [
+    YouPersonalCard.yoursTitle,
+    YouPersonalCard.yoursDetail(0),
+    YouPersonalCard.yoursDetail(1),
+    YouPersonalCard.yoursDetail(3),
+    YoursPage.intro,
+    YoursPage.empty,
     'Circles you kept',
+    'This Circle is no longer in Yours.',
+    'It leaves Yours. Days you used it stay in your history.',
   ],
 };
 
@@ -272,7 +278,7 @@ void main() {
 
   test('the Premium offer claims nothing a first-day subscriber hasn’t '
       'given THIRTY', () {
-    for (final place in ['Premium offer', 'Toolkit (repositioned)']) {
+    for (final place in ['Premium offer', 'Yours (under You)']) {
       for (final line in d2Copy()[place]!) {
         expect(_offerClaims.hasMatch(line), isFalse, reason: '$place: “$line”');
       }
@@ -449,15 +455,15 @@ void main() {
         'the part’s own clip; after the last part, the close. Each file '
         'name carries a fingerprint of its script: changing a line makes '
         'its clip missing, and the voice stays silent until the whole set '
-        'is complete again.',
+        'is complete again. Each of THIRTY’s two voices records the whole '
+        'set in its own folder: `$spokenGuidanceAssetDir/<voice>/<file>`, '
+        'with <voice> one of ${ThirtyVoice.values.map((v) => v.id).join(', ')}.',
       )
       ..writeln()
       ..writeln('| Clip | File | Script |')
       ..writeln('|---|---|---|');
     for (final clip in manifest) {
-      pack.writeln(
-        '| `${clip.id}` | `${clip.asset.split('/').last}` | ${clip.script} |',
-      );
+      pack.writeln('| `${clip.id}` | `${clip.file}` | ${clip.script} |');
     }
     final sample = composeCircle(
       ComposerContext(
@@ -483,7 +489,7 @@ void main() {
     final csv = StringBuffer()..writeln('clip,role,file,script');
     for (final clip in manifest) {
       csv.writeln(
-        '${clip.id},${clip.role.name},${clip.asset},'
+        '${clip.id},${clip.role.name},${clip.file},'
         '"${clip.script.replaceAll('"', '""')}"',
       );
     }

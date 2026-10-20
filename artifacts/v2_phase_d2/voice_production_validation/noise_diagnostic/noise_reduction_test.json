@@ -1,0 +1,51 @@
+{
+ "rule": "Noise diagnostic, controlled noise-reduction test (Andre Leone, Lunaria).\nBuilt from the EXISTING raw validation clips only; no generation.\n\nThe noise is the voices' own steady room tone (seed-independent, present in\nthe raw ElevenLabs MP3 under every pause). Two candidate treatments, both\napplied to the trimmed raw clip BEFORE the unchanged guarded gain/limiter/\nAAC chain:\n\nE  pause expander: gain is reduced only where the 10 ms envelope sits near\n   the voice's own measured noise floor; full range (8 dB) at the floor,\n   none from floor+12 dB up. 15 ms look-ahead so word onsets open before\n   they start; 5 ms open, 150 ms close. Speech itself passes at unity, and\n   the spectrum of what remains is the original noise, only quieter.\nS  spectral denoiser: ffmpeg afftdn, 8 dB reduction, noise floor set to the\n   voice's measured floor, noise tracking on.\n\nMeasured per voice over all five clips: pause-floor change, speech-frame\nchange (overall and 4-10 kHz, i.e. consonants/air), the onset/decay/breath\nzone change, and spectral flux of what remains in pauses (watery/'musical'\nartefact indicator; 0 = unchanged texture).\nWrites the guarded take of the better treatment for listening.\nUsage: python noise_reduction_test.py <repo>",
+ "voices": {
+  "Andre Leone": {
+   "measured_floor_dbfs": -64.3,
+   "E": {
+    "pause": -3.32,
+    "speech": -0.0,
+    "speech_hf": -0.0,
+    "zone": -0.32,
+    "flux_before": 5.84,
+    "flux_after": 5.85,
+    "lufs": 0.0
+   },
+   "S": {
+    "pause": 0.44,
+    "speech": -1.1,
+    "speech_hf": -0.43,
+    "zone": 0.67,
+    "flux_before": 5.84,
+    "flux_after": 5.94,
+    "lufs": 0.07
+   },
+   "listen_E_lufs": -23.2,
+   "listen_E_tp": -1.95
+  },
+  "Lunaria": {
+   "measured_floor_dbfs": -67.1,
+   "E": {
+    "pause": -3.62,
+    "speech": -0.0,
+    "speech_hf": -0.0,
+    "zone": -0.06,
+    "flux_before": 5.99,
+    "flux_after": 6.05,
+    "lufs": 0.01
+   },
+   "S": {
+    "pause": -2.34,
+    "speech": -1.47,
+    "speech_hf": 0.02,
+    "zone": 6.13,
+    "flux_before": 5.99,
+    "flux_after": 6.32,
+    "lufs": -0.06
+   },
+   "listen_E_lufs": -23.18,
+   "listen_E_tp": -1.98
+  }
+ }
+}

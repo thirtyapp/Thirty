@@ -1,0 +1,365 @@
+D  1 P moreEnergy ≈10 → [STAGE 1] openWindow:1 gentleStretch:8 whatsNext:1 10m · no answer
+D  2 P moreEnergy ≈10 → [STAGE 2] songOn:1 clearCorner:8 shakeOut:1 10m · no answer
+D  3 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D  4 P moreEnergy ≈10 → [STAGE 4] standingStretch:5 daylight:4 whatsNext:1 10m · somewhatUseful
+D  5 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 oneLongReach:1 10m · no answer
+D  6 P moreEnergy ≈10 → [STAGE 1] songOn:1 standingStretch:5 sitAMinute:2 8m · no answer
+D  7 P moreEnergy ≈10 → [STAGE 2] standAndReach:1 activeJob:8 whatsNext:1 10m · no answer
+D  8 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 neckAndShoulders:2 glassOfWater:2 9m · somewhatUseful
+D  9 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 shakeOut:1 10m · no answer
+D 10 P moreEnergy ≈10 → [STAGE 5] standingStretch:5 moveToMusic:5 10m · no answer
+D 11 P moreEnergy ≈10 → [STAGE 1] songOn:1 gentleStretch:8 whatsNext:1 10m · no answer
+D 12 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 clearCorner:5 sitAMinute:2 9m · somewhatUseful
+D 13 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 standingStretch:5 10m · no answer
+D 14 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 shakeOut:1 10m · no answer
+D 15 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D 16 P moreEnergy ≈10 → [STAGE 1] songOn:1 standingStretch:5 putThingsBack:2 8m · somewhatUseful
+D 17 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 glassOfWater:2 9m · no answer
+D 18 P moreEnergy ≈10 → [STAGE 3] standingStretch:5 clearCorner:5 10m · no answer
+D 19 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer
+D 20 P moreEnergy ≈10 → [STAGE 5] openWindow:1 standingStretch:5 daylight:4 10m · somewhatUseful
+D 21 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · no answer
+D 22 P moreEnergy ≈10 → [STAGE 2] standAndReach:1 clearCorner:8 whatsNext:1 10m · no answer
+D 23 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D 24 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D 25 P moreEnergy ≈10 → [STAGE 5] standingStretch:5 daylight:4 whatsNext:1 10m · no answer
+D 26 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 putThingsBack:2 10m · no answer
+D 27 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 sitAMinute:2 9m · no answer
+D 28 P moreEnergy ≈10 → [STAGE 3] standingStretch:5 quickClearUp:5 10m · somewhatUseful
+D 29 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 shakeOut:1 10m · no answer
+D 30 P moreEnergy ≈10 → [STAGE 5] standingStretch:5 moveToMusic:5 10m · no answer
+D 31 P moreEnergy ≈10 → [STAGE 1] songOn:1 gentleStretch:8 whatsNext:1 10m · no answer
+D 32 P moreEnergy ≈10 → [STAGE 2] clearCorner:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D 33 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D 34 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer
+D 35 P moreEnergy ≈10 → [STAGE 5] standAndReach:1 clearCorner:5 daylight:4 10m · no answer
+D 36 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · somewhatUseful
+D 37 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 whatsNext:1 8m · no answer
+D 38 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D 39 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 oneLongReach:1 10m · no answer
+D 40 P moreEnergy ≈10 → [STAGE 5] openWindow:1 gentleStretch:8 whatsNext:1 10m · somewhatUseful
+D 41 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 clearCorner:5 glassOfWater:2 9m · no answer
+D 42 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 quickClearUp:5 10m · no answer
+D 43 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 shakeOut:1 10m · no answer
+D 44 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D 45 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 putThingsBack:2 10m · no answer
+D 46 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 sitAMinute:2 9m · no answer
+D 47 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D 48 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D 49 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D 50 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · no answer
+D 51 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 putThingsBack:2 9m · no answer
+D 52 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 moveToMusic:5 10m · somewhatUseful
+D 53 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer
+D 54 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D 55 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · no answer
+D 56 P moreEnergy ≈10 → [STAGE 2] quickClearUp:5 daylight:4 whatsNext:1 10m · somewhatUseful
+D 57 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D 58 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 shakeOut:1 10m · no answer
+D 59 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 oneLongReach:1 10m · no answer
+D 60 P moreEnergy ≈10 → [STAGE 1] openWindow:1 gentleStretch:8 whatsNext:1 10m · somewhatUseful
+D 61 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 glassOfWater:2 9m · no answer
+D 62 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D 63 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 shakeOut:1 10m · no answer
+D 64 P moreEnergy ≈10 → [STAGE 5] songOn:1 gentleStretch:8 whatsNext:1 10m · somewhatUseful
+D 65 P moreEnergy ≈10 → [STAGE 2] openWindow:1 quickClearUp:5 glassOfWater:2 8m · no answer
+D 66 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D 67 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D 68 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D 69 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · no answer
+D 70 P moreEnergy ≈10 → [STAGE 2] openWindow:1 moveToMusic:8 whatsNext:1 10m · no answer
+D 71 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D 72 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D 73 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 daylight:4 shakeOut:1 10m · no answer
+D 74 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 putThingsBack:2 10m · no answer
+D 75 P moreEnergy ≈10 → [STAGE 2] standAndReach:1 clearCorner:8 whatsNext:1 10m · no answer
+D 76 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 neckAndShoulders:2 glassOfWater:2 9m · somewhatUseful
+D 77 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 oneLongReach:1 10m · no answer
+D 78 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 neckAndShoulders:2 putThingsBack:2 9m · no answer
+D 79 P moreEnergy ≈10 → [STAGE 1] songOn:1 gentleStretch:8 whatsNext:1 10m · no answer
+D 80 P moreEnergy ≈10 → [STAGE 2] openWindow:1 activeJob:8 oneLongReach:1 10m · somewhatUseful
+D 81 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 moveToMusic:5 10m · no answer
+D 82 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 shakeOut:1 10m · no answer
+D 83 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D 84 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · somewhatUseful
+D 85 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 sitAMinute:2 9m · no answer
+D 86 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 clearCorner:5 10m · no answer
+D 87 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 shakeOut:1 10m · no answer
+D 88 P moreEnergy ≈10 → [STAGE 5] openWindow:1 gentleStretch:8 whatsNext:1 10m · somewhatUseful
+D 89 P moreEnergy ≈10 → [STAGE 2] songOn:1 activeJob:8 oneLongReach:1 10m · no answer
+D 90 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D 91 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 shakeOut:1 10m · no answer
+D 92 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D 93 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 putThingsBack:2 10m · no answer
+D 94 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 glassOfWater:2 9m · no answer
+D 95 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D 96 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 whatsNext:1 10m · somewhatUseful
+D 97 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 daylight:4 oneLongReach:1 10m · no answer
+D 98 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · no answer
+D 99 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 putThingsBack:2 9m · no answer
+D100 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 moveToMusic:5 10m · somewhatUseful
+D101 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 whatsNext:1 10m · no answer
+D102 P moreEnergy ≈10 → [STAGE 5] activeJob:8 neckAndShoulders:2 10m · no answer
+D103 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · no answer
+D104 P moreEnergy ≈10 → [STAGE 2] moveToMusic:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D105 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D106 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D107 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 oneLongReach:1 10m · no answer
+D108 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 putThingsBack:2 10m · somewhatUseful
+D109 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 glassOfWater:2 9m · no answer
+D110 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D111 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 shakeOut:1 10m · no answer
+D112 P moreEnergy ≈10 → [STAGE 5] openWindow:1 gentleStretch:8 whatsNext:1 10m · somewhatUseful
+D113 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 glassOfWater:2 9m · no answer
+D114 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 moveToMusic:5 10m · no answer
+D115 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer
+D116 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D117 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · no answer
+D118 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 whatsNext:1 8m · no answer
+D119 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D120 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D121 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 shakeOut:1 10m · no answer
+D122 P moreEnergy ≈10 → [STAGE 1] songOn:1 gentleStretch:8 whatsNext:1 10m · no answer
+D123 P moreEnergy ≈10 → [STAGE 2] openWindow:1 clearCorner:8 oneLongReach:1 10m · no answer
+D124 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 sitAMinute:2 9m · somewhatUseful
+D125 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D126 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D127 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 putThingsBack:2 10m · no answer
+D128 P moreEnergy ≈10 → [STAGE 2] quickClearUp:5 daylight:4 whatsNext:1 10m · somewhatUseful
+D129 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 clearCorner:5 10m · no answer
+D130 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 shakeOut:1 10m · no answer
+D131 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 oneLongReach:1 10m · no answer
+D132 P moreEnergy ≈10 → [STAGE 1] openWindow:1 gentleStretch:8 whatsNext:1 10m · somewhatUseful
+D133 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 clearCorner:5 glassOfWater:2 9m · no answer
+D134 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D135 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 oneLongReach:1 10m · no answer
+D136 P moreEnergy ≈10 → [STAGE 5] gentleStretch:8 glassOfWater:2 10m · somewhatUseful
+D137 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 sitAMinute:2 9m · no answer
+D138 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 quickClearUp:5 10m · no answer
+D139 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 oneLongReach:1 10m · no answer
+D140 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 whatsNext:1 10m · somewhatUseful
+D141 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · no answer
+D142 P moreEnergy ≈10 → [STAGE 2] songOn:1 clearCorner:8 oneLongReach:1 10m · no answer
+D143 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D144 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D145 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 daylight:4 whatsNext:1 10m · no answer
+D146 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 putThingsBack:2 10m · no answer
+D147 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 glassOfWater:2 9m · no answer
+D148 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 neckAndShoulders:2 whatsNext:1 8m · somewhatUseful
+D149 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 shakeOut:1 10m · no answer
+D150 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 moveToMusic:5 10m · no answer
+D151 P moreEnergy ≈10 → [STAGE 1] openWindow:1 gentleStretch:8 whatsNext:1 10m · no answer
+D152 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 clearCorner:5 glassOfWater:2 9m · somewhatUseful
+D153 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 quickClearUp:5 10m · no answer
+D154 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 oneLongReach:1 10m · no answer
+D155 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D156 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · somewhatUseful
+D157 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 sitAMinute:2 9m · no answer
+D158 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 putThingsBack:2 9m · no answer
+D159 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 shakeOut:1 10m · no answer
+D160 P moreEnergy ≈10 → [STAGE 5] songOn:1 gentleStretch:8 whatsNext:1 10m · somewhatUseful
+D161 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 sitAMinute:2 9m · no answer
+D162 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 moveToMusic:5 10m · no answer
+D163 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 oneLongReach:1 10m · no answer
+D164 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D165 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 putThingsBack:2 10m · no answer
+D166 P moreEnergy ≈10 → [STAGE 2] openWindow:1 activeJob:8 oneLongReach:1 10m · no answer
+D167 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D168 P moreEnergy ≈10 → [STAGE 4] standAndReach:1 clearCorner:5 daylight:4 10m · somewhatUseful
+D169 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 oneLongReach:1 10m · no answer
+D170 P moreEnergy ≈10 → [STAGE 1] openWindow:1 gentleStretch:8 whatsNext:1 10m · no answer
+D171 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 glassOfWater:2 9m · no answer
+D172 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 moveToMusic:5 10m · somewhatUseful
+D173 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 oneLongReach:1 10m · no answer
+D174 P moreEnergy ≈10 → [STAGE 5] activeJob:8 neckAndShoulders:2 10m · no answer
+D175 P moreEnergy ≈10 → [STAGE 1] songOn:1 gentleStretch:8 whatsNext:1 10m · no answer
+D176 P moreEnergy ≈10 → [STAGE 2] clearCorner:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D177 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D178 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 whatsNext:1 10m · no answer
+D179 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 shakeOut:1 10m · no answer
+D180 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · somewhatUseful
+D181 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 clearCorner:5 glassOfWater:2 9m · no answer
+D182 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 moveToMusic:5 10m · no answer
+D183 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 oneLongReach:1 10m · no answer
+D184 P moreEnergy ≈10 → [STAGE 5] gentleStretch:8 putThingsBack:2 10m · somewhatUseful
+D185 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 glassOfWater:2 9m · no answer
+D186 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D187 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer
+D188 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D189 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · no answer
+D190 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 clearCorner:5 sitAMinute:2 9m · no answer
+D191 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 putThingsBack:2 9m · no answer
+D192 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 whatsNext:1 10m · somewhatUseful
+D193 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 daylight:4 oneLongReach:1 10m · no answer
+D194 P moreEnergy ≈10 → [STAGE 1] openWindow:1 gentleStretch:8 whatsNext:1 10m · no answer
+D195 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 sitAMinute:2 9m · no answer
+D196 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 moveToMusic:5 10m · somewhatUseful
+D197 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 oneLongReach:1 10m · no answer
+D198 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D199 P moreEnergy ≈10 → [STAGE 1] songOn:1 gentleStretch:8 whatsNext:1 10m · no answer
+D200 P moreEnergy ≈10 → [STAGE 2] clearCorner:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D201 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D202 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer
+D203 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 daylight:4 shakeOut:1 10m · no answer
+D204 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · somewhatUseful
+D205 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 whatsNext:1 8m · no answer
+D206 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D207 P moreEnergy ≈10 → [STAGE 4] songOn:1 quickClearUp:5 daylight:4 10m · no answer
+D208 P moreEnergy ≈10 → [STAGE 5] gentleStretch:8 putThingsBack:2 10m · somewhatUseful
+D209 P moreEnergy ≈10 → [STAGE 2] openWindow:1 clearCorner:8 oneLongReach:1 10m · no answer
+D210 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D211 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 whatsNext:1 10m · no answer
+D212 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D213 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · no answer
+D214 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 putThingsBack:2 9m · no answer
+D215 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D216 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D217 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D218 P moreEnergy ≈10 → [STAGE 1] songOn:1 gentleStretch:8 9m · no answer
+D219 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 sitAMinute:2 9m · no answer
+D220 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 moveToMusic:5 10m · somewhatUseful
+D221 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 shakeOut:1 10m · no answer
+D222 P moreEnergy ≈10 → [STAGE 5] activeJob:8 neckAndShoulders:2 10m · no answer
+D223 P moreEnergy ≈10 → [STAGE 1] openWindow:1 gentleStretch:8 whatsNext:1 10m · no answer
+D224 P moreEnergy ≈10 → [STAGE 2] moveToMusic:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D225 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D226 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer
+D227 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 shakeOut:1 10m · no answer
+D228 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 putThingsBack:2 10m · somewhatUseful
+D229 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 whatsNext:1 8m · no answer
+D230 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D231 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 oneLongReach:1 10m · no answer
+D232 P moreEnergy ≈10 → [STAGE 5] songOn:1 gentleStretch:8 whatsNext:1 10m · somewhatUseful
+D233 P moreEnergy ≈10 → [STAGE 2] openWindow:1 clearCorner:8 shakeOut:1 10m · no answer
+D234 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 putThingsBack:2 9m · no answer
+D235 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D236 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D237 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · no answer
+D238 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 sitAMinute:2 9m · no answer
+D239 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D240 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D241 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer
+D242 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · no answer
+D243 P moreEnergy ≈10 → [STAGE 2] songOn:1 clearCorner:8 shakeOut:1 10m · no answer
+D244 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 glassOfWater:2 9m · somewhatUseful
+D245 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 oneLongReach:1 10m · no answer
+D246 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 neckAndShoulders:2 whatsNext:1 8m · no answer
+D247 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 putThingsBack:2 10m · no answer
+D248 P moreEnergy ≈10 → [STAGE 2] quickClearUp:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D249 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 clearCorner:5 10m · no answer
+D250 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 whatsNext:1 10m · no answer
+D251 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 oneLongReach:1 10m · no answer
+D252 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · somewhatUseful
+D253 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 clearCorner:5 sitAMinute:2 9m · no answer
+D254 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D255 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D256 P moreEnergy ≈10 → [STAGE 5] openWindow:1 gentleStretch:8 9m · somewhatUseful
+D257 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 sitAMinute:2 9m · no answer
+D258 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 moveToMusic:5 10m · no answer
+D259 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer
+D260 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D261 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · no answer
+D262 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 clearCorner:5 glassOfWater:2 9m · no answer
+D263 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D264 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D265 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 daylight:4 oneLongReach:1 10m · no answer
+D266 P moreEnergy ≈10 → [STAGE 1] songOn:1 gentleStretch:8 whatsNext:1 10m · no answer
+D267 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 glassOfWater:2 9m · no answer
+D268 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 moveToMusic:5 10m · somewhatUseful
+D269 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 oneLongReach:1 10m · no answer
+D270 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D271 P moreEnergy ≈10 → [STAGE 1] openWindow:1 gentleStretch:8 whatsNext:1 10m · no answer
+D272 P moreEnergy ≈10 → [STAGE 2] clearCorner:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D273 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D274 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 shakeOut:1 10m · no answer
+D275 P moreEnergy ≈10 → [STAGE 5] quickClearUp:5 daylight:4 whatsNext:1 10m · no answer
+D276 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · somewhatUseful
+D277 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 putThingsBack:2 9m · no answer
+D278 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D279 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 shakeOut:1 10m · no answer
+D280 P moreEnergy ≈10 → [STAGE 5] gentleStretch:8 putThingsBack:2 10m · somewhatUseful
+D281 P moreEnergy ≈10 → [STAGE 2] songOn:1 clearCorner:8 oneLongReach:1 10m · no answer
+D282 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D283 P moreEnergy ≈10 → [STAGE 4] standAndReach:1 quickClearUp:5 daylight:4 10m · no answer
+D284 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D285 P moreEnergy ≈10 → [STAGE 1] songOn:1 gentleStretch:8 whatsNext:1 10m · no answer
+D286 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 moveToMusic:5 sitAMinute:2 9m · no answer
+D287 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D288 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D289 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D290 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · no answer
+D291 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 sitAMinute:2 9m · no answer
+D292 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 moveToMusic:5 10m · somewhatUseful
+D293 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 oneLongReach:1 10m · no answer
+D294 P moreEnergy ≈10 → [STAGE 5] activeJob:8 neckAndShoulders:2 10m · no answer
+D295 P moreEnergy ≈10 → [STAGE 1] openWindow:1 gentleStretch:8 whatsNext:1 10m · no answer
+D296 P moreEnergy ≈10 → [STAGE 2] moveToMusic:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D297 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 neckAndShoulders:2 glassOfWater:2 9m · no answer
+D298 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer
+D299 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 oneLongReach:1 10m · no answer
+D300 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 putThingsBack:2 10m · somewhatUseful
+D301 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 whatsNext:1 8m · no answer
+D302 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D303 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 shakeOut:1 10m · no answer
+D304 P moreEnergy ≈10 → [STAGE 5] songOn:1 gentleStretch:8 whatsNext:1 10m · somewhatUseful
+D305 P moreEnergy ≈10 → [STAGE 2] openWindow:1 moveToMusic:8 oneLongReach:1 10m · no answer
+D306 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D307 P moreEnergy ≈10 → [STAGE 4] standAndReach:1 moveToMusic:5 daylight:4 10m · no answer
+D308 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D309 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · no answer
+D310 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 sitAMinute:2 9m · no answer
+D311 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D312 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D313 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer
+D314 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · no answer
+D315 P moreEnergy ≈10 → [STAGE 2] openWindow:1 clearCorner:8 shakeOut:1 10m · no answer
+D316 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 glassOfWater:2 9m · somewhatUseful
+D317 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D318 P moreEnergy ≈10 → [STAGE 5] openWindow:1 quickClearUp:5 neckAndShoulders:2 8m · no answer
+D319 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 putThingsBack:2 10m · no answer
+D320 P moreEnergy ≈10 → [STAGE 2] quickClearUp:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D321 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 clearCorner:5 10m · no answer
+D322 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 whatsNext:1 10m · no answer
+D323 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 shakeOut:1 10m · no answer
+D324 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · somewhatUseful
+D325 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 clearCorner:5 sitAMinute:2 9m · no answer
+D326 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D327 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 oneLongReach:1 10m · no answer
+D328 P moreEnergy ≈10 → [STAGE 5] openWindow:1 gentleStretch:8 whatsNext:1 10m · somewhatUseful
+D329 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 glassOfWater:2 9m · no answer
+D330 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 quickClearUp:5 10m · no answer
+D331 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 oneLongReach:1 10m · no answer
+D332 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 whatsNext:1 10m · somewhatUseful
+D333 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · no answer
+D334 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 clearCorner:5 glassOfWater:2 9m · no answer
+D335 P moreEnergy ≈10 → [STAGE 3] activeJob:8 neckAndShoulders:2 10m · no answer
+D336 P moreEnergy ≈10 → [STAGE 4] clearCorner:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D337 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 oneLongReach:1 10m · no answer
+D338 P moreEnergy ≈10 → [STAGE 1] songOn:1 gentleStretch:8 whatsNext:1 10m · no answer
+D339 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 sitAMinute:2 9m · no answer
+D340 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 clearCorner:5 10m · somewhatUseful
+D341 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 whatsNext:1 10m · no answer
+D342 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 neckAndShoulders:2 sitAMinute:2 9m · no answer
+D343 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · no answer
+D344 P moreEnergy ≈10 → [STAGE 2] clearCorner:5 daylight:4 whatsNext:1 10m · somewhatUseful
+D345 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 neckAndShoulders:2 putThingsBack:2 9m · no answer
+D346 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 shakeOut:1 10m · no answer
+D347 P moreEnergy ≈10 → [STAGE 5] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer
+D348 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 sitAMinute:2 10m · somewhatUseful
+D349 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 glassOfWater:2 9m · no answer
+D350 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 neckAndShoulders:2 whatsNext:1 8m · no answer
+D351 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 shakeOut:1 10m · no answer
+D352 P moreEnergy ≈10 → [STAGE 5] gentleStretch:8 putThingsBack:2 10m · somewhatUseful
+D353 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 clearCorner:5 glassOfWater:2 9m · no answer
+D354 P moreEnergy ≈10 → [STAGE 3] quickClearUp:5 moveToMusic:5 10m · no answer
+D355 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 oneLongReach:1 10m · no answer
+D356 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 shakeOut:1 10m · somewhatUseful
+D357 P moreEnergy ≈10 → [STAGE 1] songOn:1 gentleStretch:8 whatsNext:1 10m · no answer
+D358 P moreEnergy ≈10 → [STAGE 2] neckAndShoulders:2 quickClearUp:5 sitAMinute:2 9m · no answer
+D359 P moreEnergy ≈10 → [STAGE 3] moveToMusic:5 clearCorner:5 10m · no answer
+D360 P moreEnergy ≈10 → [STAGE 4] quickClearUp:5 daylight:4 oneLongReach:1 10m · somewhatUseful
+D361 P moreEnergy ≈10 → [STAGE 5] clearCorner:5 daylight:4 whatsNext:1 10m · no answer
+D362 P moreEnergy ≈10 → [STAGE 1] gentleStretch:8 glassOfWater:2 10m · no answer
+D363 P moreEnergy ≈10 → [STAGE 2] openWindow:1 moveToMusic:8 oneLongReach:1 10m · no answer
+D364 P moreEnergy ≈10 → [STAGE 3] clearCorner:5 neckAndShoulders:2 sitAMinute:2 9m · somewhatUseful
+D365 P moreEnergy ≈10 → [STAGE 4] moveToMusic:5 daylight:4 whatsNext:1 10m · no answer

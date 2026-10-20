@@ -56,7 +56,10 @@ class GuidanceConductor {
     final voice = _ref.read(guidanceVoiceProvider);
     final running = state.status == RecommendationStatus.started;
     if (composed == null || moment == null || !running || !voice.available) {
-      _spokenPart = running ? moment?.position : null;
+      // Nothing is checked while silent, so a voice that comes back — turned
+      // on again, or Premium resumed — takes a first look: it speaks from
+      // the next part, never one already under way.
+      _spokenPart = null;
       _stopVoice();
       _end();
       return;

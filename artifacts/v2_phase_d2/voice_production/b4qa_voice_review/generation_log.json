@@ -1,0 +1,50 @@
+{
+ "rule": "B4-QA voice defect (2026-10-18), REVIEW ONLY: replacement\ncandidates for a clip with a founder-confirmed defect.\n  - Locke part_songOn: an extra garbled syllable after \"really like\" (~3.8-4.4 s).\nSame exact voice ID, model, voice settings, output format and canonical\nscript (fingerprint re-derived from the frozen manifest); only the seed\nmoves on: 31, 32, 33 (seed 30 is the shipping take and is reproducible).\nAt most 3 takes per clip. Output goes ONLY to this review folder\n(b4qa_voice_review/<clip dir>/raw/seed<N>.mp3) with its own log; the\nproduction raw/, raw_retakes/, retake_log.json and assets are not touched.\nUsage: python -I generate_candidates.py <repo>",
+ "model_id": "eleven_multilingual_v2",
+ "voice_settings": {
+  "stability": 0.5,
+  "similarity_boost": 0.75,
+  "style": 0.0,
+  "use_speaker_boost": true,
+  "speed": 1.0
+ },
+ "output_format": "mp3_44100_128",
+ "clips": [
+  {
+   "stable_id": "voice_locke_v1",
+   "voice": "Locke",
+   "voice_id": "oaLGpwm7fYWDEFmlRuQk",
+   "clip": "part_songOn",
+   "seed": 31,
+   "script": "Put a song on. Put on a song you really like, and let it play while you start.",
+   "characters": 78,
+   "bytes": 114563,
+   "generated_at": "2026-10-18T10:51:53+02:00",
+   "request_id": "Znai1PCCtK7DabvFxQC3"
+  },
+  {
+   "stable_id": "voice_locke_v1",
+   "voice": "Locke",
+   "voice_id": "oaLGpwm7fYWDEFmlRuQk",
+   "clip": "part_songOn",
+   "seed": 32,
+   "script": "Put a song on. Put on a song you really like, and let it play while you start.",
+   "characters": 78,
+   "bytes": 95337,
+   "generated_at": "2026-10-18T10:51:55+02:00",
+   "request_id": "6Lp1FwvEZdAH3R90PjRE"
+  },
+  {
+   "stable_id": "voice_locke_v1",
+   "voice": "Locke",
+   "voice_id": "oaLGpwm7fYWDEFmlRuQk",
+   "clip": "part_songOn",
+   "seed": 33,
+   "script": "Put a song on. Put on a song you really like, and let it play while you start.",
+   "characters": 78,
+   "bytes": 109548,
+   "generated_at": "2026-10-18T10:51:56+02:00",
+   "request_id": "0SwhCbTdzkIgHXtwAS9c"
+  }
+ ]
+}

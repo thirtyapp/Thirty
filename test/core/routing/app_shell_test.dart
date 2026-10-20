@@ -11,16 +11,18 @@ import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
 import 'package:thirty/features/home/presentation/circle_history_page.dart';
 import 'package:thirty/features/home/presentation/home_page.dart';
+import 'package:thirty/features/insights/presentation/insights_page.dart';
+import 'package:thirty/features/personal_circle/presentation/yours_page.dart';
+import 'package:thirty/features/plans/presentation/plans_page.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
 import 'package:thirty/features/settings/presentation/widgets/you_personal_card.dart';
-import 'package:thirty/features/toolkit/presentation/toolkit_page.dart';
 
-/// Navigation shell coverage for the V2 Phase D IA: **Today | Toolkit |
-/// You** (ADR-022). The V1 Plans and Insights pillars are retired; the
-/// Toolkit is the one Premium destination, and history — once inside
-/// Insights — is reached from You. The real `appRouter` / `ThirtyApp`, no
-/// fakes.
+/// Navigation shell coverage for the final shell **Today | Plans | Insights
+/// | You** (ADR-024 §2, B7). Phase D's Toolkit is retired before release: it
+/// is no destination, and the Circles the user kept are in Yours, under
+/// You. History is reached from You and from Insights. The real `appRouter`
+/// / `ThirtyApp`, no fakes.
 ///
 /// `appRouter` is a shared singleton across every `testWidgets` in this
 /// process — every test below explicitly returns to `/` first rather than
@@ -34,7 +36,7 @@ class _SettledEntitlement extends EntitlementNotifier {
   EntitlementStatus build() => _status;
 }
 
-const _labels = ['Today', 'Toolkit', 'You'];
+const _labels = ['Today', 'Plans', 'Insights', 'You'];
 
 void main() {
   Future<void> pumpApp(WidgetTester tester, {bool entitled = true}) async {
@@ -67,45 +69,50 @@ void main() {
   int selectedIndex(WidgetTester tester) =>
       tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex;
 
-  testWidgets('three destinations — Today, Toolkit, You — each with its own '
-      'page; no Plans, no Insights', (tester) async {
+  testWidgets('four destinations — Today, Plans, Insights and You — each with '
+      'its own page; no Toolkit and no Journal tab', (tester) async {
     await pumpApp(tester);
 
     for (final label in _labels) {
       expect(navDestination(label), findsOneWidget);
     }
-    expect(navDestination('Plans'), findsNothing);
-    expect(navDestination('Insights'), findsNothing);
+    expect(navDestination('Toolkit'), findsNothing);
+    expect(navDestination('Journal'), findsNothing);
 
     expect(find.byType(HomePage), findsOneWidget);
-    await tester.tap(navDestination('Toolkit'));
+    await tester.tap(navDestination('Plans'));
     await tester.pumpAndSettle();
-    expect(find.byType(ToolkitPage), findsOneWidget);
+    expect(find.byType(PlansPage), findsOneWidget);
     expect(selectedIndex(tester), 1);
+    await tester.tap(navDestination('Insights'));
+    await tester.pumpAndSettle();
+    expect(find.byType(InsightsPage), findsOneWidget);
+    expect(selectedIndex(tester), 2);
     await tester.tap(navDestination('You'));
     await tester.pumpAndSettle();
     expect(find.byType(SettingsPage), findsOneWidget);
-    expect(selectedIndex(tester), 2);
+    expect(selectedIndex(tester), 3);
   });
 
-  testWidgets('a Free user finds the Toolkit too — what it offers depends '
-      'on Premium, never whether it opens', (tester) async {
-    await pumpApp(tester, entitled: false);
-    await tester.tap(navDestination('Toolkit'));
-    await tester.pumpAndSettle();
-    expect(find.byType(ToolkitPage), findsOneWidget);
-    expect(find.text('A Circle made for your day'), findsOneWidget);
-  });
-
-  for (final old in ['/plans', '/plans/moreEnergyPath', '/insights']) {
-    testWidgets('the retired $old leads to the Toolkit, never a dead page', (
-      tester,
-    ) async {
-      await pumpApp(tester);
-      appRouter.go(old);
+  for (final entitled in [true, false]) {
+    testWidgets('Yours is one tap from You, Premium or not '
+        '(entitled: $entitled)', (tester) async {
+      tester.view.physicalSize = const Size(412, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pumpApp(tester, entitled: entitled);
+      await tester.tap(navDestination('You'));
       await tester.pumpAndSettle();
-      expect(find.byType(ToolkitPage), findsOneWidget);
-      expect(selectedIndex(tester), 1);
+      expect(find.text(YouPersonalCard.yoursDetail(0)), findsOneWidget);
+      await tester.tap(find.text(YouPersonalCard.yoursTitle));
+      await tester.pumpAndSettle();
+      expect(find.byType(YoursPage), findsOneWidget);
+      expect(find.text(YoursPage.empty), findsOneWidget);
+      // Inside the You branch: the navigation bar stays.
+      expect(selectedIndex(tester), 3);
+      // `appRouter` is shared: leave the You branch at its own root.
+      appRouter.go('/settings');
+      await tester.pumpAndSettle();
     });
   }
 
@@ -170,13 +177,14 @@ void main() {
     }
   });
 
-  test('the shell branches are exactly Today, Toolkit and You, in order', () {
+  test('the shell branches are exactly Today, Plans, Insights and You, in '
+      'order — no Toolkit branch', () {
     final routes = buildAppRoutes(includeDevPreview: false);
     final shell = routes.whereType<StatefulShellRoute>().single;
     final branchRootPaths = shell.branches
         .map((branch) => (branch.routes.single as GoRoute).path)
         .toList();
-    expect(branchRootPaths, ['/', '/toolkit', '/settings']);
+    expect(branchRootPaths, ['/', '/plans', '/insights', '/settings']);
   });
 
   test('/history and /history/:date stay top-level routes, outside the '

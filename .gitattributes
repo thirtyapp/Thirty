@@ -5,3 +5,8 @@
 # of silently drifting via CRLF normalization (as it did on Windows before
 # this rule was added).
 docs/product/RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md text eol=lf
+
+# The B8 content review pack is checked against freshly generated LF text
+# (test/features/b8/b8_review_pack_test.dart), so keep it LF on every
+# checkout, whatever the machine's core.autocrlf.
+artifacts/v2_phase_d2/b8/** text eol=lf

@@ -1,0 +1,231 @@
+10-16 14:58:30.987 26196 26196 I flutter : QA-VOICE play defer=false assets/audio/guidance/voice_locke_v1/lead_first_d97b30dd.m4a | assets/audio/guidance/voice_locke_v1/part_phoneFaceDown_312eb0f5.m4a
+10-16 14:58:30.990  3044  7903 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 14:58:30.992  3044  7903 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 14:58:30.992  3044  7903 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 14:58:30.992  3044  7903 I MediaFocusControl: propagateFocusLossFromGain_syncAf empty stack
+10-16 14:58:30.992  3044  7903 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 14:58:44.059  3044  7252 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 14:58:48.553 26196 26196 I flutter : QA-VOICE play defer=false assets/audio/guidance/voice_heather_v1/lead_first_d97b30dd.m4a | assets/audio/guidance/voice_heather_v1/part_phoneFaceDown_312eb0f5.m4a
+10-16 14:58:48.554  3044  7252 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 14:58:48.554  3044  7252 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 14:58:48.555  3044  7252 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 14:58:48.555  3044  7252 I MediaFocusControl: propagateFocusLossFromGain_syncAf empty stack
+10-16 14:58:48.555  3044  7252 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 14:59:01.377  3044  7252 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 14:59:06.126 26196 26196 I flutter : QA-VOICE play defer=false assets/audio/guidance/voice_milo_v1/lead_first_d97b30dd.m4a | assets/audio/guidance/voice_milo_v1/part_phoneFaceDown_312eb0f5.m4a
+10-16 14:59:06.127  3044  7252 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 14:59:06.128  3044  7254 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 14:59:06.128  3044  7254 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 14:59:06.128  3044  7254 I MediaFocusControl: propagateFocusLossFromGain_syncAf empty stack
+10-16 14:59:06.128  3044  7254 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 14:59:17.810  3044  7893 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 14:59:23.705 26196 26196 I flutter : QA-VOICE play defer=false assets/audio/guidance/voice_brittney_v1/lead_first_d97b30dd.m4a | assets/audio/guidance/voice_brittney_v1/part_phoneFaceDown_312eb0f5.m4a
+10-16 14:59:23.706  3044  7893 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 14:59:23.706  3044  7254 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 14:59:23.707  3044  7254 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 14:59:23.707  3044  7254 I MediaFocusControl: propagateFocusLossFromGain_syncAf empty stack
+10-16 14:59:23.707  3044  7254 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 14:59:38.609  3044  7252 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:00:18.462 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_locke_v1/lead_first_d97b30dd.m4a | assets/audio/guidance/voice_locke_v1/part_neckAndShoulders_4c3958ac.m4a
+10-16 15:00:18.470  3044  7729 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:00:18.470  3044  4678 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:00:18.471  3044  4678 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:00:18.471  3044  4678 I MediaFocusControl: propagateFocusLossFromGain_syncAf empty stack
+10-16 15:00:18.471  3044  4678 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:00:18.482  3044  7729 I ActivityManager: Background started FGS: Allowed [callingPackage: com.thirty.app.thirty; callingUid: 10254; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { act=com.thirty.app.guidance.SHOW xflg=0x4 cmp=com.thirty.app.thirty/.GuidanceService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 15:00:30.557  3044  4694 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:02:18.465 26196 26196 I flutter : QA-VOICE play defer=false assets/audio/guidance/voice_locke_v1/lead_next_df1d69d2.m4a | assets/audio/guidance/voice_locke_v1/part_getItOut_a239320e.m4a
+10-16 15:02:18.469  3044  7252 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:02:18.470  3044  7893 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:02:18.471  3044  7893 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:02:18.471  3044  7893 I MediaFocusControl: propagateFocusLossFromGain_syncAf empty stack
+10-16 15:02:18.471  3044  7893 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:02:30.602  3044  7252 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:04:08.296  3044  3913 D ActivityManager: Received SERVICE intent 0xbbd03f7 Key{startService pkg=com.thirty.app.thirty intent=act=com.thirty.app.guidance.NEXT xflg=0x4 cmp=com.thirty.app.thirty/.GuidanceService flags=0x4000000 u=0} requestCode=3 from uid 10049
+10-16 15:04:08.300 26196 26196 I flutter : QA-VOICE play defer=false assets/audio/guidance/voice_locke_v1/lead_last_7663f978.m4a | assets/audio/guidance/voice_locke_v1/part_glassOfWater_cd436c4b.m4a
+10-16 15:04:08.304  3044  5190 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:04:08.305  3044  3913 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:04:08.305  3044  3913 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:04:08.305  3044  3913 I MediaFocusControl: propagateFocusLossFromGain_syncAf empty stack
+10-16 15:04:08.305  3044  3913 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:04:15.909  3044  3557 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:04:46.828  3044  3146 I MediaFocusControl: requestAudioFocus() from uid/pid 10285/18526 AA=USAGE_MEDIA/CONTENT_TYPE_UNKNOWN clientId=android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a callingPack=com.android.chrome req=1 flags=0x1 sdk=37
+10-16 15:04:46.829  3044  3146 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:1
+10-16 15:04:46.829  3044  3146 I MediaFocusControl: propagateFocusLossFromGain_syncAf empty stack
+10-16 15:06:08.465 26196 26196 I flutter : QA-VOICE play defer=false assets/audio/guidance/voice_locke_v1/close_3b06cf13.m4a
+10-16 15:06:08.469  3044  3557 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:06:08.471 18526 18526 I AudioManager: dispatching onAudioFocusChange(1) to android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:06:08.476  3044  3557 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:06:08.477  3044  3557 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:06:08.477  3044  3557 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:06:08.478  3044  3557 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:06:08.478 18526 18526 I AudioManager: dispatching onAudioFocusChange(-3) to android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:06:12.373  3044  3147 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:06:12.373 18526 18526 I AudioManager: dispatching onAudioFocusChange(1) to android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:06:57.241  3044  6431 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:06:57.241 18526 18526 I AudioManager: dispatching onAudioFocusChange(1) to android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:08:01.350 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_heather_v1/lead_first_d97b30dd.m4a | assets/audio/guidance/voice_heather_v1/part_openWindow_b52c68ca.m4a
+10-16 15:08:01.354  3044  6430 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:08:01.355  3044  6402 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:08:01.355  3044  6402 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:08:01.355  3044  6402 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:08:01.355  3044  6402 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:08:01.355 18526 18526 I AudioManager: dispatching onAudioFocusChange(1) to android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:08:01.371  3044  6430 I ActivityManager: Background started FGS: Allowed [callingPackage: com.thirty.app.thirty; callingUid: 10254; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { act=com.thirty.app.guidance.SHOW xflg=0x4 cmp=com.thirty.app.thirty/.GuidanceService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 15:08:11.261  3044  7740 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:08:25.179  3044  3147 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:08:37.002 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_heather_v1/lead_next_df1d69d2.m4a | assets/audio/guidance/voice_heather_v1/part_moveToMusic_efb5ed3a.m4a
+10-16 15:08:37.005  3044  6402 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:08:37.006  3044  6431 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:08:37.006  3044  6431 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:08:37.006  3044  6431 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:08:37.006  3044  6431 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:08:50.334  3044  6430 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:08:59.522 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_heather_v1/lead_next_df1d69d2.m4a | assets/audio/guidance/voice_heather_v1/part_standingStretch_7ca4a0a2.m4a
+10-16 15:08:59.525  3044  5096 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:08:59.526  3044  6431 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:08:59.526  3044  6431 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:08:59.526  3044  6431 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:08:59.526  3044  6431 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:09:14.884  3044  6402 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:09:29.416 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_heather_v1/lead_last_7663f978.m4a | assets/audio/guidance/voice_heather_v1/part_glassOfWater_cd436c4b.m4a
+10-16 15:09:29.420  3044  6430 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:09:29.420  3044  6430 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:09:29.420  3044  6430 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:09:29.420  3044  6430 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:09:29.421  3044  6430 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:09:37.665  3044  6402 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:10:00.183  3044  7740 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:11:12.264 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_milo_v1/lead_first_d97b30dd.m4a | assets/audio/guidance/voice_milo_v1/part_closeWhatsOpen_a811d003.m4a
+10-16 15:11:12.267  3044  6430 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:11:12.268  3044  3913 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:11:12.268  3044  3913 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:11:12.268  3044  3913 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:11:12.268  3044  3913 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:11:12.281  3044  6430 I ActivityManager: Background started FGS: Allowed [callingPackage: com.thirty.app.thirty; callingUid: 10254; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { act=com.thirty.app.guidance.SHOW xflg=0x4 cmp=com.thirty.app.thirty/.GuidanceService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 15:11:23.437  3044  6430 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:11:30.805 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_milo_v1/lead_next_df1d69d2.m4a | assets/audio/guidance/voice_milo_v1/part_oneTask_80701d4c.m4a
+10-16 15:11:30.808  3044  6431 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:11:30.808  3044  3913 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:11:30.808  3044  3913 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:11:30.808  3044  3913 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:11:30.808  3044  3913 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:11:43.636  3044  7729 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:11:53.670 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_milo_v1/lead_next_df1d69d2.m4a | assets/audio/guidance/voice_milo_v1/part_getItOut_a239320e.m4a
+10-16 15:11:53.683  3044  7740 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:11:53.683  3044  3147 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:11:53.683  3044  3147 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:11:53.683  3044  3147 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:11:53.683  3044  3147 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:12:04.075  3044  7740 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:12:31.362 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_milo_v1/lead_last_7663f978.m4a | assets/audio/guidance/voice_milo_v1/part_lookFar_d2e2c311.m4a
+10-16 15:12:31.366  3044  3557 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:12:31.366  3044  3557 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:12:31.366  3044  3557 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:12:31.366  3044  3557 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:12:31.366  3044  3557 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:12:43.582  3044  6431 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:13:13.272  3044  7729 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:13:44.804 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_brittney_v1/lead_next_df1d69d2.m4a | assets/audio/guidance/voice_brittney_v1/part_getItOut_a239320e.m4a
+10-16 15:13:44.808  3044  6431 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:13:44.808  3044  6431 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:13:44.808  3044  6431 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:13:44.808  3044  6431 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:13:44.808  3044  6431 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:13:44.821  3044  3557 I ActivityManager: Background started FGS: Allowed [callingPackage: com.thirty.app.thirty; callingUid: 10254; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { act=com.thirty.app.guidance.SHOW xflg=0x4 cmp=com.thirty.app.thirty/.GuidanceService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 15:13:57.711  3044  6431 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:14:13.160 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_brittney_v1/close_3b06cf13.m4a
+10-16 15:14:13.165  3044  6431 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:14:13.165  3044  6431 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:14:13.165  3044  6431 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:14:13.165  3044  6431 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:14:13.166  3044  6431 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:14:18.149  3044  6430 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:14:46.815  3044  6430 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:16:55.846 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_locke_v1/lead_first_d97b30dd.m4a | assets/audio/guidance/voice_locke_v1/part_neckAndShoulders_4c3958ac.m4a
+10-16 15:16:55.864  3044  7729 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:16:55.865  3044  7729 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:16:55.866  3044  7729 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:16:55.866  3044  7729 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:16:55.866  3044  7729 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:16:55.879  3044  7729 I ActivityManager: Background started FGS: Allowed [callingPackage: com.thirty.app.thirty; callingUid: 10254; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { act=com.thirty.app.guidance.SHOW xflg=0x4 cmp=com.thirty.app.thirty/.GuidanceService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 15:17:07.981  3044  7254 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:17:18.117  3044  3557 I MediaFocusControl: requestAudioFocus() from uid/pid 10151/2397 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@3aae147com.google.android.accessibility.utils.output.SpeechControllerImpl$5@44fbd74 callingPack=com.samsung.android.accessibility.talkback req=3 flags=0x0 sdk=36
+10-16 15:17:18.117  3044  3557 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:17:18.117  3044  3557 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:17:18.117  3044  3557 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:17:27.890  3044  7740 I MediaFocusControl: abandonAudioFocus() from uid/pid 10151/2397 clientId=android.media.AudioManager@3aae147com.google.android.accessibility.utils.output.SpeechControllerImpl$5@44fbd74 callingPack=com.samsung.android.accessibility.talkback
+10-16 15:18:55.848 26196 26196 I flutter : QA-VOICE play defer=false assets/audio/guidance/voice_locke_v1/lead_next_df1d69d2.m4a | assets/audio/guidance/voice_locke_v1/part_getItOut_a239320e.m4a
+10-16 15:18:55.851  3044  7902 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:18:55.852  3044  7254 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:18:55.852  3044  7254 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:18:55.852  3044  7254 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:18:55.852  3044  7254 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:19:07.962  3044  3557 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:19:27.556  3044  6430 I MediaFocusControl: requestAudioFocus() from uid/pid 10151/2397 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@3aae147com.google.android.accessibility.utils.output.SpeechControllerImpl$5@44fbd74 callingPack=com.samsung.android.accessibility.talkback req=3 flags=0x0 sdk=36
+10-16 15:19:27.556  3044  6430 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:19:27.556  3044  6430 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:19:27.557  3044  6430 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:19:35.317  3044  6430 I MediaFocusControl: abandonAudioFocus() from uid/pid 10151/2397 clientId=android.media.AudioManager@3aae147com.google.android.accessibility.utils.output.SpeechControllerImpl$5@44fbd74 callingPack=com.samsung.android.accessibility.talkback
+10-16 15:19:35.729  3044  6430 I MediaFocusControl: requestAudioFocus() from uid/pid 10151/2397 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@3aae147com.google.android.accessibility.utils.output.SpeechControllerImpl$5@44fbd74 callingPack=com.samsung.android.accessibility.talkback req=3 flags=0x0 sdk=36
+10-16 15:19:35.729  3044  6430 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:19:35.729  3044  6430 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:19:35.729  3044  6430 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:19:38.113  3044  7902 I MediaFocusControl: abandonAudioFocus() from uid/pid 10151/2397 clientId=android.media.AudioManager@3aae147com.google.android.accessibility.utils.output.SpeechControllerImpl$5@44fbd74 callingPack=com.samsung.android.accessibility.talkback
+10-16 15:24:03.225  3044  7764 I MediaFocusControl: requestAudioFocus() from uid/pid 10151/2397 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@3aae147com.google.android.accessibility.utils.output.SpeechControllerImpl$5@44fbd74 callingPack=com.samsung.android.accessibility.talkback req=3 flags=0x0 sdk=36
+10-16 15:24:03.225  3044  7764 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:24:03.225  3044  7764 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:24:03.225  3044  7764 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:24:06.412  3044  5455 I MediaFocusControl: abandonAudioFocus() from uid/pid 10151/2397 clientId=android.media.AudioManager@3aae147com.google.android.accessibility.utils.output.SpeechControllerImpl$5@44fbd74 callingPack=com.samsung.android.accessibility.talkback
+10-16 15:24:55.848 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_locke_v1/lead_last_7663f978.m4a | assets/audio/guidance/voice_locke_v1/part_glassOfWater_cd436c4b.m4a
+10-16 15:24:55.851  3044  3146 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:24:55.937  3044  3146 I MediaFocusControl: requestAudioFocus() from uid/pid 10151/2397 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@3aae147com.google.android.accessibility.utils.output.SpeechControllerImpl$5@44fbd74 callingPack=com.samsung.android.accessibility.talkback req=3 flags=0x0 sdk=36
+10-16 15:24:55.937  3044  3146 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:24:55.937  3044  3146 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:24:55.937  3044  3146 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:25:04.883  3044  7902 I MediaFocusControl: abandonAudioFocus() from uid/pid 10151/2397 clientId=android.media.AudioManager@3aae147com.google.android.accessibility.utils.output.SpeechControllerImpl$5@44fbd74 callingPack=com.samsung.android.accessibility.talkback
+10-16 15:25:20.059  3044  7902 I MediaFocusControl: requestAudioFocus() from uid/pid 10151/2397 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@3aae147com.google.android.accessibility.utils.output.SpeechControllerImpl$5@44fbd74 callingPack=com.samsung.android.accessibility.talkback req=3 flags=0x0 sdk=36
+10-16 15:25:20.060  3044  7902 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:25:20.060  3044  7902 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:25:20.060  3044  7902 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:25:22.110  3044  7729 I MediaFocusControl: abandonAudioFocus() from uid/pid 10151/2397 clientId=android.media.AudioManager@3aae147com.google.android.accessibility.utils.output.SpeechControllerImpl$5@44fbd74 callingPack=com.samsung.android.accessibility.talkback
+10-16 15:25:43.418  3044  3913 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:28:14.544  3044  7690 I MediaFocusControl: requestAudioFocus() from uid/pid 10151/2397 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@2f029d1com.google.android.accessibility.utils.output.SpeechControllerImpl$5@5a5ac36 callingPack=com.samsung.android.accessibility.talkback req=3 flags=0x0 sdk=36
+10-16 15:28:14.544  3044  7690 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:28:14.544  3044  7690 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:28:14.544  3044  7690 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:28:33.651  3044  7199 I MediaFocusControl: abandonAudioFocus() from uid/pid 10151/2397 clientId=android.media.AudioManager@2f029d1com.google.android.accessibility.utils.output.SpeechControllerImpl$5@5a5ac36 callingPack=com.samsung.android.accessibility.talkback
+10-16 15:29:01.959  3044  5455 I MediaFocusControl: requestAudioFocus() from uid/pid 10151/2397 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@2f029d1com.google.android.accessibility.utils.output.SpeechControllerImpl$5@5a5ac36 callingPack=com.samsung.android.accessibility.talkback req=3 flags=0x0 sdk=36
+10-16 15:29:01.959  3044  5455 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:29:01.959  3044  5455 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:29:01.959  3044  5455 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:29:23.570  3044  4195 I MediaFocusControl: abandonAudioFocus() from uid/pid 10151/2397 clientId=android.media.AudioManager@2f029d1com.google.android.accessibility.utils.output.SpeechControllerImpl$5@5a5ac36 callingPack=com.samsung.android.accessibility.talkback
+10-16 15:29:33.325  3044  5455 I MediaFocusControl: requestAudioFocus() from uid/pid 10151/2397 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@2f029d1com.google.android.accessibility.utils.output.SpeechControllerImpl$5@5a5ac36 callingPack=com.samsung.android.accessibility.talkback req=3 flags=0x0 sdk=36
+10-16 15:29:33.325  3044  5455 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:29:33.325  3044  5455 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:29:33.325  3044  5455 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:29:35.385  3044  3558 I MediaFocusControl: abandonAudioFocus() from uid/pid 10151/2397 clientId=android.media.AudioManager@2f029d1com.google.android.accessibility.utils.output.SpeechControllerImpl$5@5a5ac36 callingPack=com.samsung.android.accessibility.talkback
+10-16 15:32:21.910 26196 26196 I flutter : QA-VOICE play defer=true assets/audio/guidance/voice_brittney_v1/lead_first_d97b30dd.m4a | assets/audio/guidance/voice_brittney_v1/part_lookAround_53849d95.m4a
+10-16 15:32:21.914  3044  7902 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:32:21.915  3044  7902 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:32:21.915  3044  7902 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:32:21.915  3044  7902 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:32:21.915  3044  7902 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:32:21.930  3044  7902 I ActivityManager: Background started FGS: Allowed [callingPackage: com.thirty.app.thirty; callingUid: 10254; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { act=com.thirty.app.guidance.SHOW xflg=0x4 cmp=com.thirty.app.thirty/.GuidanceService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-16 15:32:31.310  3044  7199 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:32:37.348  3044  3212 I PowerManagerService: [PWL]       PARTIAL_WAKE_LOCK                 'thirty:circle_guidance' ACQ=-15s399ms (uid=10254 isFrozen=false pid=26196 displayId=0 lock=a108de2)
+10-16 15:33:21.912 26196 26196 I flutter : QA-VOICE play defer=false assets/audio/guidance/voice_brittney_v1/lead_next_df1d69d2.m4a | assets/audio/guidance/voice_brittney_v1/part_easyWalk_9be95142.m4a
+10-16 15:33:21.915  3044  7903 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:33:21.920  3044  7199 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:33:21.921  3044  7199 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:33:21.921  3044  7199 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:33:21.921  3044  7199 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:33:33.940  3044  7557 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:48:21.912 26196 26196 I flutter : QA-VOICE play defer=false assets/audio/guidance/voice_brittney_v1/lead_next_df1d69d2.m4a | assets/audio/guidance/voice_brittney_v1/part_gentleStretch_052b8910.m4a
+10-16 15:48:21.915  3044  4194 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:48:21.917  3044  3913 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/26196 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty req=3 flags=0x0 sdk=36
+10-16 15:48:21.918  3044  3913 I MediaFocusControl: propagateFocusLossFromGain_syncAf gain:3
+10-16 15:48:21.918  3044  3913 I MediaFocusControl: propagateFocusLossFromGain_syncAf checking client:android.media.AudioManager@4d81345org.chromium.content.browser.AudioFocusDelegate@23d6a9a
+10-16 15:48:21.918  3044  3913 D MediaFocusControl: propagateFocusLossFromGainToAll, 3
+10-16 15:48:42.122  3044  3913 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty
+10-16 15:50:46.490  3044  6431 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/26196 clientId=android.media.AudioManager@18c7534 callingPack=com.thirty.app.thirty

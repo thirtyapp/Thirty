@@ -44,6 +44,7 @@ class CircleRecordDetailPage extends ConsumerWidget {
     return Scaffold(
       appBar: ThirtyAppBar(
         title: Text(humanJournalDate(localDate, withWeekday: false)),
+        parentLocation: '/insights',
       ),
       body: SafeArea(
         child: entry == null

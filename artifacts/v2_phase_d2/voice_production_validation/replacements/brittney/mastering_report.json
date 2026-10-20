@@ -1,0 +1,144 @@
+{
+ "rule": "Restrained validation master for Brittney (founder listening PASS on the\nlevel-matched diagnostic, 2026-10-16). The SAME rule as Milo's master\n(master_replacements.py), reusing its limiter and edge fades, written only\ninto brittney/ (Milo's and Grace's outputs and mastering_report.json are not\ntouched):\n1. trim to speech (-50 dBFS envelope, 40 ms margin);\n2. 10 ms raised-cosine fade at each trim edge;\n3. outlier correction only: a part/close clip more than 2 LU from the median\n   part level is moved just to the window edge; all others keep their level;\n4. ONE voice-wide gain so the five-clip take reads -22 LUFS (the level of the\n   approved Locke / Heather / Milo masters);\n5. peak safety only: delay-compensated 4x look-ahead limiter at -2 dBFS,\n   engaged only where a clip's true peak would exceed it;\n6. 150 ms lead-in; 700 ms tail after a lead, 400 ms after a part/close;\n7. AAC-LC .m4a, mono, 44.1 kHz, 128 kbit/s, production file names.\nNo denoise, no high-pass, no EQ, no compression, no expander.\nAlso checks that the edge fade does not touch a fast initial consonant: the\nenergy the fade removes, and where speech onset falls relative to the fade.\nUsage: python -I master_brittney.py <repo>",
+ "limiter_selfcheck_lag_samples": 0,
+ "voice": "Brittney",
+ "voice_id": "pjcYQlDFKMbcOUp6F5GD",
+ "source_quality": "FOUNDER LISTENING PASS (2026-10-16)",
+ "listen_as_generated_lufs": -31.72,
+ "listen_as_generated_tp": -13.3,
+ "median_part_lufs": -32.18,
+ "voice_gain_db": 9.56,
+ "clips": [
+  {
+   "clip": "lead_first",
+   "file": "lead_first_d97b30dd.m4a",
+   "raw_trimmed_lufs": -31.98,
+   "outlier_correction_db": 0.0,
+   "total_gain_db": 9.56,
+   "pre_limit_tp_dbtp": -9.06,
+   "limiter_db": 0.0,
+   "trimmed_head_tail_s": [
+    0.02,
+    0.242
+   ],
+   "edge_fade_check": {
+    "trim_start_at_file_start": false,
+    "speech_onset_ms_after_trim_start": 40,
+    "fade_head_level_dbfs": -58.7,
+    "fade_head_removed_share_of_first_100ms_db": -35.9,
+    "fade_tail_removed_share_of_last_100ms_db": -34.3
+   },
+   "final_lufs": -24.03,
+   "final_tp_dbtp": -9.07
+  },
+  {
+   "clip": "part_getItOut",
+   "file": "part_getItOut_a239320e.m4a",
+   "raw_trimmed_lufs": -32.23,
+   "outlier_correction_db": 0.0,
+   "total_gain_db": 9.56,
+   "pre_limit_tp_dbtp": -4.52,
+   "limiter_db": 0.0,
+   "trimmed_head_tail_s": [
+    0.04,
+    0.243
+   ],
+   "edge_fade_check": {
+    "trim_start_at_file_start": false,
+    "speech_onset_ms_after_trim_start": 40,
+    "fade_head_level_dbfs": -73.2,
+    "fade_head_removed_share_of_first_100ms_db": -49.2,
+    "fade_tail_removed_share_of_last_100ms_db": -16.1
+   },
+   "final_lufs": -22.89,
+   "final_tp_dbtp": -4.54
+  },
+  {
+   "clip": "part_briskWalk",
+   "file": "part_briskWalk_e3125526.m4a",
+   "raw_trimmed_lufs": -32.13,
+   "outlier_correction_db": 0.0,
+   "total_gain_db": 9.56,
+   "pre_limit_tp_dbtp": -3.48,
+   "limiter_db": 0.0,
+   "trimmed_head_tail_s": [
+    0.0,
+    0.287
+   ],
+   "edge_fade_check": {
+    "trim_start_at_file_start": true,
+    "speech_onset_ms_after_trim_start": 20,
+    "fade_head_level_dbfs": -67.1,
+    "fade_head_removed_share_of_first_100ms_db": -50.0,
+    "fade_tail_removed_share_of_last_100ms_db": -32.1
+   },
+   "final_lufs": -22.76,
+   "final_tp_dbtp": -3.49
+  },
+  {
+   "clip": "part_warmDrink",
+   "file": "part_warmDrink_db4bc51f.m4a",
+   "raw_trimmed_lufs": -30.69,
+   "outlier_correction_db": 0.0,
+   "total_gain_db": 9.56,
+   "pre_limit_tp_dbtp": -4.03,
+   "limiter_db": 0.0,
+   "trimmed_head_tail_s": [
+    0.0,
+    0.3
+   ],
+   "edge_fade_check": {
+    "trim_start_at_file_start": true,
+    "speech_onset_ms_after_trim_start": 40,
+    "fade_head_level_dbfs": -60.6,
+    "fade_head_removed_share_of_first_100ms_db": -39.6,
+    "fade_tail_removed_share_of_last_100ms_db": -27.6
+   },
+   "final_lufs": -21.24,
+   "final_tp_dbtp": -4.22
+  },
+  {
+   "clip": "close",
+   "file": "close_3b06cf13.m4a",
+   "raw_trimmed_lufs": -32.68,
+   "outlier_correction_db": 0.0,
+   "total_gain_db": 9.56,
+   "pre_limit_tp_dbtp": -4.68,
+   "limiter_db": 0.0,
+   "trimmed_head_tail_s": [
+    0.0,
+    0.288
+   ],
+   "edge_fade_check": {
+    "trim_start_at_file_start": true,
+    "speech_onset_ms_after_trim_start": 45,
+    "fade_head_level_dbfs": -62.4,
+    "fade_head_removed_share_of_first_100ms_db": -35.7,
+    "fade_tail_removed_share_of_last_100ms_db": -37.0
+   },
+   "final_lufs": -23.31,
+   "final_tp_dbtp": -4.99
+  }
+ ],
+ "listen_mastered_lufs": -22.16,
+ "listen_mastered_tp": -3.58,
+ "references": {
+  "Locke": "../../locke/locke_listen_mastered.m4a",
+  "Heather": "../../heather/heather_listen_mastered.m4a",
+  "Milo": "../milo/milo_listen_mastered.m4a"
+ },
+ "reference_levels": {
+  "Locke": {
+   "lufs": -21.96,
+   "tp_dbtp": -2.71
+  },
+  "Heather": {
+   "lufs": -21.95,
+   "tp_dbtp": -3.14
+  },
+  "Milo": {
+   "lufs": -22.15,
+   "tp_dbtp": -4.08
+  }
+ }
+}

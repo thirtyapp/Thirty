@@ -1,0 +1,192 @@
+{
+ "milo": {
+  "voice_id": "GUDYcgRAONiI1nXDcNQQ",
+  "voices_endpoint_status": 200,
+  "voice": {
+   "voice_id": "GUDYcgRAONiI1nXDcNQQ",
+   "name": "Milo - Calm, Soothing and Meditative",
+   "category": "professional",
+   "is_owner": null,
+   "available_for_tiers": [],
+   "high_quality_base_model_ids": [
+    "eleven_turbo_v2_5",
+    "eleven_flash_v2_5",
+    "eleven_turbo_v2",
+    "eleven_flash_v2",
+    "eleven_multilingual_sts_v2",
+    "eleven_v4",
+    "eleven_v4_hq",
+    "eleven_v4_post_trained",
+    "eleven_v4_turbo"
+   ],
+   "safety_control": null,
+   "is_legacy": false,
+   "labels": {
+    "use_case": "narrative_story",
+    "accent": "american",
+    "gender": "male",
+    "age": "middle_aged",
+    "language": "en",
+    "descriptive": "relaxed"
+   },
+   "description": "Adult American Male with a soothing, relaxed voice for mediation, bedtime stories, and calming down. ",
+   "sharing.status": "copied",
+   "sharing.free_users_allowed": true,
+   "sharing.rate": 1.0,
+   "sharing.notice_period": 730,
+   "sharing.disable_at_unix": null,
+   "sharing.live_moderation_enabled": false,
+   "verified_languages": [
+    [
+     "en",
+     "eleven_turbo_v2_5"
+    ],
+    [
+     "en",
+     "eleven_v2_5_flash"
+    ],
+    [
+     "en",
+     "eleven_flash_v2_5"
+    ],
+    [
+     "en",
+     "eleven_turbo_v2"
+    ],
+    [
+     "en",
+     "eleven_v2_flash"
+    ],
+    [
+     "en",
+     "eleven_flash_v2"
+    ],
+    [
+     "en",
+     "eleven_multilingual_sts_v2"
+    ],
+    [
+     "en",
+     "eleven_v4"
+    ],
+    [
+     "en",
+     "eleven_v4_exp"
+    ],
+    [
+     "en",
+     "eleven_v4_hq"
+    ]
+   ]
+  },
+  "library_status": 200,
+  "library": [
+   {
+    "name": "Milo - Calm, Soothing and Meditative",
+    "category": "high_quality",
+    "rate": 1.0,
+    "fiat_rate": null,
+    "free_users_allowed": true,
+    "notice_period": 730,
+    "live_moderation_enabled": false,
+    "is_added_by_user": true,
+    "language": "en",
+    "accent": "american",
+    "gender": "male",
+    "age": "middle_aged",
+    "use_case": "narrative_story",
+    "descriptive": "relaxed",
+    "description": "Adult American Male with a soothing, relaxed voice for mediation, bedtime stories, and calming down. ",
+    "date_unix": 1740018682,
+    "featured": false
+   }
+  ]
+ },
+ "grace": {
+  "voice_id": "mZTVERjx1WQkdAWt1Lcm",
+  "voices_endpoint_status": 200,
+  "voice": {
+   "voice_id": "mZTVERjx1WQkdAWt1Lcm",
+   "name": "Grace - warm, velvety meditation voice",
+   "category": "professional",
+   "is_owner": null,
+   "available_for_tiers": [],
+   "high_quality_base_model_ids": [
+    "eleven_turbo_v2_5",
+    "eleven_flash_v2_5",
+    "eleven_multilingual_v2",
+    "eleven_turbo_v2",
+    "eleven_flash_v2"
+   ],
+   "safety_control": null,
+   "is_legacy": false,
+   "labels": {
+    "use_case": "conversational",
+    "age": "young",
+    "gender": "female",
+    "accent": "american",
+    "language": "en",
+    "descriptive": "calm"
+   },
+   "description": "A warm, velvety alto with a slow, unhurried cadence and gentle, rounded tones. Her voice carries a natural stillness. Deeply grounding and soothing, ideal for guided meditation, breathwork, affirmations, and wellness content.",
+   "sharing.status": "copied",
+   "sharing.free_users_allowed": false,
+   "sharing.rate": 1.0,
+   "sharing.notice_period": 730,
+   "sharing.disable_at_unix": null,
+   "sharing.live_moderation_enabled": false,
+   "verified_languages": [
+    [
+     "en",
+     "eleven_turbo_v2_5"
+    ],
+    [
+     "en",
+     "eleven_v2_5_flash"
+    ],
+    [
+     "en",
+     "eleven_flash_v2_5"
+    ],
+    [
+     "en",
+     "eleven_multilingual_v2"
+    ],
+    [
+     "en",
+     "eleven_turbo_v2"
+    ],
+    [
+     "en",
+     "eleven_v2_flash"
+    ],
+    [
+     "en",
+     "eleven_flash_v2"
+    ]
+   ]
+  },
+  "library_status": 200,
+  "library": [
+   {
+    "name": "Grace - warm, velvety meditation voice",
+    "category": "high_quality",
+    "rate": 1.0,
+    "fiat_rate": null,
+    "free_users_allowed": false,
+    "notice_period": 730,
+    "live_moderation_enabled": false,
+    "is_added_by_user": true,
+    "language": "en",
+    "accent": "american",
+    "gender": "female",
+    "age": "young",
+    "use_case": "conversational",
+    "descriptive": "calm",
+    "description": "A warm, velvety alto with a slow, unhurried cadence and gentle, rounded tones. Her voice carries a natural stillness. Deeply grounding and soothing, ideal for guided meditation, breathwork, affirmations, and wellness content.",
+    "date_unix": 1777068710,
+    "featured": false
+   }
+  ]
+ }
+}

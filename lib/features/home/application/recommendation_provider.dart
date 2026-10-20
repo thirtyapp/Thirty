@@ -12,17 +12,15 @@ import '../../../core/premium/premium_access.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../../../core/utils/date_key.dart';
-import '../../toolkit/application/toolkit_provider.dart';
-import '../../toolkit/domain/module_library.dart';
-import '../../toolkit/domain/path_catalog.dart';
-import '../../toolkit/domain/path_engine.dart';
-import '../../toolkit/domain/toolkit_model.dart';
+import '../../personal_circle/application/kept_circles_provider.dart';
 import '../../personal_circle/domain/circle_composer.dart';
 import '../../personal_circle/domain/circle_elements.dart';
 import '../../personal_circle/domain/composed_session.dart';
+import '../../plans/application/circle_plans_provider.dart';
+import '../../plans/domain/plan_copy.dart';
+import '../../plans/domain/plan_stage_provenance.dart';
 import '../domain/circle_session.dart';
 import '../domain/recommendation_engine.dart';
-import '../domain/recommendation_policy.dart';
 import 'activity_catalog.dart';
 import 'circle_journal.dart';
 import 'suggestion_preferences.dart';
@@ -32,9 +30,13 @@ import 'suggestion_preferences.dart';
 /// (`../domain/recommendation_engine.dart`) picks one [ActivityId] from the
 /// user's own explicit history — locally and deterministically.
 ///
-/// **V2 Phase D:** today's Circle may instead be one of the user's routines
-/// (the engine picked it, as an ordinary candidate) or the next step of
-/// their Path (it claimed today's matching need) — see [session].
+/// **V2 Phase D2:** with Premium, today's Circle is a composed Personal
+/// Guided Circle instead ([composed]); a kept Circle the user chose with "Use
+/// it today" is one too. Phase D's routines and Paths are retired before
+/// release (ADR-024): neither can be today's Circle.
+///
+/// **ADR-024 B3:** on a Premium day whose need is the active Circle Plan's,
+/// the Plan's stage steers that composition first ([ComposedSession.stage]).
 ///
 /// Purely content — the day's session/lifecycle state (whether it has been
 /// started or closed, and when) lives on [RecommendationState], not here.
@@ -54,17 +56,17 @@ class Recommendation {
     this.reason = RecommendationReason.bestFit,
     this.replacedFrom,
     this.replacementReason,
-    this.session,
     this.replacedFromTitle,
-    this.replacedFromRoutineId,
+    this.replacedFromStage,
+    this.retiredSession,
     this.composed,
     this.composerFellBack = false,
   });
 
   final String intent;
 
-  /// What today's Circle is called: the activity, the routine, or the Path
-  /// step's pieces.
+  /// What today's Circle is called: the activity, or a composed Circle's
+  /// substance.
   final String activity;
   final String duration;
   final String why;
@@ -77,8 +79,8 @@ class Recommendation {
   final ActivityCategory category;
 
   /// The canonical activity identity this recommendation was built from —
-  /// for a routine or a Path step joining several pieces, its first piece,
-  /// whose World art stands for the Circle.
+  /// for a composed Circle, its main piece's art, which stands for the
+  /// Circle.
   final ActivityId activityId;
 
   /// The raw [Intention] this recommendation was resolved for — kept
@@ -111,20 +113,26 @@ class Recommendation {
   String? get personalReason => reason.visibleCopy;
 
   /// The activity first offered today, if the user asked for another — for
-  /// a routine or Path step, its first piece.
+  /// a composed Circle, its main piece's art.
   final ActivityId? replacedFrom;
 
   /// Why ("Not this one today"). Today's constraint, never a usefulness
   /// answer.
   final ReplacementReason? replacementReason;
 
-  /// V2 Phase D: the routine or Path step today's Circle is, or `null` for
-  /// a single activity the engine picked.
-  final TodaySession? session;
-
-  /// V2 Phase D: the routine or Path step replaced today, by name.
+  /// The composed Circle replaced today, by its main piece's name.
   final String? replacedFromTitle;
-  final String? replacedFromRoutineId;
+
+  /// ADR-024 B5: the Plan stage of the Circle replaced today, when it was a
+  /// stage Circle — journalled so the day stays a stage offer.
+  final PlanStageProvenance? replacedFromStage;
+
+  /// ADR-024 (pre-release migration): a Phase D routine or Path Circle that
+  /// was already started or closed on the day this build was installed. It
+  /// can no longer run as one, so the day carries on as its first piece, and
+  /// this — its own journal record, read back unchanged — is what the
+  /// journal keeps saying it was. Never set for anything new.
+  final CircleSessionRecord? retiredSession;
 
   /// V2 Phase D2: today's Personal Guided Circle, or a kept Circle the user
   /// chose for today — `null` otherwise.
@@ -135,30 +143,19 @@ class Recommendation {
   final bool composerFellBack;
 
   /// Whether "Not this one today" is still available: once a day — for an
-  /// activity, a routine, a Path step or a composed Circle alike — and never
-  /// for something the user chose themselves ("Use it today").
+  /// activity or a composed Circle alike — and never for something the user
+  /// chose themselves ("Use it today").
   bool get canReplace =>
       replacedFrom == null && reason != RecommendationReason.ownChoice;
 
-  /// The session today's Circle runs: the activity as authored; for a
-  /// routine or a joined Path step, its pieces one after the other on the
-  /// Guided runtime (`sessionFor`); for a single-piece Path step, that
-  /// piece's activity.
+  /// The session today's Circle runs: the activity as authored, or a
+  /// composed Circle's parts one after the other.
   ActivityDefinition get sessionDefinition {
     final composed = this.composed;
     if (composed != null) {
       return sessionForPlan(composed.plan, title: composed.title);
     }
-    final uses = session?.composition.uses;
-    if (uses == null) return activityDefinition(activityId);
-    if (uses.length == 1) return uses.single.definition.activity;
-    // Running, a Path step goes by its Path's name ("Step 1 of 6 · A lift
-    // at home"): the pieces' joined title is already the step heading's
-    // job, and would wrap beneath it (S25 finding).
-    return sessionFor(
-      session!.composition,
-      title: session!.pathName ?? session!.title,
-    );
+    return activityDefinition(activityId);
   }
 
   /// What this offer records in the Circle journal.
@@ -173,6 +170,7 @@ class Recommendation {
         reasonCode: reason.name,
         replacedFrom: replacedFrom,
         replacementReason: replacementReason?.name,
+        replacedFromStage: replacedFromStage,
         session: composed != null
             ? CircleSessionRecord(
                 title: composed!.title,
@@ -180,129 +178,16 @@ class Recommendation {
                 skipped: [for (final e in skipped) e.name],
                 keptCircleId: composed!.keptCircleId,
                 replacedFromTitle: replacedFromTitle,
-                replacedFromRoutineId: replacedFromRoutineId,
+                planStage: composed!.stage,
               )
-            : session?.toRecord(
-                    replacedFromTitle: replacedFromTitle,
-                    replacedFromRoutineId: replacedFromRoutineId,
-                  ) ??
+            : retiredSession ??
                   (replacedFromTitle == null
                       ? null
                       : CircleSessionRecord(
                           title: activity,
                           replacedFromTitle: replacedFromTitle,
-                          replacedFromRoutineId: replacedFromRoutineId,
                         )),
       );
-}
-
-/// V2 Phase D: today's routine or Path step — what it is made of, and
-/// where it comes from. Persisted with today's Circle so a restart restores
-/// exactly what was offered.
-class TodaySession {
-  const TodaySession({
-    required this.composition,
-    required this.title,
-    this.planned,
-    this.routineId,
-    this.routineVersionId,
-    this.routineVersionNumber,
-    this.pathRunId,
-    this.pathKind,
-    this.pathName,
-    this.pathCircle,
-    this.pathCircles,
-    this.pathReason,
-    this.pathExplanation,
-  });
-
-  /// What today's Circle runs.
-  final Composition composition;
-
-  /// A Path step's own pieces, before today's time made it shorter.
-  final Composition? planned;
-
-  final String title;
-
-  final String? routineId;
-  final String? routineVersionId;
-  final int? routineVersionNumber;
-
-  final String? pathRunId;
-  final PathKind? pathKind;
-  final String? pathName;
-  final int? pathCircle;
-  final int? pathCircles;
-  final PathStepReason? pathReason;
-
-  /// The Path step's one line ("Now the two together.").
-  final String? pathExplanation;
-
-  bool get isPath => pathRunId != null;
-  bool get isRoutine => routineId != null;
-
-  CircleSessionRecord toRecord({
-    String? replacedFromTitle,
-    String? replacedFromRoutineId,
-  }) => CircleSessionRecord(
-    title: title,
-    modules: composition.toWire(),
-    routineId: routineId,
-    routineVersionId: routineVersionId,
-    routineVersionNumber: routineVersionNumber,
-    pathRunId: pathRunId,
-    pathKind: pathKind?.name,
-    pathName: pathName,
-    pathCircle: pathCircle,
-    pathCircles: pathCircles,
-    pathReason: pathReason?.name,
-    replacedFromTitle: replacedFromTitle,
-    replacedFromRoutineId: replacedFromRoutineId,
-  );
-
-  Map<String, Object?> toJson() => {
-    'modules': composition.toWire(),
-    'planned': planned?.toWire(),
-    'title': title,
-    'routineId': routineId,
-    'routineVersionId': routineVersionId,
-    'routineVersionNumber': routineVersionNumber,
-    'pathRunId': pathRunId,
-    'pathKind': pathKind?.name,
-    'pathName': pathName,
-    'pathCircle': pathCircle,
-    'pathCircles': pathCircles,
-    'pathReason': pathReason?.name,
-    'pathExplanation': pathExplanation,
-  };
-
-  static TodaySession? fromJson(Object? raw) {
-    if (raw is! Map<String, Object?>) return null;
-    final composition = Composition.fromWire(raw['modules']);
-    final title = raw['title'];
-    if (composition == null || title is! String) return null;
-    String? text(String key) => raw[key] is String ? raw[key] as String : null;
-    int? number(String key) => raw[key] is int ? raw[key] as int : null;
-    final pathRunId = text('pathRunId');
-    final pathReason = PathStepReason.values.asNameMap()[raw['pathReason']];
-    // A Path step is only restored whole.
-    if (pathRunId != null && pathReason == null) return null;
-    return TodaySession(
-      composition: composition,
-      planned: Composition.fromWire(raw['planned']),
-      title: title,
-      routineId: text('routineId'),
-      routineVersionId: text('routineVersionId'),
-      routineVersionNumber: number('routineVersionNumber'),
-      pathRunId: pathRunId,
-      pathKind: PathKind.values.asNameMap()[raw['pathKind']],
-      pathName: text('pathName'),
-      pathCircle: number('pathCircle'),
-      pathCircles: number('pathCircles'),
-      pathReason: pathReason,
-      pathExplanation: text('pathExplanation'),
-    );
-  }
 }
 
 /// Today's Circle's lifecycle status. Deliberately only the three states
@@ -437,13 +322,19 @@ const recommendationPausedMsKey = 'recommendation_paused_ms';
 /// [guidedFinishPosition]) — where the user is, never what they did.
 const recommendationGuidedPositionKey = 'recommendation_guided_position';
 
-/// V2 Phase D: today's routine or Path step ([TodaySession]), as JSON —
-/// absent for a single activity.
+/// **Retired (ADR-024, B1).** Today's Phase D routine or Path step, as JSON.
+/// No longer written. Read only to keep an already started or closed one's
+/// journal record unchanged on the day this build was installed
+/// ([Recommendation.retiredSession]); removed on the next choice and by
+/// Delete.
 const recommendationSessionKey = 'recommendation_session';
 
-/// V2 Phase D: the routine or Path step replaced today, by name and (for a
-/// routine) id.
+/// The composed Circle replaced today, by its main piece's name.
 const recommendationReplacedTitleKey = 'recommendation_replaced_title';
+
+/// **Retired (ADR-024, B1).** The Phase D routine replaced today. Read only
+/// with [recommendationSessionKey]; removed on the next choice and by
+/// Delete.
 const recommendationReplacedRoutineKey = 'recommendation_replaced_routine';
 
 /// V2 Phase D2: today's composed Circle ([ComposedSession]), as JSON —
@@ -464,7 +355,7 @@ const recommendationSkippedKey = 'recommendation_skipped';
 
 /// What "Use it today" did (V2 Phase D2, ADR-023 §8).
 enum UseTodayResult {
-  /// Today's Circle is now the user's own routine or kept Circle.
+  /// Today's Circle is now one of the user's kept Circles.
   used,
 
   /// Today's Circle has already started or closed: one Circle a day.
@@ -827,14 +718,15 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// Records a [AnalyticsEventType.recommendationShown] event only on this
   /// real, once-per-day resolution.
   ///
-  /// **V2 Phase D:**
-  /// - A Path under way whose need is today's need claims today's Circle —
-  ///   only with Premium, only when its next step's pieces are all still
-  ///   allowed, and only at a truthful length that fits today's time (its
-  ///   own, or its truly shorter form). Otherwise the Path waits, untouched,
-  ///   and the engine decides as on any day.
-  /// - The engine weighs the user's enabled routines as ordinary candidates
-  ///   — whatever Premium's state: routines stay the user's.
+  /// **V2 Phase D2:** with Premium, THIRTY composes today's Personal Guided
+  /// Circle; when no honest composition exists, Free's one activity, said
+  /// plainly. Phase D's Paths and routines are retired (ADR-024): neither
+  /// ever takes today's Circle.
+  ///
+  /// **ADR-024 B3:** first, the active Circle Plan's stage, when today's
+  /// need is its need and a Circle honestly follows the stage
+  /// ([CirclePlansNotifier.steerToday]); a stage that waits or is set aside
+  /// leaves today to the ordinary Personal Guided Circle.
   void chooseIntention(Intention intention, {TimeWindow? window}) {
     if (state.recommendation != null) return;
 
@@ -843,73 +735,76 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final TimeWindow chosen = ref.read(timeWindowChoiceProvider);
     final timeWindow = window ?? chosen;
 
-    final pathStep = _pathStepToday(intention, timeWindow, today);
     final Recommendation recommendation;
-    if (pathStep != null) {
-      recommendation = pathStep;
-    } else {
-      final history = ref.read(toolkitHistoryProvider);
-      final preferences = ref.read(suggestionPreferencesProvider);
-      final decision = recommend(
-        RecommendationContext(
-          date: now,
-          need: intention,
-          window: timeWindow,
-          allowSafetyPending: ref.read(safetyPendingAllowedProvider),
-          routines: ref.read(routineCandidatesProvider),
-        ),
-        history,
-        controls: preferences.controls,
-      );
-      // V2 Phase D2 (ADR-023 §4): with Premium, THIRTY composes today's
-      // Personal Guided Circle — unless Free's choice is one of the user's
-      // own routines with positive evidence for this need (Premium never
-      // crowds out what the user built and found useful; routines keep
-      // exactly Free's frequency), or no honest composition exists (then
-      // Free's one activity, said plainly).
-      final premium = ref.read(premiumEntitlementProvider);
-      final provenRoutine =
-          decision?.routineId != null &&
-          RecommendationMemory.of(
-                now,
+    final history = ref.read(pastCirclesProvider);
+    final preferences = ref.read(suggestionPreferencesProvider);
+    final decision = recommend(
+      RecommendationContext(
+        date: now,
+        need: intention,
+        window: timeWindow,
+        allowSafetyPending: ref.read(safetyPendingAllowedProvider),
+      ),
+      history,
+      controls: preferences.controls,
+    );
+    // V2 Phase D2 (ADR-023 §4): with Premium, THIRTY composes today's
+    // Personal Guided Circle — unless no honest composition exists (then
+    // Free's one activity, said plainly).
+    final premium = ref.read(premiumEntitlementProvider);
+    final context = ComposerContext(
+      date: now,
+      need: intention,
+      window: timeWindow,
+    );
+    final planDay = premium
+        ? ref
+              .read(circlePlansProvider.notifier)
+              .steerToday(
+                context,
                 history,
-                RecommendationPolicy.initial,
-                restsLifted: preferences.controls.restsLifted,
-              ).routineStrength(decision!.routineId!, intention) >=
-              RecommendationPolicy.initial.usefulThreshold;
-      final composed = premium && !provenRoutine
-          ? composeCircle(
-              ComposerContext(date: now, need: intention, window: timeWindow),
-              history,
-              controls: preferences.controls,
-              leftOut: preferences.leftOut,
-            )
-          : null;
-      if (composed != null) {
-        recommendation = _fromComposed(
-          intention,
-          ComposedSession(plan: composed.plan, basis: composed.basis),
-          today,
-          timeWindow,
-        );
-      } else if (decision == null) {
-        // V2 Phase C: the user's own "Don't suggest" choices leave nothing
-        // that fits. Say so; never override them.
-        state = RecommendationState(
-          recommendation: null,
-          status: RecommendationStatus.notStarted,
-          noCandidateFor: (intention, timeWindow),
-        );
-        return;
-      } else {
-        recommendation = _fromDecision(
-          intention,
-          decision,
-          today,
-          timeWindow,
-          composerFellBack: premium && !provenRoutine,
-        );
-      }
+                controls: preferences.controls,
+                leftOut: preferences.leftOut,
+              )
+        : null;
+    final stageCircle = planDay?.circle;
+    final composed = premium
+        ? stageCircle ??
+              composeCircle(
+                context,
+                history,
+                controls: preferences.controls,
+                leftOut: preferences.leftOut,
+              )
+        : null;
+    if (composed != null) {
+      recommendation = _fromComposed(
+        intention,
+        ComposedSession(
+          plan: composed.plan,
+          basis: composed.basis,
+          stage: stageCircle == null ? null : planDay!.stage,
+        ),
+        today,
+        timeWindow,
+      );
+    } else if (decision == null) {
+      // V2 Phase C: the user's own "Don't suggest" choices leave nothing
+      // that fits. Say so; never override them.
+      state = RecommendationState(
+        recommendation: null,
+        status: RecommendationStatus.notStarted,
+        noCandidateFor: (intention, timeWindow),
+      );
+      return;
+    } else {
+      recommendation = _fromDecision(
+        intention,
+        decision,
+        today,
+        timeWindow,
+        composerFellBack: premium,
+      );
     }
 
     state = RecommendationState(
@@ -934,81 +829,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         );
   }
 
-  /// Today's Path step, when the Path under way may claim today (see
-  /// [chooseIntention]) — else `null`.
-  Recommendation? _pathStepToday(
-    Intention intention,
-    TimeWindow window,
-    String today,
-  ) {
-    final toolkit = ref.read(toolkitProvider);
-    final run = toolkit.path;
-    if (run == null || run.finished || run.need != intention) return null;
-    // Progressing a Path is Premium: without it, the Path is saved, waiting.
-    if (!ref.read(premiumEntitlementProvider)) return null;
-    final base = run.routineId == null
-        ? null
-        : toolkit.routineById(run.routineId!)?.versionById(run.baseVersionId!);
-    if (run.kind != PathKind.build && base == null) return null;
-    final resting = ref.read(pathRestingProvider);
-    final step = nextPathStep(
-      run,
-      ref.read(pathAnswersProvider),
-      base: base,
-      resting: resting,
-    );
-    if (step == null) return null;
-    if (!stepAllowed(
-      step,
-      intention,
-      controls: ref.read(suggestionPreferencesProvider).controls,
-      allowSafetyPending: ref.read(safetyPendingAllowedProvider),
-      resting: resting,
-    )) {
-      return null;
-    }
-    final fit = fitToWindow(step, window);
-    if (fit == null) return null;
-    final composition = fit.composition;
-    // What the user told THIRTY outranks the time line: a step that changed
-    // because of an answer says so even on a shorter day — the offered
-    // length on the card already shows it is shorter (S25 finding, D-D).
-    final explanation = fit.reason == step.reason || step.reason.fromAnswers
-        ? step.explanation
-        : pathStepExplanation(fit.reason, combined: composition.combined);
-    final routine = run.routineId == null
-        ? null
-        : toolkit.routineById(run.routineId!);
-    return _buildRecommendation(
-      intention,
-      composition.anchor,
-      today,
-      window: window,
-      offeredMinutes: composition.minutes,
-      reason: RecommendationReason.pathStep,
-      session: TodaySession(
-        composition: composition,
-        planned: step.composition,
-        title: composition.combined
-            ? composition.title
-            : composition.uses.single.definition.activity.title,
-        pathRunId: run.id,
-        pathKind: run.kind,
-        pathName: switch (run.kind) {
-          PathKind.build => pathTemplate(run.template!).name,
-          PathKind.tuneUp => 'Tuning ${routine?.name ?? 'a routine'}',
-          PathKind.shorter => 'Shortening ${routine?.name ?? 'a routine'}',
-        },
-        pathCircle: step.number,
-        pathCircles: run.length,
-        pathReason: fit.reason,
-        pathExplanation: explanation,
-      ),
-    );
-  }
-
-  /// The engine's [decision] as today's Circle: an activity, or one of the
-  /// user's routines at the version that fits.
+  /// The engine's [decision] as today's Circle: one activity.
   Recommendation _fromDecision(
     Intention intention,
     RecommendationDecision decision,
@@ -1017,35 +838,19 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     Recommendation? replacing,
     ReplacementReason? replacementReason,
     bool composerFellBack = false,
-  }) {
-    final routineId = decision.routineId;
-    final routine = routineId == null
-        ? null
-        : ref.read(toolkitProvider).routineById(routineId);
-    final version = routine?.versionById(decision.routineVersionId ?? '');
-    return _buildRecommendation(
-      intention,
-      decision.activityId,
-      circleId,
-      window: window,
-      offeredMinutes: decision.offeredMinutes,
-      reason: decision.reason,
-      replacedFrom: replacing?.activityId,
-      replacementReason: replacementReason,
-      replacedFromTitle: replacing == null ? null : _replacedTitle(replacing),
-      replacedFromRoutineId: replacing?.session?.routineId,
-      composerFellBack: composerFellBack,
-      session: routine == null || version == null
-          ? null
-          : TodaySession(
-              composition: version.composition,
-              title: routine.name,
-              routineId: routine.id,
-              routineVersionId: version.id,
-              routineVersionNumber: version.number,
-            ),
-    );
-  }
+  }) => _buildRecommendation(
+    intention,
+    decision.activityId,
+    circleId,
+    window: window,
+    offeredMinutes: decision.offeredMinutes,
+    reason: decision.reason,
+    replacedFrom: replacing?.activityId,
+    replacementReason: replacementReason,
+    replacedFromTitle: replacing == null ? null : _replacedTitle(replacing),
+    replacedFromStage: replacing?.composed?.stage,
+    composerFellBack: composerFellBack,
+  );
 
   /// V2 Phase D2: [composed] as today's Circle — its main piece's art and
   /// category stand for it; its one line says only what is true.
@@ -1067,15 +872,14 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     replacedFrom: replacing?.activityId,
     replacementReason: replacementReason,
     replacedFromTitle: replacing == null ? null : _replacedTitle(replacing),
-    replacedFromRoutineId: replacing?.session?.routineId,
+    replacedFromStage: replacing?.composed?.stage,
     composed: composed,
   );
 
-  /// How a replaced Circle is named in History: a routine or Path step by
-  /// its title, a composed Circle by its main piece, a single activity by
-  /// nothing extra (its own label is used).
+  /// How a replaced Circle is named in History: a composed Circle by its
+  /// main piece, a single activity by nothing extra (its own label is used).
   static String? _replacedTitle(Recommendation replaced) =>
-      replaced.composed?.plan.main.definition.name ?? replaced.session?.title;
+      replaced.composed?.plan.main.definition.name;
 
   /// "Not this one today" (V2 Phase B): re-selects today's activity once,
   /// under [reason] as a hard constraint for today. Returns `false` — and
@@ -1086,10 +890,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// The reason is never a usefulness answer. The journal records the final
   /// activity, the one it replaced and why, so a restart restores the
   /// replacement and never offers a second one.
-  ///
-  /// **V2 Phase D:** a routine or a Path step is replaced the same way, by
-  /// the engine — never by another Path step. A replaced Path step doesn't
-  /// count: the Path waits where it was.
   bool replaceToday(ReplacementReason reason) {
     final current = state.recommendation;
     if (current == null || !current.canReplace) return false;
@@ -1104,24 +904,46 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         !composedToday.isKept &&
         ref.read(premiumEntitlementProvider)) {
       final preferences = ref.read(suggestionPreferencesProvider);
-      final recomposed = composeCircle(
-        ComposerContext(
-          date: now,
-          need: current.intention,
-          window: current.timeWindow,
-          constraint: CompositionConstraint(
-            reason: reason,
-            replacing: composedToday.plan,
-          ),
+      final context = ComposerContext(
+        date: now,
+        need: current.intention,
+        window: current.timeWindow,
+        constraint: CompositionConstraint(
+          reason: reason,
+          replacing: composedToday.plan,
         ),
-        ref.read(toolkitHistoryProvider),
-        controls: preferences.controls,
-        leftOut: preferences.leftOut,
       );
+      final history = ref.read(pastCirclesProvider);
+      // ADR-024 C4: a stage Circle is first recomposed inside its stage;
+      // if none follows it, the ordinary composition — and the stage waits.
+      final stage = composedToday.stage;
+      final inStage = stage == null
+          ? null
+          : ref
+                .read(circlePlansProvider.notifier)
+                .replaceStage(
+                  stage,
+                  context,
+                  history,
+                  controls: preferences.controls,
+                  leftOut: preferences.leftOut,
+                );
+      final recomposed =
+          inStage ??
+          composeCircle(
+            context,
+            history,
+            controls: preferences.controls,
+            leftOut: preferences.leftOut,
+          );
       if (recomposed != null) {
         final replacement = _fromComposed(
           current.intention,
-          ComposedSession(plan: recomposed.plan, basis: recomposed.basis),
+          ComposedSession(
+            plan: recomposed.plan,
+            basis: recomposed.basis,
+            stage: inStage == null ? null : stage,
+          ),
           current.circleId,
           current.timeWindow,
           replacing: current,
@@ -1144,16 +966,11 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           reason: reason,
           replacing: current.activityId,
           replacingMinutes: current.offeredMinutes,
-          replacingRoutineId: current.session?.routineId,
-          replacingComponents:
-              current.composed?.plan.activities ??
-              current.session?.composition.activities ??
-              [],
+          replacingComponents: current.composed?.plan.activities ?? [],
         ),
         allowSafetyPending: ref.read(safetyPendingAllowedProvider),
-        routines: ref.read(routineCandidatesProvider),
       ),
-      ref.read(toolkitHistoryProvider),
+      ref.read(pastCirclesProvider),
       controls: ref.read(suggestionPreferencesProvider).controls,
     );
     if (decision == null) return false;
@@ -1288,7 +1105,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     );
     final snapshot = state;
     _enqueue(() => _persist(snapshot));
-    if (leaveOut) {
+    // Leave it out is a composer control, and Premium (contract, Free /
+    // Premium): a Free day's kept Circle skips the part for today only.
+    if (leaveOut && ref.read(premiumEntitlementProvider)) {
       unawaited(
         ref.read(suggestionPreferencesProvider.notifier).leaveOut(element),
       );
@@ -1296,86 +1115,41 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   }
 
   /// V2 Phase D2 (ADR-023 §8): "Use it today" — today's Circle becomes one
-  /// of the user's own routines ([routineId]) or kept Circles
-  /// ([keptCircleId]). Free: what the user owns is theirs to use. Only
-  /// before today's Circle has started; still one Circle a day, replacing
-  /// today's not-started choice. Today's need stays the one the user chose;
-  /// before any choice, it is the routine's or the kept Circle's own. It is
-  /// the user's choice, not a "Not this one today": nothing is recorded as
-  /// declined, and no replacement is offered after it.
-  UseTodayResult useOwnedToday({String? routineId, String? keptCircleId}) {
+  /// of the user's kept Circles ([keptCircleId]). Free: what the user owns
+  /// is theirs to use. Only before today's Circle has started; still one
+  /// Circle a day, replacing today's not-started choice. Today's need stays
+  /// the one the user chose; before any choice, it is the kept Circle's own.
+  /// It is the user's choice, not a "Not this one today": nothing is
+  /// recorded as declined, and no replacement is offered after it.
+  UseTodayResult useOwnedToday({required String keptCircleId}) {
     if (state.status != RecommendationStatus.notStarted) {
       return UseTodayResult.alreadyStarted;
     }
-    final toolkit = ref.read(toolkitProvider);
     final controls = ref.read(suggestionPreferencesProvider).controls;
-    final allowSafetyPending = ref.read(safetyPendingAllowedProvider);
     final current = state.recommendation;
     final now = ref.read(nowProvider);
     final today = dateKey(now);
 
-    final Recommendation chosen;
-    if (routineId != null) {
-      final routine = toolkit.routineById(routineId);
-      if (routine == null || !routine.enabled) {
-        return UseTodayResult.unavailable;
-      }
-      final need = current?.intention ?? routine.need;
-      // Today's time decides the version, as it would for Free: the longest
-      // that fits, else the one THIRTY uses now — the user asked for it.
-      final window = current?.timeWindow;
-      final version = window == null
-          ? routine.active
-          : routine.offerableVersions.firstWhere(
-              (v) => v.minutes <= window.maxMinutes,
-              orElse: () => routine.active,
-            );
-      final pieces = version.composition.activities;
-      if (pieces.any((a) => controls.notSuggested.contains((a, need))) ||
-          !version.composition.offerable(
-            allowSafetyPending: allowSafetyPending,
-          )) {
-        return UseTodayResult.unavailable;
-      }
-      chosen = _buildRecommendation(
-        need,
-        version.composition.anchor,
-        today,
-        window: current?.timeWindow ?? _windowFor(version.minutes),
-        offeredMinutes: version.minutes,
-        reason: RecommendationReason.ownChoice,
-        session: TodaySession(
-          composition: version.composition,
-          title: routine.name,
-          routineId: routine.id,
-          routineVersionId: version.id,
-          routineVersionNumber: version.number,
-        ),
-      );
-    } else if (keptCircleId != null) {
-      final kept = toolkit.keptById(keptCircleId);
-      if (kept == null) return UseTodayResult.unavailable;
-      final need = current?.intention ?? kept.need;
-      if (!kept.plan.parts.every((p) => isElementOfferable(p.definition)) ||
-          kept.plan.activities.any(
-            (a) => controls.notSuggested.contains((a, need)),
-          )) {
-        return UseTodayResult.unavailable;
-      }
-      chosen = _fromComposed(
-        need,
-        ComposedSession(
-          plan: kept.plan,
-          keptCircleId: kept.id,
-          keptName: kept.name,
-        ),
-        today,
-        current?.timeWindow ?? _windowFor(kept.minutes),
-        reason: RecommendationReason.ownChoice,
-      );
-    } else {
+    final kept = ref.read(keptCirclesProvider).keptById(keptCircleId);
+    if (kept == null) return UseTodayResult.unavailable;
+    final need = current?.intention ?? kept.need;
+    if (!kept.plan.parts.every((p) => isElementOfferable(p.definition)) ||
+        kept.plan.activities.any(
+          (a) => controls.notSuggested.contains((a, need)),
+        )) {
       return UseTodayResult.unavailable;
     }
+    final chosen = _fromComposed(
+      need,
+      ComposedSession(
+        plan: kept.plan,
+        keptCircleId: kept.id,
+        keptName: kept.name,
+      ),
+      today,
+      current?.timeWindow ?? _windowFor(kept.minutes),
+      reason: RecommendationReason.ownChoice,
+    );
 
     state = RecommendationState(
       recommendation: chosen,
@@ -1420,10 +1194,10 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// the only place a user's own account of what happened is recorded, and
   /// even that is always self-reported, never verified.
   void close() {
-    if (state.recommendation == null) return;
+    final recommendation = state.recommendation;
+    if (recommendation == null) return;
     if (state.status != RecommendationStatus.started) return;
 
-    final recommendation = state.recommendation!;
     final closedAt = ref.read(eventClockProvider)();
     state = state.copyWith(
       status: RecommendationStatus.closed,
@@ -1431,27 +1205,24 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     );
     final snapshot = state;
     _enqueue(() => _persist(snapshot));
+    // ADR-024 B3: a stage Circle started and now closed in THIRTY is
+    // *guided* — never "done". The Plan moves on once for this Circle.
+    final composed = recommendation.composed;
+    if (composed?.stage case final stage?) {
+      ref
+          .read(circlePlansProvider.notifier)
+          .recordGuided(
+            stage,
+            circleId: recommendation.circleId,
+            parts: composed!.plan.toWire(),
+            skipped: [for (final e in snapshot.skipped) e.name],
+          );
+    }
     // Fired only on a real transition, for the same reason start() above
     // only fires once per Circle — this is also the frozen post-fix
     // measurement protocol's "Daily Check-In completed" (see
     // AnalyticsEventType.circleClosed's own doc comment).
     ref.read(analyticsServiceProvider).track(AnalyticsEventType.circleClosed);
-
-    // V2 Phase D: a real Close of today's Path step counts it — once (the
-    // guard clauses above make a repeat close a no-op). Close moves the
-    // Path on; it never says the step was done.
-    final session = recommendation.session;
-    if (session != null && session.isPath && session.pathReason != null) {
-      ref
-          .read(toolkitProvider.notifier)
-          .recordPathCircle(
-            runId: session.pathRunId!,
-            circleId: recommendation.circleId,
-            composition: session.composition,
-            planned: session.planned ?? session.composition,
-            reason: session.pathReason!,
-          );
-    }
   }
 
   /// Records the user's optional "Did you try this activity?" answer
@@ -1547,7 +1318,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   }
 
   /// Builds today's [Recommendation] for ([intention], [activityId]) on local
-  /// date [today] — or, with [session], today's routine or Path step.
+  /// date [today] — or, with [composed], today's composed Circle.
   Recommendation _buildRecommendation(
     Intention intention,
     ActivityId activityId,
@@ -1557,16 +1328,15 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     RecommendationReason reason = RecommendationReason.bestFit,
     ActivityId? replacedFrom,
     ReplacementReason? replacementReason,
-    TodaySession? session,
     String? replacedFromTitle,
-    String? replacedFromRoutineId,
+    PlanStageProvenance? replacedFromStage,
+    CircleSessionRecord? retiredSession,
     ComposedSession? composed,
     bool composerFellBack = false,
   }) {
     final minutes =
         offeredMinutes ??
         composed?.plan.minutes ??
-        session?.composition.minutes ??
         activityTypicalMinutes(activityId);
     return Recommendation(
       intent: intentionLabel(intention),
@@ -1574,17 +1344,15 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       // how-to (S25 finding, D2).
       activity:
           composed?.plan.substanceLine ??
-          session?.title ??
+          retiredSession?.title ??
           activityLabel(activityId),
       duration: '$minutes minutes',
-      why: switch ((composed, session)) {
-        (ComposedSession(isKept: true), _) => ComposedCopy.keptLine,
-        (ComposedSession(:final basis?), _) => ComposedCopy.basisLine(
-          basis,
-          window,
-        ),
-        (_, TodaySession(:final pathExplanation?)) => pathExplanation,
-        (_, final TodaySession routine) => _piecesLine(routine.composition),
+      why: switch (composed) {
+        ComposedSession(isKept: true) => ComposedCopy.keptLine,
+        // ADR-024 B4 (C8): on a stage day the stage's line takes the basis
+        // line's place — the card is no taller.
+        ComposedSession(:final stage?) => _stageLine(stage),
+        ComposedSession(:final basis?) => ComposedCopy.basisLine(basis, window),
         _ when composerFellBack && reason.visibleCopy == null =>
           ComposedCopy.fallbackLine,
         _ => activityReasonFor(intention, activityId),
@@ -1599,23 +1367,25 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       reason: reason,
       replacedFrom: replacedFrom,
       replacementReason: replacementReason,
-      session: session,
       replacedFromTitle: replacedFromTitle,
-      replacedFromRoutineId: replacedFromRoutineId,
+      replacedFromStage: replacedFromStage,
+      retiredSession: retiredSession,
       composed: composed,
       composerFellBack: composerFellBack,
     );
   }
 
-  /// "Standing stretch, then Move to music."
-  static String _piecesLine(Composition composition) {
-    final names = [for (final use in composition.uses) use.definition.name];
-    final line = [
-      names.first,
-      for (final name in names.skip(1))
-        '${name[0].toLowerCase()}${name.substring(1)}',
-    ].join(', then ');
-    return '$line.';
+  /// A stage Circle's Today line: its stage's own, or stage 5's from what it
+  /// combines and what the user said about those stages.
+  String _stageLine(PlanStageProvenance stage) {
+    final cycle = ref.read(circlePlansProvider).plans[stage.planId]?.cycles;
+    return PlanCopy.todayStageLine(
+      stage,
+      cycle: cycle?.where((c) => c.id == stage.cycleId).firstOrNull,
+      answers: stageAnswersFrom(
+        ref.read(circleJournalRepositoryProvider).readAll(),
+      ),
+    );
   }
 
   /// Restores today's [Recommendation] from [prefs], or `null` if no valid,
@@ -1628,10 +1398,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// changed that activity's need fit or retired it — rewriting what the
   /// user was actually shown today would be untruthful.
   ///
-  /// **V2 Phase D:** today's routine or Path step is restored from its own
-  /// key exactly as offered — even if the routine has since been renamed or
-  /// changed. An unreadable one restores the plain activity (its first
-  /// piece) rather than nothing.
+  /// **ADR-024 (pre-release migration):** a Phase D routine or Path Circle
+  /// persisted for today, from before this build, is never run as one. If it
+  /// was not started, today's choice is asked again. If it was already
+  /// started or closed, the day carries on as its first piece, with its own
+  /// journal record kept exactly as it was ([Recommendation.retiredSession])
+  /// — never rewritten into something it wasn't.
   Recommendation? _restoreRecommendation(
     SharedPreferences prefs,
     String today,
@@ -1660,16 +1432,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final replacementReason = ReplacementReason.values
         .asNameMap()[prefs.getString(recommendationReplacementReasonKey)];
 
-    TodaySession? session;
-    final rawSession = prefs.getString(recommendationSessionKey);
-    if (rawSession != null) {
-      try {
-        session = TodaySession.fromJson(jsonDecode(rawSession));
-      } catch (_) {
-        session = null;
-      }
-    }
-
     ComposedSession? composed;
     final rawComposed = prefs.getString(recommendationComposedKey);
     if (rawComposed != null) {
@@ -1677,6 +1439,33 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         composed = ComposedSession.fromJson(jsonDecode(rawComposed));
       } catch (_) {
         composed = null;
+      }
+    }
+
+    CircleSessionRecord? retiredSession;
+    final rawSession = prefs.getString(recommendationSessionKey);
+    if (rawSession != null && composed == null) {
+      final status = RecommendationStatus.values
+          .asNameMap()[prefs.getString(recommendationStatusKey)];
+      if (status != RecommendationStatus.started &&
+          status != RecommendationStatus.closed) {
+        return null;
+      }
+      try {
+        final decoded = jsonDecode(rawSession);
+        if (decoded is Map<String, Object?>) {
+          retiredSession = CircleSessionRecord.fromJson({
+            ...decoded,
+            'replacedFromTitle': prefs.getString(
+              recommendationReplacedTitleKey,
+            ),
+            'replacedFromRoutineId': prefs.getString(
+              recommendationReplacedRoutineKey,
+            ),
+          });
+        }
+      } catch (_) {
+        retiredSession = null;
       }
     }
 
@@ -1689,9 +1478,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       reason: reason,
       replacedFrom: replacedFrom,
       replacementReason: replacementReason,
-      session: composed == null ? session : null,
       replacedFromTitle: prefs.getString(recommendationReplacedTitleKey),
-      replacedFromRoutineId: prefs.getString(recommendationReplacedRoutineKey),
+      retiredSession: retiredSession,
       composed: composed,
       composerFellBack:
           prefs.getBool(recommendationComposerFallbackKey) ?? false,
@@ -1785,15 +1573,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       await prefs.remove(recommendationReplacedFromKey);
       await prefs.remove(recommendationReplacementReasonKey);
     }
-    final session = recommendation.session;
-    if (session != null) {
-      await prefs.setString(
-        recommendationSessionKey,
-        jsonEncode(session.toJson()),
-      );
-    } else {
-      await prefs.remove(recommendationSessionKey);
-    }
+    // Retired with Phase D's routines and Paths (ADR-024): never written.
+    await prefs.remove(recommendationSessionKey);
+    await prefs.remove(recommendationReplacedRoutineKey);
     final composed = recommendation.composed;
     if (composed != null) {
       await prefs.setString(
@@ -1813,12 +1595,6 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       await prefs.setString(recommendationReplacedTitleKey, replacedTitle);
     } else {
       await prefs.remove(recommendationReplacedTitleKey);
-    }
-    final replacedRoutine = recommendation.replacedFromRoutineId;
-    if (replacedRoutine != null) {
-      await prefs.setString(recommendationReplacedRoutineKey, replacedRoutine);
-    } else {
-      await prefs.remove(recommendationReplacedRoutineKey);
     }
     // V1 Plan context is retired (V2 Phase D).
     for (final key in retiredPlanDayKeys) {
@@ -2056,12 +1832,13 @@ const retiredPlanDayKeys = [
 
 /// Every persisted key holding a recorded Circle outside the journal:
 /// today's Circle session (its direction, activity, lifecycle, reflection
-/// answers, routine or Path step) and the selection history drawn from past
-/// Circles. "Delete Circle history" removes these together with the
-/// journal (`../presentation/widgets/journal_data_controls.dart`), then
-/// invalidates [recommendationProvider] so today is re-derived from the
-/// empty store. Preferences, the first-breath flag and the Toolkit are not
-/// Circle history and are left alone.
+/// answers and composed Circle, and the retired Phase D keys) and the
+/// selection history drawn from past Circles. "Delete Circle history"
+/// removes these together with the journal
+/// (`../presentation/widgets/journal_data_controls.dart`), then invalidates
+/// [recommendationProvider] so today is re-derived from the empty store.
+/// Preferences, the first-breath flag and kept Circles are not Circle
+/// history and are left alone.
 Future<void> clearRecordedCircleState(SharedPreferences prefs) async {
   for (final key in [
     recommendationDayKey,
@@ -2135,63 +1912,59 @@ final NotifierProvider<TimeWindowChoice, TimeWindow> timeWindowChoiceProvider =
 /// per entry, with only its explicit usefulness answer. "Didn't try" ("Not
 /// today") is no usefulness answer; Close alone is never evidence.
 ///
-/// **V2 Phase D:** a Circle of one of [routines] is that routine's evidence,
-/// never the evidence of the activities in it. A Circle that joined several
-/// pieces lists them all, so recency sees each one.
-///
-/// **V2 Phase D2 (ADR-023 §10):** a Path Circle of the very pieces a routine
-/// version was later built from is that routine's *trial* evidence
-/// ([PastCircle.builtRoutineId]) — it informs the routine's standing ("it
-/// used to suit"), never its rest or ranking, which only real use of the
-/// owned routine decides. A Personal Guided Circle (or a kept Circle) lists
-/// its parts and skips; its answer is never evidence about an activity.
-List<PastCircle> pastCirclesFrom(
-  Iterable<CircleJournalEntry> entries, {
-  List<Routine> routines = const [],
-}) => [
+/// A Personal Guided Circle (or a kept Circle) lists its parts and skips;
+/// its answer is never evidence about an activity. A historical Phase D
+/// routine or Path Circle (retired, ADR-024) keeps exactly what it was: a
+/// routine Circle stays the routine's ([PastCircle.routineId]), and one that
+/// joined several pieces lists their activities ([historicalModuleActivities])
+/// — so neither answer ever counts as evidence about one activity, and
+/// recency still sees each piece.
+List<PastCircle> pastCirclesFrom(Iterable<CircleJournalEntry> entries) => [
   for (final entry in entries)
     if (DateTime.tryParse(entry.localDate) case final date?)
-      _pastCircle(entry, date, routines),
+      _pastCircle(entry, date),
 ];
 
-PastCircle _pastCircle(
-  CircleJournalEntry entry,
-  DateTime date,
-  List<Routine> routines,
-) {
-  final session = entry.session;
-  final uses = [
-    for (final m in session?.modules ?? const []) ?ModuleUse.fromWire(m),
-  ];
-  final pathRunId = session?.pathRunId;
-  String? builtRoutineId;
-  String? builtVersionId;
-  if (session?.routineId == null && pathRunId != null && uses.isNotEmpty) {
-    // A Path Circle of the very pieces a version was built from: the
-    // version of exactly that form first (a full and a shorter version share
-    // their pieces), else the earliest of those pieces.
-    final ran = Composition(uses);
-    RoutineVersion? sameForm;
-    RoutineVersion? samePieces;
-    String? owner;
-    for (final routine in routines) {
-      for (final version in routine.versions) {
-        if (version.pathRunId != pathRunId) continue;
-        final modules = version.composition.modules;
-        if (modules.length != ran.modules.length ||
-            !modules.containsAll(ran.modules)) {
-          continue;
-        }
-        owner = routine.id;
-        if (version.composition == ran) sameForm ??= version;
-        samePieces ??= version;
-      }
-    }
-    if (owner != null) {
-      builtRoutineId = owner;
-      builtVersionId = (sameForm ?? samePieces)!.id;
-    }
+/// The past Circles the engine and the composer read, from the journal.
+final pastCirclesProvider = Provider<List<PastCircle>>(
+  (ref) =>
+      pastCirclesFrom(ref.watch(circleJournalRepositoryProvider).readAll()),
+);
+
+/// The activity each Phase D session module stood for, by the name stored in
+/// historical journal records (`writeDown:short`). Read-only history: no
+/// module is ever offered again (ADR-024).
+const historicalModuleActivities = <String, ActivityId>{
+  'standingStretch': ActivityId.energisingStretchFlow,
+  'musicMove': ActivityId.moveToMusic,
+  'activeTask': ActivityId.activeHouseholdTask,
+  'briskWalk': ActivityId.thirtyMinuteWalk,
+  'phoneFreeWalk': ActivityId.phoneFreeWalk,
+  'writeDown': ActivityId.writeItDown,
+  'clearSurface': ActivityId.tidyOneSurface,
+  'listenOne': ActivityId.quietAudioFocus,
+  'gentleStretch': ActivityId.gentleStretchPause,
+  'warmDrink': ActivityId.smallComfortRitual,
+  'quietMusic': ActivityId.quietMusicBreak,
+  'easyWalk': ActivityId.easyWalk,
+  'sitOutside': ActivityId.quietSittingOutside,
+};
+
+/// [wire]'s activity (`writeDown:short` → Write it down), or `null`.
+ActivityId? _historicalModuleActivity(String wire) {
+  final parts = wire.split(':');
+  if (parts.length != 2 || (parts[1] != 'short' && parts[1] != 'full')) {
+    return null;
   }
+  return historicalModuleActivities[parts[0]];
+}
+
+PastCircle _pastCircle(CircleJournalEntry entry, DateTime date) {
+  final session = entry.session;
+  final pieces = [
+    for (final m in session?.modules ?? const <String>[])
+      ?_historicalModuleActivity(m),
+  ];
   final parts = [
     for (final p in session?.parts ?? const <String>[])
       if (CirclePart.fromWire(p) != null) p,
@@ -2212,17 +1985,12 @@ PastCircle _pastCircle(
     answeredAt: entry.closedAt,
     window: TimeWindow.values.asNameMap()[entry.timeWindow],
     routineId: session?.routineId,
-    routineVersionId: session?.routineId != null
-        ? session?.routineVersionId
-        : builtVersionId,
-    pathRunId: pathRunId,
     components: plan != null
         ? plan.activities
-        : uses.length > 1
-        ? [for (final use in uses) use.definition.source]
+        : pieces.length > 1
+        ? pieces
         : const [],
     replacedFromRoutineId: session?.replacedFromRoutineId,
-    builtRoutineId: builtRoutineId,
     parts: plan == null ? const [] : parts,
     skipped: session?.skipped ?? const [],
     keptCircleId: session?.keptCircleId,

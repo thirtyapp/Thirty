@@ -24,6 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/providers/shared_preferences_provider.dart';
+import '../../plans/domain/plan_stage_provenance.dart';
 import 'activity_catalog.dart';
 
 /// The user's optional, self-reported answer to "Did you try this
@@ -67,6 +68,7 @@ class CircleOffer {
     this.replacedFrom,
     this.replacementReason,
     this.session,
+    this.replacedFromStage,
   });
 
   /// The time the user said they had (`TimeWindow.name`).
@@ -88,6 +90,12 @@ class CircleOffer {
   /// V2 Phase D: what the Circle was when it was a routine or a Path step —
   /// `null` for a single activity offered by the engine.
   final CircleSessionRecord? session;
+
+  /// ADR-024 B5: the Plan stage of the Circle "Not this one today" replaced,
+  /// when it was a stage Circle — so the day stays a stage offer even when
+  /// its replacement isn't (Insight I2 counts these). A fact, never an
+  /// answer.
+  final PlanStageProvenance? replacedFromStage;
 }
 
 /// V2 Phase D: the routine or Path context of a Circle, as the journal
@@ -112,6 +120,7 @@ class CircleSessionRecord {
     this.parts = const [],
     this.skipped = const [],
     this.keptCircleId,
+    this.planStage,
   });
 
   /// What the Circle was called that day.
@@ -152,6 +161,12 @@ class CircleSessionRecord {
   /// V2 Phase D2: the kept Circle this Circle ran, when it was one.
   final String? keptCircleId;
 
+  /// ADR-024 B3 (journal schema 2): the Circle Plan stage this Circle was
+  /// composed for, when it was a stage Circle. It travels with the offer,
+  /// so a stage Circle replaced by an ordinary one stops saying it was a
+  /// stage. Unrelated to V1's retired Plan fields on [CircleJournalEntry].
+  final PlanStageProvenance? planStage;
+
   /// This record with [skipped] as the day's skips.
   CircleSessionRecord withSkipped(List<String> skipped) => CircleSessionRecord(
     title: title,
@@ -170,6 +185,7 @@ class CircleSessionRecord {
     parts: parts,
     skipped: skipped,
     keptCircleId: keptCircleId,
+    planStage: planStage,
   );
 
   Map<String, Object?> toJson() => {
@@ -189,6 +205,7 @@ class CircleSessionRecord {
     if (parts.isNotEmpty) 'parts': parts,
     if (skipped.isNotEmpty) 'skipped': skipped,
     'keptCircleId': ?keptCircleId,
+    'planStage': ?planStage?.toJson(),
   };
 
   /// Opaque at this layer, like the Plan fields: right types are trusted,
@@ -226,6 +243,7 @@ class CircleSessionRecord {
       parts: strings('parts'),
       skipped: strings('skipped'),
       keptCircleId: text('keptCircleId'),
+      planStage: PlanStageProvenance.fromJson(raw['planStage']),
     );
   }
 }
@@ -267,6 +285,7 @@ class CircleJournalEntry {
     this.replacementReason,
     this.minutesAtClose,
     this.session,
+    this.replacedFromStage,
   });
 
   /// The journal record schema version this entry was written under — see
@@ -371,6 +390,9 @@ class CircleJournalEntry {
   /// V2 Phase D: the routine or Path context, when there was one.
   final CircleSessionRecord? session;
 
+  /// ADR-024 B5 — see [CircleOffer.replacedFromStage].
+  final PlanStageProvenance? replacedFromStage;
+
   /// The title shown for this Circle: the routine or Path step as it was
   /// named that day, else the activity's.
   String get title => session?.title ?? activityLabel(activityId);
@@ -424,6 +446,7 @@ class CircleJournalEntry {
       // An offer always says exactly what the Circle was: a replacement
       // that is a single activity clears the routine or Path it replaced.
       session: offer == null ? session : offer.session,
+      replacedFromStage: offer?.replacedFromStage ?? replacedFromStage,
     );
   }
 
@@ -453,6 +476,7 @@ class CircleJournalEntry {
     'replacementReason': replacementReason,
     'minutesAtClose': minutesAtClose,
     'session': session?.toJson(),
+    'replacedFromPlanStage': ?replacedFromStage?.toJson(),
   };
 
   /// Parses one journal entry, or `null` if [json] is missing or has an
@@ -554,6 +578,9 @@ class CircleJournalEntry {
           : null,
       minutesAtClose: minutesAtCloseRaw is int ? minutesAtCloseRaw : null,
       session: CircleSessionRecord.fromJson(json['session']),
+      replacedFromStage: PlanStageProvenance.fromJson(
+        json['replacedFromPlanStage'],
+      ),
     );
   }
 }
@@ -568,7 +595,17 @@ const circleJournalKey = 'circle_journal_v1';
 /// The current journal record-shape version. Bump only alongside a
 /// reviewed schema-migration change to [CircleJournalRepository]'s
 /// read/write path — never as an incidental side effect.
-const circleJournalSchemaVersion = 1;
+///
+/// **2 (ADR-024 B3):** a Circle's [CircleSessionRecord] may carry the V2
+/// Circle Plan stage it was composed for ([CircleSessionRecord.planStage]).
+/// Nothing else changed: a version-1 journal reads exactly as before, its
+/// entries keep their own version, and the next write stores the wrapper
+/// as 2 ([circleJournalReadableVersions]).
+const circleJournalSchemaVersion = 2;
+
+/// Every wrapper version this build reads: the current one and every
+/// earlier one. A later version is unreadable — this build predates it.
+const circleJournalReadableVersions = {1, circleJournalSchemaVersion};
 
 /// The hard cap on retained journal entries: at most this many of the most
 /// recent local dates are kept, oldest dropped first.
@@ -935,10 +972,18 @@ class CircleJournalRepository {
   ///
   /// [suggestionPreferences] (V2 Phase C), when given, is exported beside
   /// the entries under its own key — the user's explicit choices, kept
-  /// apart from what happened. Nothing derived is ever exported.
+  /// apart from what happened. So are [keptCircles] (ADR-024): the only
+  /// reusable thing the user owns; and [circlePlans] (ADR-024 B3): each
+  /// Plan's place, cycles and stage records; and [insights] (ADR-024 B5):
+  /// the Insight snapshots THIRTY showed — dated records of what was shown,
+  /// not a profile. Phase D's retired routines and Paths are never exported
+  /// as current objects; the journal entries of days that used them keep
+  /// their own labels. Nothing else derived is ever exported.
   String exportAsJson({
     Map<String, Object?>? suggestionPreferences,
-    Map<String, Object?>? toolkit,
+    List<Map<String, Object?>>? keptCircles,
+    Map<String, Object?>? circlePlans,
+    Map<String, Object?>? insights,
   }) {
     final entries = readAll();
     const encoder = JsonEncoder.withIndent('  ');
@@ -946,7 +991,9 @@ class CircleJournalRepository {
       'schemaVersion': circleJournalSchemaVersion,
       'entries': entries.map((entry) => entry.toJson()).toList(),
       'suggestionPreferences': ?suggestionPreferences,
-      'toolkit': ?toolkit,
+      'keptCircles': ?keptCircles,
+      'circlePlans': ?circlePlans,
+      'insights': ?insights,
     });
   }
 
@@ -1011,6 +1058,7 @@ class CircleJournalRepository {
             replacedFrom: offer?.replacedFrom,
             replacementReason: offer?.replacementReason,
             session: offer?.session,
+            replacedFromStage: offer?.replacedFromStage,
           )
         : entries[index];
 
@@ -1057,7 +1105,9 @@ class CircleJournalRepository {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! Map<String, Object?>) return [];
-      if (decoded['schemaVersion'] != circleJournalSchemaVersion) return [];
+      if (!circleJournalReadableVersions.contains(decoded['schemaVersion'])) {
+        return [];
+      }
 
       final rawEntries = decoded['entries'];
       if (rawEntries is! List) return [];

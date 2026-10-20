@@ -21,10 +21,13 @@ import 'package:thirty/features/home/application/first_breath_provider.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/domain/recommendation_engine.dart';
 import 'package:thirty/features/home/presentation/widgets/journal_data_controls.dart';
-import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
-import 'package:thirty/features/toolkit/domain/module_library.dart';
-import 'package:thirty/features/toolkit/domain/path_catalog.dart';
-import 'package:thirty/features/toolkit/domain/toolkit_model.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart'
+    show insightsKey, insightsUnreadableKey;
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/personal_circle/domain/kept_circle.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart'
+    show circlePlansKey, circlePlansUnreadableKey;
 import 'package:thirty/features/reminder/application/reminder_provider.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 
@@ -148,8 +151,8 @@ void main() {
   });
 
   testWidgets('no recorded-Circle key survives: session, reflection, '
-      'routine or Path step and the selection history drawn from past '
-      'Circles', (tester) async {
+      'composed Circle, the retired Phase D keys and the selection history '
+      'drawn from past Circles', (tester) async {
     final (prefs, container) =
         await tester.runAsync(setUpApp)
             as (SharedPreferences, ProviderContainer);
@@ -161,6 +164,9 @@ void main() {
         ['easyWalk'],
       );
       await prefs.setString(recommendationLastFamilyKey, 'walking');
+      // Retired Phase D keys (ADR-024) a development build may have left.
+      await prefs.setString(recommendationSessionKey, '{}');
+      await prefs.setString(recommendationReplacedRoutineKey, 'routine-1');
     });
     await tester.runAsync(() => walkTodaysCircle(container));
     // V2 Phase B: today's offer is recorded too.
@@ -222,59 +228,60 @@ void main() {
     }
   });
 
-  testWidgets('V2 Phase D: routines and the Path under way stay, the '
-      'entitlement stays — and nothing the Toolkit says rests on deleted '
-      'evidence', (tester) async {
+  testWidgets('kept Circles stay, the entitlement stays — and nothing '
+      'learned survives the deleted evidence', (tester) async {
     final (prefs, container) =
         await tester.runAsync(() => setUpApp(entitled: true))
             as (SharedPreferences, ProviderContainer);
     addTearDown(container.dispose);
-    final routine = Routine(
-      id: 'routine-1',
-      name: 'My pick-me-up',
-      need: Intention.moreEnergy,
-      versions: [
-        RoutineVersion(
-          id: 'routine-1-v1',
-          number: 1,
-          composition: Composition(const [
-            ModuleUse(ModuleId.standingStretch, short: false),
-            ModuleUse(ModuleId.musicMove, short: false),
-          ]),
-          createdAt: today.subtract(const Duration(days: 40)),
-          origin: VersionOrigin.path,
-        ),
-      ],
-      activeVersionId: 'routine-1-v1',
+    final kept = KeptCircle(
+      id: 'kept-1',
+      name: 'My gentle Circle',
+      need: Intention.gentlerPace,
+      plan: CirclePlan.fromWire(const ['warmDrink:10', 'lookFar:2'])!,
       createdAt: today.subtract(const Duration(days: 40)),
-    );
-    final path = PathRun(
-      id: 'path-2',
-      kind: PathKind.build,
-      need: Intention.clearerHead,
-      startedAt: today.subtract(const Duration(days: 3)),
-      pool: const [ModuleId.writeDown, ModuleId.clearSurface],
-      seed: SeedReason.sparseStart,
-      template: PathTemplateId.clearTheDecks,
+      fromCircleId: '2026-08-29',
     );
     await tester.runAsync(
       () => prefs.setString(
-        toolkitStateKey,
-        jsonEncode(ToolkitState(routines: [routine], path: path).toJson()),
+        keptCirclesKey,
+        jsonEncode(keptCirclesRecord([kept])),
       ),
     );
-    container.invalidate(toolkitProvider);
+    container.invalidate(keptCirclesProvider);
     await tester.runAsync(() => walkTodaysCircle(container));
 
     await deleteThroughDialog(tester, container);
 
-    final toolkit = container.read(toolkitProvider);
-    expect(toolkit.routines.single.name, 'My pick-me-up');
-    expect(toolkit.path?.id, 'path-2');
+    final owned = container.read(keptCirclesProvider).kept.single;
+    expect(owned.name, 'My gentle Circle');
+    expect(owned.plan.toWire(), ['warmDrink:10', 'lookFar:2']);
     expect(container.read(entitlementStatusProvider), EntitlementStatus.active);
-    // No evidence left: no maintenance offer, no claim.
-    expect(container.read(maintenanceOffersProvider), isEmpty);
-    expect(container.read(toolkitHistoryProvider), isEmpty);
+    // No evidence left.
+    expect(container.read(pastCirclesProvider), isEmpty);
+  });
+
+  testWidgets('a Plans or Insights record set aside as unreadable goes '
+      'too; an unreadable kept-Circles record stays', (tester) async {
+    final (prefs, container) =
+        await tester.runAsync(() => setUpApp(entitled: true))
+            as (SharedPreferences, ProviderContainer);
+    addTearDown(container.dispose);
+    await tester.runAsync(() async {
+      await prefs.setString(circlePlansUnreadableKey, '{"stages": "old"}');
+      await prefs.setString(insightsUnreadableKey, '{"snapshots": "old"}');
+      await prefs.setString(keptCirclesUnreadableKey, '{"kept": "old"}');
+    });
+    await tester.runAsync(() => walkTodaysCircle(container));
+
+    await deleteThroughDialog(tester, container);
+
+    expect(prefs.containsKey(circlePlansUnreadableKey), isFalse);
+    expect(prefs.containsKey(insightsUnreadableKey), isFalse);
+    expect(prefs.getString(keptCirclesUnreadableKey), '{"kept": "old"}');
+    // Nothing else was made of them: no Plan or Insight record appeared.
+    expect(prefs.containsKey(insightsKey), isFalse);
+    expect(prefs.getString(circlePlansKey), isNot(contains('old')));
   });
 
   testWidgets('after a restart the deleted Circle does not come back', (

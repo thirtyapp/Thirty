@@ -12,10 +12,12 @@ import 'package:thirty/features/home/presentation/widgets/circle_hero.dart';
 import 'package:thirty/features/home/presentation/widgets/circle_ready_prompt.dart';
 import 'package:thirty/features/home/presentation/widgets/daily_intention_prompt.dart';
 import 'package:thirty/core/routing/app_shell.dart';
-import 'package:thirty/features/toolkit/domain/path_catalog.dart';
-import 'package:thirty/features/toolkit/presentation/path_start_page.dart';
-import 'package:thirty/features/toolkit/presentation/routine_detail_page.dart';
-import 'package:thirty/features/toolkit/presentation/toolkit_page.dart';
+import 'package:thirty/features/home/presentation/home_page.dart';
+import 'package:thirty/features/personal_circle/presentation/kept_circle_page.dart';
+import 'package:thirty/features/personal_circle/presentation/yours_page.dart';
+import 'package:thirty/features/insights/presentation/insights_page.dart';
+import 'package:thirty/features/plans/presentation/plan_detail_page.dart';
+import 'package:thirty/features/plans/presentation/plans_page.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 void main() {
@@ -78,44 +80,66 @@ void main() {
     },
   );
 
-  testWidgets(
-    "V2 Phase D: a Path's page and a routine's open inside the Toolkit "
-    'branch (the navigation bar stays); an unknown Path returns to the '
-    'Toolkit',
-    (WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
-      final prefs = await SharedPreferences.getInstance();
-      addTearDown(() => appRouter.go('/'));
+  testWidgets('ADR-024 B1/B4/B6: a retired location never opens a retired page '
+      '— the Toolkit and its kept Circles lead to Yours (inside You), Paths '
+      'and routines lead to Today, a V1 Plan to the Circle Plans page — and '
+      '/insights is the Insights tab (B7)', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({firstNamePromptSeenKey: true});
+    final prefs = await SharedPreferences.getInstance();
+    addTearDown(() => appRouter.go('/'));
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-          child: const ThirtyApp(),
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: const ThirtyApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      appRouter.go(PathStartPage.locationFor(PathTemplateId.clearTheDecks));
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<PathStartPage>(find.byType(PathStartPage)).template,
-        PathTemplateId.clearTheDecks,
-      );
-      expect(find.byType(AppShell), findsOneWidget);
+    appRouter.go('/toolkit');
+    await tester.pumpAndSettle();
+    expect(find.byType(YoursPage), findsOneWidget);
+    expect(find.byType(AppShell), findsOneWidget);
 
-      appRouter.go('/toolkit/paths/notAPath');
-      await tester.pumpAndSettle();
-      expect(find.byType(PathStartPage), findsNothing);
-      expect(find.byType(ToolkitPage), findsOneWidget);
+    appRouter.go('/toolkit/kept/kept-1');
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<KeptCirclePage>(find.byType(KeptCirclePage)).keptId,
+      'kept-1',
+    );
+    expect(find.text('This Circle is no longer in Yours.'), findsOneWidget);
 
-      appRouter.go(RoutineDetailPage.locationFor('gone'));
+    for (final retired in const [
+      '/toolkit/paths',
+      '/toolkit/paths/clearTheDecks',
+      '/toolkit/paths/notAPath',
+      '/toolkit/review',
+      '/toolkit/routine/routine-1',
+    ]) {
+      appRouter.go(retired);
       await tester.pumpAndSettle();
-      expect(
-        find.text('This routine is no longer in your Toolkit.'),
-        findsOneWidget,
-      );
-    },
-  );
+      expect(find.byType(HomePage), findsOneWidget, reason: retired);
+      expect(find.textContaining('routine'), findsNothing, reason: retired);
+      expect(find.textContaining('Path'), findsNothing, reason: retired);
+      expect(find.textContaining('Toolkit'), findsNothing, reason: retired);
+    }
+
+    // B7: `/insights` is the Insights tab, inside the four-tab shell.
+    appRouter.go('/insights');
+    await tester.pumpAndSettle();
+    expect(find.byType(InsightsPage), findsOneWidget);
+    expect(find.byType(AppShell), findsOneWidget);
+
+    // B4: `/plans` is the Circle Plans page; a V1 Plan id opens it, never a
+    // V1 Plan.
+    for (final location in const ['/plans', '/plans/moreEnergyPath']) {
+      appRouter.go(location);
+      await tester.pumpAndSettle();
+      expect(find.byType(PlansPage), findsOneWidget, reason: location);
+      expect(find.byType(PlanDetailPage), findsNothing, reason: location);
+      expect(find.textContaining('Path'), findsNothing, reason: location);
+    }
+  });
 
   testWidgets('the /showcase route shows the design system showcase', (
     WidgetTester tester,

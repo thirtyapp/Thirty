@@ -72,7 +72,10 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
     );
 
     return Scaffold(
-      appBar: const ThirtyAppBar(title: Text(MemoryPage.title)),
+      appBar: const ThirtyAppBar(
+        title: Text(MemoryPage.title),
+        parentLocation: '/settings',
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(

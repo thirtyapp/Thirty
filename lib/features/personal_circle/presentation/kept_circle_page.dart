@@ -8,20 +8,21 @@ import '../../../core/widgets/thirty_confirm_dialog.dart';
 import '../../../core/widgets/thirty_text_action.dart';
 import '../../home/application/activity_catalog.dart';
 import '../../home/application/suggestion_preferences.dart';
-import '../../toolkit/application/toolkit_provider.dart';
-import '../../toolkit/domain/toolkit_model.dart';
-import '../../toolkit/presentation/toolkit_page.dart';
-import '../../toolkit/presentation/widgets/toolkit_parts.dart';
+import '../application/kept_circles_provider.dart';
 import '../domain/circle_elements.dart';
 import '../domain/composed_session.dart';
+import '../domain/kept_circle.dart';
 import 'use_today_control.dart';
+import 'widgets/yours_parts.dart';
+import 'yours_page.dart';
 
 /// "Clearer Head · about 18 minutes · 4 parts".
 String keptCircleLine(KeptCircle circle) =>
     '${intentionLabel(circle.need)} · about ${circle.minutes} minutes · '
     '${circle.plan.parts.length} parts';
 
-/// One kept Circle (V2 Phase D2, ADR-023 §8): what is in it, using it today,
+/// One kept Circle (V2 Phase D2, ADR-023 §8; Yours, ADR-024 §3): what is in
+/// it, using it today,
 /// and the user's own controls — rename, remove. Everything here works
 /// whatever Premium's state: a kept Circle is the user's.
 class KeptCirclePage extends ConsumerWidget {
@@ -29,20 +30,20 @@ class KeptCirclePage extends ConsumerWidget {
 
   final String keptId;
 
-  static const pathPattern = '/toolkit/kept/:id';
-  static String locationFor(String id) => '/toolkit/kept/$id';
+  static const pathPattern = '${YoursPage.location}/kept/:id';
+  static String locationFor(String id) => '${YoursPage.location}/kept/$id';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
-    final circle = ref.watch(toolkitProvider).keptById(keptId);
+    final circle = ref.watch(keptCirclesProvider).keptById(keptId);
     if (circle == null) {
       return Scaffold(
         appBar: const ThirtyAppBar(title: Text('Kept Circle')),
         body: const Padding(
           padding: EdgeInsets.all(AppSpacing.page),
-          child: ToolkitNote('This Circle is no longer in your Toolkit.'),
+          child: YoursNote('This Circle is no longer in Yours.'),
         ),
       );
     }
@@ -88,12 +89,12 @@ class KeptCirclePage extends ConsumerWidget {
                         '${intentionLabel(circle.need)}.',
             ),
             const SizedBox(height: AppSpacing.l),
-            ToolkitSection(
+            YoursSection(
               title: 'What’s in it',
-              child: ToolkitRows(
+              child: YoursRows(
                 rows: [
                   for (final part in circle.plan.parts)
-                    ToolkitRow(
+                    YoursRow(
                       title: part.definition.name,
                       detail:
                           '${ComposedCopy.partCue(part.minutes)} · '
@@ -103,12 +104,12 @@ class KeptCirclePage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.l),
-            ToolkitSection(
+            YoursSection(
               title: 'It’s yours',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const ToolkitNote(
+                  const YoursNote(
                     'THIRTY never offers a kept Circle unasked. It stays '
                     'yours, with or without Premium.',
                   ),
@@ -162,7 +163,7 @@ class KeptCirclePage extends ConsumerWidget {
     );
     controller.dispose();
     if (name == null) return;
-    ref.read(toolkitProvider.notifier).renameKept(circle.id, name);
+    ref.read(keptCirclesProvider.notifier).renameKept(circle.id, name);
   }
 
   static Future<void> _remove(
@@ -175,14 +176,14 @@ class KeptCirclePage extends ConsumerWidget {
       barrierLabel: 'Keep it',
       builder: (_) => ThirtyConfirmDialog(
         title: 'Remove ${circle.name}?',
-        body: 'It leaves your Toolkit. Days you used it stay in your history.',
+        body: 'It leaves Yours. Days you used it stay in your history.',
         cancelLabel: 'Keep it',
         confirmLabel: 'Remove',
         destructive: true,
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    ref.read(toolkitProvider.notifier).deleteKept(circle.id);
-    context.go(ToolkitPage.location);
+    ref.read(keptCirclesProvider.notifier).deleteKept(circle.id);
+    context.go(YoursPage.location);
   }
 }

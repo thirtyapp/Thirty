@@ -12,16 +12,17 @@ import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/application/suggestion_preferences.dart';
 import 'package:thirty/features/home/domain/recommendation_engine.dart';
-import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
-import 'package:thirty/features/toolkit/domain/maintenance.dart';
-import 'package:thirty/features/toolkit/domain/module_library.dart';
-import 'package:thirty/features/toolkit/domain/path_catalog.dart';
-import 'package:thirty/features/toolkit/domain/toolkit_model.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+import 'package:thirty/features/plans/domain/plan_copy.dart';
+import 'package:thirty/features/plans/presentation/plan_view.dart';
 
 /// QA-1 — each synthetic scenario, built through the production Circle and
-/// Toolkit notifiers, then opened on the reference day exactly as the
-/// harness would open it. The V2 Phase D group is the founder's Premium
-/// proofs, checked here before they are walked on the S25.
+/// kept-Circle notifiers, then opened on the reference day exactly as the
+/// harness would open it. The V2 Phase D2 group is the founder's Premium
+/// proofs, checked here before they are walked on the S25. (Phase D's Path,
+/// routine and maintenance proofs retired with those features, ADR-024.)
 void main() {
   final reference = DateTime(2026, 10, 8, 10);
   late SharedPreferences genuine;
@@ -68,7 +69,7 @@ void main() {
     for (final scenario in QaScenario.values) {
       expect(
         scenario.fixedEntitlement,
-        scenario == QaScenario.dLapsed || scenario == QaScenario.d2Lapsed
+        scenario == QaScenario.d2Lapsed || scenario == QaScenario.e6Lapsed
             ? QaEntitlement.inactive
             : isNull,
       );
@@ -102,28 +103,25 @@ void main() {
       'c_memory_nothing_fits',
       'c_delete_keeps_preferences',
       'c_reset_preferences',
-      'd_first_path',
-      'd_path_under_way',
-      'd_path_adapted',
-      'd_path_review',
-      'd_routine_saved',
-      'd_routine_daily_pick',
-      'd_routine_piece_resting',
-      'd_routine_rest_lifted',
-      'd_week7_time_misfit',
-      'd_fading',
-      'd_tune_up_under_way',
-      'd_tune_up_review',
-      'd_stable_check',
-      'd_lapsed',
-      'd_month_two',
-      'd_gap',
-      'd_served_well',
       'd2_first_premium',
       'd2_month',
       'd2_running',
       'd2_lapsed',
       'd2_back',
+      'd3_plan_stage',
+      'd3_plan_set_aside',
+      'd4_plan_review',
+      'd4_plan_review_unanswered',
+      'd4_plan_review_none_useful',
+      'e6_empty',
+      'e6_calendar',
+      'e6_early_week',
+      'e6_skipped_part',
+      'e6_pacing',
+      'e6_useful_in_common',
+      'e6_nothing_to_change',
+      'e6_lapsed',
+      'e6_plan_review',
     ]);
   });
 
@@ -153,361 +151,6 @@ void main() {
       final second = (await build(scenario)).snapshot();
       expect(second, first, reason: scenario.wireName);
     }
-  });
-
-  ToolkitState toolkitOf(ProviderContainer c) => c.read(toolkitProvider);
-
-  group('V2 Phase D — Premium proofs', () {
-    test('new_user: nothing built, nothing claimed', () async {
-      final c = await open(QaScenario.newUser);
-      addTearDown(c.dispose);
-      expect(toolkitOf(c).isEmpty, isTrue);
-      expect(c.read(maintenanceOffersProvider), isEmpty);
-      expect(c.read(toolkitCheckProvider), isNull);
-    });
-
-    test('B — d_first_path: the first Path is seeded from Free evidence: '
-        'Move to music, found very useful, comes first', () async {
-      final c = await open(QaScenario.dFirstPath);
-      addTearDown(c.dispose);
-      expect(toolkitOf(c).path, isNull);
-      expect(
-        c
-            .read(toolkitProvider.notifier)
-            .startBuild(PathTemplateId.wakeUpIndoors),
-        PathStart.started,
-      );
-      final run = toolkitOf(c).path!;
-      expect(run.seed, SeedReason.usefulModule);
-      expect(run.pool.first, ModuleId.musicMove);
-      final step = c.read(nextPathStepProvider)!;
-      expect(
-        step.explanation,
-        'You’ve found this useful before, so it comes first.',
-      );
-    });
-
-    test("C/D — d_path_under_way: today's More Energy Circle is Circle 3, "
-        'and it keeps the piece found useful', () async {
-      final c = await open(QaScenario.dPathUnderWay);
-      addTearDown(c.dispose);
-      final run = toolkitOf(c).path!;
-      expect(run.circles, hasLength(2));
-      // A Clearer Head day in between left the Path where it was. With
-      // Premium it was that day's Personal Guided Circle (ADR-023) — never a
-      // Path step.
-      final journal = journalOf(c);
-      expect(journal.last.direction, Intention.clearerHead);
-      expect(journal.last.session?.pathRunId, isNull);
-      expect(journal.last.session?.parts, isNotEmpty);
-
-      c
-          .read(recommendationProvider.notifier)
-          .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
-      final today = c.read(recommendationProvider).recommendation!;
-      expect(today.session?.pathCircle, 3);
-      expect(today.activity, 'Move to music');
-      expect(today.why, 'You found this useful, so here it is in full.');
-      expect(today.offeredMinutes, 10);
-    });
-
-    test('E — "Not this one today" on a Path step: the engine replaces it, '
-        'and the Path waits', () async {
-      final c = await open(QaScenario.dPathUnderWay);
-      addTearDown(c.dispose);
-      final circle = c.read(recommendationProvider.notifier);
-      circle.chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
-      expect(circle.replaceToday(ReplacementReason.notFeeling), isTrue);
-      final today = c.read(recommendationProvider).recommendation!;
-      expect(today.session?.isPath ?? false, isFalse);
-      expect(today.replacedFromTitle, 'Move to music');
-      circle.start();
-      circle.close();
-      await Future<void>.delayed(Duration.zero);
-      expect(toolkitOf(c).path!.circles, hasLength(2));
-    });
-
-    test('D — d_path_adapted: Circle 4 turned down, so Circle 5 tries '
-        'another partner', () async {
-      final c = await open(QaScenario.dPathAdapted);
-      addTearDown(c.dispose);
-      expect(toolkitOf(c).path!.circles, hasLength(4));
-      final step = c.read(nextPathStepProvider)!;
-      expect(step.number, 5);
-      expect(step.reason, PathStepReason.alternateAfterNegative);
-      expect(step.composition.modules, {
-        ModuleId.musicMove,
-        ModuleId.activeTask,
-      });
-      expect(
-        step.explanation,
-        'That pairing didn’t suit you, so this tries another.',
-      );
-
-      // On an about-20 day it runs in its shorter form, and still says why
-      // it changed: the answer outranks the time line (S25 finding).
-      c
-          .read(recommendationProvider.notifier)
-          .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
-      final today = c.read(recommendationProvider).recommendation!;
-      expect(today.offeredMinutes, lessThan(step.composition.minutes));
-      expect(today.why, step.explanation);
-    });
-
-    test('F — d_path_review: seven Circles; the review proposes the routine '
-        'and claims only what the answers support', () async {
-      final c = await open(QaScenario.dPathReview);
-      addTearDown(c.dispose);
-      final run = toolkitOf(c).path!;
-      expect(run.finished, isTrue);
-      final proposal = c.read(pathProposalProvider)!;
-      expect(proposal.composition.modules, {
-        ModuleId.standingStretch,
-        ModuleId.musicMove,
-      });
-      expect(proposal.composition.minutes, 15);
-      expect(proposal.shorter?.minutes, 10);
-      expect(proposal.facts.answeredForResult, 4);
-      expect(proposal.facts.positiveForResult, 4);
-      // Until kept, nothing is in the Toolkit.
-      expect(toolkitOf(c).routines, isEmpty);
-    });
-
-    test("G — d_routine_saved: the routine is the user's, with a shorter "
-        'version from the Path', () async {
-      final c = await open(QaScenario.dRoutineSaved);
-      addTearDown(c.dispose);
-      final routine = toolkitOf(c).routines.single;
-      expect(routine.name, 'My pick-me-up');
-      expect(routine.active.minutes, 15);
-      expect(routine.shortVersion?.minutes, 10);
-      expect(toolkitOf(c).path, isNull);
-    });
-
-    test('H — d_routine_daily_pick: an ordinary More Energy day offers the '
-        'routine — on its evidence, no Premium bonus', () async {
-      final c = await open(QaScenario.dRoutineDailyPick);
-      addTearDown(c.dispose);
-      c
-          .read(recommendationProvider.notifier)
-          .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
-      final today = c.read(recommendationProvider).recommendation!;
-      expect(today.session?.routineId, toolkitOf(c).routines.single.id);
-      expect(today.reason, RecommendationReason.usefulHere);
-      expect(today.sessionDefinition.steps, isNotEmpty);
-    });
-
-    test(
-      'H2 — d_routine_piece_resting: Move to music, a piece of the '
-      'routine, is resting after "Not useful" — Memory says so, and Today '
-      'never brings it back inside the routine; Free picks normally',
-      () async {
-        final c = await open(QaScenario.dRoutinePieceResting);
-        addTearDown(c.dispose);
-        final routine = toolkitOf(c).routines.single;
-        expect(
-          routine.active.composition.modules,
-          contains(ModuleId.musicMove),
-        );
-        c
-            .read(recommendationProvider.notifier)
-            .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
-        final today = c.read(recommendationProvider).recommendation!;
-        expect(today.session?.routineId, isNull);
-        expect(today.activityId, isNot(ActivityId.moveToMusic));
-      },
-    );
-
-    test('H3 — d_routine_rest_lifted: "Suggest again" lifted that rest — the '
-        'routine is today\'s pick again', () async {
-      final c = await open(QaScenario.dRoutineRestLifted);
-      addTearDown(c.dispose);
-      c
-          .read(recommendationProvider.notifier)
-          .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
-      final today = c.read(recommendationProvider).recommendation!;
-      expect(today.session?.routineId, toolkitOf(c).routines.single.id);
-    });
-
-    test(
-      'I — d_week7_time_misfit: less time on most recent Clearer Head days: the '
-      'one offer is a shorter version — and it is still the same routine, '
-      'every piece in its authored short form',
-      () async {
-        final c = await open(QaScenario.dWeek7TimeMisfit);
-        addTearDown(c.dispose);
-        final offer = c.read(primaryOfferProvider)!;
-        expect(offer.kind, OfferKind.timeMisfit);
-        expect(offer.targetMinutes, 20);
-        final routine = toolkitOf(c).routines.single;
-        expect(routine.name, 'My reset');
-        expect(routine.shortVersion, isNull);
-        expect(routine.active.minutes, 30);
-        expect(
-          offer.evidence,
-          'On 5 of your last 6 Clearer Head days, you had less than the 30 '
-          'minutes My reset takes.',
-        );
-        // Try it: the shorter Path's first Circle is the same pieces, short.
-        expect(
-          c.read(toolkitProvider.notifier).startShorter(routine.id, 20),
-          PathStart.started,
-        );
-        final step = c.read(nextPathStepProvider)!;
-        expect(step.composition.minutes, 20);
-        expect(
-          [for (final u in step.composition.uses) u.module],
-          [for (final u in routine.active.composition.uses) u.module],
-        );
-        expect(step.composition.uses.every((u) => u.short), isTrue);
-      },
-    );
-
-    test('N2 — d_served_well: Clearer Head chosen as often, but every Free '
-        'pick "Somewhat useful": Free serves it — no gap offer', () async {
-      final c = await open(QaScenario.dServedWell);
-      addTearDown(c.dispose);
-      expect(c.read(maintenanceOffersProvider), isEmpty);
-    });
-
-    test('J — d_fading: a routine that used to suit, suiting less well '
-        'lately: a tune-up is offered', () async {
-      final c = await open(QaScenario.dFading);
-      addTearDown(c.dispose);
-      final offer = c.read(primaryOfferProvider)!;
-      expect(offer.kind, OfferKind.fading);
-      expect(
-        offer.evidence,
-        'Your recent answers about My pick-me-up have been less positive than '
-        'before.',
-      );
-    });
-
-    test("J2 — d_tune_up_under_way: two Circles in; today's More Energy "
-        'Circle is its Circle 3', () async {
-      final c = await open(QaScenario.dTuneUpUnderWay);
-      addTearDown(c.dispose);
-      final run = toolkitOf(c).path!;
-      expect(run.kind, PathKind.tuneUp);
-      expect(run.circles, hasLength(2));
-      expect(c.read(nextPathStepProvider)!.number, 3);
-    });
-
-    test('J3 — d_tune_up_review: keeping it makes version 2 the one THIRTY '
-        'uses, and keeps version 1', () async {
-      final c = await open(QaScenario.dTuneUpReview);
-      addTearDown(c.dispose);
-      expect(toolkitOf(c).path!.finished, isTrue);
-      final kept = c.read(toolkitProvider.notifier).keepProposal()!;
-      expect(kept.versions.length, greaterThanOrEqualTo(2));
-      expect(kept.active.number, kept.versions.last.number);
-      expect(kept.active.origin, VersionOrigin.tuneUp);
-      expect(kept.versions.first.origin, VersionOrigin.path);
-    });
-
-    test('K — d_stable_check: four weeks of steady answers: nothing to '
-        'change, and nothing invented', () async {
-      final c = await open(QaScenario.dStableCheck);
-      addTearDown(c.dispose);
-      expect(c.read(maintenanceOffersProvider), isEmpty);
-      final check = c.read(toolkitCheckProvider)!;
-      expect(check.state, CheckState.stable);
-      expect(
-        check.message,
-        'My pick-me-up is working well — nothing to change.',
-      );
-    });
-
-    test('L — d_lapsed: the routine stays usable in Free; the second Path is '
-        'saved and does not claim the day', () async {
-      final c = await open(QaScenario.dLapsed);
-      addTearDown(c.dispose);
-      expect(c.read(premiumEntitlementProvider), isFalse);
-      final toolkit = toolkitOf(c);
-      expect(toolkit.routines.single.name, 'My pick-me-up');
-      expect(toolkit.path?.template, PathTemplateId.clearTheDecks);
-      expect(toolkit.path!.circles, hasLength(2));
-      // Paid operations stop.
-      expect(
-        c
-            .read(toolkitProvider.notifier)
-            .startTuneUp(toolkit.routines.single.id),
-        PathStart.notEntitled,
-      );
-      // A Clearer Head day is a Free day: the Path waits.
-      c
-          .read(recommendationProvider.notifier)
-          .chooseIntention(Intention.clearerHead, window: TimeWindow.upTo30);
-      expect(
-        c.read(recommendationProvider).recommendation!.session?.isPath ?? false,
-        isFalse,
-      );
-      // Ownership stays.
-      c
-          .read(toolkitProvider.notifier)
-          .rename(toolkit.routines.single.id, 'Mornings');
-      expect(toolkitOf(c).routines.single.name, 'Mornings');
-    });
-
-    test('L — restored: the same Path resumes exactly where it was', () async {
-      final store = await build(QaScenario.dLapsed);
-      final c = ProviderContainer(
-        overrides: [
-          ...qaContainerOverrides(
-            genuinePreferences: genuine,
-            supabaseAvailable: false,
-            session: QaSession(
-              entitlement: QaEntitlement.active,
-              scenario: QaScenario.dLapsed,
-              store: store,
-            ),
-          ),
-          nowProvider.overrideWithValue(reference),
-          eventClockProvider.overrideWithValue(() => reference),
-        ],
-      );
-      addTearDown(c.dispose);
-      await c.read(entitlementStatusProvider.notifier).initialize();
-      expect(c.read(premiumEntitlementProvider), isTrue);
-      c
-          .read(recommendationProvider.notifier)
-          .chooseIntention(Intention.clearerHead, window: TimeWindow.upTo30);
-      final today = c.read(recommendationProvider).recommendation!;
-      expect(today.session?.pathCircle, 3);
-      expect(toolkitOf(c).path!.circles, hasLength(2));
-    });
-
-    test('M — d_month_two: two routines, a shorter version, ordinary use — '
-        'and no new content needed', () async {
-      final c = await open(QaScenario.dMonthTwo);
-      addTearDown(c.dispose);
-      final routines = toolkitOf(c).routines;
-      expect(routines.map((r) => r.name), ['My pick-me-up', 'My desk reset']);
-      expect(routines.first.shortVersion, isNotNull);
-      expect(routines.first.shortVersion!.minutes, lessThanOrEqualTo(10));
-      // The desk reset's shorter version, from the time misfit: both its
-      // pieces, each short — the same routine.
-      final reset = routines.last;
-      expect(reset.shortVersion, isNotNull);
-      expect(
-        reset.shortVersion!.composition.modules,
-        reset.active.composition.modules,
-      );
-      expect(reset.shortVersion!.minutes, lessThanOrEqualTo(20));
-      expect(toolkitOf(c).path, isNull);
-      final offers = c.read(maintenanceOffersProvider);
-      expect(offers.where((o) => o.kind == OfferKind.gap), isEmpty);
-    });
-
-    test('N — d_gap: Clearer Head chosen often, no routine for it: a build '
-        'is offered — one, bounded', () async {
-      final c = await open(QaScenario.dGap);
-      addTearDown(c.dispose);
-      final offer = c.read(primaryOfferProvider)!;
-      expect(offer.kind, OfferKind.gap);
-      expect(offer.need, Intention.clearerHead);
-      expect(offer.template, PathTemplateId.clearTheDecks);
-    });
   });
 
   group('V2 Phase D2 — recurring Premium proofs', () {
@@ -542,7 +185,7 @@ void main() {
         c.read(suggestionPreferencesProvider).elementsLeftOut,
         hasLength(1),
       );
-      expect(c.read(toolkitProvider).kept, hasLength(1));
+      expect(c.read(keptCirclesProvider).kept, hasLength(1));
       // A composed answer never becomes activity evidence.
       for (final entry in composed) {
         expect(pastCirclesFrom([entry]).single.composite, isTrue);
@@ -562,13 +205,12 @@ void main() {
       expect(state.recommendation!.sessionDefinition.steps, hasLength(4));
     });
 
-    test('D2-D — d2_lapsed: Today is Free’s; the routine and the kept Circle '
-        'are the user’s to use today', () async {
+    test('D2-D — d2_lapsed: Today is Free’s; the kept Circle is the user’s '
+        'to use today', () async {
       final c = await open(QaScenario.d2Lapsed);
       addTearDown(c.dispose);
-      final toolkit = c.read(toolkitProvider);
-      expect(toolkit.routines, hasLength(1));
-      expect(toolkit.kept, hasLength(1));
+      final owned = c.read(keptCirclesProvider);
+      expect(owned.kept, hasLength(1));
       final notifier = c.read(recommendationProvider.notifier);
       notifier.chooseIntention(
         Intention.gentlerPace,
@@ -576,7 +218,7 @@ void main() {
       );
       expect(c.read(recommendationProvider).recommendation!.composed, isNull);
       expect(
-        notifier.useOwnedToday(keptCircleId: toolkit.kept.single.id),
+        notifier.useOwnedToday(keptCircleId: owned.kept.single.id),
         UseTodayResult.used,
       );
       expect(
@@ -585,8 +227,7 @@ void main() {
       );
     });
 
-    test('D2-E — d2_back: subscribed again, composition returns (on a need '
-        'without a routine of its own)', () async {
+    test('D2-E — d2_back: subscribed again, composition returns', () async {
       final c = await open(QaScenario.d2Back);
       addTearDown(c.dispose);
       c
@@ -596,6 +237,119 @@ void main() {
         c.read(recommendationProvider).recommendation!.composed,
         isNotNull,
       );
+    });
+  });
+
+  group('ADR-024 B3 — Circle Plan proofs', () {
+    test('D3-A — d3_plan_stage: More Energy steers stage 2, closing it '
+        'moves the Plan on once; another need leaves it untouched', () async {
+      final c = await open(QaScenario.d3PlanStage);
+      addTearDown(c.dispose);
+      final plans = c.read(circlePlansProvider);
+      expect(plans.activePlanId, 'getting_going');
+      expect(plans.active!.current.cursor, 2);
+      final today = c.read(recommendationProvider.notifier);
+      today.chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      final offer = c.read(recommendationProvider).recommendation!;
+      expect(offer.composed!.stage!.stageNumber, 2);
+      today.start();
+      today.close();
+      expect(c.read(circlePlansProvider).active!.current.cursor, 3);
+      expect(c.read(keptCirclesProvider).kept, isNotEmpty, reason: 'Use it');
+
+      final other = await open(QaScenario.d3PlanStage);
+      addTearDown(other.dispose);
+      other
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.gentlerPace, window: TimeWindow.about20);
+      expect(
+        other.read(recommendationProvider).recommendation!.composed!.stage,
+        isNull,
+      );
+      expect(other.read(circlePlansProvider).active!.current.cursor, 2);
+    });
+
+    test('D3-A on INACTIVE: Free, the place kept', () async {
+      final c = await open(
+        QaScenario.d3PlanStage,
+        entitlement: QaEntitlement.inactive,
+      );
+      addTearDown(c.dispose);
+      c
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      expect(c.read(recommendationProvider).recommendation!.composed, isNull);
+      expect(c.read(circlePlansProvider).active!.current.cursor, 2);
+    });
+
+    test('D3-B — d3_plan_set_aside: at ≈10, Fresh air is set aside and '
+        'stage 5 is today\'s Circle', () async {
+      final c = await open(QaScenario.d3PlanSetAside);
+      addTearDown(c.dispose);
+      c
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.moreEnergy, window: TimeWindow.about10);
+      final stage = c
+          .read(recommendationProvider)
+          .recommendation!
+          .composed!
+          .stage!;
+      expect(stage.stageNumber, 5);
+      final cycle = c.read(circlePlansProvider).active!.current;
+      expect(cycle.latest(4)!.outcome, StageOutcome.setAside);
+      expect(cycle.cursor, 5);
+    });
+
+    test('D4-A — d4_plan_review: two real cycles of Making room, the second '
+        'reviewed against the first, with Circles to keep', () async {
+      final c = await open(QaScenario.d4PlanReview);
+      addTearDown(c.dispose);
+      final plan = c.read(circlePlansProvider).plans['making_room']!;
+      expect(plan.lifecycle, PlanLifecycle.ended);
+      expect(plan.cycles.map((x) => x.end), [
+        CycleEnd.reachedEnd,
+        CycleEnd.reachedEnd,
+      ]);
+      expect(plan.current.guidedStages, 5);
+      final answers = stageAnswersFrom(
+        c.read(circleJournalRepositoryProvider).readAll(),
+      );
+      final review = reviewOf(plan.definition, plan, answers)!;
+      expect(review.summary.single, startsWith('You said these stages were'));
+      expect(review.compared, isNotEmpty);
+      expect(review.keepable, hasLength(5));
+    });
+
+    test('D4-B — d4_plan_review_unanswered: Slowing down through once with '
+        'no answer — the review says so (case A)', () async {
+      final c = await open(QaScenario.d4PlanReviewUnanswered);
+      addTearDown(c.dispose);
+      final plan = c.read(circlePlansProvider).plans['slowing_down']!;
+      expect(plan.lifecycle, PlanLifecycle.ended);
+      expect(plan.cycles.single.end, CycleEnd.reachedEnd);
+      expect(plan.current.guidedStages, 5);
+      final answers = stageAnswersFrom(
+        c.read(circleJournalRepositoryProvider).readAll(),
+      );
+      final review = reviewOf(plan.definition, plan, answers)!;
+      expect(review.summary, [PlanCopy.noAnswers]);
+      expect(review.caseD, isFalse);
+    });
+
+    test('D4-C — d4_plan_review_none_useful: every stage said Not useful — '
+        'no last Circle, and the review says why (case D)', () async {
+      final c = await open(QaScenario.d4PlanReviewNoneUseful);
+      addTearDown(c.dispose);
+      final plan = c.read(circlePlansProvider).plans['making_room']!;
+      expect(plan.lifecycle, PlanLifecycle.ended);
+      expect(plan.cycles.single.end, CycleEnd.allRejected);
+      expect(plan.current.guidedStages, 4);
+      final answers = stageAnswersFrom(
+        c.read(circleJournalRepositoryProvider).readAll(),
+      );
+      final review = reviewOf(plan.definition, plan, answers)!;
+      expect(review.caseD, isTrue);
+      expect(review.endLine, PlanCopy.allRejected);
     });
   });
 }

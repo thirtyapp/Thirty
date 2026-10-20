@@ -73,7 +73,7 @@ class ComposerPolicy {
   /// into the same session every day.
   final double supportEvidenceFactor;
 
-  /// An answer about a whole composed Circle (or a routine, positive only)
+  /// An answer about a whole composed Circle
   /// counts this much, per part, against an answer about the element's own
   /// activity.
   final double composedEvidenceFactor;

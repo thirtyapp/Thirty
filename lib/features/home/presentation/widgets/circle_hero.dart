@@ -6,6 +6,7 @@ import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/branding/thirty_brand_lockup.dart';
+import '../../../../core/premium/premium_access.dart';
 import '../../../../core/providers/clock_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
@@ -25,9 +26,11 @@ import 'activity_guide_sheet.dart';
 import 'circle_reflection_card.dart';
 import 'circle_session_card.dart';
 import 'not_this_one_sheet.dart';
+import 'one_line_headline.dart';
 import 'home_circle_metrics.dart';
 import 'home_rhythm_column.dart';
 import 'today_card.dart';
+import '../../../plans/domain/plan_copy.dart';
 
 /// THIRTY's first true emotional experience: the Circle Hero.
 ///
@@ -123,6 +126,10 @@ class CircleHero extends ConsumerStatefulWidget {
   /// TalkBack to have spoken the focus move to Close first.
   static const naturalEndAnnouncementDelay = Duration(milliseconds: 900);
   static const closedDetail = 'Your next Circle opens tomorrow.';
+
+  /// The smallest the greeting gets to keep a long name on one line; the
+  /// designed size is 34.
+  static const greetingMinFontSize = 24.0;
 
   @override
   ConsumerState<CircleHero> createState() => _CircleHeroState();
@@ -558,7 +565,11 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                     .take(plan.partsBuildingOn(moment.position)))
               part.definition.name,
           ];
-    final choice = await showSkipPartSheet(context, buildingOn: buildingOn);
+    final choice = await showSkipPartSheet(
+      context,
+      buildingOn: buildingOn,
+      offerLeaveOut: ref.read(premiumEntitlementProvider),
+    );
     if (choice == null || !mounted) return;
     ref
         .read(recommendationProvider.notifier)
@@ -617,8 +628,8 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     // watched here too, wherever a Circle runs.
     ref.watch(guidanceConductorProvider);
     final status = recommendationState.status;
-    // V2 Phase D: a routine or a joined Path step runs its pieces on the
-    // same Guided runtime; a single activity runs as authored.
+    // A composed Circle runs its parts one after the other; a single
+    // activity runs as authored.
     final activity = recommendation.sessionDefinition;
     final offered = circleDurationFor(recommendation);
     final clockNow = ref.read(eventClockProvider)();
@@ -762,12 +773,22 @@ class _CircleHeroState extends ConsumerState<CircleHero>
       header: true,
       child: AnimatedSwitcher(
         duration: artSwitchDuration,
-        child: Text(
-          heading.title,
-          key: ValueKey(heading.title),
-          style: headingStyle,
-          textAlign: TextAlign.center,
-        ),
+        child: status == RecommendationStatus.notStarted
+            // The greeting keeps to one line whatever the name, so a long
+            // name never pushes Start Circle down (S25 finding).
+            ? OneLineHeadline(
+                heading.title,
+                key: ValueKey(heading.title),
+                style: headingStyle,
+                minFontSize: CircleHero.greetingMinFontSize,
+                wrapPastMinimum: !normalTextSize,
+              )
+            : Text(
+                heading.title,
+                key: ValueKey(heading.title),
+                style: headingStyle,
+                textAlign: TextAlign.center,
+              ),
       ),
     );
 
@@ -1012,21 +1033,18 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                     category: recommendation.category,
                     minutes: recommendation.offeredMinutes,
                     firstAction: activity.firstAction,
-                    label: switch ((composed, recommendation.session)) {
-                      (ComposedSession(isKept: true), _) => composed!.title,
-                      (ComposedSession(), _) => ComposedCopy.title,
-                      (
-                        _,
-                        TodaySession(:final pathCircle?, :final pathCircles?),
-                      ) =>
-                        'Path · $pathCircle of $pathCircles',
-                      (_, TodaySession(isRoutine: true)) => 'Your routine',
+                    label: switch (composed) {
+                      ComposedSession(isKept: true) => composed.title,
+                      // ADR-024 B4: a stage Circle names its Plan and stage.
+                      ComposedSession(:final stage?) => PlanCopy.todayLabel(
+                        stage,
+                      ),
+                      ComposedSession() => ComposedCopy.title,
                       _ => 'Today',
                     },
-                    spokenLabel: switch (recommendation.session) {
-                      TodaySession(:final pathCircle?, :final pathCircles?) =>
-                        'Path · Circle $pathCircle of $pathCircles',
-                      _ => null,
+                    spokenLabel: switch (composed?.stage) {
+                      final stage? => PlanCopy.todaySpokenLabel(stage),
+                      null => null,
                     },
                     showFirstAction:
                         recommendationState.status ==

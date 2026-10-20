@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/analytics/analytics_consent.dart';
 import '../../../../core/providers/theme_mode_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_confirm_dialog.dart';
@@ -11,9 +10,10 @@ import '../../../reminder/application/reminder_provider.dart';
 import 'theme_mode_choice.dart';
 import 'you_group_card.dart';
 
-/// You's "Preferences" group (Phase C1): the daily reminder, appearance,
-/// spoken guidance (V2 Phase D2 — only in a build that bundles it) and
-/// analytics consent as rows of one grouped card. Each row's behaviour
+/// You's "Preferences" group (Phase C1): the daily reminder, appearance
+/// and spoken guidance (V2 Phase D2 — only in a build that bundles it) as
+/// rows of one grouped card. Analytics consent is a privacy control and
+/// lives in Data & privacy ([YouDataCard]; founder decision, B7). Each row's behaviour
 /// is unchanged from before C1 — only the surface around them changed.
 ///
 /// North Star convergence: each row gains a quiet decorative icon and a
@@ -35,15 +35,13 @@ class YouPreferencesCard extends ConsumerWidget {
           icon: Icons.contrast,
           child: _AppearanceRow(themeMode: ref.watch(themeModeProvider)),
         ),
-        if (ref.watch(spokenGuidanceAvailableProvider))
+        // THIRTY's voice is Premium: on Free there is nothing to set. The
+        // stored choices stay as they are for a return.
+        if (ref.watch(spokenGuidanceOfferedProvider))
           const YouRow(
             key: ValueKey('you.spokenGuidance'),
             child: _SpokenGuidanceRow(),
           ),
-        const YouRow(
-          key: ValueKey('you.analytics'),
-          child: _AnalyticsConsentRow(),
-        ),
       ],
     );
   }
@@ -71,14 +69,63 @@ class _AppearanceRow extends ConsumerWidget {
   }
 }
 
-/// V2 Phase D2 (ADR-023 §6): spoken guidance on or off. The Circle is
-/// complete without it.
+/// V2 Phase D2 (ADR-023 §6): spoken guidance on or off, which of THIRTY's
+/// voices speaks when the build has more than one, and a preview of it in
+/// its own production recordings. The Circle is complete without it.
 class _SpokenGuidanceRow extends ConsumerWidget {
   const _SpokenGuidanceRow();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final enabled = ref.watch(spokenGuidanceEnabledProvider);
+    final voices = [
+      for (final voice in ThirtyVoice.values)
+        if (ref.watch(bundledGuidanceVoicesProvider).contains(voice)) voice,
+    ];
+    final speaking = ref.watch(thirtyVoiceProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _spokenGuidanceSwitch(ref, enabled),
+        if (enabled && voices.length > 1) ...[
+          const SizedBox(height: AppSpacing.s),
+          Semantics(
+            container: true,
+            label: SpokenGuidanceCopy.voice,
+            child: Wrap(
+              spacing: AppSpacing.s,
+              runSpacing: AppSpacing.xs,
+              children: [
+                for (final voice in voices)
+                  ChoiceChip(
+                    label: Text(voice.label),
+                    selected: voice == speaking,
+                    onSelected: (_) =>
+                        ref.read(thirtyVoiceChoiceProvider.notifier).set(voice),
+                  ),
+              ],
+            ),
+          ),
+        ],
+        if (enabled && speaking != null)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              key: const ValueKey('you.spokenGuidance.preview'),
+              icon: const Icon(Icons.play_arrow_outlined),
+              label: Text(SpokenGuidanceCopy.preview(speaking.label)),
+              // An explicit request to hear the voice: it plays even with
+              // a screen reader on.
+              onPressed: () => ref.read(guidanceAudioPlayerProvider).play([
+                spokenPreviewFor(speaking).assetFor(speaking),
+              ]),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _spokenGuidanceSwitch(WidgetRef ref, bool enabled) {
     return MergeSemantics(
       child: Row(
         children: [
@@ -105,49 +152,6 @@ class _SpokenGuidanceRow extends ConsumerWidget {
             value: enabled,
             onChanged: (value) =>
                 ref.read(spokenGuidanceEnabledProvider.notifier).set(value),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AnalyticsConsentRow extends ConsumerWidget {
-  const _AnalyticsConsentRow();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final consent = ref.watch(analyticsConsentProvider);
-
-    return MergeSemantics(
-      child: Row(
-        children: [
-          const Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                YouRowIcon(Icons.query_stats),
-                SizedBox(width: AppSpacing.m),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      YouRowTitle('Share anonymous usage data'),
-                      SizedBox(height: AppSpacing.xs),
-                      YouRowDetail(
-                        'Off by default. Helps us understand what to '
-                        'improve. Your Circle history is never included.',
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: consent,
-            onChanged: (value) =>
-                ref.read(analyticsConsentProvider.notifier).setConsent(value),
           ),
         ],
       ),

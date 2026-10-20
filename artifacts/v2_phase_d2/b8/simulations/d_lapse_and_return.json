@@ -1,0 +1,728 @@
+{
+  "profile": "d_lapse_and_return",
+  "days": 365,
+  "premiumDays": 245,
+  "composedPremiumDays": 245,
+  "freeFallbackOnPremium": 0,
+  "stalls": 0,
+  "stageDays": 97,
+  "reviews": 19,
+  "stageFiveCases": {
+    "A": 1,
+    "B": 5,
+    "C": 13
+  },
+  "foundUsefulClaims": 180,
+  "lapse": {
+    "days": 120,
+    "aKeptCircleCouldStandIn": 111,
+    "usedAKeptCircle": 111
+  },
+  "duplicateProgress": 0,
+  "insights": {
+    "perFamily": {
+      "planForNeed": 9,
+      "planPacing": 0,
+      "skippedPart": 0,
+      "usefulInCommon": 5,
+      "planReview": 19,
+      "whatsChanged": 0
+    },
+    "weeksWithANewInsight": 14,
+    "silentWeeks": 39,
+    "cadenceViolations": [],
+    "sameClaimViolations": []
+  },
+  "variety": {
+    "composedDays": 245,
+    "distinctSessions": 184,
+    "distinctMaterial": 116,
+    "distinctMains": 18,
+    "firstExactRepeatDay": 41,
+    "medianDaysBetweenRepeats": 59,
+    "shortestRepeatGap": 18,
+    "longestRunOfSameSession": 1
+  },
+  "failures": [],
+  "reviewLines": [
+    {
+      "day": 11,
+      "plan": "making_room",
+      "cycle": 1,
+      "end": "reachedEnd",
+      "answered": 1,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said Down to one was useful.",
+        "You didn’t answer after the others.",
+        "5 Jan — Neck and shoulders · Get it out · Look far away — No answer",
+        "7 Jan — Stand and reach · Read a few pages · Clear one corner · Look around — No answer",
+        "8 Jan — Quick clear-up · Get it out · Choose one thing — You said somewhat useful",
+        "9 Jan — Phone face down · Listen to one thing · Standing stretch · A glass of water — No answer",
+        "15 Jan — Set screens aside · Quiet music · Get it out · Choose one thing — No answer"
+      ]
+    },
+    {
+      "day": 18,
+      "plan": "making_room",
+      "cycle": 2,
+      "end": "reachedEnd",
+      "answered": 3,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: Out of your head, Down to one and Your way.",
+        "16 Jan — Neck and shoulders · Round the block · Get it out · Look far away — You said very useful",
+        "17 Jan — Look around · A slow warm drink · Quick clear-up · Sit for a minute — No answer",
+        "20 Jan — Set screens aside · Get it out · Choose one thing — You said somewhat useful",
+        "21 Jan — Phone face down · Screen-free walk · Sit outside · Sit for a minute — No answer",
+        "22 Jan — Neck and shoulders · One task, no switching · Get it out · Look far away — You said somewhat useful",
+        "Down to one · Somewhat useful both times."
+      ]
+    },
+    {
+      "day": 36,
+      "plan": "making_room",
+      "cycle": 3,
+      "end": "reachedEnd",
+      "answered": 3,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: Out of your head, Room around you and Your way.",
+        "26 Jan — Set screens aside · Listen to one thing · Get it out · Put things back — You said somewhat useful",
+        "28 Jan — Look around · Clear one corner · One long reach — You said somewhat useful",
+        "29 Jan — Neck and shoulders · Get it out · Choose one thing — No answer",
+        "4 Feb — Set screens aside · Read a few pages · One long reach — No answer",
+        "9 Feb — Neck and shoulders · Clear one corner · Get it out · A glass of water — You said somewhat useful",
+        "Out of your head · Very useful last time, somewhat useful this time.",
+        "Your way · Somewhat useful both times."
+      ]
+    },
+    {
+      "day": 59,
+      "plan": "getting_going",
+      "cycle": 1,
+      "end": "reachedEnd",
+      "answered": 2,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: On your feet and Fresh air.",
+        "24 Feb — Put a song on · Standing stretch · Some fresh air — No answer",
+        "25 Feb — Open a window · One active job · Choose what’s next — You said very useful",
+        "28 Feb — Move to music · Standing stretch — No answer",
+        "3 Mar — Screen-free walk · Gentle stretch · Choose what’s next — You said very useful",
+        "4 Mar — Clear one corner · Some fresh air · One long reach — No answer"
+      ]
+    },
+    {
+      "day": 77,
+      "plan": "making_room",
+      "cycle": 4,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "10 Feb — Look around · Easy walk · Get it out · Sit for a minute — No answer",
+        "12 Feb — Quick clear-up · Get it out · Choose what’s next — No answer",
+        "18 Feb — Stand and reach · Round the block · Get it out · Choose one thing — No answer",
+        "18 Mar — Neck and shoulders · Screen-free walk · Get it out · Look far away — No answer",
+        "22 Mar — Tend to one thing · Get it out · One long reach — No answer"
+      ]
+    },
+    {
+      "day": 88,
+      "plan": "getting_going",
+      "cycle": 2,
+      "end": "reachedEnd",
+      "answered": 2,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: On your feet and Your mix.",
+        "6 Mar — Put a song on · Gentle stretch · Choose what’s next — No answer",
+        "7 Mar — Open a window · One active job · One long reach — You said very useful",
+        "10 Mar — Put a song on · One active job · Gentle stretch · A glass of water — No answer",
+        "12 Mar — Round the block · Standing stretch · Sit for a minute — No answer",
+        "2 Apr — Move to music · Some fresh air · Choose what’s next — You said somewhat useful",
+        "On your feet · Very useful both times."
+      ]
+    },
+    {
+      "day": 98,
+      "plan": "getting_going",
+      "cycle": 3,
+      "end": "reachedEnd",
+      "answered": 3,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: On your feet, Two together and Your mix.",
+        "3 Apr — Put a song on · Gentle stretch · Clear one corner · Sit for a minute — No answer",
+        "4 Apr — Neck and shoulders · One active job · Some fresh air · A glass of water — You said somewhat useful",
+        "6 Apr — Clear one corner · Standing stretch — You said somewhat useful",
+        "11 Apr — Screen-free walk · Standing stretch · Sit for a minute — No answer",
+        "12 Apr — Put a song on · One active job · Shake it out — You said somewhat useful",
+        "On your feet · Very useful last time, somewhat useful this time.",
+        "Your mix · Somewhat useful both times."
+      ]
+    },
+    {
+      "day": 107,
+      "plan": "making_room",
+      "cycle": 5,
+      "end": "reachedEnd",
+      "answered": 3,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: Out of your head, Room around you and Down to one.",
+        "23 Mar — Set screens aside · One task, no switching · Get it out · Look far away — You said somewhat useful",
+        "14 Apr — Set screens aside · One task, no switching · Clear one corner · Look far away — You said somewhat useful",
+        "16 Apr — Look around · Easy walk · Get it out · Choose one thing — You said very useful",
+        "17 Apr — Set screens aside · Read a few pages · One long reach — No answer",
+        "21 Apr — Stand and reach · Clear one corner · Get it out · Choose one thing — No answer"
+      ]
+    },
+    {
+      "day": 118,
+      "plan": "making_room",
+      "cycle": 6,
+      "end": "reachedEnd",
+      "answered": 3,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: Out of your head, Down to one and Your way.",
+        "24 Apr — Neck and shoulders · Tend to one thing · Get it out · Sit for a minute — You said somewhat useful",
+        "27 Apr — Set screens aside · One task, no switching · Tend to one thing · Look far away — No answer",
+        "28 Apr — Neck and shoulders · Easy walk · Get it out · Choose one thing — You said very useful",
+        "29 Apr — Set screens aside · Quiet music · Look around — No answer",
+        "2 May — Neck and shoulders · One task, no switching · Get it out · Put things back — You said somewhat useful",
+        "Out of your head · Somewhat useful both times.",
+        "Down to one · Very useful both times."
+      ]
+    },
+    {
+      "day": 146,
+      "plan": "making_room",
+      "cycle": 7,
+      "end": "reachedEnd",
+      "answered": 3,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: Room around you, Down to one and Your way.",
+        "7 May — Open a window · Get it out · Look far away — No answer",
+        "26 May — Stand and reach · Tend to one thing · Get it out · Put things back — You said somewhat useful",
+        "28 May — Clear one corner · Get it out · Choose one thing — You said somewhat useful",
+        "29 May — Neck and shoulders · Screen-free walk · Get it out · Look far away — No answer",
+        "30 May — Look around · One task, no switching · Tend to one thing · Choose what’s next — You said somewhat useful",
+        "Down to one · Very useful last time, somewhat useful this time.",
+        "Your way · Somewhat useful both times."
+      ]
+    },
+    {
+      "day": 282,
+      "plan": "getting_going",
+      "cycle": 4,
+      "end": "reachedEnd",
+      "answered": 3,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: Loosen up, Two together and Your mix.",
+        "10 May — Open a window · Gentle stretch · Move to music · Put things back — You said somewhat useful",
+        "19 May — Stand and reach · One active job · Some fresh air · A glass of water — No answer",
+        "24 May — Screen-free walk · Gentle stretch · Sit for a minute — You said very useful",
+        "25 May — Neck and shoulders · Clear one corner · Some fresh air · A glass of water — No answer",
+        "13 Oct — Open a window · Gentle stretch · Clear one corner · Choose what’s next — You said somewhat useful",
+        "Two together · Somewhat useful last time, very useful this time.",
+        "Your mix · Somewhat useful both times."
+      ]
+    },
+    {
+      "day": 293,
+      "plan": "getting_going",
+      "cycle": 5,
+      "end": "reachedEnd",
+      "answered": 1,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said On your feet was useful.",
+        "You didn’t answer after the others.",
+        "14 Oct — Put a song on · Standing stretch · Some fresh air · Sit for a minute — No answer",
+        "15 Oct — Neck and shoulders · Quick clear-up · A glass of water — You said somewhat useful",
+        "20 Oct — Clear one corner · Move to music — No answer",
+        "22 Oct — Screen-free walk · Gentle stretch · Choose what’s next — No answer",
+        "24 Oct — Clear one corner · Some fresh air · Shake it out — No answer"
+      ]
+    },
+    {
+      "day": 306,
+      "plan": "getting_going",
+      "cycle": 6,
+      "end": "reachedEnd",
+      "answered": 4,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: Loosen up, Two together, Fresh air and Your mix.",
+        "25 Oct — Open a window · Gentle stretch · Clear one corner · A glass of water — You said somewhat useful",
+        "28 Oct — Stand and reach · Clear one corner · Choose what’s next — No answer",
+        "2 Nov — Screen-free walk · Gentle stretch · Sit for a minute — You said somewhat useful",
+        "4 Nov — Neck and shoulders · Clear one corner · Some fresh air · A glass of water — You said somewhat useful",
+        "6 Nov — Standing stretch · Some fresh air · Choose what’s next — You said somewhat useful"
+      ]
+    },
+    {
+      "day": 314,
+      "plan": "getting_going",
+      "cycle": 7,
+      "end": "reachedEnd",
+      "answered": 2,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: Fresh air and Your mix.",
+        "7 Nov — Put a song on · Gentle stretch · Clear one corner · A glass of water — No answer",
+        "9 Nov — Open a window · Move to music · One long reach — No answer",
+        "11 Nov — A brisk walk · Gentle stretch · Choose what’s next — No answer",
+        "12 Nov — Clear one corner · Some fresh air · Shake it out — You said somewhat useful",
+        "14 Nov — Quick clear-up · Some fresh air · Choose what’s next — You said very useful",
+        "Fresh air · Somewhat useful both times.",
+        "Your mix · Somewhat useful last time, very useful this time."
+      ]
+    },
+    {
+      "day": 323,
+      "plan": "getting_going",
+      "cycle": 8,
+      "end": "reachedEnd",
+      "answered": 1,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said On your feet was useful.",
+        "You didn’t answer after the others.",
+        "15 Nov — Open a window · Gentle stretch · Clear one corner · A glass of water — No answer",
+        "16 Nov — Put a song on · One active job · Shake it out — You said somewhat useful",
+        "19 Nov — Clear one corner · Standing stretch — No answer",
+        "21 Nov — Screen-free walk · Gentle stretch · Choose what’s next — No answer",
+        "23 Nov — Neck and shoulders · Clear one corner · Some fresh air · Sit for a minute — No answer"
+      ]
+    },
+    {
+      "day": 329,
+      "plan": "getting_going",
+      "cycle": 9,
+      "end": "reachedEnd",
+      "answered": 2,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: On your feet and Fresh air.",
+        "25 Nov — Open a window · Gentle stretch · Choose what’s next — No answer",
+        "26 Nov — Neck and shoulders · One active job · Some fresh air · Sit for a minute — You said somewhat useful",
+        "27 Nov — Put a song on · Clear one corner · Gentle stretch · A glass of water — No answer",
+        "28 Nov — A brisk walk · Standing stretch · Choose what’s next — You said very useful",
+        "29 Nov — Quick clear-up · Some fresh air · Shake it out — No answer",
+        "On your feet · Somewhat useful both times."
+      ]
+    },
+    {
+      "day": 346,
+      "plan": "getting_going",
+      "cycle": 10,
+      "end": "reachedEnd",
+      "answered": 4,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: On your feet, Two together, Fresh air and Your mix.",
+        "3 Dec — Put a song on · Gentle stretch · Choose what’s next — No answer",
+        "8 Dec — Stand and reach · One active job · Some fresh air · Sit for a minute — You said somewhat useful",
+        "10 Dec — Standing stretch · Quick clear-up — You said very useful",
+        "12 Dec — A brisk walk · Gentle stretch · Choose what’s next — You said somewhat useful",
+        "16 Dec — Screen-free walk · Standing stretch — You said very useful",
+        "On your feet · Somewhat useful both times.",
+        "Fresh air · Very useful last time, somewhat useful this time."
+      ]
+    },
+    {
+      "day": 355,
+      "plan": "getting_going",
+      "cycle": 11,
+      "end": "reachedEnd",
+      "answered": 2,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: Loosen up and Two together.",
+        "18 Dec — Open a window · Gentle stretch · Quick clear-up · A glass of water — You said somewhat useful",
+        "21 Dec — Quick clear-up · Some fresh air · One long reach — No answer",
+        "22 Dec — Screen-free walk · Gentle stretch · Sit for a minute — You said very useful",
+        "23 Dec — A brisk walk · Standing stretch · Choose what’s next — No answer",
+        "25 Dec — Open a window · Gentle stretch · Clear one corner · Sit for a minute — No answer",
+        "Two together · Very useful both times."
+      ]
+    },
+    {
+      "day": 362,
+      "plan": "making_room",
+      "cycle": 8,
+      "end": "reachedEnd",
+      "answered": 4,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You said these stages were useful: Room around you, Down to one, Less coming in and Your way.",
+        "31 May — Set screens aside · Get it out · One long reach — No answer",
+        "1 Jun — Neck and shoulders · Quick clear-up · Look far away — You said somewhat useful",
+        "3 Jun — Set screens aside · One task, no switching · Clear one corner · Sit for a minute — You said somewhat useful",
+        "30 Dec — Set screens aside · Quiet music · Read a few pages · Put things back — You said somewhat useful",
+        "1 Jan — Tend to one thing · Get it out · Choose one thing — You said very useful",
+        "Room around you · Somewhat useful both times.",
+        "Down to one · Somewhat useful both times.",
+        "Your way · Somewhat useful last time, very useful this time."
+      ]
+    }
+  ],
+  "stageFives": [
+    {
+      "day": 11,
+      "case": "B",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.3",
+        "making_room.1",
+        "making_room.2",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 18,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.3"
+      ]
+    },
+    {
+      "day": 36,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.2",
+        "making_room.1"
+      ]
+    },
+    {
+      "day": 59,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "getting_going.2",
+        "getting_going.4"
+      ]
+    },
+    {
+      "day": 77,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 88,
+      "case": "B",
+      "eligible": 4,
+      "drawsOn": [
+        "getting_going.2",
+        "getting_going.1",
+        "getting_going.3",
+        "getting_going.4"
+      ]
+    },
+    {
+      "day": 98,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "getting_going.2"
+      ]
+    },
+    {
+      "day": 107,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.3",
+        "making_room.2"
+      ]
+    },
+    {
+      "day": 118,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.3",
+        "making_room.1"
+      ]
+    },
+    {
+      "day": 146,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.3",
+        "making_room.2"
+      ]
+    },
+    {
+      "day": 282,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "getting_going.3",
+        "getting_going.1"
+      ]
+    },
+    {
+      "day": 293,
+      "case": "B",
+      "eligible": 4,
+      "drawsOn": [
+        "getting_going.2",
+        "getting_going.1",
+        "getting_going.3",
+        "getting_going.4"
+      ]
+    },
+    {
+      "day": 306,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "getting_going.4",
+        "getting_going.1"
+      ]
+    },
+    {
+      "day": 314,
+      "case": "B",
+      "eligible": 4,
+      "drawsOn": [
+        "getting_going.4",
+        "getting_going.1",
+        "getting_going.2",
+        "getting_going.3"
+      ]
+    },
+    {
+      "day": 323,
+      "case": "B",
+      "eligible": 4,
+      "drawsOn": [
+        "getting_going.2",
+        "getting_going.1",
+        "getting_going.3",
+        "getting_going.4"
+      ]
+    },
+    {
+      "day": 329,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "getting_going.4",
+        "getting_going.2"
+      ]
+    },
+    {
+      "day": 346,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "getting_going.3",
+        "getting_going.4"
+      ]
+    },
+    {
+      "day": 355,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "getting_going.3",
+        "getting_going.1"
+      ]
+    },
+    {
+      "day": 362,
+      "case": "C",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.2",
+        "making_room.3"
+      ]
+    }
+  ],
+  "insightsShown": [
+    {
+      "on": "2026-01-16",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 15 January."
+    },
+    {
+      "on": "2026-01-22",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 22 January."
+    },
+    {
+      "on": "2026-01-22",
+      "family": "usefulInCommon",
+      "text": "Writing was part of 4 of the 4 Clearer Head Circles you called useful, and 2 of the 6 other Clearer Head Circles in that time."
+    },
+    {
+      "on": "2026-01-31",
+      "family": "usefulInCommon",
+      "text": "Walking was part of 3 of the 4 More Energy Circles you called useful, and 0 of the 4 other More Energy Circles in that time."
+    },
+    {
+      "on": "2026-02-09",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 9 February."
+    },
+    {
+      "on": "2026-02-09",
+      "family": "planForNeed",
+      "text": "You chose Clearer Head on 11 of your last 28 Circles, between 15 January and 9 February."
+    },
+    {
+      "on": "2026-02-18",
+      "family": "planForNeed",
+      "text": "You chose More Energy on 11 of your last 28 Circles, between 25 January and 15 February."
+    },
+    {
+      "on": "2026-03-05",
+      "family": "planReview",
+      "text": "Getting going: what you told THIRTY, 4 March."
+    },
+    {
+      "on": "2026-03-14",
+      "family": "planForNeed",
+      "text": "You chose Clearer Head on 12 of your last 28 Circles, between 18 February and 14 March."
+    },
+    {
+      "on": "2026-03-23",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 22 March."
+    },
+    {
+      "on": "2026-03-23",
+      "family": "planForNeed",
+      "text": "You chose More Energy on 14 of your last 28 Circles, between 24 February and 21 March."
+    },
+    {
+      "on": "2026-04-04",
+      "family": "planReview",
+      "text": "Getting going: what you told THIRTY, 2 April."
+    },
+    {
+      "on": "2026-04-13",
+      "family": "planReview",
+      "text": "Getting going: what you told THIRTY, 12 April."
+    },
+    {
+      "on": "2026-04-13",
+      "family": "planForNeed",
+      "text": "You chose Clearer Head on 11 of your last 28 Circles, between 18 March and 10 April."
+    },
+    {
+      "on": "2026-04-22",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 21 April."
+    },
+    {
+      "on": "2026-05-04",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 2 May."
+    },
+    {
+      "on": "2026-05-07",
+      "family": "planForNeed",
+      "text": "You chose More Energy on 12 of your last 28 Circles, between 11 April and 6 May."
+    },
+    {
+      "on": "2026-05-16",
+      "family": "usefulInCommon",
+      "text": "Writing was part of 15 of the 19 Clearer Head Circles you called useful, and 9 of the 18 other Clearer Head Circles in that time."
+    },
+    {
+      "on": "2026-05-25",
+      "family": "planForNeed",
+      "text": "You chose Clearer Head on 14 of your last 28 Circles, between 28 April and 23 May."
+    },
+    {
+      "on": "2026-05-31",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 30 May."
+    },
+    {
+      "on": "2026-10-10",
+      "family": "planForNeed",
+      "text": "You chose More Energy on 13 of your last 28 Circles, between 20 September and 10 October."
+    },
+    {
+      "on": "2026-10-13",
+      "family": "planReview",
+      "text": "Getting going: what you told THIRTY, 13 October."
+    },
+    {
+      "on": "2026-10-25",
+      "family": "planReview",
+      "text": "Getting going: what you told THIRTY, 24 October."
+    },
+    {
+      "on": "2026-10-31",
+      "family": "usefulInCommon",
+      "text": "Writing was part of 6 of the 7 Clearer Head Circles you called useful, and 2 of the 4 other Clearer Head Circles in that time."
+    },
+    {
+      "on": "2026-11-06",
+      "family": "planReview",
+      "text": "Getting going: what you told THIRTY, 6 November."
+    },
+    {
+      "on": "2026-11-15",
+      "family": "planReview",
+      "text": "Getting going: what you told THIRTY, 14 November."
+    },
+    {
+      "on": "2026-11-24",
+      "family": "planReview",
+      "text": "Getting going: what you told THIRTY, 23 November."
+    },
+    {
+      "on": "2026-11-24",
+      "family": "usefulInCommon",
+      "text": "Listening was part of 4 of the 6 Gentler Pace Circles you called useful, and 0 of the 3 other Gentler Pace Circles in that time."
+    },
+    {
+      "on": "2026-11-30",
+      "family": "planReview",
+      "text": "Getting going: what you told THIRTY, 29 November."
+    },
+    {
+      "on": "2026-12-18",
+      "family": "planReview",
+      "text": "Getting going: what you told THIRTY, 16 December."
+    },
+    {
+      "on": "2026-12-27",
+      "family": "planReview",
+      "text": "Getting going: what you told THIRTY, 25 December."
+    },
+    {
+      "on": "2026-12-27",
+      "family": "planForNeed",
+      "text": "You chose Clearer Head on 12 of your last 28 Circles, between 30 November and 27 December."
+    },
+    {
+      "on": "2027-01-02",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 1 January."
+    }
+  ]
+}

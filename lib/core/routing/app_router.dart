@@ -7,27 +7,21 @@ import '../../features/home/presentation/circle_record_detail_page.dart';
 import '../../features/home/presentation/home_page.dart';
 import '../../features/home/application/activity_catalog.dart';
 import '../../features/home/presentation/memory_page.dart';
+import '../../features/insights/presentation/insights_page.dart';
 import '../../features/premium/presentation/premium_offer_page.dart';
 import '../../features/settings/application/first_name_provider.dart';
 import '../../features/settings/presentation/first_name_question_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
-import '../../features/toolkit/domain/path_catalog.dart';
-import '../../features/toolkit/presentation/choose_path_page.dart';
-import '../../features/toolkit/presentation/path_review_page.dart';
-import '../../features/toolkit/presentation/path_start_page.dart';
 import '../../features/personal_circle/presentation/kept_circle_page.dart';
-import '../../features/toolkit/presentation/routine_detail_page.dart';
-import '../../features/toolkit/presentation/toolkit_page.dart';
+import '../../features/personal_circle/presentation/yours_page.dart';
+import '../../features/plans/domain/circle_plan.dart';
+import '../../features/plans/presentation/plan_detail_page.dart';
+import '../../features/plans/presentation/plans_page.dart';
 import '../dev_preview/paced_qa_bench_page.dart';
 import '../dev_preview/quiet_trail_hero_preview_page.dart';
 import '../providers/theme_mode_provider.dart';
 import '../showcase/design_system_showcase_page.dart';
 import 'app_shell.dart';
-
-/// The [PathTemplateId] named by a `/toolkit/paths/:template` location, or
-/// `null` for an unknown name.
-PathTemplateId? _templateFrom(GoRouterState state) =>
-    PathTemplateId.values.asNameMap()[state.pathParameters['template']];
 
 /// The route list `appRouter` is built from. Extracted to a standalone,
 /// `@visibleForTesting` function so the debug-only gating below can be
@@ -36,15 +30,19 @@ PathTemplateId? _templateFrom(GoRouterState state) =>
 /// exercised from a test; asserting on [includeDevPreview] instead lets
 /// the gating logic itself be checked without one.
 ///
-/// **V2 Phase D — Today | Toolkit | You.** The V1 Plans and Insights
-/// branches are retired (PRODUCT_V2_CONTRACT: Coach and Insights retired
-/// as pillars; Plans replaced by Paths). The Toolkit is the one Premium
-/// destination: the Path under way, maintenance and the user's routines,
-/// with its Paths and routines pushed inside its branch. History, which
-/// Insights used to host, is reached from You. An old `/plans…` or
-/// `/insights` location leads to the Toolkit, never to a dead page. Each
-/// shell branch keeps its own independent Navigator, so switching tabs
-/// never disposes another branch's state.
+/// **The four-tab shell — Today | Plans | Insights | You (ADR-024 §2, B7).**
+/// Phase D's Toolkit, with its Paths and routines, is retired before
+/// release; the Circles the user kept are managed in Yours, under You.
+/// Circle Plans have their own branch: `/plans` and `/plans/<id>` for the
+/// three launch Plans only — any other id (a V1 Plan's included) opens the
+/// Plans page, never a retired Plan. Insights is its own branch at
+/// `/insights`. History, the Memory page and the Premium offer are pushed
+/// over the shell, so Back returns to whichever tab opened them; History is
+/// reached from You and from Insights. A retired location never opens a
+/// retired page: kept Circles lead to Yours, everything else to Today. Each
+/// shell branch keeps its own independent Navigator, so switching tabs never
+/// disposes another branch's state. No route checks Premium: every paid
+/// action checks it in its own service.
 @visibleForTesting
 List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
   return [
@@ -57,75 +55,89 @@ List<RouteBase> buildAppRoutes({required bool includeDevPreview}) {
             GoRoute(path: '/', builder: (context, state) => const HomePage()),
           ],
         ),
-        // V2 Phase D: the Toolkit — reachable regardless of entitlement;
-        // what each page offers depends on it, never whether it opens.
+        // Circle Plans (ADR-024 B4): readable on Free, run with Premium —
+        // the actions themselves check the entitlement, not the route.
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: ToolkitPage.location,
-              builder: (context, state) => const ToolkitPage(),
+              path: PlansPage.location,
+              builder: (context, state) => const PlansPage(),
               routes: [
                 GoRoute(
-                  path: 'paths',
-                  builder: (context, state) => const ChoosePathPage(),
-                  routes: [
-                    // An unknown Path returns to the Toolkit rather than
-                    // guessing one.
-                    GoRoute(
-                      path: ':template',
-                      redirect: (context, state) => _templateFrom(state) == null
-                          ? ToolkitPage.location
-                          : null,
-                      builder: (context, state) =>
-                          PathStartPage(template: _templateFrom(state)!),
-                    ),
-                  ],
-                ),
-                GoRoute(
-                  path: 'review',
-                  builder: (context, state) => const PathReviewPage(),
-                ),
-                GoRoute(
-                  path: 'routine/:id',
-                  builder: (context, state) =>
-                      RoutineDetailPage(routineId: state.pathParameters['id']!),
-                ),
-                // V2 Phase D2: a Circle the user kept.
-                GoRoute(
-                  path: 'kept/:id',
-                  builder: (context, state) =>
-                      KeptCirclePage(keptId: state.pathParameters['id']!),
+                  path: ':planId',
+                  redirect: (context, state) =>
+                      circlePlanById.containsKey(state.pathParameters['planId'])
+                      ? null
+                      : PlansPage.location,
+                  // `?cycle=<id>`: an earlier cycle's review (B6, from
+                  // Insights). An unknown cycle shows the page as usual.
+                  builder: (context, state) => PlanDetailPage(
+                    planId: state.pathParameters['planId']!,
+                    cycleId: state.uri.queryParameters['cycle'],
+                  ),
                 ),
               ],
             ),
           ],
         ),
+        // Insights (ADR-024 §11–§12): the calendar and History are
+        // everyone's; new Insights and their applications check Premium in
+        // the Insights service, not here.
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: InsightsPage.location,
+              builder: (context, state) => const InsightsPage(),
+            ),
+          ],
+        ),
         // "You" — a calm personal-control hub, not an account. Reuses
         // the existing `SettingsPage` verbatim (its own AppBar title is
-        // "You"); no new settings system, no login, no profile.
+        // "You"); no new settings system, no login, no profile. Yours, the
+        // Circles the user kept, is inside it — reachable whatever
+        // Premium's state.
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/settings',
               builder: (context, state) => const SettingsPage(),
+              routes: [
+                GoRoute(
+                  path: 'yours',
+                  builder: (context, state) => const YoursPage(),
+                  routes: [
+                    GoRoute(
+                      path: 'kept/:id',
+                      builder: (context, state) =>
+                          KeptCirclePage(keptId: state.pathParameters['id']!),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
       ],
     ),
-    // V2 Phase D: the retired V1 Plans and Insights locations lead to the
-    // Toolkit, never to a page that no longer exists.
-    GoRoute(path: '/plans', redirect: (context, state) => ToolkitPage.location),
+    // Retired locations (ADR-024 B1) never open a retired page. The Toolkit
+    // and its kept Circles lead to Yours; Paths and routines lead to Today.
+    // `/plans` is the Circle Plans branch now (B4), where a V1 Plan id
+    // opens the Plans page; `/insights` is the Insights branch (B7).
+    GoRoute(path: '/toolkit', redirect: (context, state) => YoursPage.location),
     GoRoute(
-      path: '/plans/:planId',
-      redirect: (context, state) => ToolkitPage.location,
+      path: '/toolkit/kept/:id',
+      redirect: (context, state) =>
+          KeptCirclePage.locationFor(state.pathParameters['id']!),
     ),
-    GoRoute(
-      path: '/insights',
-      redirect: (context, state) => ToolkitPage.location,
-    ),
-    // History: every recorded Circle — reached from You (V2 Phase D; it
-    // used to sit inside Insights).
+    for (final retired in const [
+      '/toolkit/paths',
+      '/toolkit/paths/:template',
+      '/toolkit/review',
+      '/toolkit/routine/:id',
+    ])
+      GoRoute(path: retired, redirect: (context, state) => '/'),
+    // History: every recorded Circle — reached from You and from Insights'
+    // "See as a list".
     GoRoute(
       path: '/history',
       builder: (context, state) => const CircleHistoryPage(),

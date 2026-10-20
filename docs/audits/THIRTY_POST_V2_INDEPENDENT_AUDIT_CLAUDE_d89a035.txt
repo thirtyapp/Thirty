@@ -1,0 +1,618 @@
+Written for: you as founder, deciding whether THIRTY goes into pre-release. It's also meant to be laid side by side with the other model's independent audit.
+
+# THIRTY POST-V2 INDEPENDENT AUDIT — CLAUDE
+
+## AUDIT TARGET
+- **Commit:** `d89a035` (feat(v2): add Paths, Toolkit and routine maintenance)
+- **Branch:** `step5-billing-integration`, which matches `origin/step5-billing-integration` (0 ahead, 0 behind). `main` is still `a8b4088`.
+- **Working tree:** only the known unrelated items (`quiet_trail_hero_asset_view.dart` modified; `android/build/`, `artifacts/`, `artwork/`, two quiet_trail PNGs and `independant audit.txt` untracked). None of the audited source differs from `d89a035`. `git status` was the same at the end of the audit as at the start.
+- **Read-only:** I modified, formatted, staged or committed nothing. I did **not** re-run `flutter test` or `analyze`, because both write to `.dart_tool`/`build`. So the 1567-passing baseline is documented but not re-verified by me. I counted 1,217 `test(`/`testWidgets(` call sites, which fits 1567 once parameterised tests expand.
+- **Method:** I read the contract, ADR-019 to ADR-022, the tracker, the engine, the catalogue, the module library, the Path engine, maintenance, the providers and the Toolkit/offer UI. I also read the Phase D simulation traces and review, and sampled the S25 screenshots. Pass 1 was locked before I opened `independant audit.txt`.
+
+## BLIND VERDICT
+**C — TECHNICALLY STRONG, BUT THE COMMERCIAL DESIGN IS STILL TOO WEAK** (as a recurring subscription).
+
+## EXECUTIVE CONCLUSION
+
+THIRTY V2 is now a real, honest and well-made product. It is no longer a pretty timer:
+- Feedback changes what you're offered.
+- Activities have natural lengths and visible guidance.
+- There is one bounded way to say "not this one".
+- Memory is editable and the History screen is humane.
+- Nothing claims more than the evidence supports.
+
+On product craft and trust it is better than most consumer wellbeing apps at launch.
+
+The Free problem it solves is real but low-urgency. "What small thing could help today?" is a daily question. But the answers come from a list of 16 live activities that most people could name themselves: a walk, music, tidying, reading, a warm drink, a stretch. THIRTY's value is removing the decision and framing the act calmly. That's worth installing. Whether it's worth opening every day without any pull is unproven, and the design deliberately gives up the usual pulls.
+
+Personalisation is real but mostly invisible. The engine learns properly: bounded, decaying, with rests and exploration. But the only on-screen evidence is one line, "You found this useful before.", plus the Memory page. By Day 30 the user has seen every activity for their main need, and "learning" is a reordering of a short list they already know. It will improve outcomes subtly. It's unlikely to *feel* like THIRTY understands them.
+
+Premium is a large improvement on V1 and is now honest, but structurally it is **orchestrated bundling**:
+- Each of the 13 modules is a live Free activity, plus a purpose line and an optional short form.
+- A routine is two Free activities run back to back in the Guided shell.
+- A 7-Circle Path picks among at most three possible pairs, each full or short.
+
+The process is careful and truthful. The thing it produces is modest, and a user could write it in a note.
+
+Two implementation facts weaken ownership more than the documents admit:
+1. **A user cannot run their own routine on demand.** There's no "use it today" anywhere (verified in the notifier API and on the routine page). It only appears when the engine picks it, roughly weekly in the founder's own simulations, and less often than its own pieces in SIM 6.
+2. **A routine has a hidden rest you can't lift.** A "Not useful" during the Path trial (for example on Circle 6's shorter form) is attributed to the routine. It rests the routine the user has just chosen to keep for 14 days, and nothing in Memory or the Toolkit says so. SIM 3 shows exactly this: *My reset* was kept on D27, wasn't offered on four ≈30-minute Clearer Head days, and first appeared on D60.
+
+Maintenance is genuine, honest and deterministic, but it fires **rarely** by design. Time misfit is roughly a one-off per routine and window. Fading needs at least 3 rated uses of a routine that appears about weekly. A gap needs Free to be serving the user *badly*, and a user like that has probably churned. The honest stable check then removes the last reason to pay. For a monthly subscription, the rational behaviour is to subscribe, build two or three routines over 4–6 weeks, keep them (they're kept by design) and cancel. That build-and-cancel pattern is the central commercial fact. It comes from the architecture, not from copy or polish.
+
+That isn't a reason to take routines hostage. Keeping them after cancellation is right for trust. It is a reason to doubt monthly-subscription fit, and to treat billing shape (annual, one-time, or Free-first) as the commercial lever. The offer page still says "Billed monthly."
+
+So the product deserves real users now. More desk work won't answer the open questions, which are about demand. There is one concrete defect to fix first (the hidden routine rest), and one founder decision worth taking before the closed test (letting users run their own routine on demand). The verdict is C because, judged from the code, the *paid* design is unlikely to sustain monthly renewal. It is not C because the product is bad.
+
+## EVIDENCE QUALITY
+
+| Class | Items |
+|---|---|
+| **IMPLEMENTED AND VERIFIED** (I read the source) | 21 activities: 16 live, 4 `safetyReviewPending`, 1 retired. Live modes: 14 Open, 2 Guided, **0 Paced**. Safety gate is `safetyPendingContentAllowed = kDebugMode`. Engine is deterministic with multi-direction fit, time fit, ±2/±1 evidence, 14-day rests, 45-day half-life, 90-day window, weekly cap 2, date-hash tie-break. Visible reasons limited to useful-before, try-new and three replacement lines. Don't-suggest is a hard filter including routines and pieces. 13 modules, all from live activities. 6 Paths with 3-piece pools. 7-Circle build logic. Shorter version = all pieces. Routines compete with no bonus. Path-Circle answers attributed to the routine. **No on-demand routine start. Routine rests have no UI and no lift.** Maintenance thresholds as in `ToolkitPolicy`. A gap never re-offers an already-built template. Entitlement gates only starting builds, tunes and shorter versions, and Path steps taking Today. Export includes `toolkit`. Nav is Today / Toolkit / You. V1 routes redirect. Offer copy says "Billed monthly." |
+| **DOCUMENTED BUT NOT VERIFIED BY ME** | 1567 passing / analyze clean. S25 and TalkBack acceptance (screenshots and captions exist; I didn't drive a device). Founder content approval. Migration retiring V1 state on real upgraded installs. |
+| **COMMERCIAL HYPOTHESIS** | Willingness to pay. Price and cadence. Whether calm, no-pressure design yields voluntary return. Whether Paths feel worth following. Whether routine ownership creates switching value. Pause/resume behaviour. |
+| **UNKNOWN** | Real answer rate for reflections, which drives *all* learning and maintenance. Real need-choice distribution. Real routine frequency in mixed-need lives. Acquisition channel and cost. |
+
+## SCORECARD
+
+| # | Dimension | Score | Conf. | Why |
+|---|---|---|---|---|
+| 1 | Core problem clarity | 7 | H | "Help me decide what could help today" is clear and consistently implemented. |
+| 2 | Core problem importance | 4 | M | Frequent, but low pain. Users already have adequate defaults. |
+| 3 | Free product value | 6 | M | Decision relief, real guidance, calm close and honest learning. The catalogue is obvious and thin for More Energy. |
+| 4 | Day-1 value | 6 | M | Fast, sensible and well guided. No personal value is possible yet, and that's said honestly. |
+| 5 | Day-7 value | 5 | M | Rests and returns work, but the signal is one line plus Memory. |
+| 6 | Day-30 value | 5 | M | The user has seen the whole list. Learning reorders a known short list. |
+| 7 | Recommendation quality | 6 | M | The engine is excellent. The input space is small (4 live More Energy primaries). |
+| 8 | Personalization credibility | 5 | M | Truthful but mostly invisible. Credibility is limited by legibility, not logic. |
+| 9 | Simplicity | 6 | M | Free is simple. Premium adds Path, Circle n/7, routine, versions, shorter, tune-up and check. |
+| 10 | Emotional experience | 8 | M | Art, calm copy, natural end and no guilt. Premium screens are plainer and more managerial. |
+| 11 | Trust | 8 | H | Exceptionally careful wording. Docked for the invisible, unliftable routine rest. |
+| 12 | Accessibility / robustness | 8 | M | Strong documented TalkBack/large-text work and guard tests. Not device-verified by me. |
+| 13 | Differentiation | 5 | M | One-decision calm, Worlds and editable deterministic memory. Mechanically easy to copy. |
+| 14 | Free retention potential | 4 | L | No urgency by design, little visible accumulation. A reminder is the only trigger. |
+| 15 | Premium value | 4 | M | Real process, small output. |
+| 16 | Premium differentiation | 4 | M | Different job from Free on paper. In practice it pairs Free activities. |
+| 17 | Path value | 5 | M | Honest adaptive try-out. The decision space is ≤3 pairs. |
+| 18 | Toolkit value | 3 | M | 1–3 routines you can't start yourself. With one routine the page is a single row. |
+| 19 | Routine ownership value | 4 | M | Name, versions and history are real. On-demand use is missing and frequency is weekly or less. |
+| 20 | Maintenance value | 4 | M | Correct and honest, rarely triggered. |
+| 21 | Week-7 paid value | 4 | M | A 20-minute version of "write + tidy". Free would offer one of the two anyway. |
+| 22 | Month-2 paid value | 3 | M | Mostly routines appearing (which Free also does) plus possibly one offer. |
+| 23 | Month-6 paid value | 2 | M | Usually a "nothing to change" or "still learning" check. |
+| 24 | Stable-user proposition | 2 | H | By design, nothing to do and nothing withheld. |
+| 25 | Subscription-worthiness | 3 | M | Plausible as a one-off or annual purchase; weak as monthly. |
+| 26 | Commercial differentiation | 3 | M | ChatGPT plus Notes covers the Premium job "well enough" for many. |
+| 27 | Content scalability | 7 | H | No content treadmill is needed, but there's little to sell after the six Paths. |
+| 28 | Founder-labor scalability | 7 | M | Deterministic and local with low serving cost. Acquisition and QA are the founder-heavy parts. |
+| 29 | Pre-release readiness | 7 | M | Ready after one small fix. Phase E items are still required. |
+| 30 | Overall product quality | 7 | H | Coherent, truthful, well-crafted, small. |
+| 31 | Overall commercial design strength | 3 | M | Build-and-cancel economics, low urgency, unproven acquisition. |
+
+## CORE PROBLEM
+**Strength: MODERATE as a free daily aid, WEAK as a paid problem.**
+- It's frequent.
+- It's mildly valuable on hard or foggy days, where "just tell me one thing" really helps.
+- It's barely painful on ordinary days.
+- People already solve it adequately (walk, tea, tidy).
+- Decision fatigue here is real but shallow. The cost of a wrong pick is ten minutes.
+- Software help is wanted mostly by people who already like rituals and calm apps. That's a real but narrow segment.
+
+## FREE
+
+- **Installing:** yes. It's beautiful, free, has no account and is clear within 30 seconds.
+- **Keeping:** plausible, because it costs nothing to keep.
+- **Opening regularly:** only for users who adopt it as a ritual. There's no pull beyond a reminder, and the visible return on each open is small.
+
+### Day 1
+The flow is: name → "What would help most today?" (three needs with plain meanings) → time → one activity, its authored reason, a how-to sheet and "Not this one?" → a Circle at its natural length (Open moments rotate; Guided has steps) → a calm end → optional reflection.
+
+It's clear, low-friction and credible. The starter order is curated, and the sparse-data honesty costs nothing because nothing personal could be said yet.
+
+**What the user loses if THIRTY disappears after Day 1:** almost nothing. It was a nicely framed suggestion they could have made themselves.
+
+### Day 7
+- A "Very useful" activity comes back after at least 4 days, labelled "You found this useful before."
+- "Not useful" rests it, and the acknowledgement says so.
+- Memory lists Useful before, Resting and Not suggested.
+- The improvement is **real but subtle**. Most days still show the activity's authored reason, not a personal one.
+
+**Lost after Day 7:** a short, correct memory of what helped and what didn't, and the effortless pick.
+
+### Day 30
+- For their main need, the user has seen all 4–6 options within about two weeks.
+- The engine now orders a known list well, and avoids what they disliked.
+- A "usual time" appears in Memory.
+- Value accumulates, but it isn't *felt* as understanding.
+
+**Risk: "pleasant but easy to forget" is the likely outcome for most users.** That's because the ceiling is the catalogue, not the engine.
+
+## PREMIUM
+Verified: Premium does a different *job* from Free. It deliberately builds a small owned object and then watches it. Verified limits:
+- **Pieces:** every piece is a Free activity; nothing new happens inside a routine except sequence and a single Circle.
+- **Path:** the output space per Path is tiny.
+- **Running a routine:** routines can't be started by the user.
+- **Maintenance:** triggers are rare in a satisfied user.
+- **Lapse:** fair and exact. Starting builds, tunes and shorter versions is gated, routines stay Free candidates, and a Path is saved at its Circle and resumes exactly.
+- **Content treadmill:** none, which is good for scalability and bad for "what's new this month".
+
+## USEFUL VS PREMIUM-WORTHY VS SUBSCRIPTION-WORTHY
+- **Useful: YES.** A Path is a sensible guided experiment that ends with something named.
+- **Premium-worthy: MARGINAL.** A one-time or low annual charge for "build your routines" is defensible. As a headline paid benefit it's thin, because the output is two Free activities in sequence.
+- **Subscription-worthy: NO, as monthly.** Recurring work is rare, and the main output is kept after cancellation. Annual is borderline: it works only if users value occasional upkeep plus the option to build again.
+
+## PATHS
+
+| Path | Pool (short/full min) | Realistic routines | Judgement |
+|---|---|---|---|
+| **A lift at home** | Stretch 5 · Music 5/10 · Active task 10/15 | Stretch+Music 15, Stretch+Task 20, Music+Task 25 (short 15) | Clear job, indoor and distinct. Decent progression. The best energy option given safety gating. A routine worth a name, but light. |
+| **Out the door** | Brisk walk 15/25 · Stretch 5 · Phone-free walk 15/20 | Stretch+Brisk walk 30 (short 20); Brisk+Phone-free = two walks, 30 | **Weakest and most redundant.** The result is "a walk, with a 5-minute stretch before", and Free already offers the brisk walk. |
+| **Clear the decks** | Write 10/15 · Clear surface 10/15 · Stretch 5 | Write+Surface 30 (short 20) | **Strongest.** The order matters (offload, then clear), the job is legible, the shorter form is true, and the name "My reset" earns itself. |
+| **Away from the screen** | Phone-free walk 15/20 · Listen 15/20 · Write 10/15 | Every pair is at least 25 minutes | Clear job, but **the routine can never fit a ≈10 or ≈20 day**, so it's offered only on "up to 30" days. Frequency problem by construction. |
+| **A soft landing** | Warm drink 10 · Gentle stretch 10 · Quiet music 10/15 | Drink+Stretch 20, Drink+Music 25 (short 20), Stretch+Music 25 (short 20) | **Most distinct** in feel: a natural wind-down. Two pieces have one length, so adaptation is limited. |
+| **Easy time outdoors** | Easy walk 15/20 · Sit outside 10/15 · Gentle stretch 10 | Walk+Sit 30 (short 25), Sit+Stretch 25 (short 20) | Walk-then-sit is natural. Weather-dependent, and secondary to Free's easy walk. |
+
+- **Boredom risk:** about half of each 7-Circle Path repeats an earlier composition (Circles 5 and 7).
+- **Sparse data:** honest. Template order is "a simple place to start", and no claim is made about the user.
+
+## SEVEN-CIRCLE QUESTION
+- Seven is **long relative to the decision space**. Circles 1–3 try pieces, Circle 4 pairs them, and Circle 6 tests a shorter form, which is real learning.
+- Circle 5 usually repeats Circle 4, and Circle 7 ("as it stands") usually repeats Circle 4 or 5. That's confirmation, bordering on padding.
+- A Path only advances on days that match its need, so 7 Circles take about 2.5–4 weeks for a mixed-need user. That eats a large share of a monthly subscriber's first month.
+- 5 Circles (try, try, pair, shorter, confirm) would likely produce the same routine most of the time.
+- It's TUNABLE. Don't change it now; read it in the closed test (completion and "why am I still on this?" comments).
+
+## MODULE LIBRARY
+- There are 13 modules, all live, with good role ordering and honest short forms. Three live activities aren't modules: quiet reading, single-task focus and tend-to-one-small-thing.
+- Diversity is limited by the safety gate. Energy has no bodyweight or stairs content.
+- Composition adds:
+  - one continuous guided Circle;
+  - an order (opener, then main, then closer);
+  - a truthful shorter form.
+
+  It adds no transitions, no new instruction and no integration. An Open piece becomes one step, "About n minutes".
+- **Verdict: closer to BUNDLING than to ORCHESTRATION + LEARNING.** The learning is real but narrow: it chooses among about three pairs and two lengths. Combining two pieces is mostly what you'd get by doing two Free activities back to back.
+
+## TOOLKIT
+- **Ownership:** naming, versions, origin, rename/disable/delete, routine-level Don't-suggest and exportability are all real.
+- **Bookmark vs routine:** a routine is better than a bookmark because of its history and maintenance. It is *worse* than a bookmark in one way: **you can't open it and do it.**
+- **Size:**
+  - One routine is a near-empty page (screenshot d13).
+  - 2–3 routines make a reasonable Toolkit.
+  - The gap cap is 6, but there are only 6 templates, so clutter is unlikely.
+- **Versioning:** understandable but managerial ("Version 2", "Earlier versions", "Use version 1 again?").
+- **Switching cost:** value-based and fair, but small, because the routine is easy to remember.
+
+**"What makes My reset different from saving two activities in a note?"** Today, three things:
+1. It came from your own answers over seven tries.
+2. It runs as a timed, guided Circle.
+3. THIRTY offers it on days it fits and offers to fix it when it stops fitting.
+
+The note wins on one thing that matters to users: you can use it whenever you want.
+
+## ROUTINE OWNERSHIP
+It's real at the data level and weak at the experience level. The user owns a routine they can't invoke, that appears about weekly, and that can be hidden for two weeks by an answer they gave during the trial. Ownership currently feels like "THIRTY keeps a file about my routine" rather than "this is mine to use".
+
+## ROUTINE FREQUENCY
+**Classification: LIKELY PRODUCT ISSUE.** The evidence goes beyond the closed-test framing:
+- **SIM 6:** the routine is rated "Very useful" every time and still appears 5 times in about 6 weeks. Its own pieces appear alone about as often (Move to music 4×, active task 4×).
+- **SIM 3:** zero appearances for about 5 weeks after it was built (the rest defect plus time fit).
+- "My screen break" is structurally 30-minute-only.
+- **The engine is still right** not to give routines a bonus. The problem is that the *only* way to use a routine is to be picked.
+
+No preference toggle is needed. On-demand use would remove most of the issue without touching ranking integrity.
+
+## MAINTENANCE
+
+### Fading
+- **Thresholds:** at least 3 rated uses, and then the last 3 score ≤ 0, or the last 2 score ≤ −1, or a "Not useful" after 2 or more positives.
+- Credible and not jumpy, but slow in practice. At about weekly appearances and a realistic answer rate, it takes 1–2 months of evidence.
+- A 3-Circle tune-up that swaps one piece is meaningful but small. A user could just as easily swap the piece themselves, if they could edit.
+
+### Time misfit
+- This is the **strongest Premium job**. It's visible, truthful (every piece kept), and easy to understand.
+- It's roughly a one-off per routine and per window, not recurring work.
+- It only exists for routines whose pieces have short forms. "Drink + Gentle stretch" can never be shortened.
+
+### Gap
+- Served-well suppression works. SIM 5b shows no offer when Free answers are "Somewhat useful", and a gap needs at least 3 explicit answers.
+- It won't manufacture Paths. But it fires mostly for users whom Free is failing, who are the least likely to be paying subscribers.
+- Templates already built are never offered again.
+
+### User refresh
+- Tune and Shorter are available anytime, which is useful control.
+- It isn't enough recurring value on its own: it's a feature you use once or twice a year.
+
+### Stable check
+- "Your routines are working well — nothing to change" builds trust and simultaneously says Premium has no current job.
+- It needs at least 3 rated routine uses in 28 days. Many users will see "Still learning how these fit." month after month, which is honest but empty.
+
+**Cadence: RARE** in steady state, and occasional only in the first two months.
+- **Monthly billing:** poor fit.
+- **Annual:** viable only if the build phase plus occasional upkeep feels worth a yearly fee.
+- **Pause/resume:** natural, since users come back when life changes. But Google Play monthly billing doesn't monetise that well.
+
+## WEEK 7
+**What Premium is doing in Week 7:** in SIM 3 it offers and builds a 20-minute version of *My reset* (Write it down + Clear one surface, both short), because the user now has about 20 minutes most days.
+- **Is the problem real?** Yes.
+- **Is the fix meaningful?** Mildly.
+- **Would a user notice?** Only once the shorter version is picked, which happened on D60.
+- **Could Free do almost as well?** Yes: on a ≈20 day, Free offers Write it down (15) or Tidy (15) anyway.
+- **Does it need new content?** No.
+
+**Score: 4/10.**
+
+## MONTH 2
+**What Premium does that Free wouldn't:** finish a second Path, or nothing; occasionally one maintenance offer; the routines themselves appear in Free regardless.
+- **Obvious?** No.
+- **Meaningful?** Somewhat, during a build.
+- **Recurring?** No.
+- **Commercially legible?** Weakly ("I'm building my second routine").
+
+**Score: 3/10.**
+
+## MONTH 6
+With no new content and a good Toolkit, Premium offers:
+- a 28-day check (usually "nothing to change" or "still learning");
+- an occasional time-misfit or fading offer;
+- the option to build a remaining template.
+
+**Value: WEAK. Score: 2/10.**
+
+## STABLE-USER PROBLEM
+**STRUCTURAL.** The design rightly refuses to manufacture work, degrade routines or hold them hostage. Under those rules, the honest answer to "why keep paying?" is "insurance in case your routines stop fitting".
+- **Monthly:** that doesn't renew.
+- **Annual:** it renews only if the first build was valuable enough to buy again a year later.
+- **Pause/resume:** this is the natural fit, but it only pays if re-entry is easy and priced for occasional use.
+- **Voluntary cancellation** will be high and calm. **Reactivation** is plausible, because the Path is saved exactly and offers stay visible with "Tuning routines is Premium".
+
+## LAPSE / CANCELLATION
+Verified fair: routines stay owned and offered, the controls stay, Path progress is saved and resumes at the exact Circle, and only starting builds, tunes and shorter versions is gated.
+
+Both effects are real:
+- **(A) Trust:** it lowers the risk of trying Premium and protects the brand.
+- **(B) Retention:** it removes the main reason to stay subscribed.
+
+**Structurally, B matters more under monthly billing, and A matters more under one-time or annual billing.** The fix is billing shape, never hostage mechanics.
+
+## FREE / PREMIUM BOUNDARY
+
+| Capability | Current | Verdict | Reason |
+|---|---|---|---|
+| Daily recommendation intelligence | Free | CORRECTLY FREE | Core loop; the contract forbids weakening it. |
+| Time fit | Free | CORRECTLY FREE | Basic fairness. |
+| Feedback learning | Free | CORRECTLY FREE | Perceived intelligence belongs where acquisition happens. |
+| Memory page | Free | CORRECTLY FREE | Trust asset. |
+| Recommendation reasons | Free | CORRECTLY FREE | Truth, not a feature. |
+| Not this one today | Free | CORRECTLY FREE | Minimal control. |
+| Circle guidance (all modes) | Free | CORRECTLY FREE | Activity quality. |
+| History | Free | CORRECTLY FREE | User-owned. |
+| Worlds | Free | CORRECTLY FREE | Protected brand asset. |
+| Reminders | Free | CORRECTLY FREE | Retention basics. |
+| Export / delete | Free | CORRECTLY FREE | User rights. |
+| Use of existing routines | Free | CORRECTLY FREE | Anti-hostage. |
+| Routine rename / disable / delete / versions | Free | CORRECTLY FREE | Ownership. |
+| Paths (building) | Premium | CORRECTLY PREMIUM | The paid process. |
+| Creating routines | Premium | CORRECTLY PREMIUM | The Path's output. |
+| Path review | Premium | CORRECTLY PREMIUM | Part of the build; keeping a finished proposal is ungated. |
+| Tune-ups | Premium | CORRECTLY PREMIUM | Maintenance. |
+| Shorter versions | Premium | CORRECTLY PREMIUM | Mechanical, but it is "building". |
+| Gap builds | Premium | CORRECTLY PREMIUM | A build. |
+| Maintenance offers | Premium (visible when lapsed) | CORRECTLY PREMIUM | Showing them to lapsed users is honest and a reactivation hook. |
+| Toolkit check | Premium | CORRECTLY PREMIUM | But it's low value. |
+
+Nothing should move. The problem isn't the boundary; it's that the Premium side does little recurring work.
+
+## SIMPLICITY
+- Free is about 6 concepts: need, time, the Circle, the reflection, Memory, and Not this one.
+- Premium adds about 7: Path, Circle n of 7, pieces, routine, version/shorter version, tune-up and Toolkit check.
+- The interface stays calm, but **complexity has returned in Premium as management**: versions, earlier versions, "Shortening My reset 1/3", and "resting piece, so this Path waits".
+- **Cognitive-load risks:**
+  - why the Path is still going;
+  - why my routine isn't offered;
+  - what a version is.
+- Free remains small.
+
+## NAVIGATION
+Today | Toolkit | You is a clear improvement over Plans and Insights.
+
+For Free users, though, one of three tabs is mainly a "What Premium builds" upsell. And for a Premium user with one routine it's a near-empty page. Toolkit is acceptable, but slightly over-weighted for its content. You isn't overloaded. Memory lives under You → Personal and is linked from the close, which works. No redesign needed.
+
+## TRUST
+**Score: 8.** The wording discipline is excellent:
+- Close ≠ completion.
+- Replacements are never counted as "Not useful".
+- "Useful before" appears only with a real "Very useful".
+- Stable is never claimed when a "Not useful" exists.
+- Path claims appear only from the user's own answers.
+- Gap needs explicit weak answers.
+- Lapse copy is honest.
+
+Gaps:
+- **The routine-level rest is invisible and can't be lifted.** The contract says what's resting is visible and effects are reversible; for routines, neither is true.
+- **Technically true but emotionally misleading:**
+  - "Your routines" when the user can't run them.
+  - "Thanks — you'll see this again now and then" when a routine is roughly weekly at best.
+
+## SAFETY
+- **Verified:** the gate is compile-time (`kDebugMode`). Paced has no live content. All 13 modules come from live activities, and a guard test excludes the gated and retired ids. The breath reset is retired and contributes no learning. Paths can't reintroduce gated content: pieces are checked for offerability and the routine requires every piece to be live.
+- **Commercial cost:** the gate **materially weakens More Energy and Premium** (no bodyweight or stairs content, no breathing). The paid tier has no in-session guidance beyond the two stretches.
+- **Wording:** outcome-free job lines are guard-tested. I found no health claims.
+- The external safety review is still outstanding and is not self-certified here.
+
+## ACCESSIBILITY / ROBUSTNESS
+Documented and partly evidenced:
+- live TalkBack passes in five rounds, plus final rounds on the offer and lapsed Toolkit;
+- 130% text screenshots;
+- a backdrop-label guard test across `lib/`;
+- `ThirtyButton` as its own semantics node;
+- wall-clock session state that survives background and restart;
+- exact lapse/restore in SIM 11;
+- an idempotent V1 retirement marker;
+- an unreadable Toolkit store set aside rather than reset.
+
+**Score: 8**, medium confidence (I didn't drive a device). This is strong evidence of product quality, not of commercial value.
+
+## DIFFERENTIATION
+- **CORE:** one daily decision with no browsing; explainable, editable local memory ("What THIRTY remembers").
+- **SUPPORTING:** the Worlds and the calm close; natural-length Circles; the explicit time choice; no-pressure, no-streak positioning; lapse fairness.
+- **GENERIC GOOD DESIGN:** Not this one; History; export/delete; reminders.
+- **NOT DIFFERENTIATING (as experienced):** Paths, user-owned routines and maintenance. They're well executed, but what they produce is what any routine app, coach or chatbot produces.
+
+## CHATGPT / AI SUBSTITUTE TEST
+"Give me a 20-minute reset routine for a busy head" and saving the answer in Notes reproduces the **Premium output** well. A chatbot also adapts ("it's raining, I have 10 minutes") with more flexibility than THIRTY.
+
+What THIRTY adds:
+- zero typing and zero prompting;
+- a remembered, editable evidence trail;
+- THIRTY noticing misfit and fading without the user asking;
+- a calm in-session runtime;
+- privacy and predictability.
+
+Being AI-free is a **trust strength for a niche, irrelevant to most users, and a flexibility weakness** against substitutes. For Free, the low-effort ritual is the defensible part. For Premium, the substitute is good enough for many users.
+
+## COMMERCIAL MODEL
+| Question | Assessment |
+|---|---|
+| First conversion reason | "I'd like a routine of my own for X" — curiosity plus structure. |
+| Renewal reason | Weak: occasional upkeep. |
+| Usage frequency | Plausibly several times a week for adopters. |
+| Paid-use frequency | Concentrated in the first 4–6 weeks. |
+| Acquisition | Hard: a low-urgency, crowded category with no viral loop. |
+| Serving cost | Near zero (local, deterministic). |
+| Content burden | Low. |
+| Support burden | Low. |
+| Revenue ceiling | Modest. |
+| Likely churn reasons | "I built my routines", "nothing to change", "I forgot it". |
+| Reactivation | Plausible: the Path is saved and offers stay visible. |
+
+This audit is **product quality, not commercial proof.** I've made no forecasts.
+
+## CALMNESS VS COMMERCIAL URGENCY
+- **For Free and the brand: A**, healthy differentiation at a manageable cost.
+- **Combined with a monthly subscription whose recurring work is rare: B**, a structural retention weakness.
+
+Don't fix it with pressure. Fix it with billing that matches episodic value: annual, one-time, or a "build" purchase.
+
+## CONTENT-TREADMILL TEST
+**PARTLY.**
+- A *new* subscriber gets full value with zero new content, because six Paths are enough to build a Toolkit.
+- A *tenured* subscriber gets only rare maintenance.
+- The architecture avoids a content treadmill by having little self-renewing work, not by having work that renews itself without content.
+
+## FOUNDER-LABOR SCALABILITY
+- **Content, serving, billing:** scale without founder effort.
+- **Maintenance logic:** deterministic.
+- **QA:** heavy. Every tuning change needs simulation re-reading and device passes, which is founder-time-intensive but doesn't grow with user count.
+- **Hidden human dependencies:**
+  - **acquisition**, with no organic loop, so it will be founder-driven marketing;
+  - **content and safety review**, needed for every activity added.
+
+## TOP 7 FAILURE MODES (probability × impact)
+1. **Build-and-cancel.** Users subscribe, build 1–3 routines in 4–6 weeks, keep them and cancel. Rational under monthly billing.
+2. **Low-urgency drift.** Free is pleasant but non-essential; opens decay after week 2 with no trigger beyond a reminder.
+3. **Acquisition cost beats a low-price subscription.** The category is crowded and THIRTY has no viral or organic engine.
+4. **"Two Free activities stuck together."** The Premium offer is understood but not valued, so conversion stays low.
+5. **Hollow ownership.** Routines appear rarely, can't be started, and are hidden by an invisible rest, so the Toolkit feels pointless.
+6. **Invisible learning.** Personalisation is real but felt as "same short list", so Day-30 users don't feel understood.
+7. **Low reflection answer rate.** It starves learning, fading, gap and the stable check together, making both tiers look static.
+
+## PRE-RELEASE BLOCKERS
+1. **Routine-level rests are hidden, can't be lifted, and are triggered by Path-trial answers.**
+   - A "Not useful" on any Path Circle with the same pieces, such as Circle 6's shorter form, is attributed to the routine. See `pastCirclesFrom` in `recommendation_provider.dart`, which matches on `samePieces`.
+   - It rests the routine the user has just kept for 14 days, then down-ranks it for 14 more (`routineDaysSinceNotUseful` in `recommendation_engine.dart`).
+   - Memory and the Toolkit never show it, and there's no Suggest again for routines.
+   - It's verified in the founder's own SIM 3: kept on D27, absent on four ≈30-minute days, first offered on D60.
+   - It confounds the main Premium closed-test question (routine frequency) and breaks the contract's visible, reversible rest rule.
+   - Fix it before testing. It's a bounded fix.
+
+Nothing else qualifies as a blocker.
+
+## VALIDATION QUESTIONS
+- **Free:** the real reflection answer rate; voluntary return without streaks.
+- **Learning:** whether learning is noticed by Day 7 and Day 14.
+- **Paths:** completion rate, and whether 7 Circles feels long.
+- **Routines:** whether they feel owned; whether their frequency feels right.
+- **Maintenance:** whether offers feel useful when they fire.
+- **Billing:** willingness to pay and preferred billing shape.
+- **Lapse:** whether users cancel after building, and whether they come back.
+
+## POST-LAUNCH / LATER
+- Tune Path length (7 → 5) on evidence.
+- Pass the safety review to unlock energy and breathing content, which is the biggest content lever for Premium.
+- Make learning more legible, for example a sparing "rested", "useful before" or "usual time" line on Today.
+- Add Guided treatment for more activities.
+- Revisit "My screen break" so a version fits ≈20.
+- A Premium atmosphere only if demand shows.
+
+## PRE-RELEASE TEST QUESTIONS
+1. Did THIRTY save you deciding? (Did you do what it suggested?)
+2. Was today's suggestion something you'd have chosen yourself?
+3. After a week, did suggestions feel more like *you*? What changed?
+4. Did "What THIRTY remembers" feel right, and did you correct anything?
+5. (Premium) Was the Path worth following to the end? Was it too long?
+6. Does your routine feel like yours? Did you ever want to start it yourself?
+7. Did your routine come up often enough?
+8. Did any upkeep offer feel useful?
+9. In one sentence, what does Premium do that Free doesn't?
+10. Would you miss Premium? Would you pay — monthly, yearly or once? If not, why not?
+
+## KILL SIGNALS
+
+| Signal | What it means | Hypothesis failed | Action |
+|---|---|---|---|
+| Testers rarely do the suggested activity, or swap it most days | Picks don't fit | Engine and catalogue fit | UX correction (catalogue, time defaults) |
+| Few testers answer "Was it useful?" | Learning has no fuel | Explicit-feedback learning | UX correction (reflection placement and value) |
+| Day-7 testers can't say what THIRTY learned | Learning is invisible | Personalisation credibility | Positioning / UX (legibility) |
+| Most Path starters don't reach Circle 7 | The Path is too long or dull | Path value | Premium correction (length, pool) |
+| Testers can't say how Premium differs from Free | Unclear proposition | Premium differentiation | Positioning correction |
+| Payers cancel right after building and say "I have my routines" | Build-and-cancel confirmed | Recurring paid value | Monetization correction (annual, one-time) |
+| "Would pay" only at a one-time price, or €0 | No subscription case | Subscription-worthiness | Monetization correction; if even one-time fails, stop further Premium investment |
+| Weekly opens collapse after week 2 even among happy raters | The calm product is forgotten | Voluntary habit | Stop scaling acquisition until fixed |
+
+## DO NOT BUILD
+- More Paths or modules.
+- Seasonal content.
+- Streaks, badges or points.
+- Social features or community.
+- Dashboards, charts or health scores.
+- AI chat.
+- Wearable integrations.
+- A routine marketplace or sharing.
+- Routine editors with many settings.
+- Premium visual gimmicks.
+- Extra notifications or "your routine misses you" nudges.
+- A cloud profile or backend personalisation.
+- A Premium ranking bonus for routines.
+
+## PREVIOUS AUDIT DELTA
+
+| Finding | Previous status | Current status | Why |
+|---|---|---|---|
+| Authored how-to never shown | Must fix | **RESOLVED** | How-to sheet, Open moments and Guided steps. |
+| Feedback has no effect | Must fix | **RESOLVED** | Engine V2: rests, returns, decay. |
+| Fixed 30:00 padding | Must fix | **RESOLVED** | Natural duration; breath reset retired. |
+| Brisk-breathing safety | Concern | **RESOLVED** | Retired; breathing gated. |
+| No swap / choice | Should | **RESOLVED** | One bounded "Not this one today". |
+| No close moment | Should | **RESOLVED** | Natural end, warm light, inline reflection. |
+| Audit-log record detail | Should | **RESOLVED** | Humane record copy. |
+| "Ready to close" before start | Should | **RESOLVED** | Copy fixed. |
+| No time input | Post-launch | **RESOLVED** | ≈10 / ≈20 / up to 30. |
+| Zero perceived intelligence | Risk 3 | **PARTLY RESOLVED** | Real learning, still low visibility. |
+| Thin, obvious catalogue | Content 3 | **UNCHANGED** | 16 live, everyday activities; Energy thin. |
+| No in-session support | Category gap | **PARTLY RESOLVED** | Open moments and 2 Guided; no Paced content. |
+| Premium = Free re-sequenced | Core flaw | **PARTLY RESOLVED** | Now adaptive and produces an owned routine, but still composed only of Free activities. |
+| Coach is status copy | Weak | **NO LONGER RELEVANT** | Retired. |
+| Insights count clicks / arrive late | Weak | **NO LONGER RELEVANT** | Retired. |
+| Month-2 case very weak | Critical | **PARTLY RESOLVED** | A build or one offer; mostly honest "nothing to change". |
+| Monthly subscription fit | Don't launch monthly | **UNCHANGED** | Offer still says "Billed monthly"; build-and-cancel risk is new in form. |
+| "AI Health Companion" | Must not ship | **PARTLY RESOLVED** | Not in app UI; still in `pubspec.yaml` and `README.md`; store copy is Phase E. |
+| Privacy policy / support | Must fix | **UNCHANGED** | Phase E scope. |
+| New risk | — | **WORSE (new)** | Hidden, unliftable routine rest; no on-demand routine. |
+
+| Dimension | Previous | Current | Delta | Why |
+|---|---|---|---|---|
+| First session / Day-1 | 4 | 6 | +2 | Guidance, natural length, close moment. |
+| Free product | 5 | 6 | +1 | Learning and control; catalogue unchanged. |
+| Premium value | 2 | 4 | +2 | Real process and owned output; still small. |
+| Premium differentiation | 2 | 4 | +2 | A different job, the same pieces. |
+| Content depth | 3 | 5 | +2 | Real guidance; few activities. |
+| Personal relevance | 3 | 5 | +2 | Real learning, low legibility. |
+| Day-7 | 4 | 5 | +1 | Rests and returns. |
+| Day-30 | 3 | 5 | +2 | Memory accumulates; list exhaustion remains. |
+| Month-2 paid | 2 | 3 | +1 | Honest but sparse work. |
+| Visual / emotional | 8 | 8 | 0 | Already strong. |
+| Trust | 7 | 8 | +1 | Exceptional wording; new hidden rest. |
+| Monetization / subscription fit | 2 | 3 | +1 | Better design; same monthly problem. |
+| Commercial differentiation | 3 | 3 | 0 | The art plus calm remains the moat. |
+| Overall product | 6 | 7 | +1 | — |
+| Overall commercial | 3 | 3 | 0 | The structural issue moved, it wasn't solved. |
+
+## BIGGEST 5 IMPROVEMENTS
+1. **Explicit feedback now changes selection** (bounded, decaying, explained). It turns the app from a rotation into a decider.
+2. **Activities feel designed:** natural length, visible how-to, Guided steps, an honest end. Padding and unsafe breathing are gone.
+3. **User control without browsing:** time choice, "Not this one today", Don't suggest / Suggest again, Remove answer.
+4. **Coach and Insights retired for an honest Premium job.** It produces an owned output, and lapse keeps routines. That trust posture is rare in the category.
+5. **Memory and History** are editable and truthful, with Delete removing learning by construction.
+
+## TOP 5 REMAINING RISKS
+
+| Risk | Why it matters | Current evidence | What would disprove it | When we can know |
+|---|---|---|---|---|
+| Build-and-cancel | It kills monthly revenue | Rare maintenance triggers; routines kept; SIM 6 shows no work after Week 4 | Payers renewing past month 2 *and* citing upkeep or new builds | Months 2–3 of a paid cohort |
+| Free drift | No users means no funnel | No pull mechanics; small catalogue | Testers opening several times a week through week 4 without nudges | 4 weeks of closed test |
+| Invisible learning | Undercuts the core promise | One reason line; Memory is off the main path | Testers describing what THIRTY learned unprompted by Day 7–14 | 2 weeks |
+| Hollow routine ownership | Undercuts the Premium promise | No on-demand start; ~weekly; hidden rest | Testers saying the routine appears "often enough" and feels theirs | After the first routine, about week 5 |
+| Low answer rate | Learning and maintenance starve | Answers are optional by design | A high share of Circles answered across weeks 1–4 | 2 weeks |
+
+## FOUNDER DECISIONS
+
+**1. Can a user run their own routine on demand?**
+- **Option A:** add "Use it today" on the routine page. It replaces today's not-yet-started Circle, once a day, and it's not a catalogue.
+- **Option B:** keep engine-only appearances and ask about it in the closed test.
+- **Recommendation: A, before the closed test.**
+- **Why:** without it, "routines of your own" is partly untrue in experience, and the closed test would mostly measure a design constraint you can already see.
+- **Commercial consequence:** it raises perceived ownership and Toolkit value. It slightly *increases* build-and-cancel risk, which is honest, and pushes the billing decision.
+
+**2. Billing shape for validation** (Phase E scope, but decide its framing now).
+- **Option A:** monthly-led, as the offer copy says now.
+- **Option B:** annual-led, plus a one-time or "lifetime Toolkit" option.
+- **Other:** Free-only closed test, asking willingness to pay without charging.
+- **Recommendation: B, tested against the monthly option.**
+- **Why:** the value is episodic and front-loaded, and the routines are kept.
+- **Commercial consequence:** a lower headline monthly ARPU, but less churn damage, and it matches the anti-hostage promise.
+
+There is no other founder decision before Phase E. Path length and thresholds are TUNABLE and should be read from tests.
+
+## FINAL 30 ANSWERS
+1. Yes. It's a good, honest, well-made small product.
+2. Moderately, as a free daily aid. Not strongly enough on its own to carry a subscription.
+3. Yes. Free is complete and coherent.
+4. For a ritual-loving minority, likely. For most people, unproven and probably weak.
+5. It does a different job, but it's only modestly better.
+6. Useful, and marginally Premium-worthy.
+7. Not as monthly. Plausible as annual or one-time.
+8. "Build a routine of my own for when I need X", plus the guided seven-try experiment.
+9. Finishing a second build, or a time-misfit offer. That's weak.
+10. Insurance that routines keep fitting. That's very weak.
+11. Structurally dangerous for monthly billing; acceptable for annual or one-time.
+12. Yes for trust and brand. It hurts monthly retention, so fix it through billing.
+13. Partly: yes for new subscribers, barely for tenured ones.
+14. Yes for launch. Don't add more; consider merging or replacing "Out the door" later.
+15. Enough for launch. The safety gate is the real content constraint.
+16. Mostly bundling, with narrow genuine learning (pairing, order, length).
+17. Moderately. They'd feel more valuable if the user could start them.
+18. No. About weekly at best, sometimes much less (SIM 3).
+19. No. It's rare in steady state.
+20. For Free's low-effort ritual and memory, somewhat. For Premium's routine-building job, not convincingly.
+21. Free: no. Premium adds management complexity under a calm surface.
+22. No.
+23. No.
+24. Yes for scope. The problem is recurring value, not breadth.
+25. Only the routine-rest fix, plus (recommended) "Use it today". Nothing else.
+26. Whether users voluntarily return to a calm, no-pressure daily decision without being nudged.
+27. A distinctive, trustworthy, calm daily ritual with real learning, at near-zero serving cost. If it finds its niche, it can be profitable small.
+28. Episodic Premium value under a recurring charge, in a low-urgency category that's hard to acquire into.
+29. Yes for a one-time or annual purchase for a meaningful minority. Doubtful for an ongoing monthly charge.
+30. Yes, after the one bounded fix.
+
+## FINAL VERDICT
+**FIX THESE MATERIAL ISSUES FIRST:**
+1. The routine-level "Not useful" rest:
+   - It's attributed from Path-trial Circles to the routine just kept.
+   - It's invisible in Memory and the Toolkit.
+   - It can't be lifted by the user.
+
+   Make it truthful: count only post-keep routine use, or show it and let the user lift it.
+
+Then go to pre-release validation.
+
+**IS THERE ANYTHING MATERIAL WE CAN STILL LEARN OR FIX WITHOUT REAL USERS THAT JUSTIFIES DELAYING PRE-RELEASE? YES**, narrowly.
+
+The routine-rest defect is knowable now, verified in your own SIM 3, and it directly distorts the main Premium question the closed test exists to answer. It's a days-scale fix, not a redesign. The "Use it today" decision is in the same class: knowable from the code, cheap, and it changes what the test measures. I recommend it but don't call it a blocker.
+
+Beyond that, the answer is **no**. Every remaining uncertainty is about demand: return, perceived learning, Path appeal, routine value, willingness to pay and billing shape. More simulations, ADRs or tuning can't resolve those. The previous audit noticed the pattern of judging the product against its own contracts rather than against users. V2 has corrected most of the substance, and the remaining risk is exactly what desk work can't settle.
+
+Blind verdict C stands as a diagnosis: I'd expect the recurring-subscription design to underperform. But the right response is to test with honest billing options and clear kill signals, not to rework the commercial design blind. If the closed test confirms build-and-cancel, the lever is billing shape (annual or one-time), never hostage mechanics or pressure.
+
+Nothing was modified. The audit stops here.

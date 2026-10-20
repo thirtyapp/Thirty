@@ -14,6 +14,10 @@
 /// inside-only), the main piece holds a real share of the time, the whole
 /// fits the window and uses enough of it, and no part repeats. Otherwise
 /// the answer is `null`, and Today is Free's one activity.
+///
+/// **StageBrief (ADR-024 C1–C2).** An optional [StageBrief] only narrows
+/// which gate-passing Circles may be chosen; every hard limit, the gate and
+/// the ranking stay exactly as they are. Without one, nothing changes.
 library;
 
 import 'dart:convert';
@@ -23,6 +27,7 @@ import '../../home/domain/recommendation_engine.dart';
 import '../../home/domain/recommendation_policy.dart';
 import 'circle_elements.dart';
 import 'composer_policy.dart';
+import 'stage_brief.dart';
 
 /// Today's "Not this one today" on a composed Circle: a hard constraint for
 /// the one recomposition.
@@ -117,10 +122,10 @@ class ElementStanding {
 
   /// Its explicit evidence, from −2 to 2: the confidence-weighted mean of
   /// the answers about its own activity (only where it carries that
-  /// activity's evidence), about composed Circles it was the substance of
-  /// (unskipped, at half weight), and the positive answers about the user's
-  /// routines that hold its activity (half weight). A mean, not a sum: how
-  /// often a part was offered never compounds into how much it is liked.
+  /// activity's evidence) and about composed Circles it was the substance of
+  /// (unskipped, at half weight). A mean, not a sum: how often a part was
+  /// offered never compounds into how much it is liked. (Routine evidence
+  /// is retired with routines, ADR-024.)
   final double evidence;
 
   /// Whether "things you've found useful" may name it.
@@ -162,22 +167,9 @@ ElementStanding elementStanding(
       : none;
   final about = composedWith(element.id);
   final composed = memory.answersWhere(about, need);
-  // The user's own routine, used and found useful, speaks for its pieces'
-  // elements too — positive answers only: a routine's "Not useful" may be
-  // about the combination, never about each part (ADR-022 §5).
-  final routine = carries
-      ? memory.answersWhere(
-          (c) =>
-              c.routineId != null &&
-              c.touches(from) &&
-              (c.usefulness == PastUsefulness.veryUseful ||
-                  c.usefulness == PastUsefulness.somewhatUseful),
-          need,
-        )
-      : none;
   final half = composerPolicy.composedEvidenceFactor;
-  final sum = own.sum + half * (composed.sum + routine.sum);
-  final weight = own.weight + half * (composed.weight + routine.weight);
+  final sum = own.sum + half * composed.sum;
+  final weight = own.weight + half * composed.weight;
   final mean = weight == 0 ? 0.0 : sum / weight;
   // Little evidence counts for little: the mean, scaled by confidence.
   final evidence = mean * weight / (weight + 1);
@@ -245,6 +237,11 @@ String _dateKey(DateTime date) =>
     '${date.month.toString().padLeft(2, '0')}-'
     '${date.day.toString().padLeft(2, '0')}';
 
+/// The composer's date-seeded hash of [key] on [date] — the tie-break a
+/// StageBrief's stage 5 orders equally positive stages by.
+int dateSeededHash(DateTime date, String key) =>
+    _hash('${_dateKey(date)}|$key');
+
 /// A plan's substance: its main piece and the second piece after it, if
 /// any — what must not loop day after day.
 (ElementId, ElementId?) _coreOf(CirclePlan plan) {
@@ -261,6 +258,10 @@ ElementId? _mainOf(PastCircle circle) {
   final plan = CirclePlan.fromWire(circle.parts);
   return plan?.main.element;
 }
+
+/// The role [part] takes in [parts] — what a StageBrief's conditions read.
+ElementRole partRole(List<CirclePart> parts, CirclePart part) =>
+    _roleIn(parts, part);
 
 /// The role [part] takes in [parts]: arrive before the main piece, then
 /// second, then settle — a part's place, never guessed from its name.
@@ -371,6 +372,9 @@ Iterable<List<CirclePart>> gatePassingShapes(
 ///    shorter ones; then a date-seeded tie-break. Variety only ever chooses
 ///    among sessions the evidence rates alike: a part the user found very
 ///    useful is not dropped to look varied.
+/// 4. **A [brief], when given:** only the Circles above that it accepts —
+///    composed at ≈ 20 size on an up-to-30 day when it serves up to ≈ 20.
+///    Nothing it rejects is ever broadened back in; `null` when none is left.
 ComposedCircle? composeCircle(
   ComposerContext context,
   Iterable<PastCircle> history, {
@@ -378,9 +382,13 @@ ComposedCircle? composeCircle(
   Set<ElementId> leftOut = const {},
   RecommendationPolicy policy = RecommendationPolicy.initial,
   ComposerPolicy composerPolicy = ComposerPolicy.initial,
+  StageBrief? brief,
 }) {
   final need = context.need;
-  final window = context.window.maxMinutes;
+  if (brief != null && brief.need != need) {
+    throw ArgumentError.value(brief.id, 'brief', 'is for another need');
+  }
+  final window = brief?.sizeFor(context.window) ?? context.window.maxMinutes;
   final memory = RecommendationMemory.of(
     context.date,
     history,
@@ -557,6 +565,7 @@ ComposedCircle? composeCircle(
               mainOffersThisWeek(element) < composerPolicy.mainWeeklyCap),
       policy: composerPolicy,
     )) {
+      if (brief != null && !brief.accepts(parts, size: window)) continue;
       final plan = CirclePlan(parts);
       if (capped && identicalThisWeek(plan.elements)) continue;
       considered++;
@@ -619,6 +628,7 @@ ComposedCircle? composeCircle(
     basis: proven ? CompositionBasis.foundUseful : CompositionBasis.sized,
     score: best.score,
     trace: [
+      if (brief != null) 'brief=${brief.id}',
       if (relaxed) 'relaxed',
       'considered=$considered',
       'score=${best.score.toStringAsFixed(2)}',

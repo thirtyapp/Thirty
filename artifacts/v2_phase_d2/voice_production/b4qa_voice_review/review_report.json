@@ -1,0 +1,221 @@
+{
+ "rule": "B4-QA voice defect (2026-10-18), REVIEW ONLY. A copy of\nfinal_corrections_review/tools/review_pack.py with only the targets changed\n(Locke part_songOn: an extra garbled syllable after \"really like\"; no level\ncorrections). Builds b4qa_voice_review/ and never writes to assets/, raw/, raw_retakes/\nor any production log.\n\n1. Chain check: the production master chain, re-run here on each targeted\n   clip's shipping raw with no change, must reproduce the shipping .m4a\n   byte-for-byte; so every candidate below differs from shipping only in\n   what is stated.\n2. Regenerated clips (Brittney part_sitAMinute, Heather part_gentleStretch),\n   seeds 31-33 from generate_candidates.py: the normal raw checks\n   (provenance, script by offline ASR, onset/ending, sample clipping, inner\n   stalls, pace) and the frozen perceptual pause-bed check (A-weighted, at\n   the voice's matched level, against the voice's own per-clip spread; no\n   threshold). Plus a timbre diagnostic: the level-free long-term speech\n   spectrum (1/3 octave, 100 Hz-10 kHz) and median pitch, against the\n   voice's other 41 shipping takes. Diagnostic only; the founder's ear\n   decides which take is the same person.\n   Each candidate is mastered by the frozen production rule exactly as it\n   would ship: the voice's frozen median and voice-wide gain (from\n   mastering_report.json; the other 41 clips are not re-mastered), the\n   outlier window, edge fades, limiter only if needed, lead-in and tail.\n3. Level corrections (Heather part_getItOut, part_oneTask; the takes are\n   kept): the production chain from the same raw with ONE extra static gain.\n   The gain is the mean excess of the clip's integrated, maximum momentary\n   and maximum short-term loudness over the median of Heather's parts, so\n   its loudest phrases land at her typical level instead of above it. No\n   compression, EQ, denoise or limiter change.\nUsage: python -I review_pack.py <repo>",
+ "chain_check": {
+  "voice_locke_v1/part_songOn": true
+ },
+ "regenerated": {
+  "voice_locke_v1/part_songOn": {
+   "canonical_entry": {
+    "clip": "part_songOn",
+    "role": "part",
+    "file": "part_songOn_6017657f.m4a",
+    "script": "Put a song on. Put on a song you really like, and let it play while you start."
+   },
+   "voice_id": "oaLGpwm7fYWDEFmlRuQk",
+   "shipping_raw": "raw/voice_locke_v1/part_songOn.mp3",
+   "voice_reference": {
+    "median_part_words_per_s": 2.41,
+    "pause_bed_per_clip_spread_dba": {
+     "min": -100.5,
+     "median": -98.9,
+     "max": -94.7
+    },
+    "pause_bed_voice_quietest10_dba": -98.3,
+    "timbre_leave_one_out_spread_db": {
+     "median": 1.58,
+     "p90": 2.17,
+     "max": 2.58
+    },
+    "median_f0_hz": 87.4,
+    "f0_p5_p95_hz": [
+     83.0,
+     94.5
+    ]
+   },
+   "takes": {
+    "CURRENT_seed30": {
+     "duration_s": 7.105,
+     "speech_onset_s": 0.09,
+     "tail_after_speech_s": 0.405,
+     "first_10ms_dbfs": -89.7,
+     "last_10ms_dbfs": -87.5,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -8.72,
+     "longest_inner_silence_s": 1.53,
+     "speech_span_s": 6.61,
+     "words_per_s": 2.72,
+     "pace_vs_voice_median": 1.13,
+     "asr": "Put a song on, put on a song you really like and let it play while you start.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -98.1,
+     "timbre": {
+      "spectrum_distance_db": 2.0,
+      "spectrum_distance_percentile_vs_voice": 79.0,
+      "median_f0_hz": 87.1,
+      "f0_vs_voice_median_semitones": -0.06
+     },
+     "provenance_ok": true,
+     "raw_sha1": "8c8998ab043ae8943ef36663250e89a93af37550",
+     "mastering": 4.47,
+     "final": {
+      "I": -22.0,
+      "M_max": -17.2,
+      "S_max": -21.6,
+      "speech_p90_dbfs": -15.46,
+      "duration_s": 7.24,
+      "true_peak_dbtp": -4.24
+     },
+     "file": "CURRENT_seed30.m4a"
+    },
+    "candidate1_seed31": {
+     "duration_s": 7.105,
+     "speech_onset_s": 0.08,
+     "tail_after_speech_s": 0.385,
+     "first_10ms_dbfs": -90.9,
+     "last_10ms_dbfs": -88.0,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -9.21,
+     "longest_inner_silence_s": 1.5,
+     "speech_span_s": 6.64,
+     "words_per_s": 2.71,
+     "pace_vs_voice_median": 1.12,
+     "asr": "Put a song on, put on a song you really like and let it play while you start.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -99.4,
+     "timbre": {
+      "spectrum_distance_db": 1.35,
+      "spectrum_distance_percentile_vs_voice": 26.0,
+      "median_f0_hz": 85.5,
+      "f0_vs_voice_median_semitones": -0.38
+     },
+     "provenance_ok": true,
+     "request_id": "Znai1PCCtK7DabvFxQC3",
+     "raw_sha1": "5d2f03877bafc45aee9b0c50dd5bf22df22e9ae1",
+     "mastering": {
+      "raw_trimmed_lufs": -27.12,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": 4.47,
+      "extra_gain_db": 0.0,
+      "total_gain_db": 4.47,
+      "limiter_db": 0.0,
+      "head_fade_ms": 10.0
+     },
+     "final": {
+      "I": -22.3,
+      "M_max": -17.4,
+      "S_max": -22.3,
+      "speech_p90_dbfs": -16.25,
+      "duration_s": 7.27,
+      "true_peak_dbtp": -4.75
+     },
+     "file": "candidate1_seed31.m4a"
+    },
+    "candidate2_seed32": {
+     "duration_s": 5.898,
+     "speech_onset_s": 0.08,
+     "tail_after_speech_s": 0.398,
+     "first_10ms_dbfs": -89.8,
+     "last_10ms_dbfs": -87.1,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -10.19,
+     "longest_inner_silence_s": 0.8,
+     "speech_span_s": 5.42,
+     "words_per_s": 3.32,
+     "pace_vs_voice_median": 1.38,
+     "asr": "Put a song on, put on a song you really like, and let it play while you start.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -96.0,
+     "timbre": {
+      "spectrum_distance_db": 2.21,
+      "spectrum_distance_percentile_vs_voice": 92.0,
+      "median_f0_hz": 84.6,
+      "f0_vs_voice_median_semitones": -0.55
+     },
+     "provenance_ok": true,
+     "request_id": "6Lp1FwvEZdAH3R90PjRE",
+     "raw_sha1": "b27402e30feb299ca5ca6fff8afdb644f7469228",
+     "mastering": {
+      "raw_trimmed_lufs": -26.99,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": 4.47,
+      "extra_gain_db": 0.0,
+      "total_gain_db": 4.47,
+      "limiter_db": 0.0,
+      "head_fade_ms": 10.0
+     },
+     "final": {
+      "I": -22.0,
+      "M_max": -17.8,
+      "S_max": -21.4,
+      "speech_p90_dbfs": -16.03,
+      "duration_s": 6.05,
+      "true_peak_dbtp": -5.75
+     },
+     "file": "candidate2_seed32.m4a"
+    },
+    "candidate3_seed33": {
+     "duration_s": 6.78,
+     "speech_onset_s": 0.09,
+     "tail_after_speech_s": 0.34,
+     "first_10ms_dbfs": -90.4,
+     "last_10ms_dbfs": -87.6,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -8.23,
+     "longest_inner_silence_s": 0.84,
+     "speech_span_s": 6.35,
+     "words_per_s": 2.83,
+     "pace_vs_voice_median": 1.17,
+     "asr": "Put a song on, put on a song you really like, and let it play while you start.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -99.1,
+     "timbre": {
+      "spectrum_distance_db": 1.84,
+      "spectrum_distance_percentile_vs_voice": 63.0,
+      "median_f0_hz": 86.1,
+      "f0_vs_voice_median_semitones": -0.25
+     },
+     "provenance_ok": true,
+     "request_id": "0SwhCbTdzkIgHXtwAS9c",
+     "raw_sha1": "9f41ef2df519901299d7e5dcec6a417929822383",
+     "mastering": {
+      "raw_trimmed_lufs": -27.52,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": 4.47,
+      "extra_gain_db": 0.0,
+      "total_gain_db": 4.47,
+      "limiter_db": 0.0,
+      "head_fade_ms": 10.0
+     },
+     "final": {
+      "I": -22.3,
+      "M_max": -17.9,
+      "S_max": -21.3,
+      "speech_p90_dbfs": -16.32,
+      "duration_s": 6.98,
+      "true_peak_dbtp": -3.75
+     },
+     "file": "candidate3_seed33.m4a"
+    }
+   },
+   "comparison_order": [
+    "part_moveToMusic (normal shipping clip) -> CURRENT_seed30",
+    "part_moveToMusic (normal shipping clip) -> candidate1_seed31",
+    "part_moveToMusic (normal shipping clip) -> candidate2_seed32",
+    "part_moveToMusic (normal shipping clip) -> candidate3_seed33"
+   ]
+  }
+ },
+ "level_corrected": {}
+}

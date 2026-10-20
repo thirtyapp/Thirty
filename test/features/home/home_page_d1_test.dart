@@ -214,9 +214,10 @@ void main() {
     await tester.tap(find.byType(HomeProfileButton));
     await tester.pumpAndSettle();
     expect(find.byType(SettingsPage), findsOneWidget);
+    // The final shell (ADR-024 §2): Today | Plans | Insights | You.
     expect(
       tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
-      2,
+      3,
     );
   });
 
@@ -470,12 +471,13 @@ void main() {
         AppColors.light.primary,
       );
 
-      await tester.tap(find.text('Toolkit'));
+      await tester.tap(find.text('You'));
       await tester.pumpAndSettle();
       expect(ringWidth(), 2);
+      // You is the fourth tab (B7).
       expect(
         tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
-        1,
+        3,
       );
     });
   });

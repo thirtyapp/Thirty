@@ -1,0 +1,367 @@
+{
+  "no-answer user": {
+    "month 1": {
+      "insight.plan_for_need": 1,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 1,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 2,
+      "applied by the user": 1
+    },
+    "month 3": {
+      "insight.plan_for_need": 3,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 3,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 6,
+      "applied by the user": 3
+    },
+    "month 6": {
+      "insight.plan_for_need": 6,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 6,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 12,
+      "applied by the user": 6
+    },
+    "month 12": {
+      "insight.plan_for_need": 12,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 12,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 24,
+      "applied by the user": 12
+    },
+    "max stored": 24,
+    "stored at day 365": 24,
+    "most repeats of one I1 claim": 12,
+    "most repeats of one I2 claim": 0,
+    "weeks with no new ordinary Insight": 40,
+    "days a lapsed user could read snapshots": 0
+  },
+  "moderate answerer": {
+    "month 1": {
+      "insight.plan_for_need": 1,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 1,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 2,
+      "applied by the user": 1
+    },
+    "month 3": {
+      "insight.plan_for_need": 3,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 1,
+      "insight.plan_review": 3,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 7,
+      "applied by the user": 4
+    },
+    "month 6": {
+      "insight.plan_for_need": 6,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 4,
+      "insight.plan_review": 5,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 15,
+      "applied by the user": 10
+    },
+    "month 12": {
+      "insight.plan_for_need": 12,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 9,
+      "insight.plan_review": 12,
+      "insight.whats_changed": 0,
+      "nothing to change": 1,
+      "generated": 33,
+      "applied by the user": 20
+    },
+    "max stored": 33,
+    "stored at day 365": 33,
+    "most repeats of one I1 claim": 12,
+    "most repeats of one I2 claim": 0,
+    "weeks with no new ordinary Insight": 31,
+    "days a lapsed user could read snapshots": 0
+  },
+  "frequent skipper": {
+    "month 1": {
+      "insight.plan_for_need": 1,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 1,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 1,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 3,
+      "applied by the user": 2
+    },
+    "month 3": {
+      "insight.plan_for_need": 3,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 5,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 2,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 10,
+      "applied by the user": 8
+    },
+    "month 6": {
+      "insight.plan_for_need": 5,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 9,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 5,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 19,
+      "applied by the user": 14
+    },
+    "month 12": {
+      "insight.plan_for_need": 12,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 9,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 11,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 32,
+      "applied by the user": 21
+    },
+    "max stored": 32,
+    "stored at day 365": 32,
+    "most repeats of one I1 claim": 12,
+    "most repeats of one I2 claim": 0,
+    "weeks with no new ordinary Insight": 31,
+    "days a lapsed user could read snapshots": 0
+  },
+  "active Plan user": {
+    "month 1": {
+      "insight.plan_for_need": 0,
+      "insight.plan_pacing": 1,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 3,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 4,
+      "applied by the user": 1
+    },
+    "month 3": {
+      "insight.plan_for_need": 0,
+      "insight.plan_pacing": 3,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 11,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 14,
+      "applied by the user": 3
+    },
+    "month 6": {
+      "insight.plan_for_need": 0,
+      "insight.plan_pacing": 6,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 23,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 29,
+      "applied by the user": 6
+    },
+    "month 12": {
+      "insight.plan_for_need": 0,
+      "insight.plan_pacing": 12,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 72,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 84,
+      "applied by the user": 12
+    },
+    "max stored": 52,
+    "stored at day 365": 52,
+    "most repeats of one I1 claim": 0,
+    "most repeats of one I2 claim": 12,
+    "weeks with no new ordinary Insight": 40,
+    "days a lapsed user could read snapshots": 0,
+    "cycles reviewed in 12 months": 72
+  },
+  "lapsed user": {
+    "month 1": {
+      "insight.plan_for_need": 1,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 1,
+      "insight.plan_review": 0,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 2,
+      "applied by the user": 2
+    },
+    "month 3": {
+      "insight.plan_for_need": 3,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 1,
+      "insight.plan_review": 2,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 6,
+      "applied by the user": 4
+    },
+    "month 6": {
+      "insight.plan_for_need": 4,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 1,
+      "insight.plan_review": 3,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 8,
+      "applied by the user": 5
+    },
+    "month 12": {
+      "insight.plan_for_need": 9,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 1,
+      "insight.plan_review": 8,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 18,
+      "applied by the user": 10
+    },
+    "max stored": 18,
+    "stored at day 365": 18,
+    "most repeats of one I1 claim": 9,
+    "most repeats of one I2 claim": 0,
+    "weeks with no new ordinary Insight": 42,
+    "days a lapsed user could read snapshots": 120
+  },
+  "dominant single need": {
+    "month 1": {
+      "insight.plan_for_need": 1,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 0,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 1,
+      "applied by the user": 0
+    },
+    "month 3": {
+      "insight.plan_for_need": 3,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 0,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 3,
+      "applied by the user": 0
+    },
+    "month 6": {
+      "insight.plan_for_need": 6,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 0,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 6,
+      "applied by the user": 0
+    },
+    "month 12": {
+      "insight.plan_for_need": 12,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 0,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 12,
+      "applied by the user": 0
+    },
+    "max stored": 12,
+    "stored at day 365": 12,
+    "most repeats of one I1 claim": 12,
+    "most repeats of one I2 claim": 0,
+    "weeks with no new ordinary Insight": 40,
+    "days a lapsed user could read snapshots": 0
+  },
+  "needs change over months": {
+    "month 1": {
+      "insight.plan_for_need": 1,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 1,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 2,
+      "applied by the user": 1
+    },
+    "month 3": {
+      "insight.plan_for_need": 3,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 0,
+      "insight.plan_review": 3,
+      "insight.whats_changed": 0,
+      "nothing to change": 0,
+      "generated": 6,
+      "applied by the user": 3
+    },
+    "month 6": {
+      "insight.plan_for_need": 6,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 1,
+      "insight.plan_review": 8,
+      "insight.whats_changed": 2,
+      "nothing to change": 0,
+      "generated": 17,
+      "applied by the user": 9
+    },
+    "month 12": {
+      "insight.plan_for_need": 12,
+      "insight.plan_pacing": 0,
+      "insight.skipped_part": 0,
+      "insight.useful_in_common": 1,
+      "insight.plan_review": 16,
+      "insight.whats_changed": 4,
+      "nothing to change": 0,
+      "generated": 33,
+      "applied by the user": 17
+    },
+    "max stored": 33,
+    "stored at day 365": 33,
+    "most repeats of one I1 claim": 6,
+    "most repeats of one I2 claim": 0,
+    "weeks with no new ordinary Insight": 35,
+    "days a lapsed user could read snapshots": 0
+  }
+}

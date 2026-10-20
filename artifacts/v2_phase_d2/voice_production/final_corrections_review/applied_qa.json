@@ -1,0 +1,128 @@
+{
+ "method": "QA of the four founder-approved files AS NOW SHIPPED in assets/ (2026-10-17).\nPer file: exact manifest file name and FNV-1a fingerprint of the canonical\nscript; provenance (logged voice ID and script of the source take); script\nidentity by offline ASR (faster-whisper small.en) on the shipping .m4a;\nlead-in, tail, last 10 ms, true peak; and that the file IS the approved\nperformance (waveform correlation of the decoded shipping speech against its\nsource take, trimmed and at the logged gain).\nBrittney part_sitAMinute (c3 starts on its first sample): where the initial\n\"S\" frication starts and how long it lasts before voicing, in the raw take\nand in the shipping file, against the two other seeds and the seed-30 take;\nand how much of the first 100 ms the 2 ms head fade removes.\nUsage: python -I applied_qa.py <repo>",
+ "files": {
+  "voice_brittney_v1/part_sitAMinute": {
+   "file": "part_sitAMinute_c80c3b07.m4a",
+   "script": "Sit for a minute. Sit still for a minute or two before you move on. There’s nothing to do.",
+   "filename_fingerprint_ok": true,
+   "source_take": "final_corrections_review/brittney_sit_a_minute/raw/seed33.mp3",
+   "source_seed": 33,
+   "request_id": "5TMVpk8vaaRpBHPui6SR",
+   "provenance_ok": true,
+   "asr": "Sit for a minute. Sit still for a minute or two before you move on. There's nothing to do.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 150,
+   "tail_ms": 430,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -7.13,
+   "integrated_lufs": -22.25,
+   "gain_applied_db": 8.78,
+   "extra_gain_db": 0.0,
+   "voice_gain_db_frozen": 8.78,
+   "waveform_correlation_vs_source": 0.9997,
+   "level_vs_source_at_gain_db": -0.02,
+   "initial_s": {
+    "raw_takes_from_first_sample": {
+     "seed30 (previous shipping)": {
+      "frication_onset_ms": 5,
+      "frication_to_voicing_ms": 130,
+      "hf_level_first_frame_vs_peak_db": -28.7
+     },
+     "seed31": {
+      "frication_onset_ms": 0,
+      "frication_to_voicing_ms": 135,
+      "hf_level_first_frame_vs_peak_db": -10.2
+     },
+     "seed32": {
+      "frication_onset_ms": 35,
+      "frication_to_voicing_ms": 90,
+      "hf_level_first_frame_vs_peak_db": -67.9
+     },
+     "seed33": {
+      "frication_onset_ms": 0,
+      "frication_to_voicing_ms": 140,
+      "hf_level_first_frame_vs_peak_db": -9.9
+     }
+    },
+    "shipping_from_lead_in_end": {
+     "frication_onset_ms": 0,
+     "frication_to_voicing_ms": 140,
+     "hf_level_first_frame_vs_peak_db": -9.9
+    },
+    "head_fade": {
+     "speech_onset_ms_after_trim_start": 0,
+     "head_fade_ms": 2.0,
+     "fade_ends_at_or_before_onset": false,
+     "fade_head_removed_share_of_first_100ms_db": -27.0
+    }
+   }
+  },
+  "voice_heather_v1/part_gentleStretch": {
+   "file": "part_gentleStretch_052b8910.m4a",
+   "script": "Gentle stretch. Slowly: neck, shoulders, open the chest, a seated twist, then fold forward and come up slowly. Only what’s comfortable.",
+   "filename_fingerprint_ok": true,
+   "source_take": "final_corrections_review/heather_gentle_stretch/raw/seed33.mp3",
+   "source_seed": 33,
+   "request_id": "aCTHP1IqOiosFRkxTvx9",
+   "provenance_ok": true,
+   "asr": "Gentle stretch. Slowly. Neck, shoulders. Open the chest. A seated twist. Then fold forward and come up slowly. Only what's comfortable.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 150,
+   "tail_ms": 440,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -4.38,
+   "integrated_lufs": -20.74,
+   "gain_applied_db": -2.89,
+   "extra_gain_db": 0.0,
+   "voice_gain_db_frozen": -2.89,
+   "waveform_correlation_vs_source": 0.9999,
+   "level_vs_source_at_gain_db": -0.01
+  },
+  "voice_heather_v1/part_getItOut": {
+   "file": "part_getItOut_a239320e.m4a",
+   "script": "Get it out. Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.",
+   "filename_fingerprint_ok": true,
+   "source_take": "raw/voice_heather_v1/part_getItOut.mp3",
+   "source_seed": 30,
+   "request_id": "LyHXgGtcirTbCsiSduHK",
+   "provenance_ok": true,
+   "asr": "Get it out. Write down everything on your mind without sorting. When you run dry, ask what else is nagging at you.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 150,
+   "tail_ms": 440,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -7.26,
+   "integrated_lufs": -22.56,
+   "gain_applied_db": -5.59,
+   "extra_gain_db": -1.8,
+   "voice_gain_db_frozen": -2.89,
+   "waveform_correlation_vs_source": 1.0,
+   "level_vs_source_at_gain_db": -0.01
+  },
+  "voice_heather_v1/part_oneTask": {
+   "file": "part_oneTask_80701d4c.m4a",
+   "script": "One task, no switching. Pick one task on your mind and put everything else out of sight. Stay with it until the time’s up — finished or not.",
+   "filename_fingerprint_ok": true,
+   "source_take": "raw/voice_heather_v1/part_oneTask.mp3",
+   "source_seed": 30,
+   "request_id": "rz1avaoBOOVUj5j5Rxab",
+   "provenance_ok": true,
+   "asr": "One task, no switching. Pick one task on your mind and put everything else out of sight. Stay with it until the time's up. Finished or not.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 150,
+   "tail_ms": 460,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -7.5,
+   "integrated_lufs": -22.98,
+   "gain_applied_db": -6.15,
+   "extra_gain_db": -2.7,
+   "voice_gain_db_frozen": -2.89,
+   "waveform_correlation_vs_source": 0.9999,
+   "level_vs_source_at_gain_db": -0.01
+  }
+ }
+}

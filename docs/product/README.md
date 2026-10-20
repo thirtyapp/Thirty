@@ -70,3 +70,9 @@ Een ADR (Architecture/Product Decision Record) legt één specifieke, vaak onomk
 - [ADR-016 — V1 Productization Batch 2C / Minimum Circle Insights](adr/ADR-016-v1-batch-2c-circle-insights.md)
 - [ADR-017 — V1 Step 5 / RevenueCat Billing Integration](adr/ADR-017-v1-step5-revenuecat-billing.md)
 - [ADR-018 — V1 World Art / Scene Roles, Five Worlds, Static Daypart Artwork](adr/ADR-018-v1-world-art-scene-roles-and-daypart.md)
+- [ADR-019 — V2 Phase A / Activity model, natural duration and safety gate](adr/ADR-019-v2-phase-a-activity-model.md) — Accepted
+- [ADR-020 — V2 Phase B / Recommendation Engine V2](adr/ADR-020-v2-phase-b-recommendation-engine.md) — Accepted
+- [ADR-021 — V2 Phase C / Circle experience and explicit memory](adr/ADR-021-v2-phase-c-circle-experience-and-memory.md) — Accepted
+- [ADR-022 — V2 Phase D / Premium: Paths, personal Toolkit and maintenance](adr/ADR-022-v2-phase-d-paths-toolkit-and-maintenance.md) — Accepted, as the historical record of Phase D. It is partially superseded by ADR-023, and its Paths, routines and Toolkit are retired before public release per ADR-024.
+- [ADR-023 — V2 Recurring Premium / Personal Guided Circle](adr/ADR-023-v2-recurring-premium-personal-guided-circle.md) — Accepted
+- [ADR-024 — V2 Circle Plans, Insights and the four-tab product](adr/ADR-024-v2-circle-plans-insights-and-four-tab-product.md) — Accepted

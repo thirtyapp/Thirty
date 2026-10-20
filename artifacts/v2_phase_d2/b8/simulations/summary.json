@@ -1,0 +1,190 @@
+{
+  "a_non_responder": {
+    "profile": "a_non_responder",
+    "days": 311,
+    "premiumDays": 311,
+    "composedPremiumDays": 311,
+    "freeFallbackOnPremium": 0,
+    "stalls": 0,
+    "stageDays": 131,
+    "reviews": 21,
+    "stageFiveCases": {
+      "A": 28,
+      "B": 0,
+      "C": 0
+    },
+    "foundUsefulClaims": 0,
+    "lapse": {
+      "days": 0,
+      "aKeptCircleCouldStandIn": 0,
+      "usedAKeptCircle": 0
+    },
+    "duplicateProgress": 0,
+    "insights": {
+      "perFamily": {
+        "planForNeed": 10,
+        "planPacing": 0,
+        "skippedPart": 0,
+        "usefulInCommon": 0,
+        "planReview": 21,
+        "whatsChanged": 5
+      },
+      "weeksWithANewInsight": 15,
+      "silentWeeks": 38,
+      "cadenceViolations": [],
+      "sameClaimViolations": []
+    },
+    "variety": {
+      "composedDays": 311,
+      "distinctSessions": 211,
+      "distinctMaterial": 127,
+      "distinctMains": 18,
+      "firstExactRepeatDay": 34,
+      "medianDaysBetweenRepeats": 73,
+      "shortestRepeatGap": 15,
+      "longestRunOfSameSession": 1
+    },
+    "failures": []
+  },
+  "b_mixed_answerer": {
+    "profile": "b_mixed_answerer",
+    "days": 321,
+    "premiumDays": 321,
+    "composedPremiumDays": 321,
+    "freeFallbackOnPremium": 0,
+    "stalls": 0,
+    "stageDays": 107,
+    "reviews": 18,
+    "stageFiveCases": {
+      "A": 1,
+      "B": 4,
+      "C": 14
+    },
+    "foundUsefulClaims": 241,
+    "lapse": {
+      "days": 0,
+      "aKeptCircleCouldStandIn": 0,
+      "usedAKeptCircle": 0
+    },
+    "duplicateProgress": 0,
+    "insights": {
+      "perFamily": {
+        "planForNeed": 12,
+        "planPacing": 1,
+        "skippedPart": 0,
+        "usefulInCommon": 10,
+        "planReview": 18,
+        "whatsChanged": 6
+      },
+      "weeksWithANewInsight": 29,
+      "silentWeeks": 24,
+      "cadenceViolations": [],
+      "sameClaimViolations": []
+    },
+    "variety": {
+      "composedDays": 321,
+      "distinctSessions": 225,
+      "distinctMaterial": 111,
+      "distinctMains": 18,
+      "firstExactRepeatDay": 38,
+      "medianDaysBetweenRepeats": 67,
+      "shortestRepeatGap": 15,
+      "longestRunOfSameSession": 1
+    },
+    "failures": []
+  },
+  "c_more_energy_10": {
+    "profile": "c_more_energy_10",
+    "days": 365,
+    "premiumDays": 365,
+    "composedPremiumDays": 365,
+    "freeFallbackOnPremium": 0,
+    "stalls": 0,
+    "stageDays": 365,
+    "reviews": 75,
+    "stageFiveCases": {
+      "A": 14,
+      "B": 61,
+      "C": 0
+    },
+    "foundUsefulClaims": 0,
+    "lapse": {
+      "days": 0,
+      "aKeptCircleCouldStandIn": 0,
+      "usedAKeptCircle": 0
+    },
+    "duplicateProgress": 0,
+    "insights": {
+      "perFamily": {
+        "planForNeed": 10,
+        "planPacing": 0,
+        "skippedPart": 0,
+        "usefulInCommon": 1,
+        "planReview": 75,
+        "whatsChanged": 0
+      },
+      "weeksWithANewInsight": 11,
+      "silentWeeks": 42,
+      "cadenceViolations": [],
+      "sameClaimViolations": []
+    },
+    "variety": {
+      "composedDays": 365,
+      "distinctSessions": 52,
+      "distinctMaterial": 19,
+      "distinctMains": 6,
+      "firstExactRepeatDay": 23,
+      "medianDaysBetweenRepeats": 23,
+      "shortestRepeatGap": 8,
+      "longestRunOfSameSession": 1
+    },
+    "failures": []
+  },
+  "d_lapse_and_return": {
+    "profile": "d_lapse_and_return",
+    "days": 365,
+    "premiumDays": 245,
+    "composedPremiumDays": 245,
+    "freeFallbackOnPremium": 0,
+    "stalls": 0,
+    "stageDays": 97,
+    "reviews": 19,
+    "stageFiveCases": {
+      "A": 1,
+      "B": 5,
+      "C": 13
+    },
+    "foundUsefulClaims": 180,
+    "lapse": {
+      "days": 120,
+      "aKeptCircleCouldStandIn": 111,
+      "usedAKeptCircle": 111
+    },
+    "duplicateProgress": 0,
+    "insights": {
+      "perFamily": {
+        "planForNeed": 9,
+        "planPacing": 0,
+        "skippedPart": 0,
+        "usefulInCommon": 5,
+        "planReview": 19,
+        "whatsChanged": 0
+      },
+      "weeksWithANewInsight": 14,
+      "silentWeeks": 39,
+      "cadenceViolations": [],
+      "sameClaimViolations": []
+    },
+    "variety": {
+      "composedDays": 245,
+      "distinctSessions": 184,
+      "distinctMaterial": 116,
+      "distinctMains": 18,
+      "firstExactRepeatDay": 41,
+      "medianDaysBetweenRepeats": 59,
+      "shortestRepeatGap": 18,
+      "longestRunOfSameSession": 1
+    },
+    "failures": []
+  }
+}

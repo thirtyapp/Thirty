@@ -28,8 +28,8 @@ import 'package:thirty/features/personal_circle/domain/spoken_cues.dart';
 import 'package:thirty/features/personal_circle/presentation/keep_circle_card.dart';
 import 'package:thirty/features/personal_circle/presentation/kept_circle_page.dart';
 import 'package:thirty/features/personal_circle/presentation/use_today_control.dart';
-import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
-import 'package:thirty/features/toolkit/domain/toolkit_model.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/kept_circle.dart';
 
 /// V2 Phase D2 (ADR-023 §4–§8) — the composed Circle on Today, its running
 /// body, Skip and "Leave it out", keeping a Circle, a kept Circle's page,
@@ -446,7 +446,7 @@ void main() {
         _today(status: 'started', startedMinutesAgo: 2),
         clock: clock,
         extra: [
-          spokenGuidanceAvailableProvider.overrideWithValue(true),
+          bundledGuidanceVoicesProvider.overrideWithValue({ThirtyVoice.locke}),
           guidanceAudioPlayerProvider.overrideWithValue(player),
         ],
       );
@@ -455,7 +455,10 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       await tester.pump();
       expect(player.played, [
-        [for (final clip in spokenCueFor(_plan, 2)) clip.asset],
+        [
+          for (final clip in spokenCueFor(_plan, 2))
+            clip.assetFor(ThirtyVoice.locke),
+        ],
       ]);
       await _leave(tester, container);
     });
@@ -508,12 +511,83 @@ void main() {
       await _leave(tester, container);
     });
 
-    test('without the bundled recordings the voice is silent — this build '
-        'bundles none', () async {
-      final container = ProviderContainer();
+    test('this build bundles the four production voices, each complete: '
+        'exactly the 42 manifest clips and its own preview per voice, '
+        'nothing stale, nothing else', () async {
+      expect(
+        await bundledGuidanceVoices(rootBundle),
+        ThirtyVoice.values.toSet(),
+      );
+      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      final guidance = manifest
+          .listAssets()
+          .where((a) => a.startsWith('$spokenGuidanceAssetDir/'))
+          .toSet();
+      expect(guidance, {
+        for (final voice in ThirtyVoice.values) ...[
+          for (final clip in spokenGuidanceManifest) clip.assetFor(voice),
+          spokenPreviewFor(voice).assetFor(voice),
+        ],
+      });
+      expect(guidance, hasLength(4 * 43));
+    });
+
+    test('a voice is all or nothing: one missing clip, or one recorded for '
+        'an older script, silences that voice and no other', () {
+      final all = {
+        for (final voice in ThirtyVoice.values) ...[
+          for (final clip in spokenGuidanceManifest) clip.assetFor(voice),
+          spokenPreviewFor(voice).assetFor(voice),
+        ],
+      };
+      expect(completeGuidanceVoices(all), ThirtyVoice.values.toSet());
+      final missing = {...all}
+        ..remove(spokenEnding.assetFor(ThirtyVoice.heather));
+      expect(completeGuidanceVoices(missing), {
+        ThirtyVoice.locke,
+        ThirtyVoice.milo,
+        ThirtyVoice.brittney,
+      });
+      final stale = {...all}
+        ..remove(leadNext.assetFor(ThirtyVoice.milo))
+        ..add('${ThirtyVoice.milo.assetDir}/lead_next_00000000.m4a');
+      expect(completeGuidanceVoices(stale), isNot(contains(ThirtyVoice.milo)));
+      final noPreview = {...all}
+        ..remove(
+          spokenPreviewFor(ThirtyVoice.locke).assetFor(ThirtyVoice.locke),
+        );
+      expect(
+        completeGuidanceVoices(noPreview),
+        isNot(contains(ThirtyVoice.locke)),
+      );
+      expect(completeGuidanceVoices(const {}), isEmpty);
+    });
+
+    test('voice identities are stable and neutral — never gender', () {
+      expect(ThirtyVoice.values.map((v) => v.id), [
+        'voice_locke_v1',
+        'voice_heather_v1',
+        'voice_milo_v1',
+        'voice_brittney_v1',
+      ]);
+      expect(ThirtyVoice.values.map((v) => v.label), [
+        'Locke',
+        'Heather',
+        'Milo',
+        'Brittney',
+      ]);
+      for (final voice in ThirtyVoice.values) {
+        expect(voice.id, isNot(matches(RegExp('male|female|man|woman'))));
+        expect(voice.assetDir, '$spokenGuidanceAssetDir/${voice.id}');
+      }
+    });
+
+    test('without a bundled voice the voice is silent', () {
+      final container = ProviderContainer(
+        overrides: [bundledGuidanceVoicesProvider.overrideWithValue(const {})],
+      );
       addTearDown(container.dispose);
       expect(container.read(guidanceVoiceProvider).available, isFalse);
-      expect(await spokenGuidanceBundled(rootBundle), isFalse);
       expect(container.read(spokenGuidanceAvailableProvider), isFalse);
     });
 
@@ -524,7 +598,8 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
-          spokenGuidanceAvailableProvider.overrideWithValue(true),
+          bundledGuidanceVoicesProvider.overrideWithValue({ThirtyVoice.locke}),
+          premiumEntitlementProvider.overrideWithValue(true),
         ],
       );
       addTearDown(container.dispose);
@@ -745,7 +820,7 @@ void main() {
         tester,
         _today(status: 'started', startedMinutesAgo: 2),
         extra: [
-          spokenGuidanceAvailableProvider.overrideWithValue(true),
+          bundledGuidanceVoicesProvider.overrideWithValue({ThirtyVoice.locke}),
           guidanceAudioPlayerProvider.overrideWithValue(_RecordingPlayer()),
           guidanceSessionProvider.overrideWithValue(session),
         ],
@@ -788,7 +863,7 @@ void main() {
       expect(find.text(KeepCircleCopy.offer), findsOneWidget);
       await tester.tap(find.text(KeepCircleCopy.action));
       await tester.pumpAndSettle();
-      final kept = container.read(toolkitProvider).kept.single;
+      final kept = container.read(keptCirclesProvider).kept.single;
       expect(kept.plan, _plan);
       expect(kept.name, 'My clear-head Circle');
       expect(find.text(KeepCircleCopy.kept(kept.name)), findsOneWidget);
@@ -817,21 +892,21 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       final router = GoRouter(
-        initialLocation: '/toolkit/kept/kept-1',
+        initialLocation: KeptCirclePage.locationFor('kept-1'),
         routes: [
           GoRoute(
             path: '/',
             builder: (_, _) => const Scaffold(body: Text('TODAY')),
           ),
           GoRoute(
-            path: '/toolkit/kept/:id',
+            path: KeptCirclePage.pathPattern,
             builder: (_, state) =>
                 KeptCirclePage(keptId: state.pathParameters['id']!),
           ),
         ],
       );
       SharedPreferences.setMockInitialValues({
-        toolkitStateKey: jsonEncode(ToolkitState(kept: [kept]).toJson()),
+        keptCirclesKey: jsonEncode(keptCirclesRecord([kept])),
       });
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(

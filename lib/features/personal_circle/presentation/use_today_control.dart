@@ -18,24 +18,21 @@ abstract final class UseTodayCopy {
   static const unavailable = 'It can’t be used today.';
 }
 
-/// "Use it today" (V2 Phase D2, ADR-023 §8): makes one of the user's own
-/// routines ([routineId]) or kept Circles ([keptCircleId]) today's Circle.
-/// Free — what the user owns is theirs to use — and bounded: only before
-/// today's Circle starts, still one Circle a day, from the owned thing's own
-/// page (never a list on Today).
+/// "Use it today" (V2 Phase D2, ADR-023 §8): makes one of the user's kept
+/// Circles ([keptCircleId]) today's Circle. Free — what the user owns is
+/// theirs to use — and bounded: only before today's Circle starts, still one
+/// Circle a day, from the kept Circle's own page (never a list on Today).
 class UseTodayControl extends ConsumerWidget {
   const UseTodayControl({
-    this.routineId,
-    this.keptCircleId,
+    required this.keptCircleId,
     this.unavailableNote,
     super.key,
-  }) : assert((routineId == null) != (keptCircleId == null));
+  });
 
-  final String? routineId;
-  final String? keptCircleId;
+  final String keptCircleId;
 
-  /// Why it can't be used, when the page already knows (turned off, a
-  /// piece not suggested): shown instead of the button.
+  /// Why it can't be used, when the page already knows (a part the user
+  /// asked THIRTY not to suggest): shown instead of the button.
   final String? unavailableNote;
 
   @override
@@ -45,10 +42,7 @@ class UseTodayControl extends ConsumerWidget {
     final state = ref.watch(recommendationProvider);
     final today = state.recommendation;
     final isToday =
-        today != null &&
-        ((routineId != null && today.session?.routineId == routineId) ||
-            (keptCircleId != null &&
-                today.composed?.keptCircleId == keptCircleId));
+        today != null && today.composed?.keptCircleId == keptCircleId;
     String? note;
     if (isToday) {
       note = UseTodayCopy.isToday;
@@ -74,7 +68,7 @@ class UseTodayControl extends ConsumerWidget {
       onPressed: () {
         final result = ref
             .read(recommendationProvider.notifier)
-            .useOwnedToday(routineId: routineId, keptCircleId: keptCircleId);
+            .useOwnedToday(keptCircleId: keptCircleId);
         if (result == UseTodayResult.used) {
           context.go('/');
         } else {

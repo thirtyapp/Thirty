@@ -100,11 +100,17 @@ void main() {
     );
   });
 
-  test('H · Paced opens on the internal bench, never on Today', () {
+  test('H · Paced opens on the internal bench, never on Today; B6\'s '
+      'scenarios open on the Insights tab; every other '
+      'scenario on Today', () {
     expect(QaScenario.cPacedInternal.opensAt, PacedQaBenchPage.location);
     for (final scenario in QaScenario.values) {
       if (scenario == QaScenario.cPacedInternal) continue;
-      expect(scenario.opensAt, isNull, reason: scenario.wireName);
+      expect(
+        scenario.opensAt,
+        scenario.wireName.startsWith('e6_') ? '/insights' : isNull,
+        reason: scenario.wireName,
+      );
     }
   });
 

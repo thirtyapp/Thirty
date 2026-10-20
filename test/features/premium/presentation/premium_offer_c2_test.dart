@@ -62,7 +62,7 @@ Future<ProviderContainer> _pump(
   _FakeEntitlementGateway gateway, {
   bool initialize = true,
 }) async {
-  tester.view.physicalSize = const Size(412, 2400);
+  tester.view.physicalSize = const Size(412, 3000);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -105,8 +105,9 @@ void main() {
       final order = [
         find.text(PremiumOfferPage.headline),
         find.text(PremiumOfferPage.promise),
+        // A point reads "<name>: <line>".
         for (final (name, _) in PremiumOfferPage.points)
-          find.textContaining(name, findRichText: true),
+          find.textContaining('$name: ', findRichText: true),
         find.text(PremiumOfferPage.freeLine),
         find.text(r'$9.99 / month'),
         find.text('Billed monthly. Renews automatically until you cancel.'),

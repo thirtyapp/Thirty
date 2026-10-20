@@ -96,6 +96,13 @@ flutter:
     # The You header band (`you_header_art.dart`), one per daypart.
     - assets/you/
     - assets/brand/
+    # Spoken guidance (V2 Phase D2, ADR-023 §6): THIRTY's four production
+    # voices, each the complete 42-clip manifest in its own folder
+    # (`spoken_cues.dart`). A voice speaks only when all 42 are present.
+    - assets/audio/guidance/voice_locke_v1/
+    - assets/audio/guidance/voice_heather_v1/
+    - assets/audio/guidance/voice_milo_v1/
+    - assets/audio/guidance/voice_brittney_v1/
 
   fonts:
     - family: Inter

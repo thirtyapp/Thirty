@@ -1,0 +1,9 @@
+# Excluded from the D2 closure commit, with reasons. Never stage these.
+lib/core/world_rendering/quiet_trail_hero_asset_view.dart  # tracked; line-endings-only change (known unrelated, excluded since Phase C)
+AGENTS.md                                                  # untracked copy of CLAUDE.md for other agent tools (written 2026-10-13; only the file's own name differs); not product, not referenced
+android/build/                                             # build output
+build/                                                     # build output (ignored)
+artwork/                                                   # source artwork; excluded since Phase C
+assets/worlds/quiet_trail/quiet_trail_walk_card_morning_v1.png  # unreferenced older preview image (not in pubspec)
+assets/worlds/quiet_trail/quiet_trail_walk_hero_morning_v1.png  # unreferenced older preview image (not in pubspec)
+artifacts/ (all but the .md/.csv/.json/.txt files under artifacts/v2_phase_d2/)  # media (mp3/m4a/png/mp4), scripts (.py/.pyc) and earlier-phase QA captures (~820 MB); never committed in earlier phases

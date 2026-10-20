@@ -2,6 +2,10 @@
 
 **Status:** Accepted — founder approval 2026-10-10. **Partially superseded by [ADR-023](ADR-023-v2-recurring-premium-personal-guided-circle.md) (2026-10-11):** Premium's headline job, what Today does for a Premium user, and the offer page now follow ADR-023. ADR-023 also corrects three Phase D defects: the hidden routine rest from Path-trial answers (§5), the Toolkit check's "working well" claim (§6), and the time-misfit evidence wording (§6). Everything else below remains the record of Phase D as built.
 
+**Superseded by [ADR-024](ADR-024-v2-circle-plans-insights-and-four-tab-product.md) (founder decision 2026-10-17; Accepted at the D2 closure, 2026-10-21):**
+- **What is retired before public release:** Paths, routines, tune-ups, shorter routine versions, Toolkit maintenance and the Toolkit tab. Kept Circles become the only reusable owned object, managed in "Yours" under You. The navigation becomes Today | Plans | Insights | You.
+- **This ADR's status:** it stays accepted as the historical record of what Phase D built and why. It no longer describes a launch product.
+
 Product authority: [PRODUCT_V2_CONTRACT.md](../PRODUCT_V2_CONTRACT.md). This ADR records only how Phase D realises it. Review pack: `artifacts/v2_phase_d/` (CONTENT_REVIEW.md, SIMULATION_REVIEW.md, simulations/, device proofs).
 
 ## Decisions

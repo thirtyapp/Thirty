@@ -13,10 +13,16 @@ import '../../features/personal_circle/domain/circle_composer.dart';
 import '../../features/personal_circle/domain/circle_elements.dart';
 import '../../features/personal_circle/domain/composed_session.dart';
 import '../../features/home/domain/recommendation_engine.dart';
+import '../../features/insights/application/insights_provider.dart';
+import '../../features/insights/domain/insight.dart';
+import '../../features/insights/domain/insight_engine.dart';
+import '../../features/insights/presentation/insights_page.dart';
+import '../../features/personal_circle/domain/kept_circle.dart';
+import '../../features/personal_circle/application/kept_circles_provider.dart';
+import '../../features/plans/application/circle_plans_provider.dart';
+import '../../features/plans/domain/circle_plan.dart';
+import '../../features/plans/domain/plan_stage_provenance.dart';
 import '../../features/settings/application/first_name_provider.dart';
-import '../../features/toolkit/application/toolkit_provider.dart';
-import '../../features/toolkit/domain/maintenance.dart';
-import '../../features/toolkit/domain/path_catalog.dart';
 import '../analytics/analytics_service.dart';
 import '../dev_preview/paced_qa_bench_page.dart';
 import '../premium/premium_access.dart';
@@ -117,77 +123,12 @@ enum QaScenario {
   /// History plus preferences — to reset the preferences.
   cResetPreferences('c_reset_preferences', 'C-R · Reset preferences'),
 
-  // V2 Phase D (Premium) — Paths, the Toolkit and maintenance, A–N.
-
-  /// Two weeks of Free history, Move to music found very useful: the
-  /// Toolkit's first Path is seeded from it.
-  dFirstPath('d_first_path', 'D-A · First Path, seeded'),
-
-  /// A lift at home, two Circles in; today's More Energy Circle is its
-  /// Circle 3, which keeps the piece found useful.
-  dPathUnderWay('d_path_under_way', 'D-C · Path under way'),
-
-  /// A lift at home at Circle 5, after Circle 4 was "Not useful".
-  dPathAdapted('d_path_adapted', 'D-D · Path adapted'),
-
-  /// A lift at home, all seven Circles: its review is waiting.
-  dPathReview('d_path_review', 'D-F · Path review'),
-
-  /// The first routine, kept.
-  dRoutineSaved('d_routine_saved', 'D-G · First routine saved'),
-
-  /// The routine has evidence; a More Energy day picks it.
-  dRoutineDailyPick('d_routine_daily_pick', 'D-H · Routine as today’s pick'),
-
-  /// The same, but Move to music — a piece of the routine — was "Not
-  /// useful" six days ago: it is resting, so today is not the routine.
-  dRoutinePieceResting(
-    'd_routine_piece_resting',
-    'D-H2 · Routine piece resting',
-  ),
-
-  /// The same rest, lifted yesterday with "Suggest again": the routine is
-  /// eligible again.
-  dRoutineRestLifted('d_routine_rest_lifted', 'D-H3 · Routine rest lifted'),
-
-  /// Week 7: a 30-minute reset built on days with up to 30 minutes (its
-  /// shorter form turned down then), and about 20 minutes most Clearer Head
-  /// days lately.
-  dWeek7TimeMisfit('d_week7_time_misfit', 'D-I · Week 7, less time'),
-
-  /// A routine that used to suit, suiting less well lately.
-  dFading('d_fading', 'D-J · Fading routine'),
-
-  /// Its tune-up, two Circles in.
-  dTuneUpUnderWay('d_tune_up_under_way', 'D-J2 · Tune-up under way'),
-
-  /// Its tune-up, finished: version 2 waits for review.
-  dTuneUpReview('d_tune_up_review', 'D-J3 · Tune-up review'),
-
-  /// Four weeks of steady answers: the Toolkit check says so.
-  dStableCheck('d_stable_check', 'D-K · Stable check'),
-
-  /// Premium ended with a routine and a second Path under way.
-  dLapsed('d_lapsed', 'D-L · Lapsed, routine and Path kept'),
-
-  /// Month two: two routines — one from a gap — a shorter version, and
-  /// ordinary use.
-  dMonthTwo('d_month_two', 'D-M · Month two'),
-
-  /// Clearer Head chosen often, Free's picks for it rated weak, and no
-  /// routine for it.
-  dGap('d_gap', 'D-N · Gap'),
-
-  /// Clearer Head chosen just as often, but Free's picks for it rated
-  /// "Somewhat useful" every time: Free serves it — no gap offer.
-  dServedWell('d_served_well', 'D-N2 · Served well, no gap'),
-
   /// V2 Phase D2 (ADR-023): two weeks of Free, and Premium today — the
   /// first Personal Guided Circle is one choice of need and time away.
   d2FirstPremium('d2_first_premium', 'D2-A · First Premium Today'),
 
   /// A month of Personal Guided Circles: answers, a skipped part, a part
-  /// left out (Memory shows it), a kept Circle (Toolkit shows it).
+  /// left out (Memory shows it), a kept Circle (Yours shows it).
   d2Month('d2_month', 'D2-B · A month of Circles'),
 
   /// Today's composed Circle, started a few minutes ago: its second part
@@ -195,12 +136,81 @@ enum QaScenario {
   /// themselves.
   d2Running('d2_running', 'D2-C · Composed Circle running'),
 
-  /// Premium ended after a month of Circles, a routine and a kept Circle:
-  /// Today is Free's, and what the user owns is theirs to use today.
-  d2Lapsed('d2_lapsed', 'D2-D · Lapsed, kept Circle and routine'),
+  /// Premium ended after a month of Circles and a kept Circle: Today is
+  /// Free's, and what the user kept is theirs to use today.
+  d2Lapsed('d2_lapsed', 'D2-D · Lapsed, kept Circle'),
 
   /// The same user, subscribed again: composition returns.
-  d2Back('d2_back', 'D2-E · Back on Premium');
+  d2Back('d2_back', 'D2-E · Back on Premium'),
+
+  /// ADR-024 B3: the D2-E user with "Getting going" under way — stage 1
+  /// guided, stage 2 next. More Energy steers today's Circle; another need
+  /// doesn't. Walk it on INACTIVE for the lapse.
+  d3PlanStage('d3_plan_stage', 'D3-A · Plan, stage 2'),
+
+  /// ADR-024 B3: "Getting going" at stage 4 (Fresh air), with "Some fresh
+  /// air" left out: at ≈10 the stage is set aside and stage 5 is tried the
+  /// same day.
+  d3PlanSetAside('d3_plan_set_aside', 'D3-B · Plan, set aside'),
+
+  /// ADR-024 B4: "Making room" guided twice through, with mixed answers —
+  /// its review in Plans, compared with the first cycle, and a Circle to
+  /// keep from it.
+  d4PlanReview('d4_plan_review', 'D4-A · Plan review, two cycles'),
+
+  /// ADR-024 B9: "Slowing down" guided through once with no answer at all —
+  /// its review says so (case A), and its last stage was a mix of the
+  /// earlier ones.
+  d4PlanReviewUnanswered(
+    'd4_plan_review_unanswered',
+    'D4-B · Plan review, no answers',
+  ),
+
+  /// ADR-024 B9: "Making room" with every stage said Not useful — no last
+  /// Circle was made, and the review says why (case D).
+  d4PlanReviewNoneUseful(
+    'd4_plan_review_none_useful',
+    'D4-C · Plan review, none useful',
+  ),
+
+  /// ADR-024 B6: nothing yet — the empty calendar, opened on Insights.
+  e6Empty('e6_empty', 'E6-0 · Insights, nothing yet'),
+
+  /// ADR-024 B6: five weeks across the three needs — Circles closed in
+  /// THIRTY, Circles only recorded, days with none — and nothing for an
+  /// Insight to say: the calendar is the page. Free or Premium.
+  e6Calendar('e6_calendar', 'E6-A · Calendar, mixed dates'),
+
+  /// Five Circles in the last week and "Getting going" at stage 2: too soon
+  /// for a pattern; the Plan's place shows.
+  e6EarlyWeek('e6_early_week', 'E6-B · Week one, Plan under way'),
+
+  /// "Open a window" skipped in 3 of its last 4 Circles: I3 on opening.
+  e6SkippedPart('e6_skipped_part', 'E6-C · Insight: a part you skip'),
+
+  /// "Too much for today" on 3 of 5 "Getting going" days: I2 on opening.
+  e6Pacing('e6_pacing', 'E6-D · Insight: gentler Plan Circles'),
+
+  /// Writing in every Clearer Head Circle called useful, and none of the
+  /// others: I4 on opening, with a Circle to keep.
+  e6UsefulInCommon(
+    'e6_useful_in_common',
+    'E6-E · Insight: useful Circles shared',
+  ),
+
+  /// The same, with that Circle already kept: "Nothing to change".
+  e6NothingToChange(
+    'e6_nothing_to_change',
+    'E6-F · Insight: nothing to change',
+  ),
+
+  /// E6-C's history, an Insight shown yesterday and set aside — and Premium
+  /// has ended: everything readable, nothing new.
+  e6Lapsed('e6_lapsed', 'E6-G · Lapsed, earlier Insights'),
+
+  /// D4-A's two cycles of "Making room", opened on Insights: both reviews
+  /// as references to Plans.
+  e6PlanReview('e6_plan_review', 'E6-H · Plan reviews in Insights');
 
   const QaScenario(this.wireName, this.label);
 
@@ -208,14 +218,26 @@ enum QaScenario {
   final String label;
 
   /// Where the app opens for this scenario (V2 Phase C): the Paced bench
-  /// for its internal QA, otherwise Today.
-  String? get opensAt =>
-      this == QaScenario.cPacedInternal ? PacedQaBenchPage.location : null;
+  /// for its internal QA; the Insights tab for B6's;
+  /// otherwise Today.
+  String? get opensAt => switch (this) {
+    QaScenario.cPacedInternal => PacedQaBenchPage.location,
+    QaScenario.e6Empty ||
+    QaScenario.e6Calendar ||
+    QaScenario.e6EarlyWeek ||
+    QaScenario.e6SkippedPart ||
+    QaScenario.e6Pacing ||
+    QaScenario.e6UsefulInCommon ||
+    QaScenario.e6NothingToChange ||
+    QaScenario.e6Lapsed ||
+    QaScenario.e6PlanReview => InsightsPage.location,
+    _ => null,
+  };
 
   /// The entitlement this scenario is defined by, if any — a lapsed
   /// subscriber is inactive by definition.
   QaEntitlement? get fixedEntitlement =>
-      this == QaScenario.dLapsed || this == QaScenario.d2Lapsed
+      this == QaScenario.d2Lapsed || this == QaScenario.e6Lapsed
       ? QaEntitlement.inactive
       : null;
 }
@@ -237,14 +259,14 @@ class QaSession {
 
 /// Preferences a synthetic scenario carries over from the genuine store —
 /// appearance and name only, so screenshots look like the tester's own
-/// device. Never history, the Toolkit, reminder or analytics state.
+/// device. Never history, kept Circles, reminder or analytics state.
 const qaCarriedPreferenceKeys = {themeModeKey, firstNameKey};
 
 /// Builds [scenario]'s isolated store.
 ///
 /// [genuine] is only read. Synthetic history is written into the returned
 /// [QaSharedPreferences] alone, by running the production Circle and
-/// Toolkit notifiers through the scenario's scripted days, each relative
+/// kept-Circle notifiers through the scenario's scripted days, each relative
 /// to [referenceNow]'s local date (never on that date itself, so today's
 /// Circle stays open to walk live). The same inputs always produce the
 /// same store.
@@ -265,7 +287,70 @@ Future<QaSharedPreferences> buildQaStore({
   if (qaTodayFor(scenario) case final today?) {
     await _seedToday(store, referenceNow, today);
   }
+  await _seedPlans(store, referenceNow, scenario);
+  await _seedInsightsHistory(store, referenceNow, scenario);
   return store;
+}
+
+/// ADR-024 B3: the Circle Plan a scenario has under way — its earlier
+/// stages guided on earlier days — and, for the set-aside proof, "Some
+/// fresh air" left out.
+Future<void> _seedPlans(
+  QaSharedPreferences store,
+  DateTime referenceNow,
+  QaScenario scenario,
+) async {
+  final through = switch (scenario) {
+    QaScenario.d3PlanStage => 1,
+    QaScenario.d3PlanSetAside => 3,
+    _ => null,
+  };
+  if (through == null) return;
+  String daysAgo(int n) => dateKey(
+    DateTime(referenceNow.year, referenceNow.month, referenceNow.day - n),
+  );
+  var plans = CirclePlansState.empty.start('getting_going', today: daysAgo(9))!;
+  for (var n = 1; n <= through; n++) {
+    plans = plans.recordGuided(
+      PlanStageProvenance(
+        planId: 'getting_going',
+        cycleId: 'getting_going#1',
+        stageNumber: n,
+        stageId: 'getting_going.$n',
+      ),
+      circleId: 'qa-stage-$n',
+      today: daysAgo(9 - 2 * n),
+      parts: const [],
+      skipped: const [],
+    );
+  }
+  await store.setString(circlePlansKey, jsonEncode(plans.toJson()));
+  if (scenario == QaScenario.d3PlanSetAside) {
+    final preferences = SuggestionPreferences.fromRaw(
+      store.getString(suggestionPreferencesKey),
+    );
+    await store.setString(
+      suggestionPreferencesKey,
+      jsonEncode(
+        SuggestionPreferences(
+          notSuggested: preferences.notSuggested,
+          restsLifted: preferences.restsLifted,
+          elementsLeftOut: [
+            ...preferences.elementsLeftOut,
+            ElementLeftOut(
+              element: ElementId.daylight,
+              since: DateTime(
+                referenceNow.year,
+                referenceNow.month,
+                referenceNow.day - 1,
+                18,
+              ),
+            ),
+          ],
+        ).toJson(),
+      ),
+    );
+  }
 }
 
 /// V2 Phase C: today's Circle as a scenario needs it — offered, running
@@ -405,14 +490,6 @@ List<QaPreference> qaPreferencesFor(QaScenario scenario) => switch (scenario) {
     (
       activity: ActivityId.easyWalk,
       need: _gentle,
-      restLifted: true,
-      daysAgo: 1,
-    ),
-  ],
-  QaScenario.dRoutineRestLifted => [
-    (
-      activity: ActivityId.moveToMusic,
-      need: _energy,
       restLifted: true,
       daysAgo: 1,
     ),
@@ -601,9 +678,8 @@ Future<void> _seedToday(
 }
 
 /// One scripted day of synthetic history: what the tester would have done
-/// on the day [offsetDays] from the reference date.
-/// One scripted local day: the need chosen, the time, the answers — and,
-/// V2 Phase D, what the user did in the Toolkit that day.
+/// on the day [offsetDays] from the reference date — the need chosen, the
+/// time, the answers, and what they skipped, left out or kept.
 @immutable
 class QaScenarioDay {
   const QaScenarioDay(
@@ -616,18 +692,11 @@ class QaScenarioDay {
     this.replace,
     this.seeded,
     this.catalogVersion = _currentCatalogVersion,
-    this.startPath,
-    this.acceptOffer = false,
-    this.declineOffer = false,
-    this.keepProposal = false,
-    this.keepName,
-    this.seeCheck = false,
-    this.routine,
-    this.shortVersion = false,
-    this.noCircle = false,
     this.skipFirst = false,
     this.leaveOutFirst = false,
     this.keepCircle = false,
+    this.startPlan,
+    this.goThroughAgain,
   });
 
   /// Days relative to the reference date (negative: before it).
@@ -653,31 +722,6 @@ class QaScenarioDay {
   /// The catalogue version a [seeded] entry is recorded under.
   final int catalogVersion;
 
-  /// V2 Phase D: start this Path before the day's Circle.
-  final PathTemplateId? startPath;
-
-  /// V2 Phase D: accept — or decline — the Toolkit's one maintenance offer
-  /// before the day's Circle.
-  final bool acceptOffer;
-  final bool declineOffer;
-
-  /// V2 Phase D: after the day's Circle, keep what a finished Path proposes
-  /// (named [keepName]).
-  final bool keepProposal;
-  final String? keepName;
-
-  /// V2 Phase D: see the Toolkit check.
-  final bool seeCheck;
-
-  /// V2 Phase D: write a Circle of the user's routine number [routine]
-  /// (oldest first) straight into the journal — its [shortVersion] if
-  /// asked — instead of running the engine.
-  final int? routine;
-  final bool shortVersion;
-
-  /// V2 Phase D: Toolkit actions only — no Circle that day.
-  final bool noCircle;
-
   /// V2 Phase D2: on a composed Circle, skip its first part — or skip it
   /// and leave it out of future Circles.
   final bool skipFirst;
@@ -685,6 +729,12 @@ class QaScenarioDay {
 
   /// V2 Phase D2: after Close, keep the day's composed Circle.
   final bool keepCircle;
+
+  /// ADR-024 B4: the Plan started (or gone through again) that morning,
+  /// before today's need is chosen — through the Plan notifier, exactly as
+  /// the Plans page does it.
+  final String? startPlan;
+  final String? goThroughAgain;
 }
 
 const _currentCatalogVersion = catalogVersion;
@@ -705,6 +755,15 @@ const _gentle = Intention.gentlerPace;
 /// The scripted days behind each [QaScenario], oldest first.
 List<QaScenarioDay> qaScenarioDays(QaScenario scenario) => switch (scenario) {
   QaScenario.none || QaScenario.newUser => const [],
+  // ADR-024 B6: exact records, written by [_seedInsightsHistory].
+  QaScenario.e6Empty ||
+  QaScenario.e6Calendar ||
+  QaScenario.e6EarlyWeek ||
+  QaScenario.e6SkippedPart ||
+  QaScenario.e6Pacing ||
+  QaScenario.e6UsefulInCommon ||
+  QaScenario.e6NothingToChange ||
+  QaScenario.e6Lapsed => const [],
   QaScenario.freeNotUseful => const [
     QaScenarioDay(
       -4,
@@ -1040,171 +1099,6 @@ List<QaScenarioDay> qaScenarioDays(QaScenario scenario) => switch (scenario) {
       usefulness: _very,
     ),
   ],
-  QaScenario.dFirstPath => _freeHistory(-14),
-  QaScenario.dPathUnderWay => [
-    ..._freeHistory(-20),
-    ..._wakeUpBuild(-6, const [_very, _somewhat], window: _t10),
-    const QaScenarioDay(-2, _head, attempt: _yes, usefulness: _somewhat),
-  ],
-  QaScenario.dPathAdapted => [
-    ..._freeHistory(-26),
-    ..._wakeUpBuild(-12, const [_very, _somewhat, _very, _not]),
-    const QaScenarioDay(-2, _head, attempt: _yes, usefulness: _somewhat),
-  ],
-  QaScenario.dPathReview => [
-    ..._freeHistory(-30),
-    ..._wakeUpBuild(-16, _buildAnswers),
-  ],
-  QaScenario.dRoutineSaved => [
-    ..._freeHistory(-30),
-    ..._wakeUpBuild(-16, _buildAnswers, keep: true),
-  ],
-  QaScenario.dRoutineDailyPick => _routineDays(musicAnswer: _somewhat),
-  QaScenario.dRoutinePieceResting ||
-  QaScenario.dRoutineRestLifted => _routineDays(musicAnswer: _not),
-  QaScenario.dWeek7TimeMisfit => [
-    ..._freeHistory(-70),
-    // Weeks 1–2: Clear the decks on days with up to 30 minutes builds a
-    // 30-minute reset. Its shorter form (Circle 6) was "Not useful" then —
-    // there was time enough — so the routine has no shorter version.
-    ..._build(
-      PathTemplateId.clearTheDecks,
-      _head,
-      -56,
-      const [_very, _somewhat, _very, _very, _very, _not, _very],
-      window: TimeWindow.upTo30,
-      keep: true,
-    ),
-    // Weeks 3–5: used on Clearer Head days with up to 30 minutes.
-    for (final (offset, answer) in const [
-      (-38, _very),
-      (-34, _somewhat),
-      (-30, _very),
-      (-26, _somewhat),
-      (-22, _very),
-    ])
-      QaScenarioDay(
-        offset,
-        _head,
-        routine: 0,
-        window: TimeWindow.upTo30,
-        attempt: _yes,
-        usefulness: answer,
-      ),
-    // Weeks 6–7: about 20 minutes, most Clearer Head days.
-    for (final offset in const [-12, -9, -6, -4, -2])
-      QaScenarioDay(
-        offset,
-        _head,
-        window: TimeWindow.about20,
-        attempt: _yes,
-        usefulness: _somewhat,
-      ),
-  ],
-  QaScenario.dFading => [..._fadingHistory()],
-  QaScenario.dTuneUpUnderWay => [
-    ..._fadingHistory(),
-    const QaScenarioDay(-8, _energy, noCircle: true, acceptOffer: true),
-    const QaScenarioDay(
-      -6,
-      _energy,
-      window: TimeWindow.upTo30,
-      attempt: _yes,
-      usefulness: _very,
-    ),
-    const QaScenarioDay(
-      -4,
-      _energy,
-      window: TimeWindow.upTo30,
-      attempt: _yes,
-      usefulness: _somewhat,
-    ),
-  ],
-  QaScenario.dTuneUpReview => [
-    ..._fadingHistory(),
-    const QaScenarioDay(-8, _energy, noCircle: true, acceptOffer: true),
-    for (final (offset, answer) in const [
-      (-6, _very),
-      (-4, _somewhat),
-      (-2, _very),
-    ])
-      QaScenarioDay(
-        offset,
-        _energy,
-        window: TimeWindow.upTo30,
-        attempt: _yes,
-        usefulness: answer,
-      ),
-  ],
-  QaScenario.dStableCheck => [
-    ..._freeHistory(-74),
-    ..._wakeUpBuild(-60, _buildAnswers, keep: true),
-    for (var offset = -44; offset <= -4; offset += 4)
-      QaScenarioDay(
-        offset,
-        _energy,
-        routine: 0,
-        window: TimeWindow.about20,
-        attempt: _yes,
-        usefulness: offset % 8 == 0 ? _very : _somewhat,
-      ),
-  ],
-  QaScenario.dLapsed => [
-    ..._freeHistory(-60),
-    ..._wakeUpBuild(-46, _buildAnswers, keep: true),
-    const QaScenarioDay(
-      -20,
-      _head,
-      startPath: PathTemplateId.clearTheDecks,
-      window: TimeWindow.upTo30,
-      attempt: _yes,
-      usefulness: _very,
-    ),
-    const QaScenarioDay(
-      -18,
-      _head,
-      window: TimeWindow.upTo30,
-      attempt: _yes,
-      usefulness: _somewhat,
-    ),
-    // Premium ends: Free goes on, the Path waits.
-    const QaScenarioDay(
-      -10,
-      _head,
-      entitled: false,
-      attempt: _yes,
-      usefulness: _somewhat,
-    ),
-    const QaScenarioDay(
-      -6,
-      _energy,
-      entitled: false,
-      routine: 0,
-      window: TimeWindow.about20,
-      attempt: _yes,
-      usefulness: _very,
-    ),
-    const QaScenarioDay(-3, _gentle, entitled: false),
-  ],
-  QaScenario.dMonthTwo => _monthTwo(),
-  // Free's Clearer Head picks rated mostly "Not useful": a real gap.
-  QaScenario.dGap => _gapHistory(const [
-    _not,
-    _somewhat,
-    _not,
-    _not,
-    _somewhat,
-    _not,
-  ]),
-  // The same days, every pick "Somewhat useful": Free serves it.
-  QaScenario.dServedWell => _gapHistory(const [
-    _somewhat,
-    _somewhat,
-    _somewhat,
-    _somewhat,
-    _somewhat,
-    _somewhat,
-  ]),
   QaScenario.d2FirstPremium => [
     for (final day in _freeHistory(-15))
       QaScenarioDay(
@@ -1219,9 +1113,109 @@ List<QaScenarioDay> qaScenarioDays(QaScenario scenario) => switch (scenario) {
   ],
   QaScenario.d2Month ||
   QaScenario.d2Running => [..._freeHistory(-45), ..._composedMonth(-29)],
-  QaScenario.d2Lapsed || QaScenario.d2Back => [
+  QaScenario.d4PlanReview || QaScenario.e6PlanReview => [
     ..._freeHistory(-72),
-    ..._wakeUpBuild(-58, _buildAnswers, keep: true),
+    // Cycle 1: every stage guided, some answered.
+    const QaScenarioDay(
+      -40,
+      _head,
+      startPlan: 'making_room',
+      window: TimeWindow.about20,
+      attempt: _yes,
+      usefulness: _very,
+    ),
+    const QaScenarioDay(
+      -38,
+      _head,
+      window: TimeWindow.about20,
+      attempt: _yes,
+      usefulness: _somewhat,
+    ),
+    const QaScenarioDay(-36, _head, window: TimeWindow.about20),
+    const QaScenarioDay(
+      -34,
+      _head,
+      window: TimeWindow.about20,
+      attempt: _yes,
+      usefulness: _very,
+    ),
+    const QaScenarioDay(
+      -32,
+      _head,
+      window: TimeWindow.about20,
+      attempt: _yes,
+      usefulness: _somewhat,
+    ),
+    // Cycle 2: through again, answered differently.
+    const QaScenarioDay(
+      -20,
+      _head,
+      goThroughAgain: 'making_room',
+      window: TimeWindow.about20,
+      attempt: _yes,
+      usefulness: _very,
+    ),
+    const QaScenarioDay(
+      -18,
+      _head,
+      window: TimeWindow.about20,
+      attempt: _yes,
+      usefulness: _not,
+    ),
+    const QaScenarioDay(-16, _head, window: TimeWindow.about20),
+    const QaScenarioDay(
+      -14,
+      _head,
+      window: TimeWindow.about20,
+      attempt: _yes,
+      usefulness: _somewhat,
+    ),
+    const QaScenarioDay(
+      -12,
+      _head,
+      window: TimeWindow.about20,
+      attempt: _yes,
+      usefulness: _very,
+    ),
+  ],
+  QaScenario.d4PlanReviewUnanswered => [
+    ..._freeHistory(-72),
+    const QaScenarioDay(
+      -30,
+      _gentle,
+      startPlan: 'slowing_down',
+      window: TimeWindow.about20,
+    ),
+    for (final offset in const [-28, -26, -24, -22])
+      QaScenarioDay(offset, _gentle, window: TimeWindow.about20),
+  ],
+  QaScenario.d4PlanReviewNoneUseful => [
+    ..._freeHistory(-72),
+    const QaScenarioDay(
+      -30,
+      _head,
+      startPlan: 'making_room',
+      window: TimeWindow.about20,
+      attempt: _yes,
+      usefulness: _not,
+    ),
+    for (final offset in const [-28, -26, -24])
+      QaScenarioDay(
+        offset,
+        _head,
+        window: TimeWindow.about20,
+        attempt: _yes,
+        usefulness: _not,
+      ),
+    // The next Clearer Head day: no last Circle can be made, so the cycle
+    // ends at its review and today's Circle is the ordinary one.
+    const QaScenarioDay(-22, _head, window: TimeWindow.about20),
+  ],
+  QaScenario.d2Lapsed ||
+  QaScenario.d2Back ||
+  QaScenario.d3PlanStage ||
+  QaScenario.d3PlanSetAside => [
+    ..._freeHistory(-72),
     ..._composedMonth(-34),
     // Premium ended: Free days since.
     const QaScenarioDay(-3, _head, entitled: false, attempt: _yes),
@@ -1258,59 +1252,6 @@ List<QaScenarioDay> _composedMonth(int start) => [
         leaveOutFirst: i == 13,
         keepCircle: i == 20,
       ),
-];
-
-/// A pick-me-up built and kept, then ordinary More Energy days: something
-/// new, then Move to music (answered [musicAnswer]), then the stretch — so
-/// today, on any date, the routine (found useful as it was built) is the
-/// one pick that is ready again, and nothing new is due.
-List<QaScenarioDay> _routineDays({
-  required CircleUsefulnessResponse musicAnswer,
-}) => [
-  ..._freeHistory(-38),
-  ..._wakeUpBuild(-24, _buildAnswers, keep: true),
-  const QaScenarioDay(
-    -9,
-    _energy,
-    seeded: ActivityId.thirtyMinuteWalk,
-    window: TimeWindow.about20,
-  ),
-  QaScenarioDay(
-    -6,
-    _energy,
-    seeded: ActivityId.moveToMusic,
-    window: TimeWindow.about20,
-    attempt: _yes,
-    usefulness: musicAnswer,
-  ),
-  const QaScenarioDay(
-    -3,
-    _energy,
-    seeded: ActivityId.energisingStretchFlow,
-    window: TimeWindow.about20,
-    attempt: _yes,
-    usefulness: _somewhat,
-  ),
-  const QaScenarioDay(-2, _head, attempt: _yes, usefulness: _somewhat),
-];
-
-/// A pick-me-up built and kept, then Clearer Head chosen six times in four
-/// weeks with about 20 minutes, Free's picks answered [answers].
-List<QaScenarioDay> _gapHistory(List<CircleUsefulnessResponse> answers) => [
-  ..._freeHistory(-60),
-  ..._wakeUpBuild(-46, _buildAnswers, keep: true),
-  for (final (index, offset) in const [-26, -21, -16, -12, -8, -4].indexed)
-    QaScenarioDay(
-      offset,
-      _head,
-      // Free's own picks for Clearer Head, outside the Paths' pieces.
-      seeded: index.isEven
-          ? ActivityId.quietReading
-          : ActivityId.singleTaskFocus,
-      window: TimeWindow.about20,
-      attempt: _yes,
-      usefulness: answers[index],
-    ),
 ];
 
 /// Two weeks of Free history from [start]: More Energy most days, Move to
@@ -1379,165 +1320,11 @@ List<QaScenarioDay> _freeHistory(int start) => [
   ),
 ];
 
-/// The answers a whole A lift at home build gets in these scenarios.
-const _buildAnswers = [_very, _somewhat, _very, _very, _very, _somewhat, _very];
-
-/// A lift at home from [start] (see [_build]).
-List<QaScenarioDay> _wakeUpBuild(
-  int start,
-  List<CircleUsefulnessResponse?> answers, {
-  TimeWindow window = TimeWindow.about20,
-  bool keep = false,
-}) => _build(
-  PathTemplateId.wakeUpIndoors,
-  _energy,
-  start,
-  answers,
-  window: window,
-  keep: keep,
-);
-
-/// A wake-up routine that used to suit and lately suits less well.
-List<QaScenarioDay> _fadingHistory() => [
-  ..._freeHistory(-70),
-  ..._wakeUpBuild(-56, _buildAnswers, keep: true),
-  for (final (offset, answer) in const [
-    (-40, _very),
-    (-36, _very),
-    (-30, _somewhat),
-    (-24, _somewhat),
-    (-18, _not),
-    (-12, _somewhat),
-  ])
-    QaScenarioDay(
-      offset,
-      _energy,
-      routine: 0,
-      window: TimeWindow.about20,
-      attempt: _yes,
-      usefulness: answer,
-    ),
-];
-
-/// Month two: a wake-up routine built in weeks one and two; a Clearer Head
-/// reset built from a gap in weeks four and five; a 10-minute version of
-/// the reset for busier days in week seven; ordinary use since — and no new
-/// content anywhere.
-List<QaScenarioDay> _monthTwo() => [
-  ..._freeHistory(-84),
-  ..._wakeUpBuild(-70, _buildAnswers, keep: true),
-  // Weeks 3–4: Clearer Head often, with about 20 minutes, Free's picks
-  // for it mostly "Not useful" — and the pick-me-up in use.
-  for (final (offset, activity, answer) in const [
-    (-55, ActivityId.quietReading, _not),
-    (-50, ActivityId.singleTaskFocus, _somewhat),
-    (-46, ActivityId.singleTaskFocus, _not),
-    (-42, ActivityId.quietReading, _not),
-    (-38, ActivityId.singleTaskFocus, _somewhat),
-  ])
-    QaScenarioDay(
-      offset,
-      _head,
-      seeded: activity,
-      window: TimeWindow.about20,
-      attempt: _yes,
-      usefulness: answer,
-    ),
-  for (final (offset, answer) in const [(-53, _very), (-48, _somewhat)])
-    QaScenarioDay(
-      offset,
-      _energy,
-      routine: 0,
-      window: TimeWindow.about20,
-      attempt: _yes,
-      usefulness: answer,
-    ),
-  // The gap offer — Clear the decks — accepted, and built.
-  const QaScenarioDay(-36, _head, noCircle: true, acceptOffer: true),
-  for (final (index, answer) in const [
-    _very,
-    _somewhat,
-    _very,
-    _very,
-    _somewhat,
-    _not,
-    _very,
-  ].indexed)
-    QaScenarioDay(
-      -35 + index * 2,
-      _head,
-      window: TimeWindow.upTo30,
-      attempt: _yes,
-      usefulness: answer,
-      keepProposal: index == 6,
-      keepName: 'My desk reset',
-    ),
-  // Weeks 6–7: Clearer Head days with about 20 minutes.
-  for (final offset in const [-20, -18, -16, -14])
-    QaScenarioDay(
-      offset,
-      _head,
-      window: TimeWindow.about20,
-      attempt: _yes,
-      usefulness: _somewhat,
-    ),
-  // The time-misfit offer accepted: three Circles of a 20-minute version —
-  // both pieces, each short.
-  const QaScenarioDay(-13, _head, noCircle: true, acceptOffer: true),
-  for (final (index, answer) in const [_very, _somewhat, _very].indexed)
-    QaScenarioDay(
-      -12 + index * 2,
-      _head,
-      window: TimeWindow.about20,
-      attempt: _yes,
-      usefulness: answer,
-      keepProposal: index == 2,
-    ),
-  // Since then: ordinary days, both routines in use.
-  for (final (offset, need, routine, short, window) in const [
-    (-5, _energy, 0, false, TimeWindow.about20),
-    (-4, _head, 1, true, TimeWindow.about20),
-    (-2, _energy, 0, true, _t10),
-  ])
-    QaScenarioDay(
-      offset,
-      need,
-      routine: routine,
-      shortVersion: short,
-      window: window,
-      attempt: _yes,
-      usefulness: _somewhat,
-    ),
-];
-
-/// A whole build of [template] from [start], every other day — each a
-/// [need] Circle the Path claims. [keep] keeps the routine after the last.
-List<QaScenarioDay> _build(
-  PathTemplateId template,
-  Intention need,
-  int start,
-  List<CircleUsefulnessResponse?> answers, {
-  TimeWindow window = TimeWindow.about20,
-  bool keep = false,
-}) => [
-  for (final (index, answer) in answers.indexed)
-    QaScenarioDay(
-      start + index * 2,
-      need,
-      startPath: index == 0 ? template : null,
-      window: window,
-      attempt: answer == null ? null : _yes,
-      usefulness: answer,
-      keepProposal: keep && index == answers.length - 1,
-    ),
-];
-
 /// Runs one scripted day through the production notifiers, in a throwaway
-/// container over [store], with the clock fixed to that day: the Toolkit
-/// actions first, then the day's Circle (chosen by the real engine — or a
-/// Path step, which claims it on its own), its answers, and then keeping a
-/// finished Path. A [QaScenarioDay.seeded] or [QaScenarioDay.routine] day
-/// writes its Circle straight into the journal instead.
+/// container over [store], with the clock fixed to that day: the day's
+/// Circle (chosen by the real engine, or composed), its answers, and then
+/// keeping it. A [QaScenarioDay.seeded] day writes its Circle straight into
+/// the journal instead.
 Future<void> simulateQaDay(
   SharedPreferences store,
   DateTime referenceNow,
@@ -1551,10 +1338,6 @@ Future<void> simulateQaDay(
   );
   if (day.seeded case final activity?) {
     await _seedJournalEntry(store, morning, day, activity);
-    return;
-  }
-  if (day.routine case final index?) {
-    await _seedRoutineEntry(store, morning, day, index);
     return;
   }
   var clock = morning;
@@ -1571,52 +1354,37 @@ Future<void> simulateQaDay(
     ],
   );
   try {
-    final toolkit = container.read(toolkitProvider.notifier);
+    final kept = container.read(keptCirclesProvider.notifier);
     final circle = container.read(recommendationProvider.notifier);
+    final plans = container.read(circlePlansProvider.notifier);
+    if (day.startPlan case final id?) plans.start(id);
+    if (day.goThroughAgain case final id?) plans.goThroughAgain(id);
 
-    if (day.startPath case final template?) toolkit.startBuild(template);
-    final offer = container.read(primaryOfferProvider);
-    if (day.acceptOffer && offer != null) {
-      switch (offer.kind) {
-        case OfferKind.gap:
-          toolkit.startBuild(offer.template!);
-        case OfferKind.timeMisfit:
-          toolkit.startShorter(offer.routine!.id, offer.targetMinutes!);
-        case OfferKind.fading:
-          toolkit.startTuneUp(offer.routine!.id);
-      }
+    circle.chooseIntention(day.direction, window: day.window);
+    await _settle();
+    if (day.replace case final reason?) {
+      circle.replaceToday(reason);
+      await _settle();
     }
-    if (day.declineOffer && offer != null) toolkit.declineOffer(offer.key);
-    if (day.seeCheck) toolkit.seeCheck();
+
+    clock = morning.add(const Duration(minutes: 2));
+    circle.start();
+    await _settle();
+    if (day.skipFirst || day.leaveOutFirst) {
+      circle.skipPart(leaveOut: day.leaveOutFirst);
+      await _settle();
+    }
+    clock = morning.add(const Duration(minutes: 32));
+    circle.close();
     await _settle();
 
-    if (!day.noCircle) {
-      circle.chooseIntention(day.direction, window: day.window);
+    if (day.attempt case final attempt?) {
+      circle.reportAttempt(attempt);
       await _settle();
-      if (day.replace case final reason?) {
-        circle.replaceToday(reason);
-        await _settle();
-      }
-
-      clock = morning.add(const Duration(minutes: 2));
-      circle.start();
+    }
+    if (day.usefulness case final usefulness?) {
+      circle.reportUsefulness(usefulness);
       await _settle();
-      if (day.skipFirst || day.leaveOutFirst) {
-        circle.skipPart(leaveOut: day.leaveOutFirst);
-        await _settle();
-      }
-      clock = morning.add(const Duration(minutes: 32));
-      circle.close();
-      await _settle();
-
-      if (day.attempt case final attempt?) {
-        circle.reportAttempt(attempt);
-        await _settle();
-      }
-      if (day.usefulness case final usefulness?) {
-        circle.reportUsefulness(usefulness);
-        await _settle();
-      }
     }
 
     final composed = container
@@ -1624,73 +1392,16 @@ Future<void> simulateQaDay(
         .recommendation
         ?.composed;
     if (day.keepCircle && composed != null && !composed.isKept) {
-      toolkit.keepCircle(
+      kept.keepCircle(
         plan: composed.plan,
         need: day.direction,
         circleId: dateKey(morning),
       );
       await _settle();
     }
-    if (day.keepProposal &&
-        (container.read(toolkitProvider).path?.finished ?? false)) {
-      toolkit.keepProposal(name: day.keepName);
-      await _settle();
-    }
   } finally {
     container.dispose();
   }
-}
-
-/// A Circle of the user's routine number [index] — its active version, or
-/// its shorter one — written straight into [store]'s journal for [day], as
-/// the production notifier would have recorded it.
-Future<void> _seedRoutineEntry(
-  SharedPreferences store,
-  DateTime morning,
-  QaScenarioDay day,
-  int index,
-) async {
-  final routines = ToolkitRepository(store).read().routines;
-  if (index >= routines.length) return;
-  final routine = routines[index];
-  final version = day.shortVersion
-      ? (routine.shortVersion ?? routine.active)
-      : routine.active;
-  final date = dateKey(morning);
-  final entries = CircleJournalRepository(store).readAll()
-    ..add(
-      CircleJournalEntry(
-        schemaVersion: circleJournalSchemaVersion,
-        circleId: date,
-        localDate: date,
-        direction: day.direction,
-        activityId: version.composition.anchor,
-        catalogVersion: catalogVersion,
-        shownAt: morning,
-        startedAt: morning.add(const Duration(minutes: 2)),
-        closedAt: morning.add(Duration(minutes: 2 + version.minutes)),
-        attemptResponse: day.attempt,
-        usefulnessResponse: day.usefulness,
-        timeWindow: day.window?.name,
-        offeredMinutes: version.minutes,
-        reasonCode: RecommendationReason.bestFit.name,
-        minutesAtClose: version.minutes,
-        session: CircleSessionRecord(
-          title: routine.name,
-          modules: version.composition.toWire(),
-          routineId: routine.id,
-          routineVersionId: version.id,
-          routineVersionNumber: version.number,
-        ),
-      ),
-    );
-  await store.setString(
-    circleJournalKey,
-    jsonEncode({
-      'schemaVersion': circleJournalSchemaVersion,
-      'entries': [for (final e in entries) e.toJson()],
-    }),
-  );
 }
 
 /// Lets the notifiers' fire-and-forget writes (all in-memory here) finish
@@ -1730,4 +1441,247 @@ Future<void> _seedJournalEntry(
       'entries': [for (final e in entries) e.toJson()],
     }),
   );
+}
+
+// ---------------------------------------------------------------------------
+// ADR-024 B6: the Insights surface's scenarios — exact records, so each
+// state (and each Insight family's evidence) is the same on every device.
+
+/// One B6 day: what was recorded, and whether it was closed in THIRTY.
+@immutable
+class _InsightsDay {
+  const _InsightsDay(
+    this.offsetDays,
+    this.need, {
+    this.parts = const [],
+    this.skipped = const [],
+    this.answer,
+    this.closed = true,
+    this.stage,
+    this.tooMuch = false,
+  });
+
+  final int offsetDays;
+  final Intention need;
+
+  /// A composed Circle's parts (wire form); empty: one activity.
+  final List<String> parts;
+  final List<String> skipped;
+  final CircleUsefulnessResponse? answer;
+
+  /// Closed in THIRTY — or only recorded.
+  final bool closed;
+
+  /// "Getting going" (cycle 1) stage the day's Circle was composed for — or,
+  /// with [tooMuch], the stage "Not this one today" replaced.
+  final int? stage;
+  final bool tooMuch;
+}
+
+const _windowParts = ['openWindow:1', 'standingStretch:5', 'sitAMinute:2'];
+const _musicParts = ['songOn:1', 'moveToMusic:8', 'shakeOut:1'];
+const _readingParts = ['phoneFaceDown:1', 'readPages:10'];
+const _writingParts = [
+  'closeWhatsOpen:3',
+  'getItOut:6',
+  'chooseOne:1',
+  'firstStep:2',
+];
+const _quietParts = ['comfortableSpot:1', 'quietMusic:10', 'sitAMinute:2'];
+
+List<String> _partsFor(Intention need, int i) => switch (need) {
+  Intention.moreEnergy => i.isEven ? _windowParts : _musicParts,
+  Intention.clearerHead => i.isEven ? _readingParts : _writingParts,
+  Intention.gentlerPace => _quietParts,
+};
+
+List<_InsightsDay>? _insightsDays(QaScenario scenario) => switch (scenario) {
+  // Five weeks, the three needs in turn; a day in five without a Circle,
+  // a Circle in four only recorded.
+  QaScenario.e6Calendar => [
+    for (var i = 0; i < 34; i++)
+      if (i % 5 != 3)
+        _InsightsDay(
+          -34 + i,
+          Intention.values[i % 3],
+          parts: _partsFor(Intention.values[i % 3], i),
+          closed: i % 4 != 1,
+        ),
+  ],
+  QaScenario.e6EarlyWeek => [
+    const _InsightsDay(-6, _energy, parts: _musicParts, answer: _somewhat),
+    const _InsightsDay(-5, _energy, parts: _windowParts, stage: 1),
+    const _InsightsDay(-3, _head, parts: _readingParts, answer: _very),
+    const _InsightsDay(-2, _energy, parts: _musicParts, closed: false),
+    const _InsightsDay(-1, _gentle, parts: _quietParts, answer: _somewhat),
+  ],
+  QaScenario.e6SkippedPart || QaScenario.e6Lapsed => [
+    for (final o in [-16, -14, -12, -10, -8, -6])
+      _InsightsDay(o, _head, parts: _readingParts),
+    for (final o in [-15, -11, -7, -3])
+      _InsightsDay(
+        o,
+        _energy,
+        parts: _windowParts,
+        skipped: o == -11 ? const [] : const ['openWindow'],
+      ),
+    const _InsightsDay(-2, _head, parts: _readingParts, closed: false),
+  ],
+  QaScenario.e6Pacing => [
+    const _InsightsDay(-17, _energy, stage: 1, tooMuch: true),
+    const _InsightsDay(-14, _energy, parts: _windowParts, stage: 1),
+    const _InsightsDay(-11, _energy, stage: 2, tooMuch: true),
+    const _InsightsDay(-8, _energy, parts: _musicParts, stage: 2),
+    const _InsightsDay(-4, _energy, stage: 3, tooMuch: true),
+    const _InsightsDay(-2, _head, parts: _readingParts),
+  ],
+  QaScenario.e6UsefulInCommon || QaScenario.e6NothingToChange => [
+    for (final (k, o) in [-20, -15, -10, -5].indexed)
+      _InsightsDay(
+        o,
+        _head,
+        parts: _writingParts,
+        answer: k.isEven ? _very : _somewhat,
+      ),
+    for (final o in [-18, -12, -7])
+      _InsightsDay(o, _head, parts: _readingParts),
+  ],
+  _ => null,
+};
+
+PlanStageProvenance _gettingGoing(int stage) => PlanStageProvenance(
+  planId: 'getting_going',
+  cycleId: 'getting_going#1',
+  stageNumber: stage,
+  stageId: 'getting_going.$stage',
+);
+
+CircleJournalEntry _insightsEntry(_InsightsDay day, DateTime morning) {
+  final date = dateKey(morning);
+  final plan = day.parts.isEmpty ? null : CirclePlan.fromWire(day.parts)!;
+  final stage = day.stage == null ? null : _gettingGoing(day.stage!);
+  return CircleJournalEntry(
+    schemaVersion: circleJournalSchemaVersion,
+    circleId: date,
+    localDate: date,
+    direction: day.need,
+    activityId: plan?.main.definition.art ?? ActivityId.moveToMusic,
+    catalogVersion: catalogVersion,
+    shownAt: morning,
+    startedAt: day.closed ? morning.add(const Duration(minutes: 2)) : null,
+    closedAt: day.closed ? morning.add(const Duration(minutes: 32)) : null,
+    attemptResponse: day.answer == null ? null : _yes,
+    usefulnessResponse: day.answer,
+    timeWindow: TimeWindow.about20.name,
+    offeredMinutes: plan?.minutes ?? 20,
+    reasonCode: plan == null
+        ? RecommendationReason.bestFit.name
+        : RecommendationReason.personalCircle.name,
+    replacedFrom: day.tooMuch ? ActivityId.energisingStretchFlow : null,
+    replacementReason: day.tooMuch ? ReplacementReason.tooMuch.name : null,
+    replacedFromStage: day.tooMuch ? stage : null,
+    minutesAtClose: day.closed ? 30 : null,
+    session: plan == null
+        ? null
+        : CircleSessionRecord(
+            title: ComposedCopy.title,
+            parts: day.parts,
+            skipped: day.skipped,
+            planStage: day.tooMuch ? null : stage,
+          ),
+  );
+}
+
+/// ADR-024 B6: writes [scenario]'s exact records, its Plan, kept Circle and
+/// earlier Insight — each relative to [referenceNow], never on that day.
+Future<void> _seedInsightsHistory(
+  QaSharedPreferences store,
+  DateTime referenceNow,
+  QaScenario scenario,
+) async {
+  final days = _insightsDays(scenario);
+  if (days == null) return;
+  DateTime morning(int offset) => DateTime(
+    referenceNow.year,
+    referenceNow.month,
+    referenceNow.day + offset,
+    9,
+  );
+  String on(int offset) => dateKey(morning(offset));
+  final entries = [
+    for (final d in days) _insightsEntry(d, morning(d.offsetDays)),
+  ];
+  await store.setString(
+    circleJournalKey,
+    jsonEncode({
+      'schemaVersion': circleJournalSchemaVersion,
+      'entries': [for (final e in entries) e.toJson()],
+    }),
+  );
+
+  // "Getting going" under way: stage 1 guided (E6-B), or stages 1–2 (E6-D).
+  final guided = switch (scenario) {
+    QaScenario.e6EarlyWeek => const [(1, -5)],
+    QaScenario.e6Pacing => const [(1, -14), (2, -8)],
+    _ => null,
+  };
+  if (guided != null) {
+    var plans = CirclePlansState.empty.start(
+      'getting_going',
+      today: on(guided.first.$2 - 3),
+    )!;
+    for (final (stage, offset) in guided) {
+      plans = plans.recordGuided(
+        _gettingGoing(stage),
+        circleId: on(offset),
+        today: on(offset),
+        parts: [
+          for (final d in days)
+            if (d.offsetDays == offset) ...d.parts,
+        ],
+        skipped: const [],
+      );
+    }
+    await store.setString(circlePlansKey, jsonEncode(plans.toJson()));
+  }
+
+  // E6-F: the Circle I4 would offer to keep is kept already.
+  if (scenario == QaScenario.e6NothingToChange) {
+    await store.setString(
+      keptCirclesKey,
+      jsonEncode(
+        keptCirclesRecord([
+          KeptCircle(
+            id: 'qa-kept-writing',
+            name: keptCircleDefaultName(_head),
+            need: _head,
+            plan: CirclePlan.fromWire(_writingParts)!,
+            createdAt: morning(-5).add(const Duration(minutes: 40)),
+            fromCircleId: on(-5),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  // E6-G: yesterday THIRTY showed an Insight, and the user set it aside.
+  if (scenario == QaScenario.e6Lapsed) {
+    final yesterday = morning(-1);
+    final shown = assessInsights(
+      InsightInputs(
+        today: yesterday,
+        circles: [for (final e in entries) InsightCircle.fromJournal(e)],
+      ),
+      const [],
+      generate: true,
+    ).added;
+    await store.setString(
+      insightsKey,
+      jsonEncode(
+        InsightsState([
+          for (final s in shown) s.copyWith(notNowOn: on(-1)),
+        ]).toJson(),
+      ),
+    );
+  }
 }

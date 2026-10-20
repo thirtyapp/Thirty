@@ -1,0 +1,28 @@
+10-17 09:45:03.501 31429 31429 I flutter : QA-VOICE play [assets/audio/guidance/voice_heather_v1/lead_first_d97b30dd.m4a, assets/audio/guidance/voice_heather_v1/part_phoneFaceDown_312eb0f5.m4a] defer=false
+10-17 09:45:03.502  3044  7559 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:45:03.502  3044  7690 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/31429 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH 
+10-17 09:45:16.353  3044  7690 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:45:41.965 31429 31429 I flutter : QA-VOICE play [assets/audio/guidance/voice_heather_v1/lead_next_df1d69d2.m4a, assets/audio/guidance/voice_heather_v1/part_oneTask_80701d4c.m4a] defer=true
+10-17 09:45:41.969  3044  7559 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:45:41.969  3044  7559 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/31429 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH 
+10-17 09:45:56.842  3044  7690 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:46:05.666 31429 31429 I flutter : QA-VOICE play [assets/audio/guidance/voice_heather_v1/lead_next_df1d69d2.m4a, assets/audio/guidance/voice_heather_v1/part_getItOut_a239320e.m4a] defer=true
+10-17 09:46:05.670  3044  7559 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:46:05.671  3044  7762 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/31429 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH 
+10-17 09:46:16.390  3044  7764 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:46:25.749 31429 31429 I flutter : QA-VOICE play [assets/audio/guidance/voice_heather_v1/lead_next_df1d69d2.m4a, assets/audio/guidance/voice_heather_v1/part_gentleStretch_052b8910.m4a] defer=true
+10-17 09:46:25.753  3044  7762 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:46:25.753  3044  7559 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/31429 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH 
+10-17 09:46:43.614  3044  7559 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:47:14.764 31429 31429 I flutter : QA-VOICE play [assets/audio/guidance/voice_brittney_v1/lead_first_d97b30dd.m4a, assets/audio/guidance/voice_brittney_v1/part_phoneFaceDown_312eb0f5.m4a] defer=false
+10-17 09:47:14.766  3044  7764 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:47:14.766  3044  7764 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/31429 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH 
+10-17 09:47:29.706  3044  7559 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:47:44.459 31429 31429 I flutter : QA-VOICE play [assets/audio/guidance/voice_brittney_v1/lead_last_7663f978.m4a, assets/audio/guidance/voice_brittney_v1/part_sitAMinute_c80c3b07.m4a] defer=true
+10-17 09:47:44.463  3044  7740 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:47:44.464  3044  4678 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/31429 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH 
+10-17 09:47:54.111  3044  7764 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:48:03.038 31429 31429 I flutter : QA-VOICE play [assets/audio/guidance/voice_brittney_v1/close_3b06cf13.m4a] defer=true
+10-17 09:48:03.042  3044  7559 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 
+10-17 09:48:03.043  3044  7559 I MediaFocusControl: requestAudioFocus() from uid/pid 10254/31429 AA=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE/CONTENT_TYPE_SPEECH 
+10-17 09:48:08.054  3044  5096 I MediaFocusControl: abandonAudioFocus() from uid/pid 10254/31429 

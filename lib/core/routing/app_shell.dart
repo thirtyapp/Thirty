@@ -3,14 +3,17 @@ import 'package:go_router/go_router.dart';
 
 import '../theme/design_tokens.dart';
 
-/// THIRTY's primary navigation shell: **Today | Toolkit | You** (V2
-/// Phase D).
+/// THIRTY's primary navigation shell — **Today | Plans | Insights | You**
+/// (ADR-024 §2, B7), the frozen IA.
 ///
-/// The V1 Plans and Insights destinations are retired: Premium is one
-/// Toolkit (the Path under way, maintenance, the user's routines), and the
-/// history Insights used to host is reached from You. "You" is a calm
-/// personal-control hub ("my THIRTY experience and data"), never an
-/// account/profile/social-identity system.
+/// One job per tab: Today, what to do now; Plans, where several Circles are
+/// going; Insights, what the user's own record shows and one useful change;
+/// You, what is theirs and how THIRTY behaves. Phase D's Toolkit is retired
+/// before release; the Circles the user kept live in Yours, under You.
+/// Every tab opens on Free too: a tab never opens the Premium offer and
+/// carries no badge or lock. "You" is a calm personal-control hub ("my
+/// THIRTY experience and data"), never an account/profile/social-identity
+/// system.
 ///
 /// [navigationShell] gives each branch its own independent `Navigator`,
 /// preserved across tab switches (`StatefulShellRoute.indexedStack`'s own
@@ -26,8 +29,8 @@ import '../theme/design_tokens.dart';
 ///
 /// Phase A3: the bar floats inside a [FloatingNavSurface] inset from the
 /// screen edges, rather than as a full-width band. Only its container
-/// changed — it is still the same [NavigationBar], with the same four
-/// destinations, labels, icons and `goBranch` behavior. The side margin is
+/// changed — it is still the same [NavigationBar], with the same
+/// labels, icons and `goBranch` behavior. The side margin is
 /// deliberately `AppSpacing.m`, not the page gutter: at 200% text on a
 /// 360pt screen every label must still fit, and the rule is to give up
 /// margin before ever hiding or shrinking a label.
@@ -68,12 +71,18 @@ class AppShell extends StatelessWidget {
                   selectedIcon: TodayRingIcon(selected: true),
                   label: 'Today',
                 ),
-                // V2 Phase D: the Toolkit — Paths build routines; a path,
-                // not a toolbox, as its mark.
+                // ADR-024 B4: a direction over several Circles — a
+                // signpost, never a progress ring.
                 NavigationDestination(
-                  icon: Icon(Icons.route_outlined),
-                  selectedIcon: Icon(Icons.route),
-                  label: 'Toolkit',
+                  icon: Icon(Icons.signpost_outlined),
+                  selectedIcon: Icon(Icons.signpost),
+                  label: 'Plans',
+                ),
+                // The Phase D1 Insights icon (founder-approved shell).
+                NavigationDestination(
+                  icon: Icon(Icons.insights_outlined),
+                  selectedIcon: Icon(Icons.insights),
+                  label: 'Insights',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.person_outline),

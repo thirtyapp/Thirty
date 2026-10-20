@@ -189,9 +189,8 @@ void main() {
     tearDown(() => appRouter.go('/'));
 
     for (final location in [
-      '/toolkit/paths/wakeUpIndoors',
-      '/toolkit/review',
-      '/toolkit/routine/any',
+      '/settings/yours',
+      '/settings/yours/kept/any',
       '/premium',
       '/history',
       '/history/2026-09-01',
@@ -212,16 +211,6 @@ void main() {
       expect(find.byType(AppBar), findsNothing);
       expect(find.byType(ThirtyAppBar), findsNothing);
       expect(find.byType(HomeHeader), findsOneWidget);
-    });
-
-    testWidgets('the Toolkit has no pinned bar either: like Home and You, '
-        'its header scrolls with the page (V2 Phase D)', (tester) async {
-      await pumpApp(tester);
-      appRouter.go('/toolkit');
-      await tester.pumpAndSettle();
-      expect(find.byType(AppBar), findsNothing);
-      expect(find.byType(ThirtyAppBar), findsNothing);
-      expect(find.text('Routines and Circles that are yours.'), findsOneWidget);
     });
 
     testWidgets('You has no pinned bar either: its header scrolls with the '

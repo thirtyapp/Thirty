@@ -8,6 +8,7 @@ import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_app_bar.dart';
 import '../../../core/widgets/thirty_button.dart';
 import '../../../core/widgets/thirty_card.dart';
+import '../../personal_circle/application/guidance_voice.dart';
 import 'widgets/manage_subscription.dart';
 import 'widgets/premium_restore_footer.dart';
 
@@ -22,7 +23,8 @@ import 'widgets/premium_restore_footer.dart';
 /// interstitial, no forced paywall on Free Circle launch (§12).
 ///
 /// Answers, in order and without clutter: what you get (the value card —
-/// since V2 Phase D2, the Personal Guided Circle each day), what it costs
+/// since B7, the three continuing jobs: the Personal Guided Circle, Circle
+/// Plans and Insights, with spoken guidance supporting), what it costs
 /// (the store's own localized monthly price, never a hardcoded figure),
 /// that it renews monthly until cancelled (the disclosure directly under
 /// the price), what Free still gives (next to the quiet "Not now"
@@ -37,52 +39,93 @@ import 'widgets/premium_restore_footer.dart';
 class PremiumOfferPage extends ConsumerStatefulWidget {
   const PremiumOfferPage({super.key});
 
-  /// V2 Phase D2 (ADR-023 §11): what Premium does — every day it is used.
-  /// Draft for founder review; no outcome is promised. True from a
-  /// subscriber's first day: it never claims THIRTY already knows what they
-  /// found useful — only Today's Circle says that, and only with evidence.
+  /// B7 (ADR-024 §1): what Premium does, as the launch service is built —
+  /// three continuing jobs: today's guided Circle, a Plan's direction over
+  /// several Circles, and Insights from the user's own record. Draft for
+  /// founder review; no outcome is promised. True from a subscriber's first
+  /// day: Insights wait until there is enough to go on, and the offer never
+  /// claims THIRTY already knows what they found useful — only Today's
+  /// Circle says that, and only with evidence. The headline is the approved
+  /// D2 one; the promise under it names the jobs over the weeks.
   static const headline = 'A Circle made for your day';
   static const promise =
-      'From your first day, THIRTY turns the time you have into one guided '
-      'Circle — a few small parts, one after another — and takes you '
-      'through it.';
+      'One guided Circle for today, made from the time you have — and, over '
+      'the weeks, a direction for your Circles and what they show.';
 
-  /// What Free still gives — never weakened.
+  /// What Free still gives — never weakened, and never a trial.
   static const freeLine =
       'With Free, THIRTY still gives you one good thing for today, and '
-      'learns from what you tell it.';
+      'learns from what you tell it. What it remembers, your History, the '
+      'Circles you keep and reminders stay free.';
 
-  /// V2 Phase D2: the recurring job first; owning things is a supporting
-  /// benefit, and upkeep is no reason to subscribe.
+  /// The three jobs, then the guidance and the answers that serve them.
+  /// Owning things is no Premium benefit: what the user keeps is theirs
+  /// either way, said below the purchase and in [lapseLine].
+  ///
+  /// Founder decision (2026-10-12): "Made for you" / "Guided for you".
+  /// Accessibility is never one of the services. These are the words for a
+  /// build without THIRTY's voice; [voicedPoints] for one with it, so the
+  /// page never promises a voice the build can't play.
   static const points = [
     (
-      'Made each day',
+      'Made for you',
       'tell THIRTY what would help most and how much time you have, and it '
-          'puts together one Circle for today, sized to that time',
+          'puts together a new Circle for today, sized to that time',
     ),
     (
-      'Guided through',
+      'Guided for you',
       'one part at a time, moving on when each part’s time is up — nothing '
           'to plan or keep track of',
+    ),
+    // ADR-024 §4: in the words of the frozen Plan copy.
+    (
+      'Plans to follow',
+      'each Plan is five Circles with a direction, on the days you choose its '
+          'need',
+    ),
+    // ADR-024 §11: one supported observation, one optional change.
+    (
+      'Insights',
+      'when your own Circles and answers show something, THIRTY says what it '
+          'noticed, and may suggest one change for you to make or leave',
     ),
     (
       'Shaped by your answers',
       'tell THIRTY what was useful and later Circles can bring it back; '
-          'what you leave out stays out — all of it visible in What THIRTY '
-          'remembers',
-    ),
-    (
-      'Yours to keep',
-      'keep a Circle you like, or build a routine with a Path — what you '
-          'keep stays yours, with or without Premium',
+          'what you leave out stays out',
     ),
   ];
 
-  /// What changes, truthfully, if Premium ends.
+  /// [points] in a build with THIRTY's voice: the guided service says what
+  /// the voice does.
+  static final voicedPoints = [
+    points[0],
+    (
+      'Guided for you',
+      'THIRTY’s own voice tells you when each part begins, so you needn’t '
+          'keep watching the screen',
+    ),
+    ...points.skip(2),
+  ];
+
+  /// What changes, truthfully, if Premium ends: new Premium work stops;
+  /// nothing the user has is taken.
   static const lapseLine =
       'You can cancel anytime in Google Play. Premium stays active until the '
       'end of your current billing period. After that, Today goes back to '
-      'one good thing a day, and everything you kept stays yours.';
+      'one good thing a day. A Plan keeps its place. The Insights you’ve '
+      'seen stay readable, and your History and everything you kept stay '
+      'yours.';
+
+  /// [lapseLine] in a build with THIRTY's voice: kept Circles stay whole,
+  /// and run on screen without the voice.
+  static const voicedLapseLine =
+      'You can cancel anytime in Google Play. Premium stays active until the '
+      'end of your current billing period. After that, Today goes back to '
+      'one good thing a day. A Plan keeps its place. The Insights you’ve '
+      'seen stay readable, and your History and everything you kept stay '
+      'yours — kept Circles with their parts and timing on screen, without '
+      'THIRTY’s voice.';
 
   @override
   ConsumerState<PremiumOfferPage> createState() => _PremiumOfferPageState();
@@ -130,7 +173,10 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
     final quiet = textTheme.bodySmall?.copyWith(color: colors.textSecondary);
 
     return Scaffold(
-      appBar: const ThirtyAppBar(title: Text('THIRTY Premium')),
+      appBar: const ThirtyAppBar(
+        title: Text('THIRTY Premium'),
+        parentLocation: '/',
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.page),
@@ -175,7 +221,12 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
             const SizedBox(height: AppSpacing.l),
             PremiumRestoreFooter(horizontalInset: 0, enabled: !_isPurchasing),
             const SizedBox(height: AppSpacing.s),
-            Text(PremiumOfferPage.lapseLine, style: quiet),
+            Text(
+              ref.watch(spokenGuidanceAvailableProvider)
+                  ? PremiumOfferPage.voicedLapseLine
+                  : PremiumOfferPage.lapseLine,
+              style: quiet,
+            ),
           ],
         ),
       ),
@@ -183,20 +234,23 @@ class _PremiumOfferPageState extends ConsumerState<PremiumOfferPage> {
   }
 }
 
-/// What you get: the paid job, in its three points.
-class _ValueCard extends StatelessWidget {
+/// What you get: the paid job, in its points.
+class _ValueCard extends ConsumerWidget {
   const _ValueCard();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
+    final points = ref.watch(spokenGuidanceAvailableProvider)
+        ? PremiumOfferPage.voicedPoints
+        : PremiumOfferPage.points;
     return ThirtyCard(
       padding: const EdgeInsets.all(AppSpacing.featuredCard),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final (i, (name, line)) in PremiumOfferPage.points.indexed) ...[
+          for (final (i, (name, line)) in points.indexed) ...[
             if (i > 0) const SizedBox(height: AppSpacing.m),
             // Its own semantics node: one screen-reader stop per point.
             Semantics(

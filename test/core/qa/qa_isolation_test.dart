@@ -12,7 +12,7 @@ import 'package:thirty/core/qa/qa_shared_preferences.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
-import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
 import 'package:thirty/features/settings/application/first_name_provider.dart';
 
 /// QA-1 — synthetic history lives only in its own store: the genuine store
@@ -56,7 +56,7 @@ void main() {
           supabaseAvailable: false,
           session: QaSession(
             entitlement: QaEntitlement.active,
-            scenario: QaScenario.dPathUnderWay,
+            scenario: QaScenario.d2Month,
             store: store,
           ),
         ),
@@ -70,7 +70,13 @@ void main() {
     circle.start();
     circle.close();
     circle.reportAttempt(CircleAttemptResponse.yes);
-    container.read(toolkitProvider.notifier).leavePath();
+    // An owned-Circle write too: it must land in this store only.
+    final kept = container.read(keptCirclesProvider).kept;
+    if (kept.isNotEmpty) {
+      container
+          .read(keptCirclesProvider.notifier)
+          .renameKept(kept.first.id, 'Renamed in QA');
+    }
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
   }
@@ -111,7 +117,7 @@ void main() {
   test('a whole Circle walked inside a QA session lands in the QA store '
       'only', () async {
     final store = await buildQaStore(
-      scenario: QaScenario.dPathUnderWay,
+      scenario: QaScenario.d2Month,
       genuine: genuine,
       referenceNow: reference,
     );
@@ -145,7 +151,7 @@ void main() {
 
   test('reset returns the genuine state exactly as it was', () async {
     final store = await buildQaStore(
-      scenario: QaScenario.dMonthTwo,
+      scenario: QaScenario.d2Lapsed,
       genuine: genuine,
       referenceNow: reference,
     );
@@ -166,8 +172,7 @@ void main() {
           .map((e) => e.localDate),
       ['2026-05-01'],
     );
-    expect(reset.read(toolkitProvider).routines, isEmpty);
-    expect(reset.read(toolkitProvider).path, isNull);
+    expect(reset.read(keptCirclesProvider).kept, isEmpty);
     expect(valuesOf(genuine), genuineBefore);
   });
 }

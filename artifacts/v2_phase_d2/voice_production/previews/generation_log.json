@@ -1,0 +1,62 @@
+{
+ "rule": "Each voice's own preview (founder, 2026-10-17): \"Hear <name>\" no longer\nplays a Circle's activity but the voice introducing itself. Founder-chosen\nline, the voice's name being the only difference:\n  \"Hi, I’m <Name>. I’ll tell you when each part of your Circle begins, so\n   you can put the screen down.\"\n(lib/features/personal_circle/domain/spoken_cues.dart `spokenPreviewFor`).\n\n1. Generation: exact voice ID, eleven_multilingual_v2, the frozen settings,\n   seed 30, mp3_44100_128; one request per voice -> previews/raw/<id>.mp3,\n   previews/generation_log.json. Skips a take already on disk.\n2. Raw QA (the normal checks): provenance, ASR against the script,\n   onset/ending, sample clipping, inner stalls, the frozen pause-bed check,\n   timbre against the voice's own shipping takes (diagnostic).\n3. Master by the frozen production rule with the voice's FROZEN median and\n   voice-wide gain (mastering_report.json), exactly as the approved\n   corrections were: the other 168 clips are not touched. Written to\n   assets/audio/guidance/<id>/preview_<fingerprint>.m4a.\n4. previews/listen/all_four_previews.m4a and previews/preview_qa.json.\nUsage: python preview_production.py <repo>   (PYTHONPATH: the validation tools)",
+ "model_id": "eleven_multilingual_v2",
+ "voice_settings": {
+  "stability": 0.5,
+  "similarity_boost": 0.75,
+  "style": 0.0,
+  "use_speaker_boost": true,
+  "speed": 1.0
+ },
+ "output_format": "mp3_44100_128",
+ "clips": [
+  {
+   "stable_id": "voice_locke_v1",
+   "voice": "Locke",
+   "voice_id": "oaLGpwm7fYWDEFmlRuQk",
+   "clip": "preview",
+   "seed": 30,
+   "script": "Hi, I’m Locke. I’ll tell you when each part of your Circle begins, so you can put the screen down.",
+   "characters": 98,
+   "bytes": 114563,
+   "generated_at": "2026-10-17T09:55:02+02:00",
+   "request_id": "LWxKdMLHS2XT65BqWoCm"
+  },
+  {
+   "stable_id": "voice_heather_v1",
+   "voice": "Heather",
+   "voice_id": "plP9aw1rizYgjFfuvLQ7",
+   "clip": "preview",
+   "seed": 30,
+   "script": "Hi, I’m Heather. I’ll tell you when each part of your Circle begins, so you can put the screen down.",
+   "characters": 100,
+   "bytes": 124594,
+   "generated_at": "2026-10-17T09:55:03+02:00",
+   "request_id": "3LlklnsGi1IAJPG1MU5s"
+  },
+  {
+   "stable_id": "voice_milo_v1",
+   "voice": "Milo",
+   "voice_id": "GUDYcgRAONiI1nXDcNQQ",
+   "clip": "preview",
+   "seed": 30,
+   "script": "Hi, I’m Milo. I’ll tell you when each part of your Circle begins, so you can put the screen down.",
+   "characters": 97,
+   "bytes": 116235,
+   "generated_at": "2026-10-17T09:55:04+02:00",
+   "request_id": "N849sBEvshVSrmDCtyxN"
+  },
+  {
+   "stable_id": "voice_brittney_v1",
+   "voice": "Brittney",
+   "voice_id": "pjcYQlDFKMbcOUp6F5GD",
+   "clip": "preview",
+   "seed": 30,
+   "script": "Hi, I’m Brittney. I’ll tell you when each part of your Circle begins, so you can put the screen down.",
+   "characters": 101,
+   "bytes": 130446,
+   "generated_at": "2026-10-17T09:55:06+02:00",
+   "request_id": "5NzElOT5LEUh2iiG7rHH"
+  }
+ ]
+}

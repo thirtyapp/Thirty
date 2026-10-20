@@ -36,7 +36,10 @@ class CircleHistoryPage extends ConsumerWidget {
     final entries = journal.readAll().reversed.toList();
 
     return Scaffold(
-      appBar: const ThirtyAppBar(title: Text('Your Circle history')),
+      appBar: const ThirtyAppBar(
+        title: Text('Your Circle history'),
+        parentLocation: '/insights',
+      ),
       body: SafeArea(
         child: Column(
           children: [

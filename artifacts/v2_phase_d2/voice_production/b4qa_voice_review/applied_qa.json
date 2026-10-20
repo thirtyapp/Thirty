@@ -1,0 +1,31 @@
+{
+ "method": "QA of the founder-approved Locke part_songOn AS NOW SHIPPED in assets/\n(2026-10-18), by the method of final_corrections_review/tools/applied_qa.py:\nexact manifest file name and FNV-1a fingerprint of the canonical script;\nprovenance (logged voice ID and script of the source take); script identity\nby offline ASR (faster-whisper small.en) on the shipping .m4a; lead-in, tail,\nlast 10 ms, true peak; and that the file IS the approved performance\n(waveform correlation of the decoded shipping speech against its source\ntake, trimmed and at the logged gain). Plus the defect check: the level of\nthe stretch between \"really like\" and \"and let it play\", where seed 30 had\n~450 ms of voiced sound at speech level.\nUsage: python -I applied_qa.py <repo>",
+ "files": {
+  "voice_locke_v1/part_songOn": {
+   "file": "part_songOn_6017657f.m4a",
+   "script": "Put a song on. Put on a song you really like, and let it play while you start.",
+   "filename_fingerprint_ok": true,
+   "source_take": "b4qa_voice_review/locke_song_on/raw/seed33.mp3",
+   "source_seed": 33,
+   "request_id": "0SwhCbTdzkIgHXtwAS9c",
+   "provenance_ok": true,
+   "asr": "put a song on, put on a song you really like, and let it play while you start.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 190,
+   "tail_ms": 420,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -3.75,
+   "integrated_lufs": -22.96,
+   "gain_applied_db": 4.47,
+   "extra_gain_db": 0.0,
+   "waveform_correlation_vs_source": 1.0,
+   "after_like_to_and_s": [
+    3.46,
+    3.91
+   ],
+   "after_like_max_10ms_dbfs": -57.8,
+   "speech_p90_10ms_dbfs": -16.3
+  }
+ }
+}

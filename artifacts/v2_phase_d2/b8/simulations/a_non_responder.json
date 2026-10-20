@@ -1,0 +1,877 @@
+{
+  "profile": "a_non_responder",
+  "days": 311,
+  "premiumDays": 311,
+  "composedPremiumDays": 311,
+  "freeFallbackOnPremium": 0,
+  "stalls": 0,
+  "stageDays": 131,
+  "reviews": 21,
+  "stageFiveCases": {
+    "A": 28,
+    "B": 0,
+    "C": 0
+  },
+  "foundUsefulClaims": 0,
+  "lapse": {
+    "days": 0,
+    "aKeptCircleCouldStandIn": 0,
+    "usedAKeptCircle": 0
+  },
+  "duplicateProgress": 0,
+  "insights": {
+    "perFamily": {
+      "planForNeed": 10,
+      "planPacing": 0,
+      "skippedPart": 0,
+      "usefulInCommon": 0,
+      "planReview": 21,
+      "whatsChanged": 5
+    },
+    "weeksWithANewInsight": 15,
+    "silentWeeks": 38,
+    "cadenceViolations": [],
+    "sameClaimViolations": []
+  },
+  "variety": {
+    "composedDays": 311,
+    "distinctSessions": 211,
+    "distinctMaterial": 127,
+    "distinctMains": 18,
+    "firstExactRepeatDay": 34,
+    "medianDaysBetweenRepeats": 73,
+    "shortestRepeatGap": 15,
+    "longestRunOfSameSession": 1
+  },
+  "failures": [],
+  "reviewLines": [
+    {
+      "day": 16,
+      "plan": "making_room",
+      "cycle": 1,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "5 Jan — Neck and shoulders · Get it out · Look far away — No answer",
+        "7 Jan — Stand and reach · Read a few pages · Clear one corner · Look around — No answer",
+        "9 Jan — A comfortable spot · One task, no switching · Look far away · Put things back — No answer",
+        "15 Jan — Neck and shoulders · Screen-free walk · Look far away · Note one thing — No answer",
+        "20 Jan — Clear one corner · Get it out · One long reach — No answer"
+      ]
+    },
+    {
+      "day": 25,
+      "plan": "making_room",
+      "cycle": 2,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "21 Jan — Stand and reach · Easy walk · Get it out · Look far away — No answer",
+        "22 Jan — Set screens aside · Listen to one thing · Tend to one thing · Sit for a minute — No answer",
+        "26 Jan — Phone face down · One task, no switching · Quiet music · Put things back — No answer",
+        "28 Jan — Set screens aside · Quiet music · Choose what’s next — No answer",
+        "29 Jan — Tend to one thing · Get it out · One long reach — No answer"
+      ]
+    },
+    {
+      "day": 50,
+      "plan": "making_room",
+      "cycle": 3,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "9 Feb — Set screens aside · Read a few pages · Get it out · Sit for a minute — No answer",
+        "10 Feb — Neck and shoulders · A slow warm drink · Tend to one thing · Put things back — No answer",
+        "19 Feb — Get it out · Choose one thing · Put things back — No answer",
+        "21 Feb — Set screens aside · Read a few pages · One long reach — No answer",
+        "23 Feb — Neck and shoulders · Screen-free walk · Get it out · Sit for a minute — No answer"
+      ]
+    },
+    {
+      "day": 69,
+      "plan": "making_room",
+      "cycle": 4,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "26 Feb — Quick clear-up · Get it out · One long reach — No answer",
+        "27 Feb — Clear one corner · Some fresh air · Look around — No answer",
+        "5 Mar — Set screens aside · One task, no switching · Quiet music · Put things back — No answer",
+        "13 Mar — Phone face down · Listen to one thing · Standing stretch · Look far away — No answer",
+        "14 Mar — Set screens aside · Quiet music · Get it out · Choose what’s next — No answer"
+      ]
+    },
+    {
+      "day": 85,
+      "plan": "making_room",
+      "cycle": 5,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "18 Mar — Neck and shoulders · Easy walk · Get it out · Look far away — No answer",
+        "22 Mar — Tend to one thing · Some fresh air · Look around — No answer",
+        "23 Mar — Set screens aside · One task, no switching · Sit outside · Look far away — No answer",
+        "27 Mar — Neck and shoulders · Screen-free walk · Look far away · Choose what’s next — No answer",
+        "30 Mar — Quick clear-up · Get it out · Choose what’s next — No answer"
+      ]
+    },
+    {
+      "day": 96,
+      "plan": "making_room",
+      "cycle": 6,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "5 Apr — Set screens aside · Get it out · Look around — No answer",
+        "7 Apr — Standing stretch · Quick clear-up — No answer",
+        "8 Apr — Sit outside · Get it out · Choose one thing — No answer",
+        "9 Apr — Phone face down · Read a few pages · Tend to one thing · Choose what’s next — No answer",
+        "10 Apr — Clear one corner · Get it out · Look around — No answer"
+      ]
+    },
+    {
+      "day": 113,
+      "plan": "making_room",
+      "cycle": 7,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "14 Apr — Set screens aside · Listen to one thing · Get it out · Look far away — No answer",
+        "16 Apr — Stand and reach · Quiet music · Tend to one thing · Put things back — No answer",
+        "17 Apr — Set screens aside · Get it out · Choose one thing — No answer",
+        "21 Apr — Phone face down · Listen to one thing · Standing stretch · Sit for a minute — No answer",
+        "27 Apr — Set screens aside · One task, no switching · Clear one corner · Look far away — No answer"
+      ]
+    },
+    {
+      "day": 125,
+      "plan": "making_room",
+      "cycle": 8,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "28 Apr — Neck and shoulders · Screen-free walk · Get it out · Sit for a minute — No answer",
+        "29 Apr — Phone face down · Tend to one thing · One long reach — No answer",
+        "2 May — Stand and reach · Easy walk · Get it out · Choose one thing — No answer",
+        "7 May — Phone face down · Listen to one thing · Choose what’s next — No answer",
+        "9 May — Phone face down · Sit outside · Get it out · Sit for a minute — No answer"
+      ]
+    },
+    {
+      "day": 137,
+      "plan": "making_room",
+      "cycle": 9,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "16 May — Standing stretch · Get it out · Choose what’s next — No answer",
+        "17 May — Set screens aside · Read a few pages · Tend to one thing · A glass of water — No answer",
+        "18 May — Neck and shoulders · Round the block · Get it out · Choose one thing — No answer",
+        "20 May — Set screens aside · Read a few pages · Quick clear-up · A glass of water — No answer",
+        "21 May — Neck and shoulders · Clear one corner · Get it out · Look far away — No answer"
+      ]
+    },
+    {
+      "day": 148,
+      "plan": "making_room",
+      "cycle": 10,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "22 May — Open a window · One task, no switching · Get it out · Sit for a minute — No answer",
+        "23 May — Look around · A slow warm drink · Tend to one thing · Choose what’s next — No answer",
+        "29 May — Phone face down · Gentle stretch · Get it out · Choose one thing — No answer",
+        "30 May — Name what’s on · Screen-free walk · Neck and shoulders · Look far away — No answer",
+        "1 Jun — Quick clear-up · Get it out · Look around — No answer"
+      ]
+    },
+    {
+      "day": 168,
+      "plan": "making_room",
+      "cycle": 11,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "8 Jun — Set screens aside · Listen to one thing · Get it out · Sit for a minute — No answer",
+        "16 Jun — Standing stretch · Quick clear-up — No answer",
+        "18 Jun — Sit outside · Get it out · Choose one thing — No answer",
+        "19 Jun — Phone face down · Read a few pages · Clear one corner · One long reach — No answer",
+        "21 Jun — Clear one corner · Get it out · Look around — No answer"
+      ]
+    },
+    {
+      "day": 180,
+      "plan": "making_room",
+      "cycle": 12,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "23 Jun — Quick clear-up · Get it out · One long reach — No answer",
+        "25 Jun — Stand and reach · One task, no switching · Clear one corner · Choose what’s next — No answer",
+        "29 Jun — Phone face down · Gentle stretch · Get it out · Choose one thing — No answer",
+        "1 Jul — Stand and reach · Screen-free walk · Look far away · Choose what’s next — No answer",
+        "3 Jul — Set screens aside · One task, no switching · Clear one corner · A glass of water — No answer"
+      ]
+    },
+    {
+      "day": 191,
+      "plan": "making_room",
+      "cycle": 13,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "6 Jul — Neck and shoulders · Round the block · Get it out · Look far away — No answer",
+        "8 Jul — Open a window · Tend to one thing · One long reach — No answer",
+        "11 Jul — Neck and shoulders · Easy walk · Get it out · Choose one thing — No answer",
+        "13 Jul — Set screens aside · Quiet music · One long reach — No answer",
+        "14 Jul — Phone face down · Listen to one thing · Clear one corner · Look far away — No answer"
+      ]
+    },
+    {
+      "day": 215,
+      "plan": "making_room",
+      "cycle": 14,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "23 Jul — Standing stretch · Get it out · Choose what’s next — No answer",
+        "25 Jul — Set screens aside · Read a few pages · Clear one corner · Sit for a minute — No answer",
+        "26 Jul — Get it out · Choose one thing · Look far away — No answer",
+        "27 Jul — Phone face down · Sit outside · Gentle stretch · Choose what’s next — No answer",
+        "7 Aug — Clear one corner · Get it out · Look around — No answer"
+      ]
+    },
+    {
+      "day": 223,
+      "plan": "making_room",
+      "cycle": 15,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "8 Aug — Neck and shoulders · Tend to one thing · Get it out · A glass of water — No answer",
+        "9 Aug — Open a window · Gentle stretch · Quick clear-up · Sit for a minute — No answer",
+        "13 Aug — Stand and reach · Round the block · Get it out · Choose one thing — No answer",
+        "14 Aug — Set screens aside · Listen to one thing · Some fresh air · Choose what’s next — No answer",
+        "15 Aug — Neck and shoulders · Screen-free walk · Get it out · Look far away — No answer"
+      ]
+    },
+    {
+      "day": 253,
+      "plan": "making_room",
+      "cycle": 16,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "26 Aug — Set screens aside · Read a few pages · Get it out · Choose what’s next — No answer",
+        "29 Aug — Stand and reach · A slow warm drink · Tend to one thing · Sit for a minute — No answer",
+        "10 Sep — Phone face down · Easy walk · Get it out · Choose one thing — No answer",
+        "11 Sep — Stand and reach · Screen-free walk · Read a few pages · Sit for a minute — No answer",
+        "14 Sep — Phone face down · Listen to one thing · Get it out · Choose what’s next — No answer"
+      ]
+    },
+    {
+      "day": 267,
+      "plan": "making_room",
+      "cycle": 17,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "18 Sep — Set screens aside · One task, no switching · Get it out · A glass of water — No answer",
+        "24 Sep — Open a window · Quiet music · Tend to one thing · Look around — No answer",
+        "26 Sep — Set screens aside · One task, no switching · Sit outside · Look far away — No answer",
+        "27 Sep — Phone face down · Read a few pages · Sit for a minute — No answer",
+        "28 Sep — Quick clear-up · Get it out · Choose what’s next — No answer"
+      ]
+    },
+    {
+      "day": 292,
+      "plan": "making_room",
+      "cycle": 18,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "12 Oct — Look around · A slow warm drink · Get it out · Put things back — No answer",
+        "16 Oct — Stand and reach · Clear one corner · Choose what’s next — No answer",
+        "17 Oct — Look around · Listen to one thing · Get it out · Choose one thing — No answer",
+        "19 Oct — Phone face down · Screen-free walk · Quiet music · Look far away — No answer",
+        "23 Oct — Set screens aside · Get it out · Quick clear-up · Choose what’s next — No answer"
+      ]
+    },
+    {
+      "day": 303,
+      "plan": "making_room",
+      "cycle": 19,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "27 Oct — Set screens aside · One task, no switching · Get it out · Sit for a minute — No answer",
+        "29 Oct — Look around · Quiet music · Tend to one thing · Note one thing — No answer",
+        "31 Oct — Neck and shoulders · Read a few pages · Get it out · Choose one thing — No answer",
+        "1 Nov — Phone face down · Sit outside · Gentle stretch · Look around — No answer",
+        "3 Nov — Neck and shoulders · Tend to one thing · Get it out · Put things back — No answer"
+      ]
+    },
+    {
+      "day": 334,
+      "plan": "making_room",
+      "cycle": 20,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "13 Nov — Neck and shoulders · Easy walk · Get it out · Look around — No answer",
+        "18 Nov — Name what’s on · Quick clear-up · Sit for a minute — No answer",
+        "24 Nov — Set screens aside · Get it out · Choose one thing — No answer",
+        "30 Nov — Neck and shoulders · Screen-free walk · Quiet music · Sit for a minute — No answer",
+        "4 Dec — Clear one corner · Get it out · One long reach — No answer"
+      ]
+    },
+    {
+      "day": 360,
+      "plan": "making_room",
+      "cycle": 21,
+      "end": "reachedEnd",
+      "answered": 0,
+      "lines": [
+        "This Plan has reached its end. All five stages guided.",
+        "You didn’t answer after these Circles, so THIRTY can’t say which stages suited you.",
+        "7 Dec — Look around · Listen to one thing · Get it out · Choose what’s next — No answer",
+        "13 Dec — Set screens aside · One task, no switching · Clear one corner · Look far away — No answer",
+        "15 Dec — Stand and reach · Easy walk · Get it out · Choose one thing — No answer",
+        "24 Dec — Set screens aside · Read a few pages · Quiet music · Look far away — No answer",
+        "30 Dec — Phone face down · Quiet music · Clear one corner · A glass of water — No answer"
+      ]
+    }
+  ],
+  "stageFives": [
+    {
+      "day": 16,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 25,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 50,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 69,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 83,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 85,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 96,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 110,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 113,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 124,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 125,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 137,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 147,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 148,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 168,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 179,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 180,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 191,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 210,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 212,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 215,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 223,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 253,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 267,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 292,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 303,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 334,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    },
+    {
+      "day": 360,
+      "case": "A",
+      "eligible": 4,
+      "drawsOn": [
+        "making_room.1",
+        "making_room.2",
+        "making_room.3",
+        "making_room.4"
+      ]
+    }
+  ],
+  "insightsShown": [
+    {
+      "on": "2026-01-20",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 20 January."
+    },
+    {
+      "on": "2026-01-20",
+      "family": "planForNeed",
+      "text": "You chose Clearer Head on 6 of your last 13 Circles, between 5 and 20 January."
+    },
+    {
+      "on": "2026-02-01",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 29 January."
+    },
+    {
+      "on": "2026-02-05",
+      "family": "planForNeed",
+      "text": "You chose More Energy on 10 of your last 24 Circles, between 11 January and 3 February."
+    },
+    {
+      "on": "2026-02-25",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 23 February."
+    },
+    {
+      "on": "2026-03-17",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 14 March."
+    },
+    {
+      "on": "2026-03-21",
+      "family": "planForNeed",
+      "text": "You chose More Energy on 11 of your last 21 Circles, between 24 February and 21 March."
+    },
+    {
+      "on": "2026-04-02",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 30 March."
+    },
+    {
+      "on": "2026-04-10",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 10 April."
+    },
+    {
+      "on": "2026-04-10",
+      "family": "planForNeed",
+      "text": "You chose Clearer Head on 12 of your last 28 Circles, between 14 March and 10 April."
+    },
+    {
+      "on": "2026-04-18",
+      "family": "whatsChanged",
+      "text": "From 25 January to 21 February you chose More Energy most (11 of 26). In the last four weeks it’s been Clearer Head (13 of 28)."
+    },
+    {
+      "on": "2026-04-30",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 27 April."
+    },
+    {
+      "on": "2026-05-12",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 9 May."
+    },
+    {
+      "on": "2026-05-16",
+      "family": "whatsChanged",
+      "text": "From 22 February to 21 March you chose More Energy most (11 of 21). In the last four weeks it’s been Clearer Head (11 of 21)."
+    },
+    {
+      "on": "2026-05-24",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 21 May."
+    },
+    {
+      "on": "2026-06-01",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 1 June."
+    },
+    {
+      "on": "2026-06-01",
+      "family": "planForNeed",
+      "text": "You chose Clearer Head on 15 of your last 24 Circles, between 7 May and 1 June."
+    },
+    {
+      "on": "2026-06-21",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 21 June."
+    },
+    {
+      "on": "2026-07-03",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 3 July."
+    },
+    {
+      "on": "2026-07-03",
+      "family": "planForNeed",
+      "text": "You chose Clearer Head on 14 of your last 27 Circles, between 8 June and 3 July."
+    },
+    {
+      "on": "2026-07-19",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 14 July."
+    },
+    {
+      "on": "2026-08-08",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 7 August."
+    },
+    {
+      "on": "2026-08-16",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 15 August."
+    },
+    {
+      "on": "2026-08-24",
+      "family": "planForNeed",
+      "text": "You chose More Energy on 13 of your last 26 Circles, between 28 July and 24 August."
+    },
+    {
+      "on": "2026-09-01",
+      "family": "whatsChanged",
+      "text": "From 10 June to 7 July you chose Clearer Head most (13 of 27). In the last four weeks it’s been More Energy (14 of 27)."
+    },
+    {
+      "on": "2026-09-17",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 14 September."
+    },
+    {
+      "on": "2026-10-03",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 28 September."
+    },
+    {
+      "on": "2026-10-15",
+      "family": "planForNeed",
+      "text": "You chose More Energy on 10 of your last 19 Circles, between 21 September and 15 October."
+    },
+    {
+      "on": "2026-10-23",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 23 October."
+    },
+    {
+      "on": "2026-11-04",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 3 November."
+    },
+    {
+      "on": "2026-11-04",
+      "family": "whatsChanged",
+      "text": "From 13 August to 9 September you chose More Energy most (13 of 26). In the last four weeks it’s been Clearer Head (13 of 27)."
+    },
+    {
+      "on": "2026-11-20",
+      "family": "planForNeed",
+      "text": "You chose More Energy on 12 of your last 26 Circles, between 24 October and 19 November."
+    },
+    {
+      "on": "2026-11-28",
+      "family": "whatsChanged",
+      "text": "From 6 September to 3 October you chose Clearer Head most (11 of 20). In the last four weeks it’s been More Energy (12 of 23)."
+    },
+    {
+      "on": "2026-12-06",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 4 December."
+    },
+    {
+      "on": "2026-12-18",
+      "family": "planForNeed",
+      "text": "You chose More Energy on 8 of your last 19 Circles, between 26 November and 18 December."
+    },
+    {
+      "on": "2026-12-30",
+      "family": "planReview",
+      "text": "Making room: what you told THIRTY, 30 December."
+    }
+  ]
+}

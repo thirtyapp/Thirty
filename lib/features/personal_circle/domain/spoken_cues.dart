@@ -33,10 +33,48 @@ abstract final class SpokenGuidanceCopy {
   static const pause = 'Pause';
   static const resume = 'Resume';
   static const next = 'Next';
+
+  /// The choice between THIRTY's voices.
+  static const voice = 'Voice';
+
+  /// Plays [voice]'s own introduction ([spokenPreviewFor]).
+  static String preview(String voice) => 'Hear $voice';
 }
 
-/// Where the recordings are bundled.
+/// Where the recordings are bundled: one folder per [ThirtyVoice].
 const spokenGuidanceAssetDir = 'assets/audio/guidance';
+
+/// THIRTY's own voices (founder lock, 2026-10-16): four named voices, all
+/// part of Premium's spoken guidance. Each is a complete recording of the
+/// same manifest in its own folder.
+///
+/// [id] is the voice's identity — the stored choice, the asset folder and
+/// analytics — neutral and never gender-based. It stays the same for a
+/// re-master, a re-generation or new scripts, and gets a new version only
+/// when the underlying voice changes. [label] is display metadata.
+enum ThirtyVoice {
+  locke('voice_locke_v1', 'Locke'),
+  heather('voice_heather_v1', 'Heather'),
+  milo('voice_milo_v1', 'Milo'),
+  brittney('voice_brittney_v1', 'Brittney');
+
+  const ThirtyVoice(this.id, this.label);
+
+  /// Stable: the stored choice and the asset folder.
+  final String id;
+
+  /// The voice's name, as the user sees it.
+  final String label;
+
+  String get assetDir => '$spokenGuidanceAssetDir/$id';
+
+  static ThirtyVoice? fromId(Object? id) {
+    for (final voice in values) {
+      if (voice.id == id) return voice;
+    }
+    return null;
+  }
+}
 
 /// What a clip is for.
 enum SpokenClipRole {
@@ -48,6 +86,9 @@ enum SpokenClipRole {
 
   /// The words after the last part.
   close,
+
+  /// A voice introducing itself — `Hear <name>` only, never in a Circle.
+  preview,
 }
 
 /// One recording: what to say, and where it is bundled.
@@ -64,9 +105,12 @@ class SpokenClip {
   /// Exactly what the speaker says — the words on the screen.
   final String script;
 
-  /// The bundled file: its [id] and a fingerprint of its [script].
-  String get asset =>
-      '$spokenGuidanceAssetDir/${id}_${_fingerprint(script)}.m4a';
+  /// The recording's file name: its [id] and a fingerprint of its
+  /// [script] — the same in each voice's folder.
+  String get file => '${id}_${_fingerprint(script)}.m4a';
+
+  /// This clip as recorded in [voice].
+  String assetFor(ThirtyVoice voice) => '${voice.assetDir}/$file';
 
   @override
   bool operator ==(Object other) =>
@@ -118,9 +162,19 @@ List<SpokenClip> spokenCueFor(CirclePlan plan, int position) {
   return [lead, partClip(plan.parts[position].definition)];
 }
 
+/// What [voice]'s preview plays: the voice saying its name and what it
+/// does — its own recording, never one of a Circle's activities (founder,
+/// 2026-10-17). Each voice's script differs only by its name.
+SpokenClip spokenPreviewFor(ThirtyVoice voice) => SpokenClip._(
+  'preview',
+  SpokenClipRole.preview,
+  'Hi, I’m ${voice.label}. I’ll tell you when each part of your Circle '
+      'begins, so you can put the screen down.',
+);
+
 /// Every clip a release can play — the complete recording list: the three
-/// leads, one clip for each offerable element, and the close. Spoken
-/// guidance is available only when every one of them is bundled.
+/// leads, one clip for each offerable element, and the close. A voice is
+/// available only when every one of them is bundled in its folder.
 List<SpokenClip> get spokenGuidanceManifest => [
   leadFirst,
   leadNext,

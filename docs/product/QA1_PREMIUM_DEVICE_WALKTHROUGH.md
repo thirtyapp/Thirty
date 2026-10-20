@@ -1,5 +1,15 @@
 # QA-1 — Premium device walkthrough (Samsung S25)
 
+> **HISTORICAL — SUPERSEDED (notice added 2026-10-17).**
+>
+> - **What this is:** the walkthrough for the **historical V1 Premium implementation** — V1 Plans, Coach and Insights. It is kept unchanged as historical evidence.
+> - **What it is not:** the current D2 acceptance or device-QA authority. **Do not use it to infer current launch behaviour.**
+> - **Why it can mislead:** the V1 Plans and Insights it describes (fixed five-stage Plans, V1 Coach, V1 Insight families) are superseded. The names *Plans* and *Insights* are used again in D2 for materially different capabilities.
+> - **Current authority:**
+>   - [PRODUCT_V2_CONTRACT.md](PRODUCT_V2_CONTRACT.md) (Amendment 2, 2026-10-17);
+>   - [ADR-024](adr/ADR-024-v2-circle-plans-insights-and-four-tab-product.md) (Circle Plans, Insights, the four-tab product);
+>   - the device-proof requirements in [THIRTY_V2_DELIVERY_TRACKER.md](THIRTY_V2_DELIVERY_TRACKER.md).
+
 **Purpose:** walk Premium Plans, Coach and Insights on a real device before
 live Google Play / RevenueCat billing exists, including the R5
 continuing-value and low-data cases. Debug builds only — the harness does

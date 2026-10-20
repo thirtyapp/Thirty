@@ -1,0 +1,203 @@
+{
+ "method": "Each voice's own preview (founder, 2026-10-17): \"Hear <name>\" no longer\nplays a Circle's activity but the voice introducing itself. Founder-chosen\nline, the voice's name being the only difference:\n  \"Hi, I’m <Name>. I’ll tell you when each part of your Circle begins, so\n   you can put the screen down.\"\n(lib/features/personal_circle/domain/spoken_cues.dart `spokenPreviewFor`).\n\n1. Generation: exact voice ID, eleven_multilingual_v2, the frozen settings,\n   seed 30, mp3_44100_128; one request per voice -> previews/raw/<id>.mp3,\n   previews/generation_log.json. Skips a take already on disk.\n2. Raw QA (the normal checks): provenance, ASR against the script,\n   onset/ending, sample clipping, inner stalls, the frozen pause-bed check,\n   timbre against the voice's own shipping takes (diagnostic).\n3. Master by the frozen production rule with the voice's FROZEN median and\n   voice-wide gain (mastering_report.json), exactly as the approved\n   corrections were: the other 168 clips are not touched. Written to\n   assets/audio/guidance/<id>/preview_<fingerprint>.m4a.\n4. previews/listen/all_four_previews.m4a and previews/preview_qa.json.\nUsage: python preview_production.py <repo>   (PYTHONPATH: the validation tools)",
+ "voices": {
+  "voice_locke_v1": {
+   "duration_s": 7.105,
+   "speech_onset_s": 0.07,
+   "tail_after_speech_s": 0.355,
+   "first_10ms_dbfs": -88.7,
+   "last_10ms_dbfs": -87.6,
+   "clipped_onset": false,
+   "clipped_ending": false,
+   "sample_clipping": false,
+   "sample_peak_dbfs": -8.47,
+   "longest_inner_silence_s": 0.9,
+   "speech_span_s": 6.68,
+   "script": "Hi, I’m Locke. I’ll tell you when each part of your Circle begins, so you can put the screen down.",
+   "provenance_ok": true,
+   "request_id": "LWxKdMLHS2XT65BqWoCm",
+   "asr": "Hi, I'm Locke. I'll tell you when each part of your circle begins, so you can put the screen down.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "pause_bed_dba_matched": -95.1,
+   "voice_pause_bed_spread_dba": {
+    "min": -100.5,
+    "median": -98.9,
+    "max": -94.7
+   },
+   "timbre": {
+    "spectrum_distance_db": 1.45,
+    "spectrum_distance_percentile_vs_voice": 33.0,
+    "median_f0_hz": 87.8,
+    "f0_vs_voice_median_semitones": 0.14
+   },
+   "mastering": {
+    "raw_trimmed_lufs": -26.78,
+    "outlier_correction_db": 0.0,
+    "voice_gain_db": 4.47,
+    "extra_gain_db": 0.0,
+    "total_gain_db": 4.47,
+    "limiter_db": 0.0,
+    "head_fade_ms": 10.0
+   },
+   "shipping_file": "voice_locke_v1/preview_32b96972.m4a",
+   "final": {
+    "I": -21.9,
+    "M_max": -17.7,
+    "S_max": -21.8,
+    "speech_p90_dbfs": -16.09,
+    "duration_s": 7.31,
+    "true_peak_dbtp": -4.0
+   }
+  },
+  "voice_heather_v1": {
+   "duration_s": 7.709,
+   "speech_onset_s": 0.04,
+   "tail_after_speech_s": 0.309,
+   "first_10ms_dbfs": -84.1,
+   "last_10ms_dbfs": -88.0,
+   "clipped_onset": false,
+   "clipped_ending": false,
+   "sample_clipping": false,
+   "sample_peak_dbfs": -1.04,
+   "longest_inner_silence_s": 1.01,
+   "speech_span_s": 7.36,
+   "script": "Hi, I’m Heather. I’ll tell you when each part of your Circle begins, so you can put the screen down.",
+   "provenance_ok": true,
+   "request_id": "3LlklnsGi1IAJPG1MU5s",
+   "asr": "Hi, I'm Heather. I'll tell you when each part of your circle begins, so you can put the screen down.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "pause_bed_dba_matched": -96.5,
+   "voice_pause_bed_spread_dba": {
+    "min": -108.1,
+    "median": -85.65,
+    "max": -61.2
+   },
+   "timbre": {
+    "spectrum_distance_db": 1.63,
+    "spectrum_distance_percentile_vs_voice": 5.0,
+    "median_f0_hz": 140.7,
+    "f0_vs_voice_median_semitones": -0.25
+   },
+   "mastering": {
+    "raw_trimmed_lufs": -18.22,
+    "outlier_correction_db": 0.0,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -2.89,
+    "limiter_db": 0.0,
+    "head_fade_ms": 10.0
+   },
+   "shipping_file": "voice_heather_v1/preview_0c38bd4b.m4a",
+   "final": {
+    "I": -21.0,
+    "M_max": -18.0,
+    "S_max": -21.0,
+    "speech_p90_dbfs": -15.45,
+    "duration_s": 7.99,
+    "true_peak_dbtp": -3.92
+   }
+  },
+  "voice_milo_v1": {
+   "duration_s": 7.198,
+   "speech_onset_s": 0.04,
+   "tail_after_speech_s": 0.198,
+   "first_10ms_dbfs": -84.9,
+   "last_10ms_dbfs": -87.6,
+   "clipped_onset": false,
+   "clipped_ending": false,
+   "sample_clipping": false,
+   "sample_peak_dbfs": -2.94,
+   "longest_inner_silence_s": 0.93,
+   "speech_span_s": 6.96,
+   "script": "Hi, I’m Milo. I’ll tell you when each part of your Circle begins, so you can put the screen down.",
+   "provenance_ok": true,
+   "request_id": "N849sBEvshVSrmDCtyxN",
+   "asr": "Hi, I'm Milo. I'll tell you when each part of your circle begins, so you can put the screen down.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "pause_bed_dba_matched": -90.9,
+   "voice_pause_bed_spread_dba": {
+    "min": -94.0,
+    "median": -90.6,
+    "max": -86.4
+   },
+   "timbre": {
+    "spectrum_distance_db": 1.4,
+    "spectrum_distance_percentile_vs_voice": 33.0,
+    "median_f0_hz": 80.8,
+    "f0_vs_voice_median_semitones": 0.08
+   },
+   "mastering": {
+    "raw_trimmed_lufs": -20.58,
+    "outlier_correction_db": 0.0,
+    "voice_gain_db": -2.38,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -2.38,
+    "limiter_db": 0.0,
+    "head_fade_ms": 10.0
+   },
+   "shipping_file": "voice_milo_v1/preview_e94d4123.m4a",
+   "final": {
+    "I": -22.9,
+    "M_max": -19.7,
+    "S_max": -22.6,
+    "speech_p90_dbfs": -17.57,
+    "duration_s": 7.59,
+    "true_peak_dbtp": -5.32
+   }
+  },
+  "voice_brittney_v1": {
+   "duration_s": 8.081,
+   "speech_onset_s": 0.06,
+   "tail_after_speech_s": 0.361,
+   "first_10ms_dbfs": -70.8,
+   "last_10ms_dbfs": -86.2,
+   "clipped_onset": false,
+   "clipped_ending": false,
+   "sample_clipping": false,
+   "sample_peak_dbfs": -11.78,
+   "longest_inner_silence_s": 0.95,
+   "speech_span_s": 7.66,
+   "script": "Hi, I’m Brittney. I’ll tell you when each part of your Circle begins, so you can put the screen down.",
+   "provenance_ok": true,
+   "request_id": "5NzElOT5LEUh2iiG7rHH",
+   "asr": "Hi, I'm Brittany. I'll tell you when each part of your circle begins, so you can put the screen down.",
+   "asr_word_distance": 1,
+   "asr_word_edits": [
+    "brittney->brittany"
+   ],
+   "pause_bed_dba_matched": -81.4,
+   "voice_pause_bed_spread_dba": {
+    "min": -91.8,
+    "median": -82.4,
+    "max": -79.2
+   },
+   "timbre": {
+    "spectrum_distance_db": 1.75,
+    "spectrum_distance_percentile_vs_voice": 15.0,
+    "median_f0_hz": 208.0,
+    "f0_vs_voice_median_semitones": -0.5
+   },
+   "mastering": {
+    "raw_trimmed_lufs": -29.75,
+    "outlier_correction_db": 0.0,
+    "voice_gain_db": 8.78,
+    "extra_gain_db": 0.0,
+    "total_gain_db": 8.78,
+    "limiter_db": 0.0,
+    "head_fade_ms": 10.0
+   },
+   "shipping_file": "voice_brittney_v1/preview_4146d39d.m4a",
+   "final": {
+    "I": -21.4,
+    "M_max": -16.8,
+    "S_max": -20.5,
+    "speech_p90_dbfs": -16.84,
+    "duration_s": 8.29,
+    "true_peak_dbtp": -3.15
+   }
+  }
+ }
+}

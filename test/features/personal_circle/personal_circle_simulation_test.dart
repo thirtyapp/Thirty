@@ -14,12 +14,10 @@ import 'package:thirty/features/home/application/suggestion_preferences.dart';
 import 'package:thirty/features/home/domain/recommendation_engine.dart';
 import 'package:thirty/features/personal_circle/domain/circle_composer.dart';
 import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
-import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
-import 'package:thirty/features/toolkit/domain/path_catalog.dart';
 
 /// V2 Phase D2 (ADR-023 §12) — long-horizon INTERNAL simulations: day 1 to
 /// month 12, through the production providers (composer, engine, journal,
-/// preferences, Toolkit), for scripted users whose answers depend on what
+/// preferences, kept Circles), for scripted users whose answers depend on what
 /// they were actually offered.
 ///
 /// **These are not user validation.** They catch architectural failure —
@@ -73,7 +71,6 @@ class Profile {
     this.entitledOn,
     this.leavesOut = const {},
     this.dontSuggest = const {},
-    this.buildsRoutine = false,
     this.skipsDisliked = false,
     this.restDays = const {},
     this.reportNeed,
@@ -99,9 +96,6 @@ class Profile {
   /// asks THIRTY not to suggest early on.
   final Set<ElementId> leavesOut;
   final Set<(ActivityId, Intention)> dontSuggest;
-
-  /// Builds a routine with a Path in month one.
-  final bool buildsRoutine;
 
   /// Skips a disliked part when it isn't the main piece.
   final bool skipsDisliked;
@@ -203,16 +197,8 @@ class Simulation {
                 .dontSuggest(activity, need);
           }
         }
-        if (profile.buildsRoutine && day == 10) {
-          c
-              .read(toolkitProvider.notifier)
-              .startBuild(PathTemplateId.clearTheDecks);
-        }
         await _settle();
-        final need =
-            profile.buildsRoutine && day >= 10 && day < 40 && day.isEven
-            ? _head
-            : profile.needOn(day);
+        final need = profile.needOn(day);
         final window = profile.windowOn(day);
         final notifier = c.read(recommendationProvider.notifier);
         notifier.chooseIntention(need, window: window);
@@ -249,11 +235,6 @@ class Simulation {
           notifier.reportUsefulness(answer);
         }
         await _settle();
-        final toolkit = c.read(toolkitProvider);
-        if (toolkit.path?.finished ?? false) {
-          c.read(toolkitProvider.notifier).keepProposal();
-          await _settle();
-        }
         days.add(SimDay(day, need, window, r, answer, entitled));
         lines.add(_line(day, need, window, r, answer, entitled));
       } finally {
@@ -272,10 +253,6 @@ class Simulation {
   ) {
     final what = r.composed != null
         ? '[CIRCLE ${r.composed!.basis?.name ?? 'kept'}] ${r.composed!.plan}'
-        : r.session?.isPath ?? false
-        ? '[PATH ${r.session!.pathCircle}/${r.session!.pathCircles}] ${r.activity}'
-        : r.session?.isRoutine ?? false
-        ? '[ROUTINE] ${r.activity}'
         : '[${r.composerFellBack ? 'FALLBACK' : 'FREE'}] ${r.activity}';
     return 'D${day.toString().padLeft(3)} ${entitled ? 'P' : 'F'} ${need.name} ≈${window.maxMinutes} '
         '→ $what ${r.offeredMinutes}m · ${answer?.name ?? 'no answer'}';
@@ -360,12 +337,6 @@ class Simulation {
       'Premium days': premiumDays.length,
       'Personal Guided Circles': composed.length,
       'fell back to Free': fallback,
-      'routine days': within
-          .where((d) => d.recommendation.session?.isRoutine ?? false)
-          .length,
-      'Path days': within
-          .where((d) => d.recommendation.session?.isPath ?? false)
-          .length,
       'unique compositions (element sets)': sets.length,
       'materially distinct (main + second)': material.length,
       'distinct main pieces': mainCounts.length,
@@ -510,13 +481,6 @@ final profiles = <Profile>[
     },
   ),
   Profile(
-    name: 'p12_routine_owner',
-    needOn: _rotate,
-    windowOn: (d) => TimeWindow.upTo30,
-    likes: const {ElementKind.writing, ElementKind.tidying},
-    buildsRoutine: true,
-  ),
-  Profile(
     name: 'p13_no_routine',
     needOn: _rotate,
     windowOn: (d) => TimeWindow.upTo30,
@@ -607,7 +571,7 @@ void main() {
           lessThanOrEqualTo(premiumDays ~/ 10),
           reason: 'falls back rarely',
         );
-        if (premiumDays > 60 && !profile.buildsRoutine) {
+        if (premiumDays > 60) {
           expect(composed, greaterThan(premiumDays * 0.7));
         }
         // Not a loop: many distinct sessions, no exact repeat within a week.

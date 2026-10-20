@@ -11,8 +11,12 @@ import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/domain/recommendation_engine.dart';
-import 'package:thirty/features/toolkit/application/toolkit_provider.dart';
-import 'package:thirty/features/toolkit/domain/toolkit_model.dart';
+import 'package:thirty/features/personal_circle/application/guidance_conductor.dart';
+import 'package:thirty/features/personal_circle/application/guidance_session.dart';
+import 'package:thirty/features/personal_circle/application/guidance_voice.dart';
+import 'package:thirty/features/personal_circle/domain/spoken_cues.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/kept_circle.dart';
 
 /// V2 Phase D2 correction pass (2026-10-11) — the saved-Circle / lapse
 /// attack. **Not a willingness-to-pay test.** It pins the exact product
@@ -28,6 +32,11 @@ import 'package:thirty/features/toolkit/domain/toolkit_model.dart';
 ///
 /// Whether kept Circles substitute for the subscription is a COMMERCIAL
 /// HYPOTHESIS for the post-D2 audit; ownership is not weakened here.
+///
+/// Guided-voice entitlement correction (founder decision, 2026-10-12):
+/// THIRTY's voice is Premium. Every day runs the real conductor with both
+/// voices bundled, so the report counts what THIRTY's voice actually played
+/// and whether the background service opened — on a lapsed day, never.
 ///
 /// `--dart-define=TRACE=true` writes the day lines and the lapse report to
 /// `build/saved_circle_lapse_attack.json`.
@@ -57,7 +66,38 @@ TimeWindow _window(int day) => const [
 /// What served a day.
 enum Served { composed, keptChosen, free }
 
+/// The platform player: what THIRTY's voice played.
+class _CountingPlayer implements GuidanceAudioPlayer {
+  var plays = 0;
+
+  @override
+  Future<void> play(
+    List<String> assets, {
+    bool deferToScreenReader = false,
+  }) async => plays++;
+
+  @override
+  Future<void> stop() async {}
+}
+
+/// The background service: how often it opened.
+class _CountingSession implements GuidanceSession {
+  var opened = 0;
+
+  @override
+  Future<void> show(GuidanceSessionStatus status) async => opened++;
+
+  @override
+  Future<void> end({bool afterSpeech = false}) async {}
+
+  @override
+  void listen(void Function(GuidanceAction action)? onAction) {}
+}
+
 void main() {
+  // The conductor reads the app's lifecycle.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test(
     'saved Circles and lapse: owned stays owned, never offered unasked, '
     'one Circle a day; composition stops on lapse and resumes at once',
@@ -67,6 +107,8 @@ void main() {
       final served = <int, Served>{};
       final lines = <String>[];
       final keptIdsAtLapse = <String>[];
+      final voicePlays = <int, int>{};
+      final sessionsOpened = <int, int>{};
       String? renamedId;
 
       Future<void> settle() async {
@@ -79,6 +121,8 @@ void main() {
         final morning = _start.add(Duration(days: day - 1));
         var clock = morning;
         final entitled = _entitled(day);
+        final player = _CountingPlayer();
+        final session = _CountingSession();
         final c = ProviderContainer(
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
@@ -86,14 +130,20 @@ void main() {
             eventClockProvider.overrideWithValue(() => clock),
             premiumEntitlementProvider.overrideWithValue(entitled),
             safetyPendingAllowedProvider.overrideWithValue(false),
+            bundledGuidanceVoicesProvider.overrideWithValue(
+              ThirtyVoice.values.toSet(),
+            ),
+            guidanceAudioPlayerProvider.overrideWithValue(player),
+            guidanceSessionProvider.overrideWithValue(session),
           ],
         );
+        keepGuidanceConducting(c);
         try {
           await settle();
           final need = _need(day);
           final window = _window(day);
           final notifier = c.read(recommendationProvider.notifier);
-          final toolkit = c.read(toolkitProvider);
+          final owned = c.read(keptCirclesProvider);
           notifier.chooseIntention(need, window: window);
           final offered = c.read(recommendationProvider).recommendation!;
 
@@ -112,7 +162,7 @@ void main() {
           // today's time — every lapsed day one exists, and now and then
           // while Premium.
           final candidates = [
-            for (final k in toolkit.kept)
+            for (final k in owned.kept)
               if (k.need == need && k.minutes <= window.maxMinutes) k,
           ];
           final choose =
@@ -137,10 +187,21 @@ void main() {
           }
 
           notifier.start();
+          await settle();
+          voicePlays[day] = player.plays;
+          sessionsOpened[day] = session.opened;
+          // THIRTY's voice is Premium: every Premium Circle is spoken from
+          // "First."; a lapsed day — a kept Circle included — never is.
+          if (entitled) {
+            expect(player.plays, 1, reason: 'D$day');
+          } else {
+            expect(player.plays, 0, reason: 'D$day');
+            expect(session.opened, 0, reason: 'D$day');
+          }
           // One Circle a day: once started, nothing replaces it.
-          if (toolkit.kept.isNotEmpty) {
+          if (owned.kept.isNotEmpty) {
             expect(
-              notifier.useOwnedToday(keptCircleId: toolkit.kept.first.id),
+              notifier.useOwnedToday(keptCircleId: owned.kept.first.id),
               UseTodayResult.alreadyStarted,
             );
           }
@@ -162,30 +223,30 @@ void main() {
               composed != null &&
               !composed.isKept) {
             final kept = c
-                .read(toolkitProvider.notifier)
+                .read(keptCirclesProvider.notifier)
                 .keepCircle(
                   plan: composed.plan,
                   need: need,
                   circleId: r.circleId,
                 );
-            final before = toolkit.kept.length;
+            final before = owned.kept.length;
             expect(kept == null, before >= maxKeptCircles, reason: 'D$day');
           }
           // Owned data is never held hostage: renamed while Free.
           if (day == 50) {
-            renamedId = c.read(toolkitProvider).kept.first.id;
-            c.read(toolkitProvider.notifier).renameKept(renamedId, 'Mine');
+            renamedId = c.read(keptCirclesProvider).kept.first.id;
+            c.read(keptCirclesProvider.notifier).renameKept(renamedId, 'Mine');
           }
           await settle();
           if (day == _premiumUntil) {
             keptIdsAtLapse.addAll([
-              for (final k in c.read(toolkitProvider).kept) k.id,
+              for (final k in c.read(keptCirclesProvider).kept) k.id,
             ]);
           }
           // Lapse takes nothing the user kept.
           if (day > _premiumUntil) {
             expect(
-              [for (final k in c.read(toolkitProvider).kept) k.id],
+              [for (final k in c.read(keptCirclesProvider).kept) k.id],
               keptIdsAtLapse,
               reason: 'D$day',
             );
@@ -216,7 +277,7 @@ void main() {
       final entries = c.read(circleJournalRepositoryProvider).readAll();
       expect(entries, hasLength(_lastDay));
       expect({for (final e in entries) e.localDate}, hasLength(_lastDay));
-      final kept = c.read(toolkitProvider).kept;
+      final kept = c.read(keptCirclesProvider).kept;
       expect(kept.firstWhere((k) => k.id == renamedId).name, 'Mine');
       for (final entry in entries) {
         final day = entry.closedAt!.difference(_start).inDays + 1;
@@ -248,12 +309,31 @@ void main() {
         'composed while lapsed': lapse
             .where((s) => s == Served.composed)
             .length,
+        'THIRTY voice plays while lapsed': [
+          for (var d = _premiumUntil + 1; d <= _lapsedUntil; d++)
+            voicePlays[d]!,
+        ].fold(0, (a, b) => a + b),
+        'background sessions while lapsed': [
+          for (var d = _premiumUntil + 1; d <= _lapsedUntil; d++)
+            sessionsOpened[d]!,
+        ].fold(0, (a, b) => a + b),
+        'kept-Circle days while lapsed run visual/paced, without the voice':
+            lapse.where((s) => s == Served.keptChosen).length,
+        'Premium days spoken': [
+          for (var d = 1; d <= _lastDay; d++)
+            if (_entitled(d) && voicePlays[d]! > 0) d,
+        ].length,
         'kept Circles at lapse': keptIdsAtLapse.length,
         'kept Circles after resubscribing': kept.length,
         'first day back composed': served[_lapsedUntil + 1] == Served.composed,
       };
       expect(report['composed while lapsed'], 0);
+      expect(report['THIRTY voice plays while lapsed'], 0);
+      expect(report['background sessions while lapsed'], 0);
+      expect(report['Premium days spoken'], 60);
       expect(report['first day back composed'], isTrue);
+      // ignore: avoid_print
+      print('LAPSE REPORT ${jsonEncode(report)}');
       if (_trace) {
         Directory('build').createSync(recursive: true);
         File('build/saved_circle_lapse_attack.json').writeAsStringSync(
