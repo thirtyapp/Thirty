@@ -161,13 +161,15 @@ abstract final class InsightCopy {
   /// A plain name for what a main or second piece is — never a judgment.
   static String kindLabel(ElementKind kind) => switch (kind) {
     ElementKind.writing => 'Writing',
-    ElementKind.tidying => 'Tidying',
+    // R6 (Audit #1 m3, founder-approved 2026-11-03): tidying includes One
+    // active job; outdoors includes Some fresh air, at an open door too.
+    ElementKind.tidying => 'Tidying or an active task',
     ElementKind.music => 'Music',
     ElementKind.walking => 'Walking',
     ElementKind.listening => 'Listening',
     ElementKind.reading => 'Reading',
     ElementKind.movement => 'Stretching',
-    ElementKind.outdoors => 'Time outside',
+    ElementKind.outdoors => 'Outside or fresh air',
     ElementKind.focus => 'One task at a time',
     ElementKind.looking => 'Looking far away',
     ElementKind.ritual => 'A slow drink',

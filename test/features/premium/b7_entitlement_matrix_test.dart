@@ -37,8 +37,11 @@ class _SettledEntitlement extends EntitlementNotifier {
 
 class _SilentPlayer implements GuidanceAudioPlayer {
   @override
-  Future<void> play(List<String> assets, {bool deferToScreenReader = true}) =>
-      Future.value();
+  Future<void> play(
+    List<String> assets, {
+    bool deferToScreenReader = true,
+    bool afterCurrent = false,
+  }) => Future.value();
 
   @override
   Future<void> stop() => Future.value();
@@ -50,9 +53,10 @@ class _SilentPlayer implements GuidanceAudioPlayer {
 /// app can be in. Billing reaches THIRTY as four values: RevenueCat reports
 /// a grace period and a cancelled-but-paid period as `isActive`, which the
 /// gateway maps to [EntitlementStatus.active]; true expiry, like never
-/// having subscribed, is [EntitlementStatus.inactive] (both mappings tested
-/// in `premium_access_test.dart`). "Expired" below is inactive with the
-/// Premium state a subscriber left behind.
+/// having subscribed, is [EntitlementStatus.inactive] (the adapter's mapping
+/// of real RevenueCat responses is tested in
+/// `revenue_cat_entitlement_gateway_test.dart`). "Expired" below is
+/// inactive with the Premium state a subscriber left behind.
 void main() {
   final morning = DateTime(2026, 10, 30, 9);
   late SharedPreferences prefs;

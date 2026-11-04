@@ -276,8 +276,11 @@ InsightCandidate? planForNeed(InsightInputs i) {
   final plan = _planFor(need);
   final step = _stepFor(i.plans, plan.id);
   if (step == null) return null;
-  final from = chosen.first.localDate;
-  final to = chosen.last.localDate;
+  // Audit remediation R6b (A2-08): the sentence pairs the range with the
+  // denominator ("on N of your last M Circles, between …"), so the range
+  // spans every Circle counted — never only the chosen need's.
+  final from = window.first.localDate;
+  final to = window.last.localDate;
   return InsightCandidate(
     family: InsightFamily.planForNeed,
     text: InsightCopy.planForNeed(need, count, window.length, from, to),

@@ -173,6 +173,43 @@ void main() {
     }, genuineValues);
   });
 
+  testWidgets('"Keep this QA data" reopens the same QA session under another '
+      'entitlement, never the genuine store (audit remediation R2)', (
+    tester,
+  ) async {
+    final genuine = await pumpHarness(tester);
+    final genuineValues = {
+      for (final key in genuine.getKeys()) key: genuine.get(key),
+    };
+    await openPanel(tester);
+    // Nothing to keep before a QA session exists.
+    expect(find.byKey(const Key('qa-keep-data')), findsNothing);
+    await tester.tap(find.byKey(const Key('qa-entitlement-unavailable')));
+    await tester.pumpAndSettle();
+    await openPanel(tester); // the marker toggles the panel closed
+    await applyScenario(tester, QaScenario.newUser);
+    expect(find.text('QA PREMIUM · UNAVAILABLE'), findsOneWidget);
+    await openPanel(tester);
+    await tester.tap(find.byKey(const Key('qa-entitlement-active')));
+    await tester.pumpAndSettle();
+    final keep = find.byKey(const Key('qa-keep-data'));
+    await tester.ensureVisible(keep);
+    await tester.pumpAndSettle();
+    await tester.tap(keep);
+    await tester.pumpAndSettle();
+    final apply = find.byKey(const Key('qa-apply'));
+    await tester.ensureVisible(apply);
+    await tester.pumpAndSettle();
+    await tester.tap(apply);
+    await tester.pumpAndSettle();
+
+    expect(find.text('QA PREMIUM · ACTIVE'), findsOneWidget);
+    expect(find.text('QA DATA · new_user'), findsOneWidget);
+    expect({
+      for (final key in genuine.getKeys()) key: genuine.get(key),
+    }, genuineValues);
+  });
+
   test('production keeps one shared router; only the harness builds fresh '
       'ones', () {
     expect(appRouter, same(appRouter));

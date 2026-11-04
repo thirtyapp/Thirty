@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/core/utils/date_key_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/r6_button_busy_label_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_app_bar_test.dart": {
+   "passed": 14,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_button_large_text_test.dart": {
+   "passed": 42,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_button_shape_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_button_test.dart": {
+   "passed": 18,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_card_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_confirm_dialog_test.dart": {
+   "passed": 22,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_progress_circle_test.dart": {
+   "passed": 14,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/viewport_visibility_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/world_rendering/quiet_trail_hero_asset_view_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/world_rendering/quiet_trail_hero_view_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 151,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 4,
+ "exit": 0,
+ "seconds": 19,
+ "command": "flutter test --concurrency=1 --reporter json test/core/utils/date_key_test.dart test/core/widgets/r6_button_busy_label_test.dart test/core/widgets/thirty_app_bar_test.dart test/core/widgets/thirty_button_large_text_test.dart test/core/widgets/thirty_button_shape_test.dart test/core/widgets/thirty_button_test.dart test/core/widgets/thirty_card_test.dart test/core/widgets/thirty_confirm_dialog_test.dart test/core/widgets/thirty_progress_circle_test.dart test/core/widgets/viewport_visibility_test.dart test/core/world_rendering/quiet_trail_hero_asset_view_test.dart test/core/world_rendering/quiet_trail_hero_view_test.dart"
+}

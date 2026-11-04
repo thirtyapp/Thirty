@@ -6,9 +6,11 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_text_action.dart';
 import '../../application/activity_catalog.dart';
+import '../../application/circle_history_deletion.dart';
 import '../../application/recommendation_provider.dart';
 import '../../domain/recommendation_engine.dart';
 import '../memory_page.dart';
+import 'journal_data_controls.dart';
 import 'time_window_choice.dart';
 
 /// THIRTY's Daily Context Question — Recommendation MVP v0
@@ -176,7 +178,17 @@ class _IntentionOption extends ConsumerWidget {
 
   final Intention intention;
 
-  void _choose(WidgetRef ref) {
+  /// Audit remediation R3: a Delete Circle history still pending is
+  /// finished first — a Circle begun now would be erased by it. If it still
+  /// can't be, the user is told so and today waits.
+  Future<void> _choose(BuildContext context, WidgetRef ref) async {
+    final deletion = ref.read(circleHistoryDeletionProvider);
+    if (deletion.isPending && !await deletion.resolvePending()) {
+      if (context.mounted) {
+        await JournalDataControls.showDeleteUnfinished(context);
+      }
+      return;
+    }
     ref.read(recommendationProvider.notifier).chooseIntention(intention);
   }
 
@@ -200,12 +212,12 @@ class _IntentionOption extends ConsumerWidget {
     return Semantics(
       button: true,
       label: '$label. $meaning',
-      onTap: () => _choose(ref),
+      onTap: () => _choose(context, ref),
       child: ExcludeSemantics(
         child: ThirtyButton(
           label: label,
           variant: ThirtyButtonVariant.secondary,
-          onPressed: () => _choose(ref),
+          onPressed: () => _choose(context, ref),
         ),
       ),
     );

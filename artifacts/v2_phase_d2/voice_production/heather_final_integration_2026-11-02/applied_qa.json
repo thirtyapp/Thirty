@@ -1,0 +1,263 @@
+{
+ "method": "QA of the six Heather files AS NOW SHIPPED in assets/ (final integration, 2026-11-02), by the method of\nb4qa_voice_review/tools/applied_qa.py: the manifest file name and the FNV-1a fingerprint of the\ncanonical script; provenance (FOUNDER_FINAL source = the logged raw); script identity by offline\nASR (faster-whisper small.en) on the shipping .m4a; lead-in, tail, last 10 ms, true peak,\nintegrated / max momentary / max short-term loudness; that the file IS the approved performance\n(waveform correlation against its source take, trimmed and at the logged gain). Plus: the MP4\nmovie-header duration the app sees (old vs new), the pause-bed figure (2026-11-02 method,\ndigital-silence windows excluded), and voice identity (spectrum percentile and pitch vs Heather's\nown shipping parts, from the final-round QA). Plus a chain check: the frozen rule run on the\nFOUNDER_FINAL source with its extra gain reproduces the shipping file byte-for-byte.\nUsage: python -I applied_qa.py <repo>",
+ "files": {
+  "voice_heather_v1/part_shakeOut_d58bb0f4.m4a": {
+   "clip": "part_shakeOut",
+   "script": "Shake it out. Shake out your hands and arms loosely, then let them rest.",
+   "filename_fingerprint_ok": true,
+   "founder_final_source": "heather_final_round_2026-11-02/part_shakeOut/raw/seed34.mp3",
+   "founder_final_extra_gain_db": 0.0,
+   "source_is_logged_raw": true,
+   "request_id": "8wT1CCk0FKe5bGj9om9T",
+   "chain_reproduces_shipping_file": true,
+   "take": "seed34",
+   "asr": "Shake it out. Shake out your hands and arms loosely. Then let them rest.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 150,
+   "tail_ms": 450,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -4.76,
+   "loudness_new": {
+    "I": -20.2,
+    "M_max": -17.6,
+    "S_max": -20.9
+   },
+   "loudness_replaced": {
+    "I": -24.0,
+    "M_max": -19.0,
+    "S_max": -23.5
+   },
+   "waveform_correlation_vs_source": 1.0,
+   "duration_mvhd_s": {
+    "replaced": 6.66,
+    "new": 6.83
+   },
+   "pause_bed_quietest10_A": {
+    "replaced": -66.3,
+    "new": -106.0
+   },
+   "identity_vs_heather_parts": {
+    "spectrum_percentile": 100.0,
+    "pitch_semitones": -1.3,
+    "replaced_spectrum_percentile": 89.0,
+    "replaced_pitch_semitones": -0.11
+   }
+  },
+  "voice_heather_v1/part_noteOneThing_721bafd4.m4a": {
+   "clip": "part_noteOneThing",
+   "script": "Note one thing. Note down one small thing from today you’d like to remember.",
+   "filename_fingerprint_ok": true,
+   "founder_final_source": "preexpiry_review_2026-11-01/part_noteOneThing/raw/seed31.mp3",
+   "founder_final_extra_gain_db": -1.8,
+   "source_is_logged_raw": true,
+   "request_id": "2N1tb5SHbbXeuvoepb3D",
+   "chain_reproduces_shipping_file": true,
+   "take": "seed31",
+   "asr": "Note one thing. Note down one small thing from today you'd like to remember.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 150,
+   "tail_ms": 460,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -7.88,
+   "loudness_new": {
+    "I": -21.8,
+    "M_max": -18.4,
+    "S_max": -21.4
+   },
+   "loudness_replaced": {
+    "I": -19.7,
+    "M_max": -15.9,
+    "S_max": -19.5
+   },
+   "waveform_correlation_vs_source": 1.0,
+   "duration_mvhd_s": {
+    "replaced": 6.36,
+    "new": 6.62
+   },
+   "pause_bed_quietest10_A": {
+    "replaced": -69.8,
+    "new": -105.4
+   },
+   "identity_vs_heather_parts": {
+    "spectrum_percentile": 43.0,
+    "pitch_semitones": 1.04,
+    "replaced_spectrum_percentile": 78.0,
+    "replaced_pitch_semitones": 1.47
+   }
+  },
+  "voice_heather_v1/part_briskWalk_e3125526.m4a": {
+   "clip": "part_briskWalk",
+   "script": "A brisk walk. Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+   "filename_fingerprint_ok": true,
+   "founder_final_source": "heather_seed32_bank_2026-11-02/raw/part_briskWalk_seed32.mp3",
+   "founder_final_extra_gain_db": 0.0,
+   "source_is_logged_raw": true,
+   "request_id": "Xdfb6HmGyVdHShGHlEtv",
+   "chain_reproduces_shipping_file": true,
+   "take": "seed32",
+   "asr": "A brisk walk. Head out. Start easy. Then walk briskly. At a pace you can still talk at. Turn back about halfway.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 190,
+   "tail_ms": 470,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -4.87,
+   "loudness_new": {
+    "I": -20.3,
+    "M_max": -16.3,
+    "S_max": -20.1
+   },
+   "loudness_replaced": {
+    "I": -22.1,
+    "M_max": -17.5,
+    "S_max": -22.5
+   },
+   "waveform_correlation_vs_source": 0.9999,
+   "duration_mvhd_s": {
+    "replaced": 10.64,
+    "new": 11.16
+   },
+   "pause_bed_quietest10_A": {
+    "replaced": -71.0,
+    "new": -108.1
+   },
+   "identity_vs_heather_parts": {
+    "spectrum_percentile": 22.0,
+    "pitch_semitones": 0.86,
+    "replaced_spectrum_percentile": 92.0,
+    "replaced_pitch_semitones": 0.86
+   }
+  },
+  "voice_heather_v1/part_lookAround_53849d95.m4a": {
+   "clip": "part_lookAround",
+   "script": "Look around. Look slowly around you, and find three things you hadn’t noticed before.",
+   "filename_fingerprint_ok": true,
+   "founder_final_source": "heather_seed32_bank_2026-11-02/raw/part_lookAround_seed32.mp3",
+   "founder_final_extra_gain_db": 0.0,
+   "source_is_logged_raw": true,
+   "request_id": "9dc4emFC1vGOuDi0ywtT",
+   "chain_reproduces_shipping_file": true,
+   "take": "seed32",
+   "asr": "Look around, look slowly around you and find three things you hadn't noticed before.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 190,
+   "tail_ms": 440,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -4.76,
+   "loudness_new": {
+    "I": -20.2,
+    "M_max": -17.2,
+    "S_max": -19.7
+   },
+   "loudness_replaced": {
+    "I": -23.8,
+    "M_max": -17.9,
+    "S_max": -22.5
+   },
+   "waveform_correlation_vs_source": 1.0,
+   "duration_mvhd_s": {
+    "replaced": 6.98,
+    "new": 6.27
+   },
+   "pause_bed_quietest10_A": {
+    "replaced": -70.8,
+    "new": -96.0
+   },
+   "identity_vs_heather_parts": {
+    "spectrum_percentile": 14.0,
+    "pitch_semitones": -0.22,
+    "replaced_spectrum_percentile": 5.0,
+    "replaced_pitch_semitones": -0.44
+   }
+  },
+  "voice_heather_v1/part_roundTheBlock_b1fa45f9.m4a": {
+   "clip": "part_roundTheBlock",
+   "script": "Round the block. Step outside and walk once round the block, at whatever pace feels right today.",
+   "filename_fingerprint_ok": true,
+   "founder_final_source": "heather_seed32_bank_2026-11-02/raw/part_roundTheBlock_seed32.mp3",
+   "founder_final_extra_gain_db": 0.0,
+   "source_is_logged_raw": true,
+   "request_id": "aTJNbDScQCgZ9Bro5OPD",
+   "chain_reproduces_shipping_file": true,
+   "take": "seed32",
+   "asr": "Round the block. Step outside and walk once round the block at whatever pace feels right today.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 200,
+   "tail_ms": 450,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -5.69,
+   "loudness_new": {
+    "I": -20.2,
+    "M_max": -17.3,
+    "S_max": -19.4
+   },
+   "loudness_replaced": {
+    "I": -24.6,
+    "M_max": -18.4,
+    "S_max": -24.4
+   },
+   "waveform_correlation_vs_source": 0.9999,
+   "duration_mvhd_s": {
+    "replaced": 8.3,
+    "new": 6.45
+   },
+   "pause_bed_quietest10_A": {
+    "replaced": -70.9,
+    "new": -89.2
+   },
+   "identity_vs_heather_parts": {
+    "spectrum_percentile": 38.0,
+    "pitch_semitones": 0.28,
+    "replaced_spectrum_percentile": 86.0,
+    "replaced_pitch_semitones": 0.23
+   }
+  },
+  "voice_heather_v1/part_sitOutside_ba8e7ce2.m4a": {
+   "clip": "part_sitOutside",
+   "script": "Sit outside. Find somewhere outside to sit, with your phone in your pocket. Listen to what you can hear, near and far.",
+   "filename_fingerprint_ok": true,
+   "founder_final_source": "heather_seed32_bank_2026-11-02/raw/part_sitOutside_seed32.mp3",
+   "founder_final_extra_gain_db": 0.0,
+   "source_is_logged_raw": true,
+   "request_id": "e1YDujuBQ3r44FNDrMff",
+   "chain_reproduces_shipping_file": true,
+   "take": "seed32",
+   "asr": "Sit outside, find somewhere outside to sit, with your phone in your pocket. Listen to what you can hear, near and far.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 150,
+   "tail_ms": 440,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -4.06,
+   "loudness_new": {
+    "I": -21.6,
+    "M_max": -18.6,
+    "S_max": -21.3
+   },
+   "loudness_replaced": {
+    "I": -24.1,
+    "M_max": -19.1,
+    "S_max": -23.4
+   },
+   "waveform_correlation_vs_source": 1.0,
+   "duration_mvhd_s": {
+    "replaced": 9.27,
+    "new": 9.2
+   },
+   "pause_bed_quietest10_A": {
+    "replaced": -70.3,
+    "new": -106.0
+   },
+   "identity_vs_heather_parts": {
+    "spectrum_percentile": 5.0,
+    "pitch_semitones": -0.33,
+    "replaced_spectrum_percentile": 11.0,
+    "replaced_pitch_semitones": -0.06
+   }
+  }
+ }
+}

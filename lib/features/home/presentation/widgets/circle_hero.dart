@@ -16,6 +16,7 @@ import '../../../settings/application/first_name_provider.dart';
 import '../../application/activity_catalog.dart';
 import '../../application/first_breath_provider.dart';
 import '../../../personal_circle/application/guidance_conductor.dart';
+import '../../../personal_circle/application/guidance_voice.dart';
 import '../../../personal_circle/domain/circle_elements.dart';
 import '../../../personal_circle/domain/composed_session.dart';
 import '../../../personal_circle/presentation/skip_part_sheet.dart';
@@ -127,6 +128,29 @@ class CircleHero extends ConsumerStatefulWidget {
   static const naturalEndAnnouncementDelay = Duration(milliseconds: 900);
   static const closedDetail = 'Your next Circle opens tomorrow.';
 
+  /// The Close confirmation's title — one wording on every day, so it holds
+  /// for a Circle kept open past midnight too.
+  static const closeConfirmTitle = 'Close this Circle?';
+
+  /// The Close confirmation's body — on the Circle's own day, and past it
+  /// (a Circle kept open past midnight, whose next Circle can already
+  /// begin): the same words without the wait that isn't there.
+  static const closeConfirmBody =
+      "You won't be able to reopen it until tomorrow.";
+  static const closeConfirmBodyPastItsDay = "You won't be able to reopen it.";
+
+  /// How long until "tomorrow" is looked at again: the next local
+  /// midnight, or at most a minute — so a changed date or time zone is seen.
+  static Duration dayCheckIn(DateTime now) {
+    final untilMidnight = DateTime(
+      now.year,
+      now.month,
+      now.day + 1,
+    ).difference(now);
+    const atMost = Duration(minutes: 1);
+    return untilMidnight < atMost ? untilMidnight : atMost;
+  }
+
   /// The smallest the greeting gets to keep a long name on one line; the
   /// designed size is 34.
   static const greetingMinFontSize = 24.0;
@@ -229,6 +253,11 @@ class _CircleHeroState extends ConsumerState<CircleHero>
   final _closeFocus = FocusNode(skipTraversal: true);
   Timer? _endAnnouncement;
   bool? _closeLed;
+
+  // While a closed Circle says its next one opens tomorrow: a look again at
+  // local midnight, and at least once a minute, so a changed clock or time
+  // zone is seen too.
+  Timer? _dayTurn;
 
   // Guards the play-vs-skip decision (and the MediaQuery read it needs) so
   // it runs exactly once per widget lifetime, not again on a later,
@@ -472,12 +501,10 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     final confirmed = await showDialog<bool>(
       context: context,
       barrierLabel: 'Keep Circle open',
-      builder: (_) => const ThirtyConfirmDialog(
-        title: "Close today's Circle?",
-        body: "You won't be able to reopen it until tomorrow.",
-        cancelLabel: 'Keep Circle open',
-        confirmLabel: 'Close Circle',
-        destructive: true,
+      builder: (_) => _CloseConfirmation(
+        clock: ref.read(eventClockProvider),
+        onItsOwnDayAt: (at) =>
+            !mounted || ref.read(recommendationProvider).isOnItsOwnDayAt(at),
       ),
     );
 
@@ -546,7 +573,28 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     _closeFocus.dispose();
     _endAnnouncement?.cancel();
     _ticker?.cancel();
+    _dayTurn?.cancel();
     super.dispose();
+  }
+
+  /// Rebuilds once the closed Circle's "tomorrow" stops being true.
+  void _watchDayTurn(bool saysTomorrow) {
+    if (!saysTomorrow) {
+      _dayTurn?.cancel();
+      _dayTurn = null;
+      return;
+    }
+    if (_dayTurn != null) return;
+    _dayTurn = Timer(CircleHero.dayCheckIn(ref.read(eventClockProvider)()), () {
+      _dayTurn = null;
+      if (!mounted) return;
+      final state = ref.read(recommendationProvider);
+      if (state.nextCircleIsTomorrowAt(ref.read(eventClockProvider)())) {
+        _watchDayTurn(true);
+      } else {
+        setState(() {});
+      }
+    });
   }
 
   /// V2 Phase D2 (ADR-023 §7): "Skip this step" — skip the part on show
@@ -734,10 +782,20 @@ class _CircleHeroState extends ConsumerState<CircleHero>
     // text keeps the full Circle and scrolls.
     final normalTextSize = MediaQuery.textScalerOf(context).scale(16) <= 16;
 
+    // A voiced Circle's spoken opening (founder approval, 2026-10-26): its
+    // words are the heading while they are said, at Start; then the part.
+    final opening =
+        status == RecommendationStatus.started &&
+        !paused &&
+        ref.watch(spokenOpeningProvider) == recommendation.circleId;
+    final closedSaysTomorrow = recommendationState.nextCircleIsTomorrowAt(
+      ref.read(eventClockProvider)(),
+    );
+    _watchDayTurn(closedSaysTomorrow);
     // V2 Phase C: the heading pair belongs to the Circle's moment — the
     // greeting before Start, the session while it runs (the activity and
     // its time; for Guided, the step on show), and a quiet close after.
-    final SessionHeading heading = switch (status) {
+    final SessionHeading momentHeading = switch (status) {
       RecommendationStatus.notStarted => (
         title: homeGreeting(
           ref.watch(nowProvider),
@@ -759,11 +817,18 @@ class _CircleHeroState extends ConsumerState<CircleHero>
             part.definition.name,
         ],
       ),
+      // "Tomorrow" only while it is true, by the clock: on the closed
+      // Circle's own day. Past it — closed after midnight, or left on show
+      // across it — the next Circle can already begin, so the line is not
+      // shown; the layout keeps its place ([_watchDayTurn]).
       RecommendationStatus.closed => (
         title: CircleHero.closedHeading,
-        detail: CircleHero.closedDetail,
+        detail: closedSaysTomorrow ? CircleHero.closedDetail : '',
       ),
     };
+    final SessionHeading heading = opening
+        ? (title: ComposedCopy.opening, detail: momentHeading.detail)
+        : momentHeading;
     final headingStyle = status == RecommendationStatus.notStarted
         ? greetingStyle
         // A session's title can be an activity name or a step: a touch
@@ -771,6 +836,11 @@ class _CircleHeroState extends ConsumerState<CircleHero>
         : greetingStyle.copyWith(fontSize: 30);
     final greeting = Semantics(
       header: true,
+      // The opening's words go with the voice, which is silent in front of a
+      // screen reader: the screen reader keeps the part's own heading, so
+      // nothing is read twice or only for a moment.
+      label: opening ? momentHeading.title : null,
+      excludeSemantics: opening,
       child: AnimatedSwitcher(
         duration: artSwitchDuration,
         child: status == RecommendationStatus.notStarted
@@ -1119,6 +1189,14 @@ class _CircleHeroState extends ConsumerState<CircleHero>
                       cardAsset: _art.cardAsset,
                       artSwitchDuration: artSwitchDuration,
                       partMoment: partMoment,
+                      partNote: composed != null && partMoment != null
+                          ? composed.partNote(
+                              partMoment.position,
+                              voiceAvailable: ref
+                                  .watch(guidanceVoiceProvider)
+                                  .available,
+                            )
+                          : null,
                       onSkip: composed == null ? null : _skipPart,
                     ),
                   ),
@@ -1233,6 +1311,49 @@ Widget _pausedWhenHidden({
   required VoidCallback onHidden,
   required Widget child,
 }) => paced ? PauseWhenHidden(onHidden: onHidden, child: child) : child;
+
+/// The Close confirmation. "Until tomorrow" only while it is true: on the
+/// Circle's own day, looked at again at midnight while the dialog is open.
+class _CloseConfirmation extends StatefulWidget {
+  const _CloseConfirmation({required this.clock, required this.onItsOwnDayAt});
+
+  final DateTime Function() clock;
+  final bool Function(DateTime at) onItsOwnDayAt;
+
+  @override
+  State<_CloseConfirmation> createState() => _CloseConfirmationState();
+}
+
+class _CloseConfirmationState extends State<_CloseConfirmation> {
+  Timer? _dayTurn;
+
+  @override
+  void dispose() {
+    _dayTurn?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final now = widget.clock();
+    final onItsOwnDay = widget.onItsOwnDayAt(now);
+    _dayTurn?.cancel();
+    _dayTurn = onItsOwnDay
+        ? Timer(CircleHero.dayCheckIn(now), () {
+            if (mounted) setState(() {});
+          })
+        : null;
+    return ThirtyConfirmDialog(
+      title: CircleHero.closeConfirmTitle,
+      body: onItsOwnDay
+          ? CircleHero.closeConfirmBody
+          : CircleHero.closeConfirmBodyPastItsDay,
+      cancelLabel: 'Keep Circle open',
+      confirmLabel: 'Close Circle',
+      destructive: true,
+    );
+  }
+}
 
 /// The natural end's light over the World: a soft warm wash from above,
 /// clipped to the World's circle. Decorative.

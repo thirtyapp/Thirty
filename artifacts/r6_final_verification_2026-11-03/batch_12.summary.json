@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/features/plans/plans_surface_test.dart": {
+   "passed": 29,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/plans/r2_plan_credit_provenance_test.dart": {
+   "passed": 26,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/plans/r6_stage5_end_line_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/application/premium_offer_provider_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/b7_entitlement_matrix_test.dart": {
+   "passed": 40,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/presentation/premium_offer_c2_real_font_test.dart": {
+   "passed": 24,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/presentation/premium_offer_c2_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/presentation/premium_offer_copy_guard_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/presentation/premium_offer_page_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/r6_purchase_busy_label_test.dart": {
+   "passed": 1,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/application/reminder_after_close_test.dart": {
+   "passed": 17,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/application/reminder_personalization_test.dart": {
+   "passed": 27,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 209,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 12,
+ "exit": 0,
+ "seconds": 20,
+ "command": "flutter test --concurrency=1 --reporter json test/features/plans/plans_surface_test.dart test/features/plans/r2_plan_credit_provenance_test.dart test/features/plans/r6_stage5_end_line_test.dart test/features/premium/application/premium_offer_provider_test.dart test/features/premium/b7_entitlement_matrix_test.dart test/features/premium/presentation/premium_offer_c2_real_font_test.dart test/features/premium/presentation/premium_offer_c2_test.dart test/features/premium/presentation/premium_offer_copy_guard_test.dart test/features/premium/presentation/premium_offer_page_test.dart test/features/premium/r6_purchase_busy_label_test.dart test/features/reminder/application/reminder_after_close_test.dart test/features/reminder/application/reminder_personalization_test.dart"
+}

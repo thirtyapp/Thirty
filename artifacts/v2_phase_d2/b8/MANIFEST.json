@@ -2,13 +2,13 @@
   "artifact": "CONTENT_REVIEW_PACK.md",
   "kind": "REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY",
   "canonicalAuthority": false,
-  "generatedAtUtc": "2026-10-20T15:46:32.602697Z",
-  "gitHead": "27e840a19309767cc10a770b9032ddc6c5f283de",
+  "generatedAtUtc": "2026-11-03T14:21:02.359047Z",
+  "gitHead": "8bfd42c16693b8f5040ebcf4761db0e9c439981c",
   "workingTree": "intentionally uncommitted (B0–B8 for founder review); the pack reflects the working tree, not HEAD",
   "generator": "test/features/b8/b8_review_pack_test.dart",
   "extractor": "test/features/b8/support/live_copy.dart",
-  "productionFilesScanned": 153,
-  "copyStringsExtracted": 619,
+  "productionFilesScanned": 157,
+  "copyStringsExtracted": 658,
   "sourceFilesInPack": [
     "lib/core/routing/app_shell.dart",
     "lib/features/home/domain/recommendation_engine.dart",
@@ -26,7 +26,9 @@
     "lib/features/home/presentation/widgets/home_circle_metrics.dart",
     "lib/features/home/presentation/widgets/home_header.dart",
     "lib/features/home/presentation/widgets/journal_data_controls.dart",
+    "lib/features/home/presentation/widgets/journal_save_failure_notice.dart",
     "lib/features/home/presentation/widgets/later_today_label.dart",
+    "lib/features/home/presentation/widgets/make_today_circle_card.dart",
     "lib/features/home/presentation/widgets/not_this_one_sheet.dart",
     "lib/features/home/presentation/widgets/time_window_choice.dart",
     "lib/features/home/presentation/widgets/today_card.dart",
@@ -57,6 +59,6 @@
     "lib/features/settings/presentation/widgets/you_preferences_card.dart",
     "lib/features/settings/presentation/widgets/you_premium_card.dart"
   ],
-  "contentHashFnv64": "08c8713d544ec961",
+  "contentHashFnv64": "14e887136e45c6b8",
   "founderFlags": 4
 }

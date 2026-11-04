@@ -36,7 +36,7 @@
   "variety": {
     "composedDays": 365,
     "distinctSessions": 52,
-    "distinctMaterial": 19,
+    "distinctStructural": 19,
     "distinctMains": 6,
     "firstExactRepeatDay": 23,
     "medianDaysBetweenRepeats": 23,

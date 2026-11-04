@@ -5,6 +5,7 @@ import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_app_bar.dart';
 import '../application/circle_journal.dart';
 import 'widgets/circle_journal_entry_card.dart';
+import 'widgets/journal_save_failure_notice.dart';
 import 'widgets/journal_data_controls.dart';
 
 /// THIRTY's narrow, read-only personal-record view (ADR-013 §6): the
@@ -34,6 +35,14 @@ class CircleHistoryPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final journal = ref.watch(circleJournalRepositoryProvider);
     final entries = journal.readAll().reversed.toList();
+    // R6 final: History THIRTY couldn't open is said so — never shown as
+    // "nothing recorded".
+    final unopened = journal.storedHistoryUnopened;
+    final notice = unopened
+        ? JournalSaveCopy.unopened
+        : journal.hasPreservedHistory
+        ? JournalSaveCopy.preserved
+        : null;
 
     return Scaffold(
       appBar: const ThirtyAppBar(
@@ -43,9 +52,19 @@ class CircleHistoryPage extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
+            if (notice != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.page,
+                  AppSpacing.page,
+                  AppSpacing.page,
+                  0,
+                ),
+                child: _HistoryNotice(notice),
+              ),
             Expanded(
               child: entries.isEmpty
-                  ? const _EmptyHistory()
+                  ? (unopened ? const SizedBox.shrink() : const _EmptyHistory())
                   : ListView.separated(
                       padding: const EdgeInsets.all(AppSpacing.page),
                       itemCount: entries.length,
@@ -61,6 +80,27 @@ class CircleHistoryPage extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A calm line about History THIRTY couldn't open (R6 final).
+class _HistoryNotice extends StatelessWidget {
+  const _HistoryNotice(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppColors>()!;
+    return Semantics(
+      container: true,
+      child: Text(
+        text,
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
       ),
     );
   }

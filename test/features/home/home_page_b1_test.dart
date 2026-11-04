@@ -45,6 +45,9 @@ Future<Widget> _wrap({
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
       nowProvider.overrideWithValue(_today),
+      // R6 final: Start reads the real clock for the day (a passed day's offer
+      // never starts), so the test's clock is the same day as its now.
+      eventClockProvider.overrideWithValue(() => _today),
     ],
     child: MaterialApp(
       theme: theme ?? AppTheme.light,

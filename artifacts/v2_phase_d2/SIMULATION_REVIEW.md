@@ -1,5 +1,11 @@
 # THIRTY Phase D2 — long-horizon INTERNAL simulation review
 
+> **Status update 2026-11-03 (audit remediation R6b, A2-10):**
+> - **The metric below:** the "materially distinct (main + second)" figures in this D2-era review counted parts that *could* act as main or second, so they overstate substantive breadth.
+> - **The fix:** the simulation's metric is now **structurally distinct** (actual roles; `personal_circle_simulation_test.dart`).
+> - **Not regenerated:** these Phase D2 traces predate B1–B9 and would mix in unrelated changes. The figures below are kept as written, as historical evidence.
+> - **Current structural evidence:** `b8/README.md`.
+
 **These are not user-validation results.** They are deterministic, scripted users run day by day through the production providers (composer, engine, journal, preferences, Toolkit) to catch architectural failure — repetition, degeneration, evidence that changes nothing, leaks of excluded content, broken lapse — before pre-release users see the product. They report behaviour only; no "value score" is derived. Real users are the only evidence of value.
 
 Source: `test/features/personal_circle/personal_circle_simulation_test.dart` (tag `long`), traces in `simulations/`. Each profile runs 365 local days. Regenerated 2026-10-11 after the founder correction pass (14 profiles, all passing).

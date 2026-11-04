@@ -43,7 +43,7 @@ class GuidanceAudio(private val context: Context) {
     private var player: MediaPlayer? = null
     private var queue: List<String> = emptyList()
 
-    /** Called whenever the voice falls silent after playing. */
+    /** Called whenever the voice falls silent after playing, or is stopped. */
     var onIdle: (() -> Unit)? = null
 
     /** Whether a clip is playing or still queued. */
@@ -51,22 +51,42 @@ class GuidanceAudio(private val context: Context) {
         get() = player != null || queue.isNotEmpty()
 
     /**
-     * Plays [assets] in order, replacing anything still playing. With
-     * [deferToScreenReader], nothing plays while a screen reader (touch
-     * exploration — TalkBack) is on: it announces the part itself. Other
-     * accessibility services don't count.
+     * Plays [assets] in order, replacing anything still playing — or, with
+     * [afterCurrent], once what is playing has been said, so a cue is never
+     * cut off. With [deferToScreenReader], nothing plays while a screen
+     * reader (touch exploration — TalkBack) is on: it announces the part
+     * itself. Other accessibility services don't count.
      */
-    fun play(assets: List<String>, deferToScreenReader: Boolean) {
-        stop()
-        if (deferToScreenReader && accessibilityManager.isTouchExplorationEnabled) return
+    fun play(assets: List<String>, deferToScreenReader: Boolean, afterCurrent: Boolean = false) {
+        if (deferToScreenReader && accessibilityManager.isTouchExplorationEnabled) {
+            if (!afterCurrent) stop()
+            return
+        }
+        if (afterCurrent && isPlaying) {
+            queue = queue + assets
+            return
+        }
+        halt()
         queue = assets
         if (queue.isEmpty()) return
         requestFocus()
         playNext()
     }
 
-    /** Stops at once and gives focus back. */
+    /**
+     * Stops at once and gives focus back. A session waiting for the voice
+     * to fall idle ([GuidanceService.end] after speech) ends now, not at
+     * its time limit — the voice turned off or a lapse during the ending,
+     * or the closing line queued behind it.
+     */
     fun stop() {
+        val wasPlaying = isPlaying
+        halt()
+        if (wasPlaying) onIdle?.invoke()
+    }
+
+    /** Silences what is playing, to be replaced. */
+    private fun halt() {
         queue = emptyList()
         player?.release()
         player = null

@@ -1,0 +1,206 @@
+{
+ "method": "Heather final integration (2026-11-02), founder-authorized (\"FINAL HEATHER FOUNDER-APPROVED AUDIO\nINTEGRATION\"): six FOUNDER LISTENING PASS takes replace their shipping files by the 2026-10-17/18 route.\nNothing is generated.\n\n  part_shakeOut       seed 34  (heather_final_round_2026-11-02)\n  part_noteOneThing   seed 31  (preexpiry_review_2026-11-01)       + the 2026-10-17 static trim (see below)\n  part_briskWalk      seed 32  (heather_seed32_bank_2026-11-02)\n  part_lookAround     seed 32  (heather_seed32_bank_2026-11-02)\n  part_roundTheBlock  seed 32  (heather_seed32_bank_2026-11-02)\n  part_sitOutside     seed 32  (heather_seed32_bank_2026-11-02)\n\nChecks before any write (all must pass, else STOP with nothing changed):\n  1. the shipping file's SHA-1 equals its PRODUCTION_SHA1.txt line AND the committed baseline\n     (git 8bfd42c blob): none of the six was touched since the freeze;\n  2. provenance of the raw: its credit-ledger entry (voice plP9aw1rizYgjFfuvLQ7,\n     eleven_multilingual_v2, the frozen settings, the seed, the canonical manifest script verbatim,\n     the raw file's SHA-1);\n  3. the approved master (the file the founder heard, level-matched) is reproduced byte-for-byte by\n     the frozen rule (review_pack.master, Heather's frozen median and voice gain, no extra gain)\n     from that raw, and equals the master SHA-1 in the final-round QA report;\n  4. loudness: the gate's verdict (loudness_gate.json, tools/loudness_gate.py). Only\n     part_noteOneThing is flagged (T3: its 2026-10-17 correction rounds to -1.8 dB, the getItOut\n     correction the founder confirmed by ear). It ships by the 2026-10-17 route: the same frozen\n     rule from the same raw with ONE extra static gain of -1.8 dB (no compression, EQ or denoise;\n     words, timing and pitch unchanged), reproduced twice byte-identically.\nThen, per clip: the shipping file is copied (byte-identical) to REPLACED_shipping_<file> here, and\nthe approved master (or the trimmed master, kept here as TRIMMED_<clip>_seed31_-1.8dB.m4a) is\nbyte-copied over the shipping file under the same name. PRODUCTION_SHA1.txt: the pre-correction list\nis kept here as PRE_CORRECTION_PRODUCTION_SHA1.txt and exactly six lines change (LF kept).\nproduction.FOUNDER_FINAL is edited separately (by hand).\nUsage: python -I apply.py <repo>\n",
+ "baseline_commit": "8bfd42c16693b8f5040ebcf4761db0e9c439981c",
+ "production_sha1_lines_changed": [
+  52,
+  56,
+  57,
+  73,
+  80,
+  82
+ ],
+ "files": [
+  {
+   "clip": "part_shakeOut",
+   "seed": 34,
+   "file": "part_shakeOut_d58bb0f4.m4a",
+   "script": "Shake it out. Shake out your hands and arms loosely, then let them rest.",
+   "shipping": "assets/audio/guidance/voice_heather_v1/part_shakeOut_d58bb0f4.m4a",
+   "old_sha1": "cead8c1dbcc488b4add8603ae6fefdac8d0ee389",
+   "approved_master": "heather_final_round_2026-11-02/part_shakeOut/masters/seed34_as_shipped.m4a",
+   "approved_master_sha1": "8896408ce290d31c68be331c467383323c834489",
+   "shipped_source": "heather_final_round_2026-11-02/part_shakeOut/masters/seed34_as_shipped.m4a",
+   "new_sha1": "8896408ce290d31c68be331c467383323c834489",
+   "extra_gain_db": 0.0,
+   "raw": "heather_final_round_2026-11-02/part_shakeOut/raw/seed34.mp3",
+   "request_id": "8wT1CCk0FKe5bGj9om9T",
+   "raw_sha1": "b5dd3bc0fc1949a018b4c364cdf9397411b2d1e5",
+   "mastering": {
+    "raw_trimmed_lufs": -17.34,
+    "outlier_correction_db": -0.16,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -3.05,
+    "limiter_db": 0.0,
+    "head_fade_ms": 2.0
+   },
+   "provenance": {
+    "voice_id": true,
+    "model": true,
+    "settings": true,
+    "script": true,
+    "raw_sha1": true
+   }
+  },
+  {
+   "clip": "part_noteOneThing",
+   "seed": 31,
+   "file": "part_noteOneThing_721bafd4.m4a",
+   "script": "Note one thing. Note down one small thing from today you’d like to remember.",
+   "shipping": "assets/audio/guidance/voice_heather_v1/part_noteOneThing_721bafd4.m4a",
+   "old_sha1": "ee1f04b66984cbd50d796b0b2aecaad8d81b4c46",
+   "approved_master": "preexpiry_review_2026-11-01/part_noteOneThing/masters/seed31_as_shipped.m4a",
+   "approved_master_sha1": "688b38d5e6c937cf3500ca990268654545d7d337",
+   "shipped_source": "heather_final_integration_2026-11-02/TRIMMED_part_noteOneThing_seed31_-1.8dB.m4a",
+   "new_sha1": "60e24b1fd9fbf320fac546a517532005513f420a",
+   "extra_gain_db": -1.8,
+   "raw": "preexpiry_review_2026-11-01/part_noteOneThing/raw/seed31.mp3",
+   "request_id": "2N1tb5SHbbXeuvoepb3D",
+   "raw_sha1": "5adb12141e819f12f457060a06c34add33ec4779",
+   "mastering": {
+    "raw_trimmed_lufs": -15.4,
+    "outlier_correction_db": -2.1,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": -1.8,
+    "total_gain_db": -6.79,
+    "limiter_db": 0.0,
+    "head_fade_ms": 2.0
+   },
+   "provenance": {
+    "voice_id": true,
+    "model": true,
+    "settings": true,
+    "script": true,
+    "raw_sha1": true
+   }
+  },
+  {
+   "clip": "part_briskWalk",
+   "seed": 32,
+   "file": "part_briskWalk_e3125526.m4a",
+   "script": "A brisk walk. Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+   "shipping": "assets/audio/guidance/voice_heather_v1/part_briskWalk_e3125526.m4a",
+   "old_sha1": "8302849906e7aa00283e0e9c387edd7e9daf758f",
+   "approved_master": "heather_seed32_bank_2026-11-02/masters/part_briskWalk_seed32.m4a",
+   "approved_master_sha1": "e311e08647b9b182d7bd1f2d4a99e20eb7d21032",
+   "shipped_source": "heather_seed32_bank_2026-11-02/masters/part_briskWalk_seed32.m4a",
+   "new_sha1": "e311e08647b9b182d7bd1f2d4a99e20eb7d21032",
+   "extra_gain_db": 0.0,
+   "raw": "heather_seed32_bank_2026-11-02/raw/part_briskWalk_seed32.mp3",
+   "request_id": "Xdfb6HmGyVdHShGHlEtv",
+   "raw_sha1": "49038d3d2b328fa9c5930df4b33e90ebcb6da278",
+   "mastering": {
+    "raw_trimmed_lufs": -16.52,
+    "outlier_correction_db": -0.98,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -3.87,
+    "limiter_db": 0.0,
+    "head_fade_ms": 10.0
+   },
+   "provenance": {
+    "voice_id": true,
+    "model": true,
+    "settings": true,
+    "script": true,
+    "raw_sha1": true
+   }
+  },
+  {
+   "clip": "part_lookAround",
+   "seed": 32,
+   "file": "part_lookAround_53849d95.m4a",
+   "script": "Look around. Look slowly around you, and find three things you hadn’t noticed before.",
+   "shipping": "assets/audio/guidance/voice_heather_v1/part_lookAround_53849d95.m4a",
+   "old_sha1": "3e8416d16913262b14f55724ec30ce0f8cd85ccb",
+   "approved_master": "heather_seed32_bank_2026-11-02/masters/part_lookAround_seed32.m4a",
+   "approved_master_sha1": "b55f8599e31e28c88009e24a97c9c5366974a459",
+   "shipped_source": "heather_seed32_bank_2026-11-02/masters/part_lookAround_seed32.m4a",
+   "new_sha1": "b55f8599e31e28c88009e24a97c9c5366974a459",
+   "extra_gain_db": 0.0,
+   "raw": "heather_seed32_bank_2026-11-02/raw/part_lookAround_seed32.mp3",
+   "request_id": "9dc4emFC1vGOuDi0ywtT",
+   "raw_sha1": "0008dae61c4fed866f9d2ca09729f35122b11489",
+   "mastering": {
+    "raw_trimmed_lufs": -17.19,
+    "outlier_correction_db": -0.31,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -3.2,
+    "limiter_db": 0.0,
+    "head_fade_ms": 10.0
+   },
+   "provenance": {
+    "voice_id": true,
+    "model": true,
+    "settings": true,
+    "script": true,
+    "raw_sha1": true
+   }
+  },
+  {
+   "clip": "part_roundTheBlock",
+   "seed": 32,
+   "file": "part_roundTheBlock_b1fa45f9.m4a",
+   "script": "Round the block. Step outside and walk once round the block, at whatever pace feels right today.",
+   "shipping": "assets/audio/guidance/voice_heather_v1/part_roundTheBlock_b1fa45f9.m4a",
+   "old_sha1": "e7489c58f77354ab15892db87c6482b8ae8c0f46",
+   "approved_master": "heather_seed32_bank_2026-11-02/masters/part_roundTheBlock_seed32.m4a",
+   "approved_master_sha1": "6bac184329a542ce9ff5f5bca89e373ed2322336",
+   "shipped_source": "heather_seed32_bank_2026-11-02/masters/part_roundTheBlock_seed32.m4a",
+   "new_sha1": "6bac184329a542ce9ff5f5bca89e373ed2322336",
+   "extra_gain_db": 0.0,
+   "raw": "heather_seed32_bank_2026-11-02/raw/part_roundTheBlock_seed32.mp3",
+   "request_id": "aTJNbDScQCgZ9Bro5OPD",
+   "raw_sha1": "93f398c925b134169b69b24a2b087404d0961234",
+   "mastering": {
+    "raw_trimmed_lufs": -15.53,
+    "outlier_correction_db": -1.97,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -4.86,
+    "limiter_db": 0.0,
+    "head_fade_ms": 10.0
+   },
+   "provenance": {
+    "voice_id": true,
+    "model": true,
+    "settings": true,
+    "script": true,
+    "raw_sha1": true
+   }
+  },
+  {
+   "clip": "part_sitOutside",
+   "seed": 32,
+   "file": "part_sitOutside_ba8e7ce2.m4a",
+   "script": "Sit outside. Find somewhere outside to sit, with your phone in your pocket. Listen to what you can hear, near and far.",
+   "shipping": "assets/audio/guidance/voice_heather_v1/part_sitOutside_ba8e7ce2.m4a",
+   "old_sha1": "aebf984799dc946fefbc097dde74de8d54c5e385",
+   "approved_master": "heather_seed32_bank_2026-11-02/masters/part_sitOutside_seed32.m4a",
+   "approved_master_sha1": "19ad090de7d613876d3b4e2ae34f8b22f4ea9198",
+   "shipped_source": "heather_seed32_bank_2026-11-02/masters/part_sitOutside_seed32.m4a",
+   "new_sha1": "19ad090de7d613876d3b4e2ae34f8b22f4ea9198",
+   "extra_gain_db": 0.0,
+   "raw": "heather_seed32_bank_2026-11-02/raw/part_sitOutside_seed32.mp3",
+   "request_id": "e1YDujuBQ3r44FNDrMff",
+   "raw_sha1": "44861cb85f30e5da6bcde753c19d0b6154287058",
+   "mastering": {
+    "raw_trimmed_lufs": -18.66,
+    "outlier_correction_db": 0.0,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -2.89,
+    "limiter_db": 0.0,
+    "head_fade_ms": 2.0
+   },
+   "provenance": {
+    "voice_id": true,
+    "model": true,
+    "settings": true,
+    "script": true,
+    "raw_sha1": true
+   }
+  }
+ ]
+}

@@ -22,6 +22,7 @@ import '../../plans/domain/plan_stage_provenance.dart';
 import '../domain/circle_session.dart';
 import '../domain/recommendation_engine.dart';
 import 'activity_catalog.dart';
+import 'circle_history_deletion.dart';
 import 'circle_journal.dart';
 import 'suggestion_preferences.dart';
 
@@ -148,12 +149,28 @@ class Recommendation {
   bool get canReplace =>
       replacedFrom == null && reason != RecommendationReason.ownChoice;
 
+  /// An ordinary Free offer: decided without Premium — one activity, not a
+  /// Premium day's fallback, not the user's own choice, not replaced. Once
+  /// Premium is verified, the user may turn it into today's composed Circle
+  /// (audit remediation R2, founder decision D1;
+  /// [RecommendationNotifier.upgradeToday]).
+  bool get isFreeDecision =>
+      composed == null &&
+      !composerFellBack &&
+      reason != RecommendationReason.ownChoice &&
+      replacedFrom == null &&
+      retiredSession == null;
+
   /// The session today's Circle runs: the activity as authored, or a
   /// composed Circle's parts one after the other.
   ActivityDefinition get sessionDefinition {
     final composed = this.composed;
     if (composed != null) {
-      return sessionForPlan(composed.plan, title: composed.title);
+      return sessionForPlan(
+        composed.plan,
+        title: composed.title,
+        wording: composed.wording,
+      );
     }
     return activityDefinition(activityId);
   }
@@ -353,6 +370,67 @@ const recommendationPartAnchorMsKey = 'recommendation_part_anchor_ms';
 /// V2 Phase D2: the elements skipped today, by name.
 const recommendationSkippedKey = 'recommendation_skipped';
 
+/// Audit remediation R3 (J5): a write of today's keys that may not have
+/// reached every key yet — the complete set of values it writes, as one JSON
+/// record, saved before any of them and removed once all are. Reading today
+/// ([build]) takes these values over the keys, so a write cut short by the
+/// app stopping is read as written in full, never as a mix of two days or
+/// two offers. The next write carries it forward.
+const recommendationPendingWriteKey = 'recommendation_pending_write';
+
+/// The values of [recommendationPendingWriteKey] (key → value; `null`
+/// removes the key), or none.
+Map<String, Object?> _pendingDayWrite(SharedPreferences prefs) {
+  final raw = prefs.getString(recommendationPendingWriteKey);
+  if (raw == null) return const {};
+  try {
+    final decoded = jsonDecode(raw);
+    return decoded is Map<String, Object?> ? decoded : const {};
+  } catch (_) {
+    return const {};
+  }
+}
+
+/// Today's keys as last written: a write in progress
+/// ([recommendationPendingWriteKey]) over what is stored.
+class _DayKeys {
+  _DayKeys(this._prefs) : _pending = _pendingDayWrite(_prefs);
+
+  final SharedPreferences _prefs;
+  final Map<String, Object?> _pending;
+
+  Object? _value(String key) =>
+      _pending.containsKey(key) ? _pending[key] : _prefs.get(key);
+
+  String? getString(String key) => switch (_value(key)) {
+    final String value => value,
+    _ => null,
+  };
+
+  int? getInt(String key) => switch (_value(key)) {
+    final int value => value,
+    _ => null,
+  };
+
+  bool? getBool(String key) => switch (_value(key)) {
+    final bool value => value,
+    _ => null,
+  };
+
+  List<String>? getStringList(String key) => switch (_value(key)) {
+    final List<Object?> value => [
+      for (final item in value)
+        if (item is String) item,
+    ],
+    _ => null,
+  };
+}
+
+/// A write begun before Delete Circle history began: it stops here.
+class _StaleWrite implements Exception {
+  const _StaleWrite();
+}
+
 /// What "Use it today" did (V2 Phase D2, ADR-023 §8).
 enum UseTodayResult {
   /// Today's Circle is now one of the user's kept Circles.
@@ -364,6 +442,26 @@ enum UseTodayResult {
   /// Nothing by that id, or it can't be offered (turned off, a piece the
   /// user asked THIRTY not to suggest, or content that isn't offerable).
   unavailable,
+
+  /// A Delete Circle history that didn't finish must be finished first
+  /// (audit remediation R3): nothing changed.
+  historyDeletionPending,
+}
+
+/// What "Make today's Circle" did (audit remediation R2, founder decision
+/// D1).
+enum UpgradeTodayResult {
+  /// Today's Free offer is now the Circle THIRTY made for the same need and
+  /// time.
+  upgraded,
+
+  /// No Circle could honestly be made for today's need and time: today's
+  /// offer stays exactly as it was.
+  noComposition,
+
+  /// Nothing to make: Premium isn't verified active, or today's offer isn't
+  /// an unstarted ordinary Free one.
+  notAvailable,
 }
 
 /// Today's Circle: its content ([recommendation]) plus its session/
@@ -423,6 +521,17 @@ class RecommendationState {
 
   /// When today's Circle was closed. Null iff [status] is not [closed].
   final DateTime? closedAt;
+
+  /// Whether "Your next Circle opens tomorrow." is true at [at]: this Circle
+  /// is closed and [at] is still on its own day (its circle id). Past that
+  /// day — closed after midnight, or a closed Circle still on show across
+  /// it — the next Circle can already begin: never a longer wait.
+  bool nextCircleIsTomorrowAt(DateTime at) =>
+      status == RecommendationStatus.closed && isOnItsOwnDayAt(at);
+
+  /// Whether [at] is still this Circle's own day (its circle id) — so a
+  /// Close now leaves the next Circle for tomorrow.
+  bool isOnItsOwnDayAt(DateTime at) => recommendation?.circleId == dateKey(at);
 
   /// The user's optional "Did you try this activity?" answer (ADR-013
   /// §4) — `null` means no answer was given, never a negative. Only ever
@@ -566,18 +675,233 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// Every write runs after the previous one: today's choice, a replacement
   /// moments later and the Circle's lifecycle are persisted in the order
   /// they happened, never interleaved.
+  ///
+  /// Audit remediation R3 (J4): each write is begun under Delete Circle
+  /// history's [HistoryWriteGate] — one begun before a deletion stops at its
+  /// next step ([_ensureCurrent]); one begun during a deletion waits for it.
   Future<void> _writes = Future<void>.value();
 
-  void _enqueue(Future<void> Function() write) {
-    _writes = _writes.then((_) => write()).catchError((Object _) {});
+  void _enqueue(Future<void> Function(int epoch) write) {
+    final gate = ref.read(historyWriteGateProvider);
+    final epoch = gate.epoch;
+    _writes = _writes
+        .then((_) async {
+          if (!gate.isCurrent(epoch)) return;
+          await gate.settled;
+          await write(epoch);
+        })
+        .catchError((Object _) {});
+    gate.track(epoch, _writes);
     unawaited(_writes);
+  }
+
+  /// Throws [_StaleWrite] once Delete Circle history has begun after the
+  /// write begun under [epoch].
+  void _ensureCurrent(int epoch) {
+    if (!ref.mounted || !ref.read(historyWriteGateProvider).isCurrent(epoch)) {
+      throw const _StaleWrite();
+    }
+  }
+
+  /// Writes [values] (key → value; `null` removes the key) for today's
+  /// Circle [circleId], as one publication (audit remediation R3, J5): the
+  /// whole set is first saved as one record ([recommendationPendingWriteKey],
+  /// with any earlier write still in it), then each key, then the record is
+  /// removed. Cut short anywhere, today reads as either before or after it.
+  ///
+  /// Only today's choice ([newDay]) starts a session; anything else lands
+  /// only on [circleId]'s own, never on another day's. The journal is kept
+  /// by Circle, so the caller records it either way.
+  Future<void> _publish(
+    int epoch, {
+    required String circleId,
+    required Map<String, Object?> values,
+    bool newDay = false,
+  }) async {
+    _ensureCurrent(epoch);
+    final prefs = ref.read(sharedPreferencesProvider);
+    final stored = _DayKeys(prefs).getString(recommendationDayKey);
+    if (!newDay && stored != circleId) return;
+    final all = {..._pendingDayWrite(prefs), ...values};
+    await prefs.setString(recommendationPendingWriteKey, jsonEncode(all));
+    for (final MapEntry(:key, :value) in all.entries) {
+      _ensureCurrent(epoch);
+      await switch (value) {
+        final String value => prefs.setString(key, value),
+        final int value => prefs.setInt(key, value),
+        final bool value => prefs.setBool(key, value),
+        final List<Object?> value => prefs.setStringList(key, [
+          for (final item in value) '$item',
+        ]),
+        _ => prefs.remove(key),
+      };
+    }
+    _ensureCurrent(epoch);
+    await prefs.remove(recommendationPendingWriteKey);
+  }
+
+  /// The Circle journal, for one step of the write begun under [epoch] —
+  /// checked first, so a write begun before Delete Circle history never
+  /// re-creates a deleted record.
+  CircleJournalRepository _journalFor(int epoch) {
+    _ensureCurrent(epoch);
+    return ref.read(circleJournalRepositoryProvider);
   }
 
   @override
   RecommendationState build() {
-    final prefs = ref.watch(sharedPreferencesProvider);
+    final prefs = _DayKeys(ref.watch(sharedPreferencesProvider));
     final today = dateKey(ref.watch(nowProvider));
+    final restored = _restoredOn(prefs, today);
+    _mirrorInJournal(restored);
+    // Audit remediation R3: a session of an earlier day, still the one
+    // stored (a Close just before midnight, cut short), catches up too —
+    // under its own day, never as today's.
+    if (_earlierSession(prefs, today) case final earlier?) {
+      _mirrorInJournal(earlier);
+    }
+    return restored;
+  }
 
+  /// The session stored for a day before [today], when it was started or
+  /// closed — read as that day's, exactly as stored; `null` otherwise. It is
+  /// never today's Circle: only its own records catch up from it.
+  RecommendationState? _earlierSession(_DayKeys prefs, String today) {
+    final stored = prefs.getString(recommendationDayKey);
+    if (stored == null || stored.compareTo(today) >= 0) return null;
+    final earlier = _restoredOn(prefs, stored);
+    return earlier.status == RecommendationStatus.notStarted ? null : earlier;
+  }
+
+  /// A closed stage Circle's credit to its Plan (ADR-024 B3), on the
+  /// Circle's own day — once per Circle, as [CirclePlansNotifier.recordGuided]
+  /// guarantees. Nothing for any other Circle.
+  Future<void> _creditGuided(RecommendationState closed) {
+    final recommendation = closed.recommendation;
+    final composed = recommendation?.composed;
+    final stage = composed?.stage;
+    if (recommendation == null ||
+        stage == null ||
+        closed.status != RecommendationStatus.closed) {
+      return Future<void>.value();
+    }
+    return ref
+        .read(circlePlansProvider.notifier)
+        .recordGuided(
+          stage,
+          circleId: recommendation.circleId,
+          on: recommendation.circleId,
+          parts: composed!.plan.toWire(),
+          skipped: [for (final e in closed.skipped) e.name],
+        );
+  }
+
+  /// Whether a Delete Circle history that didn't finish is still waiting
+  /// to be: no new Circle begins until it is (audit remediation R3).
+  bool get _historyDeletionPending =>
+      ref.read(circleHistoryDeletionProvider).isPending;
+
+  /// Audit remediation R3: the journal says what today's keys say. Today's
+  /// keys are published whole ([_publish]) and the journal after them, so
+  /// the app stopping in between leaves the journal behind — never ahead.
+  /// On restoring, it catches up from them: a Circle not yet started is
+  /// named as offered (a replacement, or "Make today's Circle", that didn't
+  /// reach History yet); one started or closed is recorded as such. Nothing
+  /// is made up: no answer, Close or stage that today's keys don't hold.
+  ///
+  /// A closed stage Circle's Plan credit catches up the same way: the Close
+  /// is saved first and the credit after it ([close]), so a durable Close
+  /// is what the credit follows — never the other way round.
+  void _mirrorInJournal(RecommendationState restored) {
+    final recommendation = restored.recommendation;
+    if (recommendation == null) return;
+    final entry = ref
+        .read(circleJournalRepositoryProvider)
+        .readAll()
+        .where((e) => e.circleId == recommendation.circleId)
+        .firstOrNull;
+    if (restored.status == RecommendationStatus.notStarted) {
+      if (entry != null &&
+          (entry.startedAt != null || _namesOffer(entry, recommendation))) {
+        return;
+      }
+      // When it was first shown isn't kept outside the journal: now is the
+      // closest honest estimate, as for a missing record at Start.
+      final at = ref.read(eventClockProvider)();
+      _enqueue((epoch) async {
+        final journal = _journalFor(epoch);
+        if (entry == null) {
+          await journal.recordShown(
+            circleId: recommendation.circleId,
+            localDate: recommendation.circleId,
+            direction: recommendation.intention,
+            activityId: recommendation.activityId,
+            shownAt: at,
+            offer: recommendation.journalOffer,
+          );
+        } else {
+          await journal.recordReplaced(
+            circleId: recommendation.circleId,
+            localDate: recommendation.circleId,
+            direction: recommendation.intention,
+            activityId: recommendation.activityId,
+            replacedAt: at,
+            offer: recommendation.journalOffer,
+          );
+        }
+        if (ref.mounted) ref.invalidate(circleJournalRepositoryProvider);
+      });
+      return;
+    }
+    final mirrored =
+        entry != null &&
+        entry.startedAt != null &&
+        (restored.closedAt == null || entry.closedAt != null) &&
+        (restored.attemptResponse == null ||
+            entry.attemptResponse == restored.attemptResponse) &&
+        (restored.usefulnessResponse == null ||
+            entry.usefulnessResponse == restored.usefulnessResponse);
+    final stage = recommendation.composed?.stage;
+    final credited =
+        restored.status != RecommendationStatus.closed ||
+        stage == null ||
+        (ref
+                .read(circlePlansProvider)
+                .plans[stage.planId]
+                ?.cycles
+                .any(
+                  (c) => c.records.any(
+                    (r) => r.circleId == recommendation.circleId,
+                  ),
+                ) ??
+            false);
+    if (mirrored && credited) return;
+    _enqueue((epoch) async {
+      if (!mirrored) await _recordInJournal(epoch, restored);
+      _ensureCurrent(epoch);
+      await _creditGuided(restored);
+    });
+  }
+
+  /// Whether [entry] names [recommendation]'s offer as History shows it.
+  static bool _namesOffer(
+    CircleJournalEntry entry,
+    Recommendation recommendation,
+  ) {
+    final offer = recommendation.journalOffer;
+    return entry.activityId == recommendation.activityId &&
+        entry.offeredMinutes == offer.offeredMinutes &&
+        entry.reasonCode == offer.reasonCode &&
+        entry.timeWindow == offer.timeWindow &&
+        (offer.replacedFrom == null ||
+            entry.replacedFrom == offer.replacedFrom) &&
+        (entry.session?.parts ?? const []).join(' ') ==
+            (offer.session?.parts ?? const []).join(' ');
+  }
+
+  /// The session of [today] (a local date) as stored: the keys, read
+  /// through any write in progress.
+  RecommendationState _restoredOn(_DayKeys prefs, String today) {
     final freshNoRecommendation = RecommendationState(
       recommendation: null,
       status: RecommendationStatus.notStarted,
@@ -729,9 +1053,17 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// leaves today to the ordinary Personal Guided Circle.
   void chooseIntention(Intention intention, {TimeWindow? window}) {
     if (state.recommendation != null) return;
+    // Audit remediation R3: never a Circle a pending deletion would erase.
+    if (_historyDeletionPending) return;
 
     final now = ref.read(nowProvider);
     final today = dateKey(now);
+    // An earlier day's Close that is saved but not yet credited counts
+    // before today's Plan stage is chosen.
+    final stored = _DayKeys(ref.read(sharedPreferencesProvider));
+    if (_earlierSession(stored, today) case final earlier?) {
+      unawaited(_creditGuided(earlier));
+    }
     final TimeWindow chosen = ref.read(timeWindowChoiceProvider);
     final timeWindow = window ?? chosen;
 
@@ -752,42 +1084,15 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     // Personal Guided Circle — unless no honest composition exists (then
     // Free's one activity, said plainly).
     final premium = ref.read(premiumEntitlementProvider);
-    final context = ComposerContext(
-      date: now,
-      need: intention,
-      window: timeWindow,
-    );
-    final planDay = premium
-        ? ref
-              .read(circlePlansProvider.notifier)
-              .steerToday(
-                context,
-                history,
-                controls: preferences.controls,
-                leftOut: preferences.leftOut,
-              )
-        : null;
-    final stageCircle = planDay?.circle;
     final composed = premium
-        ? stageCircle ??
-              composeCircle(
-                context,
-                history,
-                controls: preferences.controls,
-                leftOut: preferences.leftOut,
-              )
+        ? _composeToday(
+            ComposerContext(date: now, need: intention, window: timeWindow),
+            history,
+            preferences,
+          )
         : null;
     if (composed != null) {
-      recommendation = _fromComposed(
-        intention,
-        ComposedSession(
-          plan: composed.plan,
-          basis: composed.basis,
-          stage: stageCircle == null ? null : planDay!.stage,
-        ),
-        today,
-        timeWindow,
-      );
+      recommendation = _fromComposed(intention, composed, today, timeWindow);
     } else if (decision == null) {
       // V2 Phase C: the user's own "Don't suggest" choices leave nothing
       // that fits. Say so; never override them.
@@ -812,7 +1117,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       status: RecommendationStatus.notStarted,
     );
     _enqueue(
-      () => _persistChoice(
+      (epoch) => _persistChoice(
+        epoch,
         today: today,
         recommendation: recommendation,
         shownAt: now,
@@ -827,6 +1133,87 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
             'activity_id': recommendation.activityId.name,
           },
         );
+  }
+
+  /// Today's Premium composition for [context]: the active Circle Plan's
+  /// stage first, when it steers today; otherwise the ordinary Personal
+  /// Guided Circle — or `null` when no honest composition exists. The
+  /// caller has already checked Premium.
+  ComposedSession? _composeToday(
+    ComposerContext context,
+    List<PastCircle> history,
+    SuggestionPreferences preferences,
+  ) {
+    final planDay = ref
+        .read(circlePlansProvider.notifier)
+        .steerToday(
+          context,
+          history,
+          controls: preferences.controls,
+          leftOut: preferences.leftOut,
+        );
+    final stageCircle = planDay.circle;
+    final composed =
+        stageCircle ??
+        composeCircle(
+          context,
+          history,
+          controls: preferences.controls,
+          leftOut: preferences.leftOut,
+        );
+    if (composed == null) return null;
+    return ComposedSession(
+      plan: composed.plan,
+      basis: composed.basis,
+      stage: stageCircle == null ? null : planDay.stage,
+    );
+  }
+
+  /// "Make today's Circle" (audit remediation R2, founder decision D1):
+  /// today's ordinary Free offer — decided before Premium was verified —
+  /// becomes the Circle THIRTY makes for the same need and time, through
+  /// the same composition a Premium choice gets ([_composeToday]). Only on
+  /// the user's tap, only while Premium is verified active, and only before
+  /// Start: never a second Circle, never a swap of something started,
+  /// replaced, kept or already composed. Still one decision a day: once
+  /// made, today's Circle is composed, so a repeat call is
+  /// [UpgradeTodayResult.notAvailable]. When nothing honest can be made,
+  /// today's offer stays exactly as it was.
+  ///
+  /// The journal keeps one record for today, now naming the composed
+  /// Circle; it is no "Not this one today", so the day's one replacement
+  /// is still there.
+  UpgradeTodayResult upgradeToday() {
+    final current = state.recommendation;
+    if (current == null ||
+        !current.isFreeDecision ||
+        state.status != RecommendationStatus.notStarted ||
+        !ref.read(premiumEntitlementProvider)) {
+      return UpgradeTodayResult.notAvailable;
+    }
+    final now = ref.read(nowProvider);
+    final composed = _composeToday(
+      ComposerContext(
+        date: now,
+        need: current.intention,
+        window: current.timeWindow,
+      ),
+      ref.read(pastCirclesProvider),
+      ref.read(suggestionPreferencesProvider),
+    );
+    if (composed == null) return UpgradeTodayResult.noComposition;
+    final upgraded = _fromComposed(
+      current.intention,
+      composed,
+      current.circleId,
+      current.timeWindow,
+    );
+    state = RecommendationState(
+      recommendation: upgraded,
+      status: RecommendationStatus.notStarted,
+    );
+    _enqueue((epoch) => _persistReplacement(epoch, upgraded, now));
+    return UpgradeTodayResult.upgraded;
   }
 
   /// The engine's [decision] as today's Circle: one activity.
@@ -953,7 +1340,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           recommendation: replacement,
           status: RecommendationStatus.notStarted,
         );
-        _enqueue(() => _persistReplacement(replacement, now));
+        _enqueue((epoch) => _persistReplacement(epoch, replacement, now));
         return true;
       }
     }
@@ -987,7 +1374,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       recommendation: replacement,
       status: RecommendationStatus.notStarted,
     );
-    _enqueue(() => _persistReplacement(replacement, now));
+    _enqueue((epoch) => _persistReplacement(epoch, replacement, now));
     return true;
   }
 
@@ -998,17 +1385,39 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// nothing, and in particular never overwrites an already-recorded
   /// [RecommendationState.startedAt].
   void start() {
-    if (state.recommendation == null) return;
+    final recommendation = state.recommendation;
+    if (recommendation == null) return;
     if (state.status != RecommendationStatus.notStarted) return;
+    // R6 final (founder decision 2026-11-03): one Circle a day — an offer
+    // not started before local midnight is never started afterwards under
+    // its day. Start opens the new day instead, and nothing starts; the
+    // user then chooses today's Circle. Also reached by a screen reader's
+    // activation, which brings no touch for the app's own check.
+    if (recommendation.circleId != dateKey(ref.read(eventClockProvider)())) {
+      ref.invalidate(nowProvider);
+      return;
+    }
 
+    // A stage Circle's start is noted on its served evidence first
+    // (CirclePlansNotifier.noteStart), and saved before the start itself.
+    final noted = switch (recommendation.composed?.stage) {
+      final stage? =>
+        ref
+            .read(circlePlansProvider.notifier)
+            .noteStart(stage, circleId: recommendation.circleId),
+      null => Future<void>.value(),
+    };
     final startedAt = ref.read(eventClockProvider)();
     state = RecommendationState(
-      recommendation: state.recommendation,
+      recommendation: recommendation,
       status: RecommendationStatus.started,
       startedAt: startedAt,
     );
     final snapshot = state;
-    _enqueue(() => _persist(snapshot));
+    _enqueue((epoch) async {
+      await noted;
+      await _persist(epoch, snapshot);
+    });
     // Fired only on a real transition — the two guard clauses above already
     // make this method a no-op on a repeat call, so a double/duplicate
     // start() can never record a duplicate circleStarted event either
@@ -1023,7 +1432,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     if (state.status != RecommendationStatus.started || state.isPaused) return;
     state = state.copyWith(pausedAt: ref.read(eventClockProvider)());
     final snapshot = state;
-    _enqueue(() => _persist(snapshot));
+    _enqueue((epoch) => _persist(epoch, snapshot));
   }
 
   /// Resumes a paused Circle: the paused stretch is set aside, never
@@ -1039,7 +1448,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           state.pausedTotal + (paused.isNegative ? Duration.zero : paused),
     );
     final snapshot = state;
-    _enqueue(() => _persist(snapshot));
+    _enqueue((epoch) => _persist(epoch, snapshot));
   }
 
   /// Shows [position] of a Guided Circle (V2 Phase C). Where the user is,
@@ -1055,7 +1464,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     if (clamped == state.guidedPosition) return;
     state = state.copyWith(guidedPosition: clamped);
     final snapshot = state;
-    _enqueue(() => _persist(snapshot));
+    _enqueue((epoch) => _persist(epoch, snapshot));
   }
 
   /// V2 Phase D2: places a composed Circle at [position] now — Next, Back,
@@ -1071,7 +1480,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       partAnchor: state.activeElapsedAt(ref.read(eventClockProvider)()),
     );
     final snapshot = state;
-    _enqueue(() => _persist(snapshot));
+    _enqueue((epoch) => _persist(epoch, snapshot));
   }
 
   /// V2 Phase D2 (ADR-023 §7): "Skip this step" — the part on show is set
@@ -1104,7 +1513,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       ],
     );
     final snapshot = state;
-    _enqueue(() => _persist(snapshot));
+    _enqueue((epoch) => _persist(epoch, snapshot));
     // Leave it out is a composer control, and Premium (contract, Free /
     // Premium): a Free day's kept Circle skips the part for today only.
     if (leaveOut && ref.read(premiumEntitlementProvider)) {
@@ -1125,6 +1534,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     if (state.status != RecommendationStatus.notStarted) {
       return UseTodayResult.alreadyStarted;
     }
+    // Audit remediation R3: never a Circle a pending deletion would erase.
+    if (_historyDeletionPending) return UseTodayResult.historyDeletionPending;
     final controls = ref.read(suggestionPreferencesProvider).controls;
     final current = state.recommendation;
     final now = ref.read(nowProvider);
@@ -1133,7 +1544,9 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final kept = ref.read(keptCirclesProvider).keptById(keptCircleId);
     if (kept == null) return UseTodayResult.unavailable;
     final need = current?.intention ?? kept.need;
-    if (!kept.plan.parts.every((p) => isElementOfferable(p.definition)) ||
+    // Audit remediation R4: a part no longer offered — retired, or awaiting
+    // the safety review — is never run because it was saved.
+    if (keptPartsNotOffered(kept, ref.read(partOfferableProvider)).isNotEmpty ||
         kept.plan.activities.any(
           (a) => controls.notSuggested.contains((a, need)),
         )) {
@@ -1145,6 +1558,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         plan: kept.plan,
         keptCircleId: kept.id,
         keptName: kept.name,
+        wording: kept.wording,
       ),
       today,
       current?.timeWindow ?? _windowFor(kept.minutes),
@@ -1157,11 +1571,15 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     );
     if (current == null) {
       _enqueue(
-        () =>
-            _persistChoice(today: today, recommendation: chosen, shownAt: now),
+        (epoch) => _persistChoice(
+          epoch,
+          today: today,
+          recommendation: chosen,
+          shownAt: now,
+        ),
       );
     } else {
-      _enqueue(() => _persistReplacement(chosen, now));
+      _enqueue((epoch) => _persistReplacement(epoch, chosen, now));
     }
     return UseTodayResult.used;
   }
@@ -1204,20 +1622,17 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       closedAt: closedAt,
     );
     final snapshot = state;
-    _enqueue(() => _persist(snapshot));
     // ADR-024 B3: a stage Circle started and now closed in THIRTY is
     // *guided* — never "done". The Plan moves on once for this Circle.
-    final composed = recommendation.composed;
-    if (composed?.stage case final stage?) {
-      ref
-          .read(circlePlansProvider.notifier)
-          .recordGuided(
-            stage,
-            circleId: recommendation.circleId,
-            parts: composed!.plan.toWire(),
-            skipped: [for (final e in snapshot.skipped) e.name],
-          );
-    }
+    // Audit remediation R3: credited once the Close itself is saved — the
+    // credit follows a durable Close. Cut short in between, the next start
+    // finds the Close and credits it then, on its own day
+    // ([_mirrorInJournal]); cut short before, nothing was closed.
+    _enqueue((epoch) async {
+      await _persist(epoch, snapshot);
+      _ensureCurrent(epoch);
+      await _creditGuided(snapshot);
+    });
     // Fired only on a real transition, for the same reason start() above
     // only fires once per Circle — this is also the frozen post-fix
     // measurement protocol's "Daily Check-In completed" (see
@@ -1252,7 +1667,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       clearUsefulness: !isAffirmative,
     );
     final snapshot = state;
-    _enqueue(() => _persist(snapshot));
+    _enqueue((epoch) => _persist(epoch, snapshot));
     ref
         .read(analyticsServiceProvider)
         .track(
@@ -1280,7 +1695,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
 
     state = state.copyWith(usefulnessResponse: response);
     final snapshot = state;
-    _enqueue(() => _persist(snapshot));
+    _enqueue((epoch) => _persist(epoch, snapshot));
     ref
         .read(analyticsServiceProvider)
         .track(
@@ -1305,12 +1720,11 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     }
     final snapshot = state;
     final isToday = today?.circleId == circleId;
-    _enqueue(() async {
-      if (isToday) await _persist(snapshot);
-      if (!ref.mounted) return;
-      final changed = await ref
-          .read(circleJournalRepositoryProvider)
-          .removeAnswer(circleId, includingAttempt: includingAttempt);
+    _enqueue((epoch) async {
+      if (isToday) await _persist(epoch, snapshot);
+      final changed = await _journalFor(
+        epoch,
+      ).removeAnswer(circleId, includingAttempt: includingAttempt);
       if (changed && ref.mounted) {
         ref.invalidate(circleJournalRepositoryProvider);
       }
@@ -1404,10 +1818,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// started or closed, the day carries on as its first piece, with its own
   /// journal record kept exactly as it was ([Recommendation.retiredSession])
   /// — never rewritten into something it wasn't.
-  Recommendation? _restoreRecommendation(
-    SharedPreferences prefs,
-    String today,
-  ) {
+  Recommendation? _restoreRecommendation(_DayKeys prefs, String today) {
     final intention = Intention.values
         .asNameMap()[prefs.getString(recommendationIntentionKey)];
     final activityId = ActivityId.values
@@ -1491,140 +1902,114 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// usefulness values from an earlier day are explicitly cleared — a fresh
   /// choice must never inherit a stale session. Also records this Circle's
   /// "shown" journal entry (`circle_journal.dart`).
-  Future<void> _persistChoice({
+  ///
+  /// Audit remediation R3 (J5): published as one write ([_publish]), so a
+  /// new day cut short never shows the day before's Circle as today's.
+  Future<void> _persistChoice(
+    int epoch, {
     required String today,
     required Recommendation recommendation,
     required DateTime shownAt,
   }) async {
-    final prefs = ref.read(sharedPreferencesProvider);
     final intention = recommendation.intention;
     final activityId = recommendation.activityId;
-    await prefs.setString(recommendationDayKey, today);
-    await prefs.setString(recommendationIntentionKey, intention.name);
-    await prefs.setString(recommendationActivityIdKey, activityId.name);
-    await prefs.setString(
-      recommendationStatusKey,
-      RecommendationStatus.notStarted.name,
+    await _publish(
+      epoch,
+      circleId: today,
+      newDay: true,
+      values: {
+        recommendationDayKey: today,
+        recommendationIntentionKey: intention.name,
+        recommendationActivityIdKey: activityId.name,
+        recommendationStatusKey: RecommendationStatus.notStarted.name,
+        recommendationStartedAtKey: null,
+        recommendationClosedAtKey: null,
+        recommendationAttemptResponseKey: null,
+        recommendationUsefulnessResponseKey: null,
+        recommendationPausedAtKey: null,
+        recommendationPausedMsKey: null,
+        recommendationGuidedPositionKey: null,
+        recommendationPartAnchorMsKey: null,
+        recommendationSkippedKey: null,
+        ..._offerValues(recommendation),
+        // V1 selector history is retired: Engine V2 reads the journal.
+        recommendationLastFamilyKey: null,
+        for (final need in Intention.values)
+          recommendationHistoryKeyFor(need): null,
+      },
     );
-    await prefs.remove(recommendationStartedAtKey);
-    await prefs.remove(recommendationClosedAtKey);
-    await prefs.remove(recommendationAttemptResponseKey);
-    await prefs.remove(recommendationUsefulnessResponseKey);
-    await prefs.remove(recommendationPausedAtKey);
-    await prefs.remove(recommendationPausedMsKey);
-    await prefs.remove(recommendationGuidedPositionKey);
-    await prefs.remove(recommendationPartAnchorMsKey);
-    await prefs.remove(recommendationSkippedKey);
-    await _persistOffer(prefs, recommendation);
-    // V1 selector history is retired: Engine V2 reads the journal.
-    await prefs.remove(recommendationLastFamilyKey);
-    for (final need in Intention.values) {
-      await prefs.remove(recommendationHistoryKeyFor(need));
-    }
 
-    // Guards the read below, which runs after several await points — if
-    // this Notifier's container was disposed in the meantime (e.g. a test
-    // tearing down without awaiting this fire-and-forget call; see
-    // [_persist]'s own doc comment), `ref` is no longer usable and must not
-    // be read again.
-    if (!ref.mounted) return;
-    await ref
-        .read(circleJournalRepositoryProvider)
-        .recordShown(
-          circleId: today,
-          localDate: today,
-          direction: intention,
-          activityId: activityId,
-          shownAt: shownAt,
-          offer: recommendation.journalOffer,
-        );
+    await _journalFor(epoch).recordShown(
+      circleId: today,
+      localDate: today,
+      direction: intention,
+      activityId: activityId,
+      shownAt: shownAt,
+      offer: recommendation.journalOffer,
+    );
     // A plain repository mutation does not itself notify Riverpod
     // watchers — invalidate so an already-mounted reactive reader picks up
     // this write instead of staying stale until something else happens to
-    // rebuild it. Mirrors the same invalidate-after-write
-    // `journal_data_controls.dart` already does after `clearAll()`.
+    // rebuild it. Mirrors the same invalidate-after-write Delete Circle
+    // history does (`circle_history_deletion.dart`).
     if (ref.mounted) ref.invalidate(circleJournalRepositoryProvider);
   }
 
-  /// Today's offer — time window, length, reason and any replacement — in
+  /// Today's offer — time window, length, reason and any replacement — as
   /// the per-day keys [build] restores.
-  Future<void> _persistOffer(
-    SharedPreferences prefs,
-    Recommendation recommendation,
-  ) async {
-    await prefs.setString(
-      recommendationTimeWindowKey,
-      recommendation.timeWindow.name,
-    );
-    await prefs.setInt(
-      recommendationOfferedMinutesKey,
-      recommendation.offeredMinutes,
-    );
-    await prefs.setString(recommendationReasonKey, recommendation.reason.name);
+  static Map<String, Object?> _offerValues(Recommendation recommendation) {
     final replacedFrom = recommendation.replacedFrom;
     final replacementReason = recommendation.replacementReason;
-    if (replacedFrom != null && replacementReason != null) {
-      await prefs.setString(recommendationReplacedFromKey, replacedFrom.name);
-      await prefs.setString(
-        recommendationReplacementReasonKey,
-        replacementReason.name,
-      );
-    } else {
-      await prefs.remove(recommendationReplacedFromKey);
-      await prefs.remove(recommendationReplacementReasonKey);
-    }
-    // Retired with Phase D's routines and Paths (ADR-024): never written.
-    await prefs.remove(recommendationSessionKey);
-    await prefs.remove(recommendationReplacedRoutineKey);
-    final composed = recommendation.composed;
-    if (composed != null) {
-      await prefs.setString(
-        recommendationComposedKey,
-        jsonEncode(composed.toJson()),
-      );
-    } else {
-      await prefs.remove(recommendationComposedKey);
-    }
-    if (recommendation.composerFellBack) {
-      await prefs.setBool(recommendationComposerFallbackKey, true);
-    } else {
-      await prefs.remove(recommendationComposerFallbackKey);
-    }
-    final replacedTitle = recommendation.replacedFromTitle;
-    if (replacedTitle != null) {
-      await prefs.setString(recommendationReplacedTitleKey, replacedTitle);
-    } else {
-      await prefs.remove(recommendationReplacedTitleKey);
-    }
-    // V1 Plan context is retired (V2 Phase D).
-    for (final key in retiredPlanDayKeys) {
-      await prefs.remove(key);
-    }
+    final replaced = replacedFrom != null && replacementReason != null;
+    return {
+      recommendationTimeWindowKey: recommendation.timeWindow.name,
+      recommendationOfferedMinutesKey: recommendation.offeredMinutes,
+      recommendationReasonKey: recommendation.reason.name,
+      recommendationReplacedFromKey: replaced ? replacedFrom.name : null,
+      recommendationReplacementReasonKey: replaced
+          ? replacementReason.name
+          : null,
+      // Retired with Phase D's routines and Paths (ADR-024): never written.
+      recommendationSessionKey: null,
+      recommendationReplacedRoutineKey: null,
+      recommendationComposedKey: switch (recommendation.composed) {
+        final composed? => jsonEncode(composed.toJson()),
+        null => null,
+      },
+      recommendationComposerFallbackKey: recommendation.composerFellBack
+          ? true
+          : null,
+      recommendationReplacedTitleKey: recommendation.replacedFromTitle,
+      // V1 Plan context is retired (V2 Phase D).
+      for (final key in retiredPlanDayKeys) key: null,
+    };
   }
 
-  /// Persists today's replacement: the per-day keys first (so a restart
-  /// restores the replacement and never offers a second), then the journal.
+  /// Persists today's replacement — or its upgrade, "Make today's Circle"
+  /// — the per-day keys first (so a restart restores it and never offers a
+  /// second), then the journal. One publication (audit remediation R3): cut
+  /// short, today is the offer before it or the one after, never a mix.
   Future<void> _persistReplacement(
+    int epoch,
     Recommendation replacement,
     DateTime replacedAt,
   ) async {
-    final prefs = ref.read(sharedPreferencesProvider);
-    await prefs.setString(
-      recommendationActivityIdKey,
-      replacement.activityId.name,
+    await _publish(
+      epoch,
+      circleId: replacement.circleId,
+      values: {
+        recommendationActivityIdKey: replacement.activityId.name,
+        ..._offerValues(replacement),
+      },
     );
-    await _persistOffer(prefs, replacement);
-    if (!ref.mounted) return;
-    await ref
-        .read(circleJournalRepositoryProvider)
-        .recordReplaced(
-          circleId: replacement.circleId,
-          localDate: replacement.circleId,
-          direction: replacement.intention,
-          activityId: replacement.activityId,
-          replacedAt: replacedAt,
-          offer: replacement.journalOffer,
-        );
+    await _journalFor(epoch).recordReplaced(
+      circleId: replacement.circleId,
+      localDate: replacement.circleId,
+      direction: replacement.intention,
+      activityId: replacement.activityId,
+      replacedAt: replacedAt,
+      offer: replacement.journalOffer,
+    );
     if (ref.mounted) ref.invalidate(circleJournalRepositoryProvider);
   }
 
@@ -1641,102 +2026,63 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// own callers. [CircleJournalRepository]'s own upsert methods are
   /// self-healing against this fire-and-forget ordering — see their doc
   /// comments.
-  Future<void> _persist(RecommendationState state) async {
-    final prefs = ref.read(sharedPreferencesProvider);
-    final today = dateKey(ref.read(nowProvider));
+  ///
+  /// Audit remediation R3: the day written is the Circle's own
+  /// ([Recommendation.circleId]), never the clock's when the write runs, and
+  /// the keys are one publication ([_publish]).
+  Future<void> _persist(int epoch, RecommendationState state) async {
     final recommendation = state.recommendation;
-
-    await prefs.setString(recommendationDayKey, today);
-    await prefs.setString(recommendationStatusKey, state.status.name);
-
-    final startedAt = state.startedAt;
-    if (startedAt != null) {
-      await prefs.setString(
-        recommendationStartedAtKey,
-        startedAt.toIso8601String(),
-      );
-    }
-
-    final closedAt = state.closedAt;
-    if (closedAt != null) {
-      await prefs.setString(
-        recommendationClosedAtKey,
-        closedAt.toIso8601String(),
-      );
-    } else {
-      // A started (not yet closed) persist must never leave a stale
-      // closedAt from an earlier day/session behind. build()'s `started`
-      // restore branch already never reads this key regardless, but an
-      // explicit clear keeps the persisted record itself honest, not just
-      // the code path that happens to read it today.
-      await prefs.remove(recommendationClosedAtKey);
-    }
-
-    final attemptResponse = state.attemptResponse;
-    if (attemptResponse != null) {
-      await prefs.setString(
-        recommendationAttemptResponseKey,
-        attemptResponse.name,
-      );
-    } else {
-      await prefs.remove(recommendationAttemptResponseKey);
-    }
-
-    final usefulnessResponse = state.usefulnessResponse;
-    if (usefulnessResponse != null) {
-      await prefs.setString(
-        recommendationUsefulnessResponseKey,
-        usefulnessResponse.name,
-      );
-    } else {
-      await prefs.remove(recommendationUsefulnessResponseKey);
-    }
-
-    // V2 Phase C: the session runtime, as timestamps and small state.
-    final pausedAt = state.pausedAt;
-    if (pausedAt != null) {
-      await prefs.setString(
-        recommendationPausedAtKey,
-        pausedAt.toIso8601String(),
-      );
-    } else {
-      await prefs.remove(recommendationPausedAtKey);
-    }
-    if (state.pausedTotal > Duration.zero) {
-      await prefs.setInt(
-        recommendationPausedMsKey,
-        state.pausedTotal.inMilliseconds,
-      );
-    } else {
-      await prefs.remove(recommendationPausedMsKey);
-    }
-    if (state.guidedPosition > 0) {
-      await prefs.setInt(recommendationGuidedPositionKey, state.guidedPosition);
-    } else {
-      await prefs.remove(recommendationGuidedPositionKey);
-    }
-    if (state.partAnchor > Duration.zero) {
-      await prefs.setInt(
-        recommendationPartAnchorMsKey,
-        state.partAnchor.inMilliseconds,
-      );
-    } else {
-      await prefs.remove(recommendationPartAnchorMsKey);
-    }
-    if (state.skipped.isNotEmpty) {
-      await prefs.setStringList(recommendationSkippedKey, [
-        for (final e in state.skipped) e.name,
-      ]);
-    } else {
-      await prefs.remove(recommendationSkippedKey);
-    }
-
     if (recommendation == null) return;
-    // See _persistChoice's matching comment — this read also happens after
-    // several await points.
-    if (!ref.mounted) return;
-    final journal = ref.read(circleJournalRepositoryProvider);
     final circleId = recommendation.circleId;
+    final startedAt = state.startedAt;
+    final closedAt = state.closedAt;
+    final attemptResponse = state.attemptResponse;
+    final usefulnessResponse = state.usefulnessResponse;
+
+    await _publish(
+      epoch,
+      circleId: circleId,
+      values: {
+        recommendationDayKey: circleId,
+        recommendationStatusKey: state.status.name,
+        recommendationStartedAtKey: ?startedAt?.toIso8601String(),
+        // A started (not yet closed) persist must never leave a stale
+        // closedAt from an earlier day/session behind. build()'s `started`
+        // restore branch already never reads this key regardless, but an
+        // explicit clear keeps the persisted record itself honest, not just
+        // the code path that happens to read it today.
+        recommendationClosedAtKey: closedAt?.toIso8601String(),
+        recommendationAttemptResponseKey: attemptResponse?.name,
+        recommendationUsefulnessResponseKey: usefulnessResponse?.name,
+        // V2 Phase C: the session runtime, as timestamps and small state.
+        recommendationPausedAtKey: state.pausedAt?.toIso8601String(),
+        recommendationPausedMsKey: state.pausedTotal > Duration.zero
+            ? state.pausedTotal.inMilliseconds
+            : null,
+        recommendationGuidedPositionKey: state.guidedPosition > 0
+            ? state.guidedPosition
+            : null,
+        recommendationPartAnchorMsKey: state.partAnchor > Duration.zero
+            ? state.partAnchor.inMilliseconds
+            : null,
+        recommendationSkippedKey: state.skipped.isNotEmpty
+            ? [for (final e in state.skipped) e.name]
+            : null,
+      },
+    );
+    await _recordInJournal(epoch, state);
+  }
+
+  /// The journal half of [_persist]: [state]'s lifecycle, skips and answers
+  /// on its Circle's record.
+  Future<void> _recordInJournal(int epoch, RecommendationState state) async {
+    final recommendation = state.recommendation;
+    if (recommendation == null) return;
+    final circleId = recommendation.circleId;
+    final startedAt = state.startedAt;
+    final closedAt = state.closedAt;
+    final attemptResponse = state.attemptResponse;
+    final usefulnessResponse = state.usefulnessResponse;
     final direction = recommendation.intention;
     final activityId = recommendation.activityId;
     final offer = recommendation.journalOfferWith(skipped: state.skipped);
@@ -1744,7 +2090,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     var journalChanged = false;
     switch (state.status) {
       case RecommendationStatus.started:
-        await journal.recordStarted(
+        await _journalFor(epoch).recordStarted(
           circleId: circleId,
           localDate: circleId,
           direction: direction,
@@ -1754,7 +2100,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         );
         journalChanged = true;
       case RecommendationStatus.closed:
-        await journal.recordClosed(
+        await _journalFor(epoch).recordClosed(
           circleId: circleId,
           localDate: circleId,
           direction: direction,
@@ -1771,14 +2117,14 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
 
     // V2 Phase D2: today's skips, as they happen.
     if (recommendation.composed != null && state.skipped.isNotEmpty) {
-      await journal.recordSkipped(
+      await _journalFor(epoch).recordSkipped(
         circleId: circleId,
         skipped: [for (final e in state.skipped) e.name],
       );
       journalChanged = true;
     }
     if (attemptResponse != null) {
-      await journal.recordAttempt(
+      await _journalFor(epoch).recordAttempt(
         circleId: circleId,
         localDate: circleId,
         direction: direction,
@@ -1790,7 +2136,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       journalChanged = true;
     }
     if (usefulnessResponse != null) {
-      await journal.recordUsefulness(
+      await _journalFor(epoch).recordUsefulness(
         circleId: circleId,
         localDate: circleId,
         direction: direction,
@@ -1832,15 +2178,19 @@ const retiredPlanDayKeys = [
 
 /// Every persisted key holding a recorded Circle outside the journal:
 /// today's Circle session (its direction, activity, lifecycle, reflection
-/// answers and composed Circle, and the retired Phase D keys) and the
-/// selection history drawn from past Circles. "Delete Circle history"
-/// removes these together with the journal
-/// (`../presentation/widgets/journal_data_controls.dart`), then invalidates
+/// answers and composed Circle, a write of them in progress, and the retired
+/// Phase D keys) and the selection history drawn from past Circles. "Delete
+/// Circle history" removes these together with the journal
+/// (`circle_history_deletion.dart`), then invalidates
 /// [recommendationProvider] so today is re-derived from the empty store.
 /// Preferences, the first-breath flag and kept Circles are not Circle
 /// history and are left alone.
-Future<void> clearRecordedCircleState(SharedPreferences prefs) async {
+///
+/// Every removal is begun at once (audit remediation R3), so none of these
+/// keys is still readable while another is awaited.
+Future<void> clearRecordedCircleState(SharedPreferences prefs) => Future.wait([
   for (final key in [
+    recommendationPendingWriteKey,
     recommendationDayKey,
     recommendationIntentionKey,
     recommendationActivityIdKey,
@@ -1874,10 +2224,9 @@ Future<void> clearRecordedCircleState(SharedPreferences prefs) async {
     recommendationSkippedKey,
     for (final intention in Intention.values)
       recommendationHistoryKeyFor(intention),
-  ]) {
-    await prefs.remove(key);
-  }
-}
+  ])
+    prefs.remove(key),
+]);
 
 /// Whether content awaiting the safety review may be offered: only internal
 /// debug builds ([safetyPendingContentAllowed]). The QA harness pins it off,

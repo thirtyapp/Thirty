@@ -101,7 +101,25 @@ class _QaPremiumHarnessAppState extends State<QaPremiumHarnessApp> {
     });
   }
 
-  Future<void> _apply(QaEntitlement entitlement, QaScenario scenario) async {
+  Future<void> _apply(
+    QaEntitlement entitlement,
+    QaScenario scenario, {
+    bool keepData = false,
+  }) async {
+    // Audit remediation R2: the same QA data, reopened under another
+    // entitlement — billing resolving after today's choice. Still a fresh
+    // app start; still never the genuine store.
+    final current = _session;
+    if (keepData && current != null) {
+      _switchTo(
+        QaSession(
+          entitlement: current.scenario.fixedEntitlement ?? entitlement,
+          scenario: current.scenario,
+          store: current.store,
+        ),
+      );
+      return;
+    }
     setState(() => _applying = true);
     final store = await buildQaStore(
       scenario: scenario,
@@ -152,7 +170,7 @@ class QaHarnessOverlay extends StatefulWidget {
 
   final QaSession? session;
   final bool applying;
-  final void Function(QaEntitlement, QaScenario) onApply;
+  final void Function(QaEntitlement, QaScenario, {bool keepData}) onApply;
   final VoidCallback onReset;
   final Widget child;
 
@@ -192,6 +210,7 @@ String? qaPlanLine(CirclePlansState plans, Recommendation? today) {
 
 class _QaHarnessOverlayState extends State<QaHarnessOverlay> {
   var _panelOpen = false;
+  var _keepData = false;
   late QaEntitlement _entitlement;
   late QaScenario _scenario;
 
@@ -335,6 +354,19 @@ class _QaHarnessOverlayState extends State<QaHarnessOverlay> {
                       ),
                   ],
                 ),
+                if (widget.session != null)
+                  CheckboxListTile(
+                    key: const Key('qa-keep-data'),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    value: _keepData,
+                    onChanged: (value) =>
+                        setState(() => _keepData = value ?? false),
+                    title: const Text(
+                      'Keep this QA data — reopen with the entitlement above '
+                      '(scenario ignored)',
+                    ),
+                  ),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
@@ -346,7 +378,12 @@ class _QaHarnessOverlayState extends State<QaHarnessOverlay> {
                           ? null
                           : () {
                               setState(() => _panelOpen = false);
-                              widget.onApply(entitlement, _scenario);
+                              widget.onApply(
+                                entitlement,
+                                _scenario,
+                                keepData:
+                                    _keepData && widget.session != null,
+                              );
                             },
                       child: Text(widget.applying ? 'Applying…' : 'Apply'),
                     ),

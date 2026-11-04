@@ -125,7 +125,7 @@ void main() {
 
       final semantics = tester.getSemantics(find.byType(ThirtyButton));
       expect(semantics.label, contains('Start'));
-      expect(semantics.label, contains('bezig'));
+      expect(semantics.label, ThirtyButtonCopy.busy('Start'));
       expect(semantics.flagsCollection.isEnabled, Tristate.isFalse);
     });
 

@@ -1,5 +1,11 @@
 # Phase D2 — audit evidence pack (final hardening, 2026-10-12)
 
+> **Status update 2026-11-03 (audit remediation R6, Audit #1 m4):**
+> - D2 is **PASS — COMPLETE** in the closure commit `8bfd42c` (2026-10-21).
+> - The four production voices are bundled: the 172-file frozen pack plus 8 framing files.
+> - The text below records this pack as it stood on 2026-10-12 and is kept unchanged.
+> - Current status: `docs/product/THIRTY_V2_DELIVERY_TRACKER.md`.
+
 **Status of D2: NOT COMPLETE.**
 - **The open gate:** the production voice. No production clip exists, and the founder has not yet approved a voice; a review-only audition exists.
 - **Not yet the immutable target:** this pack documents the hardened build. It is **not** the immutable audit target until every D2 gate closes and a single closure commit is made.

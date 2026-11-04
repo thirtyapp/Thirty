@@ -2,17 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_button.dart';
 import '../../../../core/widgets/thirty_confirm_dialog.dart';
+import '../../../../core/widgets/thirty_notice_dialog.dart';
 import '../../../insights/application/insights_provider.dart';
 import '../../../insights/domain/insight.dart';
 import '../../../personal_circle/application/kept_circles_provider.dart';
+import '../../../personal_circle/domain/kept_circle.dart';
 import '../../../plans/application/circle_plans_provider.dart';
 import '../../../plans/domain/circle_plan.dart';
+import '../../application/circle_history_deletion.dart';
 import '../../application/circle_journal.dart';
-import '../../application/recommendation_provider.dart';
 import '../../application/suggestion_preferences.dart';
 
 /// THIRTY's local Circle-journal export/delete controls — extracted from
@@ -97,10 +98,15 @@ class JournalDataControls extends ConsumerWidget {
           suggestionPreferences: preferences.isEmpty
               ? null
               : preferences.toJson(),
-          // The Circles the user kept — never a derived score.
+          // The Circles the user kept — never a derived score — as stored,
+          // one THIRTY can't read included, each in its place (R4).
           keptCircles: kept.isEmpty
               ? null
-              : [for (final circle in kept.kept) circle.toJson()],
+              : keptCirclesRecord(kept.kept, retained: kept.retained)['kept']
+                    as List<Object?>,
+          keptCirclesUnreadable: kept.unreadable.isEmpty
+              ? null
+              : [for (final store in kept.unreadable) store.raw],
           // Each Circle Plan's place, cycles and stage records (B3).
           circlePlans: plans.plans.isEmpty ? null : plans.toJson(),
           // The Insights THIRTY showed, as shown (B5) — no profile.
@@ -141,7 +147,8 @@ class JournalDataControls extends ConsumerWidget {
             'reviews included. Your kept Circles, each Plan’s place and '
             'your suggestion preferences are kept — you can change those '
             'yourself. It cannot be undone, and nothing is '
-            'stored anywhere else to restore it from.',
+            'stored anywhere else to restore it from. If you shared usage '
+            'data, what was already sent isn’t deleted.',
         cancelLabel: 'Keep my history',
         confirmLabel: 'Delete permanently',
         destructive: true,
@@ -149,14 +156,36 @@ class JournalDataControls extends ConsumerWidget {
     );
     if (confirmed != true) return;
 
-    final plans = ref.read(circlePlansProvider.notifier);
-    await journal.clearAll();
-    await clearRecordedCircleState(ref.read(sharedPreferencesProvider));
-    final forgotten = plans.forgetStageEvidence();
-    final insightsForgotten = ref.read(insightsProvider.notifier).forgetAll();
-    ref.invalidate(circleJournalRepositoryProvider);
-    ref.invalidate(recommendationProvider);
-    await forgotten;
-    await insightsForgotten;
+    // Audit remediation R3: one deletion, behind a barrier no earlier write
+    // can cross, finished on the next start if the app stops midway. If it
+    // can't be finished now, the user is told so — never that it was done.
+    try {
+      await ref.read(circleHistoryDeletionProvider).delete();
+    } catch (_) {
+      if (!context.mounted) return;
+      await showDeleteUnfinished(context);
+    }
   }
+
+  /// Tells the user Delete Circle history couldn't be finished (founder
+  /// copy) — after Delete itself, and when a pending deletion still can't be
+  /// finished before a new Circle.
+  static Future<void> showDeleteUnfinished(BuildContext context) =>
+      showDialog<void>(
+        context: context,
+        barrierLabel: 'Close',
+        builder: (_) => const ThirtyNoticeDialog(
+          title: deleteUnfinishedTitle,
+          body: deleteUnfinishedBody,
+        ),
+      );
 }
+
+/// Shown when Delete Circle history couldn't be finished (founder copy,
+/// audit remediation R3). The deletion stays recorded and is finished on the
+/// next start.
+const deleteUnfinishedTitle = 'Couldn’t finish deleting your history.';
+
+/// See [deleteUnfinishedTitle].
+const deleteUnfinishedBody =
+    'THIRTY will try to finish when you next open the app.';

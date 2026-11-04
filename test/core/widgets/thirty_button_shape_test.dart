@@ -195,7 +195,7 @@ void main() {
     expect(_radius(tester), AppRadius.xl);
     expect(
       tester.getSemantics(find.byType(ThirtyButton)).label,
-      '$_long, bezig',
+      ThirtyButtonCopy.busy(_long),
     );
     handle.dispose();
   });

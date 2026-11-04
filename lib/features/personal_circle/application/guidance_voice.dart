@@ -24,10 +24,15 @@ abstract interface class GuidanceVoice {
   /// Whether this voice can speak at all.
   bool get available;
 
-  /// Plays [clips] in order, replacing anything still playing. With
+  /// Plays [clips] in order, replacing anything still playing — or, with
+  /// [afterCurrent], once what is playing has been said. With
   /// [deferToScreenReader], nothing plays while a screen reader is on: its
   /// own announcement of the part speaks instead.
-  Future<void> play(List<SpokenClip> clips, {bool deferToScreenReader});
+  Future<void> play(
+    List<SpokenClip> clips, {
+    bool deferToScreenReader,
+    bool afterCurrent,
+  });
 
   /// Stops — at Pause, Close or leaving the Circle.
   Future<void> stop();
@@ -44,6 +49,7 @@ class SilentGuidanceVoice implements GuidanceVoice {
   Future<void> play(
     List<SpokenClip> clips, {
     bool deferToScreenReader = false,
+    bool afterCurrent = false,
   }) async {}
 
   @override
@@ -64,9 +70,12 @@ class BundledGuidanceVoice implements GuidanceVoice {
   Future<void> play(
     List<SpokenClip> clips, {
     bool deferToScreenReader = false,
-  }) => player.play([
-    for (final clip in clips) clip.assetFor(voice),
-  ], deferToScreenReader: deferToScreenReader);
+    bool afterCurrent = false,
+  }) => player.play(
+    [for (final clip in clips) clip.assetFor(voice)],
+    deferToScreenReader: deferToScreenReader,
+    afterCurrent: afterCurrent,
+  );
 
   @override
   Future<void> stop() => player.stop();
@@ -74,9 +83,15 @@ class BundledGuidanceVoice implements GuidanceVoice {
 
 /// Plays bundled audio assets, one after another.
 abstract interface class GuidanceAudioPlayer {
-  /// Plays [assets] in order. With [deferToScreenReader], nothing plays
-  /// while the platform's screen reader is on (Android: touch exploration).
-  Future<void> play(List<String> assets, {bool deferToScreenReader});
+  /// Plays [assets] in order, replacing anything still playing — or, with
+  /// [afterCurrent], once what is playing has been said. With
+  /// [deferToScreenReader], nothing plays while the platform's screen reader
+  /// is on (Android: touch exploration).
+  Future<void> play(
+    List<String> assets, {
+    bool deferToScreenReader,
+    bool afterCurrent,
+  });
   Future<void> stop();
 }
 
@@ -88,11 +103,15 @@ class PlatformGuidanceAudioPlayer implements GuidanceAudioPlayer {
   static const _channel = MethodChannel('com.thirty.app/guidance_audio');
 
   @override
-  Future<void> play(List<String> assets, {bool deferToScreenReader = false}) =>
-      _call('play', {
-        'assets': assets,
-        'deferToScreenReader': deferToScreenReader,
-      });
+  Future<void> play(
+    List<String> assets, {
+    bool deferToScreenReader = false,
+    bool afterCurrent = false,
+  }) => _call('play', {
+    'assets': assets,
+    'deferToScreenReader': deferToScreenReader,
+    'afterCurrent': afterCurrent,
+  });
 
   @override
   Future<void> stop() => _call('stop');

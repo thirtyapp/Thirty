@@ -25,7 +25,12 @@ Where any older THIRTY document conflicts with this contract, **this contract is
 > - **Retired before public release:** Paths, routines, tune-ups, shorter routine versions, Toolkit maintenance and the Toolkit tab. **Kept Circles are the only reusable owned object**, managed in **Yours** under You.
 > - **History and the calendar** are Free and shared. The calendar sits visually inside Insights; the records stay user-owned.
 > - **Voices:** four Premium production voices — Locke, Heather, Milo and Brittney — with 43 production files each (42 guidance cues and one Preview): **172 production audio files**, PASS and FROZEN. No new Plan or Insight audio is required.
+>   - **Amendment 2026-11-01 — framing lines** (founder request 2026-10-26; accepted 2026-11-01, core functionality; ADR-023 §6 "Framing lines"):
+>     - Two spoken lines frame a voiced Premium Circle: F02 "Your Circle for today." at the user's Start, and F03 "Your next Circle opens tomorrow." after the user's Close, only while that is true.
+>     - That adds 8 files (2 × 4 voices) beside the frozen pack, so 180 guidance files are bundled.
+>     - The 172-file pack and its 42-cue manifest are unchanged and stay FROZEN. The framing files are outside the manifest, so a missing one never silences a voice.
 > - **Implementation:** pending (ADR-024 batches B1–B9). Until it ships, the built app still shows the Phase D/D2 Toolkit; that is implementation status, not product direction.
+>   - *Status 2026-11-03 (audit remediation R6, Audit #1 m4):* implemented. B1–B9 shipped in the D2 closure commit `8bfd42c` (2026-10-21), and the Toolkit, Paths and routines are gone from the built app. Live status is in the delivery tracker.
 
 > **Amendment 1 — Recurring Premium (Phase D2), founder decision 2026-10-11.** The Premium job changes; everything about Free stays as written. Where this amendment conflicts with the Premium sections below ([Product progression](#product-progression) "Premium" row, [Premium V2 contract](#premium-v2-contract), the Premium column of the [boundary](#free--premium-boundary), and "Premium as toolkit process" among the frozen rules), **this amendment wins**. Realised by [ADR-023](adr/ADR-023-v2-recurring-premium-personal-guided-circle.md), which supersedes the conflicting Premium portions of ADR-022. The text below this note is kept as it was frozen on 2026-10-08.
 >
@@ -39,6 +44,7 @@ Where any older THIRTY document conflicts with this contract, **this contract is
 >   - **THIRTY spoken guidance is a Premium service layer. Accessibility output, including TalkBack, is entitlement-independent and remains available to all users** (founder decision 2026-10-12).
 >   - **Four voices** (founder decision 2026-10-16; supersedes the two-voice decision of 2026-10-12): Locke, Heather, Milo and Brittney, all Premium, named without gender. Each has 43 production files — the 42 guidance cues and one Preview — so **172 production audio files** ship. The user's choice is a local preference that survives a lapse.
 >   - **Founder approval:** all four voices and the complete pack are founder-approved (2026-10-17), generated under a paid ElevenLabs plan with commercial rights. Production audio is **PASS — FROZEN**.
+>     - *Amendment 2026-11-01:* besides the frozen 172, eight framing files ship (see the framing-lines amendment under "Voices" at the top), so 180 guidance files are bundled. The 172 count above is the frozen pack, not the bundle.
 >   - **Out of sight (Android):** a voiced Circle keeps speaking with another app open, or with the screen off and locked, through a media-playback foreground service that exists only while that Circle runs (founder decision 2026-10-12; ADR-023 §6). The guidance service may start only for an explicitly started Circle that is eligible for THIRTY spoken guidance, when Premium is active, spoken guidance is enabled, a complete production voice is bundled, and accessibility rules permit THIRTY voice output.
 > - **Billing:** recurring subscription; monthly is the economic target. No lifetime purchase. Price stays a Phase E commercial hypothesis.
 > - **Unchanged and still binding:** the safety gate, one Circle per day, no streaks, scores, levels, collectibles or content treadmill, no runtime AI or cloud personalisation, local-first deterministic and explainable behaviour, editable Memory, and hard "Don't suggest".
@@ -118,8 +124,14 @@ This table supersedes the 2026-10-08 boundary table and the Premium column of Am
 - THIRTY's spoken guidance and its background playback.
 - Running Plans: stage-steered composition, stage progression and revisits, set-aside handling, Plan reviews and repeat cycles.
 - New Insights and their applications.
+  - *Amendment 2026-11-03 (audit remediation R5, Audit #2 A2-05 / Audit #1 m2):* except Insight 4's Keep of a Circle already in the user's History, which is ownership: **Keep is never gated** (see FREE). A valid I4 shown while Premium was active keeps its Keep after a lapse, under the same rules as on Premium:
+    - the Insight must still be current (not stale, not set aside, not already applied);
+    - the Circle must still be in History and not already kept;
+    - the eight-Circle limit applies.
+  - Generating new Insights, every other application and "Not now" stay Premium. This is implemented in `insights_provider.dart` (`apply`, `keepableWithoutPremium`).
 - Leave it out (a composer control).
 - Voiced kept Circles while the entitlement is active.
+  - *Amendment 2026-11-03 (audit remediation R6, founder decision):* a kept Circle is voiced only when **every** part's saved words are exactly the words THIRTY recorded. If any part's saved words differ, the **whole Circle** runs on screen and paced, without THIRTY's voice or its background service, and each running part says so. The Circle stays owned and usable, and nothing in it changes. This supersedes R4.1's per-part rule (`ComposedSession.voiced`).
 
 ### AFTER LAPSE
 **Preserved and readable:**
@@ -141,6 +153,7 @@ This table supersedes the 2026-10-08 boundary table and the Premium column of Am
 - new Plan reviews;
 - new Insights;
 - new Insight applications.
+  - *Amendment 2026-11-03 (R5):* except Insight 4's Keep of the user's own Circle; see PREMIUM.
 
 **No hostage mechanics.** Ordinary Free Today, "Use it today" and every accessibility support stay.
 

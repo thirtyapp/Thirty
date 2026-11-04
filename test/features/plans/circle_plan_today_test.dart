@@ -10,6 +10,7 @@ import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/phase_d_retirement.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
@@ -706,8 +707,10 @@ void main() {
       // matching day carries on truthfully from the kept place.
       final plan = c.read(circlePlansProvider).plans['slowing_down']!;
       expect(plan.lastAdvancedCircleId, isNull);
-      // The write lands outside the widget test's fake clock.
-      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      // The deletion's last writes land outside the widget test's fake
+      // clock. The next day starts as the app does (`main.dart`): a
+      // deletion still pending is finished first (audit remediation R3).
+      await tester.runAsync(() => completeInterruptedHistoryDeletion(prefs));
       expect(prefs.getString(circlePlansKey), isNot(contains('circleId')));
       final next = open(day: 1);
       today(next).chooseIntention(gentle, window: TimeWindow.about20);

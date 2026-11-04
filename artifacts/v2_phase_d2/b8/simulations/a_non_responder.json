@@ -36,7 +36,7 @@
   "variety": {
     "composedDays": 311,
     "distinctSessions": 211,
-    "distinctMaterial": 127,
+    "distinctStructural": 77,
     "distinctMains": 18,
     "firstExactRepeatDay": 34,
     "medianDaysBetweenRepeats": 73,
@@ -711,7 +711,7 @@
     {
       "on": "2026-02-05",
       "family": "planForNeed",
-      "text": "You chose More Energy on 10 of your last 24 Circles, between 11 January and 3 February."
+      "text": "You chose More Energy on 10 of your last 24 Circles, between 9 January and 5 February."
     },
     {
       "on": "2026-02-25",
@@ -726,7 +726,7 @@
     {
       "on": "2026-03-21",
       "family": "planForNeed",
-      "text": "You chose More Energy on 11 of your last 21 Circles, between 24 February and 21 March."
+      "text": "You chose More Energy on 11 of your last 21 Circles, between 23 February and 21 March."
     },
     {
       "on": "2026-04-02",
@@ -776,7 +776,7 @@
     {
       "on": "2026-06-01",
       "family": "planForNeed",
-      "text": "You chose Clearer Head on 15 of your last 24 Circles, between 7 May and 1 June."
+      "text": "You chose Clearer Head on 15 of your last 24 Circles, between 5 May and 1 June."
     },
     {
       "on": "2026-06-21",
@@ -791,7 +791,7 @@
     {
       "on": "2026-07-03",
       "family": "planForNeed",
-      "text": "You chose Clearer Head on 14 of your last 27 Circles, between 8 June and 3 July."
+      "text": "You chose Clearer Head on 14 of your last 27 Circles, between 6 June and 3 July."
     },
     {
       "on": "2026-07-19",
@@ -831,7 +831,7 @@
     {
       "on": "2026-10-15",
       "family": "planForNeed",
-      "text": "You chose More Energy on 10 of your last 19 Circles, between 21 September and 15 October."
+      "text": "You chose More Energy on 10 of your last 19 Circles, between 18 September and 15 October."
     },
     {
       "on": "2026-10-23",
@@ -851,7 +851,7 @@
     {
       "on": "2026-11-20",
       "family": "planForNeed",
-      "text": "You chose More Energy on 12 of your last 26 Circles, between 24 October and 19 November."
+      "text": "You chose More Energy on 12 of your last 26 Circles, between 24 October and 20 November."
     },
     {
       "on": "2026-11-28",
@@ -866,7 +866,7 @@
     {
       "on": "2026-12-18",
       "family": "planForNeed",
-      "text": "You chose More Energy on 8 of your last 19 Circles, between 26 November and 18 December."
+      "text": "You chose More Energy on 8 of your last 19 Circles, between 22 November and 18 December."
     },
     {
       "on": "2026-12-30",

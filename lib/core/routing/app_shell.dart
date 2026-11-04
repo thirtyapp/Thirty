@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/home/presentation/widgets/journal_save_failure_notice.dart';
 import '../theme/design_tokens.dart';
 
 /// THIRTY's primary navigation shell — **Today | Plans | Insights | You**
@@ -49,7 +50,8 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
+      // R6 final: a Circle whose save to History failed is said so.
+      body: JournalSaveFailureNotice(child: navigationShell),
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(

@@ -1,0 +1,840 @@
+{
+ "method": "F02 / F03 — the Premium Guided Circle's spoken opening and closing lines\n(founder approval, 2026-10-26: \"THIRTY — PREMIUM VOICE INTEGRATION: F02 & F03\").\n\n  F02 \"Your Circle for today.\"            -> opening_<fnv>.m4a      (said at Start)\n  F03 \"Your next Circle opens tomorrow.\"  -> next_circle_<fnv>.m4a  (said after Close)\n\nNo generation: the eight takes already exist in the social voice bank\n(Social/audio/voice_bank/vb_F0{2,3}_<Voice>.mp3, Set 2, 2026-10-22). They are\nonly READ; byte copies go to source/ with their SHA-1s.\n\n1. Provenance: each take's Set 2 generation-log entry must name the voice's\n   exact ID, the script, eleven_multilingual_v2, the frozen app settings\n   (stability 0.5, similarity 0.75, style 0, speaker boost) and seed 30, and\n   its byte count must match the file. Brittney's speed is 0.9 (the social\n   pass); the others are 1.0, as in the app.\n2. Raw QA (the normal checks): script by offline ASR (faster-whisper\n   small.en), onset/ending, sample clipping, inner stalls, the frozen pause\n   bed, timbre against the voice's own shipping takes (diagnostic), and a\n   non-speech-event check: a 10 ms frame the frozen trim (-50 dBFS, 40 ms\n   margin) would keep although it lies outside the speech itself (speech =\n   the 300 Hz-4 kHz band within 45 dB of its loudest frame), louder than\n   -50 dBFS.\n3. Corrections, each non-destructive (a new file; the source is untouched):\n   - a clip with a non-speech event: cut to its speech (5 ms before the\n     speech-band onset, 40 ms after its end — the rule's own margin), so the\n     event is removed without filtering the speech at all. Expected for\n     Heather F02 only (the known low-frequency onset thump, and a second\n     low-frequency bump after \"today\").\n   - level: a master whose integrated AND maximum momentary loudness both\n     sit more than 2 dB above the median of its voice's 39 shipping parts is\n     re-mastered with ONE extra static gain: minus the mean of those two\n     excesses — the founder-approved Heather correction of 2026-10-17\n     (part_getItOut -1.8 dB, part_oneTask -2.7 dB; short-term loudness is not\n     used, these clips are under 3 s). No compression, EQ or denoise.\n   - Brittney: her social takes are at ElevenLabs speed 0.9; her app voice\n     is 1.0. Pitch-preserving tempo x1.106 (ffmpeg atempo, WSOLA) — the\n     median 0.9->1.0 speech-span ratio of her 36 same-script pairs in the\n     social bank (tools/brittney_pace.py). Of atempo and Rubber Band, atempo\n     moved her long-term spectrum least (0.22 dB vs 2.80 dB between real\n     0.9 and 1.0 takes), kept pitch (0.00 st) and lost no periodicity.\n4. Master by the frozen production rule with the voice's FROZEN median and\n   voice-wide gain (mastering_report.json), exactly as the previews and the\n   founder corrections were: trim, edge fades, outlier window, voice gain,\n   limiter only if needed, 150 ms lead-in, tail (F02: part 400 ms, so it\n   runs into \"First.\" like a cue; F03: close 400 ms). The 172 shipping files\n   are never written. Chain check first: this script's master of each\n   voice's shipping preview raw must reproduce the shipping preview.\n5. Post-master QA: ASR, onset/ending, true peak, loudness (I, max momentary)\n   against the voice's own 39 shipping parts, the non-speech check again.\n6. Review files: listen/ (as heard in THIRTY) and review/ (the A/B\n   alternatives the founder's ear decides on).\nStaged in masters/; written to assets/audio/guidance/<id>/ only with --install.\n\nUsage: python -B framing_production.py <repo> [--install]",
+ "run_at": "2026-10-26T21:28:02+01:00",
+ "brittney_tempo": 1.106,
+ "chain_check": {
+  "voice_locke_v1": {
+   "same_samples_as_review_pack_master": true,
+   "byte_identical_to_shipping": true,
+   "decoded_max_abs_diff": 0.0
+  },
+  "voice_heather_v1": {
+   "same_samples_as_review_pack_master": true,
+   "byte_identical_to_shipping": true,
+   "decoded_max_abs_diff": 0.0
+  },
+  "voice_milo_v1": {
+   "same_samples_as_review_pack_master": true,
+   "byte_identical_to_shipping": true,
+   "decoded_max_abs_diff": 0.0
+  },
+  "voice_brittney_v1": {
+   "same_samples_as_review_pack_master": true,
+   "byte_identical_to_shipping": true,
+   "decoded_max_abs_diff": 0.0
+  }
+ },
+ "voices": {
+  "voice_locke_v1": {
+   "voice": "Locke",
+   "voice_id": "oaLGpwm7fYWDEFmlRuQk",
+   "frozen_median_part_lufs_raw": -26.8,
+   "frozen_voice_gain_db": 4.47,
+   "shipping_parts_I": {
+    "min": -23.4,
+    "median": -22.1,
+    "max": -20.7
+   },
+   "shipping_parts_M_max": {
+    "min": -19.2,
+    "median": -17.6,
+    "max": -15.5
+   },
+   "clips": {
+    "opening": {
+     "duration_s": 1.579,
+     "speech_onset_s": 0.11,
+     "tail_after_speech_s": 0.309,
+     "first_10ms_dbfs": -92.5,
+     "last_10ms_dbfs": -87.5,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -12.75,
+     "longest_inner_silence_s": 0.02,
+     "speech_span_s": 1.16,
+     "provenance": {
+      "source": "../../Social/audio/voice_bank/vb_F02_Locke.mp3",
+      "sha1": "328f1b7a981fed4d45401e591a6bf53cbc1ced5e",
+      "request_id": "uiI2v2z3ASOLmIpR2SnY",
+      "generated_at": "2026-10-22T16:38:39+02:00",
+      "speed": 1.0,
+      "ok": true
+     },
+     "script": "Your Circle for today.",
+     "asr": "Your circle for today.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": null,
+     "voice_pause_bed_spread_dba": {
+      "min": -100.5,
+      "median": -98.9,
+      "max": -94.7
+     },
+     "timbre_source": {
+      "spectrum_distance_db": 3.28,
+      "spectrum_distance_percentile_vs_voice": 100.0,
+      "median_f0_hz": 88.0,
+      "f0_vs_voice_median_semitones": 0.17
+     },
+     "non_speech_events_source": [],
+     "corrections": [],
+     "mastering": {
+      "trimmed_head_tail_s": [
+       0.07,
+       0.269
+      ],
+      "raw_trimmed_lufs": -25.97,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": 4.47,
+      "extra_gain_db": 0.0,
+      "total_gain_db": 4.47,
+      "pre_limit_tp_dbtp": -8.27,
+      "limiter_db": 0.0,
+      "edge_fade_check": {
+       "speech_onset_ms_after_trim_start": 40,
+       "head_fade_ms": 10.0,
+       "fade_ends_at_or_before_onset": true,
+       "fade_head_removed_share_of_first_100ms_db": -77.1
+      }
+     },
+     "file": "voice_locke_v1/opening_d1293026.m4a",
+     "staged_sha1": "751912f153044763928779d13aaf9a76c3ea951d",
+     "final": {
+      "I": -21.9,
+      "M_max": -19.8,
+      "S_max": -120.7,
+      "speech_p90_dbfs": -16.79,
+      "duration_s": 1.79,
+      "true_peak_dbtp": -8.29
+     },
+     "final_vs_voice_parts": {
+      "I_minus_median_part_I": 0.2,
+      "M_max_minus_median_part_M_max": -2.2
+     },
+     "master_checks": {
+      "sound_starts_s": 0.175,
+      "sound_ends_s": 1.387,
+      "silent_tail_s": 0.403,
+      "first_5ms_after_lead_in_dbfs": -95.4
+     },
+     "non_speech_events_master": [],
+     "asr_master": "Your circle for today.",
+     "asr_master_word_distance": 0,
+     "asr_master_word_edits": []
+    },
+    "next_circle": {
+     "duration_s": 2.09,
+     "speech_onset_s": 0.11,
+     "tail_after_speech_s": 0.37,
+     "first_10ms_dbfs": -90.1,
+     "last_10ms_dbfs": -86.9,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -10.96,
+     "longest_inner_silence_s": 0.03,
+     "speech_span_s": 1.61,
+     "provenance": {
+      "source": "../../Social/audio/voice_bank/vb_F03_Locke.mp3",
+      "sha1": "55574cfebe86596b42346074d33735af18d3e9be",
+      "request_id": "8Kj1TKQTfOvqvsG238jK",
+      "generated_at": "2026-10-22T16:38:43+02:00",
+      "speed": 1.0,
+      "ok": true
+     },
+     "script": "Your next Circle opens tomorrow.",
+     "asr": "Your next circle opens tomorrow.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": null,
+     "voice_pause_bed_spread_dba": {
+      "min": -100.5,
+      "median": -98.9,
+      "max": -94.7
+     },
+     "timbre_source": {
+      "spectrum_distance_db": 1.49,
+      "spectrum_distance_percentile_vs_voice": 33.0,
+      "median_f0_hz": 85.7,
+      "f0_vs_voice_median_semitones": -0.29
+     },
+     "non_speech_events_source": [],
+     "corrections": [],
+     "mastering": {
+      "trimmed_head_tail_s": [
+       0.07,
+       0.33
+      ],
+      "raw_trimmed_lufs": -27.72,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": 4.47,
+      "extra_gain_db": 0.0,
+      "total_gain_db": 4.47,
+      "pre_limit_tp_dbtp": -6.48,
+      "limiter_db": 0.0,
+      "edge_fade_check": {
+       "speech_onset_ms_after_trim_start": 40,
+       "head_fade_ms": 10.0,
+       "fade_ends_at_or_before_onset": true,
+       "fade_head_removed_share_of_first_100ms_db": -77.1
+      }
+     },
+     "file": "voice_locke_v1/next_circle_3c38eb7b.m4a",
+     "staged_sha1": "e44e86ece74205a620acec19344bf2bf4c808084",
+     "final": {
+      "I": -23.5,
+      "M_max": -20.6,
+      "S_max": -120.7,
+      "speech_p90_dbfs": -17.78,
+      "duration_s": 2.24,
+      "true_peak_dbtp": -6.49
+     },
+     "final_vs_voice_parts": {
+      "I_minus_median_part_I": -1.4,
+      "M_max_minus_median_part_M_max": -3.0
+     },
+     "master_checks": {
+      "sound_starts_s": 0.18,
+      "sound_ends_s": 1.836,
+      "silent_tail_s": 0.404,
+      "first_5ms_after_lead_in_dbfs": -96.0
+     },
+     "non_speech_events_master": [],
+     "asr_master": "Your next circle opens tomorrow.",
+     "asr_master_word_distance": 0,
+     "asr_master_word_edits": []
+    }
+   }
+  },
+  "voice_heather_v1": {
+   "voice": "Heather",
+   "voice_id": "plP9aw1rizYgjFfuvLQ7",
+   "frozen_median_part_lufs_raw": -19.5,
+   "frozen_voice_gain_db": -2.89,
+   "shipping_parts_I": {
+    "min": -24.6,
+    "median": -22.15,
+    "max": -19.7
+   },
+   "shipping_parts_M_max": {
+    "min": -20.1,
+    "median": -17.8,
+    "max": -15.9
+   },
+   "clips": {
+    "opening": {
+     "duration_s": 1.858,
+     "speech_onset_s": 0.0,
+     "tail_after_speech_s": 0.048,
+     "first_10ms_dbfs": -43.2,
+     "last_10ms_dbfs": -87.7,
+     "clipped_onset": true,
+     "clipped_ending": true,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -1.48,
+     "longest_inner_silence_s": 0.23,
+     "speech_span_s": 1.81,
+     "provenance": {
+      "source": "../../Social/audio/voice_bank/vb_F02_Heather.mp3",
+      "sha1": "bb22d7b65d38ae696ddb727c3a689c076685d312",
+      "request_id": "CCSMilE9LZGzftDAtcmL",
+      "generated_at": "2026-10-22T16:38:40+02:00",
+      "speed": 1.0,
+      "ok": true
+     },
+     "script": "Your Circle for today.",
+     "asr": "Your circle for today.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": -67.5,
+     "voice_pause_bed_spread_dba": {
+      "min": -108.1,
+      "median": -85.65,
+      "max": -61.2
+     },
+     "timbre_source": {
+      "spectrum_distance_db": 4.24,
+      "spectrum_distance_percentile_vs_voice": 95.0,
+      "median_f0_hz": 137.6,
+      "f0_vs_voice_median_semitones": -0.63
+     },
+     "non_speech_events_source": [
+      [
+       0,
+       -43.2
+      ],
+      [
+       10,
+       -40.9
+      ],
+      [
+       20,
+       -37.3
+      ],
+      [
+       30,
+       -37.9
+      ],
+      [
+       1780,
+       -49.1
+      ],
+      [
+       1790,
+       -48.2
+      ],
+      [
+       1800,
+       -46.6
+      ]
+     ],
+     "cut_to_speech": {
+      "cut_head_ms": 44.9,
+      "cut_tail_at_ms": 1566.5,
+      "speech_onset_ms": 49.9,
+      "speech_end_ms": 1526.5,
+      "source_duration_ms": 1857.6
+     },
+     "corrections": [
+      "cut to speech (non-speech events removed)",
+      "level -2.6 dB (I +2.45, M max +2.70 over the voice's median part)"
+     ],
+     "mastering": {
+      "trimmed_head_tail_s": [
+       0.0,
+       0.0
+      ],
+      "raw_trimmed_lufs": -15.54,
+      "outlier_correction_db": -1.96,
+      "voice_gain_db": -2.89,
+      "extra_gain_db": -2.6,
+      "total_gain_db": -7.45,
+      "pre_limit_tp_dbtp": -8.92,
+      "limiter_db": 0.0,
+      "edge_fade_check": {
+       "speech_onset_ms_after_trim_start": 5,
+       "head_fade_ms": 5.0,
+       "fade_ends_at_or_before_onset": true,
+       "fade_head_removed_share_of_first_100ms_db": -61.7
+      }
+     },
+     "file": "voice_heather_v1/opening_d1293026.m4a",
+     "staged_sha1": "1286f30b54d19b82305aebf11d88d7e54075efad",
+     "final": {
+      "I": -22.3,
+      "M_max": -17.7,
+      "S_max": -120.7,
+      "speech_p90_dbfs": -16.53,
+      "duration_s": 2.07,
+      "true_peak_dbtp": -8.92
+     },
+     "final_vs_voice_parts": {
+      "I_minus_median_part_I": -0.15,
+      "M_max_minus_median_part_M_max": 0.1
+     },
+     "master_checks": {
+      "sound_starts_s": 0.155,
+      "sound_ends_s": 1.661,
+      "silent_tail_s": 0.41,
+      "first_5ms_after_lead_in_dbfs": -64.4
+     },
+     "non_speech_events_master": [],
+     "asr_master": "Your circle for today.",
+     "asr_master_word_distance": 0,
+     "asr_master_word_edits": []
+    },
+    "next_circle": {
+     "duration_s": 2.322,
+     "speech_onset_s": 0.07,
+     "tail_after_speech_s": 0.322,
+     "first_10ms_dbfs": -62.0,
+     "last_10ms_dbfs": -85.4,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -3.12,
+     "longest_inner_silence_s": 0.04,
+     "speech_span_s": 1.93,
+     "provenance": {
+      "source": "../../Social/audio/voice_bank/vb_F03_Heather.mp3",
+      "sha1": "5a5e209cc43fea3f480b2a2d7d7343327f9bf098",
+      "request_id": "lleCuED0QM5aoVkJGaFM",
+      "generated_at": "2026-10-22T16:38:44+02:00",
+      "speed": 1.0,
+      "ok": true
+     },
+     "script": "Your next Circle opens tomorrow.",
+     "asr": "Your next circle opens tomorrow.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": null,
+     "voice_pause_bed_spread_dba": {
+      "min": -108.1,
+      "median": -85.65,
+      "max": -61.2
+     },
+     "timbre_source": {
+      "spectrum_distance_db": 2.8,
+      "spectrum_distance_percentile_vs_voice": 72.0,
+      "median_f0_hz": 139.1,
+      "f0_vs_voice_median_semitones": -0.44
+     },
+     "non_speech_events_source": [],
+     "corrections": [],
+     "mastering": {
+      "trimmed_head_tail_s": [
+       0.03,
+       0.282
+      ],
+      "raw_trimmed_lufs": -20.47,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": -2.89,
+      "extra_gain_db": 0.0,
+      "total_gain_db": -2.89,
+      "pre_limit_tp_dbtp": -6.0,
+      "limiter_db": 0.0,
+      "edge_fade_check": {
+       "speech_onset_ms_after_trim_start": 35,
+       "head_fade_ms": 10.0,
+       "fade_ends_at_or_before_onset": true,
+       "fade_head_removed_share_of_first_100ms_db": -49.6
+      }
+     },
+     "file": "voice_heather_v1/next_circle_3c38eb7b.m4a",
+     "staged_sha1": "ea3335590102ed03934889c5ceb4de29c77627a1",
+     "final": {
+      "I": -23.2,
+      "M_max": -19.1,
+      "S_max": -120.7,
+      "speech_p90_dbfs": -17.91,
+      "duration_s": 2.56,
+      "true_peak_dbtp": -6.01
+     },
+     "final_vs_voice_parts": {
+      "I_minus_median_part_I": -1.05,
+      "M_max_minus_median_part_M_max": -1.3
+     },
+     "master_checks": {
+      "sound_starts_s": 0.16,
+      "sound_ends_s": 2.14,
+      "silent_tail_s": 0.42,
+      "first_5ms_after_lead_in_dbfs": -74.2
+     },
+     "non_speech_events_master": [],
+     "asr_master": "Your next circle opens tomorrow.",
+     "asr_master_word_distance": 0,
+     "asr_master_word_edits": []
+    }
+   }
+  },
+  "voice_milo_v1": {
+   "voice": "Milo",
+   "voice_id": "GUDYcgRAONiI1nXDcNQQ",
+   "frozen_median_part_lufs_raw": -19.86,
+   "frozen_voice_gain_db": -2.38,
+   "shipping_parts_I": {
+    "min": -24.3,
+    "median": -22.15,
+    "max": -19.9
+   },
+   "shipping_parts_M_max": {
+    "min": -21.1,
+    "median": -18.25,
+    "max": -16.0
+   },
+   "clips": {
+    "opening": {
+     "duration_s": 1.393,
+     "speech_onset_s": 0.07,
+     "tail_after_speech_s": 0.213,
+     "first_10ms_dbfs": -80.1,
+     "last_10ms_dbfs": -83.7,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -4.18,
+     "longest_inner_silence_s": 0.01,
+     "speech_span_s": 1.11,
+     "provenance": {
+      "source": "../../Social/audio/voice_bank/vb_F02_Milo.mp3",
+      "sha1": "0396cfe8f2234a1515660f015d8bfd8f2a4c1e0a",
+      "request_id": "S4kPfKBKxAdM21zjO9br",
+      "generated_at": "2026-10-22T16:38:41+02:00",
+      "speed": 1.0,
+      "ok": true
+     },
+     "script": "Your Circle for today.",
+     "asr": "Your circle for today.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": null,
+     "voice_pause_bed_spread_dba": {
+      "min": -94.0,
+      "median": -90.6,
+      "max": -86.4
+     },
+     "timbre_source": {
+      "spectrum_distance_db": 3.37,
+      "spectrum_distance_percentile_vs_voice": 100.0,
+      "median_f0_hz": 79.4,
+      "f0_vs_voice_median_semitones": -0.24
+     },
+     "non_speech_events_source": [],
+     "corrections": [],
+     "mastering": {
+      "trimmed_head_tail_s": [
+       0.03,
+       0.173
+      ],
+      "raw_trimmed_lufs": -20.02,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": -2.38,
+      "extra_gain_db": 0.0,
+      "total_gain_db": -2.38,
+      "pre_limit_tp_dbtp": -6.53,
+      "limiter_db": 0.0,
+      "edge_fade_check": {
+       "speech_onset_ms_after_trim_start": 45,
+       "head_fade_ms": 10.0,
+       "fade_ends_at_or_before_onset": true,
+       "fade_head_removed_share_of_first_100ms_db": -69.1
+      }
+     },
+     "file": "voice_milo_v1/opening_d1293026.m4a",
+     "staged_sha1": "6db8e0864dbca81696e4e3b7f7c6204e2dcc96a5",
+     "final": {
+      "I": -22.8,
+      "M_max": -19.5,
+      "S_max": -120.7,
+      "speech_p90_dbfs": -18.1,
+      "duration_s": 1.74,
+      "true_peak_dbtp": -6.6
+     },
+     "final_vs_voice_parts": {
+      "I_minus_median_part_I": -0.65,
+      "M_max_minus_median_part_M_max": -1.25
+     },
+     "master_checks": {
+      "sound_starts_s": 0.19,
+      "sound_ends_s": 1.317,
+      "silent_tail_s": 0.423,
+      "first_5ms_after_lead_in_dbfs": -86.4
+     },
+     "non_speech_events_master": [],
+     "asr_master": "Your circle for today.",
+     "asr_master_word_distance": 0,
+     "asr_master_word_edits": []
+    },
+    "next_circle": {
+     "duration_s": 1.904,
+     "speech_onset_s": 0.07,
+     "tail_after_speech_s": 0.194,
+     "first_10ms_dbfs": -85.3,
+     "last_10ms_dbfs": -85.4,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -2.83,
+     "longest_inner_silence_s": 0.03,
+     "speech_span_s": 1.64,
+     "provenance": {
+      "source": "../../Social/audio/voice_bank/vb_F03_Milo.mp3",
+      "sha1": "81aac030e7d62534400ab57ea424beba2ecd366a",
+      "request_id": "Wf63mqBFxMPkWZ61pFHQ",
+      "generated_at": "2026-10-22T16:38:44+02:00",
+      "speed": 1.0,
+      "ok": true
+     },
+     "script": "Your next Circle opens tomorrow.",
+     "asr": "Your next circle opens tomorrow.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": null,
+     "voice_pause_bed_spread_dba": {
+      "min": -94.0,
+      "median": -90.6,
+      "max": -86.4
+     },
+     "timbre_source": {
+      "spectrum_distance_db": 1.79,
+      "spectrum_distance_percentile_vs_voice": 59.0,
+      "median_f0_hz": 79.9,
+      "f0_vs_voice_median_semitones": -0.13
+     },
+     "non_speech_events_source": [],
+     "corrections": [],
+     "mastering": {
+      "trimmed_head_tail_s": [
+       0.03,
+       0.154
+      ],
+      "raw_trimmed_lufs": -18.6,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": -2.38,
+      "extra_gain_db": 0.0,
+      "total_gain_db": -2.38,
+      "pre_limit_tp_dbtp": -5.21,
+      "limiter_db": 0.0,
+      "edge_fade_check": {
+       "speech_onset_ms_after_trim_start": 40,
+       "head_fade_ms": 10.0,
+       "fade_ends_at_or_before_onset": true,
+       "fade_head_removed_share_of_first_100ms_db": -84.1
+      }
+     },
+     "file": "voice_milo_v1/next_circle_3c38eb7b.m4a",
+     "staged_sha1": "1afb4ced310f08ed1d565fc7f7b42cb4d08214dc",
+     "final": {
+      "I": -21.2,
+      "M_max": -18.3,
+      "S_max": -120.7,
+      "speech_p90_dbfs": -16.41,
+      "duration_s": 2.27,
+      "true_peak_dbtp": -5.22
+     },
+     "final_vs_voice_parts": {
+      "I_minus_median_part_I": 0.95,
+      "M_max_minus_median_part_M_max": -0.05
+     },
+     "master_checks": {
+      "sound_starts_s": 0.19,
+      "sound_ends_s": 1.841,
+      "silent_tail_s": 0.429,
+      "first_5ms_after_lead_in_dbfs": -105.1
+     },
+     "non_speech_events_master": [],
+     "asr_master": "Your next circle opens tomorrow.",
+     "asr_master_word_distance": 0,
+     "asr_master_word_edits": []
+    }
+   }
+  },
+  "voice_brittney_v1": {
+   "voice": "Brittney",
+   "voice_id": "pjcYQlDFKMbcOUp6F5GD",
+   "frozen_median_part_lufs_raw": -31.13,
+   "frozen_voice_gain_db": 8.78,
+   "shipping_parts_I": {
+    "min": -23.8,
+    "median": -22.35,
+    "max": -20.4
+   },
+   "shipping_parts_M_max": {
+    "min": -20.6,
+    "median": -17.05,
+    "max": -14.9
+   },
+   "clips": {
+    "opening": {
+     "duration_s": 1.765,
+     "speech_onset_s": 0.1,
+     "tail_after_speech_s": 0.375,
+     "first_10ms_dbfs": -59.0,
+     "last_10ms_dbfs": -85.9,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -14.0,
+     "longest_inner_silence_s": 0.02,
+     "speech_span_s": 1.29,
+     "provenance": {
+      "source": "../../Social/audio/voice_bank/vb_F02_Brittney.mp3",
+      "sha1": "41642c07170aba1f8e98b686a7b46daf3be975b4",
+      "request_id": "C2krZMekrZM2abIdbG8T",
+      "generated_at": "2026-10-22T16:38:42+02:00",
+      "speed": 0.9,
+      "ok": true
+     },
+     "script": "Your Circle for today.",
+     "asr": "your circle for today.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": null,
+     "voice_pause_bed_spread_dba": {
+      "min": -91.8,
+      "median": -82.4,
+      "max": -79.2
+     },
+     "timbre_source": {
+      "spectrum_distance_db": 4.12,
+      "spectrum_distance_percentile_vs_voice": 95.0,
+      "median_f0_hz": 183.0,
+      "f0_vs_voice_median_semitones": -2.72
+     },
+     "non_speech_events_source": [],
+     "timbre_after_tempo": {
+      "spectrum_distance_db": 4.21,
+      "spectrum_distance_percentile_vs_voice": 95.0,
+      "median_f0_hz": 183.0,
+      "f0_vs_voice_median_semitones": -2.72
+     },
+     "corrections": [
+      "atempo 1.106 (pitch-preserving; speed 0.9 -> 1.0)"
+     ],
+     "mastering": {
+      "trimmed_head_tail_s": [
+       0.05,
+       0.286
+      ],
+      "raw_trimmed_lufs": -29.88,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": 8.78,
+      "extra_gain_db": 0.0,
+      "total_gain_db": 8.78,
+      "pre_limit_tp_dbtp": -4.37,
+      "limiter_db": 0.0,
+      "edge_fade_check": {
+       "speech_onset_ms_after_trim_start": 40,
+       "head_fade_ms": 10.0,
+       "fade_ends_at_or_before_onset": true,
+       "fade_head_removed_share_of_first_100ms_db": -32.8
+      }
+     },
+     "file": "voice_brittney_v1/opening_d1293026.m4a",
+     "staged_sha1": "c85fcadf2da4864b3b54e7af2ebcb88d0c0ee9fb",
+     "final": {
+      "I": -21.4,
+      "M_max": -18.0,
+      "S_max": -120.7,
+      "speech_p90_dbfs": -17.82,
+      "duration_s": 1.8,
+      "true_peak_dbtp": -4.4
+     },
+     "final_vs_voice_parts": {
+      "I_minus_median_part_I": 0.95,
+      "M_max_minus_median_part_M_max": -0.95
+     },
+     "master_checks": {
+      "sound_starts_s": 0.15,
+      "sound_ends_s": 1.397,
+      "silent_tail_s": 0.403,
+      "first_5ms_after_lead_in_dbfs": -54.4
+     },
+     "non_speech_events_master": [
+      [
+       160,
+       -46.3
+      ]
+     ],
+     "asr_master": "Your circle for today.",
+     "asr_master_word_distance": 0,
+     "asr_master_word_edits": []
+    },
+    "next_circle": {
+     "duration_s": 2.786,
+     "speech_onset_s": 0.09,
+     "tail_after_speech_s": 0.326,
+     "first_10ms_dbfs": -68.7,
+     "last_10ms_dbfs": -81.9,
+     "clipped_onset": false,
+     "clipped_ending": false,
+     "sample_clipping": false,
+     "sample_peak_dbfs": -16.68,
+     "longest_inner_silence_s": 0.08,
+     "speech_span_s": 2.37,
+     "provenance": {
+      "source": "../../Social/audio/voice_bank/vb_F03_Brittney.mp3",
+      "sha1": "1e78f9b585e35273c244d8cb1253479bea1eb03a",
+      "request_id": "NJgHEnxnwSWbOmV4vQL8",
+      "generated_at": "2026-10-22T16:38:45+02:00",
+      "speed": 0.9,
+      "ok": true
+     },
+     "script": "Your next Circle opens tomorrow.",
+     "asr": "Your next circle opens tomorrow.",
+     "asr_word_distance": 0,
+     "asr_word_edits": [],
+     "pause_bed_dba_matched": null,
+     "voice_pause_bed_spread_dba": {
+      "min": -91.8,
+      "median": -82.4,
+      "max": -79.2
+     },
+     "timbre_source": {
+      "spectrum_distance_db": 4.17,
+      "spectrum_distance_percentile_vs_voice": 95.0,
+      "median_f0_hz": 186.1,
+      "f0_vs_voice_median_semitones": -2.43
+     },
+     "non_speech_events_source": [],
+     "timbre_after_tempo": {
+      "spectrum_distance_db": 4.21,
+      "spectrum_distance_percentile_vs_voice": 95.0,
+      "median_f0_hz": 186.9,
+      "f0_vs_voice_median_semitones": -2.35
+     },
+     "corrections": [
+      "atempo 1.106 (pitch-preserving; speed 0.9 -> 1.0)"
+     ],
+     "mastering": {
+      "trimmed_head_tail_s": [
+       0.04,
+       0.275
+      ],
+      "raw_trimmed_lufs": -30.71,
+      "outlier_correction_db": 0.0,
+      "voice_gain_db": 8.78,
+      "extra_gain_db": 0.0,
+      "total_gain_db": 8.78,
+      "pre_limit_tp_dbtp": -7.95,
+      "limiter_db": 0.0,
+      "edge_fade_check": {
+       "speech_onset_ms_after_trim_start": 40,
+       "head_fade_ms": 10.0,
+       "fade_ends_at_or_before_onset": true,
+       "fade_head_removed_share_of_first_100ms_db": -51.4
+      }
+     },
+     "file": "voice_brittney_v1/next_circle_3c38eb7b.m4a",
+     "staged_sha1": "1385c76fcab55f9f64afabf3fd21ee182df3c15d",
+     "final": {
+      "I": -22.1,
+      "M_max": -18.7,
+      "S_max": -120.7,
+      "speech_p90_dbfs": -17.37,
+      "duration_s": 2.77,
+      "true_peak_dbtp": -7.99
+     },
+     "final_vs_voice_parts": {
+      "I_minus_median_part_I": 0.25,
+      "M_max_minus_median_part_M_max": -1.65
+     },
+     "master_checks": {
+      "sound_starts_s": 0.155,
+      "sound_ends_s": 2.37,
+      "silent_tail_s": 0.4,
+      "first_5ms_after_lead_in_dbfs": -76.5
+     },
+     "non_speech_events_master": [
+      [
+       2340,
+       -45.9
+      ],
+      [
+       2350,
+       -41.6
+      ],
+      [
+       2360,
+       -48.9
+      ]
+     ],
+     "asr_master": "Your next circle opens tomorrow.",
+     "asr_master_word_distance": 0,
+     "asr_master_word_edits": []
+    }
+   }
+  }
+ },
+ "installed": [
+  "voice_locke_v1/opening_d1293026.m4a",
+  "voice_locke_v1/next_circle_3c38eb7b.m4a",
+  "voice_heather_v1/opening_d1293026.m4a",
+  "voice_heather_v1/next_circle_3c38eb7b.m4a",
+  "voice_milo_v1/opening_d1293026.m4a",
+  "voice_milo_v1/next_circle_3c38eb7b.m4a",
+  "voice_brittney_v1/opening_d1293026.m4a",
+  "voice_brittney_v1/next_circle_3c38eb7b.m4a"
+ ]
+}

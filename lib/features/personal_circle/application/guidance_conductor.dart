@@ -27,6 +27,14 @@ import 'guidance_voice.dart';
 /// a confirmed, irreversible step taken in THIRTY itself. The session ends
 /// with the Circle â€” after the ending is spoken, at Close, or when the
 /// voice is turned off.
+///
+/// Two lines frame a voiced Circle (founder approval, 2026-10-26): its
+/// opening, "Your Circle for today.", before "First." at the user's own
+/// Start, with the same words on show ([spokenOpeningProvider]); and
+/// "Your next Circle opens tomorrow." after the user's own Close — the
+/// closed Circle's line — only when the Circle closed on its own day, and
+/// after the ending if that is still being said. Each is said once: never
+/// on a first look, a return, a restart, a resume or a reopened Circle.
 class GuidanceConductor {
   GuidanceConductor(this._ref) {
     _session = _ref.read(guidanceSessionProvider)..listen(_onAction);
@@ -41,7 +49,26 @@ class GuidanceConductor {
   /// How long the device is kept awake beyond the Circle's remaining time.
   static const awakeMargin = Duration(minutes: 1);
 
+  /// How long the opening's words stay on show: the length of that voice's
+  /// own recording (`opening_d1293026.m4a`, checked against the files by
+  /// test), so they leave as it ends and "First." begins — never while the
+  /// line is still being said. Each recording's speech ends 0.40–0.42 s
+  /// before its end, room for the player's start-up; "First." is heard
+  /// 0.15 s into its own clip.
+  static const openingOnShow = {
+    ThirtyVoice.locke: Duration(milliseconds: 1790),
+    ThirtyVoice.heather: Duration(milliseconds: 2072),
+    ThirtyVoice.milo: Duration(milliseconds: 1740),
+    ThirtyVoice.brittney: Duration(milliseconds: 1800),
+  };
+
+  /// For a voice that isn't one of the bundled four: the longest.
+  static final openingOnShowAtMost = openingOnShow.values.reduce(
+    (a, b) => a > b ? a : b,
+  );
+
   Timer? _ticker;
+  Timer? _openingTimer;
 
   /// The part last seen while the Circle ran or was paused; `null` before
   /// Start, after Close, and on a first look.
@@ -49,27 +76,66 @@ class GuidanceConductor {
   GuidanceVoice? _playingVoice;
   GuidanceSessionStatus? _shown;
 
+  /// The Circle and status last seen — so a Start or a Close is noticed only
+  /// as it happens, never on a first look at a Circle already under way or
+  /// closed.
+  String? _seenCircle;
+  RecommendationStatus? _seenStatus;
+
+  /// The Circle whose ending was the last thing asked of the voice.
+  String? _endingSpoken;
+
+  /// The Circle whose closing line was asked for, while it may still be
+  /// speaking.
+  String? _closingSpoken;
+
   void _conduct() {
     final state = _ref.read(recommendationProvider);
+    final circle = state.recommendation?.circleId;
+    final sameCircle = circle != null && circle == _seenCircle;
+    final startedNow =
+        sameCircle &&
+        _seenStatus == RecommendationStatus.notStarted &&
+        state.status == RecommendationStatus.started;
+    final closedNow =
+        sameCircle &&
+        _seenStatus == RecommendationStatus.started &&
+        state.status == RecommendationStatus.closed;
+    _seenCircle = circle;
+    _seenStatus = state.status;
     final composed = state.recommendation?.composed;
     final moment = state.partMomentAt(_ref.read(eventClockProvider)());
     final voice = _ref.read(guidanceVoiceProvider);
     final running = state.status == RecommendationStatus.started;
-    if (composed == null || moment == null || !running || !voice.available) {
+    // Audit remediation R6: a kept Circle any of whose saved words differ
+    // from the recorded ones is never voiced — not one line of it.
+    final speaks = voice.available && composed != null && composed.voiced;
+    if (composed == null || moment == null || !running || !speaks) {
       // Nothing is checked while silent, so a voice that comes back — turned
       // on again, or Premium resumed — takes a first look: it speaks from
       // the next part, never one already under way.
       _spokenPart = null;
-      _stopVoice();
+      _hideOpening();
+      if (closedNow && speaks && _closedOnItsOwnDay(state)) {
+        _speakNextCircle(voice, circle);
+      } else if (!(speaks &&
+          state.status == RecommendationStatus.closed &&
+          circle == _closingSpoken)) {
+        // The closing line, once asked for, is left to finish; anything
+        // else stops — a lapse, the voice turned off, another day.
+        _closingSpoken = null;
+        _stopVoice();
+      }
       _end();
       return;
     }
     if (state.isPaused) {
       // Resuming the same part says nothing new.
       _spokenPart = moment.position;
+      _hideOpening();
       _stopVoice();
       _setTicking(false);
-      _show(composed.plan, moment, paused: true);
+      _show(composed, moment, paused: true);
       return;
     }
     final before = _spokenPart;
@@ -80,34 +146,99 @@ class GuidanceConductor {
         !(firstLook &&
             (moment.finished ||
                 moment.partElapsed > const Duration(seconds: 2)));
-    if (begins) _speak(voice, composed.plan, moment);
+    // Every part's words are the recorded ones here ([ComposedSession.voiced]).
+    final cue = begins;
+    // The opening, only at the user's own Start, as the first part begins.
+    final opens =
+        begins && startedNow && moment.position == 0 && !moment.finished;
+    if (cue || opens) {
+      _speak(voice, composed.plan, moment, opening: opens, cue: cue);
+    }
+    if (opens) _showOpening(circle, voice);
     if (moment.finished) {
+      if (cue) _endingSpoken = circle;
       _end(afterSpeech: true);
       return;
     }
     _setTicking(true);
-    _show(composed.plan, moment, paused: false);
+    _show(composed, moment, paused: false);
   }
 
-  void _speak(GuidanceVoice voice, CirclePlan plan, PartMoment moment) {
+  /// Unknown (before any lifecycle event) counts as in front. In front, a
+  /// screen reader's live announcement speaks instead; out of sight the
+  /// voice is the only guidance.
+  static bool get _inFront {
     final lifecycle = WidgetsBinding.instance.lifecycleState;
-    // Unknown (before any lifecycle event) counts as in front. In front,
-    // a screen reader's live announcement speaks instead; out of sight the
-    // voice is the only guidance.
-    final foreground =
-        lifecycle == null || lifecycle == AppLifecycleState.resumed;
+    return lifecycle == null || lifecycle == AppLifecycleState.resumed;
+  }
+
+  void _speak(
+    GuidanceVoice voice,
+    CirclePlan plan,
+    PartMoment moment, {
+    required bool opening,
+    required bool cue,
+  }) {
     _playingVoice = voice;
+    _endingSpoken = null;
     unawaited(
-      voice.play(
-        moment.finished ? [spokenEnding] : spokenCueFor(plan, moment.position),
-        deferToScreenReader: foreground,
-      ),
+      voice.play([
+        if (opening) spokenOpening,
+        if (cue)
+          ...moment.finished
+              ? [spokenEnding]
+              : spokenCueFor(plan, moment.position),
+      ], deferToScreenReader: _inFront),
     );
   }
 
-  void _show(CirclePlan plan, PartMoment moment, {required bool paused}) {
+  /// "Your next Circle opens tomorrow." — after the ending, if that is
+  /// still being said; otherwise at once, in place of a part's cue the
+  /// Close cut short.
+  void _speakNextCircle(GuidanceVoice voice, String circle) {
+    _playingVoice = voice;
+    _closingSpoken = circle;
+    unawaited(
+      voice.play(
+        [spokenNextCircle],
+        deferToScreenReader: _inFront,
+        afterCurrent: _endingSpoken == circle,
+      ),
+    );
+    _endingSpoken = null;
+  }
+
+  /// "Tomorrow" is true only for a Circle closed on its own day: one kept
+  /// open past midnight is closed on the next day, whose Circle is already
+  /// there to begin.
+  static bool _closedOnItsOwnDay(RecommendationState state) {
+    final closedAt = state.closedAt;
+    return closedAt != null && state.nextCircleIsTomorrowAt(closedAt);
+  }
+
+  void _showOpening(String circle, GuidanceVoice voice) {
+    _openingTimer?.cancel();
+    _ref.read(spokenOpeningProvider.notifier)._show(circle);
+    final onShow = voice is BundledGuidanceVoice
+        ? openingOnShow[voice.voice]!
+        : openingOnShowAtMost;
+    _openingTimer = Timer(onShow, _hideOpening);
+  }
+
+  void _hideOpening() {
+    _openingTimer?.cancel();
+    _openingTimer = null;
+    _ref.read(spokenOpeningProvider.notifier)._show(null);
+  }
+
+  void _show(
+    ComposedSession composed,
+    PartMoment moment, {
+    required bool paused,
+  }) {
+    final plan = composed.plan;
     final status = GuidanceSessionStatus(
-      part: plan.parts[moment.position].definition.name,
+      part: composed.wordingAt(moment.position).name,
       paused: paused,
       keepAwakeFor: paused
           ? Duration.zero
@@ -172,10 +303,27 @@ class GuidanceConductor {
 
   void dispose() {
     _session.listen(null);
+    _openingTimer?.cancel();
     _stopVoice();
     _end();
   }
 }
+
+/// The Circle whose spoken opening is being said now (its circle id), so
+/// its words are on show with it; `null` otherwise. Set only by
+/// [GuidanceConductor].
+class SpokenOpening extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void _show(String? circle) {
+    if (state != circle) state = circle;
+  }
+}
+
+final spokenOpeningProvider = NotifierProvider<SpokenOpening, String?>(
+  SpokenOpening.new,
+);
 
 /// The conductor: one per container, alive for as long as the container —
 /// created at start-up by `main.dart` ([keepGuidanceConducting]), and by

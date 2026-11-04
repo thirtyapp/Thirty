@@ -24,6 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/providers/shared_preferences_provider.dart';
+import '../../../core/utils/date_key.dart';
 import '../../plans/domain/plan_stage_provenance.dart';
 import 'activity_catalog.dart';
 
@@ -492,9 +493,14 @@ class CircleJournalEntry {
     final catalogVersion = json['catalogVersion'];
     final shownAt = DateTime.tryParse('${json['shownAt']}');
 
+    // Audit remediation R6b (A2-09): a local date that isn't a real
+    // `YYYY-MM-DD` calendar date makes the record unreadable, like any
+    // other invalid required field — isolated here, never normalised and
+    // never able to break what reads dates downstream (Insights, History).
     if (schemaVersion is! int ||
         circleId is! String ||
         localDate is! String ||
+        !isCanonicalDateKey(localDate) ||
         direction == null ||
         activityId == null ||
         catalogVersion is! int ||
@@ -592,6 +598,42 @@ class CircleJournalEntry {
 /// preference writes that could observe a partial state between them.
 const circleJournalKey = 'circle_journal_v1';
 
+/// Where a journal THIRTY couldn't read as a whole is kept, exactly as it
+/// was stored, before anything is written over it (audit remediation R6c):
+/// every such copy, oldest first; never replaced by a later one.
+const circleJournalPreservedKey = 'circle_journal_preserved_v1';
+
+/// A journal save THIRTY refused, so nothing stored is lost (audit
+/// remediation R6c): the stored journal was written by a newer THIRTY, or
+/// one it can't read couldn't first be kept.
+class JournalWriteRefused implements Exception {
+  const JournalWriteRefused(this.reason);
+
+  final String reason;
+
+  @override
+  String toString() => 'JournalWriteRefused: $reason';
+}
+
+/// What became of the latest attempt to save each Circle to History (R6
+/// final, founder direction 2026-11-03): `true` saved, `false` not saved.
+/// THIRTY never says a Circle is in History unless its save succeeded; a
+/// failed one is shown to the user ([JournalSaveFailureNotice]).
+class JournalSaveStatus extends Notifier<Map<String, bool>> {
+  @override
+  Map<String, bool> build() => const {};
+
+  void record(String circleId, {required bool saved}) {
+    if (state[circleId] == saved) return;
+    state = {...state, circleId: saved};
+  }
+}
+
+final journalSaveStatusProvider =
+    NotifierProvider<JournalSaveStatus, Map<String, bool>>(
+      JournalSaveStatus.new,
+    );
+
 /// The current journal record-shape version. Bump only alongside a
 /// reviewed schema-migration change to [CircleJournalRepository]'s
 /// read/write path — never as an incidental side effect.
@@ -646,9 +688,24 @@ const circleJournalMaxRecords = 366;
 /// [recordUsefulness] — never more than [circleJournalMaxRecords]
 /// entries kept at once.
 class CircleJournalRepository {
-  CircleJournalRepository(this._prefs);
+  CircleJournalRepository(this._prefs, {this.onSaved});
 
   final SharedPreferences _prefs;
+
+  /// Told the outcome of every save, by Circle (R6 final).
+  final void Function(String circleId, {required bool saved})? onSaved;
+
+  /// Some earlier History couldn't be opened, and a copy of it is kept
+  /// ([circleJournalPreservedKey], R6c).
+  bool get hasPreservedHistory =>
+      (_prefs.getStringList(circleJournalPreservedKey) ?? const []).isNotEmpty;
+
+  /// The stored journal is one THIRTY can't open — damaged, or written by a
+  /// newer THIRTY — and it is still exactly as stored (R6c).
+  bool get storedHistoryUnopened {
+    final raw = _prefs.getString(circleJournalKey);
+    return raw != null && _classifyStored(raw) != _StoredJournal.readable;
+  }
 
   /// All journal entries currently retained, oldest local date first.
   List<CircleJournalEntry> readAll() {
@@ -746,6 +803,11 @@ class CircleJournalRepository {
   /// closest honest estimate available (ADR-013 §3, "handle safely:
   /// process interruption during writes"). See [recordShown] for the
   /// optional Plan fields.
+  ///
+  /// The record of a Circle not yet started takes [activityId] and [offer]
+  /// too (audit remediation R3): the Circle started is what the day was, even
+  /// when the app stopped before a replacement — or "Make today's Circle" —
+  /// reached the journal.
   Future<void> recordStarted({
     required String circleId,
     required String localDate,
@@ -774,7 +836,13 @@ class CircleJournalRepository {
     revisitUsed: revisitUsed,
     treatmentSource: treatmentSource,
     offer: offer,
-    update: (entry) => entry.copyWith(startedAt: startedAt),
+    update: (entry) => entry.startedAt == null && offer != null
+        ? entry.copyWith(
+            startedAt: startedAt,
+            activityId: activityId,
+            offer: offer,
+          )
+        : entry.copyWith(startedAt: startedAt),
   );
 
   /// Records [closedAt] on [circleId]'s entry. See [recordStarted] for the
@@ -930,7 +998,7 @@ class CircleJournalRepository {
     entries[index] = entry.copyWith(
       offer: CircleOffer(session: session.withSkipped(skipped)),
     );
-    await _save(entries);
+    await _save(entries, circleId: circleId);
   }
 
   /// "Remove this answer" (V2 Phase C): removes [circleId]'s usefulness
@@ -953,7 +1021,7 @@ class CircleJournalRepository {
       clearAttempt: includingAttempt,
       clearUsefulness: true,
     );
-    await _save(entries);
+    await _save(entries, circleId: circleId);
     return true;
   }
 
@@ -961,7 +1029,11 @@ class CircleJournalRepository {
   /// deletion/reset control"). Irreversible; there is no undo and nothing
   /// to restore it from, since nothing is ever sent off-device.
   Future<void> clearAll() async {
-    await _prefs.remove(circleJournalKey);
+    await Future.wait([
+      _prefs.remove(circleJournalKey),
+      // R6c: every copy kept of a journal THIRTY couldn't read goes too.
+      _prefs.remove(circleJournalPreservedKey),
+    ]);
   }
 
   /// The full retained journal, pretty-printed as JSON (ADR-013 §6 —
@@ -979,19 +1051,38 @@ class CircleJournalRepository {
   /// not a profile. Phase D's retired routines and Paths are never exported
   /// as current objects; the journal entries of days that used them keep
   /// their own labels. Nothing else derived is ever exported.
+  ///
+  /// Kept Circles are exported as stored (audit remediation R4, R4.1): one
+  /// THIRTY can't read is in [keptCircles] exactly as it is, and each whole
+  /// kept-Circle record THIRTY can't read is beside them, as its stored text
+  /// ([keptCirclesUnreadable]) — never left out.
   String exportAsJson({
     Map<String, Object?>? suggestionPreferences,
-    List<Map<String, Object?>>? keptCircles,
+    List<Object?>? keptCircles,
+    List<String>? keptCirclesUnreadable,
     Map<String, Object?>? circlePlans,
     Map<String, Object?>? insights,
   }) {
     final entries = readAll();
+    final unreadable = _unreadableStored();
+    final storedRaw = _prefs.getString(circleJournalKey);
+    final preserved =
+        _prefs.getStringList(circleJournalPreservedKey) ?? const <String>[];
     const encoder = JsonEncoder.withIndent('  ');
     return encoder.convert({
       'schemaVersion': circleJournalSchemaVersion,
       'entries': entries.map((entry) => entry.toJson()).toList(),
+      // R6b (A2-09): records THIRTY can't read, as stored — never left out.
+      if (unreadable.isNotEmpty) 'entriesUnreadable': unreadable,
+      // R6c: a journal THIRTY can't read as a whole (or a newer THIRTY
+      // wrote), as stored, and every copy kept before a save wrote over one.
+      if (storedRaw != null &&
+          _classifyStored(storedRaw) != _StoredJournal.readable)
+        'journalStored': storedRaw,
+      if (preserved.isNotEmpty) 'journalPreserved': preserved,
       'suggestionPreferences': ?suggestionPreferences,
       'keptCircles': ?keptCircles,
+      'keptCirclesUnreadable': ?keptCirclesUnreadable,
       'circlePlans': ?circlePlans,
       'insights': ?insights,
     });
@@ -1074,10 +1165,24 @@ class CircleJournalRepository {
     } else {
       entries[index] = updated;
     }
-    await _save(entries);
+    await _save(entries, circleId: circleId);
   }
 
-  Future<void> _save(List<CircleJournalEntry> entries) async {
+  Future<void> _save(
+    List<CircleJournalEntry> entries, {
+    required String circleId,
+  }) async {
+    try {
+      await _write(entries);
+    } catch (_) {
+      onSaved?.call(circleId, saved: false);
+      rethrow;
+    }
+    onSaved?.call(circleId, saved: true);
+  }
+
+  Future<void> _write(List<CircleJournalEntry> entries) async {
+    await _protectStored();
     entries.sort((a, b) => a.localDate.compareTo(b.localDate));
     final capped = entries.length > circleJournalMaxRecords
         ? entries.sublist(entries.length - circleJournalMaxRecords)
@@ -1085,9 +1190,91 @@ class CircleJournalRepository {
 
     final json = jsonEncode({
       'schemaVersion': circleJournalSchemaVersion,
-      'entries': capped.map((entry) => entry.toJson()).toList(),
+      'entries': [
+        ...capped.map((entry) => entry.toJson()),
+        // Audit remediation R6b (A2-09): what THIRTY can't read is written
+        // back exactly as stored — never erased by an ordinary save.
+        ..._unreadableStored(),
+      ],
     });
-    await _prefs.setString(circleJournalKey, json);
+    if (!await _prefs.setString(circleJournalKey, json)) {
+      throw const JournalWriteRefused('the journal could not be written');
+    }
+  }
+
+  /// Audit remediation R6c: nothing stored is written over unless THIRTY
+  /// can read it, or has first kept it. A journal it can't read as a whole
+  /// is added to [circleJournalPreservedKey] exactly as stored — and only
+  /// once the disk confirms that write — before the save goes ahead; a copy
+  /// kept earlier is never replaced. A journal written by a newer THIRTY is
+  /// never written over: the save is refused. Either refusal throws
+  /// [JournalWriteRefused], and nothing is written.
+  Future<void> _protectStored() async {
+    final raw = _prefs.getString(circleJournalKey);
+    if (raw == null) return;
+    switch (_classifyStored(raw)) {
+      case _StoredJournal.readable:
+        return;
+      case _StoredJournal.newer:
+        throw const JournalWriteRefused(
+          'the stored journal was written by a newer THIRTY',
+        );
+      case _StoredJournal.unreadable:
+        final kept = _prefs.getStringList(circleJournalPreservedKey) ?? [];
+        if (kept.contains(raw)) return;
+        var written = false;
+        try {
+          written = await _prefs.setStringList(circleJournalPreservedKey, [
+            ...kept,
+            raw,
+          ]);
+        } catch (_) {
+          written = false;
+        }
+        if (written) return;
+        // The in-memory store already shows the copy the disk refused: put
+        // it back as it was, so a later save keeps the original again
+        // instead of trusting a copy that isn't there.
+        try {
+          if (kept.isEmpty) {
+            await _prefs.remove(circleJournalPreservedKey);
+          } else {
+            await _prefs.setStringList(circleJournalPreservedKey, kept);
+          }
+        } catch (_) {
+          // Nothing more can be done; the original is still untouched.
+        }
+        throw const JournalWriteRefused(
+          'the unreadable journal could not be kept first',
+        );
+    }
+  }
+
+  /// The stored entries THIRTY can't read, exactly as stored (audit
+  /// remediation R6b, A2-09): set aside on read ([_readRaw]), written back by
+  /// every save, exported beside the entries ([exportAsJson]), and removed
+  /// only by Delete Circle history ([clearAll]). Empty when the stored
+  /// wrapper itself can't be read — that case is not changed here.
+  List<Object?> _unreadableStored() {
+    final raw = _prefs.getString(circleJournalKey);
+    if (raw == null) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, Object?> ||
+          !circleJournalReadableVersions.contains(decoded['schemaVersion'])) {
+        return const [];
+      }
+      final stored = decoded['entries'];
+      if (stored is! List) return const [];
+      return [
+        for (final entry in stored)
+          if (entry is! Map<String, Object?> ||
+              CircleJournalEntry.fromJson(entry) == null)
+            entry,
+      ];
+    } catch (_) {
+      return const [];
+    }
   }
 
   /// Reads and decodes the persisted journal, failing safe to an empty
@@ -1129,6 +1316,45 @@ class CircleJournalRepository {
 /// [SharedPreferences] instance — read by `recommendation_provider.dart`
 /// (to record each Circle's progression) and `circle_history_page.dart`
 /// (to read, clear, and export it).
-final circleJournalRepositoryProvider = Provider<CircleJournalRepository>(
-  (ref) => CircleJournalRepository(ref.watch(sharedPreferencesProvider)),
-);
+final circleJournalRepositoryProvider = Provider<CircleJournalRepository>((
+  ref,
+) {
+  final status = ref.read(journalSaveStatusProvider.notifier);
+  return CircleJournalRepository(
+    ref.watch(sharedPreferencesProvider),
+    onSaved: status.record,
+  );
+});
+
+/// What is stored under [circleJournalKey] (audit remediation R6c).
+enum _StoredJournal {
+  /// A wrapper this build reads (its records may still be unreadable one by
+  /// one — those are written back as stored).
+  readable,
+
+  /// Not one this build can read: not JSON, not an object, no entries list,
+  /// or a version that isn't a known one.
+  unreadable,
+
+  /// A later wrapper version: written by a newer THIRTY.
+  newer,
+}
+
+_StoredJournal _classifyStored(String raw) {
+  try {
+    final decoded = jsonDecode(raw);
+    if (decoded is Map<String, Object?>) {
+      final version = decoded['schemaVersion'];
+      if (version is int && version > circleJournalSchemaVersion) {
+        return _StoredJournal.newer;
+      }
+      if (circleJournalReadableVersions.contains(version) &&
+          decoded['entries'] is List) {
+        return _StoredJournal.readable;
+      }
+    }
+  } catch (_) {
+    // Not JSON.
+  }
+  return _StoredJournal.unreadable;
+}

@@ -306,8 +306,7 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     firstAction: 'Put on shoes you can walk in and head out the door.',
     preparation: 'Comfortable shoes, and a layer if it’s cool.',
     whileYoureThere: [
-      'Start easy, then walk a little quicker than usual — brisk, but still '
-          'able to talk.',
+      'Start easy, then walk briskly — at a pace you can still talk at.',
       'Let your arms swing.',
       'Turn back about halfway through your time.',
     ],
@@ -328,11 +327,11 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
     status: ActivityStatus.live,
     v1Learning: LearningCompatibility.compatible,
     reasons: {_energy: 'A few songs you like, and moving however feels good.'},
-    firstAction: 'Put on a song you really like and turn it up a little.',
+    firstAction: 'Put on a song you really like.',
     preparation: 'Something that plays music.',
     whileYoureThere: [
       'Start small — sway, tap, walk around the room.',
-      'Let the next song be a bit livelier.',
+      'Let the next song be one you feel like moving to.',
       'Nobody’s watching. There’s no right way to do this.',
     ],
     lighter: 'Two songs are enough.',
@@ -355,7 +354,7 @@ const Map<ActivityId, ActivityDefinition> activityCatalog = {
       _clearer: 'Nothing to check, so your attention can follow one thing.',
     },
     firstAction:
-        'Put your phone on silent, out of sight in a pocket or bag, and '
+        'Silence your notifications, keep your phone in your pocket, and '
         'start walking.',
     preparation: 'A route you know, so you won’t need a map.',
     whileYoureThere: [

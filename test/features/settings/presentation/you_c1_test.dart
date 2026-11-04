@@ -202,7 +202,7 @@ void main() {
         'Appearance',
         'Data & privacy',
         // Founder decision (B7): analytics consent is a privacy control.
-        'Share anonymous usage data',
+        'Share usage data',
         'Copy as text',
         'Delete Circle history',
         'About',
@@ -357,6 +357,10 @@ void main() {
       final container = await _pump(tester, gateway);
       expect(find.text('Become Premium'), findsOneWidget);
 
+      // R6 (A2-06): the fuller usage-data disclosure makes You longer; the
+      // footer is reached by scrolling, as on a phone.
+      await tester.ensureVisible(find.text('Restore purchases'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Restore purchases'));
       await tester.pumpAndSettle();
 

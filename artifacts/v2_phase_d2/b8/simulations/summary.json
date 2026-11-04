@@ -37,7 +37,7 @@
     "variety": {
       "composedDays": 311,
       "distinctSessions": 211,
-      "distinctMaterial": 127,
+      "distinctStructural": 77,
       "distinctMains": 18,
       "firstExactRepeatDay": 34,
       "medianDaysBetweenRepeats": 73,
@@ -84,7 +84,7 @@
     "variety": {
       "composedDays": 321,
       "distinctSessions": 225,
-      "distinctMaterial": 111,
+      "distinctStructural": 71,
       "distinctMains": 18,
       "firstExactRepeatDay": 38,
       "medianDaysBetweenRepeats": 67,
@@ -131,7 +131,7 @@
     "variety": {
       "composedDays": 365,
       "distinctSessions": 52,
-      "distinctMaterial": 19,
+      "distinctStructural": 19,
       "distinctMains": 6,
       "firstExactRepeatDay": 23,
       "medianDaysBetweenRepeats": 23,
@@ -178,7 +178,7 @@
     "variety": {
       "composedDays": 245,
       "distinctSessions": 184,
-      "distinctMaterial": 116,
+      "distinctStructural": 77,
       "distinctMains": 18,
       "firstExactRepeatDay": 41,
       "medianDaysBetweenRepeats": 59,

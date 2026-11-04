@@ -74,6 +74,7 @@ class _CountingPlayer implements GuidanceAudioPlayer {
   Future<void> play(
     List<String> assets, {
     bool deferToScreenReader = false,
+    bool afterCurrent = false,
   }) async => plays++;
 
   @override

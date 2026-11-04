@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/features/insights/insights_service_test.dart": {
+   "passed": 25,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/presentation/insights_page_test.dart": {
+   "passed": 29,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/presentation/widgets/circle_history_calendar_a11y_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/presentation/widgets/circle_history_calendar_states_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/presentation/widgets/circle_history_calendar_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/r5_i4_keep_after_lapse_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/r6b_insight_dates_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/circle_composer_test.dart": {
+   "passed": 26,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/circle_elements_test.dart": {
+   "passed": 21,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/composed_ui_test.dart": {
+   "passed": 33,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/composer_baseline_equivalence_test.dart": {
+   "passed": 1,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/d2_review_pack_test.dart": {
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 196,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 10,
+ "exit": 0,
+ "seconds": 34,
+ "command": "flutter test --concurrency=1 --reporter json test/features/insights/insights_service_test.dart test/features/insights/presentation/insights_page_test.dart test/features/insights/presentation/widgets/circle_history_calendar_a11y_test.dart test/features/insights/presentation/widgets/circle_history_calendar_states_test.dart test/features/insights/presentation/widgets/circle_history_calendar_test.dart test/features/insights/r5_i4_keep_after_lapse_test.dart test/features/insights/r6b_insight_dates_test.dart test/features/personal_circle/circle_composer_test.dart test/features/personal_circle/circle_elements_test.dart test/features/personal_circle/composed_ui_test.dart test/features/personal_circle/composer_baseline_equivalence_test.dart test/features/personal_circle/d2_review_pack_test.dart"
+}

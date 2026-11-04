@@ -1,0 +1,20 @@
+{
+ "files": {
+  "test/features/personal_circle/personal_circle_simulation_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": "16d",
+ "exit": 0,
+ "seconds": 303,
+ "command": "flutter test --concurrency=1 --reporter json --name p1[34]_ test/features/personal_circle/personal_circle_simulation_test.dart"
+}

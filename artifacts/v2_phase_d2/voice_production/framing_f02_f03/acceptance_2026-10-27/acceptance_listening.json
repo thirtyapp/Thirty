@@ -1,0 +1,127 @@
+{
+ "run": "2026-10-27",
+ "files": [
+  "01_brittney__existing_cue__then_F02_as_at_Start.m4a",
+  "02_brittney__existing_last_cue_and_ending__then_F03_as_at_Close.m4a",
+  "03_heather_F02__A_app_master__B_social_correction_matched__in_context_then_ABAB.m4a"
+ ],
+ "heather_F02_level": {
+  "A_app_master_I": -22.28,
+  "A_tp": -8.92,
+  "B_social_I_as_is": -18.25,
+  "B_tp_as_is": -3.58,
+  "B_gain_db": -4.03,
+  "B_matched_I": -22.3,
+  "B_matched_tp": -7.61
+ },
+ "pitch_in_context": {
+  "voice_locke_v1": {
+   "F02_hz": 88.0,
+   "F03_hz": 85.7,
+   "parts_median_hz": 87.5,
+   "short_app_lines_median_hz": 86.0,
+   "F02_vs_parts_st": 0.11,
+   "F03_vs_parts_st": -0.35,
+   "F02_vs_short_app_lines_st": 0.41,
+   "F03_vs_short_app_lines_st": -0.05,
+   "F02_vs_next_heard_First_st": -2.23,
+   "F02_vs_first_part_st": 0.53,
+   "F03_vs_ending_before_it_st": -0.05,
+   "short_app_lines_spread_st": [
+    -1.85,
+    2.34
+   ],
+   "edges": {
+    "F02": {
+     "lead_in_peak_dbfs": -116.5,
+     "tail_peak_dbfs": -240.0
+    },
+    "F03": {
+     "lead_in_peak_dbfs": -116.2,
+     "tail_peak_dbfs": -240.0
+    }
+   }
+  },
+  "voice_heather_v1": {
+   "F02_hz": 134.9,
+   "F03_hz": 139.1,
+   "parts_median_hz": 143.1,
+   "short_app_lines_median_hz": 140.7,
+   "F02_vs_parts_st": -1.02,
+   "F03_vs_parts_st": -0.48,
+   "F02_vs_short_app_lines_st": -0.73,
+   "F03_vs_short_app_lines_st": -0.19,
+   "F02_vs_next_heard_First_st": -6.32,
+   "F02_vs_first_part_st": -0.81,
+   "F03_vs_ending_before_it_st": 1.31,
+   "short_app_lines_spread_st": [
+    -1.8,
+    5.3
+   ],
+   "edges": {
+    "F02": {
+     "lead_in_peak_dbfs": -123.4,
+     "tail_peak_dbfs": -240.0
+    },
+    "F03": {
+     "lead_in_peak_dbfs": -118.4,
+     "tail_peak_dbfs": -240.0
+    }
+   }
+  },
+  "voice_milo_v1": {
+   "F02_hz": 79.4,
+   "F03_hz": 79.9,
+   "parts_median_hz": 80.6,
+   "short_app_lines_median_hz": 80.8,
+   "F02_vs_parts_st": -0.27,
+   "F03_vs_parts_st": -0.16,
+   "F02_vs_short_app_lines_st": -0.31,
+   "F03_vs_short_app_lines_st": -0.21,
+   "F02_vs_next_heard_First_st": -0.46,
+   "F02_vs_first_part_st": 1.04,
+   "F03_vs_ending_before_it_st": 0.37,
+   "short_app_lines_spread_st": [
+    -2.14,
+    0.19
+   ],
+   "edges": {
+    "F02": {
+     "lead_in_peak_dbfs": -121.3,
+     "tail_peak_dbfs": -240.0
+    },
+    "F03": {
+     "lead_in_peak_dbfs": -120.1,
+     "tail_peak_dbfs": -240.0
+    }
+   }
+  },
+  "voice_brittney_v1": {
+   "F02_hz": 183.8,
+   "F03_hz": 186.9,
+   "parts_median_hz": 214.3,
+   "short_app_lines_median_hz": 186.1,
+   "F02_vs_parts_st": -2.67,
+   "F03_vs_parts_st": -2.37,
+   "F02_vs_short_app_lines_st": -0.22,
+   "F03_vs_short_app_lines_st": 0.07,
+   "F02_vs_next_heard_First_st": 0.25,
+   "F02_vs_first_part_st": -1.9,
+   "F03_vs_ending_before_it_st": -2.06,
+   "short_app_lines_spread_st": [
+    -3.65,
+    -0.31
+   ],
+   "edges": {
+    "F02": {
+     "lead_in_peak_dbfs": -105.2,
+     "tail_peak_dbfs": -240.0
+    },
+    "F03": {
+     "lead_in_peak_dbfs": -118.6,
+     "tail_peak_dbfs": -240.0
+    }
+   }
+  }
+ }
+}

@@ -28,11 +28,29 @@ class RevenueCatEntitlementGateway implements EntitlementGateway {
   final _statusController = StreamController<EntitlementStatus>.broadcast();
   bool _configured = false;
 
+  // Lookups overlap — a foreground-resume refresh can still be in flight
+  // when a purchase or restore confirms, and answer last with the older
+  // state. Each answer is ordered by when it was asked for (a pushed update
+  // or a purchase/restore result by when it arrived), and only the newest
+  // is published, so an older answer never overwrites a newer one.
+  int _lastTicket = 0;
+  int _publishedTicket = 0;
+  EntitlementStatus _published = EntitlementStatus.unavailable;
+
+  EntitlementStatus _publish(int ticket, EntitlementStatus status) {
+    if (ticket < _publishedTicket) return _published;
+    _publishedTicket = ticket;
+    _published = status;
+    _statusController.add(status);
+    return status;
+  }
+
   @override
   Stream<EntitlementStatus> get statusUpdates => _statusController.stream;
 
   @override
   Future<EntitlementStatus> initialize() async {
+    final ticket = ++_lastTicket;
     try {
       if (!_configured) {
         await Purchases.configure(
@@ -45,33 +63,30 @@ class RevenueCatEntitlementGateway implements EntitlementGateway {
       // previously-verified cached result when the network is unreachable
       // (frozen architecture §7) — this app never builds a parallel cache.
       final customerInfo = await Purchases.getCustomerInfo();
-      final status = _statusFor(customerInfo);
-      _statusController.add(status);
-      return status;
+      return _publish(ticket, _statusFor(customerInfo));
     } catch (_) {
       // Configuration failure, no connectivity with no prior cache, or
       // any other SDK error — never a crash, never a false Premium grant.
-      const status = EntitlementStatus.unavailable;
-      _statusController.add(status);
-      return status;
+      return _publish(ticket, EntitlementStatus.unavailable);
     }
   }
 
   void _onCustomerInfoUpdate(CustomerInfo customerInfo) {
-    _statusController.add(_statusFor(customerInfo));
+    _publish(++_lastTicket, _statusFor(customerInfo));
   }
 
   /// Maps RevenueCat's verified [CustomerInfo] to THIRTY's four-value
   /// model — see `entitlement_status.dart`'s [EntitlementStatus] doc
   /// comment for exactly which provider states collapse into which value.
-  /// A missing entitlement identifier (the configured id not present in
-  /// the provider's response at all) is a configuration mismatch, not a
-  /// real "never subscribed" state, so it maps to [EntitlementStatus.unavailable]
-  /// rather than [EntitlementStatus.inactive].
+  /// The configured id absent from a successful response is the ordinary
+  /// never-purchased customer, not a failure: RevenueCat only lists an
+  /// entitlement once this customer has owned it, so it maps to
+  /// [EntitlementStatus.inactive] and the offer stays purchasable. Only
+  /// [EntitlementInfo.isActive] ever grants Premium — never an offering, a
+  /// product or another entitlement being present.
   EntitlementStatus _statusFor(CustomerInfo customerInfo) {
     final entitlement = customerInfo.entitlements.all[_config.entitlementId];
-    if (entitlement == null) return EntitlementStatus.unavailable;
-    return entitlement.isActive
+    return entitlement != null && entitlement.isActive
         ? EntitlementStatus.active
         : EntitlementStatus.inactive;
   }
@@ -100,7 +115,7 @@ class RevenueCatEntitlementGateway implements EntitlementGateway {
       // returns with the purchase result, not from the call merely
       // returning (frozen architecture §11).
       final status = _statusFor(result.customerInfo);
-      _statusController.add(status);
+      _publish(++_lastTicket, status);
       return outcomeForPurchasedStatus(status);
     } on PlatformException catch (e) {
       return outcomeForPurchaseError(PurchasesErrorHelper.getErrorCode(e));
@@ -135,7 +150,7 @@ class RevenueCatEntitlementGateway implements EntitlementGateway {
     try {
       final customerInfo = await Purchases.restorePurchases();
       final status = _statusFor(customerInfo);
-      _statusController.add(status);
+      _publish(++_lastTicket, status);
       return status == EntitlementStatus.active
           ? RestoreOutcome.restored
           : RestoreOutcome.notFound;

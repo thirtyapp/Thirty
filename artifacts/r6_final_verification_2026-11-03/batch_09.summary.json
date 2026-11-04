@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/features/home/presentation/widgets/today_card_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r2_make_today_circle_test.dart": {
+   "passed": 22,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r3_delete_feedback_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r3_persistence_delete_test.dart": {
+   "passed": 41,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r6_free_copy_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r6_journal_save_failure_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r6b_journal_unreadable_preserved_test.dart": {
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r6c_journal_store_safety_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/gentler_feasibility_test.dart": {
+   "passed": 50,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/insight_engine_test.dart": {
+   "passed": 80,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/insight_plan_review_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/insight_simulation_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 253,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 9,
+ "exit": 0,
+ "seconds": 24,
+ "command": "flutter test --concurrency=1 --reporter json test/features/home/presentation/widgets/today_card_test.dart test/features/home/r2_make_today_circle_test.dart test/features/home/r3_delete_feedback_test.dart test/features/home/r3_persistence_delete_test.dart test/features/home/r6_free_copy_test.dart test/features/home/r6_journal_save_failure_test.dart test/features/home/r6b_journal_unreadable_preserved_test.dart test/features/home/r6c_journal_store_safety_test.dart test/features/insights/gentler_feasibility_test.dart test/features/insights/insight_engine_test.dart test/features/insights/insight_plan_review_test.dart test/features/insights/insight_simulation_test.dart"
+}

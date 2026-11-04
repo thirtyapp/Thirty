@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/features/reminder/application/reminder_provider_test.dart": {
+   "passed": 24,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/presentation/widgets/reminder_invitation_card_large_text_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/presentation/widgets/reminder_invitation_card_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/settings/application/first_name_provider_test.dart": {
+   "passed": 23,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/settings/presentation/first_name_question_test.dart": {
+   "passed": 53,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/settings/presentation/settings_page_test.dart": {
+   "passed": 16,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/settings/presentation/you_b7_hierarchy_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/settings/presentation/you_c1_real_font_test.dart": {
+   "passed": 20,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/settings/presentation/you_c1_test.dart": {
+   "passed": 14,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/settings/presentation/you_first_name_test.dart": {
+   "passed": 26,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/settings/presentation/you_north_star_test.dart": {
+   "passed": 50,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/main_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 247,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 13,
+ "exit": 0,
+ "seconds": 31,
+ "command": "flutter test --concurrency=1 --reporter json test/features/reminder/application/reminder_provider_test.dart test/features/reminder/presentation/widgets/reminder_invitation_card_large_text_test.dart test/features/reminder/presentation/widgets/reminder_invitation_card_test.dart test/features/settings/application/first_name_provider_test.dart test/features/settings/presentation/first_name_question_test.dart test/features/settings/presentation/settings_page_test.dart test/features/settings/presentation/you_b7_hierarchy_test.dart test/features/settings/presentation/you_c1_real_font_test.dart test/features/settings/presentation/you_c1_test.dart test/features/settings/presentation/you_first_name_test.dart test/features/settings/presentation/you_north_star_test.dart test/main_test.dart"
+}

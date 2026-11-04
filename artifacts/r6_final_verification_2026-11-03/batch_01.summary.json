@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/core/analytics/analytics_consent_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/analytics/analytics_service_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/analytics/tester_identity_provider_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/android_identity_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/app/r6b_day_rollover_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/app/thirty_app_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/branding/thirty_wordmark_view_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/config/release_info_test.dart": {
+   "passed": 1,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/config/revenue_cat_config_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/config/supabase_config_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/premium/entitlement_gateway_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/premium/premium_access_test.dart": {
+   "passed": 19,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 86,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 1,
+ "exit": 0,
+ "seconds": 14,
+ "command": "flutter test --concurrency=1 --reporter json test/core/analytics/analytics_consent_test.dart test/core/analytics/analytics_service_test.dart test/core/analytics/tester_identity_provider_test.dart test/core/android_identity_test.dart test/core/app/r6b_day_rollover_test.dart test/core/app/thirty_app_test.dart test/core/branding/thirty_wordmark_view_test.dart test/core/config/release_info_test.dart test/core/config/revenue_cat_config_test.dart test/core/config/supabase_config_test.dart test/core/premium/entitlement_gateway_test.dart test/core/premium/premium_access_test.dart"
+}

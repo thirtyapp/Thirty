@@ -1,5 +1,21 @@
 # THIRTY — D2 B8: simulations, review packs, content guards
 
+> **Status update 2026-11-03 (audit remediation R6b, Audit #2 A2-10 / A2-08):**
+> - **The metric:** "materially distinct" counted parts that *could* act as main or second. The variety metric is now **structurally distinct**: the parts that *actually* act as main or second in each session (the composer's own `partRole`).
+> - **Regenerated:** `simulations/` and `../ELEMENT_COVERAGE.md`, from the same deterministic runs.
+> - **What changed:** only `distinctMaterial` → `distinctStructural`, and the I1 sentences' date ranges (A2-08, which now span every counted Circle). Every other line is identical.
+>
+>   | Profile | Before (possible roles) | After (actual roles) |
+>   |---|---|---|
+>   | A | 127 | 77 |
+>   | B | 111 | 71 |
+>   | C | 19 | 19 |
+>   | D | 116 | 77 |
+>
+> - **Coverage report:** Clearer Head ≈20: 355 → 122; Gentler Pace ≈30: 151 → 49; More Energy ≈10 stays 19; More Energy up-to-30: 19 → 16.
+> - **Below:** the figures quoting "materially distinct" are the earlier metric, kept as written. Neither metric is evidence of perceived variety or renewal value.
+> - The 2026-10-20 outputs remain in git history at `8bfd42c`.
+
 > **REVIEW ARTIFACT.** Evidence produced from the current working tree (HEAD `27e840a`, with the B0–B8 work intentionally uncommitted). It is not canonical authority: the product contract, ADR-023, ADR-024 and the code are.
 >
 > **Structure only.** These are deterministic synthetic histories. They show whether the product stays coherent, honest and within its rules over time. They establish **nothing** about willingness to pay, retention, conversion, health benefit, real usefulness or revenue.

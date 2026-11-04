@@ -41,6 +41,7 @@ class MainActivity : FlutterActivity() {
                         guidance.play(
                             call.argument<List<String>>("assets") ?: emptyList(),
                             call.argument<Boolean>("deferToScreenReader") ?: false,
+                            call.argument<Boolean>("afterCurrent") ?: false,
                         )
                         result.success(null)
                     }

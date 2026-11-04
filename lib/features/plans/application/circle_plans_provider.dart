@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/premium/entitlement_status.dart';
 import '../../../core/premium/premium_access.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
@@ -145,7 +146,13 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
       controls: controls,
       leftOut: leftOut,
     );
-    if (!identical(day.state, state)) _set(day.state);
+    // A stage Circle served now, under Premium, is remembered with its
+    // stage: what credits it at Close (recordGuided).
+    final stage = day.stage;
+    final next = stage != null && day.circle != null
+        ? day.state.served(stage, circleId: _today)
+        : day.state;
+    if (!identical(next, state)) _set(next);
     return day;
   }
 
@@ -175,34 +182,90 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
     );
   }
 
+  /// Today's stage Circle [circleId] is being started (R2, founder decision
+  /// on the expiry before Start). Only billing's verified answer counts: a
+  /// Circle started once Premium has verifiably ended
+  /// ([EntitlementStatus.inactive]) keeps its served evidence but earns no
+  /// credit of its own; one started under verified Premium does. Still
+  /// being checked or unavailable proves nothing, so nothing is recorded.
+  /// Completes once the record is written, so the start that follows can
+  /// never be saved without it.
+  Future<void> noteStart(
+    PlanStageProvenance stage, {
+    required String circleId,
+  }) {
+    final next = switch (ref.read(entitlementStatusProvider)) {
+      EntitlementStatus.active => state.noteStart(
+        stage,
+        circleId: circleId,
+        active: true,
+      ),
+      EntitlementStatus.inactive => state.noteStart(
+        stage,
+        circleId: circleId,
+        active: false,
+      ),
+      EntitlementStatus.initializing || EntitlementStatus.unavailable => state,
+    };
+    if (identical(next, state)) return Future<void>.value();
+    _set(next);
+    return _writes;
+  }
+
   /// Today's stage Circle was started and has now been closed: the stage
-  /// is guided and the Plan moves on — once per Circle, and only while
-  /// Premium is active.
-  void recordGuided(
+  /// is guided and the Plan moves on — once per Circle. Credit follows
+  /// where the Circle came from, not billing at the moment of Close (audit
+  /// remediation R2, founder decision D2): the stage Circle THIRTY served
+  /// under Premium ([CirclePlansState.wasServed]) is credited even if the
+  /// entitlement is still being checked, unavailable or has since ended.
+  /// Any other stage needs Premium now. A Circle can only gain a stage
+  /// while Premium is active (steerToday, replaceStage), so nothing served
+  /// after an expiry is ever credited — nor is a served Circle started only
+  /// after one ([noteStart]).
+  ///
+  /// Completes once the credit is written (audit remediation R3). Today
+  /// credits a Close only once the Close itself is saved, and catches up a
+  /// saved Close not yet credited on the next start.
+  ///
+  /// [on] is the Circle's own day (audit remediation R3) — by default, today.
+  Future<void> recordGuided(
     PlanStageProvenance stage, {
     required String circleId,
     required List<String> parts,
     required List<String> skipped,
+    String? on,
   }) {
-    if (!_premium) return;
+    if (!_premium && !state.creditsServed(stage, circleId: circleId)) {
+      return Future<void>.value();
+    }
     final next = state.recordGuided(
       stage,
       circleId: circleId,
-      today: _today,
+      today: on ?? _today,
       parts: parts,
       skipped: skipped,
     );
-    if (!identical(next, state)) _set(next);
+    if (identical(next, state)) return Future<void>.value();
+    _set(next);
+    return _writes;
   }
 
   /// Delete history: the stage evidence goes at once; each Plan's place
   /// stays. A record set aside as unreadable goes too — it may hold stage
-  /// evidence, and nothing reads it back. Completes when it is written.
+  /// evidence, and nothing reads it back. Completes when it is written —
+  /// and, unlike the Plans' other writes, fails if it couldn't be (audit
+  /// remediation R3: Delete never reports what didn't happen).
   Future<void> forgetStageEvidence() {
-    _set(state.forgetStageEvidence());
-    final setAside = _prefs.remove(circlePlansUnreadableKey);
-    _writes = _writes.then((_) => setAside).catchError((Object _) => true);
-    return _writes;
+    final next = state.forgetStageEvidence();
+    state = next;
+    final json = jsonEncode(next.toJson());
+    final prefs = _prefs;
+    final setAside = prefs.remove(circlePlansUnreadableKey);
+    final written = _writes
+        .then((_) => prefs.setString(circlePlansKey, json))
+        .then((_) => setAside);
+    _writes = written.then((_) {}, onError: (Object _) {});
+    return written;
   }
 }
 

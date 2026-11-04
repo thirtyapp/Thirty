@@ -126,7 +126,9 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
         _ => null,
       },
       InsightActionResult.alreadyApplied => InsightCopy.alreadyInPlace,
-      InsightActionResult.keptLimitReached => KeepCircleCopy.full,
+      InsightActionResult.keptLimitReached => KeepCircleCopy.fullFor(
+        ref.read(keptCirclesProvider),
+      ),
       InsightActionResult.needsPremium => null,
       InsightActionResult.notAvailable => null,
       InsightActionResult.nothingToApply => null,
@@ -182,9 +184,14 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
     InsightStatus status(InsightSnapshot s) => statusOf(s, inputs);
 
     // Now: the current Insight, or the one just applied on this visit.
+    // Without Premium, only a shown I4 whose Keep keeps the user's own
+    // Circle — Keep is never gated (audit remediation R5, A2-05).
     final applied = _appliedId == null ? null : state.byId(_appliedId!);
     final current =
-        applied ?? (premium ? currentInsight(snapshots, inputs) : null);
+        applied ??
+        (premium
+            ? currentInsight(snapshots, inputs)
+            : keepableWithoutPremium(snapshots, inputs));
     // The newest Plan review whose cycle ended within the last 28 days.
     final todayKey = dayOf(now, 1);
     final reviews = [
@@ -213,7 +220,10 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
           snapshot: current,
           actionLabel: _actionLabel(current.application),
           onAction: () => _apply(current),
-          onNotNow: current.family.isOrdinary ? () => _notNow(current) : null,
+          // "Not now" stays Premium, like every action but Keep.
+          onNotNow: premium && current.family.isOrdinary
+              ? () => _notNow(current)
+              : null,
           outcome: identical(current, applied) ? _outcome : null,
           onSeePlan:
               identical(current, applied) &&

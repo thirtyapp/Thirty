@@ -36,7 +36,7 @@
   "variety": {
     "composedDays": 321,
     "distinctSessions": 225,
-    "distinctMaterial": 111,
+    "distinctStructural": 71,
     "distinctMains": 18,
     "firstExactRepeatDay": 38,
     "medianDaysBetweenRepeats": 67,
@@ -558,7 +558,7 @@
     {
       "on": "2026-01-31",
       "family": "planForNeed",
-      "text": "You chose Clearer Head on 13 of your last 25 Circles, between 5 and 29 January."
+      "text": "You chose Clearer Head on 13 of your last 25 Circles, between 5 and 31 January."
     },
     {
       "on": "2026-02-12",
@@ -578,7 +578,7 @@
     {
       "on": "2026-03-02",
       "family": "planForNeed",
-      "text": "You chose Clearer Head on 11 of your last 24 Circles, between 4 and 27 February."
+      "text": "You chose Clearer Head on 11 of your last 24 Circles, between 3 February and 2 March."
     },
     {
       "on": "2026-03-08",
@@ -608,7 +608,7 @@
     {
       "on": "2026-04-16",
       "family": "planForNeed",
-      "text": "You chose Clearer Head on 9 of your last 24 Circles, between 22 March and 16 April."
+      "text": "You chose Clearer Head on 9 of your last 24 Circles, between 20 March and 16 April."
     },
     {
       "on": "2026-04-25",
@@ -618,7 +618,7 @@
     {
       "on": "2026-04-25",
       "family": "planForNeed",
-      "text": "You chose More Energy on 11 of your last 24 Circles, between 2 and 25 April."
+      "text": "You chose More Energy on 11 of your last 24 Circles, between 29 March and 25 April."
     },
     {
       "on": "2026-05-04",
@@ -628,7 +628,7 @@
     {
       "on": "2026-05-16",
       "family": "planForNeed",
-      "text": "You chose Clearer Head on 10 of your last 25 Circles, between 21 April and 16 May."
+      "text": "You chose Clearer Head on 10 of your last 25 Circles, between 19 April and 16 May."
     },
     {
       "on": "2026-05-25",
@@ -648,7 +648,7 @@
     {
       "on": "2026-06-24",
       "family": "planForNeed",
-      "text": "You chose Clearer Head on 14 of your last 25 Circles, between 28 May and 23 June."
+      "text": "You chose Clearer Head on 14 of your last 25 Circles, between 28 May and 24 June."
     },
     {
       "on": "2026-06-27",
@@ -663,7 +663,7 @@
     {
       "on": "2026-07-24",
       "family": "planForNeed",
-      "text": "You chose Clearer Head on 12 of your last 22 Circles, between 29 June and 23 July."
+      "text": "You chose Clearer Head on 12 of your last 22 Circles, between 27 June and 24 July."
     },
     {
       "on": "2026-08-02",
@@ -713,12 +713,12 @@
     {
       "on": "2026-09-25",
       "family": "planForNeed",
-      "text": "You chose More Energy on 12 of your last 26 Circles, between 30 August and 25 September."
+      "text": "You chose More Energy on 12 of your last 26 Circles, between 29 August and 25 September."
     },
     {
       "on": "2026-10-04",
       "family": "planForNeed",
-      "text": "You chose Clearer Head on 12 of your last 26 Circles, between 8 and 30 September."
+      "text": "You chose Clearer Head on 12 of your last 26 Circles, between 7 September and 4 October."
     },
     {
       "on": "2026-10-10",
@@ -738,7 +738,7 @@
     {
       "on": "2026-11-03",
       "family": "planForNeed",
-      "text": "You chose Clearer Head on 12 of your last 22 Circles, between 11 October and 3 November."
+      "text": "You chose Clearer Head on 12 of your last 22 Circles, between 8 October and 3 November."
     },
     {
       "on": "2026-11-12",
@@ -768,7 +768,7 @@
     {
       "on": "2026-12-12",
       "family": "planForNeed",
-      "text": "You chose More Energy on 10 of your last 23 Circles, between 19 November and 12 December."
+      "text": "You chose More Energy on 10 of your last 23 Circles, between 17 November and 12 December."
     },
     {
       "on": "2026-12-21",

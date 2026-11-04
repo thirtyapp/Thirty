@@ -241,7 +241,7 @@ Future<double> _pumpUntilButtonPartiallyFaded(WidgetTester tester) async {
 }
 
 /// Taps the Close Circle button, then confirms the Batch 1 confirmation
-/// dialog it now opens ("Close today's Circle?" / "You won't be able to
+/// dialog it now opens ("Close this Circle?" / "You won't be able to
 /// reopen it until tomorrow.") — the drop-in replacement for what used to
 /// be a single direct-close tap, everywhere a test needs the Circle to
 /// actually end up closed. Uses discrete `pump()` calls to step through
@@ -1280,7 +1280,7 @@ void main() {
         await tester.pump();
 
         expect(find.byType(AlertDialog), findsOneWidget);
-        expect(find.text("Close today's Circle?"), findsOneWidget);
+        expect(find.text('Close this Circle?'), findsOneWidget);
         expect(
           find.text("You won't be able to reopen it until tomorrow."),
           findsOneWidget,

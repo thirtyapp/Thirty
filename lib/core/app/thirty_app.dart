@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/home/application/circle_journal.dart';
+import '../../features/home/application/recommendation_provider.dart';
 import '../../features/reminder/application/reminder_provider.dart';
 import '../analytics/analytics_event_type.dart';
 import '../analytics/analytics_service.dart';
@@ -12,6 +14,7 @@ import '../providers/clock_provider.dart';
 import '../providers/theme_mode_provider.dart';
 import '../routing/app_router.dart';
 import '../theme/design_tokens.dart';
+import '../utils/date_key.dart';
 
 /// THIRTY's root widget: wires up theming and routing. Product screens are
 /// deliberately out of scope here — see the design system showcase route.
@@ -88,18 +91,73 @@ class _ThirtyAppState extends ConsumerState<ThirtyApp>
     ref.read(analyticsServiceProvider).track(AnalyticsEventType.appOpened);
   }
 
+  /// Audit remediation R6b (A2-11): an app kept in the foreground across
+  /// local midnight notices the new day at the user's first touch after it,
+  /// not only on a resume — without swallowing what that touch was for.
+  ///
+  /// - **Nothing of the old day on show** (no Circle offered yet): the day
+  ///   is re-read as the touch begins, so the choice it makes is today's.
+  /// - **Otherwise** the touch first does what it was for on the screen
+  ///   shown — Start the offered Circle, Keep it, answer its reflection,
+  ///   change tab — and the new day opens right after ([_openNewDayIfDue]).
+  /// - **Never** while a Circle is running: it keeps its own day until the
+  ///   user closes it, and is recorded once, under that day. A Circle
+  ///   closed after midnight keeps its reflection on show until that is
+  ///   answered.
+  bool get _newDay =>
+      dateKey(ref.read(eventClockProvider)()) !=
+      dateKey(ref.read(nowProvider));
+
+  void _onPointerDown(PointerDownEvent _) {
+    if (_newDay && ref.read(recommendationProvider).recommendation == null) {
+      ref.invalidate(nowProvider);
+    }
+  }
+
+  void _onPointerUp(PointerUpEvent _) {
+    // A microtask runs once this touch's own handlers have run.
+    if (_newDay) scheduleMicrotask(_openNewDayIfDue);
+  }
+
+  void _openNewDayIfDue() {
+    if (!mounted || !_newDay) return;
+    final state = ref.read(recommendationProvider);
+    if (state.status == RecommendationStatus.started) return;
+    final closedAt = state.closedAt;
+    if (state.status == RecommendationStatus.closed &&
+        closedAt != null &&
+        !state.isOnItsOwnDayAt(closedAt) &&
+        !_reflectionDone(state)) {
+      return;
+    }
+    ref.invalidate(nowProvider);
+  }
+
+  /// The closed Circle's reflection is answered as far as it goes.
+  static bool _reflectionDone(RecommendationState state) =>
+      switch (state.attemptResponse) {
+        null => false,
+        CircleAttemptResponse.notToday => true,
+        _ => state.usefulnessResponse != null,
+      };
+
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
 
-    return MaterialApp.router(
-      title: 'THIRTY',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: themeMode,
-      routerConfig: widget.router ?? appRouter,
-      builder: widget.builder,
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: _onPointerDown,
+      onPointerUp: _onPointerUp,
+      child: MaterialApp.router(
+        title: 'THIRTY',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: themeMode,
+        routerConfig: widget.router ?? appRouter,
+        builder: widget.builder,
+      ),
     );
   }
 }

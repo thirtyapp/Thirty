@@ -16,6 +16,7 @@ import 'core/qa/qa_premium_harness.dart';
 import 'features/personal_circle/application/guidance_conductor.dart';
 import 'features/personal_circle/application/guidance_voice.dart';
 import 'features/reminder/application/reminder_provider.dart';
+import 'features/home/application/circle_history_deletion.dart';
 import 'features/home/application/phase_d_retirement.dart';
 import 'features/home/application/v1_premium_retirement.dart';
 
@@ -52,6 +53,15 @@ Future<void> main() async {
   // ADR-024: Phase D's Paths, routines and maintenance are retired before
   // public release — kept Circles stay exactly as kept (once; idempotent).
   await retirePhaseDPremium(sharedPreferences);
+  // Audit remediation R3: a Delete Circle history the app stopped in the
+  // middle of is finished before anything reads the store. If it still
+  // can't be, its intent stays recorded: no new Circle begins until it is
+  // finished (`CircleHistoryDeletion.resolvePending`).
+  try {
+    await completeInterruptedHistoryDeletion(sharedPreferences);
+  } catch (_) {
+    // Kept pending; retried before the next Circle.
+  }
   // V2 Phase D2: which of THIRTY's voices this build bundles.
   final guidanceVoices = await bundledGuidanceVoices(rootBundle);
 

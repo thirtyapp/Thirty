@@ -14,7 +14,8 @@
 ///   as active (frozen architecture §6: "cancellation is not automatically
 ///   immediate entitlement loss") — is [active];
 /// - a verified subscription **outside its paid period** — account hold,
-///   expiry, revocation, refund — is [inactive].
+///   expiry, revocation, refund — is [inactive], and so is a customer
+///   RevenueCat verifiably reports as never having owned it.
 ///
 /// The app must never re-derive these from anything except
 /// [EntitlementInfo.isActive] itself (`entitlement_gateway.dart`'s
@@ -33,16 +34,17 @@ enum EntitlementStatus {
   /// alike. Plans/Coach/Insights may operate.
   active,
 
-  /// A verified RevenueCat entitlement exists but is not active — covers
-  /// account hold, expiry, revocation and refund alike. Free remains
-  /// available; new Premium operation is paused, never erased.
+  /// RevenueCat answered, and the entitlement is not active — covers
+  /// account hold, expiry, revocation and refund alike, and a customer who
+  /// has never purchased (RevenueCat lists no entitlement for them at
+  /// all). Free remains available; new Premium operation is paused, never
+  /// erased; the offer is purchasable.
   inactive,
 
   /// No trustworthy verified state is available — missing/invalid billing
-  /// configuration, the SDK failing to initialize, or a lookup that found
-  /// no matching entitlement identifier in the provider's response at all
-  /// (a configuration mismatch, not a real subscription state). Treated
-  /// exactly like [inactive] for gating purposes (fail closed for
+  /// configuration, the SDK failing to initialize, or the customer lookup
+  /// itself failing (no connectivity with no prior cache, an SDK error).
+  /// Treated exactly like [inactive] for gating purposes (fail closed for
   /// Premium), but reported separately so Settings/paywall can show a
   /// truthful "temporarily unavailable" state instead of falsely implying
   /// the user was never subscribed.

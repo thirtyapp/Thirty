@@ -14,6 +14,17 @@ abstract final class KeepCircleCopy {
   static const full =
       'You have $maxKeptCircles kept Circles. Remove one in Yours to keep '
       'another.';
+
+  /// No Circle can be kept while how many are kept can't be known (audit
+  /// remediation R4.1). Proposed copy.
+  static const countUnknown =
+      'Some kept Circles can’t be opened in this version, so THIRTY can’t '
+      'keep another yet. You’ll find them in Yours.';
+
+  /// Why another Circle can't be kept now: the limit, or a count that
+  /// can't be known.
+  static String fullFor(KeptCircles kept) =>
+      kept.countKnown ? full : countUnknown;
 }
 
 /// "Keep this Circle" (V2 Phase D2, ADR-023 §8): once today's Personal
@@ -35,18 +46,19 @@ class KeepCircleCard extends ConsumerWidget {
         state.status != RecommendationStatus.closed) {
       return const SizedBox.shrink();
     }
-    final owned = ref.watch(keptCirclesProvider).kept;
-    final kept = owned
+    final owned = ref.watch(keptCirclesProvider);
+    final kept = owned.kept
         .where((k) => k.fromCircleId == recommendation.circleId)
         .firstOrNull;
-    final full = kept == null && owned.length >= maxKeptCircles;
+    // Every kept Circle counts, one THIRTY can't read too (R4).
+    final full = kept == null && owned.isFull;
 
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
     final text = kept != null
         ? KeepCircleCopy.kept(kept.name)
         : full
-        ? KeepCircleCopy.full
+        ? KeepCircleCopy.fullFor(owned)
         : KeepCircleCopy.offer;
     return Padding(
       padding: const EdgeInsets.fromLTRB(

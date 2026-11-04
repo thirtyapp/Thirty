@@ -1,0 +1,362 @@
+{
+ "method": "Heather final integration (2026-11-02): LOUDNESS QUALITY GATE, read-only. Run before apply.py.\n\nThe founder chose the six takes from a level-matched comparison, so their real production levels\nwere not part of that decision. Each take is measured here as it would ship (the frozen rule:\nHeather's frozen median and voice gain, no extra gain), against Heather's pack as it ships today\n(43 clips, including the three seed-32 files integrated earlier on 2026-11-02).\n\nPer take:\n  - integrated / max momentary / max short-term loudness, speech p90, true peak;\n  - the frozen rule's own record (raw level, outlier correction into the +/-2 LU window, limiter);\n  - jump against its own shipping original, against Heather's part median, and against the\n    clips that play next to a part in a session (the leads \"First.\" / \"Next.\" / \"Last.\" and the\n    ending), by speech p90 (the level of the spoken words, comparable for one-word leads);\n  - the 2026-10-17 level-correction formula: extra gain = -mean excess of I, M_max and S_max over\n    Heather's part median.\nObjective trim criteria, fixed before measuring (a static gain by the 2026-10-17 route only):\n  T1  the take breaks the frozen standard: true peak above the limiter ceiling, or the rule had\n      to limit it;\n  T2  it would be a new loudness extreme: louder than every Heather part now shipping on I, M_max\n      or S_max (a level the founder has not heard from Heather in the app);\n  T3  its 2026-10-17 correction is at least the smallest one the founder has confirmed by ear as\n      needed (getItOut, -1.8 dB; heard \"too loud\", 2026-10-17).\nWrites only heather_final_integration_2026-11-02/loudness_gate.json.\nUsage: python -I loudness_gate.py <repo>\n",
+ "heather_parts_as_shipped_now": {
+  "n": 38,
+  "median": {
+   "I": -22.0,
+   "M_max": -17.8,
+   "S_max": -21.55,
+   "speech_p90_dbfs": -16.64
+  },
+  "loudest": {
+   "I": -19.7,
+   "M_max": -15.9,
+   "S_max": -19.3
+  },
+  "loudest_clip": {
+   "I": "part_noteOneThing",
+   "M_max": "part_noteOneThing",
+   "S_max": "part_chooseOne"
+  }
+ },
+ "neighbours_speech_p90_dbfs": {
+  "lead_first": -18.31,
+  "lead_next": -17.74,
+  "lead_last": -18.15,
+  "close": -16.02
+ },
+ "clips": {
+  "part_shakeOut": {
+   "take": "seed34",
+   "as_ships": {
+    "I": -20.2,
+    "M_max": -17.6,
+    "S_max": -20.9,
+    "speech_p90_dbfs": -14.88,
+    "duration_s": 6.83,
+    "true_peak_dbtp": -4.76
+   },
+   "original_as_ships": {
+    "I": -24.0,
+    "M_max": -19.0,
+    "S_max": -23.5,
+    "speech_p90_dbfs": -19.67,
+    "duration_s": 6.66,
+    "true_peak_dbtp": -5.21
+   },
+   "frozen_rule_record": {
+    "raw_trimmed_lufs": -17.34,
+    "outlier_correction_db": -0.16,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -3.05,
+    "limiter_db": 0.0,
+    "head_fade_ms": 2.0
+   },
+   "jump_vs_original_lu": {
+    "I": 3.8,
+    "M_max": 1.4,
+    "S_max": 2.6
+   },
+   "excess_over_part_median": {
+    "I": 1.8,
+    "M_max": 0.2,
+    "S_max": 0.65
+   },
+   "oct17_formula_correction_db": -0.88,
+   "speech_p90_vs_part_median_db": 1.76,
+   "speech_p90_vs_neighbours_db": {
+    "lead_first": 3.43,
+    "lead_next": 2.86,
+    "lead_last": 3.27,
+    "close": 1.14
+   },
+   "T1_breaks_frozen_standard": false,
+   "T2_new_extreme": {
+    "I": false,
+    "M_max": false,
+    "S_max": false
+   },
+   "T3_at_founder_confirmed_too_loud": false,
+   "trim_required": false
+  },
+  "part_noteOneThing": {
+   "take": "seed31",
+   "as_ships": {
+    "I": -20.0,
+    "M_max": -16.5,
+    "S_max": -19.6,
+    "speech_p90_dbfs": -14.64,
+    "duration_s": 6.62,
+    "true_peak_dbtp": -6.1
+   },
+   "original_as_ships": {
+    "I": -19.7,
+    "M_max": -15.9,
+    "S_max": -19.5,
+    "speech_p90_dbfs": -14.73,
+    "duration_s": 6.36,
+    "true_peak_dbtp": -5.99
+   },
+   "frozen_rule_record": {
+    "raw_trimmed_lufs": -15.4,
+    "outlier_correction_db": -2.1,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -4.99,
+    "limiter_db": 0.0,
+    "head_fade_ms": 2.0
+   },
+   "jump_vs_original_lu": {
+    "I": -0.3,
+    "M_max": -0.6,
+    "S_max": -0.1
+   },
+   "excess_over_part_median": {
+    "I": 2.0,
+    "M_max": 1.3,
+    "S_max": 1.95
+   },
+   "oct17_formula_correction_db": -1.75,
+   "speech_p90_vs_part_median_db": 2.0,
+   "speech_p90_vs_neighbours_db": {
+    "lead_first": 3.67,
+    "lead_next": 3.1,
+    "lead_last": 3.51,
+    "close": 1.38
+   },
+   "T1_breaks_frozen_standard": false,
+   "T2_new_extreme": {
+    "I": false,
+    "M_max": false,
+    "S_max": false
+   },
+   "T3_at_founder_confirmed_too_loud": true,
+   "trim_required": true
+  },
+  "part_briskWalk": {
+   "take": "seed32",
+   "as_ships": {
+    "I": -20.3,
+    "M_max": -16.3,
+    "S_max": -20.1,
+    "speech_p90_dbfs": -14.4,
+    "duration_s": 11.16,
+    "true_peak_dbtp": -4.87
+   },
+   "original_as_ships": {
+    "I": -22.1,
+    "M_max": -17.5,
+    "S_max": -22.5,
+    "speech_p90_dbfs": -16.07,
+    "duration_s": 10.64,
+    "true_peak_dbtp": -5.21
+   },
+   "frozen_rule_record": {
+    "raw_trimmed_lufs": -16.52,
+    "outlier_correction_db": -0.98,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -3.87,
+    "limiter_db": 0.0,
+    "head_fade_ms": 10.0
+   },
+   "jump_vs_original_lu": {
+    "I": 1.8,
+    "M_max": 1.2,
+    "S_max": 2.4
+   },
+   "excess_over_part_median": {
+    "I": 1.7,
+    "M_max": 1.5,
+    "S_max": 1.45
+   },
+   "oct17_formula_correction_db": -1.55,
+   "speech_p90_vs_part_median_db": 2.24,
+   "speech_p90_vs_neighbours_db": {
+    "lead_first": 3.91,
+    "lead_next": 3.34,
+    "lead_last": 3.75,
+    "close": 1.62
+   },
+   "T1_breaks_frozen_standard": false,
+   "T2_new_extreme": {
+    "I": false,
+    "M_max": false,
+    "S_max": false
+   },
+   "T3_at_founder_confirmed_too_loud": false,
+   "trim_required": false
+  },
+  "part_lookAround": {
+   "take": "seed32",
+   "as_ships": {
+    "I": -20.2,
+    "M_max": -17.2,
+    "S_max": -19.7,
+    "speech_p90_dbfs": -15.28,
+    "duration_s": 6.27,
+    "true_peak_dbtp": -4.76
+   },
+   "original_as_ships": {
+    "I": -23.8,
+    "M_max": -17.9,
+    "S_max": -22.5,
+    "speech_p90_dbfs": -18.77,
+    "duration_s": 6.98,
+    "true_peak_dbtp": -5.75
+   },
+   "frozen_rule_record": {
+    "raw_trimmed_lufs": -17.19,
+    "outlier_correction_db": -0.31,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -3.2,
+    "limiter_db": 0.0,
+    "head_fade_ms": 10.0
+   },
+   "jump_vs_original_lu": {
+    "I": 3.6,
+    "M_max": 0.7,
+    "S_max": 2.8
+   },
+   "excess_over_part_median": {
+    "I": 1.8,
+    "M_max": 0.6,
+    "S_max": 1.85
+   },
+   "oct17_formula_correction_db": -1.42,
+   "speech_p90_vs_part_median_db": 1.36,
+   "speech_p90_vs_neighbours_db": {
+    "lead_first": 3.03,
+    "lead_next": 2.46,
+    "lead_last": 2.87,
+    "close": 0.74
+   },
+   "T1_breaks_frozen_standard": false,
+   "T2_new_extreme": {
+    "I": false,
+    "M_max": false,
+    "S_max": false
+   },
+   "T3_at_founder_confirmed_too_loud": false,
+   "trim_required": false
+  },
+  "part_roundTheBlock": {
+   "take": "seed32",
+   "as_ships": {
+    "I": -20.2,
+    "M_max": -17.3,
+    "S_max": -19.4,
+    "speech_p90_dbfs": -15.12,
+    "duration_s": 6.45,
+    "true_peak_dbtp": -5.69
+   },
+   "original_as_ships": {
+    "I": -24.6,
+    "M_max": -18.4,
+    "S_max": -24.4,
+    "speech_p90_dbfs": -19.57,
+    "duration_s": 8.3,
+    "true_peak_dbtp": -6.3
+   },
+   "frozen_rule_record": {
+    "raw_trimmed_lufs": -15.53,
+    "outlier_correction_db": -1.97,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -4.86,
+    "limiter_db": 0.0,
+    "head_fade_ms": 10.0
+   },
+   "jump_vs_original_lu": {
+    "I": 4.4,
+    "M_max": 1.1,
+    "S_max": 5.0
+   },
+   "excess_over_part_median": {
+    "I": 1.8,
+    "M_max": 0.5,
+    "S_max": 2.15
+   },
+   "oct17_formula_correction_db": -1.48,
+   "speech_p90_vs_part_median_db": 1.52,
+   "speech_p90_vs_neighbours_db": {
+    "lead_first": 3.19,
+    "lead_next": 2.62,
+    "lead_last": 3.03,
+    "close": 0.9
+   },
+   "T1_breaks_frozen_standard": false,
+   "T2_new_extreme": {
+    "I": false,
+    "M_max": false,
+    "S_max": false
+   },
+   "T3_at_founder_confirmed_too_loud": false,
+   "trim_required": false
+  },
+  "part_sitOutside": {
+   "take": "seed32",
+   "as_ships": {
+    "I": -21.6,
+    "M_max": -18.6,
+    "S_max": -21.3,
+    "speech_p90_dbfs": -16.27,
+    "duration_s": 9.2,
+    "true_peak_dbtp": -4.06
+   },
+   "original_as_ships": {
+    "I": -24.1,
+    "M_max": -19.1,
+    "S_max": -23.4,
+    "speech_p90_dbfs": -19.46,
+    "duration_s": 9.27,
+    "true_peak_dbtp": -4.58
+   },
+   "frozen_rule_record": {
+    "raw_trimmed_lufs": -18.66,
+    "outlier_correction_db": 0.0,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -2.89,
+    "limiter_db": 0.0,
+    "head_fade_ms": 2.0
+   },
+   "jump_vs_original_lu": {
+    "I": 2.5,
+    "M_max": 0.5,
+    "S_max": 2.1
+   },
+   "excess_over_part_median": {
+    "I": 0.4,
+    "M_max": -0.8,
+    "S_max": 0.25
+   },
+   "oct17_formula_correction_db": 0.05,
+   "speech_p90_vs_part_median_db": 0.37,
+   "speech_p90_vs_neighbours_db": {
+    "lead_first": 2.04,
+    "lead_next": 1.47,
+    "lead_last": 1.88,
+    "close": -0.25
+   },
+   "T1_breaks_frozen_standard": false,
+   "T2_new_extreme": {
+    "I": false,
+    "M_max": false,
+    "S_max": false
+   },
+   "T3_at_founder_confirmed_too_loud": false,
+   "trim_required": false
+  }
+ },
+ "heather_part_median_after_replacements": {
+  "I": -21.6,
+  "M_max": -17.75,
+  "S_max": -21.3
+ },
+ "trims_required": [
+  "part_noteOneThing"
+ ]
+}

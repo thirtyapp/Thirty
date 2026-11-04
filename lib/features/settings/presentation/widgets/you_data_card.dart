@@ -11,7 +11,7 @@ import '../../../personal_circle/application/kept_circles_provider.dart';
 import '../../../plans/application/circle_plans_provider.dart';
 import 'you_group_card.dart';
 
-/// You's "Data & privacy" group: "Share anonymous usage data" (analytics
+/// You's "Data & privacy" group: "Share usage data" (analytics
 /// consent — founder decision, B7: a privacy control, not a preference),
 /// "Copy as text", then "Delete Circle history" as the group's final,
 /// destructive row. "Reset suggestion preferences" stays in What THIRTY
@@ -24,6 +24,24 @@ import 'you_group_card.dart';
 /// ([JournalDataControls.confirmAndClear]). Kept Circles, suggestion
 /// preferences, reminder, appearance, analytics consent and Premium are
 /// untouched by it.
+/// The usage-data setting's words (audit remediation R6, Audit #2 A2-06):
+/// what is actually sent while it is on — the six events, their shared
+/// fields, the random ID this phone makes — and what turning it off does.
+/// Title founder-approved (2026-11-03): "anonymous" is gone, since one
+/// stable ID links the events.
+abstract final class UsageDataCopy {
+  static const title = 'Share usage data';
+  static const detail =
+      'Off by default. It helps us understand what to improve. When on, '
+      'THIRTY sends a few facts about your use: '
+      'when you open the app, which need and activity it suggests, when you '
+      'start and close a Circle, and your “Did you try it?” and “Was it '
+      'useful?” answers — each with the date and time, the app version, a '
+      'test-group label and a random ID made on this phone. Never your name, '
+      'anything you type, or your History as a whole. Turning this off stops '
+      'sending; what was already sent isn’t deleted.';
+}
+
 class YouDataCard extends ConsumerWidget {
   const YouDataCard({super.key});
 
@@ -93,12 +111,9 @@ class _AnalyticsConsentRow extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      YouRowTitle('Share anonymous usage data'),
+                      YouRowTitle(UsageDataCopy.title),
                       SizedBox(height: AppSpacing.xs),
-                      YouRowDetail(
-                        'Off by default. Helps us understand what to '
-                        'improve. Your Circle history is never included.',
-                      ),
+                      YouRowDetail(UsageDataCopy.detail),
                     ],
                   ),
                 ),

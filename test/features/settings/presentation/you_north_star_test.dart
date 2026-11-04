@@ -419,7 +419,7 @@ void main() {
     testWidgets('the analytics row is one control: title, explanation and '
         'switch state together; still opt-in and Free', (tester) async {
       final (container, _) = await _pump(tester);
-      final node = tester.getSemantics(find.text('Share anonymous usage data'));
+      final node = tester.getSemantics(find.text('Share usage data'));
       expect(
         node,
         isSemantics(
@@ -428,8 +428,8 @@ void main() {
           hasTapAction: true,
         ),
       );
-      expect(node.label, contains('Share anonymous usage data'));
-      expect(node.label, contains('Your Circle history is never included.'));
+      expect(node.label, contains('Share usage data'));
+      expect(node.label, contains('what was already sent isn’t deleted.'));
       expect(container.read(analyticsConsentProvider), isFalse);
     });
 

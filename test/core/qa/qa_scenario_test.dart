@@ -254,6 +254,8 @@ void main() {
       expect(offer.composed!.stage!.stageNumber, 2);
       today.start();
       today.close();
+      // The Plan moves on once the Close is saved (audit remediation R3).
+      await pumpEventQueue();
       expect(c.read(circlePlansProvider).active!.current.cursor, 3);
       expect(c.read(keptCirclesProvider).kept, isNotEmpty, reason: 'Use it');
 

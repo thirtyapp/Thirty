@@ -1,0 +1,1603 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+// The platform store is the controlled "disk" here; it ships with
+// shared_preferences, so no dependency is added.
+// ignore: depend_on_referenced_packages
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+import 'package:thirty/core/premium/entitlement_status.dart';
+import 'package:thirty/core/premium/premium_access.dart';
+import 'package:thirty/core/providers/clock_provider.dart';
+import 'package:thirty/core/providers/shared_preferences_provider.dart';
+import 'package:thirty/core/utils/date_key.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/application/suggestion_preferences.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+
+/// Audit remediation R3 — persistence consistency, Delete Circle history and
+/// interruption recovery (audits A2-04 / J4 / J5).
+///
+/// Production providers throughout; only the platform store, the clock and
+/// billing are controlled. The store ([_Disk]) is the "disk": a write can be
+/// held mid-flight and released at a chosen point, the process can stop
+/// after any number of writes, and a write can fail. A restart is a fresh
+/// store and container built from what reached the disk, after the same
+/// start-up step `main.dart` runs. Everything is ordered by completers — no
+/// timing.
+void main() {
+  final morning = DateTime(2026, 10, 12, 9);
+  late _Disk disk;
+  late SharedPreferences prefs;
+
+  Future<void> boot([Map<String, Object> stored = const {}]) async {
+    disk = _Disk(Map.of(stored));
+    SharedPreferencesStorePlatform.instance = disk;
+    SharedPreferences.resetStatic();
+    prefs = await SharedPreferences.getInstance();
+  }
+
+  /// A new process on what reached the disk — after `main.dart`'s start-up
+  /// step.
+  Future<void> restart() async {
+    await boot(await disk.getAll());
+    await completeInterruptedHistoryDeletion(prefs);
+  }
+
+  setUp(() => boot());
+
+  ProviderContainer open({
+    EntitlementStatus status = EntitlementStatus.active,
+    int day = 0,
+  }) {
+    final now = morning.add(Duration(days: day));
+    final c = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        nowProvider.overrideWithValue(now),
+        eventClockProvider.overrideWithValue(
+          () => now.add(const Duration(minutes: 20)),
+        ),
+        entitlementStatusProvider.overrideWith(() => _Settable(status)),
+        safetyPendingAllowedProvider.overrideWithValue(false),
+      ],
+    );
+    addTearDown(c.dispose);
+    return c;
+  }
+
+  Future<void> settle() async {
+    for (var i = 0; i < 40; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+  }
+
+  RecommendationNotifier today(ProviderContainer c) =>
+      c.read(recommendationProvider.notifier);
+  List<CircleJournalEntry> journal(ProviderContainer c) =>
+      c.read(circleJournalRepositoryProvider).readAll();
+  PlanProgress plan(ProviderContainer c) =>
+      c.read(circlePlansProvider).plans['getting_going']!;
+  String dayOf(int day) => dateKey(morning.add(Duration(days: day)));
+
+  Future<Map<String, Object>> onDisk() => disk.getAll();
+
+  /// What Delete Circle history removes, as stored keys.
+  bool isHistoryKey(String key) =>
+      key.startsWith('flutter.recommendation_') ||
+      key == _key(circleJournalKey) ||
+      key == _key(insightsKey) ||
+      key == _key(historyDeletionPendingKey);
+
+  /// The history is gone — in memory, on disk and after a restart — and
+  /// nothing deleted is on show or comes back.
+  Future<void> expectDeleted(ProviderContainer c) async {
+    await settle();
+    expect(c.read(recommendationProvider).recommendation, isNull);
+    expect(journal(c), isEmpty);
+    expect(c.read(pastCirclesProvider), isEmpty);
+    expect(c.read(insightsProvider).snapshots, isEmpty);
+    final stored = await onDisk();
+    expect(stored.keys.where(isHistoryKey), isEmpty, reason: '$stored');
+    await restart();
+    final again = open();
+    expect(again.read(recommendationProvider).recommendation, isNull);
+    expect(journal(again), isEmpty);
+    expect(again.read(insightsProvider).snapshots, isEmpty);
+  }
+
+  Future<void> deleteHistory(ProviderContainer c) =>
+      c.read(circleHistoryDeletionProvider).delete();
+
+  /// Delete while [inFlight] writes are on their way: once it begins,
+  /// nothing but those writes and its own intent ever writes history again —
+  /// not even for a moment before it is cleared.
+  Future<void> deleteWithWritesInFlight(
+    ProviderContainer c,
+    List<String> inFlight,
+  ) async {
+    final from = disk.log.length;
+    await deleteHistory(c);
+    await settle();
+    final written = [
+      for (final w in disk.log.skip(from))
+        if (w.startsWith('set ')) w.substring(4),
+    ].where(isHistoryKey).toList();
+    for (final key in [...inFlight, historyDeletionPendingKey]) {
+      written.remove(_key(key));
+    }
+    expect(written, isEmpty, reason: 'a write begun before Delete landed');
+  }
+
+  // ---------------------------------------------------------------------
+  // J4 — Delete Circle history against writes already in flight.
+
+  group(
+    'J4: a write begun before Delete never brings deleted history back',
+    () {
+      for (final release in _Release.values) {
+        test('a guidance part update in flight (released ${release.name}): '
+            'the probe that reproduced J4 on 8bfd42c', () async {
+          final c = open();
+          today(
+            c,
+          ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+          today(c).start();
+          await settle();
+          expect(journal(c), hasLength(1));
+          final held = disk.hold(
+            (key) => key == _key(recommendationPendingWriteKey),
+          );
+          today(c).movePart(1);
+          await settle();
+          expect(held.reached.isCompleted, isTrue);
+          release.arm(disk, held);
+          await deleteWithWritesInFlight(c, [recommendationPendingWriteKey]);
+          await expectDeleted(c);
+        });
+      }
+
+      test('a Start in flight', () async {
+        final c = open();
+        today(
+          c,
+        ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+        await settle();
+        final held = disk.hold(
+          (key) => key == _key(recommendationPendingWriteKey),
+        );
+        today(c).start();
+        await settle();
+        expect(held.reached.isCompleted, isTrue);
+        _Release.onFirstRemoval.arm(disk, held);
+        await deleteWithWritesInFlight(c, [recommendationPendingWriteKey]);
+        await expectDeleted(c);
+      });
+
+      test('a stage Circle Close in flight: never saved, so never credited '
+          '— the Plan keeps the place it had; its evidence goes with the '
+          'history', () async {
+        final c = open();
+        expect(
+          c.read(circlePlansProvider.notifier).start('getting_going'),
+          PlanActionResult.done,
+        );
+        today(
+          c,
+        ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+        expect(
+          c.read(recommendationProvider).recommendation!.composed!.stage,
+          isNotNull,
+        );
+        today(c).start();
+        await settle();
+        final held = disk.hold(
+          (key) => key == _key(recommendationPendingWriteKey),
+        );
+        today(c).close();
+        await settle();
+        expect(held.reached.isCompleted, isTrue);
+        // The credit follows the Close once it is saved: not yet.
+        expect(plan(c).current.cursor, 1);
+        _Release.onFirstRemoval.arm(disk, held);
+        await deleteWithWritesInFlight(c, [recommendationPendingWriteKey]);
+        await expectDeleted(c);
+        final after = open();
+        expect(plan(after).current.cursor, 1);
+        expect(plan(after).current.records, isEmpty);
+        expect(plan(after).lastServed, isNull);
+        expect(plan(after).lifecycle, PlanLifecycle.active);
+      });
+
+      test('"Make today\'s Circle" (R2 upgrade) in flight', () async {
+        final c = open(status: EntitlementStatus.inactive);
+        today(
+          c,
+        ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+        await settle();
+        (c.read(entitlementStatusProvider.notifier) as _Settable).set(
+          EntitlementStatus.active,
+        );
+        final held = disk.hold(
+          (key) => key == _key(recommendationPendingWriteKey),
+        );
+        expect(today(c).upgradeToday(), UpgradeTodayResult.upgraded);
+        await settle();
+        expect(held.reached.isCompleted, isTrue);
+        _Release.onFirstRemoval.arm(disk, held);
+        await deleteWithWritesInFlight(c, [recommendationPendingWriteKey]);
+        await expectDeleted(c);
+      });
+
+      test('Today, Plan and Insight writes all queued at once: none restores '
+          'what was deleted; kept Circles, the Plan\'s place and preferences '
+          'stay', () async {
+        await boot({
+          _key(circleJournalKey): _journalJson(_choosingHead(morning)),
+        });
+        final c = open();
+        c.read(circlePlansProvider.notifier).start('getting_going');
+        final kept = c
+            .read(keptCirclesProvider.notifier)
+            .keepCircle(
+              plan: CirclePlan.fromWire(const [
+                'getItOut:6',
+                'chooseOne:1',
+                'clearCorner:8',
+              ])!,
+              need: Intention.clearerHead,
+              circleId: dayOf(-1),
+            );
+        expect(kept, isNotNull);
+        await c
+            .read(suggestionPreferencesProvider.notifier)
+            .leaveOut(ElementId.openWindow);
+        await settle();
+
+        final heldToday = disk.hold(
+          (key) => key == _key(recommendationPendingWriteKey),
+        );
+        final heldPlans = disk.hold((key) => key == _key(circlePlansKey));
+        final heldInsights = disk.hold((key) => key == _key(insightsKey));
+        // A stage day: Today's choice, and the Plan remembering the Circle it
+        // served; Insights opened: one new Insight.
+        today(
+          c,
+        ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+        expect(c.read(insightsProvider.notifier).assess().added, isNotEmpty);
+        await settle();
+        expect(heldToday.reached.isCompleted, isTrue);
+        expect(heldPlans.reached.isCompleted, isTrue);
+        expect(heldInsights.reached.isCompleted, isTrue);
+        disk.onRemove = (_) {
+          for (final h in [heldToday, heldPlans, heldInsights]) {
+            if (!h.release.isCompleted) h.release.complete();
+          }
+        };
+        await deleteWithWritesInFlight(c, [
+          recommendationPendingWriteKey,
+          insightsKey,
+        ]);
+        await expectDeleted(c);
+
+        final after = open();
+        expect(plan(after).current.cursor, 1);
+        expect(plan(after).lifecycle, PlanLifecycle.active);
+        expect(plan(after).lastServed, isNull);
+        expect(plan(after).current.records, isEmpty);
+        expect(after.read(keptCirclesProvider).kept, hasLength(1));
+        expect(after.read(suggestionPreferencesProvider).leftOut, {
+          ElementId.openWindow,
+        });
+      });
+
+      test('BEFORE/AFTER control: settled writes, then Delete — the same '
+          'outcome', () async {
+        final c = open();
+        today(
+          c,
+        ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+        today(c).start();
+        today(c).movePart(1);
+        await settle();
+        await deleteHistory(c);
+        await expectDeleted(c);
+      });
+    },
+  );
+
+  group('after Delete', () {
+    test('reopened at once: the next Circle is a new one, recorded alone, '
+        'and survives a restart', () async {
+      final c = open();
+      today(
+        c,
+      ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+      today(c).start();
+      today(c).close();
+      await settle();
+      await deleteHistory(c);
+      await settle();
+      expect(c.read(recommendationProvider).recommendation, isNull);
+      expect(c.read(timeWindowChoiceProvider), TimeWindow.firstUse);
+      today(
+        c,
+      ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+      today(c).start();
+      await settle();
+      expect(journal(c).single.direction, Intention.gentlerPace);
+      await restart();
+      final again = open();
+      final state = again.read(recommendationProvider);
+      expect(state.status, RecommendationStatus.started);
+      expect(state.recommendation!.intention, Intention.gentlerPace);
+      expect(journal(again).single.direction, Intention.gentlerPace);
+    });
+
+    test('a choice made while the deletion is still running waits for it, '
+        'then lands — it belongs to the new history', () async {
+      final c = open();
+      today(
+        c,
+      ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+      today(c).start();
+      await settle();
+      final marker = disk.hold((key) => key == _key(historyDeletionPendingKey));
+      final deleting = deleteHistory(c);
+      await settle();
+      expect(marker.reached.isCompleted, isTrue);
+      // Today already reads as deleted; the user answers again.
+      expect(c.read(recommendationProvider).recommendation, isNull);
+      today(
+        c,
+      ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+      await settle();
+      expect(
+        (await onDisk())[_key(recommendationIntentionKey)],
+        isNot(Intention.gentlerPace.name),
+      );
+      marker.release.complete();
+      await deleting;
+      await settle();
+      final stored = await onDisk();
+      expect(
+        stored[_key(recommendationIntentionKey)],
+        Intention.gentlerPace.name,
+      );
+      expect(stored[_key(historyDeletionPendingKey)], isNull);
+      expect(journal(c).single.direction, Intention.gentlerPace);
+      await restart();
+      expect(
+        open().read(recommendationProvider).recommendation!.intention,
+        Intention.gentlerPace,
+      );
+    });
+
+    test('no stale provider rebuilds what was deleted: the old Today '
+        'notifier, the guidance part moves, pickers and Insights', () async {
+      await boot({
+        _key(circleJournalKey): _journalJson(_choosingHead(morning)),
+      });
+      final c = open();
+      final notifier = today(c);
+      notifier.chooseIntention(
+        Intention.clearerHead,
+        window: TimeWindow.about20,
+      );
+      notifier.start();
+      await settle();
+      await deleteHistory(c);
+      await settle();
+      final writes = disk.log.length;
+      notifier.movePart(2);
+      notifier.close();
+      notifier.reportAttempt(CircleAttemptResponse.yes);
+      expect(c.read(insightsProvider.notifier).assess().added, isEmpty);
+      await settle();
+      expect(disk.log.length, writes, reason: disk.log.toString());
+      expect(c.read(pastCirclesProvider), isEmpty);
+      expect(c.read(timeWindowChoiceProvider), TimeWindow.firstUse);
+      await expectDeleted(c);
+    });
+  });
+
+  group('a Delete that does not finish', () {
+    test('the app stops after each step of it: the next start finishes '
+        'it — never half deleted, never reported done', () async {
+      Future<void> seed() async {
+        await boot();
+        final c = open();
+        c.read(circlePlansProvider.notifier).start('getting_going');
+        c
+            .read(keptCirclesProvider.notifier)
+            .keepCircle(
+              plan: CirclePlan.fromWire(const [
+                'getItOut:6',
+                'chooseOne:1',
+                'clearCorner:8',
+              ])!,
+              need: Intention.clearerHead,
+              circleId: dayOf(-1),
+            );
+        today(
+          c,
+        ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+        today(c).start();
+        today(c).close();
+        await settle();
+      }
+
+      await seed();
+      final full = await onDisk();
+      final from = disk.log.length;
+      await deleteHistory(open());
+      await settle();
+      final steps = disk.log.length - from;
+      expect(steps, greaterThan(3));
+
+      for (var n = 0; n <= steps; n++) {
+        await boot(full);
+        disk.stopAfter = disk.log.length + n;
+        var done = false;
+        unawaited(deleteHistory(open()).then((_) => done = true));
+        await settle();
+        expect(done, n >= steps, reason: 'step $n: reported done');
+        await restart();
+        final c = open();
+        final keptHistory = journal(c).isNotEmpty;
+        if (n == 0) {
+          // Nothing reached the disk: the deletion never began.
+          expect(keptHistory, isTrue);
+          expect(
+            c.read(recommendationProvider).status,
+            RecommendationStatus.closed,
+          );
+          continue;
+        }
+        expect(keptHistory, isFalse, reason: 'step $n');
+        expect(c.read(recommendationProvider).recommendation, isNull);
+        final stored = await onDisk();
+        expect(stored.keys.where(isHistoryKey), isEmpty, reason: 'step $n');
+        expect(plan(c).current.cursor, 2, reason: 'step $n: the place');
+        expect(plan(c).current.records, isEmpty, reason: 'step $n');
+        expect(c.read(keptCirclesProvider).kept, hasLength(1));
+      }
+    });
+
+    test('a write fails: Delete completes with the error, the intent stays '
+        'recorded, and the next start finishes it', () async {
+      final c = open();
+      today(
+        c,
+      ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+      today(c).start();
+      today(c).close();
+      await settle();
+      disk.failRemove = (key) => key == _key(circleJournalKey);
+      await expectLater(deleteHistory(c), throwsA(isA<StateError>()));
+      expect((await onDisk())[_key(historyDeletionPendingKey)], isTrue);
+      expect((await onDisk())[_key(circleJournalKey)], isNotNull);
+      disk.failRemove = null;
+      await restart();
+      final again = open();
+      expect(journal(again), isEmpty);
+      expect(again.read(recommendationProvider).recommendation, isNull);
+      expect((await onDisk()).keys.where(isHistoryKey), isEmpty);
+    });
+
+    test('start-up with no deletion pending changes nothing', () async {
+      final c = open();
+      today(
+        c,
+      ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+      await settle();
+      final before = await onDisk();
+      await completeInterruptedHistoryDeletion(prefs);
+      expect(await onDisk(), before);
+    });
+  });
+
+  // ---------------------------------------------------------------------
+  // J5 — today's state is published whole.
+
+  group('J5: a write of today cut short reads as before it or after it', () {
+    for (final status in [
+      EntitlementStatus.inactive,
+      EntitlementStatus.active,
+    ]) {
+      final kind = status == EntitlementStatus.active ? 'Premium' : 'Free';
+      test('$kind new day, the app stopping after every write: never '
+          'yesterday\'s closed Circle as today\'s', () async {
+        // Yesterday: an ordinary closed day, settled.
+        final y = open(status: status, day: -1);
+        today(
+          y,
+        ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+        today(y).start();
+        today(y).close();
+        await settle();
+        final settled = await onDisk();
+        final yesterday = journal(y).single;
+
+        // A dry run counts today's writes and records today's offer.
+        final dry = open(status: status);
+        today(
+          dry,
+        ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+        final offered = dry.read(recommendationProvider).recommendation!;
+        final from = disk.log.length;
+        await settle();
+        final writes = disk.log.length - from;
+        expect(writes, greaterThan(3));
+        expect(offered.composed != null, status == EntitlementStatus.active);
+
+        for (var n = 0; n <= writes; n++) {
+          await boot(settled);
+          disk.stopAfter = disk.log.length + n;
+          today(
+            open(status: status),
+          ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+          await settle();
+          await restart();
+          final c = open(status: status);
+          final s = c.read(recommendationProvider);
+          final r = s.recommendation;
+          expect(s.status, RecommendationStatus.notStarted, reason: 'write $n');
+          expect(s.startedAt, isNull);
+          if (r != null) {
+            expect(r.circleId, dayOf(0));
+            expect(r.intention, Intention.clearerHead, reason: 'write $n');
+            expect(r.activityId, offered.activityId, reason: 'write $n');
+            expect(r.offeredMinutes, offered.offeredMinutes);
+            expect(r.reason, offered.reason);
+            expect(r.composed?.plan.toWire(), offered.composed?.plan.toWire());
+          }
+          final entries = journal(c);
+          expect(entries.first.toJson(), yesterday.toJson());
+          if (entries.length == 2) expect(entries.last.startedAt, isNull);
+        }
+      });
+    }
+
+    test('"Make today\'s Circle" cut short after every write: the Free '
+        'offer or the composed one — never a mix; Start then records the '
+        'Circle actually started', () async {
+      final free = open(status: EntitlementStatus.inactive);
+      today(
+        free,
+      ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+      await settle();
+      final offer = free.read(recommendationProvider).recommendation!;
+      final settled = await onDisk();
+
+      final dry = open();
+      expect(today(dry).upgradeToday(), UpgradeTodayResult.upgraded);
+      final upgraded = dry.read(recommendationProvider).recommendation!;
+      final from = disk.log.length;
+      await settle();
+      final writes = disk.log.length - from;
+      expect(writes, greaterThan(3));
+      final outcomes = (free: <int>[], upgraded: <int>[]);
+
+      for (var n = 0; n <= writes; n++) {
+        await boot(settled);
+        disk.stopAfter = disk.log.length + n;
+        expect(today(open()).upgradeToday(), UpgradeTodayResult.upgraded);
+        await settle();
+        await restart();
+        final c = open();
+        final r = c.read(recommendationProvider).recommendation!;
+        final expected = r.composed == null ? offer : upgraded;
+        expect(r.activityId, expected.activityId, reason: 'write $n');
+        expect(r.offeredMinutes, expected.offeredMinutes, reason: 'write $n');
+        expect(r.reason, expected.reason, reason: 'write $n');
+        expect(r.why, expected.why, reason: 'write $n');
+        expect(
+          r.composed?.plan.toWire(),
+          expected.composed?.plan.toWire(),
+          reason: 'write $n',
+        );
+        // Before Start, History already names what Today shows — and
+        // nothing more: no Start, Close or answer is made up.
+        await settle();
+        final shown = journal(c).single;
+        expect(shown.activityId, r.activityId, reason: 'write $n');
+        expect(shown.session?.parts, r.composed?.plan.toWire());
+        expect(shown.reasonCode, r.reason.name, reason: 'write $n');
+        expect(shown.offeredMinutes, r.offeredMinutes, reason: 'write $n');
+        expect(shown.startedAt, isNull);
+        expect(shown.closedAt, isNull);
+        expect(shown.attemptResponse, isNull);
+        expect(shown.usefulnessResponse, isNull);
+        expect(shown.session?.planStage, r.composed?.stage);
+        (r.composed == null ? outcomes.free : outcomes.upgraded).add(n);
+        today(c).start();
+        await settle();
+        final record = journal(c).single;
+        expect(record.activityId, r.activityId, reason: 'write $n');
+        expect(
+          record.session?.parts,
+          r.composed?.plan.toWire(),
+          reason: 'write $n',
+        );
+        expect(record.startedAt, isNotNull);
+      }
+      // Both sides of the cut were reached.
+      expect(outcomes.free, isNotEmpty);
+      expect(outcomes.upgraded, isNotEmpty);
+    });
+
+    test('a stage Circle\'s Close cut short after every write: closed and '
+        'credited, or still open and credited once on closing again — '
+        'never closed without its stage, never credited twice', () async {
+      final c0 = open();
+      c0.read(circlePlansProvider.notifier).start('getting_going');
+      today(
+        c0,
+      ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      final circleId = c0.read(recommendationProvider).recommendation!.circleId;
+      today(c0).start();
+      await settle();
+      final settled = await onDisk();
+
+      final dry = open();
+      today(dry).close();
+      final from = disk.log.length;
+      await settle();
+      final writes = disk.log.length - from;
+      expect(plan(dry).current.cursor, 2);
+
+      for (var n = 0; n <= writes; n++) {
+        await boot(settled);
+        disk.stopAfter = disk.log.length + n;
+        today(open()).close();
+        await settle();
+        await restart();
+        final c = open();
+        final status = c.read(recommendationProvider).status;
+        await settle();
+        if (status == RecommendationStatus.closed) {
+          // A saved Close: credited, now if not before.
+          expect(plan(c).current.cursor, 2, reason: 'write $n');
+        } else {
+          // No saved Close: nothing credited, nothing made up.
+          expect(status, RecommendationStatus.started, reason: 'write $n');
+          expect(plan(c).current.cursor, 1, reason: 'write $n');
+          expect(journal(c).single.closedAt, isNull, reason: 'write $n');
+          today(c).close();
+          await settle();
+          today(c).close();
+          await settle();
+        }
+        final after = open();
+        // Today restored closed: the journal catches up from it.
+        after.read(recommendationProvider);
+        await settle();
+        expect(plan(after).current.cursor, 2, reason: 'write $n');
+        expect(
+          plan(after).current.records.where((r) => r.circleId == circleId),
+          hasLength(1),
+          reason: 'write $n',
+        );
+        expect(
+          after.read(recommendationProvider).status,
+          RecommendationStatus.closed,
+        );
+        expect(journal(after).single.closedAt, isNotNull);
+      }
+    });
+
+    test(
+      'a day change while an older write is still on its way: the older '
+      'Circle\'s write keeps its own day and never becomes today\'s',
+      () async {
+        var now = morning;
+        final c = ProviderContainer(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            nowProvider.overrideWith((ref) => now),
+            eventClockProvider.overrideWithValue(() => now),
+            entitlementStatusProvider.overrideWith(
+              () => _Settable(EntitlementStatus.inactive),
+            ),
+            safetyPendingAllowedProvider.overrideWithValue(false),
+          ],
+        );
+        addTearDown(c.dispose);
+        today(
+          c,
+        ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+        today(c).start();
+        await settle();
+        final held = disk.hold(
+          (key) => key == _key(recommendationPendingWriteKey),
+        );
+        today(c).close();
+        await settle();
+        expect(held.reached.isCompleted, isTrue);
+
+        // Overnight: the app comes back the next morning.
+        now = morning.add(const Duration(days: 1));
+        c.invalidate(nowProvider);
+        expect(c.read(recommendationProvider).recommendation, isNull);
+        today(
+          c,
+        ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+        held.release.complete();
+        await settle();
+
+        final s = c.read(recommendationProvider);
+        expect(s.recommendation!.circleId, dayOf(1));
+        expect(s.status, RecommendationStatus.notStarted);
+        await restart();
+        final again = open(day: 1, status: EntitlementStatus.inactive);
+        final restored = again.read(recommendationProvider);
+        expect(restored.recommendation!.intention, Intention.gentlerPace);
+        expect(restored.status, RecommendationStatus.notStarted);
+        final entries = journal(again);
+        expect([for (final e in entries) e.circleId], [dayOf(0), dayOf(1)]);
+        expect(entries.first.closedAt, isNotNull);
+        expect(entries.last.startedAt, isNull);
+      },
+    );
+
+    test('the credit follows a saved Close: a slow Close holds it back; a '
+        'Close saved with its credit cut short is credited at the next '
+        'start, once', () async {
+      final c = open();
+      c.read(circlePlansProvider.notifier).start('getting_going');
+      today(
+        c,
+      ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      today(c).start();
+      await settle();
+      final settled = await onDisk();
+
+      // A slow Close: nothing is credited while it is on its way.
+      final close = disk.hold(
+        (key) => key == _key(recommendationPendingWriteKey),
+      );
+      today(c).close();
+      await settle();
+      expect(close.reached.isCompleted, isTrue);
+      expect(plan(c).current.cursor, 1);
+      expect(
+        (await onDisk())[_key(circlePlansKey)].toString(),
+        isNot(contains('"outcome":"guided"')),
+      );
+
+      // The Close and its History record are saved; the app stops before
+      // the credit.
+      await boot(settled);
+      disk.stopAfterWriting = _key(circleJournalKey);
+      today(open()).close();
+      await settle();
+      expect(
+        (await onDisk())[_key(recommendationStatusKey)],
+        RecommendationStatus.closed.name,
+      );
+      await restart();
+      final again = open();
+      expect(plan(again).current.cursor, 1, reason: 'not yet caught up');
+      expect(
+        again.read(recommendationProvider).status,
+        RecommendationStatus.closed,
+      );
+      await settle();
+      expect(plan(again).current.cursor, 2);
+      expect(plan(again).current.records, hasLength(1));
+      await restart();
+      final later = open();
+      later.read(recommendationProvider);
+      await settle();
+      expect(plan(later).current.cursor, 2);
+      expect(plan(later).current.records, hasLength(1));
+    });
+
+    test('a write for one Circle never lands on another day\'s session; '
+        'its own record still goes to the journal', () async {
+      // Yesterday's Circle is still open on a screen when today's choice has
+      // already been published; then it is closed there.
+      final y = open(day: -1, status: EntitlementStatus.inactive);
+      today(
+        y,
+      ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+      today(y).start();
+      await settle();
+      final t = open(status: EntitlementStatus.inactive);
+      today(
+        t,
+      ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+      await settle();
+      today(y).close();
+      await settle();
+      await restart();
+      final again = open(status: EntitlementStatus.inactive);
+      final s = again.read(recommendationProvider);
+      expect(s.recommendation!.intention, Intention.gentlerPace);
+      expect(s.status, RecommendationStatus.notStarted);
+      final entries = journal(again);
+      expect([for (final e in entries) e.circleId], [dayOf(-1), dayOf(0)]);
+      expect(entries.first.closedAt, isNotNull);
+      expect(entries.last.startedAt, isNull);
+    });
+
+    test('Close and answers repeated: one Circle, one record, one '
+        'credit', () async {
+      final c = open();
+      c.read(circlePlansProvider.notifier).start('getting_going');
+      today(
+        c,
+      ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      today(c).start();
+      today(c).close();
+      today(c).close();
+      today(c).reportAttempt(CircleAttemptResponse.yes);
+      today(c).reportAttempt(CircleAttemptResponse.yes);
+      await settle();
+      await restart();
+      final again = open();
+      today(again).close();
+      await settle();
+      expect(journal(again), hasLength(1));
+      expect(plan(again).current.cursor, 2);
+      expect(plan(again).current.records, hasLength(1));
+    });
+  });
+  // ---------------------------------------------------------------------
+  // R3 final gate §2 — Today and History after "Make today's Circle".
+
+  group('Today and History after "Make today\'s Circle"', () {
+    /// Today's Free offer, decided before Premium was verified; then
+    /// Premium is verified.
+    Future<ProviderContainer> freeThenPremium() async {
+      final c = open(status: EntitlementStatus.inactive);
+      today(
+        c,
+      ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+      await settle();
+      (c.read(entitlementStatusProvider.notifier) as _Settable).set(
+        EntitlementStatus.active,
+      );
+      return c;
+    }
+
+    void expectHistoryNames(ProviderContainer c, Recommendation r) {
+      final entry = journal(c).single;
+      expect(entry.circleId, r.circleId);
+      expect(entry.activityId, r.activityId);
+      expect(entry.session?.parts, r.composed?.plan.toWire());
+      expect(entry.reasonCode, r.reason.name);
+      expect(entry.offeredMinutes, r.offeredMinutes);
+      expect(entry.startedAt, isNull);
+      expect(entry.closedAt, isNull);
+      expect(entry.attemptResponse, isNull);
+      expect(entry.usefulnessResponse, isNull);
+    }
+
+    test('upgraded, then History opened at once: it names the Circle Today '
+        'shows, not yet started', () async {
+      final c = await freeThenPremium();
+      final free = c.read(recommendationProvider).recommendation!;
+      expect(journal(c).single.activityId, free.activityId);
+      expect(today(c).upgradeToday(), UpgradeTodayResult.upgraded);
+      await settle();
+      final upgraded = c.read(recommendationProvider).recommendation!;
+      expect(upgraded.composed, isNotNull);
+      expectHistoryNames(c, upgraded);
+    });
+
+    test('upgraded, then a restart before Start: Today and History both '
+        'name the upgraded Circle', () async {
+      final c = await freeThenPremium();
+      expect(today(c).upgradeToday(), UpgradeTodayResult.upgraded);
+      await settle();
+      final upgraded = c.read(recommendationProvider).recommendation!;
+      await restart();
+      final again = open();
+      final r = again.read(recommendationProvider).recommendation!;
+      await settle();
+      expect(r.composed?.plan.toWire(), upgraded.composed!.plan.toWire());
+      expect(
+        again.read(recommendationProvider).status,
+        RecommendationStatus.notStarted,
+      );
+      expectHistoryNames(again, r);
+    });
+
+    test('History behind Today (the upgrade reached Today, not History): '
+        'the next start brings History level — and only that', () async {
+      final c = await freeThenPremium();
+      final free = c.read(recommendationProvider).recommendation!;
+      // Today's publication lands; the journal write after it never does.
+      final journalWrite = disk.hold((key) => key == _key(circleJournalKey));
+      expect(today(c).upgradeToday(), UpgradeTodayResult.upgraded);
+      await settle();
+      expect(journalWrite.reached.isCompleted, isTrue);
+      disk.stopAfter = disk.log.length;
+      await restart();
+      expect(
+        journal(open()).single.activityId,
+        free.activityId,
+        reason: 'the stored journal is behind',
+      );
+      final again = open();
+      final r = again.read(recommendationProvider).recommendation!;
+      expect(r.composed, isNotNull);
+      await settle();
+      expectHistoryNames(again, r);
+      await restart();
+      expectHistoryNames(open(), r);
+    });
+
+    test('upgrading again changes nothing: one record, one Circle', () async {
+      final c = await freeThenPremium();
+      expect(today(c).upgradeToday(), UpgradeTodayResult.upgraded);
+      expect(today(c).upgradeToday(), UpgradeTodayResult.notAvailable);
+      await settle();
+      final upgraded = c.read(recommendationProvider).recommendation!;
+      await restart();
+      final again = open();
+      again.read(recommendationProvider);
+      await settle();
+      expect(today(again).upgradeToday(), UpgradeTodayResult.notAvailable);
+      await settle();
+      expect(journal(again), hasLength(1));
+      expectHistoryNames(again, upgraded);
+    });
+
+    test('still one Circle a day: the need isn\'t asked again, "Not this one '
+        'today" stays once, and nothing changes after Start', () async {
+      final c = await freeThenPremium();
+      expect(today(c).upgradeToday(), UpgradeTodayResult.upgraded);
+      final upgraded = c.read(recommendationProvider).recommendation!;
+      today(
+        c,
+      ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+      expect(c.read(recommendationProvider).recommendation, same(upgraded));
+      expect(upgraded.canReplace, isTrue);
+      expect(today(c).replaceToday(ReplacementReason.tooMuch), isTrue);
+      final replaced = c.read(recommendationProvider).recommendation!;
+      expect(today(c).replaceToday(ReplacementReason.tooMuch), isFalse);
+      expect(today(c).upgradeToday(), UpgradeTodayResult.notAvailable);
+      today(c).start();
+      expect(today(c).upgradeToday(), UpgradeTodayResult.notAvailable);
+      await settle();
+      final entry = journal(c).single;
+      expect(entry.activityId, replaced.activityId);
+      expect(entry.startedAt, isNotNull);
+    });
+  });
+
+  // ---------------------------------------------------------------------
+  // R3 final gate §3 — the write-in-progress record never outlives what
+  // came after it.
+
+  group('a write-in-progress record left by a stopped app', () {
+    /// Today's Circle, stopped mid-write: the record landed, the keys after
+    /// it did not. Returns what reached the disk.
+    Future<Map<String, Object>> stoppedAfterRecord(
+      void Function(ProviderContainer c) write, {
+      EntitlementStatus status = EntitlementStatus.active,
+      int day = 0,
+      void Function(ProviderContainer c)? before,
+    }) async {
+      final c = open(status: status, day: day);
+      before?.call(c);
+      await settle();
+      disk.stopAfterWriting = _key(recommendationPendingWriteKey);
+      write(c);
+      await settle();
+      final stored = await onDisk();
+      expect(stored[_key(recommendationPendingWriteKey)], isNotNull);
+      return stored;
+    }
+
+    test('a later Delete removes it with the rest: it brings nothing back, '
+        'and nor does a restart', () async {
+      final stored = await stoppedAfterRecord(
+        (c) => today(c).start(),
+        before: (c) => today(
+          c,
+        ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20),
+      );
+      await boot(stored);
+      final c = open();
+      expect(
+        c.read(recommendationProvider).status,
+        RecommendationStatus.started,
+      );
+      await settle();
+      await deleteHistory(c);
+      await expectDeleted(c);
+    });
+
+    test('a Delete itself cut short removes it on the next start', () async {
+      final stored = await stoppedAfterRecord(
+        (c) => today(c).start(),
+        before: (c) => today(
+          c,
+        ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20),
+      );
+      await boot(stored);
+      disk.stopAfter = disk.log.length + 2; // the intent, one removal
+      unawaited(deleteHistory(open()));
+      await settle();
+      await restart();
+      final again = open();
+      expect(again.read(recommendationProvider).recommendation, isNull);
+      expect(journal(again), isEmpty);
+      expect((await onDisk()).keys.where(isHistoryKey), isEmpty);
+    });
+
+    test('yesterday\'s record never becomes today, and never overwrites the '
+        'choice made today', () async {
+      final stored = await stoppedAfterRecord(
+        (c) => today(c).close(),
+        status: EntitlementStatus.inactive,
+        day: -1,
+        before: (c) {
+          today(
+            c,
+          ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+          today(c).start();
+        },
+      );
+      await boot(stored);
+      final c = open(status: EntitlementStatus.inactive);
+      expect(c.read(recommendationProvider).recommendation, isNull);
+      today(
+        c,
+      ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+      await settle();
+      final chosen = c.read(recommendationProvider).recommendation!;
+      expect((await onDisk())[_key(recommendationPendingWriteKey)], isNull);
+      await restart();
+      final again = open(status: EntitlementStatus.inactive);
+      final s = again.read(recommendationProvider);
+      expect(s.status, RecommendationStatus.notStarted);
+      expect(s.startedAt, isNull);
+      expect(s.recommendation!.intention, Intention.gentlerPace);
+      expect(s.recommendation!.activityId, chosen.activityId);
+    });
+
+    test('an upgrade cut short is carried forward, then replaced: neither '
+        'the upgraded Circle nor the Free one comes back', () async {
+      final stored = await stoppedAfterRecord(
+        (c) => expect(today(c).upgradeToday(), UpgradeTodayResult.upgraded),
+        before: (c) {
+          (c.read(entitlementStatusProvider.notifier) as _Settable).set(
+            EntitlementStatus.inactive,
+          );
+          today(
+            c,
+          ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+          (c.read(entitlementStatusProvider.notifier) as _Settable).set(
+            EntitlementStatus.active,
+          );
+        },
+      );
+      await boot(stored);
+      final c = open();
+      final upgraded = c.read(recommendationProvider).recommendation!;
+      expect(upgraded.composed, isNotNull, reason: 'carried forward');
+      await settle();
+      expect(today(c).replaceToday(ReplacementReason.tooMuch), isTrue);
+      final replacement = c.read(recommendationProvider).recommendation!;
+      await settle();
+      expect((await onDisk())[_key(recommendationPendingWriteKey)], isNull);
+      await restart();
+      final again = open();
+      final r = again.read(recommendationProvider).recommendation!;
+      await settle();
+      expect(r.activityId, replacement.activityId);
+      expect(r.composed?.plan.toWire(), replacement.composed?.plan.toWire());
+      expect(r.replacedFrom, isNotNull);
+      expect(r.canReplace, isFalse);
+      final entry = journal(again).single;
+      expect(entry.activityId, replacement.activityId);
+      expect(entry.session?.parts, replacement.composed?.plan.toWire());
+    });
+
+    test(
+      'Plan and Insight evidence deleted after it never comes back',
+      () async {
+        await boot({
+          _key(circleJournalKey): _journalJson(_choosingHead(morning)),
+        });
+        final stored = await stoppedAfterRecord(
+          (c) => today(c).start(),
+          before: (c) {
+            c.read(circlePlansProvider.notifier).start('getting_going');
+            today(
+              c,
+            ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+            expect(
+              c.read(insightsProvider.notifier).assess().added,
+              isNotEmpty,
+            );
+          },
+        );
+        await boot(stored);
+        final c = open();
+        expect(
+          c.read(recommendationProvider).status,
+          RecommendationStatus.started,
+        );
+        await settle();
+        await deleteHistory(c);
+        await expectDeleted(c);
+        final after = open();
+        expect(after.read(insightsProvider.notifier).assess().added, isEmpty);
+        await settle();
+        expect(plan(after).current.records, isEmpty);
+        expect(plan(after).lastServed, isNull);
+        expect(plan(after).current.cursor, 1);
+        await restart();
+        final again = open();
+        again.read(recommendationProvider);
+        await settle();
+        expect(again.read(insightsProvider).snapshots, isEmpty);
+        expect(plan(again).current.records, isEmpty);
+        expect(plan(again).lastServed, isNull);
+        expect(journal(again), isEmpty);
+      },
+    );
+  });
+  // ---------------------------------------------------------------------
+  // R3 edge-case closure §1 — a Close just before midnight, cut short.
+
+  group('a Close just before midnight, cut short', () {
+    /// Day 0: a Plan under way and its stage Circle started, settled.
+    Future<(Map<String, Object>, String, DateTime)> stageCircleStarted() async {
+      final c = open();
+      c.read(circlePlansProvider.notifier).start('getting_going');
+      today(
+        c,
+      ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      final r = c.read(recommendationProvider).recommendation!;
+      expect(r.composed!.stage!.stageNumber, 1);
+      today(c).start();
+      await settle();
+      return (
+        await onDisk(),
+        r.circleId,
+        morning.add(const Duration(minutes: 20)),
+      );
+    }
+
+    test('after the Close was saved: the next morning, its own day\'s '
+        'record is closed and its stage credited once — and today is '
+        'today', () async {
+      final (settled, circleId, closedAt) = await stageCircleStarted();
+      await boot(settled);
+      // Saved: the write in progress landed; nothing after it did.
+      disk.stopAfterWriting = _key(recommendationPendingWriteKey);
+      today(open()).close();
+      await settle();
+
+      await restart();
+      final next = open(day: 1);
+      expect(next.read(recommendationProvider).recommendation, isNull);
+      await settle();
+      final record = journal(next).single;
+      expect(record.circleId, circleId);
+      expect(record.localDate, circleId);
+      expect(record.closedAt, closedAt);
+      expect(plan(next).current.cursor, 2);
+      final credit = plan(next).current.records.single;
+      expect(credit.circleId, circleId);
+      expect(credit.localDate, circleId, reason: 'its own day, not today');
+      // Today's Circle is the next stage, under today's own identity.
+      today(
+        next,
+      ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      final r = next.read(recommendationProvider).recommendation!;
+      expect(r.circleId, dayOf(1));
+      expect(r.composed!.stage!.stageNumber, 2);
+      await settle();
+      for (var i = 0; i < 2; i++) {
+        await restart();
+        final again = open(day: 1);
+        again.read(recommendationProvider);
+        await settle();
+        expect(plan(again).current.records, hasLength(1));
+        expect(
+          [for (final e in journal(again)) e.circleId],
+          [circleId, dayOf(1)],
+        );
+        expect(journal(again).first.closedAt, closedAt);
+      }
+    });
+
+    test('before the Close was saved: no Close is made up — the record '
+        'stays started, nothing is credited, and the stage is still '
+        'ahead', () async {
+      final (settled, circleId, _) = await stageCircleStarted();
+      await boot(settled);
+      disk.stopAfter = disk.log.length; // nothing of the Close lands
+      today(open()).close();
+      await settle();
+
+      await restart();
+      final next = open(day: 1);
+      expect(next.read(recommendationProvider).recommendation, isNull);
+      await settle();
+      final record = journal(next).single;
+      expect(record.circleId, circleId);
+      expect(record.startedAt, isNotNull);
+      expect(record.closedAt, isNull);
+      expect(plan(next).current.cursor, 1);
+      expect(plan(next).current.records, isEmpty);
+      today(
+        next,
+      ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      expect(
+        next
+            .read(recommendationProvider)
+            .recommendation!
+            .composed!
+            .stage!
+            .stageNumber,
+        1,
+      );
+    });
+
+    test('cut short after every write, opened the next morning: closed '
+        'exactly when credited, never twice, never as today', () async {
+      final (settled, circleId, _) = await stageCircleStarted();
+      final dry = open();
+      today(dry).close();
+      final from = disk.log.length;
+      await settle();
+      final writes = disk.log.length - from;
+      final reached = <bool>{};
+      for (var n = 0; n <= writes; n++) {
+        await boot(settled);
+        disk.stopAfter = disk.log.length + n;
+        today(open()).close();
+        await settle();
+        await restart();
+        final next = open(day: 1);
+        expect(next.read(recommendationProvider).recommendation, isNull);
+        await settle();
+        await restart();
+        final again = open(day: 1);
+        again.read(recommendationProvider);
+        await settle();
+        final closed = journal(again).single.closedAt != null;
+        final credits = plan(
+          again,
+        ).current.records.where((r) => r.circleId == circleId).length;
+        expect(credits, closed ? 1 : 0, reason: 'write $n');
+        expect(plan(again).current.cursor, closed ? 2 : 1);
+        reached.add(closed);
+      }
+      expect(reached, {true, false});
+    });
+
+    test('a new day\'s Circle chosen at once, before anything settles: '
+        'yesterday\'s saved Close is credited first, so today serves the '
+        'next stage', () async {
+      final (settled, _, _) = await stageCircleStarted();
+      await boot(settled);
+      disk.stopAfterWriting = _key(recommendationPendingWriteKey);
+      today(open()).close();
+      await settle();
+      await restart();
+      final next = open(day: 1);
+      today(
+        next,
+      ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      expect(
+        next
+            .read(recommendationProvider)
+            .recommendation!
+            .composed!
+            .stage!
+            .stageNumber,
+        2,
+      );
+      await settle();
+      expect(plan(next).current.records, hasLength(1));
+    });
+
+    test(
+      'billing still being checked the next morning: the stage served '
+      'under Premium is credited from its saved Close all the same',
+      () async {
+        final (settled, circleId, _) = await stageCircleStarted();
+        await boot(settled);
+        disk.stopAfterWriting = _key(recommendationPendingWriteKey);
+        today(open()).close();
+        await settle();
+        await restart();
+        final next = open(day: 1, status: EntitlementStatus.initializing);
+        next.read(recommendationProvider);
+        await settle();
+        expect(plan(next).current.records.single.circleId, circleId);
+        expect(journal(next).single.closedAt, isNotNull);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------
+  // R3 edge-case closure §2 — a Delete still pending comes first.
+
+  group('a Delete still pending', () {
+    /// History to delete, a kept Circle, and a Delete whose journal write
+    /// fails: pending.
+    Future<ProviderContainer> failedDelete() async {
+      final c = open();
+      c
+          .read(keptCirclesProvider.notifier)
+          .keepCircle(
+            plan: CirclePlan.fromWire(const [
+              'getItOut:6',
+              'chooseOne:1',
+              'clearCorner:8',
+            ])!,
+            need: Intention.clearerHead,
+            circleId: dayOf(-1),
+          );
+      today(
+        c,
+      ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
+      today(c).start();
+      today(c).close();
+      await settle();
+      disk.failRemove = (key) => key == _key(circleJournalKey);
+      await expectLater(deleteHistory(c), throwsA(isA<StateError>()));
+      expect(c.read(circleHistoryDeletionProvider).isPending, isTrue);
+      return c;
+    }
+
+    String keptId(ProviderContainer c) =>
+        c.read(keptCirclesProvider).kept.single.id;
+
+    test('no new Circle begins — not by choosing a need, not by "Use it '
+        'today" — and nothing is written for one', () async {
+      final c = await failedDelete();
+      final writes = disk.log.length;
+      today(
+        c,
+      ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+      expect(c.read(recommendationProvider).recommendation, isNull);
+      expect(
+        today(c).useOwnedToday(keptCircleId: keptId(c)),
+        UseTodayResult.historyDeletionPending,
+      );
+      expect(c.read(recommendationProvider).recommendation, isNull);
+      await settle();
+      expect(disk.log.length, writes, reason: disk.log.toString());
+      expect(journal(c), isEmpty);
+      // What the user owns stays readable and theirs.
+      expect(c.read(keptCirclesProvider).kept, hasLength(1));
+    });
+
+    test('finishing it again fails: still pending, still nothing new, '
+        'nothing claimed', () async {
+      final c = await failedDelete();
+      final deletion = c.read(circleHistoryDeletionProvider);
+      expect(await deletion.resolvePending(), isFalse);
+      expect(deletion.isPending, isTrue);
+      expect((await onDisk())[_key(historyDeletionPendingKey)], isTrue);
+      today(
+        c,
+      ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+      expect(c.read(recommendationProvider).recommendation, isNull);
+    });
+
+    test('finished on retry: the new Circle begins, and no later recovery '
+        'erases it', () async {
+      final c = await failedDelete();
+      disk.failRemove = null;
+      final deletion = c.read(circleHistoryDeletionProvider);
+      expect(await deletion.resolvePending(), isTrue);
+      expect(deletion.isPending, isFalse);
+      expect((await onDisk()).keys.where(isHistoryKey), isEmpty);
+      today(
+        c,
+      ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+      today(c).start();
+      await settle();
+      await restart();
+      final again = open();
+      expect(
+        again.read(recommendationProvider).status,
+        RecommendationStatus.started,
+      );
+      expect(journal(again).single.direction, Intention.gentlerPace);
+      expect(again.read(keptCirclesProvider).kept, hasLength(1));
+    });
+
+    test('a restart that still can\'t finish it: the app opens, nothing '
+        'deleted shows, no new Circle begins until it is finished', () async {
+      await failedDelete();
+      // The next start (as main.dart runs it): finishing fails again.
+      await boot(await disk.getAll());
+      disk.failRemove = (key) => key == _key(circleJournalKey);
+      await expectLater(
+        completeInterruptedHistoryDeletion(prefs),
+        throwsA(isA<StateError>()),
+      );
+      final c = open();
+      expect(c.read(circleHistoryDeletionProvider).isPending, isTrue);
+      expect(journal(c), isEmpty, reason: 'nothing deleted is read back');
+      expect(c.read(recommendationProvider).recommendation, isNull);
+      expect(c.read(insightsProvider).snapshots, isEmpty);
+      expect(c.read(keptCirclesProvider).kept, hasLength(1));
+      today(
+        c,
+      ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+      expect(c.read(recommendationProvider).recommendation, isNull);
+
+      disk.failRemove = null;
+      expect(
+        await c.read(circleHistoryDeletionProvider).resolvePending(),
+        isTrue,
+      );
+      today(
+        c,
+      ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+      await settle();
+      await restart();
+      final again = open();
+      expect(
+        again.read(recommendationProvider).recommendation!.intention,
+        Intention.gentlerPace,
+      );
+      expect(again.read(keptCirclesProvider).kept, hasLength(1));
+    });
+
+    test(
+      'the next start finishes it when it can: no Circle is lost to it',
+      () async {
+        await failedDelete();
+        disk.failRemove = null;
+        await restart();
+        final c = open();
+        expect(c.read(circleHistoryDeletionProvider).isPending, isFalse);
+        today(
+          c,
+        ).chooseIntention(Intention.gentlerPace, window: TimeWindow.about10);
+        await settle();
+        await restart();
+        expect(journal(open()).single.direction, Intention.gentlerPace);
+      },
+    );
+  });
+}
+
+String _key(String key) => 'flutter.$key';
+
+class _Settable extends EntitlementNotifier {
+  _Settable(this._initial);
+  final EntitlementStatus _initial;
+  @override
+  EntitlementStatus build() => _initial;
+  void set(EntitlementStatus s) => state = s;
+}
+
+/// A write held on its way to the disk.
+class _Hold {
+  final reached = Completer<void>();
+  final release = Completer<void>();
+}
+
+/// When a held write is let through, relative to Delete.
+enum _Release {
+  /// As Delete records its intent.
+  onDeletionIntent,
+
+  /// As Delete removes its first key.
+  onFirstRemoval;
+
+  void arm(_Disk disk, _Hold held) {
+    void go(String _) {
+      if (!held.release.isCompleted) held.release.complete();
+    }
+
+    switch (this) {
+      case _Release.onDeletionIntent:
+        disk.onSet = (key) {
+          if (key == _key(historyDeletionPendingKey)) go(key);
+        };
+      case _Release.onFirstRemoval:
+        disk.onRemove = go;
+    }
+  }
+}
+
+/// The platform store: the "disk".
+class _Disk extends InMemorySharedPreferencesStore {
+  _Disk(super.data) : super.withData();
+
+  /// Writes that reached the disk, in order.
+  final log = <String>[];
+  final _holds = <(bool Function(String), _Hold)>[];
+
+  /// The process stops once this many writes have reached the disk: nothing
+  /// later lands, and those writes never complete.
+  int? stopAfter;
+  bool Function(String key)? failRemove;
+
+  /// The process stops as soon as a write to this key has landed.
+  String? stopAfterWriting;
+  void Function(String key)? onSet;
+  void Function(String key)? onRemove;
+
+  bool get _stopped => stopAfter != null && log.length >= stopAfter!;
+
+  /// Holds the next write to a key [match]es until released.
+  _Hold hold(bool Function(String key) match) {
+    final hold = _Hold();
+    _holds.add((match, hold));
+    return hold;
+  }
+
+  Future<void>? _held(String key) {
+    final i = _holds.indexWhere((h) => h.$1(key));
+    if (i == -1) return null;
+    final hold = _holds.removeAt(i).$2;
+    hold.reached.complete();
+    return hold.release.future;
+  }
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async {
+    if (_stopped) return Completer<bool>().future;
+    onSet?.call(key);
+    final held = _held(key);
+    if (held != null) await held;
+    if (_stopped) return Completer<bool>().future;
+    log.add('set $key');
+    if (key == stopAfterWriting) stopAfter = log.length;
+    return super.setValue(valueType, key, value);
+  }
+
+  @override
+  Future<bool> remove(String key) async {
+    if (_stopped) return Completer<bool>().future;
+    onRemove?.call(key);
+    if (failRemove?.call(key) ?? false) throw StateError('disk write failed');
+    final held = _held(key);
+    if (held != null) await held;
+    if (_stopped) return Completer<bool>().future;
+    log.add('remove $key');
+    return super.remove(key);
+  }
+}
+
+/// I1's evidence alone: Clearer Head chosen on 5 days across two weeks
+/// before [morning] (as `insights_service_test.dart` seeds it).
+List<CircleJournalEntry> _choosingHead(DateTime morning) => [
+  for (final ago in [1, 5, 9, 13, 14])
+    if (morning.subtract(Duration(days: ago)) case final date)
+      CircleJournalEntry(
+        schemaVersion: circleJournalSchemaVersion,
+        circleId: dateKey(date),
+        localDate: dateKey(date),
+        direction: Intention.clearerHead,
+        activityId: ActivityId.values.first,
+        catalogVersion: catalogVersion,
+        shownAt: date,
+        startedAt: date,
+        closedAt: date,
+      ),
+];
+
+String _journalJson(List<CircleJournalEntry> entries) => jsonEncode({
+  'schemaVersion': circleJournalSchemaVersion,
+  'entries': [for (final e in entries) e.toJson()],
+});

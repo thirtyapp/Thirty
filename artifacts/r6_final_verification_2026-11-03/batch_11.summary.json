@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/features/personal_circle/f02_f03_framing_lines_test.dart": {
+   "passed": 40,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/guidance_entitlement_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/guidance_session_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/premium_today_test.dart": {
+   "passed": 16,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/r41_kept_store_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/r4_kept_ownership_test.dart": {
+   "passed": 25,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/r6_kept_voice_whole_circle_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/saved_circle_lapse_attack_test.dart": {
+   "passed": 1,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/stage_brief_test.dart": {
+   "passed": 78,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/plans/circle_plan_domain_test.dart": {
+   "passed": 29,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/plans/circle_plan_today_test.dart": {
+   "passed": 24,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/plans/plan_copy_guard_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 250,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 11,
+ "exit": 0,
+ "seconds": 37,
+ "command": "flutter test --concurrency=1 --reporter json test/features/personal_circle/f02_f03_framing_lines_test.dart test/features/personal_circle/guidance_entitlement_test.dart test/features/personal_circle/guidance_session_test.dart test/features/personal_circle/premium_today_test.dart test/features/personal_circle/r41_kept_store_test.dart test/features/personal_circle/r4_kept_ownership_test.dart test/features/personal_circle/r6_kept_voice_whole_circle_test.dart test/features/personal_circle/saved_circle_lapse_attack_test.dart test/features/personal_circle/stage_brief_test.dart test/features/plans/circle_plan_domain_test.dart test/features/plans/circle_plan_today_test.dart test/features/plans/plan_copy_guard_test.dart"
+}

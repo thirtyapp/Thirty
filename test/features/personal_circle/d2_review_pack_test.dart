@@ -44,10 +44,11 @@ class Coverage {
       final plan = CirclePlan(parts);
       shapes++;
       mains.add(plan.main.element);
+      // Structural variety (R6b, A2-10): each part's actual role here.
       final core = [
         for (final p in plan.parts)
-          if (p.definition.roles.contains(ElementRole.main) ||
-              p.definition.roles.contains(ElementRole.second))
+          if (partRole(plan.parts, p)
+              case ElementRole.main || ElementRole.second)
             p.element.name,
       ]..sort();
       material.add(core.join('+'));
@@ -60,9 +61,11 @@ class Coverage {
   var shapes = 0;
   final mains = <ElementId>{};
 
-  /// Materially distinct: the main and second pieces — the session's
-  /// substance — never counting a different arrival or close, and never an
-  /// order (the order is fixed by role, so no re-ordering exists to count).
+  /// Structurally distinct (audit remediation R6b, A2-10; "materially
+  /// distinct" before): the parts actually acting as main and second in
+  /// the session — never counting a different arrival or close, and never
+  /// an order (the order is fixed by role, so no re-ordering exists to
+  /// count). Structure only: not evidence of perceived variety.
   final material = <String>{};
   final totals = <int>[];
 }
@@ -247,7 +250,7 @@ void main() {
       for (final window in TimeWindow.values) Coverage(need, window),
   ];
 
-  test('coverage: every need and time has honest, materially varied '
+  test('coverage: every need and time has honest, structurally varied '
       'sessions', () {
     for (final c in coverage) {
       expect(
@@ -350,14 +353,17 @@ void main() {
       ..writeln('## Compositions that pass the quality gate')
       ..writeln()
       ..writeln(
-        '“Materially distinct” counts sessions by their substance — the main '
-        'and second piece — so a different arrival or close, or a different '
-        'length of the same piece, is not a new session. Order is fixed by '
-        'role, so no re-ordering is ever counted.',
+        '“Structurally distinct” counts sessions by the parts actually '
+        'acting as main and second in each (the composer\'s own role), so a '
+        'different arrival or close, or a different length of the same '
+        'piece, is not a new session. Order is fixed by role, so no '
+        're-ordering is ever counted. This is structure, not perceived '
+        'variety (audit remediation R6b, A2-10; “materially distinct” '
+        'before, which counted possible roles).',
       )
       ..writeln()
       ..writeln(
-        '| Need | Time | Gate-passing shapes | Materially distinct | Distinct '
+        '| Need | Time | Gate-passing shapes | Structurally distinct | Distinct '
         'main pieces | Shortest–longest |',
       )
       ..writeln('|---|---|---|---|---|---|');

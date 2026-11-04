@@ -14,6 +14,7 @@ import 'widgets/circle_ready_prompt.dart';
 import 'widgets/home_circle_metrics.dart';
 import 'widgets/home_header.dart';
 import 'widgets/later_today_label.dart';
+import 'widgets/make_today_circle_card.dart';
 
 /// THIRTY's product entry screen.
 ///
@@ -96,6 +97,10 @@ class HomePage extends ConsumerWidget {
                       // (circle_reflection_card.dart), and still comes first:
                       // neither invitation shows while it is pending.
                       footer: const [
+                        // Audit remediation R2 (D1): Premium verified after
+                        // today's Free offer — made into today's Circle only
+                        // on the user's tap, before Start.
+                        MakeTodayCircleCard(),
                         // V2 Phase D2: after Close, a composed Circle can be
                         // kept — the user's own from then on.
                         KeepCircleCard(),

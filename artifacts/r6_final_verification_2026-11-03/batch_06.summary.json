@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/features/b8/b8_review_pack_test.dart": {
+   "passed": 1,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/application/activity_catalog_test.dart": {
+   "passed": 41,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/application/circle_journal_test.dart": {
+   "passed": 23,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/application/circle_session_lifecycle_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/application/first_breath_provider_test.dart": {
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/application/recommendation_provider_test.dart": {
+   "passed": 55,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/application/recommendation_v2_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/application/world_scene_resolution_test.dart": {
+   "passed": 22,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/circle_greeting_test.dart": {
+   "passed": 33,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/delete_circle_history_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/domain/circle_session_test.dart": {
+   "passed": 15,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/domain/recommendation_engine_test.dart": {
+   "passed": 27,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 251,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 6,
+ "exit": 0,
+ "seconds": 17,
+ "command": "flutter test --concurrency=1 --reporter json test/features/b8/b8_review_pack_test.dart test/features/home/application/activity_catalog_test.dart test/features/home/application/circle_journal_test.dart test/features/home/application/circle_session_lifecycle_test.dart test/features/home/application/first_breath_provider_test.dart test/features/home/application/recommendation_provider_test.dart test/features/home/application/recommendation_v2_test.dart test/features/home/application/world_scene_resolution_test.dart test/features/home/circle_greeting_test.dart test/features/home/delete_circle_history_test.dart test/features/home/domain/circle_session_test.dart test/features/home/domain/recommendation_engine_test.dart"
+}

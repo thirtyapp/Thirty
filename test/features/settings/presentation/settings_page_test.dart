@@ -315,7 +315,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(container.read(analyticsConsentProvider), isFalse);
-      expect(find.text('Share anonymous usage data'), findsOneWidget);
+      expect(find.text('Share usage data'), findsOneWidget);
 
       await tester.ensureVisible(_switchIn('you.analytics'));
       await tester.pumpAndSettle();

@@ -12,7 +12,6 @@ import '../../home/application/circle_journal.dart';
 import '../../home/application/suggestion_preferences.dart';
 import '../../personal_circle/application/kept_circles_provider.dart';
 import '../../personal_circle/domain/circle_elements.dart';
-import '../../personal_circle/domain/kept_circle.dart';
 import '../../plans/application/circle_plans_provider.dart';
 import '../../plans/domain/circle_plan.dart';
 import '../domain/insight.dart';
@@ -48,8 +47,9 @@ enum InsightActionResult {
 
 /// The user's Insights. Reading what was shown is everyone's; generating a
 /// new Insight and applying one are Premium, checked here — never only in
-/// a screen. Nothing runs in the background: [assess] is called when
-/// Insights is opened.
+/// a screen — except Insight 4's Keep of the user's own Circle, which is
+/// ownership and never gated ([apply]; [keepableWithoutPremium]). Nothing
+/// runs in the background: [assess] is called when Insights is opened.
 class InsightsNotifier extends Notifier<InsightsState> {
   Future<void> _writes = Future<void>.value();
 
@@ -89,7 +89,8 @@ class InsightsNotifier extends Notifier<InsightsState> {
 
   /// The facts as they stand today.
   InsightInputs inputs() {
-    final kept = ref.read(keptCirclesProvider).kept;
+    final collection = ref.read(keptCirclesProvider);
+    final kept = collection.kept;
     return InsightInputs(
       today: _now,
       circles: [
@@ -102,7 +103,8 @@ class InsightsNotifier extends Notifier<InsightsState> {
         for (final k in kept)
           if (k.fromCircleId != null) k.fromCircleId!,
       },
-      keptCount: kept.length,
+      // Every kept Circle counts, one THIRTY can't read too (R4).
+      keptCount: collection.count,
     );
   }
 
@@ -129,9 +131,18 @@ class InsightsNotifier extends Notifier<InsightsState> {
 
   /// Applies [snapshotId]'s application through its own domain — and
   /// records it only when that succeeded. Safe to repeat.
+  ///
+  /// Applying is Premium, with one exception (audit remediation R5,
+  /// A2-05): Insight 4's Keep of a Circle already in the user's History is
+  /// ownership, and Keep is never gated (contract "Kept Circles and
+  /// Yours"; ADR-024 §3). A valid I4 shown while Premium was active keeps
+  /// that Keep after a lapse — through the same checks below: the snapshot
+  /// must still be current, and the kept Circles' duplicate and limit
+  /// rules apply. Nothing new is generated without Premium ([assess]).
   InsightActionResult apply(String snapshotId) {
-    if (!_premium) return InsightActionResult.needsPremium;
     final snapshot = state.byId(snapshotId);
+    final keepsOwnCircle = snapshot?.application is KeepCircleFromHistory;
+    if (!_premium && !keepsOwnCircle) return InsightActionResult.needsPremium;
     if (snapshot == null) return InsightActionResult.notAvailable;
     final i = inputs();
     switch (statusOf(snapshot, i)) {
@@ -200,7 +211,7 @@ class InsightsNotifier extends Notifier<InsightsState> {
     if (kept.kept.any((k) => k.fromCircleId == circleId)) {
       return InsightActionResult.alreadyApplied;
     }
-    if (kept.kept.length >= maxKeptCircles) {
+    if (kept.isFull) {
       return InsightActionResult.keptLimitReached;
     }
     CircleJournalEntry? entry;
@@ -254,13 +265,35 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// every one goes. What the user applied — a left-out part, a kept
   /// Circle, a Plan's gentler setting — is theirs and stays. A record set
   /// aside as unreadable goes too: nothing reads it back. Completes when it
-  /// is written.
+  /// is written — and, unlike the other writes here, fails if it couldn't be
+  /// (audit remediation R3: Delete never reports what didn't happen).
   Future<void> forgetAll() {
-    _set(InsightsState.empty);
-    final setAside = _prefs.remove(insightsUnreadableKey);
-    _writes = _writes.then((_) => setAside).catchError((Object _) => true);
-    return _writes;
+    state = InsightsState.empty;
+    final prefs = _prefs;
+    final setAside = prefs.remove(insightsUnreadableKey);
+    final written = _writes
+        .then((_) => prefs.remove(insightsKey))
+        .then((_) => setAside);
+    _writes = written.then((_) {}, onError: (Object _) {});
+    return written;
   }
+}
+
+/// Without Premium, the one Insight still offered with its action: the
+/// newest current I4 whose Keep would keep a Circle from the user's own
+/// History (audit remediation R5, A2-05). Nothing else — no other family,
+/// and never an Insight generated without Premium.
+InsightSnapshot? keepableWithoutPremium(
+  List<InsightSnapshot> snapshots,
+  InsightInputs i,
+) {
+  for (final s in snapshots.reversed) {
+    if (s.application is KeepCircleFromHistory &&
+        statusOf(s, i) == InsightStatus.current) {
+      return s;
+    }
+  }
+  return null;
 }
 
 final insightsProvider = NotifierProvider<InsightsNotifier, InsightsState>(

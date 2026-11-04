@@ -37,7 +37,7 @@ const _dialogs = [
     destructive: true,
   ),
   ThirtyConfirmDialog(
-    title: "Close today's Circle?",
+    title: 'Close this Circle?',
     body: "You won't be able to reopen it until tomorrow.",
     cancelLabel: 'Keep Circle open',
     confirmLabel: 'Close Circle',

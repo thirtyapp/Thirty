@@ -92,7 +92,7 @@ void main() {
         'Appearance',
         if (paid) SpokenGuidanceCopy.title,
         'Data & privacy',
-        'Share anonymous usage data',
+        'Share usage data',
         'Copy as text',
         'Delete Circle history',
         'About',
@@ -111,7 +111,7 @@ void main() {
       );
       // Founder decision (B7): usage-data consent sits in Data & privacy,
       // once; Reset suggestion preferences stays in What THIRTY remembers.
-      const usage = 'Share anonymous usage data';
+      const usage = 'Share usage data';
       expect(find.text(usage), findsOneWidget);
       expect(
         find.descendant(

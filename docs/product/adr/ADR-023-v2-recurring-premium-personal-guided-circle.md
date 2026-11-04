@@ -6,6 +6,9 @@
 - **Production voices (corrected 2026-10-17):** four founder-approved production voices — Locke, Heather, Milo and Brittney (stable IDs `voice_locke_v1`, `voice_heather_v1`, `voice_milo_v1`, `voice_brittney_v1`).
   - **The pack:** each voice has 43 production files — the 42 guidance cues of the manifest and one Preview — so **172 production audio files** are bundled in `assets/audio/guidance/voice_*_v1/`.
   - **Status:** generated under a paid ElevenLabs plan with commercial rights (`artifacts/v2_phase_d2/voice_production/PROVENANCE.md`), S25-QA'd, and passed the founder's perceptual QA on 2026-10-17. Production audio is **PASS — FROZEN**.
+- **Correction (2026-11-02):** three Heather files (`close`, `part_closeWhatsOpen`, `part_activeJob`) were replaced by founder-approved seed-32 takes of the same scripts (background noise in the pauses). They used the 2026-10-17/18 single-clip route: the frozen master rule, no new loudness change and the same file names. The pack is still 172 files. Record: `artifacts/v2_phase_d2/voice_production/heather_seed32_integration_2026-11-02/`.
+- **Correction (2026-11-02, final quality round):** six more Heather parts (`part_shakeOut`, `part_noteOneThing`, `part_briskWalk`, `part_lookAround`, `part_roundTheBlock`, `part_sitOutside`) were replaced by founder-approved takes of the same scripts (pause noise). They used the same route and file names. `part_noteOneThing` carries the 2026-10-17 static trim (−1.8 dB) after the loudness gate; the others carry none. The pack is still 172 files. The Heather audio-quality correction round is closed. Record: `artifacts/v2_phase_d2/voice_production/heather_final_integration_2026-11-02/`.
+  - *Amendment 2026-11-01:* eight framing files (F02/F03 × 4 voices) are bundled beside the pack, 180 in all. The pack and its status above are unchanged (§6, "Framing lines").
 - **Amended by [ADR-024](ADR-024-v2-circle-plans-insights-and-four-tab-product.md) (founder decision 2026-10-17; Accepted with this ADR at the D2 closure, 2026-10-21):** Circle Plans, Insights, the four-tab IA, and the pre-release removal of Paths, routines, tune-ups, shorter versions and the Toolkit tab. Where this ADR describes Paths, routines, the Toolkit or maintenance (§4 items 1–2, §8's routine ownership, §9, §10's routine and Toolkit fixes, §11's routine line, §12's routine scenarios), it records Phase D2 **as built**; ADR-024 is the current decision. The Personal Guided Circle, the composer, the guided runtime and spoken guidance decided here are unchanged.
 - **Acceptance conditions met (2026-10-21):** the ADR-024 implementation (batches B1–B9) and the complete D2 gate. Production voices and audio were already closed. Phase D2 is PASS — COMPLETE; the two independent post-D2 audits of the closure commit follow.
 
@@ -138,6 +141,7 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
      - **The gate:** `guidanceVoiceProvider` is silent unless Premium is active (`spokenGuidanceOfferedProvider`: a voice is bundled and the entitlement is active), the user's switch is on, and a voice is bundled. Silent means no background service either.
      - **The service invariant:** "The guidance service may start only for an explicitly started Circle that is eligible for THIRTY spoken guidance, when Premium is active, spoken guidance is enabled, a complete production voice is bundled, and accessibility rules permit THIRTY voice output."
        - **Eligible:** any Circle that runs as a composed session — today's newly composed Personal Guided Circle, or a kept Circle chosen with "Use it today". On Premium a kept Circle is voiced like a new one; on Free neither is.
+         - *Amendment 2026-11-03 (audit remediation R6, founder decision):* a kept Circle is voiced only when every part's saved words are exactly the recorded ones (`ComposedSession.voiced`). Otherwise the whole Circle runs on screen and paced, unvoiced and without the background service, with a note on each running part. This supersedes R4.1's per-part silence. Ownership, Free and entitlement are unchanged.
        - **Explicitly started:** the user's Start, or reopening that same Circle while it is under way. Never a Free Today activity, a Circle not yet started, or a closed one.
        - **Accessibility rule:** in front with a screen reader on (Android: touch exploration), no cue plays and the screen reader's live announcement speaks. Out of sight, THIRTY's voice is permitted, because nothing is on screen to announce. So for an eligible Premium Circle the service also runs while a screen reader is on — it is the out-of-sight route — but plays nothing in front.
        - **In code:** `GuidanceConductor._conduct` opens the session only when the Circle is started, has a composed session, has a part on show, and `guidanceVoiceProvider` is available (Premium, switch on, a complete voice bundled). The cue-level screen-reader rule is in `GuidanceAudio.kt`.
@@ -151,6 +155,14 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
      - **Each part is spoken once.** Lifecycle changes, returns and rebuilds never repeat a cue.
      - **Never on a first look** into a Circle already under way, and never the ending on a first look past the last part.
      - **Nothing while paused.** It stops at Pause and Close; resuming the same part says nothing new.
+     - **Framing lines (amendment 2026-11-01; founder-accepted 2026-11-01, core functionality).**
+       - **F02 at Start:** at the user's own Start the voice says F02 "Your Circle for today.", then "First.". Its words are the heading for exactly the length of that voice's recording: Locke 1.79 s, Heather 2.07 s, Milo 1.74 s, Brittney 1.80 s, checked against the files by test. They are never said on a first look, a return, a restart or a resume.
+         - A screen reader keeps the part's own heading throughout. The opening is excluded from semantics, so the accessibility tree is the one S25-verified before F02.
+       - **F03 at Close:** after the user's own Close the voice says F03 "Your next Circle opens tomorrow.", only when the Circle closed on its own local day (`RecommendationState.nextCircleIsTomorrowAt`).
+       - **Close contract (changed; founder-approved lifecycle exception):** when F03 follows, an ending already being said is finished first, then F03 plays (native `afterCurrent`). In every other case Close stops the voice at once, as before. Close itself is written at once.
+       - **Never more than once:** both lines live only on a live transition, never more than once per Circle, and stop with the voice being turned off, a lapse, or Flutter going away.
+       - **With a screen reader in front**, both lines stay silent like every cue (below): TalkBack announces the part, and "Circle closed." at Close.
+       - **S25 (2026-11-01):** §4 rows 1–8 and 11 of the framing delta PASS on the founder's ear and device evidence. **Not device-validated:** midnight (automated only), a full process restart (automated only), the exact visual F02 → "First." handover, direct audio-focus measurement, and a real RevenueCat lapse (QA lapse only). Delta: `artifacts/v2_phase_d2/voice_production/framing_f02_f03/GOVERNANCE_DELTA_PROPOSED.md` §8.
      - **Defect found and fixed:** before this pass, a Circle's first part was never spoken at Start, because the voice had already "seen" part 1 before Start. "First." now plays at Start (tested, and S25-verified).
    - **Android background playback** (founder decision E, 2026-10-12; `GuidanceService.kt`).
      - **Service lifecycle:**
@@ -158,6 +170,8 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
        - **Timeout:** the wake lock is held with a timeout of the Circle's remaining time plus one minute, refreshed at each part. It is released while paused and when the session ends.
        - **Start:** only from THIRTY in front, after the user's Start (or on reopening a voiced Circle under way).
        - **End:** after the ending has been spoken (it waits for the voice to fall idle, at most 30 s), at Close, when the voice is turned off, when Flutter goes away, or when THIRTY is removed from Recents (`stopWithTask`).
+         - *(Amendment 2026-11-01.)* Once the ending has been spoken, the session also waits for a queued F03 (still at most 30 s from the ending; ending plus F03 is 7.6 s at most).
+         - `GuidanceAudio.stop()` now reports the voice idle. A session waiting for speech therefore ends at once when the voice is turned off or lapses during the ending. Before, it ended at the 30 s limit.
        - **Scope:** `START_NOT_STICKY`. No permanent service, no tracking, no data, no other work.
      - **Why not Media3 / MediaSessionService:**
        - **A session takes the media buttons:** a media session would become the target of headset and lock-screen media buttons after each cue. During "Move to music" or "Listen to one thing" the user's own player would lose its play/pause buttons to THIRTY — exactly the hijacking the founder brief rules out.
@@ -190,6 +204,26 @@ The post-V2 audits at d89a035 (`docs/audits/`) judged Phase D's Premium a weak f
      - **Audition:** a review-only audition — 3 candidate voices × 5 representative clips, generated once through the vidIQ voiceover tool (ElevenLabs premade voices) — is in `artifacts/v2_phase_d2/voice_audition/`. It is not bundled.
      - **Production route (founder decision, 2026-10-12):** the vidIQ files are an audition only. Production clips are generated directly under a paid ElevenLabs plan with commercial rights. *(Historical: that day's plan for a next audition of two female-presenting and two male-presenting candidates was completed and superseded by the four-voice set of 2026-10-16.)*
      - **Founder gate:** closed. All four voices, the licence and every file passed (2026-10-16/17; `voice_production/`, `FINAL_VOICE_SET.md`).
+     - **Framing audio (amendment 2026-11-01):** 8 files, made without generation from the social bank's Set 2 takes (`artifacts/v2_phase_d2/voice_production/framing_f02_f03/`).
+       - Heather F02: cut to speech, −2.6 dB.
+       - Brittney: pitch-preserving tempo ×1.106.
+       - Founder listening: Brittney F02 and F03, Heather F02 PASS (2026-10-29); all four F02 on the S25 (2026-11-01).
+       - **ACCEPTED (2026-11-01)**, beside the 172 FROZEN pack and not merged into it. "180" is the bundled count, not a new frozen pack.
+   - **The closed Circle and the Close confirmation** (amendment 2026-11-01; ADR-021's closed copy and ADR-011's confirmation point here). Noted here because F03 speaks for this screen.
+     - **"Your next Circle opens tomorrow." is shown only while the local day is still the closed Circle's own day.**
+       - Past that day — a Circle closed after midnight, or a closed screen still on show across it — the line is not shown. The heading, reflection and Keep stay. The Circle keeps its own day and identity, and nothing promises a wait that isn't there.
+       - The screen looks again at local midnight, and at least once a minute while it is on show, so a changed date or time zone is seen.
+       - The next Circle appears through the existing daily reset (foreground return or restart). No new copy is added.
+     - **The confirmation's title is "Close this Circle?"** (founder-approved 2026-10-29; it replaces "Close today's Circle?").
+       - One wording on every day, including a Circle kept open past midnight.
+       - The dialog's semantics label is the title, so TalkBack announces the new wording (S25-verified 2026-11-01).
+       - ADR-011's quotation of the old title is historical and is not rewritten.
+     - **The confirmation's "until tomorrow" is shown only while it is true.**
+       - The rule is the same as F03's: the local day is still the Circle's own day (`RecommendationState.isOnItsOwnDayAt`, which `nextCircleIsTomorrowAt` uses).
+       - On a Circle kept open past midnight, the body reads "You won't be able to reopen it.": the approved sentence without the wait that isn't there. No new words are added.
+       - A confirmation left open across midnight, or across a date or time-zone change, is checked again at midnight and at least once a minute.
+       - The two actions and the barrier and back behaviour are unchanged. Close itself is unchanged: it is written at once, whatever the voice is doing.
+     - **Device evidence:** the midnight rules are covered by automated tests only (framing test groups 8/8b); they were not run on the S25.
 
 7. **Element controls and evidence boundaries.**
    - **"Skip this step"** (Skip → sheet: "Skip it for today" / "Leave it out next time" / "Keep going"):

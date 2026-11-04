@@ -459,7 +459,9 @@ class _Review extends ConsumerWidget {
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          kept != null ? KeepCircleCopy.kept(kept.name) : KeepCircleCopy.full,
+          kept != null
+              ? KeepCircleCopy.kept(kept.name)
+              : KeepCircleCopy.fullFor(ref.read(keptCirclesProvider)),
         ),
       ),
     );

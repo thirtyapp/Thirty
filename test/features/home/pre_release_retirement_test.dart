@@ -251,13 +251,16 @@ void main() {
   });
 
   group('the kept-Circle store', () {
-    test('an unreadable record is set aside untouched, and nothing kept is '
-        'guessed at', () async {
+    test('an unreadable record stays exactly where it is, and nothing kept '
+        'is guessed at (audit remediation R4.1)', () async {
       final prefs = await _prefs({keptCirclesKey: '{not json'});
       final state = KeptCirclesRepository(prefs).read();
       await Future<void>.delayed(Duration.zero);
-      expect(state.isEmpty, isTrue);
-      expect(prefs.getString(keptCirclesUnreadableKey), '{not json');
+      expect(state.kept, isEmpty);
+      expect(state.unreadable.single.raw, '{not json');
+      expect(state.countKnown, isFalse);
+      expect(prefs.getString(keptCirclesKey), '{not json');
+      expect(prefs.getString(keptCirclesUnreadableKey), isNull);
     });
 
     test('a legacy record still reads its kept Circles before the migration '

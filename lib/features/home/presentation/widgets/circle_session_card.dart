@@ -134,6 +134,7 @@ class CircleSessionCard extends StatelessWidget {
     this.cardAsset,
     this.artSwitchDuration = Duration.zero,
     this.partMoment,
+    this.partNote,
     this.onSkip,
     super.key,
   });
@@ -163,6 +164,10 @@ class CircleSessionCard extends StatelessWidget {
   /// A composed Circle's part on show ([SessionBody.composed]).
   final PartMoment? partMoment;
 
+  /// What a kept part says about its own guidance, if anything (audit
+  /// remediation R4.1, [ComposedSession.partNote]).
+  final String? partNote;
+
   /// "Skip this step" on a composed Circle's part on show.
   final VoidCallback? onSkip;
 
@@ -182,7 +187,11 @@ class CircleSessionCard extends StatelessWidget {
         ),
       // Not past the last part: the case above takes every other one.
       SessionBody.composed => HomeCardShell(
-        first: _ComposedPartText(activity: activity, moment: moment!),
+        first: _ComposedPartText(
+          activity: activity,
+          moment: moment!,
+          note: partNote,
+        ),
         second: _ComposedControls(
           paused: paused,
           onSkip: onSkip,
@@ -570,10 +579,15 @@ class _QuietControl extends StatelessWidget {
 /// including when the part moves on by itself: the user need not watch the
 /// screen to know a new part has begun.
 class _ComposedPartText extends StatelessWidget {
-  const _ComposedPartText({required this.activity, required this.moment});
+  const _ComposedPartText({
+    required this.activity,
+    required this.moment,
+    this.note,
+  });
 
   final ActivityDefinition activity;
   final PartMoment moment;
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
@@ -585,7 +599,7 @@ class _ComposedPartText extends StatelessWidget {
       liveRegion: true,
       label:
           'Part ${moment.position + 1} of ${moment.parts}. ${step.name}. '
-          '${step.instruction} ${step.cue}.',
+          '${step.instruction} ${step.cue}.${note == null ? '' : ' $note'}',
       child: ExcludeSemantics(
         child: AnimatedSwitcher(
           duration: _switchDuration(context),
@@ -621,6 +635,15 @@ class _ComposedPartText extends StatelessWidget {
                   ),
                 ],
               ),
+              if (note case final note?) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  note,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ],
             ],
           ),
         ),

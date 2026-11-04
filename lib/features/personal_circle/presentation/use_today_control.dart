@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/widgets/thirty_button.dart';
+import '../../home/application/circle_history_deletion.dart';
 import '../../home/application/recommendation_provider.dart';
+import '../../home/presentation/widgets/journal_data_controls.dart';
 
 /// The words of [UseTodayControl], in one place.
 abstract final class UseTodayCopy {
@@ -65,7 +67,17 @@ class UseTodayControl extends ConsumerWidget {
     return ThirtyButton(
       label: UseTodayCopy.action,
       trailingIcon: Icons.arrow_forward_rounded,
-      onPressed: () {
+      onPressed: () async {
+        // Audit remediation R3: a Delete Circle history still pending is
+        // finished first; if it still can't be, the user is told so.
+        final deletion = ref.read(circleHistoryDeletionProvider);
+        if (deletion.isPending && !await deletion.resolvePending()) {
+          if (context.mounted) {
+            await JournalDataControls.showDeleteUnfinished(context);
+          }
+          return;
+        }
+        if (!context.mounted) return;
         final result = ref
             .read(recommendationProvider.notifier)
             .useOwnedToday(keptCircleId: keptCircleId);

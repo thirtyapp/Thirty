@@ -38,7 +38,7 @@ class YouPersonalCard extends ConsumerWidget {
     final colors = theme.extension<AppColors>()!;
     final name = ref.watch(firstNameProvider);
     final detail = name ?? addPrompt;
-    final kept = ref.watch(keptCirclesProvider).kept.length;
+    final kept = ref.watch(keptCirclesProvider).count;
     void open() => showFirstNameEditor(context);
 
     return YouGroupCard(

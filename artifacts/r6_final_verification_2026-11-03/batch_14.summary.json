@@ -1,0 +1,20 @@
+{
+ "files": {
+  "test/widget_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 14,
+ "exit": 0,
+ "seconds": 5,
+ "command": "flutter test --concurrency=1 --reporter json test/widget_test.dart"
+}

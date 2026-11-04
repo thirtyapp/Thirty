@@ -643,6 +643,27 @@ void main() {
       expect(find.text(InsightCopy.leaveOut), findsNothing);
       expect(c.read(insightsProvider).snapshots, hasLength(1));
     });
+
+    testWidgets('R5 (A2-05): a shown I4 keeps its Keep after a lapse — '
+        'no "Not now", no paywall, the lapse line still true', (tester) async {
+      await seedJournal(usefulWriting());
+      final paid = container();
+      final shown = paid.read(insightsProvider.notifier).assess().added.single;
+      expect(shown.application, isA<KeepCircleFromHistory>());
+      await tester.pump(const Duration(milliseconds: 50));
+      final c = await open(tester, status: EntitlementStatus.inactive, day: 1);
+      expect(cards(), findsOneWidget);
+      expect(find.text(InsightCopy.notNow), findsNothing);
+      await tester.tap(find.text(InsightCopy.keepCircle));
+      await tester.pumpAndSettle();
+      final kept = c.read(keptCirclesProvider).kept;
+      expect(kept.single.fromCircleId, '2026-10-29');
+      expect(find.text(KeepCircleCopy.kept(kept.single.name)), findsOneWidget);
+      expect(find.text('premium offer'), findsNothing);
+      await scrollTo(tester, find.text(InsightCopy.lapsed));
+      expect(find.text(InsightCopy.lapsed), findsOneWidget);
+      guarded(tester);
+    });
   });
 
   group('Earlier', () {

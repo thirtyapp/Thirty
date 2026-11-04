@@ -93,9 +93,13 @@ abstract final class PlanCopy {
   static String left(int guided, int setAside) =>
       'You left this Plan: ${_stages(guided)} guided, ${_stages(setAside)} '
       'set aside.';
+
+  /// Every stage set aside (audit remediation R6c, founder direction
+  /// 2026-11-03): THIRTY sets a stage aside for a part left out, asked not
+  /// to be suggested, or resting after a Not useful — all three named.
   static const allSetAside =
-      'Every stage of this Plan uses parts you’ve left out or asked THIRTY not '
-      'to suggest.';
+      'Every stage of this Plan uses parts you’ve left out, asked THIRTY not '
+      'to suggest, or that are resting for now.';
   static String revisitPending(String stage) => '$stage again next time.';
 
   /// Set aside, and why — the user's own control, never blamed (ADR-024 §4).
@@ -157,6 +161,14 @@ abstract final class PlanCopy {
   static const allRejected =
       'You said none of these stages was useful, so THIRTY hasn’t made a last '
       'Circle from them.';
+
+  /// No last Circle when some stages were answered Not useful and THIRTY
+  /// set the others aside (audit remediation R6, Audit #1 m1; founder
+  /// direction 2026-11-03, worded for what set aside means: THIRTY set them
+  /// aside, for parts left out, resting or not to be suggested).
+  static const someNotUsefulOthersSetAside =
+      'Some stages didn’t feel useful, and THIRTY set the others aside. It '
+      'hasn’t made a last Circle from them.';
   static String answer(PastUsefulness? answer) => switch (answer) {
     PastUsefulness.veryUseful => 'Very useful',
     PastUsefulness.somewhatUseful => 'Somewhat useful',

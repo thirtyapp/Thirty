@@ -101,6 +101,7 @@ class _RecordingPlayer implements GuidanceAudioPlayer {
   Future<void> play(
     List<String> assets, {
     bool deferToScreenReader = false,
+    bool afterCurrent = false,
   }) async => played.add(assets);
 
   @override
@@ -247,6 +248,10 @@ List<String> _accessibilityTree(WidgetTester tester) {
 String _assets(ThirtyVoice voice, int position) =>
     spokenCueFor(_plan, position).map((c) => c.assetFor(voice)).join(',');
 
+/// What the user's Start plays: the opening (F02), then the first cue.
+String _startAssets(ThirtyVoice voice) =>
+    '${spokenOpening.assetFor(voice)},${_assets(voice, 0)}';
+
 void main() {
   group('Premium: THIRTY’s voice', () {
     testWidgets('Premium with the voice on: Start speaks in the chosen '
@@ -255,7 +260,7 @@ void main() {
       rig.container.read(recommendationProvider.notifier).start();
       await tester.pump();
       expect(rig.player.played.map((a) => a.join(',')), [
-        _assets(ThirtyVoice.locke, 0),
+        _startAssets(ThirtyVoice.locke),
       ]);
       expect(rig.session.shown, hasLength(1));
       await _leave(tester, rig);
@@ -270,7 +275,10 @@ void main() {
       );
       rig.container.read(recommendationProvider.notifier).start();
       await tester.pump();
-      expect(rig.player.played.single.join(','), _assets(ThirtyVoice.milo, 0));
+      expect(
+        rig.player.played.single.join(','),
+        _startAssets(ThirtyVoice.milo),
+      );
       await _leave(tester, rig);
 
       rig = await _pump(
@@ -281,7 +289,10 @@ void main() {
       );
       rig.container.read(recommendationProvider.notifier).start();
       await tester.pump();
-      expect(rig.player.played.single.join(','), _assets(ThirtyVoice.locke, 0));
+      expect(
+        rig.player.played.single.join(','),
+        _startAssets(ThirtyVoice.locke),
+      );
       await _leave(tester, rig);
     });
   });

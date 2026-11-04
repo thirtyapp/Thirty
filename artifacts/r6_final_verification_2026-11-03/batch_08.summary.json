@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/features/home/presentation/circle_history_page_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/circle_record_detail_page_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/phase_c_memory_ui_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/phase_c_talkback_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/activity_guide_sheet_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/circle_hero_test.dart": {
+   "passed": 56,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/circle_ready_prompt_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/circle_reflection_card_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/daily_intention_prompt_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/phase_b_ui_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/phase_c_session_ui_test.dart": {
+   "passed": 22,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/premium_offer_invitation_card_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 161,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 8,
+ "exit": 0,
+ "seconds": 27,
+ "command": "flutter test --concurrency=1 --reporter json test/features/home/presentation/circle_history_page_test.dart test/features/home/presentation/circle_record_detail_page_test.dart test/features/home/presentation/phase_c_memory_ui_test.dart test/features/home/presentation/phase_c_talkback_test.dart test/features/home/presentation/widgets/activity_guide_sheet_test.dart test/features/home/presentation/widgets/circle_hero_test.dart test/features/home/presentation/widgets/circle_ready_prompt_test.dart test/features/home/presentation/widgets/circle_reflection_card_test.dart test/features/home/presentation/widgets/daily_intention_prompt_test.dart test/features/home/presentation/widgets/phase_b_ui_test.dart test/features/home/presentation/widgets/phase_c_session_ui_test.dart test/features/home/presentation/widgets/premium_offer_invitation_card_test.dart"
+}

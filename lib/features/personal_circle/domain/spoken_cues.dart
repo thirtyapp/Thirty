@@ -89,6 +89,12 @@ enum SpokenClipRole {
 
   /// A voice introducing itself — `Hear <name>` only, never in a Circle.
   preview,
+
+  /// "Your Circle for today." — once, at the user's Start, before "First."
+  opening,
+
+  /// "Your next Circle opens tomorrow." — once, after the user's Close.
+  nextCircle,
 }
 
 /// One recording: what to say, and where it is bundled.
@@ -143,6 +149,28 @@ final spokenEnding = SpokenClip._(
   SpokenClipRole.close,
   ComposedCopy.ending,
 );
+
+/// What the voice says at the user's Start, before "First." (founder
+/// approval, 2026-10-26: F02) — the heading on show while it is spoken.
+final spokenOpening = SpokenClip._(
+  'opening',
+  SpokenClipRole.opening,
+  ComposedCopy.opening,
+);
+
+/// What the voice says after the user's Close (founder approval,
+/// 2026-10-26: F03) — the closed Circle's own line, said only when it is
+/// true: the Circle closed on its own day.
+final spokenNextCircle = SpokenClip._(
+  'next_circle',
+  SpokenClipRole.nextCircle,
+  ComposedCopy.nextCircle,
+);
+
+/// The Circle's spoken opening and closing lines. Not part of
+/// [spokenGuidanceManifest]: a voice without them still guides every part,
+/// and a line that can't be played is skipped, never an error.
+List<SpokenClip> get spokenFramingClips => [spokenOpening, spokenNextCircle];
 
 /// [element]'s own clip: its name, then its instruction.
 SpokenClip partClip(CircleElement element) => SpokenClip._(

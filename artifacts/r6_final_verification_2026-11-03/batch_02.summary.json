@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/core/premium/revenue_cat_entitlement_gateway_test.dart": {
+   "passed": 23,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/providers/clock_provider_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/providers/shared_preferences_provider_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/providers/theme_mode_provider_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_entitlement_gateway_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_free_v2_scenarios_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_isolation_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_phase_c_scenarios_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_premium_gate_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_premium_harness_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_scenario_test.dart": {
+   "passed": 15,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/release_build_guard_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 98,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 2,
+ "exit": 0,
+ "seconds": 79,
+ "command": "flutter test --concurrency=1 --reporter json test/core/premium/revenue_cat_entitlement_gateway_test.dart test/core/providers/clock_provider_test.dart test/core/providers/shared_preferences_provider_test.dart test/core/providers/theme_mode_provider_test.dart test/core/qa/qa_entitlement_gateway_test.dart test/core/qa/qa_free_v2_scenarios_test.dart test/core/qa/qa_isolation_test.dart test/core/qa/qa_phase_c_scenarios_test.dart test/core/qa/qa_premium_gate_test.dart test/core/qa/qa_premium_harness_test.dart test/core/qa/qa_scenario_test.dart test/core/release_build_guard_test.dart"
+}

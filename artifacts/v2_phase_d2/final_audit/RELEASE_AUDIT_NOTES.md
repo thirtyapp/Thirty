@@ -1,5 +1,16 @@
 # Release-audit notes — wording in older Free / routine content (carried forward, not fixed in D2)
 
+> **Status update 2026-11-03 (audit remediation R6, Audit #1 m4 / m6):**
+> - **Routine-module rows:** `lib/features/toolkit/domain/module_library.dart` was removed with the Toolkit (ADR-024 B1), so those rows are historical only.
+> - **Free activity rows:** still **open** (Audit #1 m6, `activity_catalog.dart`); their wording needs founder copy decisions before public release.
+> - The table below is kept as written.
+> - **Update 2026-11-03 (R6 final):** the four Free activity rows (Audit #1 m6) are **resolved** with founder-approved wording:
+>   1. A brisk walk step: "Start easy, then walk briskly — at a pace you can still talk at."
+>   2. Move to music, first action: "Put on a song you really like."
+>   3. Move to music step: "Let the next song be one you feel like moving to."
+>   4. Phone-free walk, first action: "Silence your notifications, keep your phone in your pocket, and start walking."
+>   - None is recorded audio. Tests: `test/features/home/r6_free_copy_test.dart`.
+
 **Status:** open. These lines must be reviewed before the final public release.
 - **Why not in D2:** they are outside the bounded D2 scope (founder brief §19), and none of them is an active release-safety or truth defect in the experience shipping today. The reasons are below.
 - **Do not lose them:** this note is the reminder. It is not permission to widen D2.

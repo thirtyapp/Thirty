@@ -18,6 +18,21 @@
 /// paces or asks for exertion. No element comes from content awaiting the
 /// safety review, or from retired content (tested). The composer treats
 /// [isElementOfferable] as a hard limit.
+///
+/// **Authoring rules for content a kept Circle may hold (audit remediation
+/// R4.1).** A kept Circle runs as it was kept — its lengths and its words —
+/// so a change here never silently reaches it, and nothing unsafe may stay
+/// runnable because it was saved:
+/// - An element found unsafe is marked [ActivityStatus.retired]: no kept
+///   Circle holding it runs again (it stays the user's, readable, renamable
+///   and removable).
+/// - A length found unsafe goes into the element's [CircleElement.
+///   retiredLengths]: a kept part at that length doesn't run. A kept Circle
+///   is never shortened on the user's behalf.
+/// - An instruction corrected for safety raises the element's
+///   [CircleElement.safetyRevision]: the corrected words replace a kept
+///   Circle's saved ones on screen, with a note, and the saved Circle itself
+///   is unchanged. An editorial change raises nothing.
 library;
 
 import '../../home/application/activity_catalog.dart';
@@ -116,6 +131,8 @@ class CircleElement {
     this.after,
     this.leadsInto,
     this.status = ActivityStatus.live,
+    this.safetyRevision = 0,
+    this.retiredLengths = const {},
   }) : assert(shortMinutes == null || shortMinutes < minutes);
 
   final ElementId id;
@@ -174,6 +191,16 @@ class CircleElement {
   final Set<ElementKind>? leadsInto;
 
   final ActivityStatus status;
+
+  /// Raised only when [instruction] is corrected for safety (audit
+  /// remediation R4). A kept Circle keeps the words it was kept with
+  /// ([PartWording]); words saved before a safety correction give way to the
+  /// corrected ones. An editorial change never raises it.
+  final int safetyRevision;
+
+  /// Lengths found unsafe (audit remediation R4.1): a kept part saved at one
+  /// of them never runs again. Never one of [lengths].
+  final Set<int> retiredLengths;
 
   /// Its lengths, longest first.
   List<int> get lengths => [minutes, ?shortMinutes];
@@ -769,6 +796,16 @@ bool isElementOfferable(CircleElement element) {
   return from == null || activityDefinition(from).status == ActivityStatus.live;
 }
 
+/// The longest a saved part can be: no element was ever authored longer.
+/// A stored length beyond it, or below a minute, is no length a Circle had.
+const maxSavedPartMinutes = 60;
+
+/// Whether [element] may run at [minutes] (audit remediation R4.1):
+/// offerable at all ([isElementOfferable]), and not at a length retired for
+/// safety ([CircleElement.retiredLengths]).
+bool isPartOffered(CircleElement element, int minutes) =>
+    isElementOfferable(element) && !element.retiredLengths.contains(minutes);
+
 /// One element at one of its authored lengths: a part of a Circle.
 class CirclePart {
   const CirclePart(this.element, this.minutes);
@@ -791,6 +828,21 @@ class CirclePart {
     final minutes = int.tryParse(parts[1]);
     if (id == null || minutes == null) return null;
     if (!elementOf(id).lengths.contains(minutes)) return null;
+    return CirclePart(id, minutes);
+  }
+
+  /// A part as a kept Circle saved it (audit remediation R4): its element
+  /// and the length it was authored at then — kept as it was, even when the
+  /// element's lengths have been retuned since. `null` for an element this
+  /// build doesn't know, or a length no part ever had; never a guess.
+  static CirclePart? fromSaved(Object? raw) {
+    if (raw is! String) return null;
+    final parts = raw.split(':');
+    if (parts.length != 2) return null;
+    final id = ElementId.values.asNameMap()[parts[0]];
+    final minutes = int.tryParse(parts[1]);
+    if (id == null || minutes == null) return null;
+    if (minutes < 1 || minutes > maxSavedPartMinutes) return null;
     return CirclePart(id, minutes);
   }
 
@@ -866,13 +918,24 @@ class CirclePlan {
 
   List<String> toWire() => [for (final p in parts) p.wire];
 
-  static CirclePlan? fromWire(Object? raw) {
+  static CirclePlan? fromWire(Object? raw) =>
+      _fromParts(raw, CirclePart.fromWire);
+
+  /// A kept Circle's saved parts, each as it was kept
+  /// ([CirclePart.fromSaved]); `null` if any one can't be read.
+  static CirclePlan? fromSaved(Object? raw) =>
+      _fromParts(raw, CirclePart.fromSaved);
+
+  static CirclePlan? _fromParts(
+    Object? raw,
+    CirclePart? Function(Object?) part,
+  ) {
     if (raw is! List || raw.isEmpty) return null;
     final parts = <CirclePart>[];
     for (final item in raw) {
-      final part = CirclePart.fromWire(item);
-      if (part == null) return null;
-      parts.add(part);
+      final read = part(item);
+      if (read == null) return null;
+      parts.add(read);
     }
     return CirclePlan(parts);
   }
@@ -890,4 +953,108 @@ class CirclePlan {
 
   @override
   String toString() => toWire().join(' ');
+}
+
+/// What a part said when its Circle was kept (audit remediation R4): its
+/// name and instruction then, and its element's [CircleElement.
+/// safetyRevision] then. A kept Circle never changes: later editorial
+/// changes to the catalogue don't reach it.
+class PartWording {
+  const PartWording({
+    required this.name,
+    required this.instruction,
+    this.safetyRevision = 0,
+  });
+
+  /// [element]'s words now.
+  factory PartWording.of(CircleElement element) => PartWording(
+    name: element.name,
+    instruction: element.instruction,
+    safetyRevision: element.safetyRevision,
+  );
+
+  final String name;
+  final String instruction;
+  final int safetyRevision;
+
+  Map<String, Object?> toJson() => {
+    'name': name,
+    'instruction': instruction,
+    'safetyRevision': safetyRevision,
+  };
+
+  static PartWording? fromJson(Object? raw) {
+    if (raw is! Map<String, Object?>) return null;
+    final name = raw['name'];
+    final instruction = raw['instruction'];
+    final revision = raw['safetyRevision'] ?? 0;
+    if (name is! String ||
+        name.trim().isEmpty ||
+        instruction is! String ||
+        instruction.trim().isEmpty ||
+        revision is! int) {
+      return null;
+    }
+    return PartWording(
+      name: name,
+      instruction: instruction,
+      safetyRevision: revision,
+    );
+  }
+
+  /// One wording per part of [parts] — or `null` when [raw] isn't exactly
+  /// that, so nothing is ever matched to the wrong part.
+  static List<PartWording>? listFromJson(Object? raw, int parts) {
+    if (raw is! List || raw.length != parts) return null;
+    final wording = <PartWording>[];
+    for (final item in raw) {
+      final read = fromJson(item);
+      if (read == null) return null;
+      wording.add(read);
+    }
+    return wording;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is PartWording &&
+      other.name == name &&
+      other.instruction == instruction &&
+      other.safetyRevision == safetyRevision;
+
+  @override
+  int get hashCode => Object.hash(name, instruction, safetyRevision);
+}
+
+/// Whether [part]'s [saved] words have given way to words corrected for
+/// safety since it was kept ([partWordingFor]) — what the part says so for.
+bool partWordingCorrectedForSafety(
+  CirclePart part,
+  PartWording? saved, {
+  int Function(CircleElement element)? safetyRevisionOf,
+}) =>
+    saved != null &&
+    saved.safetyRevision <
+        (safetyRevisionOf ?? (e) => e.safetyRevision)(part.definition);
+
+/// The words [part] is shown with (audit remediation R4): as [saved], unless
+/// its element's instruction has since been corrected for safety — then the
+/// corrected words, so a saved Circle is never a way around a safety fix.
+/// Without saved words (a Circle kept before they were saved, or one THIRTY
+/// composed), the element's own.
+PartWording partWordingFor(
+  CirclePart part,
+  PartWording? saved, {
+  int Function(CircleElement element)? safetyRevisionOf,
+}) {
+  final element = part.definition;
+  final current = (safetyRevisionOf ?? (e) => e.safetyRevision)(element);
+  if (saved == null || saved.safetyRevision < current) {
+    return PartWording(
+      name: element.name,
+      instruction: element.instruction,
+      safetyRevision: current,
+    );
+  }
+  return saved;
 }

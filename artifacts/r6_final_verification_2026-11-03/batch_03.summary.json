@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/core/reminder/local_notifications_reminder_gateway_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/routing/app_router_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/routing/app_shell_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/routing/b7_four_tab_shell_test.dart": {
+   "passed": 25,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/routing/floating_nav_surface_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/routing/premium_billing_navigation_test.dart": {
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/theme/app_colors_a4_test.dart": {
+   "passed": 18,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/theme/app_spacing_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/theme/app_theme_a5_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/theme/app_theme_test.dart": {
+   "passed": 17,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/theme/app_typography_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/theme/snackbar_c5_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 117,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 3,
+ "exit": 0,
+ "seconds": 26,
+ "command": "flutter test --concurrency=1 --reporter json test/core/reminder/local_notifications_reminder_gateway_test.dart test/core/routing/app_router_test.dart test/core/routing/app_shell_test.dart test/core/routing/b7_four_tab_shell_test.dart test/core/routing/floating_nav_surface_test.dart test/core/routing/premium_billing_navigation_test.dart test/core/theme/app_colors_a4_test.dart test/core/theme/app_spacing_test.dart test/core/theme/app_theme_a5_test.dart test/core/theme/app_theme_test.dart test/core/theme/app_typography_test.dart test/core/theme/snackbar_c5_test.dart"
+}

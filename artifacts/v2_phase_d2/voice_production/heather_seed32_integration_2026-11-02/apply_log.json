@@ -1,0 +1,95 @@
+{
+ "method": "Heather seed-32 integration (2026-11-02), founder-authorized: three FOUNDER LISTENING PASS takes\nreplace their shipping files by the 2026-10-17/18 route. Nothing is remastered or generated.\n\n  close                (Ending)             close_3b06cf13.m4a\n  part_closeWhatsOpen  (Set screens aside)  part_closeWhatsOpen_a811d003.m4a\n  part_activeJob       (One active job)     part_activeJob_5b1bb959.m4a\n\nChecks before any write (all must pass, else STOP with nothing changed):\n  1. the shipping file's SHA-1 equals its PRODUCTION_SHA1.txt line AND the committed baseline\n     (git HEAD 8bfd42c blob);\n  2. provenance of the seed-32 raw: the 2026-11-01 credit ledger entry (voice plP9aw1rizYgjFfuvLQ7,\n     eleven_multilingual_v2, the frozen settings, seed 32, the canonical manifest script verbatim,\n     file SHA-1);\n  3. the approved master (preexpiry_review_2026-11-01/<clip>/masters/seed32_as_shipped.m4a) is\n     reproduced byte-for-byte by the frozen rule (review_pack.master, Heather's frozen median and\n     voice gain, no extra gain) from that raw, and equals the bank's QA'd candidate master.\nThen, per clip: the shipping file is copied (byte-identical) to REPLACED_shipping_seed30_<file> in\nthis folder, and the approved master is byte-copied over the shipping file under the same name.\nPRODUCTION_SHA1.txt: the pre-correction list is kept here as PRE_CORRECTION_PRODUCTION_SHA1.txt and\nexactly three lines change (LF kept). production.FOUNDER_FINAL is edited separately (by hand).\nUsage: python -I apply.py <repo>\n",
+ "baseline_commit": "8bfd42c16693b8f5040ebcf4761db0e9c439981c",
+ "production_sha1_lines_changed": [
+  55,
+  66,
+  84
+ ],
+ "files": [
+  {
+   "clip": "close",
+   "file": "close_3b06cf13.m4a",
+   "script": "That’s your Circle. Take a moment before you move on.",
+   "shipping": "assets/audio/guidance/voice_heather_v1/close_3b06cf13.m4a",
+   "old_sha1": "c295a7f4c7679c2def0775650884bf991b8cec18",
+   "new_sha1": "64fd416e98cbb2caf669660ce8f80993761c9151",
+   "raw": "preexpiry_review_2026-11-01/close/raw/seed32.mp3",
+   "master": "preexpiry_review_2026-11-01/close/masters/seed32_as_shipped.m4a",
+   "request_id": "4ZAKwlIqG0aIFKPwN82D",
+   "raw_sha1": "2c47c91f8ea61526c09f1c7f76bbd1563a063326",
+   "mastering": {
+    "raw_trimmed_lufs": -17.7,
+    "outlier_correction_db": 0.0,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -2.89,
+    "limiter_db": 0.0,
+    "head_fade_ms": 10.0
+   },
+   "provenance": {
+    "voice_id": true,
+    "model": true,
+    "settings": true,
+    "script": true,
+    "raw_sha1": true
+   }
+  },
+  {
+   "clip": "part_closeWhatsOpen",
+   "file": "part_closeWhatsOpen_a811d003.m4a",
+   "script": "Set screens aside. Minimise what you don’t need on your screens — nothing needs closing. Keep in view only what comes next.",
+   "shipping": "assets/audio/guidance/voice_heather_v1/part_closeWhatsOpen_a811d003.m4a",
+   "old_sha1": "ee9d5e868bf833fbdf053d8e3a0784d8b3d66e6a",
+   "new_sha1": "7c1a508d34eaa44ac2892ba32b3fbd2d2a11778f",
+   "raw": "preexpiry_review_2026-11-01/part_closeWhatsOpen/raw/seed32.mp3",
+   "master": "preexpiry_review_2026-11-01/part_closeWhatsOpen/masters/seed32_as_shipped.m4a",
+   "request_id": "DxA4DONNMEf9YMVWNgUF",
+   "raw_sha1": "5409d0b0586e97c05f139eb55223705ecd547090",
+   "mastering": {
+    "raw_trimmed_lufs": -19.0,
+    "outlier_correction_db": 0.0,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -2.89,
+    "limiter_db": 0.0,
+    "head_fade_ms": 5.0
+   },
+   "provenance": {
+    "voice_id": true,
+    "model": true,
+    "settings": true,
+    "script": true,
+    "raw_sha1": true
+   }
+  },
+  {
+   "clip": "part_activeJob",
+   "file": "part_activeJob_5b1bb959.m4a",
+   "script": "One active job. One job that keeps you on your feet — sweeping, hoovering, carrying things — at a pace that feels comfortable.",
+   "shipping": "assets/audio/guidance/voice_heather_v1/part_activeJob_5b1bb959.m4a",
+   "old_sha1": "53b65e05c2200dd7e9f83245e1786d794584a5e6",
+   "new_sha1": "239c8f0dcbcce940a40913c5b61e9db251433dc0",
+   "raw": "preexpiry_review_2026-11-01/part_activeJob/raw/seed32.mp3",
+   "master": "preexpiry_review_2026-11-01/part_activeJob/masters/seed32_as_shipped.m4a",
+   "request_id": "BQKjWOc3zjpzUxizuZ0q",
+   "raw_sha1": "8f832d4d105001cb37976704381985e286e57d93",
+   "mastering": {
+    "raw_trimmed_lufs": -18.17,
+    "outlier_correction_db": 0.0,
+    "voice_gain_db": -2.89,
+    "extra_gain_db": 0.0,
+    "total_gain_db": -2.89,
+    "limiter_db": 0.0,
+    "head_fade_ms": 2.0
+   },
+   "provenance": {
+    "voice_id": true,
+    "model": true,
+    "settings": true,
+    "script": true,
+    "raw_sha1": true
+   }
+  }
+ ]
+}

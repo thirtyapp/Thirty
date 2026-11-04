@@ -155,7 +155,12 @@ PlanStatusView planStatus(
 /// How a cycle that is over reads at its top.
 String endLine(PlanCycle cycle) => switch (cycle.end) {
   CycleEnd.allSetAside => PlanCopy.allSetAside,
-  CycleEnd.allRejected => PlanCopy.allRejected,
+  // R6 (Audit #1 m1): "none … was useful" only when no stage was set aside;
+  // otherwise the cycle's own records say some were set aside.
+  CycleEnd.allRejected =>
+    cycle.setAsideStages > 0
+        ? PlanCopy.someNotUsefulOthersSetAside
+        : PlanCopy.allRejected,
   CycleEnd.historyDeleted || null => PlanCopy.endedWithoutRecord,
   _ => PlanCopy.reachedEnd(cycle.guidedStages, cycle.setAsideStages),
 };

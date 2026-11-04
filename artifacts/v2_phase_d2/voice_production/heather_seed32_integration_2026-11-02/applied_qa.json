@@ -1,0 +1,128 @@
+{
+ "method": "QA of the three Heather files AS NOW SHIPPED in assets/ (2026-11-02), by the method of\nb4qa_voice_review/tools/applied_qa.py: the manifest file name and the FNV-1a fingerprint of the\ncanonical script; provenance (FOUNDER_FINAL source = the logged raw); script identity by offline\nASR (faster-whisper small.en) on the shipping .m4a; lead-in, tail, last 10 ms, true peak,\nintegrated / max momentary / max short-term loudness; that the file IS the approved performance\n(waveform correlation against its source take, trimmed and at the logged gain). Plus: the MP4\nmovie-header duration the app sees (old vs new), the pause-bed figure (2026-11-02 method,\ndigital-silence windows excluded), and voice identity (spectrum percentile and pitch vs Heather's\nown shipping parts, from the bank QA).\nUsage: python -I applied_qa.py <repo>",
+ "files": {
+  "voice_heather_v1/close_3b06cf13.m4a": {
+   "clip": "close",
+   "script": "That’s your Circle. Take a moment before you move on.",
+   "filename_fingerprint_ok": true,
+   "founder_final_source": "preexpiry_review_2026-11-01/close/raw/seed32.mp3",
+   "founder_final_extra_gain_db": 0.0,
+   "source_is_logged_raw": true,
+   "request_id": "4ZAKwlIqG0aIFKPwN82D",
+   "asr": "That's your circle. Take a moment before you move on.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 190,
+   "tail_ms": 440,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -4.07,
+   "loudness_new": {
+    "I": -20.6,
+    "M_max": -17.9,
+    "S_max": -21.5
+   },
+   "loudness_replaced": {
+    "I": -24.3,
+    "M_max": -20.1,
+    "S_max": -24.4
+   },
+   "waveform_correlation_vs_source": 0.9999,
+   "duration_mvhd_s": {
+    "replaced": 4.33,
+    "new": 4.43
+   },
+   "pause_bed_quietest10_A": {
+    "replaced": -67.9,
+    "new": -87.8
+   },
+   "identity_vs_heather_parts": {
+    "spectrum_percentile": 61.0,
+    "pitch_semitones": -0.88,
+    "replaced_spectrum_percentile": 100.0,
+    "replaced_pitch_semitones": -1.81
+   }
+  },
+  "voice_heather_v1/part_closeWhatsOpen_a811d003.m4a": {
+   "clip": "part_closeWhatsOpen",
+   "script": "Set screens aside. Minimise what you don’t need on your screens — nothing needs closing. Keep in view only what comes next.",
+   "filename_fingerprint_ok": true,
+   "founder_final_source": "preexpiry_review_2026-11-01/part_closeWhatsOpen/raw/seed32.mp3",
+   "founder_final_extra_gain_db": 0.0,
+   "source_is_logged_raw": true,
+   "request_id": "DxA4DONNMEf9YMVWNgUF",
+   "asr": "Set screens aside. Minimize what you don't need on your screens. Nothing needs closing. Keep in view only what comes next.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 150,
+   "tail_ms": 450,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -3.96,
+   "loudness_new": {
+    "I": -21.9,
+    "M_max": -17.5,
+    "S_max": -21.6
+   },
+   "loudness_replaced": {
+    "I": -22.8,
+    "M_max": -16.7,
+    "S_max": -21.7
+   },
+   "waveform_correlation_vs_source": 0.9999,
+   "duration_mvhd_s": {
+    "replaced": 10.3,
+    "new": 10.14
+   },
+   "pause_bed_quietest10_A": {
+    "replaced": -66.9,
+    "new": -95.3
+   },
+   "identity_vs_heather_parts": {
+    "spectrum_percentile": 76.0,
+    "pitch_semitones": -0.39,
+    "replaced_spectrum_percentile": 73.0,
+    "replaced_pitch_semitones": 1.28
+   }
+  },
+  "voice_heather_v1/part_activeJob_5b1bb959.m4a": {
+   "clip": "part_activeJob",
+   "script": "One active job. One job that keeps you on your feet — sweeping, hoovering, carrying things — at a pace that feels comfortable.",
+   "filename_fingerprint_ok": true,
+   "founder_final_source": "preexpiry_review_2026-11-01/part_activeJob/raw/seed32.mp3",
+   "founder_final_extra_gain_db": 0.0,
+   "source_is_logged_raw": true,
+   "request_id": "BQKjWOc3zjpzUxizuZ0q",
+   "asr": "One active job, one job that keeps you on your feet, sweeping, hoovering, carrying things at a pace that feels comfortable.",
+   "asr_word_distance": 0,
+   "asr_word_edits": [],
+   "lead_in_ms": 150,
+   "tail_ms": 440,
+   "last_10ms_dbfs": -240.0,
+   "true_peak_dbtp": -3.77,
+   "loudness_new": {
+    "I": -20.9,
+    "M_max": -16.3,
+    "S_max": -20.5
+   },
+   "loudness_replaced": {
+    "I": -21.1,
+    "M_max": -16.1,
+    "S_max": -20.1
+   },
+   "waveform_correlation_vs_source": 0.9999,
+   "duration_mvhd_s": {
+    "replaced": 12.06,
+    "new": 10.9
+   },
+   "pause_bed_quietest10_A": {
+    "replaced": -67.1,
+    "new": -101.3
+   },
+   "identity_vs_heather_parts": {
+    "spectrum_percentile": 3.0,
+    "pitch_semitones": -0.06,
+    "replaced_spectrum_percentile": 0.0,
+    "replaced_pitch_semitones": -0.11
+   }
+  }
+ }
+}

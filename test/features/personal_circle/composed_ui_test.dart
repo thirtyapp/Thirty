@@ -86,6 +86,7 @@ class _RecordingVoice implements GuidanceVoice {
   Future<void> play(
     List<SpokenClip> clips, {
     bool deferToScreenReader = false,
+    bool afterCurrent = false,
   }) async {
     said.add(clips);
     deferred.add(deferToScreenReader);
@@ -103,6 +104,7 @@ class _RecordingPlayer implements GuidanceAudioPlayer {
   Future<void> play(
     List<String> assets, {
     bool deferToScreenReader = false,
+    bool afterCurrent = false,
   }) async => played.add(assets);
 
   @override
@@ -512,8 +514,9 @@ void main() {
     });
 
     test('this build bundles the four production voices, each complete: '
-        'exactly the 42 manifest clips and its own preview per voice, '
-        'nothing stale, nothing else', () async {
+        'exactly the 42 manifest clips and its own preview per voice, plus '
+        'the opening and closing lines (F02/F03, founder approval '
+        '2026-10-26), nothing stale, nothing else', () async {
       expect(
         await bundledGuidanceVoices(rootBundle),
         ThirtyVoice.values.toSet(),
@@ -527,9 +530,17 @@ void main() {
         for (final voice in ThirtyVoice.values) ...[
           for (final clip in spokenGuidanceManifest) clip.assetFor(voice),
           spokenPreviewFor(voice).assetFor(voice),
+          for (final clip in spokenFramingClips) clip.assetFor(voice),
         ],
       });
-      expect(guidance, hasLength(4 * 43));
+      // The frozen pack of 172, unchanged, and the 8 lines beside it.
+      expect(
+        guidance.where(
+          (a) => !spokenFramingClips.any((c) => a.endsWith(c.file)),
+        ),
+        hasLength(4 * 43),
+      );
+      expect(guidance, hasLength(4 * 43 + 4 * 2));
     });
 
     test('a voice is all or nothing: one missing clip, or one recorded for '
@@ -671,7 +682,10 @@ void main() {
       expect(voice.said, isEmpty);
       container.read(recommendationProvider.notifier).start();
       await tester.pump();
-      expect(voice.said, [spokenCueFor(_plan, 0)]);
+      // The user's Start: the opening (F02), then "First." and the part.
+      expect(voice.said, [
+        [spokenOpening, ...spokenCueFor(_plan, 0)],
+      ]);
       expect(session.shown.single.part, 'Stand and reach');
       expect(session.shown.single.paused, isFalse);
       expect(

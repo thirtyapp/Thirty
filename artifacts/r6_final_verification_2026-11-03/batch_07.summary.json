@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/features/home/domain/recommendation_simulation_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/domain/suggestion_controls_test.dart": {
+   "passed": 14,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/greeting_one_line_test.dart": {
+   "passed": 25,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/home_cta_nav_layout_test.dart": {
+   "passed": 18,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/home_invitation_session_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/home_page_b1_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/home_page_b2_test.dart": {
+   "passed": 20,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/home_page_b3_real_font_test.dart": {
+   "passed": 28,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/home_page_b3_test.dart": {
+   "passed": 27,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/home_page_d1_test.dart": {
+   "passed": 32,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/home_page_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/pre_release_retirement_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 219,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 7,
+ "exit": 0,
+ "seconds": 37,
+ "command": "flutter test --concurrency=1 --reporter json test/features/home/domain/recommendation_simulation_test.dart test/features/home/domain/suggestion_controls_test.dart test/features/home/greeting_one_line_test.dart test/features/home/home_cta_nav_layout_test.dart test/features/home/home_invitation_session_test.dart test/features/home/home_page_b1_test.dart test/features/home/home_page_b2_test.dart test/features/home/home_page_b3_real_font_test.dart test/features/home/home_page_b3_test.dart test/features/home/home_page_d1_test.dart test/features/home/home_page_test.dart test/features/home/pre_release_retirement_test.dart"
+}

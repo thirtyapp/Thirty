@@ -396,6 +396,7 @@ class PlanProgress {
     required this.lifecycle,
     required this.cycles,
     this.lastAdvancedCircleId,
+    this.lastServed,
   });
 
   final String planId;
@@ -406,6 +407,12 @@ class PlanProgress {
   /// once, however often it is closed or the app restarts.
   final String? lastAdvancedCircleId;
 
+  /// The last stage Circle THIRTY served for this Plan, and its stage.
+  /// Written only when a stage Circle is composed under Premium, so a Close
+  /// after billing changed still credits the stage it was served for
+  /// (audit remediation R2, founder decision D2).
+  final ServedStageCircle? lastServed;
+
   PlanCycle get current => cycles.last;
   CirclePlanDefinition get definition => circlePlanById[planId]!;
 
@@ -413,11 +420,13 @@ class PlanProgress {
     PlanLifecycle? lifecycle,
     List<PlanCycle>? cycles,
     String? lastAdvancedCircleId,
+    ServedStageCircle? lastServed,
   }) => PlanProgress(
     planId: planId,
     lifecycle: lifecycle ?? this.lifecycle,
     cycles: cycles ?? this.cycles,
     lastAdvancedCircleId: lastAdvancedCircleId ?? this.lastAdvancedCircleId,
+    lastServed: lastServed ?? this.lastServed,
   );
 
   /// With the current cycle replaced.
@@ -428,6 +437,7 @@ class PlanProgress {
     'lifecycle': lifecycle.name,
     'cycles': [for (final c in cycles) c.toJson()],
     'lastAdvancedCircleId': ?lastAdvancedCircleId,
+    'lastServed': ?lastServed?.toJson(),
   };
 
   static PlanProgress? fromJson(String planId, Object? raw) {
@@ -448,6 +458,54 @@ class PlanProgress {
       lifecycle: lifecycle,
       cycles: cycles,
       lastAdvancedCircleId: last is String ? last : null,
+      lastServed: ServedStageCircle.fromJson(raw['lastServed']),
+    );
+  }
+}
+
+/// One stage Circle as THIRTY served it: today's Circle id and the stage it
+/// was composed for ([PlanProgress.lastServed]).
+class ServedStageCircle {
+  const ServedStageCircle({
+    required this.circleId,
+    required this.stage,
+    this.startedAfterExpiry = false,
+  });
+
+  final String circleId;
+  final PlanStageProvenance stage;
+
+  /// Started only once billing had verifiably ended Premium: still what
+  /// THIRTY served, but it earns no guided credit of its own (R2, founder
+  /// decision on the expiry before Start).
+  final bool startedAfterExpiry;
+
+  /// Whether [stage] on [circleId] is this served stage — the same Plan,
+  /// cycle, stage and revisit.
+  bool matches(PlanStageProvenance stage, {required String circleId}) =>
+      circleId == this.circleId &&
+      stage.planId == this.stage.planId &&
+      stage.cycleId == this.stage.cycleId &&
+      stage.stageNumber == this.stage.stageNumber &&
+      stage.stageId == this.stage.stageId &&
+      stage.revisit == this.stage.revisit;
+
+  Map<String, Object?> toJson() => {
+    'circleId': circleId,
+    'stage': stage.toJson(),
+    if (startedAfterExpiry) 'startedAfterExpiry': true,
+  };
+
+  /// `null` for anything that isn't a whole served stage.
+  static ServedStageCircle? fromJson(Object? raw) {
+    if (raw is! Map<String, Object?>) return null;
+    final circleId = raw['circleId'];
+    final stage = PlanStageProvenance.fromJson(raw['stage']);
+    if (circleId is! String || stage == null) return null;
+    return ServedStageCircle(
+      circleId: circleId,
+      stage: stage,
+      startedAfterExpiry: raw['startedAfterExpiry'] == true,
     );
   }
 }
@@ -697,6 +755,64 @@ extension CirclePlanActions on CirclePlansState {
       activePlanId: moved.lifecycle == PlanLifecycle.active
           ? activePlanId
           : null,
+    );
+  }
+
+  /// [stage]'s Circle [circleId] was served — composed for the stage under
+  /// Premium ([PlanProgress.lastServed]).
+  CirclePlansState served(
+    PlanStageProvenance stage, {
+    required String circleId,
+  }) {
+    final plan = plans[stage.planId];
+    if (plan == null) return this;
+    return _with(
+      plan.copyWith(
+        lastServed: ServedStageCircle(circleId: circleId, stage: stage),
+      ),
+      activePlanId: activePlanId,
+    );
+  }
+
+  /// Whether [stage]'s Circle [circleId] is the one THIRTY last served for
+  /// its Plan.
+  bool wasServed(PlanStageProvenance stage, {required String circleId}) =>
+      plans[stage.planId]?.lastServed?.matches(stage, circleId: circleId) ??
+      false;
+
+  /// Whether the served stage Circle [circleId] earns its guided credit
+  /// whatever billing says at Close: served under Premium ([wasServed]) and
+  /// not started after a verified expiry.
+  bool creditsServed(PlanStageProvenance stage, {required String circleId}) =>
+      wasServed(stage, circleId: circleId) &&
+      !plans[stage.planId]!.lastServed!.startedAfterExpiry;
+
+  /// The served stage Circle [circleId] was started — with Premium verified
+  /// [active], or verifiably ended. Records which on its served evidence,
+  /// never removing it; anything other than that served Circle is
+  /// unchanged, as is a Circle already recorded the same way.
+  CirclePlansState noteStart(
+    PlanStageProvenance stage, {
+    required String circleId,
+    required bool active,
+  }) {
+    final plan = plans[stage.planId];
+    final served = plan?.lastServed;
+    if (plan == null ||
+        served == null ||
+        !served.matches(stage, circleId: circleId) ||
+        served.startedAfterExpiry == !active) {
+      return this;
+    }
+    return _with(
+      plan.copyWith(
+        lastServed: ServedStageCircle(
+          circleId: served.circleId,
+          stage: served.stage,
+          startedAfterExpiry: !active,
+        ),
+      ),
+      activePlanId: activePlanId,
     );
   }
 

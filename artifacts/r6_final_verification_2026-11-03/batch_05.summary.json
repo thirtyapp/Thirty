@@ -1,0 +1,75 @@
+{
+ "files": {
+  "test/core/worlds/catalog/quiet_trail_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/daypart_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/place_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/reference/quiet_trail_hero_scene_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/registered_worlds_test.dart": {
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/world_art_manifest_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/world_registry_test.dart": {
+   "passed": 15,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/world_scene_policy_test.dart": {
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/world_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/b8/b8_delete_longitudinal_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/b8/b8_live_copy_guard_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/b8/b8_plan_attack_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 94,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "batch": 5,
+ "exit": 0,
+ "seconds": 41,
+ "command": "flutter test --concurrency=1 --reporter json test/core/worlds/catalog/quiet_trail_test.dart test/core/worlds/daypart_test.dart test/core/worlds/place_test.dart test/core/worlds/reference/quiet_trail_hero_scene_test.dart test/core/worlds/registered_worlds_test.dart test/core/worlds/world_art_manifest_test.dart test/core/worlds/world_registry_test.dart test/core/worlds/world_scene_policy_test.dart test/core/worlds/world_test.dart test/features/b8/b8_delete_longitudinal_test.dart test/features/b8/b8_live_copy_guard_test.dart test/features/b8/b8_plan_attack_test.dart"
+}

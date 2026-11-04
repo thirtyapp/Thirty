@@ -370,6 +370,10 @@ class B8Run {
           }
           if (!paid) {
             for (final s in c.read(insightsProvider).snapshots) {
+              // I4's Keep of the user's own Circle is ownership, never
+              // gated (R5, A2-05; r5_i4_keep_after_lapse_test.dart). It is
+              // not exercised here, so the profile's path stays as it was.
+              if (s.application is KeepCircleFromHistory) continue;
               if (insights.apply(s.id) != InsightActionResult.needsPremium) {
                 fail('D$day an Insight applied while lapsed');
               }
@@ -570,12 +574,18 @@ class B8Run {
     ];
     String session(B8Day d) =>
         ([for (final e in d.composed!.plan.elements) e.name]..sort()).join('+');
-    String material(B8Day d) => ([
-      for (final p in d.composed!.plan.parts)
-        if (p.definition.roles.contains(ElementRole.main) ||
-            p.definition.roles.contains(ElementRole.second))
-          p.element.name,
-    ]..sort()).join('+');
+    // Structural variety (audit remediation R6b, A2-10): the parts that
+    // actually act as main or second in this session (the composer's own
+    // partRole) — never a part that could but here arrives or settles.
+    String structural(B8Day d) {
+      final parts = d.composed!.plan.parts;
+      return ([
+        for (final p in parts)
+          if (partRole(parts, p) case ElementRole.main || ElementRole.second)
+            p.element.name,
+      ]..sort()).join('+');
+    }
+
     final seen = <String, int>{};
     int? firstRepeat;
     var longestSame = 0;
@@ -598,7 +608,7 @@ class B8Run {
     return {
       'composedDays': composed.length,
       'distinctSessions': seen.length,
-      'distinctMaterial': {for (final d in composed) material(d)}.length,
+      'distinctStructural': {for (final d in composed) structural(d)}.length,
       'distinctMains': {
         for (final d in composed) d.composed!.plan.main.element,
       }.length,

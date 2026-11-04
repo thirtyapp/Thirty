@@ -279,10 +279,12 @@ class Simulation {
       final plan = d.plan!;
       final key = ([for (final e in plan.elements) e.name]..sort()).join('+');
       (sets[key] ??= []).add(d.day);
+      // Structural variety (R6b, A2-10): each part's actual role here.
       final core = plan.parts.where(
-        (p) =>
-            p.definition.roles.contains(ElementRole.main) ||
-            p.definition.roles.contains(ElementRole.second),
+        (p) => switch (partRole(plan.parts, p)) {
+          ElementRole.main || ElementRole.second => true,
+          _ => false,
+        },
       );
       material.add(([for (final p in core) p.element.name]..sort()).join('+'));
       for (final p in plan.parts) {
@@ -338,7 +340,7 @@ class Simulation {
       'Personal Guided Circles': composed.length,
       'fell back to Free': fallback,
       'unique compositions (element sets)': sets.length,
-      'materially distinct (main + second)': material.length,
+      'structurally distinct (actual main + second roles)': material.length,
       'distinct main pieces': mainCounts.length,
       'median repeat interval (days)': intervals.isEmpty
           ? null

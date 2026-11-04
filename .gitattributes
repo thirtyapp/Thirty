@@ -10,3 +10,9 @@ docs/product/RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md text eol=
 # (test/features/b8/b8_review_pack_test.dart), so keep it LF on every
 # checkout, whatever the machine's core.autocrlf.
 artifacts/v2_phase_d2/b8/** text eol=lf
+
+# Hash manifests are checked with `sha1sum -c`; a CRLF checkout puts the
+# carriage return into the file-name field and every line fails (Audit #1
+# m5, audit remediation R6). Keep them LF on every checkout. The audio they
+# name is binary and was never affected.
+artifacts/**/*SHA1.txt text eol=lf

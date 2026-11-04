@@ -108,3 +108,5 @@ local, one-time read of state that already existed before analytics did.
 - [ADR-006 — No Account Before First Value](ADR-006-no-account-before-first-value.md)
 - [ADR-010 — Circle Closed Is Not Verified Activity Completion](ADR-010-circle-closed-not-completion.md)
 - [`supabase/README.md`](../../../supabase/README.md)
+
+*Amended by ADR-023 §6 (2026-11-01): the confirmation title is "Close this Circle?"; "until tomorrow" and the closed line are shown only on the Circle's own local day.*

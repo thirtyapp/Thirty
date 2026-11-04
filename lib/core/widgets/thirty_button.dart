@@ -10,6 +10,13 @@ enum ThirtyButtonVariant { primary, secondary }
 /// only Home's lifecycle CTA.
 enum ThirtyButtonSize { regular, hero }
 
+/// What a loading button tells a screen reader (audit remediation R6: it
+/// said "<label>, bezig", Dutch inside the English app). Founder-approved
+/// copy (2026-11-03): "Become Premium, in progress" on the purchase button.
+abstract final class ThirtyButtonCopy {
+  static String busy(String label) => '$label, in progress';
+}
+
 /// THIRTY's single button component, covering both variants and the
 /// enabled, disabled and loading states.
 class ThirtyButton extends StatelessWidget {
@@ -330,7 +337,7 @@ class ThirtyButton extends StatelessWidget {
       liveRegion: isLoading,
       focusable: focused == null ? null : true,
       focused: focused,
-      label: isLoading ? '$label, bezig' : label,
+      label: isLoading ? ThirtyButtonCopy.busy(label) : label,
       onTap: _isEnabled ? onPressed : null,
       child: ExcludeSemantics(
         // A trailing-icon button's Row fills its width (to pin the icon),

@@ -26,7 +26,8 @@ class YoursPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final kept = ref.watch(keptCirclesProvider).kept;
+    final collection = ref.watch(keptCirclesProvider);
+    final kept = collection.kept;
     return Scaffold(
       appBar: const ThirtyAppBar(title: Text(title)),
       body: SafeArea(
@@ -38,8 +39,8 @@ class YoursPage extends ConsumerWidget {
             AppSpacing.xl,
           ),
           children: [
-            YoursNote(kept.isEmpty ? empty : intro),
-            if (kept.isNotEmpty) ...[
+            YoursNote(collection.isEmpty ? empty : intro),
+            if (!collection.isEmpty) ...[
               const SizedBox(height: AppSpacing.l),
               YoursSection(
                 title: 'Circles you kept',
@@ -51,6 +52,25 @@ class YoursPage extends ConsumerWidget {
                         detail: keptCircleLine(circle),
                         onTap: () =>
                             context.push(KeptCirclePage.locationFor(circle.id)),
+                      ),
+                    // A whole record THIRTY can't open stays in the list
+                    // (R4.1).
+                    for (final store in collection.unreadable)
+                      YoursRow(
+                        title: KeptCircleCopy.unreadableStore,
+                        detail: KeptCircleCopy.unreadableStoreLine,
+                        onTap: () => context.push(
+                          KeptCirclePage.locationFor(store.address),
+                        ),
+                      ),
+                    // One THIRTY can't read stays in the list (R4).
+                    for (final record in collection.retained)
+                      YoursRow(
+                        title: record.name ?? KeptCircleCopy.unnamed,
+                        detail: KeptCircleCopy.unreadableLine,
+                        onTap: () => context.push(
+                          KeptCirclePage.locationFor(record.key),
+                        ),
                       ),
                   ],
                 ),

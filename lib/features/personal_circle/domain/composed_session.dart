@@ -22,6 +22,13 @@ abstract final class ComposedCopy {
   /// The ending after the last part.
   static const ending = 'That’s your Circle. Take a moment before you move on.';
 
+  /// The heading while a voiced Circle's opening is spoken, at Start — the
+  /// same words as the closed Circle's heading.
+  static const opening = 'Your Circle for today.';
+
+  /// What the voice says after Close — the closed Circle's own line.
+  static const nextCircle = 'Your next Circle opens tomorrow.';
+
   /// The one line under a composed Circle — only what is true.
   static String basisLine(CompositionBasis basis, TimeWindow window) =>
       switch (basis) {
@@ -81,6 +88,22 @@ abstract final class ComposedCopy {
   static const keepGoing = 'Keep going';
 
   /// How long a part takes, as its cue.
+  /// A kept part whose saved words were corrected for safety (founder
+  /// copy, audit remediation R4.1).
+  static const correctedForSafety =
+      'This part has updated guidance for safety. Your saved Circle is '
+      'unchanged.';
+
+  /// A kept part THIRTY's voice can't say, because its saved words differ
+  /// from the recording (audit remediation R4.1). Proposed copy.
+  /// A saved Circle THIRTY's voice doesn't guide (audit remediation R6):
+  /// some of its saved words aren't the recorded ones. Founder-approved copy
+  /// (2026-11-03); replaces R4.1's per-part "Spoken guidance isn’t available
+  /// for this part." The reason stays internal.
+  static const notSpokenCircle =
+      'Spoken guidance isn’t available for this saved Circle. You can still '
+      'follow each part.';
+
   static String partCue(int minutes) =>
       minutes == 1 ? 'About 1 minute' : 'About $minutes minutes';
 }
@@ -93,6 +116,7 @@ class ComposedSession {
     this.keptCircleId,
     this.keptName,
     this.stage,
+    this.wording,
   });
 
   final CirclePlan plan;
@@ -108,7 +132,48 @@ class ComposedSession {
   /// stage Circle.
   final PlanStageProvenance? stage;
 
+  /// A kept Circle's saved words, one per part (audit remediation R4):
+  /// what it runs with, never today's catalogue's. `null` otherwise.
+  final List<PartWording>? wording;
+
   bool get isKept => keptCircleId != null;
+
+  /// The words the part at [position] runs with ([partWordingFor]).
+  PartWording wordingAt(int position) =>
+      partWordingFor(plan.parts[position], wording?[position]);
+
+  /// Whether THIRTY's voice may speak the part at [position]: its recorded
+  /// words are the element's own, so a kept part whose saved words differ
+  /// runs on screen and paced instead — the voice never says something else
+  /// than the screen shows.
+  bool voicedAt(int position) =>
+      wordingAt(position) == PartWording.of(plan.parts[position].definition);
+
+  /// Whether THIRTY's voice may speak this Circle at all (audit remediation
+  /// R6, founder decision 2026-11-03): only when every part is [voicedAt].
+  /// A kept Circle with any part whose saved words differ from the
+  /// recorded ones runs whole on screen and paced — never partly voiced.
+  bool get voiced {
+    for (var position = 0; position < plan.parts.length; position++) {
+      if (!voicedAt(position)) return false;
+    }
+    return true;
+  }
+
+  /// What the running part at [position] says about its own guidance, if
+  /// anything (audit remediation R4.1, R6): that its words were corrected
+  /// for safety; or — when THIRTY's voice would otherwise speak
+  /// ([voiceAvailable]) — that it doesn't guide this saved Circle ([voiced]).
+  /// Nothing past the last part, when the ending is on show.
+  String? partNote(int position, {required bool voiceAvailable}) {
+    if (position < 0 || position >= plan.parts.length) return null;
+    final part = plan.parts[position];
+    if (partWordingCorrectedForSafety(part, wording?[position])) {
+      return ComposedCopy.correctedForSafety;
+    }
+    if (voiceAvailable && !voiced) return ComposedCopy.notSpokenCircle;
+    return null;
+  }
 
   /// What it is called: "Your Circle", or the kept Circle's name.
   String get title => keptName ?? ComposedCopy.title;
@@ -119,13 +184,19 @@ class ComposedSession {
     'keptCircleId': keptCircleId,
     'keptName': keptName,
     'stage': ?stage?.toJson(),
+    if (wording case final wording?)
+      'wording': [for (final w in wording) w.toJson()],
   };
 
   static ComposedSession? fromJson(Object? raw) {
     if (raw is! Map<String, Object?>) return null;
-    final plan = CirclePlan.fromWire(raw['parts']);
-    if (plan == null) return null;
     final keptCircleId = raw['keptCircleId'];
+    // A kept Circle runs as it was kept, at the lengths it was kept with
+    // (audit remediation R4); one THIRTY composed, as authored today.
+    final plan = keptCircleId is String
+        ? CirclePlan.fromSaved(raw['parts'])
+        : CirclePlan.fromWire(raw['parts']);
+    if (plan == null) return null;
     final keptName = raw['keptName'];
     final basis = CompositionBasis.values.asNameMap()[raw['basis']];
     // A composed Circle is restored whole: one the composer made says what
@@ -139,6 +210,9 @@ class ComposedSession {
           ? keptName
           : null,
       stage: PlanStageProvenance.fromJson(raw['stage']),
+      wording: keptCircleId is String
+          ? PartWording.listFromJson(raw['wording'], plan.parts.length)
+          : null,
     );
   }
 }
@@ -146,7 +220,16 @@ class ComposedSession {
 /// The Guided-shaped session [plan] runs as in the Circle: one part a time,
 /// each a step with its authored instruction and length, then the composed
 /// ending. Phase C's shell runs it; the composed body times the parts.
-ActivityDefinition sessionForPlan(CirclePlan plan, {required String title}) {
+///
+/// A kept Circle's parts run with its saved [wording] (audit remediation R4,
+/// [partWordingFor]).
+ActivityDefinition sessionForPlan(
+  CirclePlan plan, {
+  required String title,
+  List<PartWording>? wording,
+}) {
+  PartWording words(int position) =>
+      partWordingFor(plan.parts[position], wording?[position]);
   final main = plan.main.definition;
   final settings = {for (final p in plan.parts) p.definition.setting};
   final efforts = {for (final p in plan.parts) p.definition.effort};
@@ -170,15 +253,15 @@ ActivityDefinition sessionForPlan(CirclePlan plan, {required String title}) {
     reasons: {
       for (final need in Intention.values) need: ComposedCopy.howItRuns,
     },
-    firstAction: plan.parts.first.definition.instruction,
+    firstAction: words(0).instruction,
     preparation: main.from == null
         ? null
         : activityDefinition(main.from!).preparation,
     steps: [
-      for (final part in plan.parts)
+      for (final (position, part) in plan.parts.indexed)
         GuidedStep(
-          name: part.definition.name,
-          instruction: part.definition.instruction,
+          name: words(position).name,
+          instruction: words(position).instruction,
           cue: ComposedCopy.partCue(part.minutes),
         ),
     ],

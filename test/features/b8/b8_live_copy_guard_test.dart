@@ -131,6 +131,13 @@ const allowlist = [
     'completedCircleCount',
     'an internal assertion message',
   ),
+  (
+    'false completion',
+    'lib/features/home/presentation/widgets/journal_data_controls.dart',
+    'finish',
+    'Delete history that could not be finished — it says the deletion is '
+        'not done yet (founder copy, audit remediation R3)',
+  ),
   // Words that are instructions, not pressure or inference.
   (
     'streak / guilt',

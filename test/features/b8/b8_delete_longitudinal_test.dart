@@ -6,6 +6,7 @@ import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
 import 'package:thirty/core/utils/date_key.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/home/application/recommendation_provider.dart';
 import 'package:thirty/features/home/application/suggestion_preferences.dart';
@@ -25,8 +26,8 @@ import 'package:thirty/features/plans/presentation/plan_view.dart';
 /// settings, a Leave the user chose, kept Circles and explicit preferences
 /// stay. Then the product carries on, and nothing deleted is rebuilt.
 ///
-/// Delete runs the same steps, in the same order, as
-/// `JournalDataControls.confirmAndClear` (its dialog and UI path are tested
+/// Delete runs what `JournalDataControls.confirmAndClear` runs once
+/// confirmed (its dialog and UI path are tested
 /// in `circle_plan_today_test.dart` 45–46 and `delete_circle_history_test`).
 /// Every day is a fresh container on the stored data — a restart — so no
 /// in-memory cache can hide a stale value.
@@ -82,16 +83,10 @@ void main() {
     return r;
   }
 
-  /// Delete Circle history — `JournalDataControls.confirmAndClear`'s steps.
+  /// Delete Circle history — what `JournalDataControls.confirmAndClear`
+  /// runs once confirmed.
   Future<void> deleteHistory(int day) async {
-    final c = open(day);
-    final plans = c.read(circlePlansProvider.notifier);
-    await c.read(circleJournalRepositoryProvider).clearAll();
-    await clearRecordedCircleState(prefs);
-    final forgotten = plans.forgetStageEvidence();
-    final insights = c.read(insightsProvider.notifier).forgetAll();
-    await forgotten;
-    await insights;
+    await open(day).read(circleHistoryDeletionProvider).delete();
     await settle();
   }
 

@@ -103,6 +103,9 @@ Future<void> _pumpHome(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(resolved),
         nowProvider.overrideWithValue(DateTime(2026, 9, 30, hour)),
+        // R6 final: Start reads the real clock for the day (a passed day's offer
+        // never starts), so the test's clock is the same day as its now.
+        eventClockProvider.overrideWithValue(() => DateTime(2026, 9, 30, hour)),
       ],
       child: const ThirtyApp(),
     ),

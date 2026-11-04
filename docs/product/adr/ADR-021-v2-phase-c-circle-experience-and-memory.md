@@ -104,3 +104,5 @@ Product authority: [PRODUCT_V2_CONTRACT.md](../PRODUCT_V2_CONTRACT.md). This ADR
 - **Phase D migration invariant:** an explicit per-need "Don't suggest" MUST be respected by the new Path / Toolkit architecture — no Path stage, routine, Toolkit candidate or tune-up may offer an activity for a need the user asked THIRTY not to suggest it for. No temporary V1 Plan compatibility work is added for this; V1 Plans are retired in Phase D.
 - Phase D can give its Paths the same session runtime.
 - A reviewed pacing pattern, once it exists, is added to its activity's `pace`. The Paced body and its lifecycle are ready; the safety gate still decides exposure.
+
+*Amended by ADR-023 §6 (2026-11-01): "Your next Circle opens tomorrow." is shown only on the closed Circle's own local day.*

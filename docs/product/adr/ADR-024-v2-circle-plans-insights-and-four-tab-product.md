@@ -215,6 +215,11 @@ A StageBrief is a pure condition, applied on top of the existing composer (`Comp
   - **Later cycle:** checked again from scratch.
   - **Reversal:** the user may reverse the control in Memory (Put it back / Suggest again / allow) and then "Try this stage", using that stage's one revisit. THIRTY never overrides the exclusion.
   - **Edge case:** if stages 1–4 are all set aside, the Plan ends at its review: "Every stage of this Plan uses parts you've left out or asked THIRTY not to suggest."
+    - *Amendment 2026-11-03 (audit remediation R6/R6c, Audit #1 m1; founder-approved wording):*
+      - **All set aside:** the line now names all three reasons THIRTY sets a stage aside: "Every stage of this Plan uses parts you’ve left out, asked THIRTY not to suggest, or that are resting for now."
+      - **Mixed (some Not useful, the others set aside):** "Some stages didn’t feel useful, and THIRTY set the others aside. It hasn’t made a last Circle from them."
+      - **All Not useful:** unchanged.
+      - The line is chosen from the cycle's own stage records. No action changes.
 - **Revisit:** "This stage again next time" — at most once per stage per cycle. A pending revisit is served on the next matching day **without moving the place**.
 - **NOT USEFUL ON A COMPOSED OR STAGE CIRCLE:**
   - negative ranking evidence only;
@@ -274,6 +279,8 @@ Each earlier stage of the cycle is classified as positive (Very or Somewhat usef
 ### 8. The fifteen StageBriefs
 
 The Today lines are in §4. Counts are gate-passing shapes / distinct main pieces / materially distinct sessions at ≈10 · ≈20 · up to 30. Shared rules C1–C8 apply to every stage.
+
+*Amendment 2026-11-03 (audit remediation R6b, A2-10):* "materially distinct" here counts parts that *could* act as main or second, so it overstates substantive breadth. The frozen counts below stay as decided and are pinned by `stage_brief_test.dart`. The project's variety evidence now uses **structurally distinct** sessions (actual roles; see `artifacts/v2_phase_d2/b8/README.md`). Neither metric is evidence of perceived variety.
 
 **Getting going (More Energy)**
 - **E1 `getting_going.1` — Loosen up**
@@ -395,6 +402,7 @@ The Today lines are in §4. Counts are gate-passing shapes / distinct main piece
   - nothing is pushed.
 - **Snapshots:** the shown text, evidence dates, wording version, and applied/dismissed status; at most 52; readable after a lapse; deleted by Delete Circle history. Each Plan review is shown once: the cap never brings back a review it dropped *(B8 correction, 2026-10-20)*.
 - **Free / Premium:** generating and applying Insights is Premium. The facts are always visible to everyone in History.
+  - *Amendment 2026-11-03 (audit remediation R5, A2-05 / m2):* the one exception is I4's Keep of a Circle from the user's own History. It is ownership: §3's "Keep is never gated" governs it. A valid I4 shown while Premium was active keeps its Keep after a lapse, under the unchanged validity rules (current, still in History, not already kept) and the eight-Circle limit. Generating, every other application and "Not now" stay Premium. See the contract's [Free / Premium / after lapse](../PRODUCT_V2_CONTRACT.md#free--premium--after-lapse-amended-2026-10-17).
 - **Forbidden everywhere:** mood, diagnosis, stress, mental-health state, recovery, physical ability, causal benefit, and "you did it" from a Close.
 
 **I1 `insight.plan_for_need` — the Plan for your need**
@@ -492,6 +500,7 @@ Identical to the contract's section [Free / Premium / after lapse](../PRODUCT_V2
 - **Premium:** Personal Guided Circle composition, spoken guidance and background playback, running Plans (stage-steered composition, progression and revisits, reviews, repeat cycles), new Insights and their applications, Leave it out, and voiced kept Circles while the entitlement is active.
 - **After lapse, preserved and readable:** kept Circles, History and calendar, Memory, leave-outs (with Put it back), saved Plan places and cycles, existing reviews, existing Insight snapshots, applied settings, the voice choice, export and delete.
 - **After lapse, stops:** new composition, THIRTY's voice, Plan steering and progression, new reviews, new Insights, new applications.
+  - *Amendment 2026-11-03 (R5):* "new applications" excludes I4's Keep of the user's own Circle (§11, §3).
 - **No hostage mechanics.**
 
 ### 14. Audio, measurement and implementation

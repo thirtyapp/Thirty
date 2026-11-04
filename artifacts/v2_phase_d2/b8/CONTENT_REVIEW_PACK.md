@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-10-20T15:46:32.602697Z from the working tree at HEAD `27e840a19309767cc10a770b9032ddc6c5f283de` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-03T14:21:02.359047Z from the working tree at HEAD `8bfd42c16693b8f5040ebcf4761db0e9c439981c` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -12,7 +12,7 @@
 - Why (moreEnergy): Fresh air and a quicker pace to get you moving.
 - First action: Put on shoes you can walk in and head out the door.
 - Preparation: Comfortable shoes, and a layer if it’s cool.
-- While you’re there: Start easy, then walk a little quicker than usual — brisk, but still able to talk.
+- While you’re there: Start easy, then walk briskly — at a pace you can still talk at.
 - While you’re there: Let your arms swing.
 - While you’re there: Turn back about halfway through your time.
 - Lighter: A shorter loop is fine on a busy day.
@@ -22,10 +22,10 @@
 
 - Needs: moreEnergy (primary), clearerHead (secondary) · 5–10 min · open
 - Why (moreEnergy): A few songs you like, and moving however feels good.
-- First action: Put on a song you really like and turn it up a little.
+- First action: Put on a song you really like.
 - Preparation: Something that plays music.
 - While you’re there: Start small — sway, tap, walk around the room.
-- While you’re there: Let the next song be a bit livelier.
+- While you’re there: Let the next song be one you feel like moving to.
 - While you’re there: Nobody’s watching. There’s no right way to do this.
 - Lighter: Two songs are enough.
 - Ending: Let the last song be a slower one, then sit for a moment.
@@ -34,7 +34,7 @@
 
 - Needs: moreEnergy (secondary), clearerHead (primary), gentlerPace (secondary) · 15–20 min · open
 - Why (clearerHead): Nothing to check, so your attention can follow one thing.
-- First action: Put your phone on silent, out of sight in a pocket or bag, and start walking.
+- First action: Silence your notifications, keep your phone in your pocket, and start walking.
 - Preparation: A route you know, so you won’t need a map.
 - While you’re there: Notice three things you haven’t noticed before.
 - While you’re there: If a thought pulls at you, let it go and look around again.
@@ -247,7 +247,7 @@
 
 **`features/home/presentation/widgets/activity_guide_sheet.dart`**
 
-- Close *(×2)*
+- Close *(×4)*
 - Not this one today
 - First *(×2)*
 - You’ll need
@@ -262,16 +262,17 @@
 
 **`features/home/presentation/widgets/circle_hero.dart`**
 
-- Your Circle for today.
-- Your next Circle opens tomorrow.
-- Keep Circle open *(×2)*
-- Close today's Circle?
+- Your Circle for today. *(×2)*
+- Your next Circle opens tomorrow. *(×2)*
+- Close this Circle?
 - You won't be able to reopen it until tomorrow.
-- Close Circle *(×2)*
+- You won't be able to reopen it.
+- Keep Circle open *(×2)*
 - Circle closed. *(×2)*
 - Nothing else fits today — this stays.
 - Start Circle
 - Ready to begin.
+- Close Circle *(×2)*
 - That’s your $total minutes. The Circle is still open.
 - Circle paused. $minutes of $total minutes.
 - Circle in progress. $minutes of $total minutes.
@@ -343,7 +344,7 @@
 - Resume
 - That’s your $minutes minutes. $ending Close the Circle whenever you’re ready.
 - Step ${position + 1} of ${steps.length}. ${step!.name}. ${step.instruction} ${step.cue}.
-- Part ${moment.position + 1} of ${moment.parts}. ${step.name}. ${step.instruction} ${step.cue}.
+- Part ${moment.position + 1} of ${moment.parts}. ${step.name}. ${step.instruction} ${step.cue}.${note == null ?  : 
 - Pacing has ended
 - Pacing has ended.
 
@@ -374,13 +375,29 @@
 - Copied your Circle history as text.
 - Keep my history *(×2)*
 - Delete your Circle history?
-- This permanently deletes every recorded Circle on this device, and everything THIRTY has learned from them, Insights and Plan reviews included. Your kept Circles, each Plan’s place and your suggestion preferences are kept — you can change those yourself. It cannot be undone, and nothing is stored anywhere else to restore it from.
+- This permanently deletes every recorded Circle on this device, and everything THIRTY has learned from them, Insights and Plan reviews included. Your kept Circles, each Plan’s place and your suggestion preferences are kept — you can change those yourself. It cannot be undone, and nothing is stored anywhere else to restore it from. If you shared usage data, what was already sent isn’t deleted.
 - Delete permanently
+- Couldn’t finish deleting your history.
+- THIRTY will try to finish when you next open the app.
+
+**`features/home/presentation/widgets/journal_save_failure_notice.dart`**
+
+- This Circle couldn’t be saved to History.
+- Your existing saved data wasn’t overwritten.
+- Some earlier History couldn’t be opened. THIRTY preserved a copy before continuing.
+- Your History couldn’t be opened. THIRTY has left the stored data unchanged.
 
 **`features/home/presentation/widgets/later_today_label.dart`**
 
 - LATER TODAY
 - Later today
+
+**`features/home/presentation/widgets/make_today_circle_card.dart`**
+
+- Premium is active. THIRTY can make today’s Circle for this need and time, in place of this suggestion.
+- Make today’s Circle
+- Today’s Circle is ready.
+- No Circle fits this need and time today, so this one stays.
 
 **`features/home/presentation/widgets/not_this_one_sheet.dart`**
 
@@ -433,6 +450,8 @@
 - Leave it out next time
 - THIRTY won’t put it in your Circles again. You can bring it back in What THIRTY remembers.
 - Keep going
+- This part has updated guidance for safety. Your saved Circle is unchanged.
+- Spoken guidance isn’t available for this saved Circle. You can still follow each part.
 - About 1 minute
 
 **`features/personal_circle/presentation/keep_circle_card.dart`**
@@ -441,6 +460,7 @@
 - Keep it
 - Kept as $name. It’s in Yours, under You.
 - You have $maxKeptCircles kept Circles. Remove one in Yours to keep another.
+- Some kept Circles can’t be opened in this version, so THIRTY can’t keep another yet. You’ll find them in Yours.
 
 **`features/personal_circle/presentation/use_today_control.dart`**
 
@@ -562,7 +582,7 @@
 - This Plan has reached its end: ${_stages(guided)} guided, ${_stages(setAside)} set aside.
 - This Plan has reached its end.
 - You left this Plan: ${_stages(guided)} guided, ${_stages(setAside)} set aside.
-- Every stage of this Plan uses parts you’ve left out or asked THIRTY not to suggest.
+- Every stage of this Plan uses parts you’ve left out, asked THIRTY not to suggest, or that are resting for now.
 - $stage again next time.
 - Set aside this time: it’s built around $part, which you’ve asked THIRTY to leave out.
 - Set aside this time: it’s built around $part, which is resting after you said it wasn’t useful.
@@ -597,6 +617,7 @@
 - You said $stage wasn’t.
 - You said these stages were useful: ${_list(stages)}.
 - You said none of these stages was useful, so THIRTY hasn’t made a last Circle from them.
+- Some stages didn’t feel useful, and THIRTY set the others aside. It hasn’t made a last Circle from them.
 - Very useful
 - Somewhat useful
 - Not useful
@@ -703,13 +724,13 @@
 - “$part” is left out. You can put it back in What THIRTY remembers.
 - That’s already in place.
 - Writing
-- Tidying
+- Tidying or an active task
 - Music
 - Walking
 - Listening
 - Reading
 - Stretching
-- Time outside
+- Outside or fresh air
 - One task at a time
 - Looking far away
 - A slow drink
@@ -798,9 +819,9 @@ Voices: Locke, Heather, Milo, Brittney
 - Somewhat useful
 - Not useful
 - Remove the answer from $date
-- Remove *(×3)*
+- Remove *(×6)*
 - Reset suggestion preferences
-- Keep them *(×2)*
+- Keep them *(×4)*
 - Reset suggestion preferences?
 - THIRTY will forget which activities you asked it not to suggest, any rests you lifted, and any parts you left out of your Circles. Your Circle history and your answers stay.
 - Reset
@@ -828,17 +849,28 @@ Voices: Locke, Heather, Milo, Brittney
 **`features/personal_circle/presentation/kept_circle_page.dart`**
 
 - ${intentionLabel(circle.need)} · about ${circle.minutes} minutes · ${circle.plan.parts.length} parts
-- Kept Circle *(×2)*
+- A kept Circle
+- THIRTY can’t open it in this version. It’s still yours.
+- THIRTY can’t open this Circle in this version of the app, so it can’t run today. Nothing in it has changed: it stays in Yours and in your export.
+- Kept Circles THIRTY can’t open
+- They stay as stored, and in your export.
+- THIRTY can’t open these kept Circles in this version of the app, so it can’t show or run them, or tell how many there are. Until they can be opened or you remove them, THIRTY won’t keep another Circle. Nothing in them has changed, and they’re in your export.
+- Remove stored Circles?
+- THIRTY can’t tell how many Circles are in this saved data. Removing it deletes all of them from this device. You can copy your history as text first.
+- THIRTY no longer offers ${parts.join(
+- )}, so this Circle can’t run. It stays yours to read, rename or remove.
+- Kept Circle *(×4)*
 - This Circle is no longer in Yours.
 - It includes ${blocked.join(
 - )}, which you asked THIRTY not to suggest for ${intentionLabel(circle.need)}.
 - What’s in it
-- It’s yours
+- It’s yours *(×2)*
 - THIRTY never offers a kept Circle unasked. It stays yours, with or without Premium.
-- Rename *(×3)*
+- Rename *(×4)*
 - Cancel *(×4)*
 - Save *(×2)*
 - It leaves Yours. Days you used it stay in your history.
+- They’re yours
 
 **`features/personal_circle/presentation/yours_page.dart`**
 
@@ -893,10 +925,10 @@ Voices: Locke, Heather, Milo, Brittney
 
 **`features/settings/presentation/widgets/you_data_card.dart`**
 
+- Share usage data
+- Off by default. It helps us understand what to improve. When on, THIRTY sends a few facts about your use: when you open the app, which need and activity it suggests, when you start and close a Circle, and your “Did you try it?” and “Was it useful?” answers — each with the date and time, the app version, a test-group label and a random ID made on this phone. Never your name, anything you type, or your History as a whole. Turning this off stops sending; what was already sent isn’t deleted.
 - Copy as text
 - Delete Circle history
-- Share anonymous usage data
-- Off by default. Helps us understand what to improve. Your Circle history is never included.
 
 **`features/settings/presentation/widgets/you_personal_card.dart`**
 
@@ -1021,7 +1053,7 @@ Voices: Locke, Heather, Milo, Brittney
 - Keep Circle open
 - Remove your answer to $question
 - Begin today's Circle
-- Part ${moment.position + 1} of ${moment.parts}. ${step.name}. ${step.instruction} ${step.cue}.
+- Part ${moment.position + 1} of ${moment.parts}. ${step.name}. ${step.instruction} ${step.cue}.${note == null ?  : 
 - Pacing has ended.
 - Today's Circle
 - Open You
@@ -1051,4 +1083,4 @@ Voices: Locke, Heather, Milo, Brittney
 - Thin: moreEnergy at ≈10 has 19 materially distinct sessions and 6 main pieces (ADR-024 §10 known risk).
 - Thin: moreEnergy at ≈30 has 19 materially distinct sessions and 7 main pieces (ADR-024 §10 known risk).
 - “Your routine” is still shown for History records from retired routines (development devices only; ADR-024 §3 keeps such records readable).
-- Apostrophes are mixed: 9 live strings use a straight one (e.g. “Nothing recorded yet. Your Circle history will appear here once you've had a few days with THIRTY.”, “Close today's Circle?”, “You won't be able to reopen it until tomorrow.”, “Begin today's Circle”, “Today's Circle”, “Your Circle is here when you're ready.”) while 69 use ’.
+- Apostrophes are mixed: 9 live strings use a straight one (e.g. “Nothing recorded yet. Your Circle history will appear here once you've had a few days with THIRTY.”, “You won't be able to reopen it until tomorrow.”, “You won't be able to reopen it.”, “Begin today's Circle”, “Today's Circle”, “Your Circle is here when you're ready.”) while 89 use ’.

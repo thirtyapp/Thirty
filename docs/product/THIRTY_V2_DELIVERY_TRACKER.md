@@ -9,11 +9,15 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
 | **PRODUCT V2 CONTRACT** | FROZEN (2026-10-08); Amendment 1 (2026-10-11); **Amendment 2 — architecture and content freeze APPROVED (2026-10-17)** |
 | **TARGET IA** | Today \| Plans \| Insights \| You — built as the final four-tab shell since B7 (2026-10-20) |
 | **PUBLIC LAUNCH** | PAUSED |
-| **CURRENT IMPLEMENTATION PHASE** | PHASE D2 — PASS — COMPLETE (2026-10-21; batches B0–B9 closed in the single D2 closure commit). Awaiting the two independent post-D2 audits of that commit. Phase E on hold. |
-| **D2** | PASS — COMPLETE (2026-10-21; closure commit; ADR-023 Accepted, ADR-024 Accepted). Post-D2 audits pending on the closure commit. |
-| **PRODUCTION AUDIO** | PASS — FROZEN: 4 voices (Locke, Heather, Milo, Brittney) × 43 files = 172. One file corrected 2026-10-18 after B4 QA (Locke `part_songOn`); the other 171 are byte-identical |
+| **CURRENT IMPLEMENTATION PHASE** | PHASE D2 — PASS — COMPLETE (2026-10-21; batches B0–B9 closed in the single D2 closure commit `8bfd42c`). The two independent post-D2 audits of that commit **returned on 2026-10-21** (see POST-D2 AUDITS). The joint audit remediation follows batch by batch on founder approval: R1–R4.1 implemented and verified, R5 and R6 accepted at implementation and test level (2026-11-03; not audit closure), R7 final regression PASS on the exact commit tree (2026-11-04); all of this since `8bfd42c` is in one R7 remediation commit on `step5-billing-integration`, whose SHA is recorded outside the commit (see JOINT AUDIT REMEDIATION). F02/F03 framing lines accepted 2026-11-01. Phase E on hold. |
+| **D2** | PASS — COMPLETE (2026-10-21; closure commit `8bfd42c`; ADR-023 Accepted, ADR-024 Accepted). The post-D2 audits of that commit returned on 2026-10-21: Audit #1 CONDITIONAL, Audit #2 FAIL (see POST-D2 AUDITS). |
+| **PRODUCTION AUDIO** | PASS — FROZEN: 4 voices (Locke, Heather, Milo, Brittney) × 43 files = 172. One file corrected 2026-10-18 after B4 QA (Locke `part_songOn`); the other 171 are byte-identical. Three Heather files corrected 2026-11-02 (seed 32, FOUNDER LISTENING PASS: `close`, `part_closeWhatsOpen`, `part_activeJob`); the other 169 are byte-identical to the 2026-10-18 state (`heather_seed32_integration_2026-11-02/`). Six more Heather files corrected 2026-11-02 in the final quality round (FOUNDER LISTENING PASS: `part_shakeOut` s34, `part_noteOneThing` s31 with the 2026-10-17 −1.8 dB static trim, `part_briskWalk`, `part_lookAround`, `part_roundTheBlock`, `part_sitOutside` s32); the other 166 are byte-identical; S25 PASS at real levels (`heather_final_integration_2026-11-02/`). Heather audio-quality correction round **CLOSED** |
+| **FRAMING AUDIO (F02/F03)** | ACCEPTED (founder, 2026-11-01; core functionality): 8 files (2 lines × 4 voices) beside the frozen 172, not part of it; 180 bundled. S25 PASS (2026-11-01). Not device-validated: midnight, a full process restart, the exact visual F02 → "First." handover, direct audio-focus measurement and a real RevenueCat lapse (automated or QA coverage only). Committed in the R7 remediation commit (2026-11-04) |
+| **OPEN AUDIO FINDING** | 2026-11-01: on the S25 the founder hears background noise in Heather's **ending** (`voice_heather_v1/close_3b06cf13.m4a`, part of the frozen 172). Under bounded, non-destructive investigation (`artifacts/v2_phase_d2/voice_production/heather_ending_qa_2026-11-01/`): one cleaned candidate awaits the founder's A/B listening; the production file is unchanged. **2026-11-02: RESOLVED.** Replaced by the founder-approved seed-32 take; S25 ending → F03 PASS. **New, open:** on the S25 the founder hears background noise at the end of Heather's `part_shakeOut` (unchanged original; seed 32 and seed 31 did not clean it). Not authorized for replacement; no candidate. **2026-11-02 (later): RESOLVED.** Replaced by the founder-approved seed-34 take; S25 PASS (end noise gone). No founder-heard audio finding remains open |
 | **PHASE E** | HOLD |
-| **POST-D2 AUDITS** | Mandatory: two independent audits (Claude; GPT-6 Astra) of one immutable pushed SHA — the D2 closure commit, whose full SHA is recorded in the B9-B report and the audit hand-off (a commit can't name itself). A material blocker from either restarts both on a new SHA. Audit #1: NOT STARTED. Audit #2: NOT STARTED. |
+| **POST-D2 AUDITS** | Mandatory: two independent audits (Claude; GPT-6 Astra) of one immutable pushed SHA — the D2 closure commit, whose full SHA is recorded in the B9-B report and the audit hand-off (a commit can't name itself). A material blocker from either restarts both on a new SHA. **Both RETURNED on 2026-10-21, on `8bfd42c`; the reports are preserved as delivered in `docs/audits/`.** Audit #1 (Claude): **CONDITIONAL**; Phase E recommendation PROCEED, subject to its conditions, Audit #2's outcome and founder approval (`INDEPENDENT_AUDIT_1_D2_2026-10-21.md`). Audit #2 (GPT-6 Astra): **FAIL**; Phase E **HOLD**. Its BLOCKER, A2-01: a never-purchased RevenueCat customer read as billing unavailable, so the paywall showed no purchase control (`INDEPENDENT_AUDIT_2_D2_2026-10-21.md`). A2-01 is a material blocker: after the remediation, both audits restart on the new SHA. `8bfd42c` stays the immutable historical audit target. |
+| **JOINT AUDIT REMEDIATION** | R1 billing entry (A2-01), R2 paid day, R3 persistence and Delete, R4/R4.1 kept-Circle ownership: implemented and verified, uncommitted (log 2026-10-21/22). **R5 (I4 Keep, A2-05): implemented; founder-accepted at implementation and test level (2026-11-03). This is not audit closure.** **R6 (R6, R6b, R6c, R6 final): ACCEPTED at implementation and test level (2026-11-03). This is not audit closure; no independent audit has reviewed it** (log 2026-11-03). **R7 (verification, 2026-11-04): final regression PASS on the exact commit tree — 159/159 files, 2,353 passed, 0 failed, 0 skipped; analyze clean; audio 172/172 + 8/8. One auditable commit on `step5-billing-integration` (parent `8bfd42c`); SHA and push verification recorded outside the commit** (log 2026-11-04; `artifacts/r7_final_regression_2026-11-04/`). The repeat (targeted) independent audit: NOT STARTED — no audit has passed |
+| **PRE-RELEASE REVIEW — PREMIUM SECURITY & LOCAL DEVICE MIGRATION** | REGISTERED 2026-11-01 — mandatory before public release; NOT STARTED. Scope in the log (2026-11-01). No accounts, cloud infrastructure or new migration functionality without founder approval |
 | **MEASUREMENT-1** | PAUSED, resumes in Phase E |
 
 ---
@@ -385,6 +389,8 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
 
 **STATUS: NOT STARTED — ON HOLD until Phase D2 passes, its single closure SHA is pushed, both independent post-D2 audits of that SHA are positive, and the founder approves**
 
+*(2026-11-01: the audits of `8bfd42c` returned with Audit #2 FAIL; under the audit rule both restart on the remediated SHA. See Current state.)*
+
 - **Purpose:** a measurable, compliant launch.
 - **Scope:**
   - MEASUREMENT-1 resumed for the V2 funnel, including the consent-copy decision and a production Supabase project.
@@ -437,6 +443,16 @@ Public launch requires **all** of the following:
 - Closed-test evidence reviewed, including feedback response rate and early retention.
 - Privacy, support, Data Safety, truthful consent, production telemetry and live billing proven.
 - No "AI" positioning in store copy.
+- The **Premium security & local device migration** review completed (registered 2026-11-01; scope in the log).
+  - *Amendment 2026-11-03 (audit remediation R6b): **Audit #2 A2-07 is an explicit, mandatory gate inside this review.*** Public release is blocked until all of the following are true.
+    - **Decision:** the founder decides the intended behaviour for Android cloud backup and device-to-device transfer of THIRTY's local stores (journal, kept Circles, Plans, Insights, preferences): excluded, or deliberately carried.
+    - **Configuration:** the manifest and `dataExtractionRules` / `fullBackupContent` implement that decision. `allowBackup="false"` alone is not assumed to cover device-to-device transfer.
+    - **Verification:** a backup/restore and a device-transfer test are run on the **signed release artifact**, on at least the S25 and one other manufacturer or emulator image.
+    - **Copy:** the user-facing copy states only the verified behaviour.
+  - **Owner:** founder (decision and test devices), with engineering (configuration, tests and evidence).
+  - **Depends on:** this review's device-migration decisions, a buildable signed release (RevenueCat release configuration and keystore), and Premium restore via RevenueCat.
+  - **Not a substitute:** "Copy as text" is a one-way clipboard export; it is not device migration.
+  - **Allowed meanwhile:** internal engineering and closed tests may proceed before this gate.
 
 ## Log
 
@@ -741,3 +757,194 @@ Public launch requires **all** of the following:
   - **Gates:** analyze clean; tests 2,074/0; S25 device QA and TalkBack (B4, B6, B7, B9-A with its evidence top-up); founder content closure (`artifacts/v2_phase_d2/b9/`).
   - **Known, non-blocking:** More Energy is thin (WEAK; a real-user risk); the public-release safety review is still required, and the gated content stays disabled; mixed apostrophes; the legacy "Your routine" label on development data only; the Samsung speech engine garbles one calendar label.
   - **Next:** the two independent post-D2 audits of the pushed closure commit (not started). Phase E stays on hold.
+- **2026-10-21** — **Post-D2 audits returned** on `8bfd42c`. The reports are preserved as delivered: `docs/audits/INDEPENDENT_AUDIT_1_D2_2026-10-21.md` and `docs/audits/INDEPENDENT_AUDIT_2_D2_2026-10-21.md`.
+  - **Audit #1 (Claude): CONDITIONAL.** Phase E recommendation PROCEED, subject to its conditions, Audit #2's outcome and founder approval. No CRITICAL or BLOCKER findings; two MAJOR technical defects.
+  - **Audit #2 (GPT-6 Astra): FAIL; Phase E HOLD.** BLOCKER A2-01: a never-purchased RevenueCat customer read as billing unavailable, so the paywall showed no purchase control. Reproduced independently with the real adapter.
+  - **Consequence:** under the audit rule, a material blocker restarts both audits on a new SHA. `8bfd42c` stays the immutable historical audit target.
+  - **Joint audit remediation plan:** R1 billing → R2 paid day → R3 persistence and Delete → R4 kept compatibility → R5 I4 Keep → R6 copy, docs and config → R7 verification. Each batch starts only on founder approval.
+- **2026-10-21/22** — **Remediation R1–R4.1 implemented and verified.** Uncommitted; Phase E HOLD.
+  - **R1 billing entry:** an absent entitlement maps to inactive (A2-01). The adapter publishes only the newest-asked answer. Tests: `test/core/premium/revenue_cat_entitlement_gateway_test.dart`. No real Play purchase was made.
+  - **R2 paid day:**
+    - "Make today's Circle" turns today's Free decision into today's Circle.
+    - Plan credit follows its provenance, with no credit for a Circle started after a verified expiry (design A).
+    - Tests: `r2_make_today_circle_test.dart`, `r2_plan_credit_provenance_test.dart`.
+    - S25 device QA, including TalkBack: PASS (2026-10-22). Real data was restored byte-identical.
+  - **R3 persistence and Delete:**
+    - Today's keys are published as one write-ahead record.
+    - A Delete Circle history that was cut short is finished at start-up.
+    - The journal and Plan credit catch up from durable state.
+    - Tests: `r3_persistence_delete_test.dart`, `r3_delete_feedback_test.dart`. Full suite 2,196/0, analyze clean, debug APK.
+  - **R4/R4.1 kept-Circle ownership:**
+    - Kept Circles are read with their saved lengths and words. Records THIRTY can't read are kept verbatim.
+    - The founder signed off the R4.1 copy (2026-10-22).
+    - Tests: `r4_kept_ownership_test.dart`. Full suite 2,233/0, analyze clean, build exit 0.
+  - **Not started:** R5–R7 and the repeat audits.
+- **2026-10-26** — **F02/F03 integrated** (founder approval "PREMIUM VOICE INTEGRATION: F02 & F03").
+  - No generation; the 172 files are byte-identical.
+  - Tests 2,260/0, analyze clean, debug APK. No device QA.
+- **2026-10-27** — **F02/F03 acceptance remediation.**
+  - Native lifecycle proven on the real Kotlin under a simulated platform (12 scenarios, 69 checks). One gap fixed: `stop()` now reports idle.
+  - The closed screen's "tomorrow" follows the real local day, and so does the Close confirmation's "until tomorrow".
+  - F02 is on show for each voice's own recording length; its words are kept out of the semantics tree.
+  - Listening pack in `framing_f02_f03/acceptance_2026-10-27/`.
+  - **Final verification:**
+    - Full suite: 2,272 pass, 1 fail. The only failure was the B8 review-pack guard, cleared by regenerating the pack for the one new string.
+    - A clean full rerun was stopped by the system for low memory at 1,629/0.
+    - Analyze clean. Debug APK built with all 180 files byte-identical.
+    - 172/172 SHA-1 OK. Native harness 69/69.
+  - **Not accepted yet.**
+- **2026-10-29** — **F02/F03 final regression closure.**
+  - Founder ear: Brittney F02/F03 PASS, Heather F02 PASS. No new audio.
+  - The Close confirmation title is now "Close this Circle?" (`CircleHero.closeConfirmTitle`). B8 review pack regenerated. Its only change is that string, plus the apostrophe tally note going from 10 to 9.
+  - Full suite, `flutter test --concurrency=1`: **2,273 pass, 0 fail, 0 skipped, exit 0** (14 min 11 s, about 8 GB free, no other test run alongside).
+  - `flutter analyze`: no issues, exit 0. `flutter build apk --debug`: exit 0.
+  - The APK holds 180 guidance files: 172/172 match `PRODUCTION_SHA1.txt` and 8/8 match `FRAMING_SHA1.txt`.
+  - Native harness re-run: 69/69 PASS, output identical to 2026-10-27 (`native_lifecycle/result_2026-10-29_final_regression.txt`). `GuidanceAudio.kt` and `GuidanceService.kt` are unchanged since that run.
+  - **Not accepted yet.** The harness runs the real Kotlin against stubs on a desktop JVM; it is not device evidence.
+- **2026-11-01** — **F02/F03 S25 acceptance; founder acceptance; governance applied.** Uncommitted.
+  - **S25 run:** SM-S931B, QA APK `9ff2e3c4…` installed in place, Google TalkBack 17.1.
+    - PASS on the founder's ear and device evidence: F02 → "First." in all four voices; Close during the ending, after the ending and mid-part; voice off and QA lapse during speech; locked-screen cue; return after Close; TalkBack; "Close this Circle?".
+    - Afterwards the original APK was reinstalled in place, real data was byte-identical to the backup, and the 17:32 reminder was re-armed.
+  - **Founder decision: F02/F03 CORE FUNCTIONALITY — ACCEPTED.**
+    - Not validated on the device, and never reported as device PASS: midnight (automated only); a full process restart with QA data (automated only); the exact visual F02 → "First." handover; direct audio-focus measurement (the probe was defective); a real RevenueCat lapse (QA lapse only).
+  - **Governance:** the F02/F03 delta §§1–8 is applied append-only: the contract ("Voices" and "Four voices"), ADR-023 (header and §6), and pointers in ADR-021 and ADR-011. The 172-file baseline is unchanged.
+  - **Separate finding:** Heather's ending (`close_3b06cf13.m4a`, frozen 172) has audible background noise on the device. It is under bounded, non-destructive investigation; the file is unchanged.
+  - **Pre-release review registered: PREMIUM SECURITY & LOCAL DEVICE MIGRATION.** Mandatory before public release; separate from F02/F03; nothing implemented. Scope:
+    - APK copying, tampering and unauthorized Premium entitlement;
+    - RevenueCat / Google Play purchase restoration after changing phones;
+    - multi-device and anonymous user-ID behaviour;
+    - local history, kept Circles, Plans, settings and reminders during device migration;
+    - Android backup behaviour and the local-only privacy promise;
+    - elimination of QA Premium overrides from production release builds.
+    - No accounts, cloud infrastructure or new migration functionality without founder approval.
+  - R5 and R6 not started. Phase E HOLD.
+- **2026-11-02** — Heather audio correction: three founder-approved seed-32 takes integrated by the 2026-10-17/18 route. Uncommitted.
+  - **Replaced:** `voice_heather_v1/close_3b06cf13.m4a`, `part_closeWhatsOpen_a811d003.m4a` and `part_activeJob_5b1bb959.m4a`.
+    - Each is byte-copied from the review master, which the frozen rule reproduces from its raw take.
+    - No new loudness change.
+  - **Integrity:** `PRODUCTION_SHA1.txt` changed 3 lines and verifies 172/172. F02/F03 8/8 unchanged. The originals are kept beside the record, and the baseline is 8bfd42c.
+  - **Records:** `production.FOUNDER_FINAL` has 3 entries. Record folder: `artifacts/v2_phase_d2/voice_production/heather_seed32_integration_2026-11-02/`.
+  - **Gates:** analyze clean; relevant tests 371/0; debug and QA debug APKs bundle 172/172 + 8/8.
+  - **S25:** ending → F03 PASS (founder ear); real data restored byte-identical.
+  - **New open finding:** Heather `part_shakeOut` has audible background noise at its end on the device (unchanged original).
+  - **Social F04 Heather (separately, 2026-11-02):** t5 applied to the social manifest; CLOSED.
+  - R5/R6 not started. Phase E HOLD.
+- **2026-11-02** — Heather final audio-quality round: six founder-approved takes integrated by the 2026-10-17/18 route. Heather audio-quality correction round **CLOSED**. Uncommitted.
+  - **Replaced:** `voice_heather_v1/part_shakeOut` (seed 34), `part_noteOneThing` (seed 31), `part_briskWalk`, `part_lookAround`, `part_roundTheBlock` and `part_sitOutside` (seed 32). File names unchanged.
+    - The founder chose from a level-matched package. For roundTheBlock, seed 32 was preferred despite its shorter pause, overriding the automated recommendation.
+  - **Loudness gate:** measured at real levels against Heather's shipping pack. No take breaks the frozen standard or becomes a new loudest part.
+    - Only `part_noteOneThing` meets the getItOut threshold (2026-10-17 formula −1.8 dB), so it carries that one static trim; words, timing and pitch are unchanged.
+  - **Integrity:** `PRODUCTION_SHA1.txt` changed 6 lines and verifies 172/172. F02/F03 8/8. The three earlier seed-32 files and all other voices (incl. the getItOut/oneTask trims) are byte-identical. Originals are kept beside the record; baseline 8bfd42c.
+  - **Records:** `production.FOUNDER_FINAL` +6 entries. Record folder: `artifacts/v2_phase_d2/voice_production/heather_final_integration_2026-11-02/`.
+  - **Gates:** analyze clean; relevant tests 371/0; debug and QA debug APKs bundle 172/172 + 8/8.
+  - **S25:** five in-app Circles at real production levels, each new clip between unchanged neighbours: all six PASS (founder ear), including the shakeOut end noise gone. Real data restored byte-identical.
+  - No generation, no credits. F04/social bank untouched. R5/R6 not started. Phase E HOLD.
+- **2026-11-03** — **R5 accepted at implementation level (founder): I4 Keep after a lapse (Audit #2 A2-05 / Audit #1 m2).** This is not audit closure; no independent audit has reviewed it. Uncommitted.
+  - **Fix:**
+    - `InsightsNotifier.apply` exempts only `KeepCircleFromHistory`, under the unchanged validity (current, in History, not kept) and eight-Circle checks.
+    - The Insights page offers that one card without Premium; "Not now" stays Premium.
+  - **Tests:** `test/features/insights/r5_i4_keep_after_lapse_test.dart` (13: Premium; inactive, unavailable and initializing; stale; Not now; I1 and I3 still Premium; unknown id; eight kept; after Delete; a mid-session lapse; restart), plus one widget test in `insights_page_test.dart`.
+  - **B8:** the simulation's lapse loop skips I4 Keeps (they are not exercised there, so its trajectory is unchanged). The exception is covered by the R5 file.
+  - **Mutations:** 5/5 caught.
+- **2026-11-03** — **R6 (copy, docs, config) implemented in part; awaiting founder review.** Uncommitted; Phase E HOLD.
+  - **D-B, kept-Circle voice (founder decision):**
+    - R4 already voiced a kept part only when its saved words equal the recorded script (no mismatched clip was ever played). R6 makes this whole-Circle: `ComposedSession.voiced`.
+    - A kept Circle with any differing part has no opening, cues, ending, closing line or background session, and every running part shows a note.
+    - Supersedes R4.1's per-part note. New line: `ComposedCopy.notSpokenCircle`, **proposed copy, awaiting founder approval**.
+    - Tests: `r6_kept_voice_whole_circle_test.dart` (8). R4 and R4.1 tests updated to the new rule.
+  - **TalkBack "bezig":** `ThirtyButtonCopy.busy` gives "<label>, loading" (**proposed copy**). Tests: `test/core/widgets/r6_button_busy_label_test.dart` (5); the existing button tests updated.
+  - **Docs:** dated amendment notes in the contract (Free / Premium / after lapse), ADR-024 §11/§13 and ADR-023 §6. No sentence rewritten.
+  - **m4 (Audit #1):** dated status notes on the stale contract line and three `final_audit` files.
+  - **m5 (Audit #1):** `.gitattributes` keeps `artifacts/**/*SHA1.txt` LF.
+  - **B8 content review pack:** regenerated (one line changed).
+  - **Gates:** full suite 2,300/0; analyze clean; R6 mutations 5/5 caught. No device QA.
+  - **Not done in R6, awaiting founder decisions:**
+    - A2-06 analytics disclosure copy;
+    - A2-07 Android device-transfer exclusions (belongs to the device-migration review);
+    - A2-08, A2-09, A2-10, A2-11;
+    - Audit #1 m1, m3, m6.
+- **2026-11-03** — **R6b implemented; awaiting founder copy approvals.** Uncommitted; Phase E HOLD.
+  - **A2-08:** I1's date range now spans the whole denominator window (`insight_engine.dart`).
+  - **A2-09:** a journal record whose local date isn't a real `YYYY-MM-DD` date is unreadable at the read boundary (`isCanonicalDateKey`, `circle_journal.dart`). It is dropped like any record with an invalid required field, never normalised.
+  - **A2-11:** the first touch after local midnight re-reads the day without a resume (`thirty_app.dart`). A Circle that is running keeps its own day until Close, and is recorded once.
+  - **A2-10:** the variety metric is now structurally distinct (actual roles via `partRole`) at all three evidence sites. `ELEMENT_COVERAGE.md` and `b8/simulations/` were regenerated; only the metric and the A2-08 date lines changed. Dated notes were added to the B8 README, `SIMULATION_REVIEW.md` and ADR-024 §8. The frozen §8 counts are unchanged.
+  - **A2-07:** recorded as an explicit gate under the Premium security & local device migration review (release gate).
+  - **Tests:** `test/features/insights/r6b_insight_dates_test.dart` (10), `test/core/app/r6b_day_rollover_test.dart` (2), each failing before its fix. Full suite 2,312/0; analyze clean. Mutations: A2-08 1/1, A2-09 1/1, A2-11 2/3 (the uncaught one removes a same-day short-circuit with no observable effect).
+  - **Correction to earlier reports:** the app sends six analytics event types, not three: `app_opened`, `recommendation_shown` (need, activity id), `circle_started`, `circle_closed`, `circle_attempt_reported` and `circle_usefulness_reported` (answer).
+  - **Awaiting the founder:** A2-06 disclosure copy; R6 strings (kept-Circle note, busy label); m1, m3, m6 copy.
+- **2026-11-03** — **R6 final corrections applied (founder copy direction); awaiting founder acceptance.** Uncommitted; Phase E HOLD.
+  - **Copy applied:**
+    - kept-Circle note: "Spoken guidance isn’t available for this saved Circle. You can still follow each part.";
+    - busy label "{label}, in progress" (purchase: "Become Premium, in progress");
+    - I4 labels "Outside or fresh air" / "Tidying or an active task";
+    - Stage 5 mixed line "Some stages didn’t feel useful, and THIRTY set the others aside. It hasn’t made a last Circle from them." (worded for what set aside means: THIRTY sets a stage aside for parts left out, resting or not to be suggested);
+    - A2-06 "Share usage data", plus a detail naming the six events, their fields and the random ID, and what turning it off does;
+    - Delete dialog: "If you shared usage data, what was already sent isn’t deleted."
+  - **A2-09 data safety:** every journal save now writes records it can't read back verbatim (`_unreadableStored`), and export carries them as `entriesUnreadable`; Delete still removes all. **Still open:** a journal whose whole stored wrapper is unreadable is replaced by the next save (pre-existing).
+  - **A2-11:** reworked so the first touch never swallows its action. No Circle offered → the day is re-read as the touch begins; otherwise the touch acts first and the new day opens after; never while running, nor while a Circle closed after midnight awaits its reflection.
+  - **Tests:** `r6_purchase_busy_label_test`, `r6_stage5_end_line_test` (5), `r6b_journal_unreadable_preserved_test` (4), `r6b_day_rollover_test` (5). Mutations: A2-11 4/4, A2-09 write-back 1/1. B8 pack regenerated.
+  - **Audio:** production 172/172 and framing 8/8 SHA-1 OK. m6 is not applied (complete four-line table awaiting the founder).
+  - **A2-06 remains a blocker for measurement and public release:** no retention policy, no user-requested deletion and no privacy policy exist yet.
+- **2026-11-03** — **R6c journal data safety implemented; awaiting founder acceptance.** Uncommitted; Phase E HOLD.
+  - **Root cause:** every journal save rewrites the whole stored journal from what it read. A stored journal THIRTY couldn't read as a whole (not JSON, not an object, no entries list, an unknown version) read as empty, and the next save wrote over it. A journal written by a newer THIRTY was read as empty and overwritten the same way.
+  - **Fix (`circle_journal.dart`):**
+    - **Before every save:** a journal THIRTY can't read is appended, byte for byte, to `circle_journal_preserved_v1` (`circleJournalPreservedKey`), and only once the disk confirms that write. An earlier copy is never replaced, and a copy is kept once.
+    - **A newer schema** is never written over.
+    - **Failure:** a refusal or a failed copy throws `JournalWriteRefused` and writes nothing. The in-memory cache is restored, so the next save tries again.
+    - **Export:** shows `journalStored` and `journalPreserved`.
+    - **Delete:** Delete Circle history (`clearAll` and the R3 deletion) removes the copies too.
+  - **Tests:** `r6c_journal_store_safety_test.dart` (11; 9 failed before the fix). Mutations 4/4 caught.
+  - **Stage 5:** the all-set-aside line now names resting parts ("…or that are resting for now."). ADR-024 amendment note added; B8 pack regenerated.
+  - **Open for the founder:**
+    - starting yesterday's not-yet-started Circle after midnight (it keeps yesterday's date);
+    - m6 (four lines, not applied);
+    - A2-06 retention, deletion and privacy policy;
+    - A2-07.
+- **2026-11-03** — **R6 final closure batch implemented; awaiting founder acceptance.** Uncommitted; Phase E HOLD.
+  - **Midnight (founder rule):** `RecommendationNotifier.start` never starts an offer whose day has passed. Start opens the new day instead and nothing starts; today's Circle is then started deliberately. The rule also holds for a screen reader's activation. A Circle started before midnight still continues and closes under its own day, recorded once.
+  - **m6:** the four founder-approved Free lines are applied (`activity_catalog.dart`). Activities, ids and status are unchanged, and no recording is affected.
+  - **Journal save outcome:**
+    - each save's outcome reaches the screen (`journalSaveStatusProvider`);
+    - a failed save is shown once per Circle (`JournalSaveFailureNotice` in the app shell, `ThirtyNoticeDialog`): "This Circle couldn’t be saved to History." / "Your existing saved data wasn’t overwritten.";
+    - History says "Some earlier History couldn’t be opened. THIRTY preserved a copy before continuing." when a copy was kept;
+    - for a journal it can't open and hasn't copied (damaged, or from a newer THIRTY), History shows the **proposed** "Some earlier History couldn’t be opened. THIRTY is leaving it as it was stored." (awaiting founder approval) instead of "Nothing recorded yet";
+    - a journal write that returns false is treated as a failure.
+  - **Tests:** `r6_free_copy_test.dart` (5), `r6_journal_save_failure_test.dart` (9), plus midnight tests rewritten for the rule (10 in `test/core/app`). Mutations 2/2 caught. B8 pack regenerated.
+- **2026-11-03** — **R6 FINAL VERIFIED: accepted at implementation and test level.** This is **not** an independent audit. Uncommitted; Phase E HOLD.
+  - **Last copy:** "Your History couldn’t be opened. THIRTY has left the stored data unchanged." (History THIRTY can't open, no copy yet).
+  - **Full suite:** run in memory-bounded sequential batches (`artifacts/r6_final_verification_2026-11-03/`). **159/159 test files, 2,353 passed, 0 failed, 0 skipped**; `COVERAGE_MANIFEST.json` shows none not run, none unexpected, none incomplete. The host stopped one background batch for low memory; that file was rerun in five foreground parts, 13 of 13 profiles. `flutter analyze` clean. Audio 172/172 + 8/8 SHA-1 OK.
+  - **Still open, not solved by R6 (public-release blockers):**
+    - A2-06: analytics retention schedule, server-side deletion, privacy policy, verification of Supabase data handling;
+    - A2-07: Android backup and device migration, Premium restore and transfer checks;
+    - the Premium security review (tampering, subscription recovery, no QA overrides in production);
+    - the six-language launch and final commercial audits.
+  - **R7 entry (awaiting founder authorization):**
+    1. founder authorizes R7;
+    2. agree the auditable commit's scope (code, tests, docs, the `artifacts/` evidence and media; personal data cropped);
+    3. full regression on the final tree (same batch method if memory requires);
+    4. one commit on `step5-billing-integration`, then push (never main, no force), local SHA == remote;
+    5. hand that SHA to the targeted independent audit (billing A2-01, R2–R6).
+- **2026-11-04** — **R7 final regression, auditable commit and controlled push (founder authorization, 2026-11-03).** Phase E HOLD; no commercial release.
+  - **Commit scope:** one remediation commit on `step5-billing-integration`, parent `8bfd42c`. It holds 97 modified and 73 added paths, with no deletions, plus `artifacts/r7_final_regression_2026-11-04/` and this entry:
+    - R1–R6 code and tests (159 test files);
+    - the 9 founder-approved Heather replacements and the 8 F02/F03 framing clips, with their SHA-1 manifests and integration records;
+    - the contract and ADR amendment notes;
+    - the regenerated B8 pack;
+    - the two post-D2 audit reports, unchanged;
+    - the R6 and R7 verification summaries.
+  - **Deliberately not committed (kept locally, unchanged):**
+    - the six-language and Founder Dashboard planning folder `artifacts/launch_six_language_2026-11-03/` (drafts, including the unapplied Amendment 3, and discontinued KEYBRACE material);
+    - raw and intermediate audio, auditions and listening files;
+    - device screenshots and recordings;
+    - earlier-phase local artifacts;
+    - raw test logs (`*.jsonl`);
+    - `android/build/`, `AGENTS.md`, and two unreferenced Quiet Trail morning PNGs.
+  - **Verification:** the inclusion manifest was written into a separate index and checked out into a fresh detached worktree, and only that tree was tested:
+    - **159/159 files; 2,353 passed, 0 failed, 0 skipped.** No empty or non-zero runs. Per-file counts are identical to R6.
+    - All 13 year profiles ran, each exactly once (`CASE_COVERAGE.json`).
+    - `flutter analyze` clean.
+    - Audio 172/172 + 8/8 SHA-1 OK.
+    - The secrets and privacy scan of every staged text file is clean.
+  - **No device QA in R7.**
+  - **Handoff:** `artifacts/r7_final_regression_2026-11-04/AUDIT_HANDOFF.md`. Audit the pushed SHA, not a working tree.
+  - **Still OPEN:** A2-06, A2-07, the pre-commercial security review, the six-language launch, and the Founder Dashboard.

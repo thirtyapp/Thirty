@@ -1,5 +1,10 @@
 # Known commercial hypotheses and real-world unknowns — Phase D2
 
+> **Status update 2026-11-03 (audit remediation R6, Audit #1 m4):**
+> - **Voice:** "no production voice yet" no longer holds. Four production voices ship (D2 closure, `8bfd42c`). Whether they are valued is still unknown.
+> - **Lapse figures:** the "40 of 60" lapse figure is the earlier D2 simulation. The B8 simulation's figure is **111 of 120** lapsed days on which a matching kept Circle existed. Audit #1 (R1) notes that this is **coverage, not behaviour**: the scripted user always used one.
+> - The hypotheses below are kept as written on 2026-10-12.
+
 **Nothing below has been validated with real users or real money.** The internal simulations are architectural checks of the engine — variety, fallback, repetition, adaptation, time use — run with scripted answers. They are **not** evidence of willingness to pay, conversion, retention or acquisition.
 
 ## H1 — The recurring job is worth a monthly subscription
