@@ -116,6 +116,13 @@ class KeptCircle {
       return null;
     }
     final wording = PartWording.listFromJson(raw['wording'], plan.parts.length);
+    // Audit remediation R8 (Astra R7-A07): saved words that are there but
+    // damaged — an item that isn't words, the wrong number, not a list —
+    // are never replaced by today's catalogue words and voiced as if they
+    // were the Circle's own. The whole record is kept as stored instead
+    // ([RetainedKept]): shown, renamable, removable, exported — never run.
+    // A Circle kept before words were saved (no field) shows its parts'.
+    if (raw.containsKey('wording') && wording == null) return null;
     return KeptCircle(
       id: id,
       name: name,
@@ -126,9 +133,7 @@ class KeptCircle {
       wording: wording,
       stored: {
         for (final MapEntry(:key, :value) in raw.entries)
-          // Saved words this build can't read stay as they were.
-          if (!_fields.contains(key) || (key == 'wording' && wording == null))
-            key: value,
+          if (!_fields.contains(key)) key: value,
       },
     );
   }
@@ -186,26 +191,43 @@ const keptCirclesSchemaVersion = 1;
 /// all. Nothing is guessed at, and nothing is left out.
 ///
 /// The record is the one the Phase D Toolkit wrote (`toolkit_v1`). Its retired
-/// Path, routine and maintenance fields are ignored here, and dropped by the
-/// pre-release migration (`phase_d_retirement.dart`) and by the next write.
-({List<KeptCircle> kept, List<RetainedKept> retained})?
+/// Path, routine and maintenance fields are removed by the pre-release
+/// migration (`phase_d_retirement.dart`) before anything reads it.
+///
+/// **Audit remediation R8 (Astra R7-A02, Claude F-3).** A `kept` field that
+/// is there but isn't a list makes the whole record unreadable — never an
+/// empty store a Keep would write over. A record with no `kept` field at all
+/// is the Phase D Toolkit's, from before anything was kept: empty. Fields
+/// this build doesn't know are returned in [extra] and written back
+/// unchanged ([keptCirclesRecord]).
+({
+  List<KeptCircle> kept,
+  List<RetainedKept> retained,
+  Map<String, Object?> extra,
+})?
 keptCollectionFromRecord(Object? raw) {
   if (raw is! Map<String, Object?>) return null;
   if (raw['schemaVersion'] != keptCirclesSchemaVersion) return null;
-  final rawKept = raw['kept'];
+  if (raw.containsKey('kept') && raw['kept'] is! List) return null;
+  final rawKept = raw['kept'] as List? ?? const [];
   final kept = <KeptCircle>[];
   final retained = <RetainedKept>[];
-  if (rawKept is List) {
-    for (final (position, record) in rawKept.indexed) {
-      switch (KeptCircle.fromJson(record)) {
-        case final circle?:
-          kept.add(circle);
-        case null:
-          retained.add(RetainedKept(record, position: position));
-      }
+  for (final (position, record) in rawKept.indexed) {
+    switch (KeptCircle.fromJson(record)) {
+      case final circle?:
+        kept.add(circle);
+      case null:
+        retained.add(RetainedKept(record, position: position));
     }
   }
-  return (kept: kept, retained: retained);
+  return (
+    kept: kept,
+    retained: retained,
+    extra: {
+      for (final MapEntry(:key, :value) in raw.entries)
+        if (key != 'schemaVersion' && key != 'kept') key: value,
+    },
+  );
 }
 
 /// The kept Circles a stored record holds that can be read
@@ -214,10 +236,12 @@ List<KeptCircle>? keptCirclesFromRecord(Object? raw) =>
     keptCollectionFromRecord(raw)?.kept;
 
 /// [kept] as the stored record — with every [retained] one back in its
-/// place, exactly as it was stored.
+/// place, exactly as it was stored, and the record's other fields ([extra])
+/// unchanged.
 Map<String, Object?> keptCirclesRecord(
   List<KeptCircle> kept, {
   List<RetainedKept> retained = const [],
+  Map<String, Object?> extra = const {},
 }) {
   final entries = <Object?>[for (final k in kept) k.toJson()];
   for (final r in [
@@ -225,5 +249,5 @@ Map<String, Object?> keptCirclesRecord(
   ]..sort((a, b) => a.position.compareTo(b.position))) {
     entries.insert(r.position.clamp(0, entries.length), r.stored);
   }
-  return {'schemaVersion': keptCirclesSchemaVersion, 'kept': entries};
+  return {...extra, 'schemaVersion': keptCirclesSchemaVersion, 'kept': entries};
 }

@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // shared_preferences, so no dependency is added.
 // ignore: depend_on_referenced_packages
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+import 'package:thirty/core/storage/confirmed_write.dart';
 import 'package:thirty/core/premium/entitlement_status.dart';
 import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
@@ -247,7 +248,7 @@ void main() {
         });
         final c = open();
         c.read(circlePlansProvider.notifier).start('getting_going');
-        final kept = c
+        final kept = await c
             .read(keptCirclesProvider.notifier)
             .keepCircle(
               plan: CirclePlan.fromWire(const [
@@ -352,7 +353,10 @@ void main() {
       ).chooseIntention(Intention.clearerHead, window: TimeWindow.about20);
       today(c).start();
       await settle();
-      final marker = disk.hold((key) => key == _key(historyDeletionPendingKey));
+      // Audit remediation R8 (Astra R7-A04): the intent is confirmed on disk
+      // before anything is removed, so the deletion is held at its first
+      // removal — the journal's — once Today already reads as deleted.
+      final marker = disk.hold((key) => key == _key(circleJournalKey));
       final deleting = deleteHistory(c);
       await settle();
       expect(marker.reached.isCompleted, isTrue);
@@ -418,7 +422,7 @@ void main() {
         await boot();
         final c = open();
         c.read(circlePlansProvider.notifier).start('getting_going');
-        c
+        await c
             .read(keptCirclesProvider.notifier)
             .keepCircle(
               plan: CirclePlan.fromWire(const [
@@ -484,7 +488,7 @@ void main() {
       today(c).close();
       await settle();
       disk.failRemove = (key) => key == _key(circleJournalKey);
-      await expectLater(deleteHistory(c), throwsA(isA<StateError>()));
+      await expectLater(deleteHistory(c), throwsA(isA<StorageWriteFailed>()));
       expect((await onDisk())[_key(historyDeletionPendingKey)], isTrue);
       expect((await onDisk())[_key(circleJournalKey)], isNotNull);
       disk.failRemove = null;
@@ -1339,7 +1343,7 @@ void main() {
     /// fails: pending.
     Future<ProviderContainer> failedDelete() async {
       final c = open();
-      c
+      await c
           .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: CirclePlan.fromWire(const [
@@ -1357,7 +1361,7 @@ void main() {
       today(c).close();
       await settle();
       disk.failRemove = (key) => key == _key(circleJournalKey);
-      await expectLater(deleteHistory(c), throwsA(isA<StateError>()));
+      await expectLater(deleteHistory(c), throwsA(isA<StorageWriteFailed>()));
       expect(c.read(circleHistoryDeletionProvider).isPending, isTrue);
       return c;
     }
@@ -1429,7 +1433,7 @@ void main() {
       disk.failRemove = (key) => key == _key(circleJournalKey);
       await expectLater(
         completeInterruptedHistoryDeletion(prefs),
-        throwsA(isA<StateError>()),
+        throwsA(isA<StorageWriteFailed>()),
       );
       final c = open();
       expect(c.read(circleHistoryDeletionProvider).isPending, isTrue);

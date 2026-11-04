@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/providers/shared_preferences_provider.dart';
+import '../../../core/storage/confirmed_write.dart';
 import '../../insights/application/insights_provider.dart';
 import '../../plans/application/circle_plans_provider.dart';
 import '../../plans/domain/circle_plan.dart';
@@ -17,6 +18,16 @@ import 'recommendation_provider.dart';
 /// ([completeInterruptedHistoryDeletion]) — a deletion is never left half
 /// done, and never taken back.
 const historyDeletionPendingKey = 'circle_history_deletion_pending';
+
+/// Delete Circle history didn't begin: its intent couldn't be recorded on
+/// disk, so nothing was removed (audit remediation R8, Astra R7-A04). The
+/// history is exactly as it was; the user can try again.
+class HistoryDeletionNotStarted implements Exception {
+  const HistoryDeletionNotStarted();
+
+  @override
+  String toString() => 'HistoryDeletionNotStarted';
+}
 
 /// The barrier between Delete Circle history and the writes that were
 /// already on their way when it began (audit remediation R3, J4).
@@ -119,12 +130,15 @@ class CircleHistoryDeletion {
   /// and the deletion is durable; if anything fails it completes with that
   /// error, and the deletion is finished on the next start.
   ///
-  /// In order: the intent is recorded, so the deletion survives the app
-  /// stopping; what is in memory goes at once, so nothing deleted stays on
-  /// screen or feeds a new write; every write begun before the deletion
-  /// stops or finishes; then everything is cleared again — whatever such a
-  /// write managed to put back goes too — and only then is the intent
-  /// removed.
+  /// In order: the intent is recorded — and confirmed on disk before
+  /// anything is removed (audit remediation R8, Astra R7-A04), so the
+  /// deletion survives the app stopping; what is in memory goes at once, so
+  /// nothing deleted stays on screen or feeds a new write; every write begun
+  /// before the deletion stops or finishes; then everything is cleared again
+  /// — whatever such a write managed to put back goes too — and only then is
+  /// the intent removed. Every removal must be confirmed by the store
+  /// ([writeConfirmed]): one that throws or returns `false` fails the
+  /// deletion, and the intent stays.
   Future<void> delete() {
     final run = switch (_running) {
       final previous? => previous.then((_) => _delete()),
@@ -139,22 +153,37 @@ class CircleHistoryDeletion {
     final prefs = _ref.read(sharedPreferencesProvider);
     final plans = _ref.read(circlePlansProvider.notifier);
     final insights = _ref.read(insightsProvider.notifier);
+    // The intent first, confirmed on disk — tried once more if the store
+    // refuses it — before anything else: no write is stopped, nothing is
+    // cleared from memory and nothing is removed until it is (founder
+    // decision D3, 2026-11-04). A Delete that never began leaves every write
+    // on its way to land.
+    try {
+      await writeConfirmed(prefs, historyDeletionPendingKey, true);
+    } on StorageWriteFailed {
+      try {
+        await writeConfirmed(prefs, historyDeletionPendingKey, true);
+      } on StorageWriteFailed {
+        throw const HistoryDeletionNotStarted();
+      }
+    }
     final stale = gate._begin();
     try {
-      final intent = prefs.setBool(historyDeletionPendingKey, true);
       final firstPass = _clearRecordedCircles(prefs);
       final evidence = plans.forgetStageEvidence();
       final snapshots = insights.forgetAll();
       _ref.invalidate(circleJournalRepositoryProvider);
       _ref.invalidate(recommendationProvider);
-      await Future.wait([intent, firstPass, stale, evidence, snapshots]);
+      // Every step is awaited, even once one has failed, so none is left
+      // running behind the error.
+      await _all([firstPass, stale, evidence, snapshots]);
       await _clearRecordedCircles(prefs);
-      await prefs.remove(historyDeletionPendingKey);
+      await writeConfirmed(prefs, historyDeletionPendingKey, null);
     } catch (_) {
       // Not finished: the intent stays recorded, so the next start finishes
-      // it — written again in case it was the write that failed.
+      // it — written again in case a step put it back.
       try {
-        await prefs.setBool(historyDeletionPendingKey, true);
+        await writeConfirmed(prefs, historyDeletionPendingKey, true);
       } catch (_) {
         // The store refuses every write: nothing more can be done now.
       }
@@ -172,13 +201,33 @@ final circleHistoryDeletionProvider = Provider<CircleHistoryDeletion>(
 
 /// The journal and today's Circle session, removed together. Every removal
 /// is begun at once, so none of them is left readable while the others are
-/// awaited.
-Future<void> _clearRecordedCircles(SharedPreferences prefs) => Future.wait([
-  prefs.remove(circleJournalKey),
+/// awaited; each must be confirmed (audit remediation R8).
+Future<void> _clearRecordedCircles(SharedPreferences prefs) => _all([
+  writeConfirmed(prefs, circleJournalKey, null, restoreOnFailure: false),
   // R6c: and every copy kept of a journal THIRTY couldn't read.
-  prefs.remove(circleJournalPreservedKey),
+  writeConfirmed(
+    prefs,
+    circleJournalPreservedKey,
+    null,
+    restoreOnFailure: false,
+  ),
   clearRecordedCircleState(prefs),
 ]);
+
+/// Waits for every one of [steps] and then fails with the first failure, if
+/// any — never before all have finished, so nothing is left running behind
+/// an error.
+Future<void> _all(List<Future<void>> steps) async {
+  Object? failure;
+  for (final step in steps) {
+    try {
+      await step;
+    } catch (error) {
+      failure ??= error;
+    }
+  }
+  if (failure != null) throw failure;
+}
 
 /// Finishes a Delete Circle history the app stopped in the middle of, or
 /// that failed ([historyDeletionPendingKey]) — before anything reads the
@@ -186,27 +235,33 @@ Future<void> _clearRecordedCircles(SharedPreferences prefs) => Future.wait([
 /// records themselves: the journal, today's session, each Plan's stage
 /// evidence (its place stays) and every Insight snapshot. Every step is
 /// begun at once, so even if one fails nothing deleted is read back; the
-/// marker goes last, only when all of them succeeded, and otherwise this
-/// completes with the error. Safe to repeat.
+/// marker goes last, only when all of them were confirmed (audit remediation
+/// R8: a removal that throws or returns `false` is a failure), and otherwise
+/// this completes with the error. Safe to repeat.
 Future<void> completeInterruptedHistoryDeletion(SharedPreferences prefs) async {
   if (!(prefs.getBool(historyDeletionPendingKey) ?? false)) return;
   final rawPlans = prefs.getString(circlePlansKey);
-  await Future.wait([
+  await _all([
     _clearRecordedCircles(prefs),
     if (rawPlans != null)
-      prefs.setString(
+      writeConfirmed(
+        prefs,
         circlePlansKey,
         jsonEncode(
           (_plansFrom(rawPlans) ?? CirclePlansState.empty)
               .forgetStageEvidence()
               .toJson(),
         ),
+        restoreOnFailure: false,
       ),
-    prefs.remove(circlePlansUnreadableKey),
-    prefs.remove(insightsKey),
-    prefs.remove(insightsUnreadableKey),
+    for (final key in [
+      circlePlansUnreadableKey,
+      insightsKey,
+      insightsUnreadableKey,
+    ])
+      writeConfirmed(prefs, key, null, restoreOnFailure: false),
   ]);
-  await prefs.remove(historyDeletionPendingKey);
+  await writeConfirmed(prefs, historyDeletionPendingKey, null);
 }
 
 CirclePlansState? _plansFrom(String raw) {

@@ -112,7 +112,7 @@ void main() {
     expect(first.composed!.stage!.stageNumber, 1);
     await circle(31, answer: CircleUsefulnessResponse.notUseful);
     c = open(32);
-    c
+    await c
         .read(keptCirclesProvider.notifier)
         .keepCircle(
           plan: first.composed!.plan,

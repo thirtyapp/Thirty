@@ -948,3 +948,48 @@ Public launch requires **all** of the following:
   - **No device QA in R7.**
   - **Handoff:** `artifacts/r7_final_regression_2026-11-04/AUDIT_HANDOFF.md`. Audit the pushed SHA, not a working tree.
   - **Still OPEN:** A2-06, A2-07, the pre-commercial security review, the six-language launch, and the Founder Dashboard.
+- **2026-11-04** — **R8 post-independent-audit remediation implemented; awaiting founder acceptance.** Uncommitted, on top of `8ece26f6`, which stays the audited baseline (Astra FAIL, Claude CONDITIONAL PASS). Phase E HOLD.
+  - **Findings:**
+    - Astra R7-A01…A04 (HIGH) and A05…A08 (MEDIUM): taken from the founder directive; the Astra report itself wasn't available locally.
+    - Claude F-1…F-6, plus recommendations.
+    - All are deduplicated into 15 register entries: `artifacts/r8_post_audit_remediation_2026-11-04/ISSUE_REGISTER.json`.
+  - **Shared fix:** `writeConfirmed` (`lib/core/storage/confirmed_write.dart`).
+    - A throw or a `false` from the store is a failure, and memory is put back to what is on disk.
+    - It is used by Today's day keys, History, kept Circles, Plans, Insights and Delete.
+    - Failures are shown in the app shell.
+  - **Behaviour:**
+    - Delete records its intent on disk before removing anything (one retry); otherwise nothing is deleted and the user is told.
+    - A Keep and an I4 apply are confirmed before they are shown.
+    - A malformed kept collection, damaged saved words and damaged Insight dates are kept as stored and never overwritten or substituted.
+    - Unreadable History can be copied and deleted.
+    - Yesterday's running Circle survives a resume or restart after midnight, within a proposed 6-hour limit.
+    - A no-touch choice uses the real time.
+    - "Restored" is shown only when billing verifies Premium active.
+  - **Tests:**
+    - 94 new R8 tests; 73 fail on the R7 tree, and the other 21 are guards.
+    - Full suite in memory-bounded batches: **167/167 files, 2,448 passed, 0 failed, 0 skipped**; all 13 year profiles ran, each once.
+    - The source fingerprint was unchanged across the run. `flutter analyze` clean.
+    - Audio 172/172 + 8/8 SHA-1 OK.
+  - **Awaiting the founder:**
+    - proposed copy: "This change couldn’t be saved."; "Your history wasn’t deleted." / "Nothing was changed. You can try again.";
+    - `midnightCarryOverLimit` = 6 h (TUNABLE);
+    - the R3 Delete timing change (memory is cleared once the intent is confirmed);
+    - the Astra report, for a cross-check.
+  - **Still open:** A2-06, A2-07, pre-commercial security, the six-language launch, the Founder Dashboard and the final audits. Independent re-audit of a new SHA is NOT STARTED.
+- **2026-11-04 (later)** — **R8 pre-commit gate: founder decisions D1–D3 applied; corrections P2, overwrite protection and Delete ordering made.** Uncommitted; awaiting founder acceptance. Phase E HOLD.
+  - **D1:**
+    - "This change couldn’t be saved." / "Please try again.";
+    - "Your history wasn’t deleted." / "Nothing was changed. You can try again.".
+  - **D2:** a six-hour carry-over of real elapsed time, frozen in the contract amendment.
+  - **D3:** the Delete intent is confirmed before anything else, frozen in the contract amendment.
+  - **P2:** a failed recovery-record cleanup is pending retry, not "not saved".
+  - **Overwrite protection:** an earlier day's unrecorded Start or Close is never overwritten by the next day's choice; under a persistent History failure, today's choice isn't durable and the user is told.
+  - **Delete ordering:** a Delete that never began stops no write.
+  - **Astra report:** read in full; cross-checked.
+  - **Full suite:** **169/169 files, 2,484 passed, 0 failed, 0 skipped**; 13/13 year profiles. Source fingerprint unchanged; analyze clean; audio 172/172 + 8/8.
+  - **Evidence:** `artifacts/r8_post_audit_remediation_2026-11-04/` (README, ISSUE_REGISTER with 20 entries, COMMIT_INVENTORY).
+- **2026-11-04 (later)** — **R8 ACCEPTED by the founder at implementation and reported-test level; committed as one R8 commit on top of `8ece26f6` and pushed to `origin/step5-billing-integration`.** This is NOT independent audit closure. Phase E HOLD; no commercial release authorized.
+  - **Approved:** D1 copy (typographic apostrophes); D2 six-hour carry-over; D3 durable Delete intent before the write barrier; P2 recovery-record cleanup is pending retry; the fail-closed rule for a persistent History failure (do not remove for convenience).
+  - **Commit identity:** a commit cannot hold its own SHA. Its parent is `8ece26f6dbd41f573e854b8fc82f44a6942282e3`; the full SHA is in the local push record `artifacts/r8_post_audit_remediation_2026-11-04/R8_PUSH_RECORD.md` and the founder report.
+  - **Re-audit handoff:** `artifacts/r8_post_audit_remediation_2026-11-04/AUDIT_HANDOFF.md`. Both auditors must inspect the exact new commit. Re-audit NOT STARTED.
+  - **Still OPEN:** A2-06, A2-07, commercial subscription and APK security checks, six-language localization (zero unapproved hardcoded user-facing text, complete multilingual audio, native-language QA), the final commercial release audit. The KEYBRACE Founder Dashboard is a separate project; KEYBRACE OS is discontinued.

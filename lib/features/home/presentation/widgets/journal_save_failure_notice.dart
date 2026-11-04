@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/storage/store_save_failures.dart';
 import '../../../../core/widgets/thirty_notice_dialog.dart';
 import '../../application/circle_journal.dart';
 
@@ -23,11 +24,24 @@ abstract final class JournalSaveCopy {
   static const unopened =
       'Your History couldn’t be opened. THIRTY has left the stored data '
       'unchanged.';
+
+  /// A change to the user's own kept Circles, Plans or Insights wasn't
+  /// saved (audit remediation R8) — founder wording (D1, 2026-11-04). It
+  /// claims nothing about what was stored before: that isn't proven for
+  /// every failure path.
+  static const changeNotSavedTitle = 'This change couldn’t be saved.';
+
+  /// See [changeNotSavedTitle] — founder wording (D1, 2026-11-04).
+  static const changeNotSavedBody = 'Please try again.';
 }
 
 /// Tells the user, once for each Circle, when its save to History failed
 /// (R6 final): never a silent loss, never a false confirmation. Wraps the
 /// app's shell, so it is heard whichever tab is open.
+///
+/// Audit remediation R8 (Claude F-6, Astra R7-A03): also each time a save of
+/// the user's kept Circles, Plans or Insights isn't confirmed
+/// ([storeSaveFailuresProvider]) — once per failure, never stacked.
 class JournalSaveFailureNotice extends ConsumerStatefulWidget {
   const JournalSaveFailureNotice({required this.child, super.key});
 
@@ -48,9 +62,27 @@ class _JournalSaveFailureNoticeState
   void initState() {
     super.initState();
     // A failure that happened before this was on screen.
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _check(ref.read(journalSaveStatusProvider)),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _check(ref.read(journalSaveStatusProvider));
+      _checkStores(ref.read(storeSaveFailuresProvider));
+    });
+  }
+
+  /// Store failures already told.
+  var _storeFailuresTold = 0;
+
+  void _checkStores(StoreSaveState failures) {
+    if (!mounted || failures.count <= _storeFailuresTold || _showing) return;
+    _storeFailuresTold = failures.count;
+    _showing = true;
+    showDialog<void>(
+      context: context,
+      barrierLabel: 'Close',
+      builder: (_) => const ThirtyNoticeDialog(
+        title: JournalSaveCopy.changeNotSavedTitle,
+        body: JournalSaveCopy.changeNotSavedBody,
+      ),
+    ).whenComplete(() => _showing = false);
   }
 
   void _check(Map<String, bool> outcomes) {
@@ -76,6 +108,7 @@ class _JournalSaveFailureNoticeState
   @override
   Widget build(BuildContext context) {
     ref.listen(journalSaveStatusProvider, (_, next) => _check(next));
+    ref.listen(storeSaveFailuresProvider, (_, next) => _checkStores(next));
     return widget.child;
   }
 }

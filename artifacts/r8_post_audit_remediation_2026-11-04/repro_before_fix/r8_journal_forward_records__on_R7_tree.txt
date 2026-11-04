@@ -1,0 +1,40 @@
+00:00 +0: loading C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-verify-r7/test/features/home/r8_journal_forward_records_test.dart
+00:00 +0: a save keeps it byte for byte, beside the new record
+00:00 +0 -1: a save keeps it byte for byte, beside the new record [E]
+  Expected: contains '{"schemaVersion":3,"circleId":"2026-10-01","localDate":"2026-10-01","direction":"moreEnergy","activityId":"thirtyMinuteWalk","catalogVersion":1,"shownAt":"2026-10-01T09:00:00.000","laterField":{"kept":"as stored"}}'
+    Actual: [
+              '{"schemaVersion":3,"circleId":"2026-10-01","localDate":"2026-10-01","direction":"moreEnergy","activityId":"thirtyMinuteWalk","catalogVersion":1,"shownAt":"2026-10-01T09:00:00.000","startedAt":null,"closedAt":null,"attemptResponse":null,"usefulnessResponse":null,"planId":null,"planVersion":null,"stageId":null,"planCycleId":null,"treatmentUsed":null,"revisitUsed":null,"treatmentSource":null,"timeWindow":null,"offeredMinutes":null,"reasonCode":null,"replacedFromActivityId":null,"replacementReason":null,"minutesAtClose":null,"session":null}',
+              '{"schemaVersion":2,"circleId":"2026-10-02","localDate":"2026-10-02","direction":"gentlerPace","activityId":"thirtyMinuteWalk","catalogVersion":2,"shownAt":"2026-10-02T09:00:00.000","startedAt":null,"closedAt":null,"attemptResponse":null,"usefulnessResponse":null,"planId":null,"planVersion":null,"stageId":null,"planCycleId":null,"treatmentUsed":null,"revisitUsed":null,"treatmentSource":null,"timeWindow":null,"offeredMinutes":null,"reasonCode":null,"replacedFromActivityId":null,"replacementReason":null,"minutesAtClose":null,"session":null}'
+            ]
+     Which: does not contain '{"schemaVersion":3,"circleId":"2026-10-01","localDate":"2026-10-01","direction":"moreEnergy","activityId":"thirtyMinuteWalk","catalogVersion":1,"shownAt":"2026-10-01T09:00:00.000","laterField":{"kept":"as stored"}}'
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8_journal_forward_records_test.dart 49:5  main.<fn>
+  
+00:00 +0 -1: it is exported as stored
+00:00 +0 -2: it is exported as stored [E]
+  Expected: [
+              {
+                'schemaVersion': 3,
+                'circleId': '2026-10-01',
+                'localDate': '2026-10-01',
+                'direction': 'moreEnergy',
+                'activityId': 'thirtyMinuteWalk',
+                'catalogVersion': 1,
+                'shownAt': '2026-10-01T09:00:00.000',
+                'laterField': {'kept': 'as stored'}
+              }
+            ]
+    Actual: <null>
+     Which: is not Iterable
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8_journal_forward_records_test.dart 58:5  main.<fn>
+  
+00:00 +0 -2: Some tests failed.
+
+Failing tests:
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-verify-r7/test/features/home/r8_journal_forward_records_test.dart: a save keeps it byte for byte, beside the new record
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-verify-r7/test/features/home/r8_journal_forward_records_test.dart: it is exported as stored

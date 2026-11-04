@@ -11,6 +11,8 @@ library;
 
 import 'dart:convert';
 
+import '../../../core/utils/date_key.dart';
+
 /// The six frozen families — no seventh, no fallback.
 enum InsightFamily {
   planForNeed('insight.plan_for_need'),
@@ -310,6 +312,12 @@ class InsightSnapshot {
   };
 
   /// `null` for anything that isn't a whole snapshot.
+  ///
+  /// Audit remediation R8 (Claude F-4): every date it carries —
+  /// [generatedOn], [appliedOn], [notNowOn], [declinedOn] and any date fact
+  /// (`endedOn`) — must be a real `YYYY-MM-DD` date ([isCanonicalDateKey]),
+  /// or the snapshot can't be read: nothing downstream ever parses a damaged
+  /// date. Such a snapshot is kept as stored ([InsightsState.unreadable]).
   static InsightSnapshot? fromJson(Object? raw) {
     if (raw is! Map<String, Object?>) return null;
     final id = raw['id'];
@@ -322,10 +330,22 @@ class InsightSnapshot {
     if (id is! String ||
         family == null ||
         generatedOn is! String ||
+        !isCanonicalDateKey(generatedOn) ||
         version is! int ||
         text is! String ||
         key is! String ||
         application == null) {
+      return null;
+    }
+    for (final field in const ['appliedOn', 'notNowOn', 'declinedOn']) {
+      final value = raw[field];
+      if (value != null && (value is! String || !isCanonicalDateKey(value))) {
+        return null;
+      }
+    }
+    if (raw['facts'] case {'endedOn': final Object? endedOn}
+        when endedOn != null &&
+            (endedOn is! String || !isCanonicalDateKey(endedOn))) {
       return null;
     }
     String? date(String k) => raw[k] is String ? raw[k] as String : null;
@@ -356,13 +376,23 @@ class InsightSnapshot {
 
 /// Every snapshot kept, oldest first.
 class InsightsState {
-  const InsightsState([this.snapshots = const []]);
+  const InsightsState([this.snapshots = const [], this.unreadable = const []]);
 
   static const empty = InsightsState();
 
   final List<InsightSnapshot> snapshots;
 
-  bool get isEmpty => snapshots.isEmpty;
+  /// Stored snapshots THIRTY can't read (audit remediation R8, Claude F-4) —
+  /// a damaged date, a missing field — exactly as stored: never shown or
+  /// acted on, written back by every save, exported, and removed only by
+  /// Delete Circle history.
+  final List<Object?> unreadable;
+
+  bool get isEmpty => snapshots.isEmpty && unreadable.isEmpty;
+
+  /// These snapshots, with what THIRTY can't read still kept.
+  InsightsState withSnapshots(List<InsightSnapshot> next) =>
+      InsightsState(next, unreadable);
 
   InsightSnapshot? byId(String id) {
     for (final s in snapshots) {
@@ -373,22 +403,33 @@ class InsightsState {
 
   InsightsState replacing(InsightSnapshot snapshot) => InsightsState([
     for (final s in snapshots) s.id == snapshot.id ? snapshot : s,
-  ]);
+  ], unreadable);
 
   Map<String, Object?> toJson() => {
     'schemaVersion': insightsSchemaVersion,
-    'snapshots': [for (final s in snapshots) s.toJson()],
+    'snapshots': [for (final s in snapshots) s.toJson(), ...unreadable],
   };
 
-  /// `null` when [raw] isn't a readable record; unreadable snapshots are
-  /// dropped one by one.
+  /// `null` when [raw] isn't a readable record; snapshots THIRTY can't read
+  /// are kept one by one, as stored ([unreadable]).
   static InsightsState? fromJson(Object? raw) {
     if (raw is! Map<String, Object?>) return null;
     if (raw['schemaVersion'] != insightsSchemaVersion) return null;
-    return InsightsState([
-      if (raw['snapshots'] case final List list)
-        for (final s in list) ?InsightSnapshot.fromJson(s),
-    ]);
+    final list = switch (raw['snapshots']) {
+      final List list => list,
+      _ => const <Object?>[],
+    };
+    final read = <InsightSnapshot>[];
+    final kept = <Object?>[];
+    for (final s in list) {
+      switch (InsightSnapshot.fromJson(s)) {
+        case final snapshot?:
+          read.add(snapshot);
+        case null:
+          kept.add(s);
+      }
+    }
+    return InsightsState(read, kept);
   }
 }
 

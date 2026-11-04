@@ -1,0 +1,132 @@
+00:00 +0: loading C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/insights/r8_f4_insight_dates_test.dart
+00:00 +0: generatedOn "garbage", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+00:00 +0 -1: generatedOn "garbage", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied [E]
+  Expected: return normally
+    Actual: <Closure: () => InsightAssessment>
+     Which: threw FormatException:<FormatException: Invalid radix-10 number (at character 1)
+            garbage
+            ^
+            >
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\insights\r8_f4_insight_dates_test.dart 117:9  main.<fn>
+  
+00:00 +0 -1: generatedOn "garbage", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+00:00 +0 -2: generatedOn "garbage", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied [E]
+  Expected: null
+    Actual: <Instance of 'InsightSnapshot'>
+  a snapshot with a damaged date is never acted on
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\insights\r8_f4_insight_dates_test.dart 128:9  main.<fn>
+  
+00:00 +0 -2: generatedOn "2026-02-30", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+00:00 +0 -3: generatedOn "2026-02-30", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied [E]
+  Expected: null
+    Actual: <Instance of 'InsightSnapshot'>
+  a snapshot with a damaged date is never acted on
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\insights\r8_f4_insight_dates_test.dart 128:9  main.<fn>
+  
+00:00 +0 -3: generatedOn "2026-02-30", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+00:00 +0 -4: generatedOn "2026-02-30", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied [E]
+  Expected: null
+    Actual: <Instance of 'InsightSnapshot'>
+  a snapshot with a damaged date is never acted on
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\insights\r8_f4_insight_dates_test.dart 128:9  main.<fn>
+  
+00:00 +0 -4: appliedOn "not a date", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+00:00 +0 -5: appliedOn "not a date", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied [E]
+  Expected: null
+    Actual: <Instance of 'InsightSnapshot'>
+  a snapshot with a damaged date is never acted on
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\insights\r8_f4_insight_dates_test.dart 128:9  main.<fn>
+  
+00:00 +0 -5: appliedOn "not a date", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+00:00 +0 -6: appliedOn "not a date", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied [E]
+  Expected: null
+    Actual: <Instance of 'InsightSnapshot'>
+  a snapshot with a damaged date is never acted on
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\insights\r8_f4_insight_dates_test.dart 128:9  main.<fn>
+  
+00:00 +0 -6: notNowOn "30/10/2026", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+00:00 +0 -7: notNowOn "30/10/2026", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied [E]
+  Expected: null
+    Actual: <Instance of 'InsightSnapshot'>
+  a snapshot with a damaged date is never acted on
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\insights\r8_f4_insight_dates_test.dart 128:9  main.<fn>
+  
+00:00 +0 -7: notNowOn "30/10/2026", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+00:00 +0 -8: notNowOn "30/10/2026", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied [E]
+  Expected: null
+    Actual: <Instance of 'InsightSnapshot'>
+  a snapshot with a damaged date is never acted on
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\insights\r8_f4_insight_dates_test.dart 128:9  main.<fn>
+  
+00:00 +0 -8: declinedOn "2026-1-5", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+00:00 +0 -9: declinedOn "2026-1-5", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied [E]
+  Expected: null
+    Actual: <Instance of 'InsightSnapshot'>
+  a snapshot with a damaged date is never acted on
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\insights\r8_f4_insight_dates_test.dart 128:9  main.<fn>
+  
+00:00 +0 -9: declinedOn "2026-1-5", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+00:00 +0 -10: declinedOn "2026-1-5", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied [E]
+  Expected: null
+    Actual: <Instance of 'InsightSnapshot'>
+  a snapshot with a damaged date is never acted on
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\insights\r8_f4_insight_dates_test.dart 128:9  main.<fn>
+  
+00:00 +0 -10: facts.endedOn "soon", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+00:00 +0 -11: facts.endedOn "soon", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied [E]
+  Expected: null
+    Actual: <Instance of 'InsightSnapshot'>
+  a snapshot with a damaged date is never acted on
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\insights\r8_f4_insight_dates_test.dart 128:9  main.<fn>
+  
+00:00 +0 -11: facts.endedOn "soon", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+00:00 +0 -12: facts.endedOn "soon", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied [E]
+  Expected: null
+    Actual: <Instance of 'InsightSnapshot'>
+  a snapshot with a damaged date is never acted on
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\insights\r8_f4_insight_dates_test.dart 128:9  main.<fn>
+  
+00:00 +0 -12: Some tests failed.
+
+Failing tests:
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/insights/r8_f4_insight_dates_test.dart: appliedOn "not a date", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/insights/r8_f4_insight_dates_test.dart: appliedOn "not a date", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/insights/r8_f4_insight_dates_test.dart: declinedOn "2026-1-5", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/insights/r8_f4_insight_dates_test.dart: declinedOn "2026-1-5", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied
+  ... and 8 more

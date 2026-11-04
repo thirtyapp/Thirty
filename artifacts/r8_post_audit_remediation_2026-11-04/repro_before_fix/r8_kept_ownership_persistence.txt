@@ -1,0 +1,371 @@
+00:00 +0: loading C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/personal_circle/r8_kept_ownership_persistence_test.dart
+00:00 +0: Astra R7-A02 — a version-1 record whose kept field is present but malformed an object: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts
+00:00 +0 -1: Astra R7-A02 — a version-1 record whose kept field is present but malformed an object: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 134:11  main.<fn>.<fn>
+  
+00:00 +0 -1: Astra R7-A02 — a version-1 record whose kept field is present but malformed a string: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts
+00:00 +0 -2: Astra R7-A02 — a version-1 record whose kept field is present but malformed a string: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 134:11  main.<fn>.<fn>
+  
+00:00 +0 -2: Astra R7-A02 — a version-1 record whose kept field is present but malformed a number: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts
+00:00 +0 -3: Astra R7-A02 — a version-1 record whose kept field is present but malformed a number: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 134:11  main.<fn>.<fn>
+  
+00:00 +0 -3: Astra R7-A02 — a version-1 record whose kept field is present but malformed null: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts
+00:00 +0 -4: Astra R7-A02 — a version-1 record whose kept field is present but malformed null: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 134:11  main.<fn>.<fn>
+  
+00:00 +0 -4: Astra R7-A02 — a version-1 record whose kept field is present but malformed a boolean: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts
+00:00 +0 -5: Astra R7-A02 — a version-1 record whose kept field is present but malformed a boolean: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 134:11  main.<fn>.<fn>
+  
+00:00 +0 -5: Astra R7-A02 — a version-1 record whose kept field is present but malformed kept missing altogether (the Phase D record's shape) is an empty store; fields THIRTY doesn't know are written back unchanged
+00:00 +0 -6: Astra R7-A02 — a version-1 record whose kept field is present but malformed kept missing altogether (the Phase D record's shape) is an empty store; fields THIRTY doesn't know are written back unchanged [E]
+  Expected: {'a': 1}
+    Actual: <null>
+     Which: expected a map
+  
+  package:matcher                                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18                           expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 164:9  main.<fn>.<fn>
+  
+00:00 +0 -6: Astra R7-A02 — a version-1 record whose kept field is present but malformed a valid record beside one THIRTY can't read: both stay, each in its place, after a Keep
+00:00 +1 -6: the kept store's write throws (Astra R7-A03, Claude F-6) a Keep isn't confirmed: it fails, nothing shows as kept, and after a restart nothing is kept
+00:00 +1 -7: the kept store's write throws (Astra R7-A03, Claude F-6) a Keep isn't confirmed: it fails, nothing shows as kept, and after a restart nothing is kept [E]
+  Expected: null
+    Actual: <Instance of 'KeptCircle'>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 198:11  main.<fn>.<fn>
+  
+00:00 +1 -7: the kept store's write throws (Astra R7-A03, Claude F-6) the next Keep, once the disk takes it, keeps one Circle — no duplicate from the failed one
+00:00 +1 -8: the kept store's write throws (Astra R7-A03, Claude F-6) the next Keep, once the disk takes it, keeps one Circle — no duplicate from the failed one [E]
+  Expected: not null
+    Actual: <null>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 213:11  main.<fn>.<fn>
+  
+00:00 +1 -8: the kept store's write throws (Astra R7-A03, Claude F-6) a rename isn't confirmed: the old name stays, in memory and on disk, and the failure is shown
+00:00 +1 -9: the kept store's write throws (Astra R7-A03, Claude F-6) a rename isn't confirmed: the old name stays, in memory and on disk, and the failure is shown [E]
+  Expected: 'My clear-head Circle'
+    Actual: 'New name'
+     Which: is different.
+            Expected: My clear-h ...
+              Actual: New name
+                      ^
+             Differ at offset 0
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 229:11  main.<fn>.<fn>
+  
+00:00 +1 -9: the kept store's write returnsFalse (Astra R7-A03, Claude F-6) a Keep isn't confirmed: it fails, nothing shows as kept, and after a restart nothing is kept
+00:00 +1 -10: the kept store's write returnsFalse (Astra R7-A03, Claude F-6) a Keep isn't confirmed: it fails, nothing shows as kept, and after a restart nothing is kept [E]
+  Expected: null
+    Actual: <Instance of 'KeptCircle'>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 198:11  main.<fn>.<fn>
+  
+00:00 +1 -10: the kept store's write returnsFalse (Astra R7-A03, Claude F-6) the next Keep, once the disk takes it, keeps one Circle — no duplicate from the failed one
+00:00 +1 -11: the kept store's write returnsFalse (Astra R7-A03, Claude F-6) the next Keep, once the disk takes it, keeps one Circle — no duplicate from the failed one [E]
+  Expected: not null
+    Actual: <null>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 213:11  main.<fn>.<fn>
+  
+00:00 +1 -11: the kept store's write returnsFalse (Astra R7-A03, Claude F-6) a rename isn't confirmed: the old name stays, in memory and on disk, and the failure is shown
+00:00 +1 -12: the kept store's write returnsFalse (Astra R7-A03, Claude F-6) a rename isn't confirmed: the old name stays, in memory and on disk, and the failure is shown [E]
+  Expected: 'My clear-head Circle'
+    Actual: 'New name'
+     Which: is different.
+            Expected: My clear-h ...
+              Actual: New name
+                      ^
+             Differ at offset 0
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 229:11  main.<fn>.<fn>
+  
+00:00 +1 -12: two Keeps at once, one place left: one is kept, the other refused — never nine
+00:00 +2 -12: the same Circle kept twice at once: kept once
+00:00 +3 -12: Astra R7-A07 — damaged saved words an item that isn't words: the Circle is kept as stored, never run with today's words or voice — and written back byte for byte
+00:00 +3 -13: Astra R7-A07 — damaged saved words an item that isn't words: the Circle is kept as stored, never run with today's words or voice — and written back byte for byte [E]
+  Expected: empty
+    Actual: [Instance of 'KeptCircle']
+  run with substituted words
+  
+  package:matcher                                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18                           expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 291:9  main.<fn>.<fn>
+  
+00:00 +3 -13: Astra R7-A07 — damaged saved words one wording too few: the Circle is kept as stored, never run with today's words or voice — and written back byte for byte
+00:00 +3 -14: Astra R7-A07 — damaged saved words one wording too few: the Circle is kept as stored, never run with today's words or voice — and written back byte for byte [E]
+  Expected: empty
+    Actual: [Instance of 'KeptCircle']
+  run with substituted words
+  
+  package:matcher                                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18                           expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 291:9  main.<fn>.<fn>
+  
+00:00 +3 -14: Astra R7-A07 — damaged saved words not a list: the Circle is kept as stored, never run with today's words or voice — and written back byte for byte
+00:00 +3 -15: Astra R7-A07 — damaged saved words not a list: the Circle is kept as stored, never run with today's words or voice — and written back byte for byte [E]
+  Expected: empty
+    Actual: [Instance of 'KeptCircle']
+  run with substituted words
+  
+  package:matcher                                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18                           expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 291:9  main.<fn>.<fn>
+  
+00:00 +3 -15: Astra R7-A07 — damaged saved words null: the Circle is kept as stored, never run with today's words or voice — and written back byte for byte
+00:00 +3 -16: Astra R7-A07 — damaged saved words null: the Circle is kept as stored, never run with today's words or voice — and written back byte for byte [E]
+  Expected: empty
+    Actual: [Instance of 'KeptCircle']
+  run with substituted words
+  
+  package:matcher                                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18                           expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 291:9  main.<fn>.<fn>
+  
+00:00 +3 -16: Astra R7-A07 — damaged saved words a Circle kept before words were saved (no wording field) still runs with its parts' words
+00:00 +4 -16: Insight 4's Keep (Astra R7-A03) active: the Circle's save throws — I4 is not applied, nothing is kept; once the disk takes it, one Keep and I4 applied, across a restart
+00:00 +4 -17: Insight 4's Keep (Astra R7-A03) active: the Circle's save throws — I4 is not applied, nothing is kept; once the disk takes it, one Keep and I4 applied, across a restart [E]
+  Expected: not InsightActionResult:<InsightActionResult.done>
+    Actual: InsightActionResult:<InsightActionResult.done>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 341:11  main.<fn>.<fn>
+  
+00:00 +4 -17: Insight 4's Keep (Astra R7-A03) active: the Circle's save returnsFalse — I4 is not applied, nothing is kept; once the disk takes it, one Keep and I4 applied, across a restart
+00:00 +4 -18: Insight 4's Keep (Astra R7-A03) active: the Circle's save returnsFalse — I4 is not applied, nothing is kept; once the disk takes it, one Keep and I4 applied, across a restart [E]
+  Expected: not InsightActionResult:<InsightActionResult.done>
+    Actual: InsightActionResult:<InsightActionResult.done>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 341:11  main.<fn>.<fn>
+  
+00:00 +4 -18: Insight 4's Keep (Astra R7-A03) inactive: the Circle's save throws — I4 is not applied, nothing is kept; once the disk takes it, one Keep and I4 applied, across a restart
+00:00 +4 -19: Insight 4's Keep (Astra R7-A03) inactive: the Circle's save throws — I4 is not applied, nothing is kept; once the disk takes it, one Keep and I4 applied, across a restart [E]
+  Expected: not InsightActionResult:<InsightActionResult.done>
+    Actual: InsightActionResult:<InsightActionResult.done>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 341:11  main.<fn>.<fn>
+  
+00:00 +4 -19: Insight 4's Keep (Astra R7-A03) inactive: the Circle's save returnsFalse — I4 is not applied, nothing is kept; once the disk takes it, one Keep and I4 applied, across a restart
+00:00 +4 -20: Insight 4's Keep (Astra R7-A03) inactive: the Circle's save returnsFalse — I4 is not applied, nothing is kept; once the disk takes it, one Keep and I4 applied, across a restart [E]
+  Expected: not InsightActionResult:<InsightActionResult.done>
+    Actual: InsightActionResult:<InsightActionResult.done>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18                            expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 341:11  main.<fn>.<fn>
+  
+00:00 +4 -20: Insight 4's Keep (Astra R7-A03) the Circle kept, I4's own record refused: after a restart the Keep is offered again, keeps nothing twice, and I4 is applied
+00:00 +4 -21: Insight 4's Keep (Astra R7-A03) the Circle kept, I4's own record refused: after a restart the Keep is offered again, keeps nothing twice, and I4 is applied [E]
+  Expected: InsightStatus:<InsightStatus.applied>
+    Actual: InsightStatus:<InsightStatus.current>
+  
+  package:matcher                                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18                           expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 379:9  main.<fn>.<fn>
+  
+00:00 +4 -21: Insight 4's Keep (Astra R7-A03) lapsed: every other Insight action stays Premium
+00:00 +5 -21: Plans and Insights saves (Claude F-6) a Plan action the disk refuses (throws) is shown as not saved
+00:00 +5 -22: Plans and Insights saves (Claude F-6) a Plan action the disk refuses (throws) is shown as not saved [E]
+  Expected: a value greater than <0>
+    Actual: <0>
+     Which: is not a value greater than <0>
+  
+  package:matcher                                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18                           expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 407:9  main.<fn>.<fn>
+  
+00:00 +5 -22: Plans and Insights saves (Claude F-6) Plans THIRTY can't read, its copy refused (throws): the stored Plans are never written over
+00:00 +5 -23: Plans and Insights saves (Claude F-6) Plans THIRTY can't read, its copy refused (throws): the stored Plans are never written over [E]
+  Bad state: disk set failed for circle_plans_v2_unreadable
+  test\support\r8_fault_disk.dart 88:9                                          FaultDisk._attempt
+  test\support\r8_fault_disk.dart 100:7                                         FaultDisk.setValue
+  package:shared_preferences/src/shared_preferences_legacy.dart 186:19          SharedPreferences._setValue
+  package:shared_preferences/src/shared_preferences_legacy.dart 164:7           SharedPreferences.setString
+  package:thirty/features/plans/application/circle_plans_provider.dart 71:21    CirclePlansNotifier.build
+  package:riverpod/src/providers/notifier.dart 93:31                            $NotifierProviderElement.handleCreate
+  package:riverpod/src/providers/notifier/orphan.dart 69:47                     Notifier.runBuild
+  package:riverpod/src/core/provider/notifier_provider.dart 570:43              $ClassProviderElement.create
+  package:riverpod/src/core/element.dart 751:28                                 ProviderElement.buildState
+  package:riverpod/src/core/element.dart 587:7                                  ProviderElement.mount
+  package:riverpod/src/core/element.dart 704:9                                  ProviderElement.flush
+  package:riverpod/src/core/provider/provider.dart 119:24                       $ProviderBaseImpl._addListener
+  package:riverpod/src/core/provider_container.dart 1140:26                     ProviderContainer.listen
+  package:riverpod/src/core/provider_container.dart 1067:17                     ProviderContainer.read
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 416:11  main.<fn>.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                    Future._asyncCompleteError
+  test\support\r8_fault_disk.dart 100:7                                         FaultDisk.setValue
+  package:shared_preferences/src/shared_preferences_legacy.dart 186:19          SharedPreferences._setValue
+  package:shared_preferences/src/shared_preferences_legacy.dart 164:7           SharedPreferences.setString
+  package:thirty/features/plans/application/circle_plans_provider.dart 71:21    CirclePlansNotifier.build
+  package:riverpod/src/providers/notifier.dart 93:31                            $NotifierProviderElement.handleCreate
+  package:riverpod/src/providers/notifier/orphan.dart 69:47                     Notifier.runBuild
+  package:riverpod/src/core/provider/notifier_provider.dart 570:43              $ClassProviderElement.create
+  package:riverpod/src/core/element.dart 751:28                                 ProviderElement.buildState
+  package:riverpod/src/core/element.dart 587:7                                  ProviderElement.mount
+  package:riverpod/src/core/element.dart 704:9                                  ProviderElement.flush
+  package:riverpod/src/core/provider/provider.dart 119:24                       $ProviderBaseImpl._addListener
+  package:riverpod/src/core/provider_container.dart 1140:26                     ProviderContainer.listen
+  package:riverpod/src/core/provider_container.dart 1067:17                     ProviderContainer.read
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 416:11  main.<fn>.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                    _CustomZone.registerUnaryCallback
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 413:9   main.<fn>.<fn>
+  
+  Expected: '{damaged'
+    Actual: '{"schemaVersion":1,"activePlanId":"getting_going","plans":{"getting_going":{"lifecycle":"active","cycles":[{"id":"getting_going#1","number":1,"startedOn":"2026-10-30","cursor":1,"records":[]}]}}}'
+     Which: is different.
+            Expected: {damaged
+              Actual: {"schemaVer ...
+                       ^
+             Differ at offset 1
+  
+  package:matcher                                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18                           expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 420:9  main.<fn>.<fn>
+  
+00:00 +5 -23: Plans and Insights saves (Claude F-6) Insights THIRTY can't read, its copy refused (throws): the stored Insights are never written over
+00:00 +5 -24: Plans and Insights saves (Claude F-6) Insights THIRTY can't read, its copy refused (throws): the stored Insights are never written over [E]
+  Bad state: disk set failed for insights_v2_unreadable
+  test\support\r8_fault_disk.dart 88:9                                          FaultDisk._attempt
+  test\support\r8_fault_disk.dart 100:7                                         FaultDisk.setValue
+  package:shared_preferences/src/shared_preferences_legacy.dart 186:19          SharedPreferences._setValue
+  package:shared_preferences/src/shared_preferences_legacy.dart 164:7           SharedPreferences.setString
+  package:thirty/features/insights/application/insights_provider.dart 69:21     InsightsNotifier.build
+  package:riverpod/src/providers/notifier.dart 93:31                            $NotifierProviderElement.handleCreate
+  package:riverpod/src/providers/notifier/orphan.dart 69:47                     Notifier.runBuild
+  package:riverpod/src/core/provider/notifier_provider.dart 570:43              $ClassProviderElement.create
+  package:riverpod/src/core/element.dart 751:28                                 ProviderElement.buildState
+  package:riverpod/src/core/element.dart 587:7                                  ProviderElement.mount
+  package:riverpod/src/core/element.dart 704:9                                  ProviderElement.flush
+  package:riverpod/src/core/provider/provider.dart 119:24                       $ProviderBaseImpl._addListener
+  package:riverpod/src/core/provider_container.dart 1140:26                     ProviderContainer.listen
+  package:riverpod/src/core/provider_container.dart 1067:17                     ProviderContainer.read
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 431:11  main.<fn>.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                    Future._asyncCompleteError
+  test\support\r8_fault_disk.dart 100:7                                         FaultDisk.setValue
+  package:shared_preferences/src/shared_preferences_legacy.dart 186:19          SharedPreferences._setValue
+  package:shared_preferences/src/shared_preferences_legacy.dart 164:7           SharedPreferences.setString
+  package:thirty/features/insights/application/insights_provider.dart 69:21     InsightsNotifier.build
+  package:riverpod/src/providers/notifier.dart 93:31                            $NotifierProviderElement.handleCreate
+  package:riverpod/src/providers/notifier/orphan.dart 69:47                     Notifier.runBuild
+  package:riverpod/src/core/provider/notifier_provider.dart 570:43              $ClassProviderElement.create
+  package:riverpod/src/core/element.dart 751:28                                 ProviderElement.buildState
+  package:riverpod/src/core/element.dart 587:7                                  ProviderElement.mount
+  package:riverpod/src/core/element.dart 704:9                                  ProviderElement.flush
+  package:riverpod/src/core/provider/provider.dart 119:24                       $ProviderBaseImpl._addListener
+  package:riverpod/src/core/provider_container.dart 1140:26                     ProviderContainer.listen
+  package:riverpod/src/core/provider_container.dart 1067:17                     ProviderContainer.read
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 431:11  main.<fn>.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                    _CustomZone.registerUnaryCallback
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 425:9   main.<fn>.<fn>
+  
+  Expected: '{damaged'
+    Actual: '{"schemaVersion":1,"snapshots":[{"id":"insight.useful_in_common@2026-10-30#insight.useful_in_common:clearerHead:writing","family":"insight.useful_in_common","generatedOn":"2026-10-30","wordingVersion":1,"text":"Writing was part of 4 of the 4 Clearer Head Circles you called useful, and 0 of the 3 other Clearer Head Circles in that time.","facts":{"need":"clearerHead","kind":"writing","inUseful":4,"useful":4,"inOther":0,"other":3,"circleId":"2026-10-29"},"evidence":["2026-10-10","2026-10-14","2026-10-17","2026-10-21","2026-10-23","2026-10-27","2026-10-29"],"subject":"insight.useful_in_common:clearerHead:writing","application":{"kind":"keep","circleId":"2026-10-29"}}]}'
+     Which: is different.
+            Expected: {damaged
+              Actual: {"schemaVer ...
+                       ^
+             Differ at offset 1
+  
+  package:matcher                                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18                           expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 435:9  main.<fn>.<fn>
+  
+00:00 +5 -24: Plans and Insights saves (Claude F-6) a Plan action the disk refuses (returnsFalse) is shown as not saved
+00:00 +5 -25: Plans and Insights saves (Claude F-6) a Plan action the disk refuses (returnsFalse) is shown as not saved [E]
+  Expected: a value greater than <0>
+    Actual: <0>
+     Which: is not a value greater than <0>
+  
+  package:matcher                                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18                           expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 407:9  main.<fn>.<fn>
+  
+00:00 +5 -25: Plans and Insights saves (Claude F-6) Plans THIRTY can't read, its copy refused (returnsFalse): the stored Plans are never written over
+00:00 +5 -26: Plans and Insights saves (Claude F-6) Plans THIRTY can't read, its copy refused (returnsFalse): the stored Plans are never written over [E]
+  Expected: '{damaged'
+    Actual: '{"schemaVersion":1,"activePlanId":"getting_going","plans":{"getting_going":{"lifecycle":"active","cycles":[{"id":"getting_going#1","number":1,"startedOn":"2026-10-30","cursor":1,"records":[]}]}}}'
+     Which: is different.
+            Expected: {damaged
+              Actual: {"schemaVer ...
+                       ^
+             Differ at offset 1
+  
+  package:matcher                                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18                           expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 420:9  main.<fn>.<fn>
+  
+00:00 +5 -26: Plans and Insights saves (Claude F-6) Insights THIRTY can't read, its copy refused (returnsFalse): the stored Insights are never written over
+00:00 +5 -27: Plans and Insights saves (Claude F-6) Insights THIRTY can't read, its copy refused (returnsFalse): the stored Insights are never written over [E]
+  Expected: '{damaged'
+    Actual: '{"schemaVersion":1,"snapshots":[{"id":"insight.useful_in_common@2026-10-30#insight.useful_in_common:clearerHead:writing","family":"insight.useful_in_common","generatedOn":"2026-10-30","wordingVersion":1,"text":"Writing was part of 4 of the 4 Clearer Head Circles you called useful, and 0 of the 3 other Clearer Head Circles in that time.","facts":{"need":"clearerHead","kind":"writing","inUseful":4,"useful":4,"inOther":0,"other":3,"circleId":"2026-10-29"},"evidence":["2026-10-10","2026-10-14","2026-10-17","2026-10-21","2026-10-23","2026-10-27","2026-10-29"],"subject":"insight.useful_in_common:clearerHead:writing","application":{"kind":"keep","circleId":"2026-10-29"}}]}'
+     Which: is different.
+            Expected: {damaged
+              Actual: {"schemaVer ...
+                       ^
+             Differ at offset 1
+  
+  package:matcher                                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18                           expect
+  test\features\personal_circle\r8_kept_ownership_persistence_test.dart 435:9  main.<fn>.<fn>
+  
+00:00 +5 -27: Some tests failed.
+
+Failing tests:
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/personal_circle/r8_kept_ownership_persistence_test.dart: Astra R7-A02 — a version-1 record whose kept field is present but malformed a boolean: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/personal_circle/r8_kept_ownership_persistence_test.dart: Astra R7-A02 — a version-1 record whose kept field is present but malformed a number: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/personal_circle/r8_kept_ownership_persistence_test.dart: Astra R7-A02 — a version-1 record whose kept field is present but malformed a string: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/personal_circle/r8_kept_ownership_persistence_test.dart: Astra R7-A02 — a version-1 record whose kept field is present but malformed an object: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts
+  ... and 23 more

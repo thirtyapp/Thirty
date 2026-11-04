@@ -24,6 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/providers/shared_preferences_provider.dart';
+import '../../../core/storage/confirmed_write.dart';
 import '../../../core/utils/date_key.dart';
 import '../../plans/domain/plan_stage_provenance.dart';
 import 'activity_catalog.dart';
@@ -498,6 +499,11 @@ class CircleJournalEntry {
     // other invalid required field — isolated here, never normalised and
     // never able to break what reads dates downstream (Insights, History).
     if (schemaVersion is! int ||
+        // Audit remediation R8 (Claude recommendation): a record written by
+        // a newer THIRTY may carry fields this build would drop on its next
+        // save, so it is kept as stored (written back verbatim, exported)
+        // instead of being read and rewritten.
+        schemaVersion > circleJournalSchemaVersion ||
         circleId is! String ||
         localDate is! String ||
         !isCanonicalDateKey(localDate) ||
@@ -700,6 +706,16 @@ class CircleJournalRepository {
   bool get hasPreservedHistory =>
       (_prefs.getStringList(circleJournalPreservedKey) ?? const []).isNotEmpty;
 
+  /// Whether anything of History is stored, readable or not (audit
+  /// remediation R8, Astra R7-A06): records, a journal THIRTY can't open,
+  /// records it can't read, or a copy it preserved. What can be exported
+  /// and deleted — never only what this build can read.
+  bool get holdsHistory =>
+      readAll().isNotEmpty ||
+      storedHistoryUnopened ||
+      hasPreservedHistory ||
+      _unreadableStored().isNotEmpty;
+
   /// The stored journal is one THIRTY can't open — damaged, or written by a
   /// newer THIRTY — and it is still exactly as stored (R6c).
   bool get storedHistoryUnopened {
@@ -848,12 +864,18 @@ class CircleJournalRepository {
   /// Records [closedAt] on [circleId]'s entry. See [recordStarted] for the
   /// self-healing behaviour if the entry doesn't exist yet, and
   /// [recordShown] for the optional Plan fields.
+  ///
+  /// [startedAt] is the Start this Close follows (audit remediation R8,
+  /// Astra R7-A05): recorded with the Close on an entry whose Start never
+  /// reached History — as [recordStarted] would have — so History never
+  /// shows a Close without its Start. A recorded Start is never changed.
   Future<void> recordClosed({
     required String circleId,
     required String localDate,
     required Intention direction,
     required ActivityId activityId,
     required DateTime closedAt,
+    DateTime? startedAt,
     String? planId,
     int? planVersion,
     String? stageId,
@@ -877,8 +899,23 @@ class CircleJournalRepository {
     revisitUsed: revisitUsed,
     treatmentSource: treatmentSource,
     offer: offer,
-    update: (entry) =>
-        entry.copyWith(closedAt: closedAt, minutesAtClose: minutesAtClose),
+    update: (entry) {
+      final started = switch ((entry.startedAt, startedAt)) {
+        (null, final at?) =>
+          offer == null
+              ? entry.copyWith(startedAt: at)
+              : entry.copyWith(
+                  startedAt: at,
+                  activityId: activityId,
+                  offer: offer,
+                ),
+        _ => entry,
+      };
+      return started.copyWith(
+        closedAt: closedAt,
+        minutesAtClose: minutesAtClose,
+      );
+    },
   );
 
   /// Records the user's "Did you try this activity?" answer on [circleId]'s
@@ -1028,11 +1065,19 @@ class CircleJournalRepository {
   /// Permanently deletes the entire local journal (ADR-013 §6 — "local
   /// deletion/reset control"). Irreversible; there is no undo and nothing
   /// to restore it from, since nothing is ever sent off-device.
+  ///
+  /// Completes only once both removals are confirmed (audit remediation R8);
+  /// otherwise it fails with [StorageWriteFailed].
   Future<void> clearAll() async {
     await Future.wait([
-      _prefs.remove(circleJournalKey),
+      writeConfirmed(_prefs, circleJournalKey, null, restoreOnFailure: false),
       // R6c: every copy kept of a journal THIRTY couldn't read goes too.
-      _prefs.remove(circleJournalPreservedKey),
+      writeConfirmed(
+        _prefs,
+        circleJournalPreservedKey,
+        null,
+        restoreOnFailure: false,
+      ),
     ]);
   }
 
@@ -1197,7 +1242,13 @@ class CircleJournalRepository {
         ..._unreadableStored(),
       ],
     });
-    if (!await _prefs.setString(circleJournalKey, json)) {
+    // Audit remediation R8 (Claude F-5, Astra R7-A01): a write that throws
+    // or returns `false` is put back as it was in memory too, so History,
+    // Insights and Today's own checks never read a record that isn't on
+    // disk.
+    try {
+      await writeConfirmed(_prefs, circleJournalKey, json);
+    } on StorageWriteFailed {
       throw const JournalWriteRefused('the journal could not be written');
     }
   }
@@ -1222,31 +1273,19 @@ class CircleJournalRepository {
       case _StoredJournal.unreadable:
         final kept = _prefs.getStringList(circleJournalPreservedKey) ?? [];
         if (kept.contains(raw)) return;
-        var written = false;
+        // A copy the disk refused is put back out of memory too, so a later
+        // save keeps the original again instead of trusting a copy that
+        // isn't there ([writeConfirmed]).
         try {
-          written = await _prefs.setStringList(circleJournalPreservedKey, [
+          await writeConfirmed(_prefs, circleJournalPreservedKey, [
             ...kept,
             raw,
           ]);
-        } catch (_) {
-          written = false;
+        } on StorageWriteFailed {
+          throw const JournalWriteRefused(
+            'the unreadable journal could not be kept first',
+          );
         }
-        if (written) return;
-        // The in-memory store already shows the copy the disk refused: put
-        // it back as it was, so a later save keeps the original again
-        // instead of trusting a copy that isn't there.
-        try {
-          if (kept.isEmpty) {
-            await _prefs.remove(circleJournalPreservedKey);
-          } else {
-            await _prefs.setStringList(circleJournalPreservedKey, kept);
-          }
-        } catch (_) {
-          // Nothing more can be done; the original is still untouched.
-        }
-        throw const JournalWriteRefused(
-          'the unreadable journal could not be kept first',
-        );
     }
   }
 

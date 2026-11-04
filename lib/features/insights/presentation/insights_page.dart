@@ -105,8 +105,9 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
     NothingToChange() => null,
   };
 
-  void _apply(InsightSnapshot snapshot) {
-    final result = ref.read(insightsProvider.notifier).apply(snapshot.id);
+  Future<void> _apply(InsightSnapshot snapshot) async {
+    final result = await ref.read(insightsProvider.notifier).apply(snapshot.id);
+    if (!mounted) return;
     final said = switch (result) {
       InsightActionResult.done => switch (snapshot.application) {
         PlanDirection(:final planId) => InsightCopy.nowYourPlan(
@@ -132,6 +133,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
       InsightActionResult.needsPremium => null,
       InsightActionResult.notAvailable => null,
       InsightActionResult.nothingToApply => null,
+      // Audit remediation R8: the app shell says it wasn't saved.
+      InsightActionResult.notSaved => null,
     };
     if (result == InsightActionResult.needsPremium) {
       context.push('/premium');

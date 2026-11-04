@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/home/application/circle_journal.dart';
 import '../../features/home/application/recommendation_provider.dart';
 import '../../features/reminder/application/reminder_provider.dart';
 import '../analytics/analytics_event_type.dart';
@@ -65,6 +64,10 @@ class _ThirtyAppState extends ConsumerState<ThirtyApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
+    // Audit remediation R8 (Astra R7-A08, Claude F-1): a Circle still under
+    // way from before midnight stays on show — Today's own restore keeps it
+    // (`RecommendationState.carriesOverMidnightAt`), so the day is re-read
+    // here whatever is on screen.
     ref.invalidate(nowProvider);
     _trackAppOpened();
     // Step 5: re-resolve verified entitlement state on every foreground
@@ -105,8 +108,7 @@ class _ThirtyAppState extends ConsumerState<ThirtyApp>
   ///   closed after midnight keeps its reflection on show until that is
   ///   answered.
   bool get _newDay =>
-      dateKey(ref.read(eventClockProvider)()) !=
-      dateKey(ref.read(nowProvider));
+      dateKey(ref.read(eventClockProvider)()) != dateKey(ref.read(nowProvider));
 
   void _onPointerDown(PointerDownEvent _) {
     if (_newDay && ref.read(recommendationProvider).recommendation == null) {
@@ -127,19 +129,11 @@ class _ThirtyAppState extends ConsumerState<ThirtyApp>
     if (state.status == RecommendationStatus.closed &&
         closedAt != null &&
         !state.isOnItsOwnDayAt(closedAt) &&
-        !_reflectionDone(state)) {
+        !state.reflectionAnswered) {
       return;
     }
     ref.invalidate(nowProvider);
   }
-
-  /// The closed Circle's reflection is answered as far as it goes.
-  static bool _reflectionDone(RecommendationState state) =>
-      switch (state.attemptResponse) {
-        null => false,
-        CircleAttemptResponse.notToday => true,
-        _ => state.usefulnessResponse != null,
-      };
 
   @override
   Widget build(BuildContext context) {

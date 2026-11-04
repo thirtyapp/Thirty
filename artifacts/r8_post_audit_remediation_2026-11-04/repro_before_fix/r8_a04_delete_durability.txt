@@ -1,0 +1,97 @@
+00:00 +0: loading C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a04_delete_durability_test.dart
+00:00 +0: a removal that throws the journal's: Delete fails — never complete; the intent stays on disk; the next start finishes it
+00:00 +1: a removal that throws a day key's: Delete fails; the intent stays
+00:00 +2: a removal that throws the Plans' stage evidence write: Delete fails; the intent stays
+00:00 +3: a removal that throws the intent itself: nothing is removed before it is on disk, and Delete fails
+00:00 +3 -1: a removal that throws the intent itself: nothing is removed before it is on disk, and Delete fails [E]
+  Expected: true
+    Actual: <false>
+  history removed with no durable intent
+  
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test\features\home\r8_a04_delete_durability_test.dart 113:9  main.<fn>.<fn>
+  
+00:00 +3 -1: a removal that throws the start-up completion's: it fails, and the intent stays for the next start
+00:00 +4 -1: a removal that returnsFalse the journal's: Delete fails — never complete; the intent stays on disk; the next start finishes it
+00:00 +4 -2: a removal that returnsFalse the journal's: Delete fails — never complete; the intent stays on disk; the next start finishes it [E]
+  Expected: not null
+    Actual: <null>
+  Delete looked complete
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\home\r8_a04_delete_durability_test.dart 83:9  main.<fn>.<fn>
+  
+00:00 +4 -2: a removal that returnsFalse a day key's: Delete fails; the intent stays
+00:00 +4 -3: a removal that returnsFalse a day key's: Delete fails; the intent stays [E]
+  Expected: not null
+    Actual: <null>
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\home\r8_a04_delete_durability_test.dart 93:9  main.<fn>.<fn>
+  
+00:00 +4 -3: a removal that returnsFalse the Plans' stage evidence write: Delete fails; the intent stays
+00:00 +4 -4: a removal that returnsFalse the Plans' stage evidence write: Delete fails; the intent stays [E]
+  Expected: not null
+    Actual: <null>
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8_a04_delete_durability_test.dart 103:11  main.<fn>.<fn>
+  
+00:00 +4 -4: a removal that returnsFalse the intent itself: nothing is removed before it is on disk, and Delete fails
+00:00 +4 -5: a removal that returnsFalse the intent itself: nothing is removed before it is on disk, and Delete fails [E]
+  Expected: not null
+    Actual: <null>
+  
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test\features\home\r8_a04_delete_durability_test.dart 112:9  main.<fn>.<fn>
+  
+00:00 +4 -5: a removal that returnsFalse the start-up completion's: it fails, and the intent stays for the next start
+00:00 +4 -6: a removal that returnsFalse the start-up completion's: it fails, and the intent stays for the next start [E]
+  Expected: true
+    Actual: <null>
+  
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test\features\home\r8_a04_delete_durability_test.dart 133:9  main.<fn>.<fn>
+  
+00:00 +4 -6: a failed Delete: a write queued before it never brings anything back, through the failure and the next start
+00:00 +4 -7: a failed Delete: a write queued before it never brings anything back, through the failure and the next start [E]
+  Expected: not null
+    Actual: <null>
+  
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test\features\home\r8_a04_delete_durability_test.dart 149:5  main.<fn>
+  
+00:00 +4 -7: Delete repeated: the second finds nothing and succeeds; history stays deleted
+00:00 +5 -7: preserved copies of a journal THIRTY couldn't read are deleted with it, and their removal is confirmed too
+00:00 +5 -8: preserved copies of a journal THIRTY couldn't read are deleted with it, and their removal is confirmed too [E]
+  Expected: not null
+    Actual: <null>
+  
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test\features\home\r8_a04_delete_durability_test.dart 169:5  main.<fn>
+  
+00:00 +5 -8: Insights' removal refused: Delete fails; the intent stays
+00:00 +5 -9: Insights' removal refused: Delete fails; the intent stays [E]
+  Expected: not null
+    Actual: <null>
+  
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test\features\home\r8_a04_delete_durability_test.dart 181:5  main.<fn>
+  
+00:00 +5 -9: Some tests failed.
+
+Failing tests:
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a04_delete_durability_test.dart: Insights' removal refused: Delete fails; the intent stays
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a04_delete_durability_test.dart: a failed Delete: a write queued before it never brings anything back, through the failure and the next start
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a04_delete_durability_test.dart: a removal that returnsFalse a day key's: Delete fails; the intent stays
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a04_delete_durability_test.dart: a removal that returnsFalse the Plans' stage evidence write: Delete fails; the intent stays
+  ... and 5 more

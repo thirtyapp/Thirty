@@ -224,7 +224,12 @@ class KeptCirclePage extends ConsumerWidget {
     );
     controller.dispose();
     if (name == null) return;
-    ref.read(keptCirclesProvider.notifier).renameKept(id, name);
+    // Audit remediation R8: renamed once saved; a rename that isn't is told
+    // by the app shell, and the old name stays.
+    await ref
+        .read(keptCirclesProvider.notifier)
+        .renameKept(id, name)
+        .catchError((Object _) {});
   }
 
   static Future<void> _remove(
@@ -245,7 +250,14 @@ class KeptCirclePage extends ConsumerWidget {
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    ref.read(keptCirclesProvider.notifier).deleteKept(id);
+    // Audit remediation R8: gone once the removal is saved; one that isn't
+    // is told by the app shell, and the Circle stays on show.
+    try {
+      await ref.read(keptCirclesProvider.notifier).deleteKept(id);
+    } catch (_) {
+      return;
+    }
+    if (!context.mounted) return;
     context.go(YoursPage.location);
   }
 }
@@ -383,7 +395,15 @@ class _UnreadableStoreView extends StatelessWidget {
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    ref.read(keptCirclesProvider.notifier).removeUnreadable(store.address);
+    // Audit remediation R8: removed once the removal is saved.
+    try {
+      await ref
+          .read(keptCirclesProvider.notifier)
+          .removeUnreadable(store.address);
+    } catch (_) {
+      return;
+    }
+    if (!context.mounted) return;
     context.go(YoursPage.location);
   }
 }

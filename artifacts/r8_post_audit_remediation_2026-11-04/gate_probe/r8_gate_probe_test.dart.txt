@@ -1,0 +1,240 @@
+// TEMPORARY read-only probe for the R8 pre-commit gate (2026-11-04).
+// Not part of the suite: removed after the run; its source and log are kept
+// in artifacts/r8_post_audit_remediation_2026-11-04/gate_probe/.
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+// ignore: depend_on_referenced_packages
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+import 'package:thirty/core/premium/entitlement_status.dart';
+import 'package:thirty/core/premium/premium_access.dart';
+import 'package:thirty/core/storage/confirmed_write.dart';
+import 'package:thirty/core/storage/store_save_failures.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+
+import '../support/r8_fault_disk.dart';
+import '../support/r8_harness.dart';
+
+/// Fails only the *removal* of [key] — its writes go through.
+class _RemovalFaultDisk extends FaultDisk {
+  _RemovalFaultDisk(super.data);
+  String? key;
+  DiskFault? fault;
+  @override
+  Future<bool> remove(String k) async {
+    if (k == 'flutter.$key') {
+      if (fault == DiskFault.throws) throw StateError('remove failed');
+      if (fault == DiskFault.returnsFalse) return false;
+    }
+    return super.remove(k);
+  }
+}
+
+void main() {
+  final morning = DateTime(2026, 10, 12, 9);
+  late R8Harness h;
+  late _RemovalFaultDisk rdisk;
+
+  setUp(() async {
+    h = R8Harness(morning);
+    rdisk = _RemovalFaultDisk(const {});
+    h.disk = rdisk;
+    SharedPreferencesStorePlatform.instance = rdisk;
+    SharedPreferences.resetStatic();
+    h.prefs = await SharedPreferences.getInstance();
+  });
+
+  Future<ProviderContainer> reopen({
+    EntitlementStatus status = EntitlementStatus.active,
+  }) async {
+    await h.restart();
+    final c = h.open(status: status);
+    c.read(recommendationProvider);
+    await R8Harness.settle();
+    return c;
+  }
+
+  Future<ProviderContainer> stageChosen({DateTime? at}) async {
+    if (at != null) h.clock.value = at;
+    final c = h.open();
+    c.read(circlePlansProvider.notifier).start('getting_going');
+    c
+        .read(recommendationProvider.notifier)
+        .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    await R8Harness.settle();
+    expect(
+      c.read(recommendationProvider).recommendation!.composed?.stage,
+      isNotNull,
+    );
+    return c;
+  }
+
+  for (final fault in DiskFault.values) {
+    test('P1 Delete: only the marker removal (its last step) ${fault.name} — '
+        'Delete fails, the marker stays, nothing deleted shows; the next '
+        'start finishes', () async {
+      final c = await stageChosen();
+      final today = c.read(recommendationProvider.notifier);
+      today.start();
+      await R8Harness.settle();
+      today.close();
+      await R8Harness.settle();
+      rdisk
+        ..key = historyDeletionPendingKey
+        ..fault = fault;
+      Object? error;
+      try {
+        await c.read(circleHistoryDeletionProvider).delete();
+      } catch (e) {
+        error = e;
+      }
+      expect(error, isNotNull, reason: 'Delete looked complete');
+      expect((await h.disk.stored())[historyDeletionPendingKey], isTrue);
+      expect(c.read(circleJournalRepositoryProvider).readAll(), isEmpty);
+      expect((await h.disk.stored()).containsKey(circleJournalKey), isFalse);
+      rdisk.fault = null;
+      final again = await reopen();
+      expect(again.read(circleJournalRepositoryProvider).readAll(), isEmpty);
+      expect(
+        (await h.disk.stored()).containsKey(historyDeletionPendingKey),
+        isFalse,
+      );
+    });
+
+    test('P2 Today: every key landed, only the recovery-record removal '
+        '${fault.name} — record the visible outcome; restart is consistent',
+        () async {
+      final c = h.open(status: EntitlementStatus.inactive);
+      final today = c.read(recommendationProvider.notifier);
+      today.chooseIntention(Intention.moreEnergy);
+      await R8Harness.settle();
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      rdisk
+        ..key = recommendationPendingWriteKey
+        ..fault = fault;
+      today.start();
+      await R8Harness.settle();
+      final stored = await h.disk.stored();
+      final entry = c.read(circleJournalRepositoryProvider).readAll().single;
+      // ignore: avoid_print
+      print(
+        'P2 ${fault.name}: statusOnDisk=${stored[recommendationStatusKey]} '
+        'recoveryRecordOnDisk=${stored.containsKey(recommendationPendingWriteKey)} '
+        'savedFlag=${c.read(journalSaveStatusProvider)[id]} '
+        'historyHasStart=${entry.startedAt != null}',
+      );
+      expect(stored[recommendationStatusKey], 'started');
+      rdisk.fault = null;
+      final again = await reopen(status: EntitlementStatus.inactive);
+      expect(
+        again.read(recommendationProvider).status,
+        RecommendationStatus.started,
+      );
+      expect(
+        again.read(circleJournalRepositoryProvider).readAll().single.startedAt,
+        isNotNull,
+      );
+    });
+
+    test('P3 Start of a stage Circle whose Plans evidence write '
+        '${fault.name}: the Start is not saved and the user is told; a '
+        'restart brings back the unstarted offer', () async {
+      final c = await stageChosen();
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      // Billing verifiably ended before Start: Start writes its R2 evidence.
+      (c.read(entitlementStatusProvider.notifier) as SettableEntitlement).set(
+        EntitlementStatus.inactive,
+      );
+      final plansWritesBefore = h.disk.attempts
+          .where((a) => a == 'set $circlePlansKey')
+          .length;
+      h.disk.fail(circlePlansKey, fault);
+      c.read(recommendationProvider.notifier).start();
+      await R8Harness.settle();
+      expect(
+        h.disk.attempts.where((a) => a == 'set $circlePlansKey').length,
+        greaterThan(plansWritesBefore),
+        reason: 'Start attempted its Plans evidence',
+      );
+      expect(c.read(journalSaveStatusProvider)[id], isFalse);
+      expect((await h.disk.stored())[recommendationStatusKey], 'notStarted');
+      h.disk.healAll();
+      final again = await reopen();
+      expect(
+        again.read(recommendationProvider).status,
+        RecommendationStatus.notStarted,
+      );
+      expect(
+        again.read(circleJournalRepositoryProvider).readAll().single.startedAt,
+        isNull,
+      );
+    });
+
+    test('P4 removing a kept Circle ${fault.name}: it stays, in memory and '
+        'on disk; the failure is shown', () async {
+      final c = h.open();
+      final kept = (await c
+          .read(keptCirclesProvider.notifier)
+          .keepCircle(
+            plan: CirclePlan.fromWire(const [
+              'getItOut:6',
+              'chooseOne:1',
+              'clearCorner:8',
+            ])!,
+            need: Intention.clearerHead,
+            circleId: 'd1',
+          ))!;
+      h.disk.fail(keptCirclesKey, fault);
+      Object? error;
+      try {
+        await c.read(keptCirclesProvider.notifier).deleteKept(kept.id);
+      } catch (e) {
+        error = e;
+      }
+      expect(error, isA<StorageWriteFailed>());
+      expect(c.read(keptCirclesProvider).kept, hasLength(1));
+      expect(c.read(storeSaveFailuresProvider).count, greaterThan(0));
+      h.disk.healAll();
+      final again = await reopen();
+      expect(again.read(keptCirclesProvider).kept, hasLength(1));
+    });
+  }
+
+  test('P5 midnight carry-over of a stage Circle: started 23:40, restarted '
+      'at 00:10, closed — the Plan is credited once, for that Circle', () async {
+    final c = await stageChosen(at: DateTime(2026, 10, 12, 23, 40));
+    final id = c.read(recommendationProvider).recommendation!.circleId;
+    c.read(recommendationProvider.notifier).start();
+    await R8Harness.settle();
+    h.clock.value = DateTime(2026, 10, 13, 0, 10);
+    final again = await reopen();
+    expect(
+      again.read(recommendationProvider).status,
+      RecommendationStatus.started,
+    );
+    expect(again.read(recommendationProvider).recommendation!.circleId, id);
+    again.read(recommendationProvider.notifier).close();
+    await R8Harness.settle();
+    int credited(ProviderContainer x) => x
+        .read(circlePlansProvider)
+        .plans['getting_going']!
+        .current
+        .records
+        .where((r) => r.circleId == id)
+        .length;
+    expect(credited(again), 1);
+    final third = await reopen();
+    expect(credited(third), 1);
+    expect(
+      third.read(circleJournalRepositoryProvider).readAll().single.localDate,
+      id,
+    );
+  });
+}

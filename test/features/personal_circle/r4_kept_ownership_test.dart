@@ -211,13 +211,13 @@ void main() {
 
     test('a Circle kept now saves the words each part has now', () async {
       final c = open();
-      final kept = c
+      final kept = (await c
           .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: CirclePlan.fromWire(valid)!,
             need: Intention.clearerHead,
             circleId: '2026-10-11',
-          )!;
+          ))!;
       await settle();
       expect(kept.wording, [
         for (final p in kept.plan.parts) PartWording.of(p.definition),
@@ -276,7 +276,7 @@ void main() {
       expect(kept.count, maxKeptCircles);
       expect(kept.isFull, isTrue);
       expect(
-        c
+        await c
             .read(keptCirclesProvider.notifier)
             .keepCircle(
               plan: CirclePlan.fromWire(valid)!,

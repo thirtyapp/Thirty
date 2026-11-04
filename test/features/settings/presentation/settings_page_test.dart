@@ -82,7 +82,15 @@ class _FakeEntitlementGateway implements EntitlementGateway {
   Future<PurchaseOutcome> purchaseMonthly() async => PurchaseOutcome.error;
 
   @override
-  Future<RestoreOutcome> restore() async => restoreOutcome;
+  Future<RestoreOutcome> restore() async {
+    // As the store does: a restore that finds the purchase leaves billing
+    // verifying Premium active (audit remediation R8 — "restored" is only
+    // said when it is).
+    if (restoreOutcome == RestoreOutcome.restored) {
+      initialStatus = EntitlementStatus.active;
+    }
+    return restoreOutcome;
+  }
 
   @override
   Future<String?> managementUrl() async => managementUrlValue;

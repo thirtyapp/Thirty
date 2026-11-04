@@ -160,9 +160,9 @@ void main() {
     return shown;
   }
 
-  void keepEight(ProviderContainer c) {
+  Future<void> keepEight(ProviderContainer c) async {
     for (var k = 0; k < 8; k++) {
-      c
+      await c
           .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: CirclePlan(reading),
@@ -176,7 +176,7 @@ void main() {
     test('Premium active: the I4 Keep keeps the Circle (unchanged)', () async {
       final shown = await showI4WhilePaid();
       final c = open();
-      expect(insights(c).apply(shown.id), InsightActionResult.done);
+      expect(await insights(c).apply(shown.id), InsightActionResult.done);
       expect(
         c.read(keptCirclesProvider).kept.single.fromCircleId,
         '2026-10-29',
@@ -193,7 +193,10 @@ void main() {
         final shown = await showI4WhilePaid();
         final lapsed = open(status: status, day: 1);
         expect(insights(lapsed).status(shown), InsightStatus.current);
-        expect(insights(lapsed).apply(shown.id), InsightActionResult.done);
+        expect(
+          await insights(lapsed).apply(shown.id),
+          InsightActionResult.done,
+        );
         final kept = lapsed.read(keptCirclesProvider).kept;
         expect(kept, hasLength(1));
         expect(kept.single.fromCircleId, '2026-10-29');
@@ -203,7 +206,7 @@ void main() {
           dateKey(morning.add(const Duration(days: 1))),
         );
         expect(
-          insights(lapsed).apply(shown.id),
+          await insights(lapsed).apply(shown.id),
           InsightActionResult.alreadyApplied,
         );
         expect(lapsed.read(keptCirclesProvider).kept, hasLength(1));
@@ -231,7 +234,7 @@ void main() {
       await settle();
       final lapsedAgain = open(status: EntitlementStatus.inactive, day: 7);
       expect(
-        insights(lapsedAgain).apply(i1.id),
+        await insights(lapsedAgain).apply(i1.id),
         InsightActionResult.needsPremium,
       );
       expect(
@@ -265,7 +268,10 @@ void main() {
       expect(i3.application, isA<LeaveOutPart>());
       await settle();
       final lapsed = open(status: EntitlementStatus.inactive, day: 1);
-      expect(insights(lapsed).apply(i3.id), InsightActionResult.needsPremium);
+      expect(
+        await insights(lapsed).apply(i3.id),
+        InsightActionResult.needsPremium,
+      );
       await settle();
       expect(
         open(
@@ -293,7 +299,7 @@ void main() {
       final lapsed = open(status: EntitlementStatus.inactive, day: 1);
       expect(insights(lapsed).status(shown), InsightStatus.stale);
       expect(
-        insights(lapsed).apply(shown.id),
+        await insights(lapsed).apply(shown.id),
         InsightActionResult.notAvailable,
       );
       expect(lapsed.read(keptCirclesProvider).kept, isEmpty);
@@ -311,7 +317,7 @@ void main() {
         InsightStatus.notNow,
       );
       expect(
-        insights(lapsed).apply(shown.id),
+        await insights(lapsed).apply(shown.id),
         InsightActionResult.notAvailable,
       );
       expect(lapsed.read(keptCirclesProvider).kept, isEmpty);
@@ -322,7 +328,7 @@ void main() {
       await seedJournal(usefulWriting());
       final lapsed = open(status: EntitlementStatus.inactive);
       expect(
-        insights(lapsed).apply('not-a-snapshot'),
+        await insights(lapsed).apply('not-a-snapshot'),
         InsightActionResult.needsPremium,
       );
       expect(lapsed.read(keptCirclesProvider).kept, isEmpty);
@@ -333,12 +339,12 @@ void main() {
         'nothing recorded', () async {
       final shown = await showI4WhilePaid();
       final lapsed = open(status: EntitlementStatus.inactive, day: 1);
-      keepEight(lapsed);
+      await keepEight(lapsed);
       final before = [
         for (final k in lapsed.read(keptCirclesProvider).kept) k.id,
       ];
       expect(
-        insights(lapsed).apply(shown.id),
+        await insights(lapsed).apply(shown.id),
         InsightActionResult.keptLimitReached,
       );
       expect([
@@ -352,7 +358,10 @@ void main() {
       final shown = await showI4WhilePaid();
       final lapsed = open(status: EntitlementStatus.inactive, day: 1);
       await insights(lapsed).forgetAll();
-      expect(insights(lapsed).apply(shown.id), isNot(InsightActionResult.done));
+      expect(
+        await insights(lapsed).apply(shown.id),
+        isNot(InsightActionResult.done),
+      );
       expect(lapsed.read(keptCirclesProvider).kept, isEmpty);
     });
 
@@ -367,7 +376,7 @@ void main() {
       moveTo(c, EntitlementStatus.inactive);
       expect(c.read(premiumEntitlementProvider), isFalse);
       expect(insights(c).assess().added, isEmpty);
-      expect(insights(c).apply(shown.id), InsightActionResult.done);
+      expect(await insights(c).apply(shown.id), InsightActionResult.done);
       expect(c.read(keptCirclesProvider).kept, hasLength(1));
     });
 
@@ -375,7 +384,7 @@ void main() {
         'survive; a repeat keeps nothing twice', () async {
       final shown = await showI4WhilePaid();
       final lapsed = open(status: EntitlementStatus.inactive, day: 1);
-      expect(insights(lapsed).apply(shown.id), InsightActionResult.done);
+      expect(await insights(lapsed).apply(shown.id), InsightActionResult.done);
       await settle();
       final restarted = open(status: EntitlementStatus.inactive, day: 2);
       final kept = restarted.read(keptCirclesProvider).kept;
@@ -388,7 +397,7 @@ void main() {
         InsightStatus.applied,
       );
       expect(
-        insights(restarted).apply(shown.id),
+        await insights(restarted).apply(shown.id),
         InsightActionResult.alreadyApplied,
       );
       expect(restarted.read(keptCirclesProvider).kept, hasLength(1));

@@ -300,7 +300,7 @@ class B8Run {
         if (closes &&
             plan != null &&
             (profile.keepsOn?.call(day, r, answer) ?? false)) {
-          c
+          await c
               .read(keptCirclesProvider.notifier)
               .keepCircle(plan: plan, need: need, circleId: today);
         }
@@ -361,7 +361,7 @@ class B8Run {
             shown.add(s);
             switch (profile.onInsight?.call(s) ?? InsightChoice.ignore) {
               case InsightChoice.apply:
-                insights.apply(s.id);
+                await insights.apply(s.id);
               case InsightChoice.notNow:
                 if (s.family.isOrdinary) insights.notNow(s.id);
               case InsightChoice.ignore:
@@ -374,7 +374,8 @@ class B8Run {
               // gated (R5, A2-05; r5_i4_keep_after_lapse_test.dart). It is
               // not exercised here, so the profile's path stays as it was.
               if (s.application is KeepCircleFromHistory) continue;
-              if (insights.apply(s.id) != InsightActionResult.needsPremium) {
+              if (await insights.apply(s.id) !=
+                  InsightActionResult.needsPremium) {
                 fail('D$day an Insight applied while lapsed');
               }
             }

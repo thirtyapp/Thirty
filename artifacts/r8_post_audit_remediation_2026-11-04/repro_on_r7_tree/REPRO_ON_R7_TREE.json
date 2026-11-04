@@ -1,0 +1,158 @@
+{
+ "r8_a01_daily_persistence_test": {
+  "tests": 13,
+  "failedOnR7": [
+   "History refuses the save (returnsFalse): History and the Circles THIRTY learns from read what is on disk — nothing unsaved is shown as saved (Claude F-5)",
+   "History refuses the save (throws): History and the Circles THIRTY learns from read what is on disk — nothing unsaved is shown as saved (Claude F-5)",
+   "Start's History write lost (returnsFalse), Close recovered after a restart: the record carries the Start the durable day keys hold — never a Close without its Start (Astra R7-A05)",
+   "Start's History write lost (throws), Close recovered after a restart: the record carries the Start the durable day keys hold — never a Close without its Start (Astra R7-A05)",
+   "a day-key write at Start that returnsFalse is shown as not saved; the recovery record stays on disk; a restart restores the started Circle, and History agrees",
+   "a day-key write at Start that throws is shown as not saved; the recovery record stays on disk; a restart restores the started Circle, and History agrees",
+   "the recovery record itself refused (returnsFalse): nothing else of the write lands, the failure is shown, and History never runs ahead of the day keys",
+   "the recovery record itself refused (throws): nothing else of the write lands, the failure is shown, and History never runs ahead of the day keys"
+  ],
+  "passedOnR7": [
+   "Start's History write lost (returnsFalse) once, Close saved in the same session: one record, with its Start",
+   "Start's History write lost (throws) once, Close saved in the same session: one record, with its Start",
+   "a choice whose day key didn't land (returnsFalse): the Start after it still writes today's Circle — never skipped while History moves on",
+   "a choice whose day key didn't land (throws): the Start after it still writes today's Circle — never skipped while History moves on",
+   "a failed write is retried by the next one, exactly once: the day keys and History end in one Circle, started and closed"
+  ],
+  "compileError": false
+ },
+ "r8_a04_delete_durability_test": {
+  "tests": 14,
+  "failedOnR7": [
+   "Insights' removal refused: Delete fails; the intent stays",
+   "a failed Delete: a write queued before it never brings anything back, through the failure and the next start",
+   "a removal that returnsFalse a day key's: Delete fails; the intent stays",
+   "a removal that returnsFalse the Plans' stage evidence write: Delete fails; the intent stays",
+   "a removal that returnsFalse the intent itself: nothing is removed before it is on disk, and Delete fails",
+   "a removal that returnsFalse the journal's: Delete fails — never complete; the intent stays on disk; the next start finishes it",
+   "a removal that returnsFalse the start-up completion's: it fails, and the intent stays for the next start",
+   "a removal that throws the intent itself: nothing is removed before it is on disk, and Delete fails",
+   "preserved copies of a journal THIRTY couldn't read are deleted with it, and their removal is confirmed too"
+  ],
+  "passedOnR7": [
+   "Delete repeated: the second finds nothing and succeeds; history stays deleted",
+   "a removal that throws a day key's: Delete fails; the intent stays",
+   "a removal that throws the Plans' stage evidence write: Delete fails; the intent stays",
+   "a removal that throws the journal's: Delete fails — never complete; the intent stays on disk; the next start finishes it",
+   "a removal that throws the start-up completion's: it fails, and the intent stays for the next start"
+  ],
+  "compileError": false
+ },
+ "r8_a06_unreadable_history_controls_test": {
+  "tests": 9,
+  "failedOnR7": [
+   "History — History damaged: Copy exports it as stored, and Delete deletes it after confirmation",
+   "History — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it after confirmation",
+   "History — History readable, but its one record isn't: Copy exports it as stored, and Delete deletes it after confirmation",
+   "History — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it after confirmation",
+   "You — History damaged: Copy exports it as stored, and Delete deletes it after confirmation",
+   "You — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it after confirmation",
+   "You — History readable, but its one record isn't: Copy exports it as stored, and Delete deletes it after confirmation",
+   "You — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it after confirmation"
+  ],
+  "passedOnR7": [
+   "History empty, nothing stored: nothing to copy or delete"
+  ],
+  "compileError": false
+ },
+ "r8_f4_insight_dates_test": {
+  "tests": 12,
+  "failedOnR7": [
+   "appliedOn \"not a date\", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "appliedOn \"not a date\", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "declinedOn \"2026-1-5\", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "declinedOn \"2026-1-5\", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "facts.endedOn \"soon\", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "facts.endedOn \"soon\", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "generatedOn \"2026-02-30\", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "generatedOn \"2026-02-30\", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "generatedOn \"garbage\", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "generatedOn \"garbage\", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "notNowOn \"30/10/2026\", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "notNowOn \"30/10/2026\", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied"
+  ],
+  "passedOnR7": [],
+  "compileError": false
+ },
+ "r8_journal_forward_records_test": {
+  "tests": 2,
+  "failedOnR7": [
+   "a save keeps it byte for byte, beside the new record",
+   "it is exported as stored"
+  ],
+  "passedOnR7": [],
+  "compileError": false
+ },
+ "r8_kept_ownership_persistence_test": {
+  "tests": 32,
+  "failedOnR7": [
+   "Astra R7-A02 — a version-1 record whose kept field is present but malformed a boolean: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts",
+   "Astra R7-A02 — a version-1 record whose kept field is present but malformed a number: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts",
+   "Astra R7-A02 — a version-1 record whose kept field is present but malformed a string: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts",
+   "Astra R7-A02 — a version-1 record whose kept field is present but malformed an object: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts",
+   "Astra R7-A02 — a version-1 record whose kept field is present but malformed kept missing altogether (the Phase D record's shape) is an empty store; fields THIRTY doesn't know are written back unchanged",
+   "Astra R7-A02 — a version-1 record whose kept field is present but malformed null: read as a store THIRTY can't read — never as empty; a Keep refuses; the bytes never change, across restarts",
+   "Astra R7-A07 — damaged saved words an item that isn't words: the Circle is kept as stored, never run with today's words or voice — and written back byte for byte",
+   "Astra R7-A07 — damaged saved words not a list: the Circle is kept as stored, never run with today's words or voice — and written back byte for byte",
+   "Astra R7-A07 — damaged saved words null: the Circle is kept as stored, never run with today's words or voice — and written back byte for byte",
+   "Astra R7-A07 — damaged saved words one wording too few: the Circle is kept as stored, never run with today's words or voice — and written back byte for byte",
+   "Insight 4's Keep (Astra R7-A03) active: the Circle's save returnsFalse — I4 is not applied, nothing is kept; once the disk takes it, one Keep and I4 applied, across a restart",
+   "Insight 4's Keep (Astra R7-A03) active: the Circle's save throws — I4 is not applied, nothing is kept; once the disk takes it, one Keep and I4 applied, across a restart",
+   "Insight 4's Keep (Astra R7-A03) inactive: the Circle's save returnsFalse — I4 is not applied, nothing is kept; once the disk takes it, one Keep and I4 applied, across a restart",
+   "Insight 4's Keep (Astra R7-A03) inactive: the Circle's save throws — I4 is not applied, nothing is kept; once the disk takes it, one Keep and I4 applied, across a restart",
+   "Insight 4's Keep (Astra R7-A03) the Circle kept, I4's own record refused: after a restart the Keep is offered again, keeps nothing twice, and I4 is applied",
+   "Plans and Insights saves (Claude F-6) Insights THIRTY can't read, its copy refused (returnsFalse): the stored Insights are never written over",
+   "Plans and Insights saves (Claude F-6) Insights THIRTY can't read, its copy refused (throws): the stored Insights are never written over",
+   "Plans and Insights saves (Claude F-6) Plans THIRTY can't read, its copy refused (returnsFalse): the stored Plans are never written over",
+   "Plans and Insights saves (Claude F-6) Plans THIRTY can't read, its copy refused (throws): the stored Plans are never written over",
+   "Plans and Insights saves (Claude F-6) a Plan action the disk refuses (returnsFalse) is shown as not saved",
+   "Plans and Insights saves (Claude F-6) a Plan action the disk refuses (throws) is shown as not saved",
+   "the kept store's write returnsFalse (Astra R7-A03, Claude F-6) a Keep isn't confirmed: it fails, nothing shows as kept, and after a restart nothing is kept",
+   "the kept store's write returnsFalse (Astra R7-A03, Claude F-6) a rename isn't confirmed: the old name stays, in memory and on disk, and the failure is shown",
+   "the kept store's write returnsFalse (Astra R7-A03, Claude F-6) the next Keep, once the disk takes it, keeps one Circle — no duplicate from the failed one",
+   "the kept store's write throws (Astra R7-A03, Claude F-6) a Keep isn't confirmed: it fails, nothing shows as kept, and after a restart nothing is kept",
+   "the kept store's write throws (Astra R7-A03, Claude F-6) a rename isn't confirmed: the old name stays, in memory and on disk, and the failure is shown",
+   "the kept store's write throws (Astra R7-A03, Claude F-6) the next Keep, once the disk takes it, keeps one Circle — no duplicate from the failed one"
+  ],
+  "passedOnR7": [
+   "Astra R7-A02 — a version-1 record whose kept field is present but malformed a valid record beside one THIRTY can't read: both stay, each in its place, after a Keep",
+   "Astra R7-A07 — damaged saved words a Circle kept before words were saved (no wording field) still runs with its parts' words",
+   "Insight 4's Keep (Astra R7-A03) lapsed: every other Insight action stays Premium",
+   "the same Circle kept twice at once: kept once",
+   "two Keeps at once, one place left: one is kept, the other refused — never nine"
+  ],
+  "compileError": false
+ },
+ "r8_midnight_resume_test": {
+  "tests": 9,
+  "failedOnR7": [
+   "Astra R7-A08 / Claude F-1 — a Circle started before midnight backgrounded, resumed after midnight: still running, its own day; Close and the reflection work; recorded once, under that day; no new Circle starts by itself",
+   "Astra R7-A08 / Claude F-1 — a Circle started before midnight closed after midnight, its reflection not answered: a resume keeps the reflection on show",
+   "Astra R7-A08 / Claude F-1 — a Circle started before midnight restarted after midnight: still running, its own day",
+   "Claude F-2 — a choice after midnight with no touch on an ordinary day, the time shown is the choice's own, not when the app came to the foreground",
+   "Claude F-2 — a choice after midnight with no touch screen reader, keyboard or switch: the Circle chosen is today's, and History says when it was really shown"
+  ],
+  "passedOnR7": [
+   "Astra R7-A08 / Claude F-1 — a Circle started before midnight a Circle started two days before and never closed is not brought back as running",
+   "Astra R7-A08 / Claude F-1 — a Circle started before midnight an offer never started: a resume after midnight opens the new day, and it can't be started (founder rule, unchanged)",
+   "Astra R7-A08 / Claude F-1 — a Circle started before midnight closed on its own day: a resume after midnight opens the new day (unchanged)",
+   "Astra R7-A08 / Claude F-1 — a Circle started before midnight started yesterday morning, never closed: opened the next morning, it is not brought back as running — beyond the carry-over limit, the new day opens"
+  ],
+  "compileError": false
+ },
+ "r8_restore_wording_test": {
+  "tests": 3,
+  "failedOnR7": [
+   "restore reported, billing then inactive: unavailable, and Premium is exactly what billing says",
+   "restore reported, billing then unavailable: unavailable, and Premium is exactly what billing says"
+  ],
+  "passedOnR7": [
+   "restore reported, billing then active: restored, and Premium is exactly what billing says"
+  ],
+  "compileError": false
+ }
+}

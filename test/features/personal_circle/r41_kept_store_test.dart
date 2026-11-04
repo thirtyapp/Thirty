@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:thirty/core/storage/confirmed_write.dart';
 import 'package:thirty/core/premium/entitlement_status.dart';
 import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
@@ -86,7 +87,7 @@ void main() {
     }
   }
 
-  KeptCircle? keep(ProviderContainer c, String circleId) => c
+  Future<KeptCircle?> keep(ProviderContainer c, String circleId) => c
       .read(keptCirclesProvider.notifier)
       .keepCircle(
         plan: CirclePlan.fromWire(valid)!,
@@ -112,7 +113,7 @@ void main() {
           secondInPlace,
         ]);
         expect(kept.countKnown, isFalse);
-        expect(keep(c, '2026-10-1$i'), isNull, reason: 'count unknown');
+        expect(await keep(c, '2026-10-1$i'), isNull, reason: 'count unknown');
         await settle();
         expect(prefs.getString(keptCirclesUnreadableKey), firstSetAside);
         expect(prefs.getString(keptCirclesKey), secondInPlace);
@@ -124,9 +125,14 @@ void main() {
         'even by a direct write of the store', () async {
       await boot({keptCirclesKey: secondInPlace});
       final c = open();
-      await c
-          .read(keptCirclesRepositoryProvider)
-          .write(KeptCircles([KeptCircle.fromJson(record('a', 'Morning'))!]));
+      // Audit remediation R8: refused out loud, never a silent no-op that
+      // looks like a save.
+      await expectLater(
+        c
+            .read(keptCirclesRepositoryProvider)
+            .write(KeptCircles([KeptCircle.fromJson(record('a', 'Morning'))!])),
+        throwsA(isA<StorageWriteFailed>()),
+      );
       expect(prefs.getString(keptCirclesKey), secondInPlace);
       expect(prefs.getString(keptCirclesUnreadableKey), isNull);
     });
@@ -158,7 +164,7 @@ void main() {
       expect(prefs.getString(keptCirclesUnreadableKey), firstSetAside);
       expect(c.read(keptCirclesProvider).count, 3);
       expect(c.read(keptCirclesProvider).isFull, isTrue);
-      expect(keep(c, '2026-10-11'), isNull);
+      expect(await keep(c, '2026-10-11'), isNull);
       expect(
         KeepCircleCopy.fullFor(c.read(keptCirclesProvider)),
         KeepCircleCopy.countUnknown,
@@ -199,11 +205,11 @@ void main() {
       await settle();
       expect(prefs.getString(keptCirclesUnreadableKey), isNull);
       expect(prefs.getString(keptCirclesKey), secondInPlace);
-      expect(keep(c, '2026-10-11'), isNull);
+      expect(await keep(c, '2026-10-11'), isNull);
       notifier.removeUnreadable('store-$keptCirclesKey');
       await settle();
       expect(c.read(keptCirclesProvider).countKnown, isTrue);
-      expect(keep(c, '2026-10-11'), isNotNull);
+      expect(await keep(c, '2026-10-11'), isNotNull);
       await settle();
       await restart();
       final kept = open().read(keptCirclesProvider);

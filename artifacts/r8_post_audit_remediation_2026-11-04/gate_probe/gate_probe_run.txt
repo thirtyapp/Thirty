@@ -1,0 +1,13 @@
+00:00 +0: loading C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/_r8_probe/r8_gate_probe_test.dart
+00:00 +0: P1 Delete: only the marker removal (its last step) throws — Delete fails, the marker stays, nothing deleted shows; the next start finishes
+00:00 +1: P2 Today: every key landed, only the recovery-record removal throws — record the visible outcome; restart is consistent
+P2 throws: statusOnDisk=started recoveryRecordOnDisk=true savedFlag=false historyHasStart=false
+00:00 +2: P3 Start of a stage Circle whose Plans evidence write throws: the Start is not saved and the user is told; a restart brings back the unstarted offer
+00:00 +3: P4 removing a kept Circle throws: it stays, in memory and on disk; the failure is shown
+00:00 +4: P1 Delete: only the marker removal (its last step) returnsFalse — Delete fails, the marker stays, nothing deleted shows; the next start finishes
+00:00 +5: P2 Today: every key landed, only the recovery-record removal returnsFalse — record the visible outcome; restart is consistent
+P2 returnsFalse: statusOnDisk=started recoveryRecordOnDisk=true savedFlag=false historyHasStart=false
+00:00 +6: P3 Start of a stage Circle whose Plans evidence write returnsFalse: the Start is not saved and the user is told; a restart brings back the unstarted offer
+00:00 +7: P4 removing a kept Circle returnsFalse: it stays, in memory and on disk; the failure is shown
+00:00 +8: P5 midnight carry-over of a stage Circle: started 23:40, restarted at 00:10, closed — the Plan is credited once, for that Circle
+00:00 +9: All tests passed!

@@ -1,0 +1,25 @@
+00:00 +0: loading C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/core/premium/r8_restore_wording_test.dart
+00:00 +0: restore reported, billing then active: restored, and Premium is exactly what billing says
+00:00 +1: restore reported, billing then inactive: unavailable, and Premium is exactly what billing says
+00:00 +1 -1: restore reported, billing then inactive: unavailable, and Premium is exactly what billing says [E]
+  Expected: RestoreOutcome:<RestoreOutcome.unavailable>
+    Actual: RestoreOutcome:<RestoreOutcome.restored>
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test\core\premium\r8_restore_wording_test.dart 63:7  main.<fn>
+  
+00:00 +1 -1: restore reported, billing then unavailable: unavailable, and Premium is exactly what billing says
+00:00 +1 -2: restore reported, billing then unavailable: unavailable, and Premium is exactly what billing says [E]
+  Expected: RestoreOutcome:<RestoreOutcome.unavailable>
+    Actual: RestoreOutcome:<RestoreOutcome.restored>
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test\core\premium\r8_restore_wording_test.dart 63:7  main.<fn>
+  
+00:00 +1 -2: Some tests failed.
+
+Failing tests:
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/core/premium/r8_restore_wording_test.dart: restore reported, billing then inactive: unavailable, and Premium is exactly what billing says
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/core/premium/r8_restore_wording_test.dart: restore reported, billing then unavailable: unavailable, and Premium is exactly what billing says

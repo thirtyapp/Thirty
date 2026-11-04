@@ -531,7 +531,7 @@ void main() {
       await seedJournal(usefulWriting());
       final c = await open(tester);
       for (var k = 0; k < 8; k++) {
-        c
+        await c
             .read(keptCirclesProvider.notifier)
             .keepCircle(
               plan: CirclePlan(reading),
@@ -549,7 +549,7 @@ void main() {
     testWidgets('Nothing to change: calm, with no fake action', (tester) async {
       await seedJournal(usefulWriting());
       final c = container();
-      c
+      await c
           .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: CirclePlan(writing),
@@ -736,7 +736,7 @@ void main() {
         CirclePlansState.empty.start('getting_going', today: '2026-10-20')!,
       );
       final c = container();
-      c
+      await c
           .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: CirclePlan(reading),

@@ -609,7 +609,7 @@ void main() {
         'says at Close', () async {
       await seed(under('making_room', through: 1));
       final c = open(EntitlementStatus.active);
-      c
+      await c
           .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: CirclePlan.fromWire(const [

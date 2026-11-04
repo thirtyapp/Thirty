@@ -105,13 +105,16 @@ class KeepCircleCard extends ConsumerWidget {
                     style: TextButton.styleFrom(
                       minimumSize: const Size(48, 48),
                     ),
+                    // Audit remediation R8: shown as kept only once it is
+                    // saved; a Keep that isn't is told by the app shell.
                     onPressed: () => ref
                         .read(keptCirclesProvider.notifier)
                         .keepCircle(
                           plan: composed.plan,
                           need: recommendation.intention,
                           circleId: recommendation.circleId,
-                        ),
+                        )
+                        .ignore(),
                     child: const Text(KeepCircleCopy.action),
                   ),
                 ],

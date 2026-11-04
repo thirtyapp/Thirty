@@ -1,0 +1,5 @@
+file,line,kind,literal (truncated),status,source
+lib/features/home/presentation/widgets/journal_save_failure_notice.dart,32,ui,"This change couldn’t be saved.",founder-approved D1 2026-11-04,R8
+lib/features/home/presentation/widgets/journal_save_failure_notice.dart,35,ui,"Please try again.",founder-approved D1 2026-11-04,R8
+lib/features/home/presentation/widgets/journal_data_controls.dart,210,ui,"Your history wasn’t deleted.",founder-approved D1 2026-11-04,R8
+lib/features/home/presentation/widgets/journal_data_controls.dart,213,ui,"Nothing was changed. You can try again.",founder-approved D1 2026-11-04,R8

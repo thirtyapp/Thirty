@@ -1,0 +1,224 @@
+00:00 +0: loading C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart
+00:00 +0: History — History damaged: Copy exports it as stored, and Delete deletes it after confirmation
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <1>
+  Actual: []
+   Which: has length of <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart:108:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart line 108
+The test description was:
+  History — History damaged: Copy exports it as stored, and Delete deletes it after confirmation
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: History — History damaged: Copy exports it as stored, and Delete deletes it after confirmation [E]
+  Test failed. See exception logs above.
+  The test description was: History — History damaged: Copy exports it as stored, and Delete deletes it after confirmation
+  
+00:00 +0 -1: You — History damaged: Copy exports it as stored, and Delete deletes it after confirmation
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <1>
+  Actual: []
+   Which: has length of <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart:108:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart line 108
+The test description was:
+  You — History damaged: Copy exports it as stored, and Delete deletes it after confirmation
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -2: You — History damaged: Copy exports it as stored, and Delete deletes it after confirmation [E]
+  Test failed. See exception logs above.
+  The test description was: You — History damaged: Copy exports it as stored, and Delete deletes it after confirmation
+  
+00:00 +0 -2: History — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it after confirmation
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <1>
+  Actual: []
+   Which: has length of <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart:108:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart line 108
+The test description was:
+  History — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it
+  after confirmation
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -3: History — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it after confirmation [E]
+  Test failed. See exception logs above.
+  The test description was: History — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it after confirmation
+  
+00:00 +0 -3: You — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it after confirmation
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <1>
+  Actual: []
+   Which: has length of <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart:108:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart line 108
+The test description was:
+  You — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it after
+  confirmation
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -4: You — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it after confirmation [E]
+  Test failed. See exception logs above.
+  The test description was: You — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it after confirmation
+  
+00:00 +0 -4: History — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it after confirmation
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <1>
+  Actual: []
+   Which: has length of <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart:108:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart line 108
+The test description was:
+  History — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it
+  after confirmation
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -5: History — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it after confirmation [E]
+  Test failed. See exception logs above.
+  The test description was: History — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it after confirmation
+  
+00:00 +0 -5: You — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it after confirmation
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <1>
+  Actual: []
+   Which: has length of <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart:108:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart line 108
+The test description was:
+  You — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it
+  after confirmation
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -6: You — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it after confirmation [E]
+  Test failed. See exception logs above.
+  The test description was: You — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it after confirmation
+  
+00:00 +0 -6: History — History readable, but its one record isn't: Copy exports it as stored, and Delete deletes it after confirmation
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <1>
+  Actual: []
+   Which: has length of <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart:108:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart line 108
+The test description was:
+  History — History readable, but its one record isn't: Copy exports it as stored, and Delete
+  deletes it after confirmation
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -7: History — History readable, but its one record isn't: Copy exports it as stored, and Delete deletes it after confirmation [E]
+  Test failed. See exception logs above.
+  The test description was: History — History readable, but its one record isn't: Copy exports it as stored, and Delete deletes it after confirmation
+  
+00:00 +0 -7: You — History readable, but its one record isn't: Copy exports it as stored, and Delete deletes it after confirmation
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: an object with length of <1>
+  Actual: []
+   Which: has length of <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart:108:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart line 108
+The test description was:
+  You — History readable, but its one record isn't: Copy exports it as stored, and Delete deletes it
+  after confirmation
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -8: You — History readable, but its one record isn't: Copy exports it as stored, and Delete deletes it after confirmation [E]
+  Test failed. See exception logs above.
+  The test description was: You — History readable, but its one record isn't: Copy exports it as stored, and Delete deletes it after confirmation
+  
+00:00 +0 -8: History empty, nothing stored: nothing to copy or delete
+00:00 +1 -8: Some tests failed.
+
+Failing tests:
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart: History — History damaged: Copy exports it as stored, and Delete deletes it after confirmation
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart: History — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it after confirmation
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart: History — History readable, but its one record isn't: Copy exports it as stored, and Delete deletes it after confirmation
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a06_unreadable_history_controls_test.dart: History — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it after confirmation
+  ... and 4 more

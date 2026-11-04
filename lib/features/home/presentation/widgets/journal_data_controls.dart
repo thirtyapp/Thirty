@@ -31,7 +31,9 @@ class JournalDataControls extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final journal = ref.watch(circleJournalRepositoryProvider);
-    final hasEntries = journal.readAll().isNotEmpty;
+    // Audit remediation R8 (Astra R7-A06): History THIRTY can't read is
+    // still the user's to export and delete — never only what it reads.
+    final hasEntries = journal.holdsHistory;
     final preferences = ref.watch(suggestionPreferencesProvider);
     final kept = ref.watch(keptCirclesProvider);
     final plans = ref.watch(circlePlansProvider);
@@ -52,7 +54,8 @@ class JournalDataControls extends ConsumerWidget {
                   hasEntries ||
                       !preferences.isEmpty ||
                       !kept.isEmpty ||
-                      plans.plans.isNotEmpty
+                      plans.plans.isNotEmpty ||
+                      !insights.isEmpty
                   ? () => exportToClipboard(
                       context,
                       journal,
@@ -161,6 +164,17 @@ class JournalDataControls extends ConsumerWidget {
     // can't be finished now, the user is told so — never that it was done.
     try {
       await ref.read(circleHistoryDeletionProvider).delete();
+    } on HistoryDeletionNotStarted {
+      // Audit remediation R8: nothing was deleted — never "will finish".
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        barrierLabel: 'Close',
+        builder: (_) => const ThirtyNoticeDialog(
+          title: deleteNotStartedTitle,
+          body: deleteNotStartedBody,
+        ),
+      );
     } catch (_) {
       if (!context.mounted) return;
       await showDeleteUnfinished(context);
@@ -189,3 +203,11 @@ const deleteUnfinishedTitle = 'Couldn’t finish deleting your history.';
 /// See [deleteUnfinishedTitle].
 const deleteUnfinishedBody =
     'THIRTY will try to finish when you next open the app.';
+
+/// Shown when Delete Circle history couldn't begin — its intent couldn't be
+/// recorded, so nothing was deleted (audit remediation R8, Astra R7-A04).
+/// Founder wording (D1, 2026-11-04).
+const deleteNotStartedTitle = 'Your history wasn’t deleted.';
+
+/// See [deleteNotStartedTitle]. Founder wording (D1, 2026-11-04).
+const deleteNotStartedBody = 'Nothing was changed. You can try again.';

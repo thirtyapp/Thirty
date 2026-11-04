@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/premium/premium_access.dart';
 import '../../../core/providers/clock_provider.dart';
+import '../../../core/storage/confirmed_write.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/utils/date_key.dart';
 import '../../../core/widgets/thirty_app_bar.dart';
@@ -15,6 +16,7 @@ import '../../home/application/circle_journal.dart';
 import '../../home/application/recommendation_provider.dart';
 import '../../personal_circle/application/kept_circles_provider.dart';
 import '../../personal_circle/domain/circle_elements.dart';
+import '../../personal_circle/domain/kept_circle.dart';
 import '../../personal_circle/presentation/keep_circle_card.dart';
 import '../../personal_circle/presentation/widgets/yours_parts.dart';
 import '../application/circle_plans_provider.dart';
@@ -453,9 +455,16 @@ class _Review extends ConsumerWidget {
     if (picked == null) return;
     final parts = CirclePlan.fromWire(picked.parts);
     if (parts == null) return;
-    final kept = ref
-        .read(keptCirclesProvider.notifier)
-        .keepCircle(plan: parts, need: plan.need, circleId: picked.circleId!);
+    // Audit remediation R8: said to be kept only once it is saved; a Keep
+    // that isn't is told by the app shell.
+    final KeptCircle? kept;
+    try {
+      kept = await ref
+          .read(keptCirclesProvider.notifier)
+          .keepCircle(plan: parts, need: plan.need, circleId: picked.circleId!);
+    } on StorageWriteFailed {
+      return;
+    }
     messenger.showSnackBar(
       SnackBar(
         content: Text(

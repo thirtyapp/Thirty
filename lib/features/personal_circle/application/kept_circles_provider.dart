@@ -6,7 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
+import '../../../core/storage/confirmed_write.dart';
+import '../../../core/storage/store_save_failures.dart';
 import '../../home/application/activity_catalog.dart';
+import '../../home/application/phase_d_retirement.dart';
 import '../domain/circle_elements.dart';
 import '../domain/kept_circle.dart';
 
@@ -47,10 +50,10 @@ class KeptCirclesRepository {
   /// anything, and nothing is guessed from it.
   KeptCircles read() {
     final stores = [
-      if (_prefs.getString(keptCirclesUnreadableKey) case final setAside?)
+      if (_stored(keptCirclesUnreadableKey) case final setAside?)
         UnreadableKeptStore(key: keptCirclesUnreadableKey, raw: setAside),
     ];
-    final raw = _prefs.getString(keptCirclesKey);
+    final raw = _stored(keptCirclesKey);
     if (raw == null) return KeptCircles(const [], unreadable: stores);
     final read = _collectionIn(raw);
     if (read != null) {
@@ -58,6 +61,13 @@ class KeptCirclesRepository {
         read.kept,
         retained: read.retained,
         unreadable: stores,
+        // Every field this build doesn't use is written back (audit
+        // remediation R8) — except Phase D's, retired before release
+        // (ADR-024 §3): the next write drops them, as the migration does.
+        extra: {
+          for (final MapEntry(:key, :value) in read.extra.entries)
+            if (!retiredToolkitFields.contains(key)) key: value,
+        },
       );
     }
     return KeptCircles(
@@ -69,9 +79,20 @@ class KeptCirclesRepository {
     );
   }
 
-  static ({List<KeptCircle> kept, List<RetainedKept> retained})? _collectionIn(
-    String raw,
-  ) {
+  /// What is stored under [key], as text — a value of another type is
+  /// stored data THIRTY can't read, given as its text, never dropped.
+  String? _stored(String key) => switch (_prefs.get(key)) {
+    null => null,
+    final String raw => raw,
+    final Object other => '$other',
+  };
+
+  static ({
+    List<KeptCircle> kept,
+    List<RetainedKept> retained,
+    Map<String, Object?> extra,
+  })?
+  _collectionIn(String raw) {
     try {
       return keptCollectionFromRecord(jsonDecode(raw));
     } catch (_) {
@@ -82,17 +103,36 @@ class KeptCirclesRepository {
   /// One write of the whole record — a single key, so it is never half
   /// written — with every kept Circle in it, read or not. Never over a
   /// record THIRTY can't read (R4.1): that stays as it is.
+  ///
+  /// Completes only once the store confirms it (audit remediation R8,
+  /// Astra R7-A03, Claude F-6); otherwise — or over a record THIRTY can't
+  /// read — it fails with [StorageWriteFailed], and nothing is written.
   Future<void> write(KeptCircles state) async {
-    final current = _prefs.getString(keptCirclesKey);
-    if (current != null && _collectionIn(current) == null) return;
-    await _prefs.setString(
+    final current = _prefs.get(keptCirclesKey);
+    if (current != null &&
+        (current is! String || _collectionIn(current) == null)) {
+      throw const StorageWriteFailed(
+        keptCirclesKey,
+        'the stored kept Circles can\'t be read',
+      );
+    }
+    await writeConfirmed(
+      _prefs,
       keptCirclesKey,
-      jsonEncode(keptCirclesRecord(state.kept, retained: state.retained)),
+      jsonEncode(
+        keptCirclesRecord(
+          state.kept,
+          retained: state.retained,
+          extra: state.extra,
+        ),
+      ),
     );
   }
 
-  /// Removes [store] — only ever on the user's own request.
-  Future<void> remove(UnreadableKeptStore store) => _prefs.remove(store.key);
+  /// Removes [store] — only ever on the user's own request. Fails with
+  /// [StorageWriteFailed] unless the store confirms it.
+  Future<void> remove(UnreadableKeptStore store) =>
+      writeConfirmed(_prefs, store.key, null);
 }
 
 final keptCirclesRepositoryProvider = Provider<KeptCirclesRepository>(
@@ -106,12 +146,28 @@ class KeptCircles {
     this.kept, {
     this.retained = const [],
     this.unreadable = const [],
+    this.extra = const {},
   });
 
   static const empty = KeptCircles([]);
 
   final List<KeptCircle> kept;
   final List<RetainedKept> retained;
+
+  /// The stored record's fields this build doesn't know, written back
+  /// unchanged (audit remediation R8).
+  final Map<String, Object?> extra;
+
+  KeptCircles _with({
+    List<KeptCircle>? kept,
+    List<RetainedKept>? retained,
+    List<UnreadableKeptStore>? unreadable,
+  }) => KeptCircles(
+    kept ?? this.kept,
+    retained: retained ?? this.retained,
+    unreadable: unreadable ?? this.unreadable,
+    extra: extra,
+  );
 
   /// Whole stored records THIRTY can't read (R4.1), as stored.
   final List<UnreadableKeptStore> unreadable;
@@ -165,42 +221,69 @@ final partOfferableProvider = Provider<bool Function(CirclePart)>(
 
 /// The user's kept Circles: keep, rename, remove. Never gated — what was
 /// made for the user is theirs, whatever Premium's state.
+///
+/// **Audit remediation R8 (Astra R7-A03, Claude F-6).** Every change is
+/// shown only once the store has confirmed it: until then, and if it fails,
+/// the kept Circles stay as they were — in memory and on disk — the failure
+/// is shown ([storeSaveFailuresProvider]) and the returned future fails with
+/// [StorageWriteFailed]. Changes run one after another, each on what the one
+/// before it left.
 class KeptCirclesNotifier extends Notifier<KeptCircles> {
   Future<void> _writes = Future<void>.value();
+
+  /// Days whose Circle is being kept now — counted, so two Keeps at once
+  /// never keep it twice or pass [maxKeptCircles].
+  final _keeping = <String>{};
 
   @override
   KeptCircles build() => ref.watch(keptCirclesRepositoryProvider).read();
 
-  void _set(List<KeptCircle> kept, {List<RetainedKept>? retained}) {
-    final next = KeptCircles(
-      kept,
-      retained: retained ?? state.retained,
-      unreadable: state.unreadable,
+  /// Applies [change] to the kept Circles as they then stand, and shows the
+  /// result once it is on disk. [change] returning `null` changes nothing.
+  Future<KeptCircles?> _commit(KeptCircles? Function(KeptCircles) change) {
+    final run = _writes.then((_) async {
+      final next = change(state);
+      if (next == null) return null;
+      await ref.read(keptCirclesRepositoryProvider).write(next);
+      if (ref.mounted) state = next;
+      return next;
+    });
+    _writes = run.then(
+      (_) {},
+      onError: (Object _) {
+        if (ref.mounted) {
+          ref
+              .read(storeSaveFailuresProvider.notifier)
+              .record(UserStore.keptCircles);
+        }
+      },
     );
-    state = next;
-    _writes = _writes
-        .then((_) => ref.read(keptCirclesRepositoryProvider).write(next))
-        .catchError((Object _) {});
-    unawaited(_writes);
+    return run;
   }
 
   DateTime get _now => ref.read(eventClockProvider)();
 
   /// Keeps today's composed Circle as one of the user's own — named [name],
-  /// or by its need — with the words each part has now. Returns `null` when
-  /// [maxKeptCircles] are kept already (counting any THIRTY can't read), or
-  /// this day's Circle is already kept.
-  KeptCircle? keepCircle({
+  /// or by its need — with the words each part has now. Completes with the
+  /// kept Circle once it is on disk; with `null` when [maxKeptCircles] are
+  /// kept already (counting any THIRTY can't read, and Keeps under way), or
+  /// this day's Circle is already kept or being kept. Fails with
+  /// [StorageWriteFailed] when the store doesn't confirm it — then nothing
+  /// is kept.
+  Future<KeptCircle?> keepCircle({
     required CirclePlan plan,
     required Intention need,
     required String circleId,
     String? name,
-  }) {
-    if (state.isFull) return null;
-    if (state.kept.any((k) => k.fromCircleId == circleId)) return null;
+  }) async {
+    bool refused(KeptCircles current) =>
+        !current.countKnown ||
+        current.count + _keeping.length >= maxKeptCircles ||
+        current.kept.any((k) => k.fromCircleId == circleId);
+    if (_keeping.contains(circleId) || refused(state)) return null;
     final trimmed = name?.trim();
     final circle = KeptCircle(
-      id: 'kept-${_now.microsecondsSinceEpoch}-${state.count}',
+      id: 'kept-${_now.microsecondsSinceEpoch}-${state.count + _keeping.length}',
       name: trimmed == null || trimmed.isEmpty
           ? keptCircleDefaultName(need)
           : trimmed,
@@ -210,71 +293,98 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
       fromCircleId: circleId,
       wording: [for (final p in plan.parts) PartWording.of(p.definition)],
     );
-    _set([...state.kept, circle]);
-    return circle;
+    _keeping.add(circleId);
+    try {
+      final next = await _commit((current) {
+        _keeping.remove(circleId);
+        if (refused(current)) return null;
+        return current._with(kept: [...current.kept, circle]);
+      });
+      return next == null ? null : circle;
+    } finally {
+      _keeping.remove(circleId);
+    }
   }
 
   /// Renames the kept Circle [id] addresses — one THIRTY can't read too,
-  /// changing nothing else in it.
-  void renameKept(String id, String name) {
+  /// changing nothing else in it. Completes once on disk.
+  Future<void> renameKept(String id, String name) async {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return;
-    if (state.keptById(id) != null) {
-      _set([
-        for (final k in state.kept) k.id == id ? k.copyWith(name: trimmed) : k,
-      ]);
-      return;
-    }
-    final record = state.retainedByKey(id);
-    if (record == null || !record.canRename) return;
-    _set(
-      state.kept,
-      retained: [
-        for (final r in state.retained) r == record ? r.renamed(trimmed) : r,
-      ],
-    );
+    await _commit((current) {
+      if (current.keptById(id) != null) {
+        return current._with(
+          kept: [
+            for (final k in current.kept)
+              k.id == id ? k.copyWith(name: trimmed) : k,
+          ],
+        );
+      }
+      final record = current.retainedByKey(id);
+      if (record == null || !record.canRename) return null;
+      return current._with(
+        retained: [
+          for (final r in current.retained)
+            r == record ? r.renamed(trimmed) : r,
+        ],
+      );
+    });
   }
 
   /// Removes a kept Circle — one THIRTY can't read too, only ever on the
   /// user's own request. History keeps the days it was used, under the name
-  /// it had then.
-  void deleteKept(String id) {
-    if (state.keptById(id) != null) {
-      _set([
-        for (final k in state.kept)
-          if (k.id != id) k,
-      ]);
-      return;
-    }
-    final record = state.retainedByKey(id);
-    if (record == null) return;
-    _set(
-      state.kept,
-      retained: [
-        for (final r in state.retained)
-          if (r != record) r,
-      ],
-    );
+  /// it had then. Completes once on disk.
+  Future<void> deleteKept(String id) async {
+    await _commit((current) {
+      if (current.keptById(id) != null) {
+        return current._with(
+          kept: [
+            for (final k in current.kept)
+              if (k.id != id) k,
+          ],
+        );
+      }
+      final record = current.retainedByKey(id);
+      if (record == null) return null;
+      return current._with(
+        retained: [
+          for (final r in current.retained)
+            if (r != record) r,
+        ],
+      );
+    });
   }
 
   /// Removes a whole stored record THIRTY can't read (R4.1) — only ever on
-  /// the user's own request. Nothing else changes.
-  void removeUnreadable(String address) {
+  /// the user's own request. Nothing else changes. Completes once the store
+  /// confirms the removal; until then, and if it fails, the record is still
+  /// shown.
+  Future<void> removeUnreadable(String address) async {
     final store = state.unreadableAt(address);
     if (store == null) return;
-    state = KeptCircles(
-      state.kept,
-      retained: state.retained,
-      unreadable: [
-        for (final s in state.unreadable)
-          if (s != store) s,
-      ],
-    );
     final repository = ref.read(keptCirclesRepositoryProvider);
-    _writes = _writes
-        .then((_) => repository.remove(store))
-        .catchError((Object _) => true);
-    unawaited(_writes);
+    final run = _writes.then((_) async {
+      await repository.remove(store);
+      if (ref.mounted) {
+        state = state._with(
+          unreadable: [
+            for (final s in state.unreadable)
+              if (s != store) s,
+          ],
+        );
+      }
+    });
+    _writes = run.then(
+      (_) {},
+      onError: (Object _) {
+        if (ref.mounted) {
+          ref
+              .read(storeSaveFailuresProvider.notifier)
+              .record(UserStore.keptCircles);
+        }
+      },
+    );
+    await run;
   }
 }
 

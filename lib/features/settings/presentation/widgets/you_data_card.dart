@@ -48,7 +48,9 @@ class YouDataCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final journal = ref.watch(circleJournalRepositoryProvider);
-    final hasEntries = journal.readAll().isNotEmpty;
+    // Audit remediation R8 (Astra R7-A06): History THIRTY can't read is
+    // still the user's to export and delete — never only what it reads.
+    final hasEntries = journal.holdsHistory;
     final preferences = ref.watch(suggestionPreferencesProvider);
     final kept = ref.watch(keptCirclesProvider);
     final plans = ref.watch(circlePlansProvider);
@@ -67,7 +69,8 @@ class YouDataCard extends ConsumerWidget {
               hasEntries ||
                   !preferences.isEmpty ||
                   !kept.isEmpty ||
-                  plans.plans.isNotEmpty
+                  plans.plans.isNotEmpty ||
+                  !insights.isEmpty
               ? () => JournalDataControls.exportToClipboard(
                   context,
                   journal,

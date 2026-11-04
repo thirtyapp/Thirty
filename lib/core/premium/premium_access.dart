@@ -100,6 +100,10 @@ class EntitlementNotifier extends Notifier<EntitlementStatus> {
     final outcome = await gateway.restore();
     if (outcome == RestoreOutcome.restored) {
       state = await gateway.initialize();
+      // Audit remediation R8 (audit recommendation): "restored" is said only
+      // when billing then verifies Premium active. Otherwise the restore
+      // couldn't be confirmed — said as unavailable, never as a success.
+      if (state != EntitlementStatus.active) return RestoreOutcome.unavailable;
     }
     return outcome;
   }

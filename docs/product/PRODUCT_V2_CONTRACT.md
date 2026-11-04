@@ -291,11 +291,37 @@ The confirmation copy must state this truthfully. No residue from deleted journa
 
 **Export** includes the journal (including the V2 fields), kept Circles, Plan state and reviews, Insight snapshots, and explicit corrections and preferences *(amended 2026-10-17; replaces "routines")*.
 
+*Amendment 2026-11-04 (audit remediation R8, Astra R7-A04; founder decision D3, supersedes the R3 timing):*
+- **Intent first.** Delete Circle history records its intent durably, confirmed by the store and tried once more if refused, before anything else happens: before any write on its way is stopped, before anything is cleared from memory, and before anything is removed.
+- **If the intent can't be stored,** nothing is deleted, and every write on its way still lands. The user is told: "Your history wasn’t deleted." / "Nothing was changed. You can try again."
+- **Every step must be confirmed** by the store: each removal, the Plans' stage-evidence write, the Insights removal, and the removal of preserved copies of History THIRTY couldn't read. A step that throws or returns false fails the deletion.
+- **Never announced as done unless done.** A failed or partial Delete is never announced as done. The intent stays recorded and the next start finishes it.
+- **The marker goes last,** and only after every step succeeded.
+- **Deleted stays deleted.** Nothing deleted is shown again in the meantime, and no write begun before the deletion brings it back.
+
+*Amendment 2026-11-04 (audit remediation R8, founder decisions D1 / R7-A06):*
+- History THIRTY can't read can still be exported as stored and deleted. This covers History that is damaged, written by a newer THIRTY, kept only as a preserved copy, or holding records this build can't read.
+- A save of the user's own kept Circles, Plans or Insights that the store doesn't confirm is never shown as saved. The user is told: "This change couldn’t be saved." / "Please try again."
+
 ---
 
 ## Circle V2 contract
 
 A Circle is **the activity-specific experience chosen for today**, not a generic timer. It uses a small set of reusable modes, never one bespoke screen per activity.
+
+*Amendment 2026-11-04 (audit remediation R8, Astra R7-A08 / Claude F-1; founder decision D2): across local midnight.*
+- **Six-hour carry-over.** A Circle of the day before is still the user's to finish when THIRTY is resumed or restarted after midnight, for at most **six hours** of real elapsed time:
+  - a Circle still running: six hours from its Start;
+  - a Circle closed after its own day, with its reflection not yet answered: six hours from its Close.
+- **Elapsed time, not the clock face.** The limit is real elapsed time, correct across local midnight and daylight-saving changes. It is applied when THIRTY restores or resumes. A Circle running in the foreground is never interrupted because the clock passes it.
+- **When the carry-over ends:**
+  - History keeps the Circle exactly as it was: started and unfinished, or closed with the answers already given. No Close or reflection is made up, and nothing is deleted.
+  - The next day's Circle is then chosen deliberately, under the one-Circle-a-day rule.
+  - Nothing starts by itself.
+  - An offer of the day before that was never started still can't be started after midnight.
+- **A carried-over Circle is recorded once, under its own day.** Its Plan stage is credited by the usual rules.
+- **Choices use the real time.** A choice made without a touch (screen reader, keyboard, switch access) is dated by the real time, not by when the app last came to the foreground.
+- **No earlier session is written over unrecorded.** The next day's choice never writes over the day before's started or closed Circle until History holds it and its Plan credit is saved. If History keeps refusing, the new day's Circle is reported as not saved, and the earlier one is kept for the next attempt.
 
 - **Open.** A strong first action; optional how-to one tap away; a quiet session timed to the activity's length; a gentle end cue; continuing past the cue is fine.
 - **Guided Steps.** 3–6 bounded steps, one clear instruction at a time; an optional lighter variant; pause where needed; resumes correctly after backgrounding.

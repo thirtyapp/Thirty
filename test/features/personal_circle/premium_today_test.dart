@@ -357,17 +357,17 @@ void main() {
           .read(recommendationProvider)
           .recommendation!
           .composed!;
-      final kept = premium
+      final kept = (await premium
           .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: composed.plan,
             need: Intention.gentlerPace,
             circleId: '2026-10-11',
-          )!;
+          ))!;
       expect(kept.name, 'My gentle Circle');
       // The same day's Circle is kept once.
       expect(
-        premium
+        await premium
             .read(keptCirclesProvider.notifier)
             .keepCircle(
               plan: composed.plan,
@@ -458,7 +458,7 @@ void main() {
       notifier.start();
       notifier.skipPart(leaveOut: true);
       notifier.close();
-      c
+      await c
           .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: plan,

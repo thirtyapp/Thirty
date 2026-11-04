@@ -292,7 +292,7 @@ void main() {
         'moves nor is set aside', () async {
       await seed(under('making_room', through: 1));
       final c = open();
-      c
+      await c
           .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: CirclePlan.fromWire(const [
@@ -664,7 +664,7 @@ void main() {
       await seed(under('slowing_down', through: 2));
       final c = open();
       await tester.runAsync(() async {
-        c
+        await c
             .read(keptCirclesProvider.notifier)
             .keepCircle(
               plan: CirclePlan.fromWire(const ['tendOne:8', 'sitAMinute:2'])!,

@@ -8,6 +8,8 @@ import '../../../core/premium/entitlement_status.dart';
 import '../../../core/premium/premium_access.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
+import '../../../core/storage/confirmed_write.dart';
+import '../../../core/storage/store_save_failures.dart';
 import '../../../core/utils/date_key.dart';
 import '../../home/application/circle_journal.dart';
 import '../../home/domain/recommendation_engine.dart';
@@ -68,27 +70,84 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
     } catch (_) {
       // Unreadable: kept aside below.
     }
-    unawaited(prefs.setString(circlePlansUnreadableKey, raw));
+    // Kept aside at once; a save that follows confirms the copy first
+    // ([_protectStored]), so the original is never written over unkept.
+    if (prefs.get(circlePlansUnreadableKey) == null) {
+      writeConfirmed(prefs, circlePlansUnreadableKey, raw).ignore();
+    }
     return CirclePlansState.empty;
   }
 
   bool get _premium => ref.read(premiumEntitlementProvider);
   String get _today => dateKey(ref.read(nowProvider));
 
-  void _set(CirclePlansState next) {
+  /// Shows [next] and saves it. Audit remediation R8 (Claude F-6): the save
+  /// must be confirmed by the store ([writeConfirmed]). One that isn't stays
+  /// in memory — a Plan's served-stage evidence included, so Today's credit
+  /// rules still hold in this session — is retried by the next save, which
+  /// writes the whole record, and, with [report], is shown to the user
+  /// ([storeSaveFailuresProvider]); Today reports its own. Never over a
+  /// stored record THIRTY can't read until a copy is confirmed aside
+  /// ([_protectStored]). The returned future fails when the save does.
+  Future<void> _set(CirclePlansState next, {bool report = true}) {
     state = next;
     final json = jsonEncode(next.toJson());
     final prefs = _prefs;
-    _writes = _writes
-        .then((_) => prefs.setString(circlePlansKey, json))
-        .catchError((Object _) => true);
-    unawaited(_writes);
+    final write = _writes.then((_) async {
+      await _protectStored(prefs);
+      await writeConfirmed(prefs, circlePlansKey, json);
+    });
+    _writes = write.then(
+      (_) {
+        if (ref.mounted) {
+          ref
+              .read(storeSaveFailuresProvider.notifier)
+              .saved(UserStore.circlePlans);
+        }
+      },
+      onError: (Object _) {
+        if (ref.mounted) {
+          ref
+              .read(storeSaveFailuresProvider.notifier)
+              .record(UserStore.circlePlans, notify: report);
+        }
+      },
+    );
+    return write;
+  }
+
+  /// A stored record THIRTY can't read is never written over before it is
+  /// kept aside, exactly as stored, and the store has confirmed that (audit
+  /// remediation R8). A different record already kept aside is never
+  /// replaced: the save is refused instead.
+  static Future<void> _protectStored(SharedPreferences prefs) async {
+    final raw = prefs.get(circlePlansKey);
+    if (raw == null) return;
+    if (raw is String && _readable(raw)) return;
+    final text = '$raw';
+    final aside = prefs.get(circlePlansUnreadableKey);
+    if (aside == text) return;
+    if (aside != null) {
+      throw const StorageWriteFailed(
+        circlePlansKey,
+        'an earlier unreadable record is already kept aside',
+      );
+    }
+    await writeConfirmed(prefs, circlePlansUnreadableKey, text);
+  }
+
+  static bool _readable(String raw) {
+    try {
+      return CirclePlansState.fromJson(jsonDecode(raw)) != null;
+    } catch (_) {
+      return false;
+    }
   }
 
   PlanActionResult _apply(CirclePlansState? next, {required bool running}) {
     if (running && !_premium) return PlanActionResult.needsPremium;
     if (next == null) return PlanActionResult.notAvailable;
-    _set(next);
+    _set(next).ignore();
     return PlanActionResult.done;
   }
 
@@ -152,7 +211,7 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
     final next = stage != null && day.circle != null
         ? day.state.served(stage, circleId: _today)
         : day.state;
-    if (!identical(next, state)) _set(next);
+    if (!identical(next, state)) _set(next).ignore();
     return day;
   }
 
@@ -208,8 +267,9 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
       EntitlementStatus.initializing || EntitlementStatus.unavailable => state,
     };
     if (identical(next, state)) return Future<void>.value();
-    _set(next);
-    return _writes;
+    // Today reports a Start whose evidence wasn't saved (audit remediation
+    // R8): it never saves the Start without it.
+    return _set(next, report: false);
   }
 
   /// Today's stage Circle was started and has now been closed: the stage
@@ -246,8 +306,7 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
       skipped: skipped,
     );
     if (identical(next, state)) return Future<void>.value();
-    _set(next);
-    return _writes;
+    return _set(next);
   }
 
   /// Delete history: the stage evidence goes at once; each Plan's place
@@ -255,14 +314,31 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   /// evidence, and nothing reads it back. Completes when it is written —
   /// and, unlike the Plans' other writes, fails if it couldn't be (audit
   /// remediation R3: Delete never reports what didn't happen).
+  ///
+  /// Audit remediation R8 (Astra R7-A04): the write and the removal must both
+  /// be confirmed by the store ([writeConfirmed]).
   Future<void> forgetStageEvidence() {
     final next = state.forgetStageEvidence();
     state = next;
     final json = jsonEncode(next.toJson());
     final prefs = _prefs;
-    final setAside = prefs.remove(circlePlansUnreadableKey);
+    // Removed at once, and confirmed (the intent to delete is already on
+    // disk): nothing set aside stays readable while earlier writes finish.
+    final setAside = writeConfirmed(
+      prefs,
+      circlePlansUnreadableKey,
+      null,
+      restoreOnFailure: false,
+    )..ignore();
     final written = _writes
-        .then((_) => prefs.setString(circlePlansKey, json))
+        .then(
+          (_) => writeConfirmed(
+            prefs,
+            circlePlansKey,
+            json,
+            restoreOnFailure: false,
+          ),
+        )
         .then((_) => setAside);
     _writes = written.then((_) {}, onError: (Object _) {});
     return written;

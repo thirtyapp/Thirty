@@ -133,13 +133,13 @@ void main() {
     final paid = open(EntitlementStatus.active);
     final insights = paid.read(insightsProvider.notifier);
     final shown = insights.assess().added.single;
-    expect(insights.apply(shown.id), InsightActionResult.done);
+    expect(await insights.apply(shown.id), InsightActionResult.done);
     final plans = paid.read(circlePlansProvider.notifier);
     expect(plans.keepGentler('making_room'), PlanActionResult.done);
     expect(plans.start('getting_going'), PlanActionResult.done);
     expect(plans.pause('getting_going'), PlanActionResult.done);
     expect(plans.resume('making_room'), PlanActionResult.done);
-    paid
+    await paid
         .read(keptCirclesProvider.notifier)
         .keepCircle(
           plan: keptPlan,
@@ -213,17 +213,20 @@ void main() {
         final added = insights.assess().added;
         expect(added, paid ? hasLength(1) : isEmpty);
         if (paid) {
-          expect(insights.apply(added.single.id), InsightActionResult.done);
+          expect(
+            await insights.apply(added.single.id),
+            InsightActionResult.done,
+          );
         } else {
           expect(c.read(insightsProvider).snapshots, isEmpty);
-          expect(insights.apply('any'), InsightActionResult.needsPremium);
+          expect(await insights.apply('any'), InsightActionResult.needsPremium);
           expect(insights.notNow('any'), InsightActionResult.needsPremium);
         }
       });
 
-      test('Keep is never gated', () {
+      test('Keep is never gated', () async {
         final c = open(status);
-        final kept = c
+        final kept = await c
             .read(keptCirclesProvider.notifier)
             .keepCircle(
               plan: keptPlan,
@@ -236,7 +239,7 @@ void main() {
       test('Leave it out: a composer control — recorded only while paid, '
           'even when a kept Circle runs on a Free day', () async {
         final c = open(status);
-        c
+        await c
             .read(keptCirclesProvider.notifier)
             .keepCircle(
               plan: keptPlan,
@@ -303,7 +306,7 @@ void main() {
       final insights = lapsed.read(insightsProvider.notifier);
       expect(insights.assess().added, isEmpty);
       expect(
-        insights.apply(lapsed.read(insightsProvider).snapshots.single.id),
+        await insights.apply(lapsed.read(insightsProvider).snapshots.single.id),
         InsightActionResult.needsPremium,
       );
 

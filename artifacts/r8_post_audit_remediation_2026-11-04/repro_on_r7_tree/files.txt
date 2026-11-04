@@ -1,0 +1,8 @@
+test/core/app/r8_midnight_resume_test.dart
+test/core/premium/r8_restore_wording_test.dart
+test/features/home/r8_a01_daily_persistence_test.dart
+test/features/home/r8_a04_delete_durability_test.dart
+test/features/home/r8_a06_unreadable_history_controls_test.dart
+test/features/home/r8_journal_forward_records_test.dart
+test/features/insights/r8_f4_insight_dates_test.dart
+test/features/personal_circle/r8_kept_ownership_persistence_test.dart

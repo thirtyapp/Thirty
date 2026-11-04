@@ -1,0 +1,90 @@
+00:00 +0: loading C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a01_daily_persistence_test.dart
+00:00 +0: a day-key write at Start that throws is shown as not saved; the recovery record stays on disk; a restart restores the started Circle, and History agrees
+00:00 +0 -1: a day-key write at Start that throws is shown as not saved; the recovery record stays on disk; a restart restores the started Circle, and History agrees [E]
+  Expected: false
+    Actual: <true>
+  the failure must reach the user
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\home\r8_a01_daily_persistence_test.dart 64:9  main.<fn>.<fn>
+  
+00:00 +0 -1: the recovery record itself refused (throws): nothing else of the write lands, the failure is shown, and History never runs ahead of the day keys
+00:00 +0 -2: the recovery record itself refused (throws): nothing else of the write lands, the failure is shown, and History never runs ahead of the day keys [E]
+  Expected: false
+    Actual: <true>
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\home\r8_a01_daily_persistence_test.dart 89:7  main.<fn>
+  
+00:00 +0 -2: a choice whose day key didn't land (throws): the Start after it still writes today's Circle — never skipped while History moves on
+00:00 +1 -2: History refuses the save (throws): History and the Circles THIRTY learns from read what is on disk — nothing unsaved is shown as saved (Claude F-5)
+00:00 +1 -3: History refuses the save (throws): History and the Circles THIRTY learns from read what is on disk — nothing unsaved is shown as saved (Claude F-5) [E]
+  Expected: null
+    Actual: <Instance of 'CircleJournalEntry'>
+  unsaved record visible in memory
+  
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test\features\home\r8_a01_daily_persistence_test.dart 131:7  main.<fn>
+  
+00:00 +1 -3: Start's History write lost (throws), Close recovered after a restart: the record carries the Start the durable day keys hold — never a Close without its Start (Astra R7-A05)
+00:00 +1 -4: Start's History write lost (throws), Close recovered after a restart: the record carries the Start the durable day keys hold — never a Close without its Start (Astra R7-A05) [E]
+  Expected: DateTime:<2026-10-12 09:00:00.000>
+    Actual: <null>
+  
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test\features\home\r8_a01_daily_persistence_test.dart 158:7  main.<fn>
+  
+00:00 +1 -4: Start's History write lost (throws) once, Close saved in the same session: one record, with its Start
+00:00 +2 -4: a day-key write at Start that returnsFalse is shown as not saved; the recovery record stays on disk; a restart restores the started Circle, and History agrees
+00:00 +2 -5: a day-key write at Start that returnsFalse is shown as not saved; the recovery record stays on disk; a restart restores the started Circle, and History agrees [E]
+  Expected: false
+    Actual: <true>
+  the failure must reach the user
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\home\r8_a01_daily_persistence_test.dart 64:9  main.<fn>.<fn>
+  
+00:00 +2 -5: the recovery record itself refused (returnsFalse): nothing else of the write lands, the failure is shown, and History never runs ahead of the day keys
+00:00 +2 -6: the recovery record itself refused (returnsFalse): nothing else of the write lands, the failure is shown, and History never runs ahead of the day keys [E]
+  Expected: false
+    Actual: <true>
+  
+  package:matcher                                             expect
+  package:flutter_test/src/widget_tester.dart 473:18          expect
+  test\features\home\r8_a01_daily_persistence_test.dart 89:7  main.<fn>
+  
+00:00 +2 -6: a choice whose day key didn't land (returnsFalse): the Start after it still writes today's Circle — never skipped while History moves on
+00:00 +3 -6: History refuses the save (returnsFalse): History and the Circles THIRTY learns from read what is on disk — nothing unsaved is shown as saved (Claude F-5)
+00:00 +3 -7: History refuses the save (returnsFalse): History and the Circles THIRTY learns from read what is on disk — nothing unsaved is shown as saved (Claude F-5) [E]
+  Expected: null
+    Actual: <Instance of 'CircleJournalEntry'>
+  unsaved record visible in memory
+  
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test\features\home\r8_a01_daily_persistence_test.dart 131:7  main.<fn>
+  
+00:00 +3 -7: Start's History write lost (returnsFalse), Close recovered after a restart: the record carries the Start the durable day keys hold — never a Close without its Start (Astra R7-A05)
+00:00 +3 -8: Start's History write lost (returnsFalse), Close recovered after a restart: the record carries the Start the durable day keys hold — never a Close without its Start (Astra R7-A05) [E]
+  Expected: DateTime:<2026-10-12 09:00:00.000>
+    Actual: <null>
+  
+  package:matcher                                              expect
+  package:flutter_test/src/widget_tester.dart 473:18           expect
+  test\features\home\r8_a01_daily_persistence_test.dart 158:7  main.<fn>
+  
+00:00 +3 -8: Start's History write lost (returnsFalse) once, Close saved in the same session: one record, with its Start
+00:00 +4 -8: a failed write is retried by the next one, exactly once: the day keys and History end in one Circle, started and closed
+00:00 +5 -8: Some tests failed.
+
+Failing tests:
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a01_daily_persistence_test.dart: History refuses the save (returnsFalse): History and the Circles THIRTY learns from read what is on disk — nothing unsaved is shown as saved (Claude F-5)
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a01_daily_persistence_test.dart: History refuses the save (throws): History and the Circles THIRTY learns from read what is on disk — nothing unsaved is shown as saved (Claude F-5)
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a01_daily_persistence_test.dart: Start's History write lost (returnsFalse), Close recovered after a restart: the record carries the Start the durable day keys hold — never a Close without its Start (Astra R7-A05)
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8_a01_daily_persistence_test.dart: Start's History write lost (throws), Close recovered after a restart: the record carries the Start the durable day keys hold — never a Close without its Start (Astra R7-A05)
+  ... and 4 more

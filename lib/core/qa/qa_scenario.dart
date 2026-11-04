@@ -1392,7 +1392,7 @@ Future<void> simulateQaDay(
         .recommendation
         ?.composed;
     if (day.keepCircle && composed != null && !composed.isKept) {
-      kept.keepCircle(
+      await kept.keepCircle(
         plan: composed.plan,
         need: day.direction,
         circleId: dateKey(morning),

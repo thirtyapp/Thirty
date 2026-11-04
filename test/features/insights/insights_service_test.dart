@@ -184,7 +184,7 @@ void main() {
         final c = open();
         final shown = insights(c).assess().added.single;
         expect(shown.family, InsightFamily.planForNeed);
-        expect(insights(c).apply(shown.id), InsightActionResult.done);
+        expect(await insights(c).apply(shown.id), InsightActionResult.done);
       },
     );
 
@@ -199,7 +199,7 @@ void main() {
       expect(insights(lapsed).read().snapshots, hasLength(1));
       expect(insights(lapsed).assess().added, isEmpty);
       expect(
-        insights(lapsed).apply(shown.id),
+        await insights(lapsed).apply(shown.id),
         InsightActionResult.needsPremium,
       );
       expect(
@@ -220,7 +220,7 @@ void main() {
         await seedJournal(choosingHead());
         final c = open();
         final shown = insights(c).assess().added.single;
-        expect(insights(c).apply(shown.id), InsightActionResult.done);
+        expect(await insights(c).apply(shown.id), InsightActionResult.done);
         expect(
           c.read(circlePlansProvider).lifecycleOf('making_room'),
           PlanLifecycle.active,
@@ -229,7 +229,10 @@ void main() {
           c.read(insightsProvider).byId(shown.id)!.appliedOn,
           '2026-10-30',
         );
-        expect(insights(c).apply(shown.id), InsightActionResult.alreadyApplied);
+        expect(
+          await insights(c).apply(shown.id),
+          InsightActionResult.alreadyApplied,
+        );
         expect(
           c.read(circlePlansProvider).plans['making_room']!.cycles,
           hasLength(1),
@@ -246,7 +249,7 @@ void main() {
           final shown = insights(c).assess().added.single;
           c.read(circlePlansProvider.notifier).start('making_room');
           expect(
-            insights(c).apply(shown.id),
+            await insights(c).apply(shown.id),
             InsightActionResult.notAvailable,
             reason: 'withdrawn: its Plan is active',
           );
@@ -266,9 +269,9 @@ void main() {
             isEmpty,
             reason: 'never applied by showing it',
           );
-          expect(insights(c).apply(shown.id), InsightActionResult.done);
+          expect(await insights(c).apply(shown.id), InsightActionResult.done);
           expect(
-            insights(c).apply(shown.id),
+            await insights(c).apply(shown.id),
             InsightActionResult.alreadyApplied,
           );
           await settle();
@@ -314,7 +317,10 @@ void main() {
           insights(c).status(c.read(insightsProvider).byId(shown.id)!),
           InsightStatus.declined,
         );
-        expect(insights(c).apply(shown.id), InsightActionResult.notAvailable);
+        expect(
+          await insights(c).apply(shown.id),
+          InsightActionResult.notAvailable,
+        );
       });
 
       group('I4: Keep, through the kept Circles', () {
@@ -338,22 +344,22 @@ void main() {
             final c = open();
             final shown = insights(c).assess().added.single;
             expect(shown.family, InsightFamily.usefulInCommon);
-            expect(insights(c).apply(shown.id), InsightActionResult.done);
+            expect(await insights(c).apply(shown.id), InsightActionResult.done);
             final kept = c.read(keptCirclesProvider).kept;
             expect(kept, hasLength(1));
             expect(kept.single.fromCircleId, '2026-10-29');
             expect(kept.single.plan.toWire(), CirclePlan(writing).toWire());
             expect(
-              insights(c).apply(shown.id),
+              await insights(c).apply(shown.id),
               InsightActionResult.alreadyApplied,
             );
             expect(c.read(keptCirclesProvider).kept, hasLength(1));
           },
         );
 
-        void keepEight(ProviderContainer c) {
+        Future<void> keepEight(ProviderContainer c) async {
           for (var k = 0; k < 8; k++) {
-            c
+            await c
                 .read(keptCirclesProvider.notifier)
                 .keepCircle(
                   plan: CirclePlan(reading),
@@ -368,11 +374,11 @@ void main() {
           () async {
             await seedJournal(useful());
             final c = open();
-            keepEight(c);
+            await keepEight(c);
             final shown = insights(c).assess().added.single;
             expect(shown.application, isA<NothingToChange>());
             expect(
-              insights(c).apply(shown.id),
+              await insights(c).apply(shown.id),
               InsightActionResult.nothingToApply,
             );
             expect(c.read(keptCirclesProvider).kept, hasLength(8));
@@ -385,13 +391,13 @@ void main() {
           final c = open();
           final shown = insights(c).assess().added.single;
           expect(shown.application, isA<KeepCircleFromHistory>());
-          keepEight(c);
+          await keepEight(c);
           final before = [
             for (final k in c.read(keptCirclesProvider).kept) k.id,
           ];
           expect(insights(c).status(shown), InsightStatus.current);
           expect(
-            insights(c).apply(shown.id),
+            await insights(c).apply(shown.id),
             InsightActionResult.keptLimitReached,
           );
           expect([
@@ -439,8 +445,11 @@ void main() {
         isFalse,
         reason: 'never turned on by being shown',
       );
-      expect(insights(c).apply(shown.id), InsightActionResult.done);
-      expect(insights(c).apply(shown.id), InsightActionResult.alreadyApplied);
+      expect(await insights(c).apply(shown.id), InsightActionResult.done);
+      expect(
+        await insights(c).apply(shown.id),
+        InsightActionResult.alreadyApplied,
+      );
       await settle();
       final cycle = c.read(circlePlansProvider).active!.current;
       expect(cycle.gentlerSince, '2026-10-30');
@@ -475,7 +484,7 @@ void main() {
     test('a different need: ordinary composition, untouched', () async {
       await seedPacing();
       final c = open();
-      insights(c).apply(insights(c).assess().added.single.id);
+      await insights(c).apply(insights(c).assess().added.single.id);
       await settle();
       final next = open(day: 1);
       next
@@ -497,7 +506,7 @@ void main() {
     test('never below ≈10, and Not this one today stays gentler', () async {
       await seedPacing();
       final c = open();
-      insights(c).apply(insights(c).assess().added.single.id);
+      await insights(c).apply(insights(c).assess().added.single.id);
       await settle();
       final next = open(day: 1);
       final today = next.read(recommendationProvider.notifier);
@@ -518,7 +527,7 @@ void main() {
     test('turned off by the user; ends with the cycle', () async {
       await seedPacing();
       final c = open();
-      insights(c).apply(insights(c).assess().added.single.id);
+      await insights(c).apply(insights(c).assess().added.single.id);
       final plans = c.read(circlePlansProvider.notifier);
       expect(plans.stopGentler('getting_going'), PlanActionResult.done);
       expect(c.read(circlePlansProvider).active!.current.isGentler, isFalse);
@@ -540,7 +549,7 @@ void main() {
       await settle();
       final lapsed = open(status: EntitlementStatus.inactive);
       expect(
-        insights(lapsed).apply(shown.id),
+        await insights(lapsed).apply(shown.id),
         InsightActionResult.needsPremium,
       );
       expect(
@@ -663,7 +672,10 @@ void main() {
       await settle();
       expect(prefs.getString(circleJournalKey), journalBefore);
       expect(prefs.getString(suggestionPreferencesKey), suggestionsBefore);
-      expect(insights(c).apply(shown.id), InsightActionResult.notAvailable);
+      expect(
+        await insights(c).apply(shown.id),
+        InsightActionResult.notAvailable,
+      );
       // A week on, the same observation stays quiet.
       final week = open(day: 7);
       expect(
@@ -690,8 +702,8 @@ void main() {
         );
         c = open();
         final shown = insights(c).assess().added.single;
-        insights(c).apply(shown.id);
-        c
+        await insights(c).apply(shown.id);
+        await c
             .read(keptCirclesProvider.notifier)
             .keepCircle(
               plan: CirclePlan(reading),

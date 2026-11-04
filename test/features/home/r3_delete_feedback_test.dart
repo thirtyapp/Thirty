@@ -136,8 +136,6 @@ void main() {
     // The intent itself is recorded; only removing it — the last step —
     // fails.
     ('the last step', 'flutter.$historyDeletionPendingKey', true, false),
-    // Recording the intent fails the first time: it is recorded again.
-    ('the intent, once,', 'flutter.$historyDeletionPendingKey', false, true),
   ]) {
     testWidgets('a write to $what fails: the founder\'s message, the intent '
         'kept, nothing deleted back on screen — and the next start '
@@ -195,6 +193,44 @@ void main() {
       );
     });
   }
+
+  // Audit remediation R8 (Astra R7-A04): the intent is recorded — and
+  // confirmed — before anything is removed.
+  testWidgets('recording the intent fails once: it is tried again, and the '
+      'deletion completes — no message, nothing pending', (tester) async {
+    final c = await withHistory(tester);
+    disk
+      ..failing = 'flutter.$historyDeletionPendingKey'
+      ..failuresLeft = 1;
+    await deleteThroughDialog(tester, c);
+    expect(find.byType(ThirtyNoticeDialog), findsNothing);
+    expectNothingDeletedOnShow(c);
+    expect((await disk.getAll())['flutter.$historyDeletionPendingKey'], isNull);
+  });
+
+  testWidgets('the intent can\'t be recorded at all: nothing is deleted, and '
+      'the user is told so — never that it will finish', (tester) async {
+    final c = await withHistory(tester);
+    disk.failing = 'flutter.$historyDeletionPendingKey';
+    await deleteThroughDialog(tester, c);
+    expect(find.text(deleteNotStartedTitle), findsOneWidget);
+    expect(find.text(deleteNotStartedBody), findsOneWidget);
+    // Announced by its title, not "Alert" (founder decision D1).
+    expect(
+      tester.widget<AlertDialog>(find.byType(AlertDialog)).semanticLabel,
+      deleteNotStartedTitle,
+    );
+    expect(find.text(deleteUnfinishedBody), findsNothing);
+    expect(c.read(circleJournalRepositoryProvider).readAll(), hasLength(1));
+    final stored = await disk.getAll();
+    expect(stored['flutter.$historyDeletionPendingKey'], isNull);
+    expect(stored['flutter.$circleJournalKey'], isNotNull);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    disk.failing = null;
+    final next = await restart();
+    expect(next.read(circleJournalRepositoryProvider).readAll(), hasLength(1));
+  });
 
   testWidgets('a Delete still pending, then a need tapped: finished first '
       'when it can be; when it can\'t, the same message and no Circle', (

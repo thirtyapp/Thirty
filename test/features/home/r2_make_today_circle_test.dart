@@ -307,7 +307,7 @@ void main() {
 
     test('a kept Circle used today', () async {
       final c = open(status: EntitlementStatus.inactive);
-      c
+      await c
           .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: CirclePlan.fromWire(const [
@@ -377,7 +377,7 @@ void main() {
       today(day0).start();
       today(day0).close();
       await settle();
-      day0
+      await day0
           .read(keptCirclesProvider.notifier)
           .keepCircle(
             plan: offer(day0).composed!.plan,

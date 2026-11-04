@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-03T14:21:02.359047Z from the working tree at HEAD `8bfd42c16693b8f5040ebcf4761db0e9c439981c` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-04T14:58:16.576072Z from the working tree at HEAD `8ece26f6dbd41f573e854b8fc82f44a6942282e3` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -247,7 +247,7 @@
 
 **`features/home/presentation/widgets/activity_guide_sheet.dart`**
 
-- Close *(×4)*
+- Close *(×6)*
 - Not this one today
 - First *(×2)*
 - You’ll need
@@ -379,6 +379,8 @@
 - Delete permanently
 - Couldn’t finish deleting your history.
 - THIRTY will try to finish when you next open the app.
+- Your history wasn’t deleted.
+- Nothing was changed. You can try again.
 
 **`features/home/presentation/widgets/journal_save_failure_notice.dart`**
 
@@ -386,6 +388,8 @@
 - Your existing saved data wasn’t overwritten.
 - Some earlier History couldn’t be opened. THIRTY preserved a copy before continuing.
 - Your History couldn’t be opened. THIRTY has left the stored data unchanged.
+- This change couldn’t be saved.
+- Please try again.
 
 **`features/home/presentation/widgets/later_today_label.dart`**
 
@@ -1083,4 +1087,4 @@ Voices: Locke, Heather, Milo, Brittney
 - Thin: moreEnergy at ≈10 has 19 materially distinct sessions and 6 main pieces (ADR-024 §10 known risk).
 - Thin: moreEnergy at ≈30 has 19 materially distinct sessions and 7 main pieces (ADR-024 §10 known risk).
 - “Your routine” is still shown for History records from retired routines (development devices only; ADR-024 §3 keeps such records readable).
-- Apostrophes are mixed: 9 live strings use a straight one (e.g. “Nothing recorded yet. Your Circle history will appear here once you've had a few days with THIRTY.”, “You won't be able to reopen it until tomorrow.”, “You won't be able to reopen it.”, “Begin today's Circle”, “Today's Circle”, “Your Circle is here when you're ready.”) while 89 use ’.
+- Apostrophes are mixed: 9 live strings use a straight one (e.g. “Nothing recorded yet. Your Circle history will appear here once you've had a few days with THIRTY.”, “You won't be able to reopen it until tomorrow.”, “You won't be able to reopen it.”, “Begin today's Circle”, “Today's Circle”, “Your Circle is here when you're ready.”) while 91 use ’.

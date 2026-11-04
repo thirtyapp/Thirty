@@ -1,0 +1,15 @@
+{"protocolVersion":"0.1.1","runnerVersion":"1.31.0","pid":14868,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-verify-r7/test/core/premium/r8_restore_wording_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-verify-r7/test/core/premium/r8_restore_wording_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"count":1,"time":2,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":1111}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":3,"line":null,"column":null,"url":null},"type":"group","time":1112}
+{"test":{"id":3,"name":"restore reported, billing then active: restored, and Premium is exactly what billing says","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":51,"column":5,"url":"file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-verify-r7/test/core/premium/r8_restore_wording_test.dart"},"type":"testStart","time":1113}
+{"testID":3,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1148}
+{"test":{"id":4,"name":"restore reported, billing then inactive: unavailable, and Premium is exactly what billing says","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":51,"column":5,"url":"file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-verify-r7/test/core/premium/r8_restore_wording_test.dart"},"type":"testStart","time":1148}
+{"testID":4,"error":"Expected: RestoreOutcome:<RestoreOutcome.unavailable>\n  Actual: RestoreOutcome:<RestoreOutcome.restored>\n","stackTrace":"package:matcher                                      expect\npackage:flutter_test/src/widget_tester.dart 473:18   expect\ntest\\core\\premium\\r8_restore_wording_test.dart 63:7  main.<fn>\n","isFailure":true,"type":"error","time":1160}
+{"testID":4,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1160}
+{"test":{"id":5,"name":"restore reported, billing then unavailable: unavailable, and Premium is exactly what billing says","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":51,"column":5,"url":"file:///C:/Users/thoma/Desktop/THIRTY%20App/Development/Thirty-verify-r7/test/core/premium/r8_restore_wording_test.dart"},"type":"testStart","time":1161}
+{"testID":5,"error":"Expected: RestoreOutcome:<RestoreOutcome.unavailable>\n  Actual: RestoreOutcome:<RestoreOutcome.restored>\n","stackTrace":"package:matcher                                      expect\npackage:flutter_test/src/widget_tester.dart 473:18   expect\ntest\\core\\premium\\r8_restore_wording_test.dart 63:7  main.<fn>\n","isFailure":true,"type":"error","time":1167}
+{"testID":5,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1167}
+{"success":false,"type":"done","time":1186}

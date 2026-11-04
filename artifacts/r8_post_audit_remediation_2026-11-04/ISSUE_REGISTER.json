@@ -1,0 +1,484 @@
+{
+ "baseline": {
+  "auditedCommit": "8ece26f6dbd41f573e854b8fc82f44a6942282e3",
+  "parent": "8bfd42c16693b8f5040ebcf4761db0e9c439981c",
+  "status": "Audited FAIL baseline (Astra) / CONDITIONAL PASS (Claude). R8 is uncommitted on top of it; no new SHA exists yet."
+ },
+ "sources": {
+  "claude": "Claude independent post-R7 audit, CONDITIONAL PASS, F-1..F-6 + recommendations. Read in full (local session transcript); not copied into the repository. A verbatim copy is at docs/audits/THIRTY_CLAUDE_POST_R7_AUDIT_REPORT.md (sha256 c6b396a1…), proposed for the commit.",
+  "astra": "GPT-6 Astra independent post-R7 audit, FAIL, R7-A01..A08 plus a MEDIUM restore defect and a LOW evidence recommendation. Read in full from docs/audits/THIRTY_ASTRA_POST_R7_AUDIT_SHARED_REPORT.md (sha256 e24bf8c1…, supplied by the founder 2026-11-04). The linked extended Library report was NOT supplied and was not read. Every finding's stated source evidence and reproduction was cross-checked against the R8 tests (see CROSSCHECK in README)."
+ },
+ "issues": [
+  {
+   "id": "R8-01",
+   "findings": [
+    {
+     "auditor": "Astra",
+     "id": "R7-A01",
+     "severity": "HIGH"
+    }
+   ],
+   "title": "Daily persistence failures",
+   "rootCause": "RecommendationNotifier._enqueue swallowed every error (catchError no-op); _publish ignored the bool results of setString/remove, so a refused key write continued, and the write-ahead record was removed although keys had not landed; a write whose day key never landed was later skipped silently (stored day != circleId) while the journal moved on. SharedPreferences keeps a refused value in memory, so the app also read back what was never saved.",
+   "files": [
+    "lib/core/storage/confirmed_write.dart (new)",
+    "lib/features/home/application/recommendation_provider.dart",
+    "lib/features/home/application/circle_journal.dart"
+   ],
+   "fix": "One shared primitive, writeConfirmed: a throw or a false is a failure; the key is put back as it was (memory and, if possible, disk) and StorageWriteFailed is thrown. _publish confirms the write-ahead record before any key, confirms every key, and removes the record only after all landed; on failure the Circle is reported not saved (existing founder-approved notice) and the confirmed record stays for the next write or the restart to complete. A write of today's Circle whose choice never reached disk publishes the choice with it instead of being skipped. The queue no longer drops failures silently. Exactly once: journal records stay one per circleId; Plan credit stays once per Circle.",
+   "reproducingTests": "test/features/home/r8_a01_daily_persistence_test.dart",
+   "failureInjection": "FaultDisk under the real SharedPreferences: throws and returns-false, per key, once or until healed; restart from what reached disk.",
+   "onR7Tree": "13 tests: 8 fail, 5 pass (guards)",
+   "afterFix": "13/13 pass",
+   "limitations": [
+    "Analytics interaction events (circle_started, circle_closed) still fire at the tap, before persistence: they record the interaction, not the save (unchanged).",
+    "RESOLVED in the pre-commit gate (R8-17): the earlier 'persistent History failure can overwrite yesterday's Close' limitation."
+   ]
+  },
+  {
+   "id": "R8-02",
+   "findings": [
+    {
+     "auditor": "Astra",
+     "id": "R7-A02",
+     "severity": "HIGH"
+    },
+    {
+     "auditor": "Claude",
+     "id": "F-3",
+     "severity": "LOW"
+    }
+   ],
+   "title": "Malformed kept-Circle collection read as empty and overwritten",
+   "rootCause": "keptCollectionFromRecord treated a version-1 wrapper whose kept field was present but not a list as a valid empty store; the next Keep replaced the bytes. Unknown top-level fields were dropped on every write. The repository's write over an unreadable record returned silently, as if saved.",
+   "files": [
+    "lib/features/personal_circle/domain/kept_circle.dart",
+    "lib/features/personal_circle/application/kept_circles_provider.dart"
+   ],
+   "fix": "kept present but not a list -> the whole record is unreadable (UnreadableKeptStore: shown, exported as stored, removed only by the user; count unknown -> nothing kept, 8-slot rule fails closed). kept absent (Phase D Toolkit shape) stays an empty store. Unknown wrapper fields are written back unchanged (retired Phase D fields excepted, as the migration does). A write over an unreadable record now fails with StorageWriteFailed; a non-string stored value is treated as unreadable data, never dropped.",
+   "reproducingTests": "test/features/personal_circle/r8_kept_ownership_persistence_test.dart (group 'Astra R7-A02')",
+   "failureInjection": "object/string/number/null/boolean kept values; missing field; unknown version; three restarts each.",
+   "onR7Tree": "part of 32 tests in the file: 27 fail, 5 pass (guards)",
+   "afterFix": "32/32 pass",
+   "limitations": []
+  },
+  {
+   "id": "R8-03",
+   "findings": [
+    {
+     "auditor": "Astra",
+     "id": "R7-A03",
+     "severity": "HIGH"
+    },
+    {
+     "auditor": "Claude",
+     "id": "F-6",
+     "severity": "LOW"
+    }
+   ],
+   "title": "Keep (and Plans/Insights saves) confirmed before durable persistence",
+   "rootCause": "KeptCirclesNotifier set state, returned the new Circle and wrote in the background with errors swallowed and false ignored; InsightsNotifier.apply marked I4 applied on that unconfirmed result, so a lost Keep left I4 applied forever. Plans and Insights _set had the same swallow/ignore pattern, and their unreadable-record set-aside was fire-and-forget before the main key could be overwritten.",
+   "files": [
+    "lib/features/personal_circle/application/kept_circles_provider.dart",
+    "lib/features/insights/application/insights_provider.dart",
+    "lib/features/plans/application/circle_plans_provider.dart",
+    "lib/core/storage/store_save_failures.dart (new)",
+    "lib/features/home/presentation/widgets/journal_save_failure_notice.dart",
+    "lib/features/insights/presentation/insights_page.dart",
+    "lib/features/personal_circle/presentation/keep_circle_card.dart",
+    "lib/features/personal_circle/presentation/kept_circle_page.dart",
+    "lib/features/plans/presentation/plan_detail_page.dart",
+    "lib/core/qa/qa_scenario.dart"
+   ],
+   "fix": "keepCircle / renameKept / deleteKept / removeUnreadable are asynchronous and change what is shown only once the store confirms the write; a failure leaves the kept Circles as they were, is shown in the app shell, and the future fails with StorageWriteFailed. Concurrent Keeps are counted (never 9, never a duplicate). Insights.apply is asynchronous: I4 is recorded applied only after its Circle is on disk (InsightActionResult.notSaved otherwise); an I4 whose Circle is already kept is recorded applied without keeping it twice. Plans and Insights saves are confirmed, a failure is shown and retried by the next whole-record save; an unreadable stored record is never written over until its copy aside is confirmed. Free/Premium unchanged: I4 Keep stays ungated after a lapse; every other Insight action stays Premium.",
+   "reproducingTests": "test/features/personal_circle/r8_kept_ownership_persistence_test.dart",
+   "failureInjection": "kept/Insights/Plans keys throw and return false; once and persistent; restarts; concurrent Keeps.",
+   "onR7Tree": "see R8-02 (same file)",
+   "afterFix": "32/32 pass",
+   "limitations": [
+    "Plans and Insights changes the store refused stay on screen, explicitly unsaved (StoreSaveState.unsaved — pending retry by the next save of that store), until the next successful save (then durably saved) or a restart (then gone; the store shows what is durable).",
+    "Copy: founder-approved D1 'This change couldn’t be saved.' / 'Please try again.'"
+   ]
+  },
+  {
+   "id": "R8-04",
+   "findings": [
+    {
+     "auditor": "Astra",
+     "id": "R7-A04",
+     "severity": "HIGH"
+    }
+   ],
+   "title": "Delete appears complete despite failed writes",
+   "rootCause": "The deletion intent was written concurrently with the first removals and its result ignored; removal results (false) were ignored, so a Delete whose removals the disk refused completed and removed its own marker; start-up completion and the Plans/Insights forgets ignored false too.",
+   "files": [
+    "lib/features/home/application/circle_history_deletion.dart",
+    "lib/features/home/application/recommendation_provider.dart (clearRecordedCircleState)",
+    "lib/features/plans/application/circle_plans_provider.dart",
+    "lib/features/insights/application/insights_provider.dart",
+    "lib/features/home/application/circle_journal.dart (clearAll)",
+    "lib/features/home/presentation/widgets/journal_data_controls.dart"
+   ],
+   "fix": "The intent is confirmed on disk (one retry) before anything is removed; if it can't be, nothing is deleted and the user is told so (HistoryDeletionNotStarted). Every removal and the Plans evidence write must be confirmed; every step is awaited even after one fails; the marker is removed last and only after all succeeded, otherwise it stays and the next start finishes. Start-up completion is confirmed the same way. Deleted values are never put back in memory (R3 founder rule), preserved journal copies included. Pre-commit gate (founder D3): the write barrier now begins only after the intent is confirmed, so a Delete that never began stops no write on its way (R8-18).",
+   "reproducingTests": "test/features/home/r8_a04_delete_durability_test.dart; updated test/features/home/r3_delete_feedback_test.dart",
+   "failureInjection": "journal / day key / Plans / Insights / preserved copy / intent / marker removal, throws and false; start-up completion still failing; queued write during a failed Delete; repeated Delete.",
+   "onR7Tree": "14 tests: 9 fail, 5 pass (guards)",
+   "afterFix": "14/14 pass",
+   "limitations": [
+    "R3 timing changed by founder decision D3 (2026-11-04), frozen in PRODUCT_V2_CONTRACT (Delete / Export amendment 2026-11-04).",
+    "Copy: founder-approved D1 'Your history wasn’t deleted.' / 'Nothing was changed. You can try again.'"
+   ]
+  },
+  {
+   "id": "R8-05",
+   "findings": [
+    {
+     "auditor": "Astra",
+     "id": "R7-A05",
+     "severity": "MEDIUM"
+    }
+   ],
+   "title": "Close recovered without its Start",
+   "rootCause": "When Start's History write failed and the Close was recovered from the durable day keys, _recordInJournal(closed) wrote only closedAt: History showed a Close without a Start although the keys held startedAt.",
+   "files": [
+    "lib/features/home/application/circle_journal.dart (recordClosed startedAt)",
+    "lib/features/home/application/recommendation_provider.dart"
+   ],
+   "fix": "recordClosed takes the Start from the same durable session and records it (with the started offer) only on an entry whose Start never reached History; a recorded Start is never changed. Nothing is invented: the value is the session's own startedAt.",
+   "reproducingTests": "test/features/home/r8_a01_daily_persistence_test.dart ('Start's History write lost …')",
+   "failureInjection": "journal throws/false for Start (and Close), restart; once, same session.",
+   "onR7Tree": "included in R8-01 counts",
+   "afterFix": "pass",
+   "limitations": []
+  },
+  {
+   "id": "R8-06",
+   "findings": [
+    {
+     "auditor": "Astra",
+     "id": "R7-A06",
+     "severity": "MEDIUM"
+    }
+   ],
+   "title": "Copy/Delete disabled for unreadable History",
+   "rootCause": "Both control surfaces enabled Copy/Delete from readAll().isNotEmpty — only what this build can decode.",
+   "files": [
+    "lib/features/home/application/circle_journal.dart (holdsHistory)",
+    "lib/features/home/presentation/widgets/journal_data_controls.dart",
+    "lib/features/settings/presentation/widgets/you_data_card.dart"
+   ],
+   "fix": "CircleJournalRepository.holdsHistory covers readable records, a journal it can't open (damaged or newer schema), unreadable records and preserved copies. Copy exports them as stored (journalStored / journalPreserved / entriesUnreadable, unchanged R6 export); Delete deletes them through the existing confirmation and deletion contract.",
+   "reproducingTests": "test/features/home/r8_a06_unreadable_history_controls_test.dart (widget tests, both surfaces)",
+   "failureInjection": "damaged, newer-schema, preserved-only, unreadable-record History; empty History.",
+   "onR7Tree": "9 tests: 8 fail, 1 pass (guard)",
+   "afterFix": "9/9 pass",
+   "limitations": []
+  },
+  {
+   "id": "R8-07",
+   "findings": [
+    {
+     "auditor": "Astra",
+     "id": "R7-A07",
+     "severity": "MEDIUM"
+    }
+   ],
+   "title": "Damaged saved wording replaced by catalogue wording and voiced",
+   "rootCause": "PartWording.listFromJson returned null for damaged words and the kept Circle was read with wording: null — the 'kept before words were saved' path — so today's catalogue words were shown and, matching the recordings, voiced as if original.",
+   "files": [
+    "lib/features/personal_circle/domain/kept_circle.dart"
+   ],
+   "fix": "A wording field that is present but damaged (bad item, wrong count, not a list, null) makes the record a RetainedKept: kept byte for byte, shown, renamable, removable, exported, counted in the eight — never run, so never voiced. A record without the field (kept before words were saved) is unchanged.",
+   "reproducingTests": "test/features/personal_circle/r8_kept_ownership_persistence_test.dart (group 'Astra R7-A07')",
+   "failureInjection": "four damaged shapes; written back after another Keep.",
+   "onR7Tree": "see R8-02 (same file)",
+   "afterFix": "pass",
+   "limitations": [
+    "Such a Circle can no longer be used today; the user can remove it and keep a new one. No product rule allows substituting current words, so none is applied."
+   ]
+  },
+  {
+   "id": "R8-08",
+   "findings": [
+    {
+     "auditor": "Astra",
+     "id": "R7-A08",
+     "severity": "MEDIUM"
+    },
+    {
+     "auditor": "Claude",
+     "id": "F-1",
+     "severity": "MEDIUM"
+    }
+   ],
+   "title": "Running Circle dropped on resume/restart after midnight",
+   "rootCause": "build() restored only a session whose stored day equals today; every resume invalidates nowProvider, so a started Circle of the day before was replaced by an empty new day. The protection existed only on the touch path.",
+   "files": [
+    "lib/features/home/application/recommendation_provider.dart",
+    "lib/core/app/thirty_app.dart"
+   ],
+   "fix": "build() keeps the previous day's session on show — resumed or restarted — when it is started (within midnightCarryOverLimit of its Start), or closed after its own day within the limit with its reflection unanswered; on its own day, recorded once, Plan credit by the existing rules; then the next resume/touch opens the new day. Never an older day, never an unstarted offer (founder stale-Start rule unchanged), nothing starts by itself.",
+   "reproducingTests": "test/core/app/r8_midnight_resume_test.dart",
+   "failureInjection": "background->resume, restart, closed-after-midnight reflection pending, closed on own day, unstarted offer, beyond the limit, two days old.",
+   "onR7Tree": "9 tests: 5 fail, 4 pass (guards)",
+   "afterFix": "9/9 pass",
+   "limitations": [
+    "midnightCarryOverLimit = 6 hours, frozen by founder decision D2 (PRODUCT_V2_CONTRACT, Circle V2 amendment 2026-11-04); boundaries 5h59/6h/6h01, restart, resume and the 25 Oct 2026 DST change tested (r8b_precommit_persistence_test).",
+    "The lifecycle 'resumed' event (including after only 'inactive', e.g. the notification shade) applies the expiry, as directed; a Circle left running in the foreground for over six hours is dropped at such a resume (it stays in History as started).",
+    "Not device-validated (automated only)."
+   ],
+   "founderDecision": "2026-11-04: D2 APPROVED (six elapsed hours from Start or Close)."
+  },
+  {
+   "id": "R8-09",
+   "findings": [
+    {
+     "auditor": "Claude",
+     "id": "F-2",
+     "severity": "LOW"
+    }
+   ],
+   "title": "No-touch choice after midnight dated yesterday; shownAt imprecise",
+   "rootCause": "chooseIntention and useOwnedToday took day and shownAt from the cached nowProvider (app start/resume time).",
+   "files": [
+    "lib/features/home/application/recommendation_provider.dart"
+   ],
+   "fix": "A choice uses the real time (eventClock, never earlier than the cached day): today's day and the moment it was shown. Use it today replaces only an offer of today; an earlier day's offer is never replaced under its day.",
+   "reproducingTests": "test/core/app/r8_midnight_resume_test.dart (group 'Claude F-2')",
+   "failureInjection": "choice at 00:10 with the app open since 23:50, no pointer; ordinary-day shownAt.",
+   "onR7Tree": "included in R8-08 counts",
+   "afterFix": "pass",
+   "limitations": []
+  },
+  {
+   "id": "R8-10",
+   "findings": [
+    {
+     "auditor": "Claude",
+     "id": "F-4",
+     "severity": "LOW"
+    }
+   ],
+   "title": "Malformed Insight dates reach int.parse",
+   "rootCause": "InsightSnapshot.fromJson accepted any string for generatedOn/appliedOn/notNowOn/declinedOn and facts.endedOn; unreadable snapshots were dropped on read and erased by the next save.",
+   "files": [
+    "lib/features/insights/domain/insight.dart",
+    "lib/features/insights/application/insights_provider.dart"
+   ],
+   "fix": "Every snapshot date must be a canonical YYYY-MM-DD (isCanonicalDateKey) or the snapshot is unreadable; unreadable snapshots are kept as stored (InsightsState.unreadable), written back by every save, exported, removed only by Delete. Nothing unreadable is shown or acted on; Premium boundaries unchanged.",
+   "reproducingTests": "test/features/insights/r8_f4_insight_dates_test.dart",
+   "failureInjection": "six damaged date shapes, active and inactive.",
+   "onR7Tree": "12 tests: 12 fail",
+   "afterFix": "12/12 pass",
+   "limitations": [
+    "A snapshot whose appliedOn/notNowOn is damaged is set aside, so with Premium the same observation may be offered again."
+   ]
+  },
+  {
+   "id": "R8-11",
+   "findings": [
+    {
+     "auditor": "Claude",
+     "id": "F-5",
+     "severity": "LOW"
+    }
+   ],
+   "title": "Failed History save visible in memory",
+   "rootCause": "shared_preferences updates its cache before the platform write and keeps the value whatever the disk says; circle_journal had no rollback.",
+   "files": [
+    "lib/features/home/application/circle_journal.dart",
+    "lib/core/storage/confirmed_write.dart"
+   ],
+   "fix": "Journal saves go through writeConfirmed: a refused save is put back in memory, so History, Insights and Today's own checks read what is on disk; the next save of that Circle writes it again.",
+   "reproducingTests": "test/features/home/r8_a01_daily_persistence_test.dart ('History refuses the save …')",
+   "failureInjection": "journal throws/false.",
+   "onR7Tree": "included in R8-01 counts",
+   "afterFix": "pass",
+   "limitations": []
+  },
+  {
+   "id": "R8-12",
+   "findings": [
+    {
+     "auditor": "Claude",
+     "id": "recommendation: journal record versions",
+     "severity": "RECOMMENDATION"
+    }
+   ],
+   "title": "Newer-schema journal records lose unknown fields on save",
+   "rootCause": "A record with a higher per-record schemaVersion inside a readable wrapper was read and rewritten with only this build's fields.",
+   "files": [
+    "lib/features/home/application/circle_journal.dart"
+   ],
+   "fix": "Such a record is unreadable for this build: written back verbatim, exported in entriesUnreadable, counted by holdsHistory.",
+   "reproducingTests": "test/features/home/r8_journal_forward_records_test.dart",
+   "onR7Tree": "2 tests: 2 fail",
+   "afterFix": "2/2 pass",
+   "limitations": [
+    "A newer-build record is not shown in History by this build."
+   ]
+  },
+  {
+   "id": "R8-13",
+   "findings": [
+    {
+     "auditor": "Astra",
+     "id": "restore defect (section 7)",
+     "severity": "MEDIUM"
+    },
+    {
+     "auditor": "Audit recommendation (founder directive §6)",
+     "id": "RevenueCat restore wording",
+     "severity": "RECOMMENDATION"
+    }
+   ],
+   "title": "'Premium restored' said while the entitlement is not active",
+   "rootCause": "EntitlementNotifier.restore returned the gateway's restored outcome even when the re-resolved entitlement was inactive or unavailable.",
+   "files": [
+    "lib/core/premium/premium_access.dart"
+   ],
+   "fix": "restored is returned only when billing then verifies Premium active; otherwise unavailable (existing copy). RevenueCat remains the only authority; no configuration touched.",
+   "disposition": "FIXED in R8 (low-risk). Real-device restore and cross-device recovery stay in the A2-07 / Premium restoration release gate.",
+   "reproducingTests": "test/core/premium/r8_restore_wording_test.dart",
+   "onR7Tree": "3 tests: 2 fail, 1 pass (guard)",
+   "afterFix": "3/3 pass",
+   "limitations": [
+    "settings_page_test's fake gateway reported 'restored' while still inactive; it now behaves like the store (Premium active after a found restore)."
+   ]
+  },
+  {
+   "id": "R8-14",
+   "findings": [
+    {
+     "auditor": "Astra",
+     "id": "C — evidence automation",
+     "severity": "LOW"
+    }
+   ],
+   "title": "Evidence runner",
+   "fix": "R8 runner records the reporter's done.success as doneSuccess separately from done; report and cases exit non-zero on any mismatch (not run, unexpected, incomplete, empty, non-zero exit, done not successful, failures, skips).",
+   "files": [
+    "artifacts/r8_post_audit_remediation_2026-11-04/regression/run_batches.py"
+   ],
+   "disposition": "FIXED for R8 evidence. The R6/R7 runners are historical evidence and stay unchanged.",
+   "limitations": []
+  },
+  {
+   "id": "R8-15",
+   "findings": [
+    {
+     "auditor": "Claude",
+     "id": "recommendation: doc comments",
+     "severity": "RECOMMENDATION"
+    }
+   ],
+   "title": "Misplaced / duplicated doc comments",
+   "fix": "dateKey's doc comment moved back onto dateKey (date_key.dart); close()'s duplicated paragraph removed.",
+   "files": [
+    "lib/core/utils/date_key.dart",
+    "lib/features/home/application/recommendation_provider.dart"
+   ],
+   "disposition": "FIXED",
+   "limitations": []
+  },
+  {
+   "id": "R8-16",
+   "findings": [
+    {
+     "auditor": "R8 pre-commit probe P2 (founder: fix before commit)",
+     "id": "P2",
+     "severity": "LOW"
+    }
+   ],
+   "title": "Recovery-record removal failure reported as 'not saved' (false negative)",
+   "rootCause": "In _publish the removal of the write-ahead record was inside the same failure path as the required key writes, so a refused removal — after every key had landed — reported the Circle not saved and skipped the History write.",
+   "files": [
+    "lib/features/home/application/recommendation_provider.dart"
+   ],
+   "fix": "Once every required key is confirmed the Circle is durably saved. The record's removal is cleanup: if refused, the record stays (memory = disk, via writeConfirmed's rollback) holding exactly the stored values — pending retry. The next write merges and removes it; a restart reads the same Circle. History is written and the save reported truthfully.",
+   "reproducingTests": "test/features/home/r8b_precommit_persistence_test.dart (P2 ×4)",
+   "onPreGateR8": "2 of 4 failed (the restart variants passed)",
+   "afterFix": "4/4 pass",
+   "limitations": [],
+   "founderDecision": "2026-11-04: APPROVED."
+  },
+  {
+   "id": "R8-17",
+   "findings": [
+    {
+     "auditor": "R8 limitation, not accepted by the founder",
+     "id": "persistent History failure",
+     "severity": "HIGH (data loss)"
+    }
+   ],
+   "title": "The next day's choice could overwrite an earlier Close History didn't hold",
+   "rootCause": "Day keys hold one session. A new day's choice published over them regardless of whether History had recorded the earlier session; under a persistent History failure the earlier Start/Close existed only in the day keys and was destroyed.",
+   "files": [
+    "lib/features/home/application/recommendation_provider.dart (_recordBeforeOverwrite, _journalHolds)"
+   ],
+   "fix": "Before the day keys move to another day, the stored started/closed session must be in History and its Plan credit saved; otherwise nothing is written, the new day's Circle is reported not saved, and the earlier session stays in the day keys. Once History saves again, the next start records it (existing catch-up) and the new day proceeds. Smallest non-destructive change: no new key, no migration.",
+   "reproducingTests": "test/features/home/r8b_precommit_persistence_test.dart ('History refusing every save' ×2)",
+   "onPreGateR8": "2 of 2 failed",
+   "afterFix": "2/2 pass",
+   "limitations": [
+    "Degraded mode while History refuses every save (e.g. a journal from a newer THIRTY): today's choice is not durable — a restart re-decides today — and the user is told each time. No History evidence is destroyed. An offer that was never started is not protected this way (it is recorded by the ordinary catch-up)."
+   ],
+   "founderDecision": "2026-11-04: fail-closed rule APPROVED by the founder; must not be removed for convenience."
+  },
+  {
+   "id": "R8-18",
+   "findings": [
+    {
+     "auditor": "Founder D3 review",
+     "id": "D3 ordering",
+     "severity": "MEDIUM"
+    }
+   ],
+   "title": "A Delete that never began could still stop a write on its way",
+   "rootCause": "The write barrier (epoch) moved before the intent was confirmed; when the intent then failed, a Close already queued was dropped as stale although nothing was deleted.",
+   "files": [
+    "lib/features/home/application/circle_history_deletion.dart"
+   ],
+   "fix": "The intent is written and confirmed (one retry) before the barrier begins; only then do writes stop, memory clear and removals begin.",
+   "reproducingTests": "test/features/home/r8b_precommit_persistence_test.dart ('D3 — a Close on its way' ×2)",
+   "onPreGateR8": "2 of 2 failed",
+   "afterFix": "2/2 pass",
+   "limitations": [],
+   "founderDecision": "2026-11-04: D3 APPROVED (durable intent before the write barrier, memory clearing or removals)."
+  },
+  {
+   "id": "R8-19",
+   "findings": [
+    {
+     "auditor": "Astra",
+     "id": "section 4, RevenueCat ordering",
+     "severity": "NOTE"
+    }
+   ],
+   "title": "R7 handoff overstated the RevenueCat ordering guarantee",
+   "rootCause": "The R7 AUDIT_HANDOFF says overlapping refreshes publish 'only the newest-asked answer'. The gateway (_publish ticket check) prevents an older answer from replacing a newer PUBLISHED one; an older answer can still be published while a newer request is unresolved (and is then replaced).",
+   "disposition": "Documentation correction only; no code change (RevenueCat out of R8 scope). The R7 handoff is historical and unchanged; this register states the accurate guarantee.",
+   "files": [],
+   "limitations": []
+  },
+  {
+   "id": "R8-20",
+   "findings": [
+    {
+     "auditor": "Astra",
+     "id": "section 6, tested-source equivalence",
+     "severity": "LOW"
+    }
+   ],
+   "title": "Tested source not reproducibly matched to the commit",
+   "rootCause": "R7's tested tree was a temporary index tree not in the repository, and raw reporter logs were not committed.",
+   "fix": "R8 records SOURCE_MANIFEST_git_blobs.txt (git blob id of every lib/, test/, pubspec.*, analysis_options.yaml file as tested — line-ending independent, comparable with `git ls-tree -r <commit>`), SOURCE_FINGERPRINT_start/end.sha256 (unchanged during the run), and proposes committing the raw R8 logs and R7's raw logs.",
+   "files": [
+    "artifacts/r8_post_audit_remediation_2026-11-04/regression/SOURCE_MANIFEST_git_blobs.txt"
+   ],
+   "limitations": [
+    "Equivalence is established at commit time by comparing the committed tree with the manifest; not yet done (no commit)."
+   ]
+  }
+ ]
+}

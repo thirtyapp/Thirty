@@ -223,7 +223,7 @@ void main() {
               day % 4 == 0 &&
               composed != null &&
               !composed.isKept) {
-            final kept = c
+            final kept = await c
                 .read(keptCirclesProvider.notifier)
                 .keepCircle(
                   plan: composed.plan,

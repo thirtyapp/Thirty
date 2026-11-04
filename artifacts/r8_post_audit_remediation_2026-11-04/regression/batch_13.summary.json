@@ -1,0 +1,289 @@
+{
+ "files": {
+  "test/features/plans/r6_stage5_end_line_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/application/premium_offer_provider_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/b7_entitlement_matrix_test.dart": {
+   "passed": 40,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/presentation/premium_offer_c2_real_font_test.dart": {
+   "passed": 24,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/presentation/premium_offer_c2_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/presentation/premium_offer_copy_guard_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/presentation/premium_offer_page_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/r6_purchase_busy_label_test.dart": {
+   "passed": 1,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/application/reminder_after_close_test.dart": {
+   "passed": 17,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/application/reminder_personalization_test.dart": {
+   "passed": 27,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/application/reminder_provider_test.dart": {
+   "passed": 24,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/presentation/widgets/reminder_invitation_card_large_text_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 187,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/features/plans/r6_stage5_end_line_test.dart": [
+   "every stage answered Not useful: the existing line",
+   "some Not useful, the others set aside: the mixed line \u2014 never \"none of these stages was useful\"",
+   "a stage set aside and later guided counts as guided, not set aside",
+   "every stage set aside: its own line, unchanged",
+   "the all-set-aside line names all three reasons, exactly",
+   "the mixed line, exactly"
+  ],
+  "test/features/premium/application/premium_offer_provider_test.dart": [
+   "showPremiumOfferInvitationProvider false with zero closed Circles",
+   "showPremiumOfferInvitationProvider false with only one closed Circle on one distinct date",
+   "showPremiumOfferInvitationProvider true once a second closed Circle lands on a distinct date",
+   "showPremiumOfferInvitationProvider never true while already entitled",
+   "showPremiumOfferInvitationProvider never true once already marked shown, even if still eligible",
+   "showPremiumOfferInvitationProvider never true while a reflection question is pending \u2014 prompt-priority rule (parent \u00a728): reflection first, Premium invitation waits until neither is being presented",
+   "showPremiumOfferInvitationProvider becomes true once the pending reflection is answered, still on the same visit",
+   "showPremiumOfferInvitationProvider never true while the reminder invitation is currently eligible \u2014 prompt-priority rule (parent \u00a728): reminder invitation before Premium invitation"
+  ],
+  "test/features/premium/b7_entitlement_matrix_test.dart": [
+   "initializing \u2192 initializing Personal Guided Circle: composed only while paid",
+   "initializing \u2192 initializing THIRTY's voice: offered and speaking only while paid",
+   "initializing \u2192 initializing Plans: start, carry on, repeat, revisit and gentler need Premium; pause, leave and gentler off never do",
+   "initializing \u2192 initializing Insights: a new assessment and its application only while paid",
+   "initializing \u2192 initializing Keep is never gated",
+   "initializing \u2192 initializing Leave it out: a composer control \u2014 recorded only while paid, even when a kept Circle runs on a Free day",
+   "unavailable \u2192 unavailable Personal Guided Circle: composed only while paid",
+   "unavailable \u2192 unavailable THIRTY's voice: offered and speaking only while paid",
+   "unavailable \u2192 unavailable Plans: start, carry on, repeat, revisit and gentler need Premium; pause, leave and gentler off never do",
+   "unavailable \u2192 unavailable Insights: a new assessment and its application only while paid",
+   "unavailable \u2192 unavailable Keep is never gated",
+   "unavailable \u2192 unavailable Leave it out: a composer control \u2014 recorded only while paid, even when a kept Circle runs on a Free day",
+   "inactive (never subscribed) \u2192 inactive Personal Guided Circle: composed only while paid",
+   "inactive (never subscribed) \u2192 inactive THIRTY's voice: offered and speaking only while paid",
+   "inactive (never subscribed) \u2192 inactive Plans: start, carry on, repeat, revisit and gentler need Premium; pause, leave and gentler off never do",
+   "inactive (never subscribed) \u2192 inactive Insights: a new assessment and its application only while paid",
+   "inactive (never subscribed) \u2192 inactive Keep is never gated",
+   "inactive (never subscribed) \u2192 inactive Leave it out: a composer control \u2014 recorded only while paid, even when a kept Circle runs on a Free day",
+   "active \u2192 active Personal Guided Circle: composed only while paid",
+   "active \u2192 active THIRTY's voice: offered and speaking only while paid",
+   "active \u2192 active Plans: start, carry on, repeat, revisit and gentler need Premium; pause, leave and gentler off never do",
+   "active \u2192 active Insights: a new assessment and its application only while paid",
+   "active \u2192 active Keep is never gated",
+   "active \u2192 active Leave it out: a composer control \u2014 recorded only while paid, even when a kept Circle runs on a Free day",
+   "grace period \u2192 active Personal Guided Circle: composed only while paid",
+   "grace period \u2192 active THIRTY's voice: offered and speaking only while paid",
+   "grace period \u2192 active Plans: start, carry on, repeat, revisit and gentler need Premium; pause, leave and gentler off never do",
+   "grace period \u2192 active Insights: a new assessment and its application only while paid",
+   "grace period \u2192 active Keep is never gated",
+   "grace period \u2192 active Leave it out: a composer control \u2014 recorded only while paid, even when a kept Circle runs on a Free day",
+   "cancelled but paid through the period \u2192 active Personal Guided Circle: composed only while paid",
+   "cancelled but paid through the period \u2192 active THIRTY's voice: offered and speaking only while paid",
+   "cancelled but paid through the period \u2192 active Plans: start, carry on, repeat, revisit and gentler need Premium; pause, leave and gentler off never do",
+   "cancelled but paid through the period \u2192 active Insights: a new assessment and its application only while paid",
+   "cancelled but paid through the period \u2192 active Keep is never gated",
+   "cancelled but paid through the period \u2192 active Leave it out: a composer control \u2014 recorded only while paid, even when a kept Circle runs on a Free day",
+   "expired (true expiry after a subscription) \u2192 inactive new Premium work stops, even called directly; everything the subscriber had stays readable and theirs",
+   "expired (true expiry after a subscription) \u2192 inactive resubscribing restores the paid services where they were",
+   "the skip sheet offers Leave it out only with Premium (offered: true)",
+   "the skip sheet offers Leave it out only with Premium (offered: false)"
+  ],
+  "test/features/premium/presentation/premium_offer_c2_real_font_test.dart": [
+   "320pt, 200%, free, light: nothing truncated or overflowing",
+   "320pt, 200%, free, dark: nothing truncated or overflowing",
+   "320pt, 200%, price loading, light: nothing truncated or overflowing",
+   "320pt, 200%, price loading, dark: nothing truncated or overflowing",
+   "320pt, 200%, no offer, light: nothing truncated or overflowing",
+   "320pt, 200%, no offer, dark: nothing truncated or overflowing",
+   "320pt, 200%, active, light: nothing truncated or overflowing",
+   "320pt, 200%, active, dark: nothing truncated or overflowing",
+   "320pt, 200%, unavailable, light: nothing truncated or overflowing",
+   "320pt, 200%, unavailable, dark: nothing truncated or overflowing",
+   "320pt, 200%, checking, light: nothing truncated or overflowing",
+   "320pt, 200%, checking, dark: nothing truncated or overflowing",
+   "360pt, 200%, free, light: nothing truncated or overflowing",
+   "360pt, 200%, free, dark: nothing truncated or overflowing",
+   "360pt, 200%, price loading, light: nothing truncated or overflowing",
+   "360pt, 200%, price loading, dark: nothing truncated or overflowing",
+   "360pt, 200%, no offer, light: nothing truncated or overflowing",
+   "360pt, 200%, no offer, dark: nothing truncated or overflowing",
+   "360pt, 200%, active, light: nothing truncated or overflowing",
+   "360pt, 200%, active, dark: nothing truncated or overflowing",
+   "360pt, 200%, unavailable, light: nothing truncated or overflowing",
+   "360pt, 200%, unavailable, dark: nothing truncated or overflowing",
+   "360pt, 200%, checking, light: nothing truncated or overflowing",
+   "360pt, 200%, checking, dark: nothing truncated or overflowing"
+  ],
+  "test/features/premium/presentation/premium_offer_c2_test.dart": [
+   "Hierarchy value \u2192 what stays Free \u2192 price \u2192 disclosure \u2192 CTA \u2192 Not now \u2192 ownership \u2192 restore footer \u2192 cancel line",
+   "Hierarchy Become Premium is the full-width 56pt hero CTA",
+   "Hierarchy each value point is one sentence for assistive tech; the mark is decorative",
+   "Exits Not now goes back without purchasing",
+   "Exits active: Premium is active, Manage, Done \u2014 no price, no CTA",
+   "Billing-state matrix checking: no purchase, no restore",
+   "Billing-state matrix unavailable: truthful status, no purchase, restore shown",
+   "Billing-state matrix price loading: \"Checking the current price\u2026\", CTA disabled, no price text",
+   "Billing-state matrix no offer: no price, no CTA, the exit stays",
+   "Billing-state matrix the price is the store's own string, never a hardcoded one",
+   "Billing-state matrix purchasing: CTA loading; Not now and Restore disabled",
+   "Billing-state matrix confirmed purchase: switches to the active state and says so once",
+   "Billing-state matrix pending: explained, still free \u2014 then unlocks when Google Play completes it"
+  ],
+  "test/features/premium/presentation/premium_offer_copy_guard_test.dart": [
+   "no offer line promises an outcome \u2014 it may say what THIRTY does, never that it will work",
+   "no offer line sells a retired Phase D product",
+   "B7: the offer describes the live product the three jobs: a guided Circle, Plans and Insights",
+   "B7: the offer describes the live product Free stays available, whole and not a trial",
+   "B7: the offer describes the live product cancelling is told truthfully: active to the end of the period, then new Premium work stops and nothing the user has is lost",
+   "B7: the offer describes the live product owning is never sold as Premium: no \"Yours to keep\" point",
+   "B7: the offer describes the live product no unsupported claim"
+  ],
+  "test/features/premium/presentation/premium_offer_page_test.dart": [
+   "describes the recurring paid job \u2014 a guided Circle made each day, owned things kept \u2014 and nothing else: no retired pillar, no upkeep pitch, no Atmosphere, AI, trial, annual or scarcity language (V2 Phase D2)",
+   "shows the real localized store price and period, never a hardcoded figure",
+   "shows a quiet unavailable state and no purchase button when no monthly package is configured",
+   "already-entitled users see their active status, not a purchase button (Phase C2 copy)",
+   "a successful purchase reports confirmation and updates entitlement state authoritatively",
+   "a user-cancelled purchase is treated as an ordinary outcome \u2014 no error message, no crash",
+   "a pending Google Play payment is explained, never shown as success or as an error",
+   "a purchase whose entitlement is not yet active is shown as confirming, never as success",
+   "a provider error is reported without implying success",
+   "says what Free still gives and that history stays on this device (Phase C2 copy)",
+   "Phase A2 \u2014 the Premium offer card uses featuredCard padding"
+  ],
+  "test/features/premium/r6_purchase_busy_label_test.dart": [
+   "the purchase button while the store works: \"Become Premium, in progress\", disabled; afterwards its own label again"
+  ],
+  "test/features/reminder/application/reminder_after_close_test.dart": [
+   "A \u2014 not started: today's reminder stays, then comes every day",
+   "C \u2014 closing today's Circle moves a reminder still ahead today to tomorrow, with no Settings screen anywhere",
+   "B/E \u2014 starting alone already skips today, and reflecting after Close never brings today back",
+   "the original time passes silently; tomorrow's reminder is delivered once",
+   "no app reopen for several days: after Close, every following day still gets its reminder \u2014 none skipped, none twice",
+   "ignored reminders never pile up: each day's replaces the last",
+   "D \u2014 a time changed after Close still skips today, then repeats daily at the new time",
+   "D \u2014 disabling leaves nothing scheduled; re-enabling after Close skips today",
+   "disabled, the reminder stays silent for days",
+   "a rename after Close updates the greeting and still skips today",
+   "F/G \u2014 killed after Close and relaunched later the same day: today stays skipped",
+   "H \u2014 a reboot after Close keeps today skipped and the days after covered, before THIRTY is ever opened again",
+   "a phone off through reminder time never delivers it late; the next day's still comes",
+   "the next day, opening THIRTY before reminder time keeps that day's reminder",
+   "a reminder time already past today stays daily after Close",
+   "without exact-alarm access nothing is armed \u2014 never an inexact fallback",
+   "the plugin's own repeating schedule \u2014 the source of the stale reminder \u2014 is never used, and an alarm it armed in an earlier version is retired"
+  ],
+  "test/features/reminder/application/reminder_personalization_test.dart": [
+   "reminderNotificationTitle (pure) 8:00 \u2192 \"Good morning, Thomas.\" / \"Good morning.\"",
+   "reminderNotificationTitle (pure) 14:00 \u2192 \"Good afternoon, Thomas.\" / \"Good afternoon.\"",
+   "reminderNotificationTitle (pure) 20:00 \u2192 \"Good evening, Thomas.\" / \"Good evening.\"",
+   "reminderNotificationTitle (pure) 4:30 \u2192 \"Good evening, Thomas.\" / \"Good evening.\"",
+   "reminderNotificationTitle (pure) 4:59 \u2192 \"Good evening, Thomas.\" / \"Good evening.\"",
+   "reminderNotificationTitle (pure) 5:00 \u2192 \"Good morning, Thomas.\" / \"Good morning.\"",
+   "reminderNotificationTitle (pure) 11:59 \u2192 \"Good morning, Thomas.\" / \"Good morning.\"",
+   "reminderNotificationTitle (pure) 12:00 \u2192 \"Good afternoon, Thomas.\" / \"Good afternoon.\"",
+   "reminderNotificationTitle (pure) 17:59 \u2192 \"Good afternoon, Thomas.\" / \"Good afternoon.\"",
+   "reminderNotificationTitle (pure) 18:00 \u2192 \"Good evening, Thomas.\" / \"Good evening.\"",
+   "reminderNotificationTitle (pure) the body is fixed and carries nothing personal",
+   "Scheduled notification content reminder at 8:0, Thomas \u2192 \"Good morning, Thomas.\"",
+   "Scheduled notification content reminder at 14:0, Thomas \u2192 \"Good afternoon, Thomas.\"",
+   "Scheduled notification content reminder at 20:0, Thomas \u2192 \"Good evening, Thomas.\"",
+   "Scheduled notification content reminder at 4:30, Thomas \u2192 \"Good evening, Thomas.\"",
+   "Scheduled notification content reminder at 8:0, no name \u2192 \"Good morning.\"",
+   "Scheduled notification content reminder at 14:0, no name \u2192 \"Good afternoon.\"",
+   "Scheduled notification content reminder at 20:0, no name \u2192 \"Good evening.\"",
+   "Scheduled notification content the title follows the reminder time, not the moment it is scheduled: scheduled at 09:00 for 20:00 \u2192 evening",
+   "Name lifecycle enabled + add a name \u2192 the future notification is re-established with it",
+   "Name lifecycle enabled + change the name \u2192 updated",
+   "Name lifecycle enabled + remove the name \u2192 neutral greeting",
+   "Name lifecycle disabled + change the name \u2192 nothing is scheduled",
+   "Name lifecycle a name edit never asks for notification permission again, and keeps the reminder time and state",
+   "Name lifecycle saving the same name again changes nothing",
+   "Reminder time lifecycle changing the reminder time changes the greeting's daypart",
+   "Reminder time lifecycle enabling picks the greeting for the chosen time"
+  ],
+  "test/features/reminder/application/reminder_provider_test.dart": [
+   "nextReminderOccurrence (pure) today, when the time has not yet passed and today is not suppressed",
+   "nextReminderOccurrence (pure) tomorrow, when the time has already passed today",
+   "nextReminderOccurrence (pure) tomorrow, when today is suppressed even though the time has not passed yet",
+   "nextReminderOccurrence (pure) tomorrow at the exact boundary \u2014 \"already passed\" includes the exact minute",
+   "ReminderNotifier build() restores defaults and never touches the gateway",
+   "ReminderNotifier restores a previously persisted enabled state",
+   "ReminderNotifier initialize() (called at cold launch) never requests notification permission or exact-alarm access \u2014 only checks them \u2014 matching \"no permission request at cold launch\" (parent \u00a727, extended to exact-alarm special access)",
+   "ReminderNotifier enable() requests permission, persists, and schedules exactly once when notification permission and exact-alarm access are both granted",
+   "ReminderNotifier enable() with denied notification permission still records the user's choice truthfully, but schedules nothing",
+   "ReminderNotifier enable() with notification permission granted but exact-alarm access missing schedules nothing \u2014 never an inexact fallback",
+   "ReminderNotifier requestExactAlarmAccess() invokes the platform request exactly once and, once access is actually granted, re-checks live and the reminder becomes active",
+   "ReminderNotifier user returns from the exact-alarm access screen without granting it \u2014 the reminder remains inactive/needs access, not scheduled",
+   "ReminderNotifier exact-alarm access revoked later (e.g. from system settings while backgrounded) is reconciled without crashing \u2014 schedules nothing and the state reflects it truthfully",
+   "ReminderNotifier repeatedly reconciling with exact-alarm access still denied never triggers the platform request itself \u2014 no permission nag loop; the request only ever happens from the dedicated explicit user action",
+   "ReminderNotifier disable() cancels pending work and persists",
+   "ReminderNotifier setTime() reschedules with the new time while active",
+   "ReminderNotifier setTime() while disabled never schedules \u2014 only cancels (a no-op, nothing was scheduled)",
+   "ReminderNotifier reschedules automatically when today's Circle starts \u2014 suppressing an unnecessary later reminder the same day",
+   "ReminderNotifier never reschedules on unrelated recommendation changes with the same status (no redundant work)",
+   "ReminderNotifier closing today's Circle (after starting it) suppresses the same day, targeting the same next occurrence as starting alone \u2014 never pushed further out by the second status change",
+   "ReminderNotifier Close cancels the same-day alarm before anything else runs \u2014 the alarm is already gone even if the process never gets past that first step (simulated by a permission check that never resolves)",
+   "ReminderNotifier a failed re-arm after a successful cancel fails closed \u2014 today's alarm is not reintroduced merely because tomorrow's reschedule attempt failed",
+   "ReminderNotifier Day N+1: a stale Day-N started/closed status cannot suppress the new day's reminder \u2014 eligibility is restored automatically, exactly the founder-approved \"reminds again the next day automatically\" behavior (rule 4/5 of the reminder contract amendment). This models a fresh app session on the new day \u2014 THIRTY's own Dart code has no way to run at midnight with no app open at all; that guarantee is provided entirely by `flutter_local_notifications`' native Android `ScheduledNotificationReceiver`, which re-arms its own next occurrence purely in native code once a notification has actually fired (verified by reading that plugin's Java source directly) \u2014 a platform boundary no Flutter-side test can exercise. What THIS test proves is the one thing entirely within THIRTY's own control: if the Day-N session correctly targeted Day N+1 (already covered above) and the app happens to be reopened on Day N+1, it must never remain incorrectly suppressed by Day N's leftover status.",
+   "ReminderNotifier refreshPermission() reconciles the schedule after an external permission change"
+  ],
+  "test/features/reminder/presentation/widgets/reminder_invitation_card_large_text_test.dart": [
+   "100% text: side by side, unchanged 320pt",
+   "100% text: side by side, unchanged 360pt",
+   "100% text: side by side, unchanged 412pt",
+   "200% text: stacked when the pair would truncate 320pt: stacked, same order, full width, nothing cut off",
+   "200% text: stacked when the pair would truncate 320pt: \"Not now\" still closes the invitation for the session",
+   "200% text: stacked when the pair would truncate 320pt: \"Choose a time\" still opens the time picker and enables the reminder",
+   "200% text: stacked when the pair would truncate 360pt: stacked, same order, full width, nothing cut off",
+   "200% text: stacked when the pair would truncate 360pt: \"Not now\" still closes the invitation for the session",
+   "200% text: stacked when the pair would truncate 360pt: \"Choose a time\" still opens the time picker and enables the reminder"
+  ]
+ },
+ "batch": 13,
+ "exit": 0,
+ "seconds": 17,
+ "command": "flutter test --concurrency=1 --reporter json test/features/plans/r6_stage5_end_line_test.dart test/features/premium/application/premium_offer_provider_test.dart test/features/premium/b7_entitlement_matrix_test.dart test/features/premium/presentation/premium_offer_c2_real_font_test.dart test/features/premium/presentation/premium_offer_c2_test.dart test/features/premium/presentation/premium_offer_copy_guard_test.dart test/features/premium/presentation/premium_offer_page_test.dart test/features/premium/r6_purchase_busy_label_test.dart test/features/reminder/application/reminder_after_close_test.dart test/features/reminder/application/reminder_personalization_test.dart test/features/reminder/application/reminder_provider_test.dart test/features/reminder/presentation/widgets/reminder_invitation_card_large_text_test.dart"
+}

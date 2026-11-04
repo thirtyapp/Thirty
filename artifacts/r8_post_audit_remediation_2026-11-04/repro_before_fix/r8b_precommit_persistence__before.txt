@@ -1,0 +1,162 @@
+00:00 +0: loading C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8b_precommit_persistence_test.dart
+00:00 +0: P2 — every key landed, only the recovery record's removal throws: durably saved and said so; History has the Start; the record stays for retry, and the next write removes it — once
+00:00 +0 -1: P2 — every key landed, only the recovery record's removal throws: durably saved and said so; History has the Start; the record stays for retry, and the next write removes it — once [E]
+  Expected: true
+    Actual: <false>
+  saved, and the user must not be told otherwise
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8b_precommit_persistence_test.dart 131:9  main.<fn>
+  
+00:00 +0 -1: P2 — the record's removal throws, then a restart before any retry: the restart reads the same Circle, and the next write cleans up
+00:00 +1 -1: Astra R7-A01 as reproduced: Start saved; Close's recovery-record write throws — not saved and said so; a restart shows the Circle still started; Close again saves it
+00:00 +2 -1: History refusing every save (throws): the next day's choice never writes over yesterday's Close that History doesn't hold yet; once History saves again, yesterday's Close is recorded
+00:00 +2 -2: History refusing every save (throws): the next day's choice never writes over yesterday's Close that History doesn't hold yet; once History saves again, yesterday's Close is recorded [E]
+  Expected: '2026-10-12'
+    Actual: '2026-10-13'
+     Which: is different.
+            Expected: 2026-10-12
+              Actual: 2026-10-13
+                               ^
+             Differ at offset 9
+  yesterday's unrecorded Close was overwritten
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8b_precommit_persistence_test.dart 237:9  main.<fn>
+  
+00:00 +2 -2: D3 — a Close on its way when Delete can't record its intent (throws): nothing is deleted, and the Close still lands
+00:00 +2 -3: D3 — a Close on its way when Delete can't record its intent (throws): nothing is deleted, and the Close still lands [E]
+  Expected: 'closed'
+    Actual: 'started'
+     Which: is different.
+            Expected: closed
+              Actual: started
+                      ^
+             Differ at offset 0
+  a write was stopped by a Delete that never began
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8b_precommit_persistence_test.dart 280:9  main.<fn>
+  
+00:00 +2 -3: D3 — the marker's removal, Delete's last step, throws: Delete fails, the marker stays, nothing deleted shows; the next start finishes it
+00:00 +3 -3: a stage Circle's Start whose Plans evidence write throws (billing verifiably ended): the Start isn't saved and the user is told; a restart brings back the unstarted offer
+00:00 +4 -3: removing a kept Circle throws: it stays, in memory and on disk, and the failure is shown
+00:00 +5 -3: a Plan action the store refuses (throws): still on screen, marked unsaved — pending retry; a restart before any retry shows what is durable; the next save makes it durably saved
+00:00 +5 -4: a Plan action the store refuses (throws): still on screen, marked unsaved — pending retry; a restart before any retry shows what is durable; the next save makes it durably saved [E]
+  Expected: contains UserStore:<UserStore.circlePlans>
+    Actual: Set:[]
+     Which: does not contain UserStore:<UserStore.circlePlans>
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8b_precommit_persistence_test.dart 377:7  main.<fn>
+  
+00:00 +5 -4: Plans THIRTY can't read, with a different copy already set aside (throws irrelevant): the save is refused, both stay byte for byte, and the failure is shown
+00:00 +5 -5: Plans THIRTY can't read, with a different copy already set aside (throws irrelevant): the save is refused, both stay byte for byte, and the failure is shown [E]
+  Expected: contains UserStore:<UserStore.circlePlans>
+    Actual: Set:[]
+     Which: does not contain UserStore:<UserStore.circlePlans>
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8b_precommit_persistence_test.dart 412:7  main.<fn>
+  
+00:00 +5 -5: P2 — every key landed, only the recovery record's removal returnsFalse: durably saved and said so; History has the Start; the record stays for retry, and the next write removes it — once
+00:00 +5 -6: P2 — every key landed, only the recovery record's removal returnsFalse: durably saved and said so; History has the Start; the record stays for retry, and the next write removes it — once [E]
+  Expected: true
+    Actual: <false>
+  saved, and the user must not be told otherwise
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8b_precommit_persistence_test.dart 131:9  main.<fn>
+  
+00:00 +5 -6: P2 — the record's removal returnsFalse, then a restart before any retry: the restart reads the same Circle, and the next write cleans up
+00:00 +6 -6: Astra R7-A01 as reproduced: Start saved; Close's recovery-record write returnsFalse — not saved and said so; a restart shows the Circle still started; Close again saves it
+00:00 +7 -6: History refusing every save (returnsFalse): the next day's choice never writes over yesterday's Close that History doesn't hold yet; once History saves again, yesterday's Close is recorded
+00:00 +7 -7: History refusing every save (returnsFalse): the next day's choice never writes over yesterday's Close that History doesn't hold yet; once History saves again, yesterday's Close is recorded [E]
+  Expected: '2026-10-12'
+    Actual: '2026-10-13'
+     Which: is different.
+            Expected: 2026-10-12
+              Actual: 2026-10-13
+                               ^
+             Differ at offset 9
+  yesterday's unrecorded Close was overwritten
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8b_precommit_persistence_test.dart 237:9  main.<fn>
+  
+00:00 +7 -7: D3 — a Close on its way when Delete can't record its intent (returnsFalse): nothing is deleted, and the Close still lands
+00:00 +7 -8: D3 — a Close on its way when Delete can't record its intent (returnsFalse): nothing is deleted, and the Close still lands [E]
+  Expected: 'closed'
+    Actual: 'started'
+     Which: is different.
+            Expected: closed
+              Actual: started
+                      ^
+             Differ at offset 0
+  a write was stopped by a Delete that never began
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8b_precommit_persistence_test.dart 280:9  main.<fn>
+  
+00:00 +7 -8: D3 — the marker's removal, Delete's last step, returnsFalse: Delete fails, the marker stays, nothing deleted shows; the next start finishes it
+00:00 +8 -8: a stage Circle's Start whose Plans evidence write returnsFalse (billing verifiably ended): the Start isn't saved and the user is told; a restart brings back the unstarted offer
+00:00 +9 -8: removing a kept Circle returnsFalse: it stays, in memory and on disk, and the failure is shown
+00:00 +10 -8: a Plan action the store refuses (returnsFalse): still on screen, marked unsaved — pending retry; a restart before any retry shows what is durable; the next save makes it durably saved
+00:00 +10 -9: a Plan action the store refuses (returnsFalse): still on screen, marked unsaved — pending retry; a restart before any retry shows what is durable; the next save makes it durably saved [E]
+  Expected: contains UserStore:<UserStore.circlePlans>
+    Actual: Set:[]
+     Which: does not contain UserStore:<UserStore.circlePlans>
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8b_precommit_persistence_test.dart 377:7  main.<fn>
+  
+00:00 +10 -9: Plans THIRTY can't read, with a different copy already set aside (returnsFalse irrelevant): the save is refused, both stay byte for byte, and the failure is shown
+00:00 +10 -10: Plans THIRTY can't read, with a different copy already set aside (returnsFalse irrelevant): the save is refused, both stay byte for byte, and the failure is shown [E]
+  Expected: contains UserStore:<UserStore.circlePlans>
+    Actual: Set:[]
+     Which: does not contain UserStore:<UserStore.circlePlans>
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8b_precommit_persistence_test.dart 412:7  main.<fn>
+  
+00:00 +10 -10: Insights THIRTY can't read, with a different copy already set aside: the save is refused, both stay byte for byte
+00:00 +10 -11: Insights THIRTY can't read, with a different copy already set aside: the save is refused, both stay byte for byte [E]
+  Expected: contains UserStore:<UserStore.insights>
+    Actual: Set:[]
+     Which: does not contain UserStore:<UserStore.insights>
+  
+  package:matcher                                               expect
+  package:flutter_test/src/widget_tester.dart 473:18            expect
+  test\features\home\r8b_precommit_persistence_test.dart 432:5  main.<fn>
+  
+00:00 +10 -11: I4: the Circle kept, I4's own record throws: after a restart the Keep keeps nothing twice and I4 is applied; lapsed throughout
+00:00 +11 -11: D2 — the six-hour carry-over running, restarted a minute before six hours after its Start: brought back
+00:00 +12 -11: D2 — the six-hour carry-over running, resumed a minute before six hours after its Start: still on show
+00:00 +13 -11: D2 — the six-hour carry-over closed after midnight, reflection open, a minute before six hours after its Close: reflection still on show; the answer already given is kept
+00:00 +14 -11: D2 — the six-hour carry-over running, restarted exactly six hours after its Start: brought back
+00:00 +15 -11: D2 — the six-hour carry-over running, resumed exactly six hours after its Start: still on show
+00:00 +16 -11: D2 — the six-hour carry-over closed after midnight, reflection open, exactly six hours after its Close: reflection still on show; the answer already given is kept
+00:00 +17 -11: D2 — the six-hour carry-over running, restarted a minute after six hours after its Start: not brought back
+00:00 +18 -11: D2 — the six-hour carry-over running, resumed a minute after six hours after its Start: the new day opens, nothing starts
+00:00 +19 -11: D2 — the six-hour carry-over closed after midnight, reflection open, a minute after six hours after its Close: the new day opens; the answer already given is kept
+00:00 +20 -11: D2 — the six-hour carry-over expired: the next day's Circle is chosen deliberately and starts — nothing starts by itself; yesterday's record is unchanged
+00:00 +21 -11: D2 — the six-hour carry-over a stage Circle carried over, closed after a restart past midnight: its Plan is credited once, under that Circle
+00:00 +22 -11: D2 — the six-hour carry-over elapsed time, not the clock face: across the daylight-saving change of 25 October 2026 (where the device's zone has one)
+00:00 +23 -11: Some tests failed.
+
+Failing tests:
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8b_precommit_persistence_test.dart: D3 — a Close on its way when Delete can't record its intent (returnsFalse): nothing is deleted, and the Close still lands
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8b_precommit_persistence_test.dart: D3 — a Close on its way when Delete can't record its intent (throws): nothing is deleted, and the Close still lands
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8b_precommit_persistence_test.dart: History refusing every save (returnsFalse): the next day's choice never writes over yesterday's Close that History doesn't hold yet; once History saves again, yesterday's Close is recorded
+  C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/home/r8b_precommit_persistence_test.dart: History refusing every save (throws): the next day's choice never writes over yesterday's Close that History doesn't hold yet; once History saves again, yesterday's Close is recorded
+  ... and 7 more
