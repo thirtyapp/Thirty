@@ -277,7 +277,10 @@ void main() {
         ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
         expect(c.read(insightsProvider.notifier).assess().added, isNotEmpty);
         await settle();
-        expect(heldToday.reached.isCompleted, isTrue);
+        // R8.1 RL-1 (founder decision 2026-11-05): Today's stage choice is
+        // saved only after the Plan record it was composed from, so its
+        // write waits behind the held Plans write.
+        expect(heldToday.reached.isCompleted, isFalse);
         expect(heldPlans.reached.isCompleted, isTrue);
         expect(heldInsights.reached.isCompleted, isTrue);
         disk.onRemove = (_) {

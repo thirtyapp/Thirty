@@ -1,0 +1,84 @@
+FAILURE | _n02_preservation_writes_test.dart | Plans — reproduction A: the build's copy is pending when a save follows; the copy then throws: the original is never written over unkept — on disk, af
+FAILURE | _n02_preservation_writes_test.dart | Plans — reproduction A: the build's copy is pending when a save follows; the copy then returnsFalse: the original is never written over unkept — on di
+FAILURE | _n02_preservation_writes_test.dart | Plans — the copy failing every time: the original stays exactly as stored, and nothing is written over it
+FAILURE | _n01_durable_plan_credit_test.dart | throws: AUD-1 as reported — Plans store failing across a restart; the next day's choice never overwrites the closed stage Circle whose credit is only 
+SUCCESS | _n02_preservation_writes_test.dart | Plans — retries are idempotent: a copy that lands, then a restart and another save, leaves one copy, byte for byte
+FAILURE | _n02_preservation_writes_test.dart | Insights — reproduction A: the build's copy is pending when a save follows; the copy then throws: the original is never written over unkept — on disk,
+FAILURE | _n01_durable_plan_credit_test.dart | throws: Astra N01 as reported — only the credit write fails at Close; Premium lapses; same session, next day, a Free choice: the credit is retried and
+FAILURE | _n02_preservation_writes_test.dart | Insights — reproduction A: the build's copy is pending when a save follows; the copy then returnsFalse: the original is never written over unkept — on
+FAILURE | _n02_preservation_writes_test.dart | Insights — the copy failing every time: the original stays exactly as stored, and nothing is written over it
+FAILURE | _n01_durable_plan_credit_test.dart | throws: Plans store failing persistently in the same session: the next day's Free choice is not saved over yesterday; once the store heals, the next w
+SUCCESS | _n02_preservation_writes_test.dart | Insights — retries are idempotent: a copy that lands, then a restart and another save, leaves one copy, byte for byte
+FAILURE | _n01_durable_plan_credit_test.dart | throws: the served-stage Start evidence already noted in memory but not on disk is written again — never treated as saved because memory holds it
+FAILURE | _n02_preservation_writes_test.dart | reproduction B — both copies pending when Delete Circle history runs: Delete completes only after them, and no raw retained evidence is on disk afterw
+SUCCESS | _n02_preservation_writes_test.dart | reproduction B, the copy failing as Delete runs: Delete still completes and nothing is left behind
+FAILURE | _n01_durable_plan_credit_test.dart | returnsFalse: AUD-1 as reported — Plans store failing across a restart; the next day's choice never overwrites the closed stage Circle whose credit is
+FAILURE | _n01_durable_plan_credit_test.dart | returnsFalse: Astra N01 as reported — only the credit write fails at Close; Premium lapses; same session, next day, a Free choice: the credit is retri
+FAILURE | _n01_durable_plan_credit_test.dart | returnsFalse: Plans store failing persistently in the same session: the next day's Free choice is not saved over yesterday; once the store heals, the 
+FAILURE | _n01_durable_plan_credit_test.dart | returnsFalse: the served-stage Start evidence already noted in memory but not on disk is written again — never treated as saved because memory holds i
+FAILURE | _n03_removed_answers_test.dart | next day, before a new Circle is chosen: the usefulness answer removed, then a restart — never written back
+FAILURE | _n03_removed_answers_test.dart | next day, before a new Circle is chosen: the usefulness answer removed, then the day's choice (before-overwrite recording) — never written back
+FAILURE | _n03_removed_answers_test.dart | next day in the same session (no restart): the usefulness answer removed, then a choice and a restart — never written back
+SUCCESS | _n03_removed_answers_test.dart | same day: the usefulness answer removed, then a restart — never written back
+FAILURE | _n03_removed_answers_test.dart | next day, before a new Circle is chosen: both answers removed, then a restart — never written back
+FAILURE | _n03_removed_answers_test.dart | next day, before a new Circle is chosen: both answers removed, then the day's choice (before-overwrite recording) — never written back
+FAILURE | _n03_removed_answers_test.dart | next day in the same session (no restart): both answers removed, then a choice and a restart — never written back
+SUCCESS | _n03_removed_answers_test.dart | same day: both answers removed, then a restart — never written back
+FAILURE | _n03_removed_answers_test.dart | next day, the removal cut short — the day keys' write throws: History keeps the answer (nothing half-removed), the user is told, and a retry removes i
+SUCCESS | _n03_removed_answers_test.dart | next day, History's removal throws after the day keys were cleared: the answer stays in History and is reported; a restart neither loses nor duplicate
+FAILURE | _n03_removed_answers_test.dart | next day, the removal cut short — the day keys' write returnsFalse: History keeps the answer (nothing half-removed), the user is told, and a retry rem
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N04 — expiry at Start as reported (throws, Plans refusing): Start after a verified expiry, then Close with daily and History writes allowed — a restar
+SUCCESS | _n03_removed_answers_test.dart | next day, History's removal returnsFalse after the day keys were cleared: the answer stays in History and is reported; a restart neither loses nor dup
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N04 — expiry at Start the evidence write throws once at Start: the Close writes it first, then saves — no credit, now or after a restart
+SUCCESS | _n03_removed_answers_test.dart | an answer never given is never invented by a removal, and other Circles' answers are untouched
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N04 — expiry at Start the evidence write throws at Start, then a pause: the pause never saves a started Circle without it
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N04 — expiry at Start as reported (returnsFalse, Plans refusing): Start after a verified expiry, then Close with daily and History writes allowed — a 
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N04 — expiry at Start the evidence write returnsFalse once at Start: the Close writes it first, then saves — no credit, now or after a restart
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N04 — expiry at Start the evidence write returnsFalse at Start, then a pause: the pause never saves a started Circle without it
+SUCCESS | _n04_n05_expiry_and_insight_application_test.dart | N04 — expiry at Start regression — served and started under Premium, lapsed before Close: the legitimate credit still lands once
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words one item not words, not started, kept Circle intact: restored with its own saved words from the kep
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words one item not words, not started, kept Circle gone: never run or voiced with today's words; the stor
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N05 — Insight application is recorded only once it is durable I1 (Plan direction) — its own store throws: not saved, not recorded as applied (memory a
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N05 — Insight application is recorded only once it is durable I1 (Plan direction) — its own store returnsFalse: not saved, not recorded as applied (me
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words one item not words, started, kept Circle intact: restored with its own saved words from the kept Ci
+SUCCESS | _n04_n05_expiry_and_insight_application_test.dart | N05 — Insight application is recorded only once it is durable I1 (Plan direction) — its change saved, the applied mark refused: the change is durable 
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N05 — Insight application is recorded only once it is durable I2 (gentler Plan) — its own store throws: not saved, not recorded as applied (memory and
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words one item not words, started, kept Circle gone: never run or voiced with today's words; the stored b
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N05 — Insight application is recorded only once it is durable I2 (gentler Plan) — its own store returnsFalse: not saved, not recorded as applied (memo
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words the wrong length, not started, kept Circle intact: restored with its own saved words from the kept 
+SUCCESS | _n04_n05_expiry_and_insight_application_test.dart | N05 — Insight application is recorded only once it is durable I2 (gentler Plan) — its change saved, the applied mark refused: the change is durable an
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words the wrong length, not started, kept Circle gone: never run or voiced with today's words; the stored
+ERROR | _n04_n05_expiry_and_insight_application_test.dart | N05 — Insight application is recorded only once it is durable I3 (leave a part out) — its own store throws: not saved, not recorded as applied (memory
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words the wrong length, started, kept Circle intact: restored with its own saved words from the kept Circ
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N05 — Insight application is recorded only once it is durable I3 (leave a part out) — its own store returnsFalse: not saved, not recorded as applied (
+SUCCESS | _n04_n05_expiry_and_insight_application_test.dart | N05 — Insight application is recorded only once it is durable I3 (leave a part out) — its change saved, the applied mark refused: the change is durabl
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words the wrong length, started, kept Circle gone: never run or voiced with today's words; the stored byt
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N05 — Insight application is recorded only once it is durable I1 retried in the same session once the store heals: the Plan already on screen is saved
+FAILURE | _n04_n05_expiry_and_insight_application_test.dart | N05 — Insight application is recorded only once it is durable a suggestion preference the store refuses is not shown as saved (returnsFalse is a failu
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words not a list, not started, kept Circle intact: restored with its own saved words from the kept Circle
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words not a list, not started, kept Circle gone: never run or voiced with today's words; the stored bytes
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words not a list, started, kept Circle intact: restored with its own saved words from the kept Circle — n
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words not a list, started, kept Circle gone: never run or voiced with today's words; the stored bytes are
+FAILURE | _n06_n07_damaged_records_test.dart | N06 — Today's kept Circle with damaged saved words the words field missing from Today's copy while the kept Circle has its words: they come from the k
+FAILURE | _n06_n07_damaged_records_test.dart | N07 — damaged or unknown data inside a readable record AUD-3 — a Plan this build doesn't know (a newer build's) is kept byte for byte through a Plan s
+FAILURE | _n06_n07_damaged_records_test.dart | N07 — damaged or unknown data inside a readable record a Plan whose cycle is damaged is kept as stored, never rewritten without it
+FAILURE | _n06_n07_damaged_records_test.dart | N07 — damaged or unknown data inside a readable record a damaged stage record inside a readable cycle is kept through a save
+FAILURE | _n06_n07_damaged_records_test.dart | N07 — damaged or unknown data inside a readable record unknown fields of the Plans record itself are written back
+SUCCESS | _n06_n07_damaged_records_test.dart | N07 — damaged or unknown data inside a readable record a Plans record of a newer whole-record version stays unreadable and is kept aside, not reinterp
+FAILURE | _n06_n07_damaged_records_test.dart | N07 — damaged or unknown data inside a readable record AUD-4 / N07-A — Insights whose snapshots field is present but not a list are kept, never replac
+FAILURE | _n06_n07_damaged_records_test.dart | N07 — damaged or unknown data inside a readable record unknown fields of the Insights record itself are written back
+SUCCESS | _n06_n07_damaged_records_test.dart | N07 — damaged or unknown data inside a readable record regression — an Insights record without a snapshots field (none yet) is readable, as before
+FAILURE | _n08_n09_aud2_time_test.dart | N08 — a no-touch choice after midnight: the served stage is dated with the Circle's own day, so a lapse before Close keeps the legitimate credit
+SUCCESS | _n08_n09_aud2_time_test.dart | N09 — closed at the first 02:30 of 25 October 2026, reflection open, restart at 08:00: 6h30 really elapsed, so it is not carried over
+FAILURE | _n08_n09_aud2_time_test.dart | N09 — closed at the second 02:30 of 25 October 2026, reflection open, restart at 08:00: 5h30 really elapsed, so it is carried over
+FAILURE | _n08_n09_aud2_time_test.dart | N09 — the two 02:30 Closes are stored differently: an instant, not a wall-clock time
+SUCCESS | _n08_n09_aud2_time_test.dart | N09 — an older offset-free Start still reads as before (local), and the six-hour rule holds for it
+ERROR | _n10_failure_notices_test.dart | a store failure while the History notice is open is told after it closes — with no further change
+ERROR | _n10_failure_notices_test.dart | a second Circle's History failure while a store notice is open is told after it closes
+ERROR | _n10_failure_notices_test.dart | several store failures while one notice is open: told once more after it closes, never stacked
+FAILURE | _n10_failure_notices_test.dart | a failed Keep (throws) then a successful one: Kept Circles are no longer marked unsaved
+FAILURE | _n10_failure_notices_test.dart | a failed Keep (returnsFalse) then a successful one: Kept Circles are no longer marked unsaved
+ERROR | _n08_n09_aud2_time_test.dart | AUD-2 — the carried-over Circle finished and its reflection answered after midnight: today's Circle can be chosen without another resume (with a touch
+ERROR | _n08_n09_aud2_time_test.dart | AUD-2 — the carried-over Circle finished and its reflection answered after midnight: today's Circle can be chosen without another resume (no touch — s
+SUCCESS | _n08_n09_aud2_time_test.dart | AUD-2 regression — the carried-over Circle closed but its reflection still open stays on show (contract: until answered)
+{'failure': 60, 'success': 17, 'error': 6}

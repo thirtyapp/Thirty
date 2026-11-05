@@ -1,0 +1,262 @@
+// INDEPENDENT POST-R8 AUDIT — temporary reproductions (scratch copy only;
+// never part of the audited repository).
+import 'dart:convert';
+
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:thirty/core/app/thirty_app.dart';
+import 'package:thirty/core/premium/entitlement_status.dart';
+import 'package:thirty/core/providers/clock_provider.dart';
+import 'package:thirty/core/providers/shared_preferences_provider.dart';
+import 'package:thirty/core/utils/date_key.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/settings/application/first_name_provider.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart';
+import 'package:thirty/features/insights/domain/insight.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+
+import '../support/r8_fault_disk.dart';
+import '../support/r8_harness.dart';
+
+void main() {
+  // ------------------------------------------------------------------ AUD-1
+  for (final fault in DiskFault.values) {
+    test('AUD-1 (${fault.name}): Plans store failing, next day\'s choice '
+        'must not overwrite a closed stage Circle whose Plan credit is not '
+        'durable', () async {
+      final day1 = DateTime(2026, 10, 12, 9);
+      final h = R8Harness(day1);
+      await h.boot();
+      final c = h.open();
+      c.read(circlePlansProvider.notifier).start('getting_going');
+      c
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final rec = c.read(recommendationProvider).recommendation!;
+      expect(rec.composed?.stage, isNotNull);
+      final id = rec.circleId;
+      c.read(recommendationProvider.notifier).start();
+      await R8Harness.settle();
+
+      // From here the Plans store refuses every write.
+      h.disk.fail(circlePlansKey, fault);
+      h.clock.value = day1.add(const Duration(minutes: 25));
+      c.read(recommendationProvider.notifier).close();
+      await R8Harness.settle();
+
+      // Next day, restart; Plans still refusing; History fine.
+      h.clock.value = day1.add(const Duration(days: 1));
+      await h.restart(keepFaults: true);
+      final next = h.open();
+      next.read(recommendationProvider);
+      await R8Harness.settle();
+      next
+          .read(recommendationProvider.notifier)
+          .chooseIntention(Intention.gentlerPace);
+      await R8Harness.settle();
+      final storedDay = (await h.disk.stored())[recommendationDayKey];
+
+      // Storage healed; restart.
+      h.disk.healAll();
+      await h.restart();
+      final healed = h.open();
+      healed.read(recommendationProvider);
+      await R8Harness.settle();
+      final credits = healed
+          .read(circlePlansProvider)
+          .plans['getting_going']!
+          .cycles
+          .expand((cy) => cy.records)
+          .where((r) => r.circleId == id)
+          .length;
+      final entry = healed
+          .read(circleJournalRepositoryProvider)
+          .readAll()
+          .where((e) => e.circleId == id)
+          .firstOrNull;
+      // ignore: avoid_print
+      print('AUD-1 ${fault.name}: dayKeyAfterDay2Choice=$storedDay '
+          'journalClosed=${entry?.closedAt != null} creditsAfterHeal=$credits');
+      expect(
+        storedDay == id || credits == 1,
+        isTrue,
+        reason: 'day keys were overwritten while the Plan credit was only in '
+            'memory; after healing the credit is permanently lost',
+      );
+    });
+  }
+
+  // ------------------------------------------------------------------ AUD-2
+  testWidgets('AUD-2: carried-over Circle finished after midnight — the new '
+      'day must open without another resume', (tester) async {
+    var now = DateTime(2026, 8, 1, 23, 45);
+    SharedPreferences.setMockInitialValues({
+      firstNamePromptSeenKey: true,
+      recommendationDayKey: '2026-08-01',
+      recommendationIntentionKey: 'moreEnergy',
+      recommendationActivityIdKey: 'thirtyMinuteWalk',
+      recommendationStatusKey: 'started',
+      recommendationStartedAtKey: DateTime(
+        2026,
+        8,
+        1,
+        23,
+        40,
+      ).toIso8601String(),
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final c = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        nowProvider.overrideWith((ref) => now),
+        eventClockProvider.overrideWithValue(() => now),
+      ],
+    );
+    addTearDown(c.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: c, child: const ThirtyApp()),
+    );
+    await tester.pumpAndSettle();
+    Future<void> settle() async {
+      for (var i = 0; i < 10; i++) {
+        await tester.pump();
+      }
+    }
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await settle();
+    now = DateTime(2026, 8, 2, 0, 10);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await settle();
+    final n = c.read(recommendationProvider.notifier);
+    expect(c.read(recommendationProvider).recommendation?.circleId,
+        '2026-08-01');
+    n.close();
+    await settle();
+    n.reportAttempt(CircleAttemptResponse.yes);
+    n.reportUsefulness(CircleUsefulnessResponse.veryUseful);
+    await settle();
+    // The user touches the screen, then tries to choose today's Circle.
+    await tester.tapAt(const Offset(5, 5));
+    await settle();
+    n.chooseIntention(Intention.gentlerPace);
+    await settle();
+    final s = c.read(recommendationProvider);
+    // ignore: avoid_print
+    print('AUD-2: after finishing + touch + choose: '
+        'circleId=${s.recommendation?.circleId} status=${s.status}');
+    expect(
+      s.recommendation?.circleId,
+      '2026-08-02',
+      reason: 'today stays locked on yesterday\'s finished Circle',
+    );
+  });
+
+  // ------------------------------------------------------------------ AUD-3
+  test('AUD-3: a stored Plan this build does not know (newer build) is kept '
+      'through a Plan save', () async {
+    final h = R8Harness(DateTime(2026, 10, 12, 9));
+    await h.boot();
+    final c = h.open();
+    c.read(circlePlansProvider.notifier).start('getting_going');
+    await R8Harness.settle();
+    final raw =
+        jsonDecode((await h.disk.stored())[circlePlansKey]! as String)
+            as Map<String, Object?>;
+    final plans = Map<String, Object?>.from(raw['plans']! as Map);
+    plans['future_plan'] = {
+      ...(plans['getting_going']! as Map),
+      'lifecycle': 'paused',
+    };
+    raw['plans'] = plans;
+    await h.boot({circlePlansKey: jsonEncode(raw)});
+    final c2 = h.open();
+    c2.read(circlePlansProvider);
+    c2.read(circlePlansProvider.notifier).pause('getting_going');
+    await R8Harness.settle();
+    final after =
+        jsonDecode((await h.disk.stored())[circlePlansKey]! as String)
+            as Map<String, Object?>;
+    final keys = (after['plans']! as Map).keys.toList();
+    final aside = (await h.disk.stored())[circlePlansUnreadableKey];
+    // ignore: avoid_print
+    print('AUD-3: plans after save=$keys setAside=${aside != null}');
+    expect(keys.contains('future_plan') || aside != null, isTrue,
+        reason: 'newer-build Plan silently dropped on save');
+  });
+
+  // ------------------------------------------------------------------ AUD-4
+  test('AUD-4: an Insights record whose snapshots field is damaged (not a '
+      'list) is not written over unkept', () async {
+    final damaged = jsonEncode({
+      'schemaVersion': insightsSchemaVersion,
+      'snapshots': {'original': 'recoverable payload'},
+    });
+    final morning = DateTime(2026, 10, 12, 9);
+    final h = R8Harness(morning);
+    await h.boot({insightsKey: damaged, circleJournalKey: _i4Journal(morning)});
+    final c = h.open(status: EntitlementStatus.active);
+    final state = c.read(insightsProvider);
+    // Any save: assess may or may not add; use forgetAll-free path by
+    // triggering a write through assess with an empty journal.
+    c.read(insightsProvider.notifier).assess();
+    await R8Harness.settle();
+    final stored = await h.disk.stored();
+    // ignore: avoid_print
+    print('AUD-4: readAsEmpty=${state.isEmpty} '
+        'stored=${stored[insightsKey]} aside=${stored[insightsUnreadableKey]}');
+    expect(
+      stored[insightsKey] == damaged || stored[insightsUnreadableKey] == damaged,
+      isTrue,
+      reason: 'damaged Insights payload overwritten without being kept',
+    );
+  });
+}
+
+String _i4Journal(DateTime morning) {
+  CirclePart part(ElementId e) => CirclePart(e, elementOf(e).minutes);
+  final writing = [
+    part(ElementId.closeWhatsOpen),
+    part(ElementId.getItOut),
+    part(ElementId.chooseOne),
+    part(ElementId.firstStep),
+  ];
+  final reading = [part(ElementId.phoneFaceDown), part(ElementId.readPages)];
+  CircleJournalEntry entry(int ago, List<CirclePart> parts, bool useful) {
+    final date = morning.subtract(Duration(days: ago));
+    return CircleJournalEntry(
+      schemaVersion: circleJournalSchemaVersion,
+      circleId: dateKey(date),
+      localDate: dateKey(date),
+      direction: Intention.clearerHead,
+      activityId: ActivityId.values.first,
+      catalogVersion: catalogVersion,
+      shownAt: date,
+      startedAt: date,
+      closedAt: date,
+      attemptResponse: useful ? CircleAttemptResponse.yes : null,
+      usefulnessResponse: useful ? CircleUsefulnessResponse.veryUseful : null,
+      session: CircleSessionRecord(
+        title: 'Circle',
+        parts: CirclePlan(parts).toWire(),
+      ),
+    );
+  }
+
+  return jsonEncode({
+    'schemaVersion': circleJournalSchemaVersion,
+    'entries': [
+      for (final ago in [1, 7, 13, 20]) entry(ago, writing, true).toJson(),
+      for (final ago in [3, 9, 16]) entry(ago, reading, false).toJson(),
+    ],
+  });
+}

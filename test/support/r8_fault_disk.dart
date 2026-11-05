@@ -75,6 +75,14 @@ class FaultDisk extends InMemorySharedPreferencesStore {
     return fault;
   }
 
+  final _holds = <String, HeldWrite>{};
+
+  /// The next write or removal of [key] waits, before it reaches the disk,
+  /// until the returned [HeldWrite] is released (R8.1, Astra N02). The
+  /// SharedPreferences cache has already changed by then, exactly as on a
+  /// device while a platform write is pending. Other keys are not held.
+  HeldWrite hold(String key) => _holds[_bare(key)] = HeldWrite._();
+
   Future<bool> _attempt(
     String op,
     String key,
@@ -83,6 +91,19 @@ class FaultDisk extends InMemorySharedPreferencesStore {
     final bare = _bare(key);
     attempts.add('$op $bare');
     if (_stopped) return Completer<bool>().future;
+    if (_holds.remove(bare) case final held?) {
+      held._reached.complete();
+      final fault = await held._released.future;
+      switch (fault) {
+        case DiskFault.throws:
+          throw StateError('disk $op failed for $bare');
+        case DiskFault.returnsFalse:
+          return false;
+        case null:
+          log.add('$op $bare');
+          return land();
+      }
+    }
     switch (_faultFor(bare)) {
       case DiskFault.throws:
         throw StateError('disk $op failed for $bare');
@@ -108,4 +129,21 @@ class FaultDisk extends InMemorySharedPreferencesStore {
     for (final MapEntry(:key, :value) in (await getAll()).entries)
       _bare(key): value,
   };
+}
+
+/// One platform write held before the disk ([FaultDisk.hold]).
+class HeldWrite {
+  HeldWrite._();
+
+  final _reached = Completer<void>();
+  final _released = Completer<DiskFault?>();
+
+  /// Completes once the write has arrived and is waiting.
+  Future<void> get reached => _reached.future;
+
+  /// Whether the write has arrived and is waiting.
+  bool get isWaiting => _reached.isCompleted && !_released.isCompleted;
+
+  /// Lets the write land — or fail as [fault].
+  void release([DiskFault? fault]) => _released.complete(fault);
 }

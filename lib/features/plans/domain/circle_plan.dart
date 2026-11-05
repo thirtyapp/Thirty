@@ -134,10 +134,18 @@ class StageRecord {
     this.drawsOn = const [],
     this.revisit = false,
     this.setAsideBecause = const [],
+    this.source,
   });
 
   final int stageNumber;
   final StageOutcome outcome;
+
+  /// The record exactly as it was stored, when it was read from the store
+  /// (R8.1 RL-3): a stage record never changes once written, so it is
+  /// written back as stored — an item THIRTY can't read in one of its lists,
+  /// or a field a newer THIRTY added, is never dropped by a later save. Its
+  /// readable facts are what THIRTY uses; nothing is invented for the rest.
+  final Map<String, Object?>? source;
 
   /// The day it was guided or set aside (`YYYY-MM-DD`).
   final String localDate;
@@ -161,7 +169,12 @@ class StageRecord {
   /// — `leftOut`, `notSuggested` or `resting`, with the part.
   final List<StageBlock> setAsideBecause;
 
-  Map<String, Object?> toJson() => {
+  Map<String, Object?> toJson() => switch (source) {
+    final stored? => {...stored},
+    null => _fields(),
+  };
+
+  Map<String, Object?> _fields() => {
     'stageNumber': stageNumber,
     'outcome': outcome.name,
     'localDate': localDate,
@@ -214,6 +227,7 @@ class StageRecord {
                   case (final element?, final role?, final reason?))
                 StageBlock(element, role, reason),
       ],
+      source: raw,
     );
   }
 }
@@ -237,6 +251,9 @@ class PlanCycle {
     this.endedOn,
     this.end,
     this.gentlerSince,
+    this.unreadableRecords = const [],
+    this.unreadableRevisits = const [],
+    this.extra = const {},
   });
 
   /// e.g. `getting_going#2`.
@@ -261,6 +278,21 @@ class PlanCycle {
   /// for now" for this cycle, or `null`. A setting of this cycle only, so it
   /// ends with it; the user may turn it off.
   final String? gentlerSince;
+
+  /// Stage records stored in this cycle that THIRTY can't read (R8.1,
+  /// Astra N07 / Claude AUD-3) — exactly as stored: never counted, shown or
+  /// acted on, written back by every save, removed only by Delete Circle
+  /// history (they may hold stage evidence).
+  final List<Object?> unreadableRecords;
+
+  /// Revisit entries stored that aren't stage numbers (R8.1 RL-3): written
+  /// back as stored, never counted.
+  final List<Object?> unreadableRevisits;
+
+  /// Fields this build doesn't know, and known fields whose stored value it
+  /// can't read, exactly as stored (R8.1 RL-3): written back until THIRTY
+  /// itself sets that field again.
+  final Map<String, Object?> extra;
 
   bool get isOver => end != null;
 
@@ -299,6 +331,7 @@ class PlanCycle {
     cursor: cursor,
     pendingRevisit: pendingRevisit,
     revisitsUsed: revisitsUsed,
+    unreadableRevisits: unreadableRevisits,
     endedOn: end == CycleEnd.left ? endedOn : null,
     end: switch (end) {
       null => null,
@@ -339,16 +372,32 @@ class PlanCycle {
     endedOn: endedOn ?? this.endedOn,
     end: end ?? this.end,
     gentlerSince: clearGentler ? null : (gentlerSince ?? this.gentlerSince),
+    unreadableRecords: unreadableRecords,
+    unreadableRevisits: unreadableRevisits,
+    extra: {
+      for (final MapEntry(:key, :value) in extra.entries)
+        if (!(key == 'pendingRevisit' &&
+                (clearRevisit || pendingRevisit != null)) &&
+            !(key == 'revisitsUsed' && revisitsUsed != null) &&
+            !(key == 'endedOn' && endedOn != null) &&
+            !(key == 'gentlerSince' && (clearGentler || gentlerSince != null)))
+          key: value,
+    },
   );
 
   Map<String, Object?> toJson() => {
+    ...extra,
     'id': id,
     'number': number,
     'startedOn': startedOn,
     'cursor': cursor,
     'pendingRevisit': ?pendingRevisit,
-    if (revisitsUsed.isNotEmpty) 'revisitsUsed': [...revisitsUsed]..sort(),
-    'records': [for (final r in records) r.toJson()],
+    if (revisitsUsed.isNotEmpty || unreadableRevisits.isNotEmpty)
+      'revisitsUsed': [
+        ...([...revisitsUsed]..sort()),
+        ...unreadableRevisits,
+      ],
+    'records': [for (final r in records) r.toJson(), ...unreadableRecords],
     'endedOn': ?endedOn,
     'end': ?end?.name,
     'gentlerSince': ?gentlerSince,
@@ -365,26 +414,74 @@ class PlanCycle {
     final revisit = raw['pendingRevisit'];
     final endedOn = raw['endedOn'];
     final gentlerSince = raw['gentlerSince'];
+    // An end THIRTY doesn't know (a newer THIRTY's) is never read as "not
+    // ended": the cycle is unreadable, and its Plan kept as stored (R8.1
+    // RL-3).
+    final end = CycleEnd.values.asNameMap()[raw['end']];
+    if (raw['end'] != null && end == null) return null;
+    // A present records field that isn't a list can't be kept record by
+    // record: the cycle is unreadable, and so its Plan (R8.1, Astra N07).
+    final rawRecords = raw['records'];
+    if (rawRecords != null && rawRecords is! List) return null;
+    final validRevisit = revisit is int && revisit >= 1 && revisit < cursor;
+    final rawRevisits = raw['revisitsUsed'];
+    final revisits = <int>{};
+    final unreadableRevisits = <Object?>[];
+    if (rawRevisits is List) {
+      for (final n in rawRevisits) {
+        if (n is int) {
+          revisits.add(n);
+        } else {
+          unreadableRevisits.add(n);
+        }
+      }
+    }
+    const known = {
+      'id',
+      'number',
+      'startedOn',
+      'cursor',
+      'pendingRevisit',
+      'revisitsUsed',
+      'records',
+      'endedOn',
+      'end',
+      'gentlerSince',
+    };
+    final extra = <String, Object?>{
+      for (final MapEntry(:key, :value) in raw.entries)
+        if (!known.contains(key)) key: value,
+      if (revisit != null && !validRevisit) 'pendingRevisit': revisit,
+      if (rawRevisits != null && rawRevisits is! List)
+        'revisitsUsed': rawRevisits,
+      if (endedOn != null && endedOn is! String) 'endedOn': endedOn,
+      if (gentlerSince != null && gentlerSince is! String)
+        'gentlerSince': gentlerSince,
+    };
+    final records = <StageRecord>[];
+    final unreadable = <Object?>[];
+    for (final r in (rawRecords as List?) ?? const <Object?>[]) {
+      switch (StageRecord.fromJson(r)) {
+        case final record?:
+          records.add(record);
+        case null:
+          unreadable.add(r);
+      }
+    }
     return PlanCycle(
       id: id,
       number: number,
       startedOn: startedOn,
       cursor: cursor,
-      pendingRevisit: revisit is int && revisit >= 1 && revisit < cursor
-          ? revisit
-          : null,
-      revisitsUsed: {
-        if (raw['revisitsUsed'] case final List list)
-          for (final n in list)
-            if (n is int) n,
-      },
-      records: [
-        if (raw['records'] case final List list)
-          for (final r in list) ?StageRecord.fromJson(r),
-      ],
+      pendingRevisit: validRevisit ? revisit : null,
+      revisitsUsed: revisits,
+      records: records,
       endedOn: endedOn is String ? endedOn : null,
-      end: CycleEnd.values.asNameMap()[raw['end']],
+      end: end,
       gentlerSince: gentlerSince is String ? gentlerSince : null,
+      unreadableRecords: unreadable,
+      unreadableRevisits: unreadableRevisits,
+      extra: extra,
     );
   }
 }
@@ -397,9 +494,15 @@ class PlanProgress {
     required this.cycles,
     this.lastAdvancedCircleId,
     this.lastServed,
+    this.extra = const {},
   });
 
   final String planId;
+
+  /// Fields this build doesn't know, and known fields whose stored value it
+  /// can't read, exactly as stored (R8.1 RL-3): written back until THIRTY
+  /// itself sets that field again.
+  final Map<String, Object?> extra;
   final PlanLifecycle lifecycle;
   final List<PlanCycle> cycles;
 
@@ -427,6 +530,12 @@ class PlanProgress {
     cycles: cycles ?? this.cycles,
     lastAdvancedCircleId: lastAdvancedCircleId ?? this.lastAdvancedCircleId,
     lastServed: lastServed ?? this.lastServed,
+    extra: {
+      for (final MapEntry(:key, :value) in extra.entries)
+        if (!(key == 'lastServed' && lastServed != null) &&
+            !(key == 'lastAdvancedCircleId' && lastAdvancedCircleId != null))
+          key: value,
+    },
   );
 
   /// With the current cycle replaced.
@@ -434,6 +543,7 @@ class PlanProgress {
       copyWith(cycles: [...cycles.take(cycles.length - 1), cycle]);
 
   Map<String, Object?> toJson() => {
+    ...extra,
     'lifecycle': lifecycle.name,
     'cycles': [for (final c in cycles) c.toJson()],
     'lastAdvancedCircleId': ?lastAdvancedCircleId,
@@ -447,18 +557,34 @@ class PlanProgress {
     if (lifecycle == null || lifecycle == PlanLifecycle.neverStarted) {
       return null;
     }
-    final cycles = [
-      if (raw['cycles'] case final List list)
-        for (final c in list) ?PlanCycle.fromJson(c),
-    ];
+    // Every cycle must be read, or the Plan isn't (R8.1, Astra N07): a
+    // damaged cycle is never dropped — which cycle is current depends on
+    // all of them — so the whole Plan is kept as stored instead.
+    final rawCycles = raw['cycles'];
+    if (rawCycles is! List) return null;
+    final cycles = <PlanCycle>[];
+    for (final c in rawCycles) {
+      final cycle = PlanCycle.fromJson(c);
+      if (cycle == null) return null;
+      cycles.add(cycle);
+    }
     if (cycles.isEmpty) return null;
     final last = raw['lastAdvancedCircleId'];
+    final served = ServedStageCircle.fromJson(raw['lastServed']);
+    const known = {'lifecycle', 'cycles', 'lastAdvancedCircleId', 'lastServed'};
     return PlanProgress(
       planId: planId,
       lifecycle: lifecycle,
       cycles: cycles,
       lastAdvancedCircleId: last is String ? last : null,
-      lastServed: ServedStageCircle.fromJson(raw['lastServed']),
+      lastServed: served,
+      extra: {
+        for (final MapEntry(:key, :value) in raw.entries)
+          if (!known.contains(key)) key: value,
+        if (last != null && last is! String) 'lastAdvancedCircleId': last,
+        if (raw['lastServed'] != null && served == null)
+          'lastServed': raw['lastServed'],
+      },
     );
   }
 }
@@ -512,12 +638,33 @@ class ServedStageCircle {
 
 /// Every Plan the user has started, and the one active — at most one.
 class CirclePlansState {
-  const CirclePlansState({this.activePlanId, this.plans = const {}});
+  const CirclePlansState({
+    this.activePlanId,
+    this.plans = const {},
+    this.unreadablePlans = const {},
+    this.extra = const {},
+    this.retainedActivePlanId,
+  });
 
   static const empty = CirclePlansState();
 
   final String? activePlanId;
   final Map<String, PlanProgress> plans;
+
+  /// Plans stored in a readable record that THIRTY can't read (R8.1, Astra
+  /// N07 / Claude AUD-3) — one this build doesn't know (a newer build's),
+  /// or one with a damaged part — by id, exactly as stored: never shown,
+  /// run or started over, written back by every save, removed only by
+  /// Delete Circle history (they may hold stage evidence).
+  final Map<String, Object?> unreadablePlans;
+
+  /// Fields of the stored record this build doesn't know, written back as
+  /// stored (R8.1, Astra N07).
+  final Map<String, Object?> extra;
+
+  /// The stored active Plan, when it is one of [unreadablePlans]: written
+  /// back while no other Plan is made active (R8.1).
+  final String? retainedActivePlanId;
 
   PlanProgress? get active => activePlanId == null ? null : plans[activePlanId];
 
@@ -525,28 +672,56 @@ class CirclePlansState {
       plans[planId]?.lifecycle ?? PlanLifecycle.neverStarted;
 
   CirclePlansState _with(PlanProgress plan, {String? activePlanId}) =>
-      CirclePlansState(
-        activePlanId: activePlanId,
-        plans: {...plans, plan.planId: plan},
-      );
+      withPlans({...plans, plan.planId: plan}, activePlanId: activePlanId);
+
+  /// These Plans as [next], [activePlanId] active — what THIRTY can't read
+  /// still kept.
+  CirclePlansState withPlans(
+    Map<String, PlanProgress> next, {
+    required String? activePlanId,
+  }) => CirclePlansState(
+    activePlanId: activePlanId,
+    plans: next,
+    unreadablePlans: unreadablePlans,
+    extra: extra,
+    retainedActivePlanId: activePlanId == null ? retainedActivePlanId : null,
+  );
+
+  /// Whether [planId]'s stored Plan is one THIRTY can't read: it is never
+  /// started over, so nothing replaces it.
+  bool isUnreadable(String planId) =>
+      !plans.containsKey(planId) && unreadablePlans.containsKey(planId);
 
   Map<String, Object?> toJson() => {
+    ...extra,
     'schemaVersion': circlePlansSchemaVersion,
-    'activePlanId': ?activePlanId,
-    'plans': {for (final e in plans.entries) e.key: e.value.toJson()},
+    'activePlanId': ?(activePlanId ?? retainedActivePlanId),
+    'plans': {
+      ...unreadablePlans,
+      for (final e in plans.entries) e.key: e.value.toJson(),
+    },
   };
 
-  /// `null` when [raw] isn't a readable record. Unknown Plans are dropped;
-  /// an active id must name an active Plan.
+  /// `null` when [raw] isn't a readable record — a version this build
+  /// doesn't know, or a present `plans` field that isn't a map. Inside a
+  /// readable record, a Plan THIRTY can't read is kept as stored
+  /// ([unreadablePlans]), never dropped (R8.1, Astra N07); an active id
+  /// must name an active Plan.
   static CirclePlansState? fromJson(Object? raw) {
     if (raw is! Map<String, Object?>) return null;
     if (raw['schemaVersion'] != circlePlansSchemaVersion) return null;
     final rawPlans = raw['plans'];
     if (rawPlans is! Map<String, Object?>) return null;
-    final plans = <String, PlanProgress>{
-      for (final e in rawPlans.entries)
-        e.key: ?PlanProgress.fromJson(e.key, e.value),
-    };
+    final plans = <String, PlanProgress>{};
+    final unreadable = <String, Object?>{};
+    for (final e in rawPlans.entries) {
+      switch (PlanProgress.fromJson(e.key, e.value)) {
+        case final plan?:
+          plans[e.key] = plan;
+        case null:
+          unreadable[e.key] = e.value;
+      }
+    }
     final active = raw['activePlanId'];
     return CirclePlansState(
       activePlanId:
@@ -554,6 +729,17 @@ class CirclePlansState {
           ? active
           : null,
       plans: plans,
+      unreadablePlans: unreadable,
+      extra: {
+        for (final e in raw.entries)
+          if (e.key != 'schemaVersion' &&
+              e.key != 'activePlanId' &&
+              e.key != 'plans')
+            e.key: e.value,
+      },
+      retainedActivePlanId: active is String && unreadable.containsKey(active)
+          ? active
+          : null,
     );
   }
 }
@@ -573,10 +759,10 @@ extension CirclePlanActions on CirclePlansState {
           : e.value,
   };
 
-  CirclePlansState _activate(PlanProgress plan) => CirclePlansState(
-    activePlanId: plan.planId,
-    plans: {..._pausingActive(plan.planId), plan.planId: plan},
-  );
+  CirclePlansState _activate(PlanProgress plan) => withPlans({
+    ..._pausingActive(plan.planId),
+    plan.planId: plan,
+  }, activePlanId: plan.planId);
 
   PlanProgress _newCycle(PlanProgress? plan, String planId, String today) {
     final number = (plan?.cycles.length ?? 0) + 1;
@@ -590,6 +776,7 @@ extension CirclePlanActions on CirclePlansState {
       lifecycle: PlanLifecycle.active,
       cycles: [...?plan?.cycles, cycle],
       lastAdvancedCircleId: plan?.lastAdvancedCircleId,
+      extra: plan?.extra ?? const {},
     );
   }
 
@@ -598,6 +785,7 @@ extension CirclePlanActions on CirclePlansState {
   /// Plan is paused at its place. Nothing is composed or recorded.
   CirclePlansState? start(String planId, {required String today}) {
     if (!circlePlanById.containsKey(planId)) return null;
+    if (isUnreadable(planId)) return null;
     final plan = plans[planId];
     return switch (plan?.lifecycle) {
       PlanLifecycle.active => null,
@@ -820,8 +1008,12 @@ extension CirclePlanActions on CirclePlansState {
   /// every cycle goes with the journal ([PlanCycle.withoutEvidence]), and so
   /// does the last Circle that moved each Plan; each Plan's place — its
   /// lifecycle, cycles and where each one stands — stays.
+  ///
+  /// What THIRTY can't read may hold stage evidence and can't be told apart
+  /// from it, so it goes too (R8.1) — as a whole record set aside does.
   CirclePlansState forgetStageEvidence() => CirclePlansState(
     activePlanId: activePlanId,
+    extra: extra,
     plans: {
       for (final e in plans.entries)
         e.key: PlanProgress(

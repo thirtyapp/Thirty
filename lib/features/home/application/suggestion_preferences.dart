@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
+import '../../../core/storage/confirmed_write.dart';
+import '../../../core/storage/store_save_failures.dart';
 import '../../personal_circle/domain/circle_elements.dart';
 import '../domain/recommendation_engine.dart';
 import 'activity_catalog.dart';
@@ -109,6 +111,8 @@ class SuggestionPreferences {
     this.notSuggested = const [],
     this.restsLifted = const [],
     this.elementsLeftOut = const [],
+    this.unreadable = const {},
+    this.extra = const {},
   });
 
   static const empty = SuggestionPreferences();
@@ -119,8 +123,22 @@ class SuggestionPreferences {
   /// V2 Phase D2.
   final List<ElementLeftOut> elementsLeftOut;
 
+  /// Stored items THIRTY can't read, by list (R8.1 RL-3) — a damaged one, or
+  /// one naming an activity or part this build doesn't know — exactly as
+  /// stored: never applied, written back by every save. Reset removes them.
+  final Map<String, List<Object?>> unreadable;
+
+  /// Fields of the stored record this build doesn't know, written back as
+  /// stored (R8.1 RL-3) — except the retired Phase D routines field, which
+  /// the next save drops ([retiredRoutinesNotSuggestedField]).
+  final Map<String, Object?> extra;
+
   bool get isEmpty =>
-      notSuggested.isEmpty && restsLifted.isEmpty && elementsLeftOut.isEmpty;
+      notSuggested.isEmpty &&
+      restsLifted.isEmpty &&
+      elementsLeftOut.isEmpty &&
+      unreadable.values.every((items) => items.isEmpty) &&
+      extra.isEmpty;
 
   /// What the Personal Guided Circle composer reads.
   Set<ElementId> get leftOut => {for (final e in elementsLeftOut) e.element};
@@ -136,6 +154,8 @@ class SuggestionPreferences {
     notSuggested: notSuggested ?? this.notSuggested,
     restsLifted: restsLifted ?? this.restsLifted,
     elementsLeftOut: elementsLeftOut ?? this.elementsLeftOut,
+    unreadable: unreadable,
+    extra: extra,
   );
 
   bool isNotSuggested(ActivityId activity, Intention need) =>
@@ -148,84 +168,170 @@ class SuggestionPreferences {
   );
 
   Map<String, Object?> toJson() => {
+    ...extra,
     'schemaVersion': suggestionPreferencesSchemaVersion,
-    'notSuggested': [for (final n in notSuggested) n.toJson()],
-    'restsLifted': [for (final r in restsLifted) r.toJson()],
-    'elementsLeftOut': [for (final e in elementsLeftOut) e.toJson()],
+    'notSuggested': [
+      for (final n in notSuggested) n.toJson(),
+      ...?unreadable['notSuggested'],
+    ],
+    'restsLifted': [
+      for (final r in restsLifted) r.toJson(),
+      ...?unreadable['restsLifted'],
+    ],
+    'elementsLeftOut': [
+      for (final e in elementsLeftOut) e.toJson(),
+      ...?unreadable['elementsLeftOut'],
+    ],
   };
 
   /// Reads [raw], failing safe to [empty] for anything unreadable; a single
-  /// malformed item is dropped, never the rest.
-  static SuggestionPreferences fromRaw(String? raw) {
+  /// malformed item is set aside ([unreadable]), never the rest.
+  static SuggestionPreferences fromRaw(String? raw) => tryRead(raw) ?? empty;
+
+  /// [raw] read, or `null` when it is a record THIRTY can't read as a whole
+  /// (R8.1 RL-3) — not JSON, not a record, a version this build doesn't
+  /// know, or a list field that isn't a list. No record reads as [empty].
+  static SuggestionPreferences? tryRead(String? raw) {
     if (raw == null) return empty;
     try {
       final decoded = jsonDecode(raw);
-      if (decoded is! Map<String, Object?>) return empty;
+      if (decoded is! Map<String, Object?>) return null;
       if (decoded['schemaVersion'] != suggestionPreferencesSchemaVersion) {
-        return empty;
+        return null;
       }
-      List<T> items<T>(Object? list, T? Function(Object?) parse) => [
-        if (list is List)
-          for (final item in list)
-            if (parse(item) case final T parsed) parsed,
-      ];
+      const lists = ['notSuggested', 'restsLifted', 'elementsLeftOut'];
+      for (final list in lists) {
+        final value = decoded[list];
+        if (value != null && value is! List) return null;
+      }
+      final unreadable = <String, List<Object?>>{};
+      List<T> items<T>(String list, T? Function(Object?) parse) {
+        final read = <T>[];
+        for (final item in (decoded[list] as List?) ?? const <Object?>[]) {
+          switch (parse(item)) {
+            case final T parsed:
+              read.add(parsed);
+            case null:
+              (unreadable[list] ??= []).add(item);
+          }
+        }
+        return read;
+      }
+
       return SuggestionPreferences(
-        notSuggested: items(decoded['notSuggested'], NotSuggested.fromJson),
-        restsLifted: items(decoded['restsLifted'], RestLifted.fromJson),
-        elementsLeftOut: items(
-          decoded['elementsLeftOut'],
-          ElementLeftOut.fromJson,
-        ),
+        notSuggested: items('notSuggested', NotSuggested.fromJson),
+        restsLifted: items('restsLifted', RestLifted.fromJson),
+        elementsLeftOut: items('elementsLeftOut', ElementLeftOut.fromJson),
+        unreadable: unreadable,
+        extra: {
+          for (final MapEntry(:key, :value) in decoded.entries)
+            if (key != 'schemaVersion' &&
+                !lists.contains(key) &&
+                key != retiredRoutinesNotSuggestedField)
+              key: value,
+        },
       );
     } catch (_) {
-      return empty;
+      return null;
     }
   }
 }
 
 class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
+  /// Whether the stored record is one THIRTY can't read as a whole (R8.1
+  /// RL-3): then no change is written over it — only Reset, the user's own
+  /// erasure, removes it.
+  var _storedUnreadable = false;
+
   @override
-  SuggestionPreferences build() => SuggestionPreferences.fromRaw(
-    ref.watch(sharedPreferencesProvider).getString(suggestionPreferencesKey),
-  );
+  SuggestionPreferences build() {
+    final raw = ref
+        .watch(sharedPreferencesProvider)
+        .getString(suggestionPreferencesKey);
+    final read = SuggestionPreferences.tryRead(raw);
+    _storedUnreadable = read == null;
+    return read ?? SuggestionPreferences.empty;
+  }
 
   SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
 
-  Future<void> _save(SuggestionPreferences next) async {
-    state = next;
-    if (next.isEmpty) {
-      await _prefs.remove(suggestionPreferencesKey);
-    } else {
-      await _prefs.setString(
-        suggestionPreferencesKey,
-        jsonEncode(next.toJson()),
-      );
-    }
+  Future<void> _writes = Future<void>.value();
+
+  /// Applies [change] to the preferences as they then stand, and shows the
+  /// result once the store has confirmed it (R8.1, Astra N05; the R8 Kept
+  /// Circles rule): a write that throws or returns `false` changes nothing —
+  /// in memory or on disk — and the user is told
+  /// ([storeSaveFailuresProvider]). Completes with whether the preferences
+  /// now hold the change; changes run one after another, each on what the
+  /// one before it left. [change] returning `null` changes nothing.
+  ///
+  /// R8.1 RL-3: never over a stored record THIRTY can't read ([tryRead]):
+  /// the change is refused, the stored bytes stay, and the user is told —
+  /// unless [erase] (Reset).
+  Future<bool> _save(
+    SuggestionPreferences? Function(SuggestionPreferences current) change, {
+    bool erase = false,
+  }) {
+    final prefs = _prefs;
+    final run = _writes.then((_) async {
+      final next = change(state);
+      if (next == null) return true;
+      if (_storedUnreadable && !erase) {
+        if (ref.mounted) {
+          ref
+              .read(storeSaveFailuresProvider.notifier)
+              .record(UserStore.suggestionPreferences);
+        }
+        return false;
+      }
+      try {
+        await writeConfirmed(
+          prefs,
+          suggestionPreferencesKey,
+          next.isEmpty ? null : jsonEncode(next.toJson()),
+        );
+      } on StorageWriteFailed {
+        if (ref.mounted) {
+          ref
+              .read(storeSaveFailuresProvider.notifier)
+              .record(UserStore.suggestionPreferences);
+        }
+        return false;
+      }
+      _storedUnreadable = false;
+      if (ref.mounted) {
+        state = next;
+        ref
+            .read(storeSaveFailuresProvider.notifier)
+            .saved(UserStore.suggestionPreferences);
+      }
+      return true;
+    });
+    _writes = run.then((_) {}, onError: (Object _) {});
+    return run;
   }
 
   /// "Don't suggest" [activity] for [need] — until the user says otherwise.
-  Future<void> dontSuggest(ActivityId activity, Intention need) {
-    if (state.isNotSuggested(activity, need)) return Future.value();
+  Future<bool> dontSuggest(ActivityId activity, Intention need) {
+    final since = ref.read(eventClockProvider)();
     return _save(
-      state.copyWith(
-        notSuggested: [
-          ...state.notSuggested,
-          NotSuggested(
-            activity: activity,
-            need: need,
-            since: ref.read(eventClockProvider)(),
-          ),
-        ],
-      ),
+      (current) => current.isNotSuggested(activity, need)
+          ? null
+          : current.copyWith(
+              notSuggested: [
+                ...current.notSuggested,
+                NotSuggested(activity: activity, need: need, since: since),
+              ],
+            ),
     );
   }
 
   /// "Suggest again" for an activity the user asked THIRTY not to suggest:
   /// it is eligible under the normal rules again — nothing more.
-  Future<void> allowAgain(ActivityId activity, Intention need) => _save(
-    state.copyWith(
+  Future<bool> allowAgain(ActivityId activity, Intention need) => _save(
+    (current) => current.copyWith(
       notSuggested: [
-        for (final n in state.notSuggested)
+        for (final n in current.notSuggested)
           if (n.activity != activity || n.need != need) n,
       ],
     ),
@@ -233,42 +339,40 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
 
   /// "Suggest again" for an activity resting after "Not useful": the
   /// current rest ends now. The answer is kept.
-  Future<void> liftRest(ActivityId activity, Intention need) => _save(
-    state.copyWith(
-      restsLifted: [
-        for (final r in state.restsLifted)
-          if (r.activity != activity || r.need != need) r,
-        RestLifted(
-          activity: activity,
-          need: need,
-          at: ref.read(eventClockProvider)(),
-        ),
-      ],
-    ),
-  );
-
-  /// V2 Phase D2: "Leave this out next time" — [element] stays out of the
-  /// user's Personal Guided Circles until they put it back.
-  Future<void> leaveOut(ElementId element) {
-    if (state.isLeftOut(element)) return Future.value();
+  Future<bool> liftRest(ActivityId activity, Intention need) {
+    final at = ref.read(eventClockProvider)();
     return _save(
-      state.copyWith(
-        elementsLeftOut: [
-          ...state.elementsLeftOut,
-          ElementLeftOut(
-            element: element,
-            since: ref.read(eventClockProvider)(),
-          ),
+      (current) => current.copyWith(
+        restsLifted: [
+          for (final r in current.restsLifted)
+            if (r.activity != activity || r.need != need) r,
+          RestLifted(activity: activity, need: need, at: at),
         ],
       ),
     );
   }
 
+  /// V2 Phase D2: "Leave this out next time" — [element] stays out of the
+  /// user's Personal Guided Circles until they put it back.
+  Future<bool> leaveOut(ElementId element) {
+    final since = ref.read(eventClockProvider)();
+    return _save(
+      (current) => current.isLeftOut(element)
+          ? null
+          : current.copyWith(
+              elementsLeftOut: [
+                ...current.elementsLeftOut,
+                ElementLeftOut(element: element, since: since),
+              ],
+            ),
+    );
+  }
+
   /// V2 Phase D2: "Put it back" — [element] may be composed again.
-  Future<void> putBack(ElementId element) => _save(
-    state.copyWith(
+  Future<bool> putBack(ElementId element) => _save(
+    (current) => current.copyWith(
       elementsLeftOut: [
-        for (final e in state.elementsLeftOut)
+        for (final e in current.elementsLeftOut)
           if (e.element != element) e,
       ],
     ),
@@ -276,7 +380,11 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
 
   /// "Reset suggestion preferences": every "Don't suggest", lifted rest and
   /// left-out part goes. Circle history and its answers stay.
-  Future<void> reset() => _save(SuggestionPreferences.empty);
+  ///
+  /// R8.1 RL-3: the user's own erasure — it removes a stored record THIRTY
+  /// can't read too, and every item set aside as unreadable.
+  Future<bool> reset() =>
+      _save((_) => SuggestionPreferences.empty, erase: true);
 }
 
 final suggestionPreferencesProvider =

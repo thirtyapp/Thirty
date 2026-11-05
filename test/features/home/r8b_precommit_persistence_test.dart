@@ -362,17 +362,20 @@ void main() {
       expect(again.read(keptCirclesProvider).kept, hasLength(1));
     });
 
-    test('a Plan action the store refuses (${fault.name}): still on screen, '
-        'marked unsaved — pending retry; a restart before any retry shows '
-        'what is durable; the next save makes it durably saved', () async {
+    // R8.1 RL-1 (founder decision 2026-11-05) supersedes R8's "still on
+    // screen": a refused Plan change is taken back off the screen, never
+    // shown as made; it stays marked unsaved until a later save lands.
+    test('a Plan action the store refuses (${fault.name}): taken back off '
+        'the screen, marked unsaved; a restart before any retry shows what '
+        'is durable; the next save makes it durably saved', () async {
       final c = h.open();
       h.disk.fail(circlePlansKey, fault);
       c.read(circlePlansProvider.notifier).start('getting_going');
       await R8Harness.settle();
       expect(
         c.read(circlePlansProvider).active,
-        isNotNull,
-        reason: 'the change stays on screen',
+        isNull,
+        reason: 'an unsaved change shown as made',
       );
       expect(
         c.read(storeSaveFailuresProvider).unsaved,

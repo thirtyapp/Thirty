@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../../../core/storage/confirmed_write.dart';
+import '../../../core/storage/preservation_writes.dart';
 import '../../insights/application/insights_provider.dart';
 import '../../plans/application/circle_plans_provider.dart';
 import '../../plans/domain/circle_plan.dart';
@@ -139,6 +140,11 @@ class CircleHistoryDeletion {
   /// the intent removed. Every removal must be confirmed by the store
   /// ([writeConfirmed]): one that throws or returns `false` fails the
   /// deletion, and the intent stays.
+  ///
+  /// R8.1 (Astra N02): a copy of an unreadable Plans or Insights record
+  /// still being written ([PreservationWrites]) is one of those writes —
+  /// waited for, and its key cleared again in the last pass — so none can
+  /// land after a deletion that succeeded.
   Future<void> delete() {
     final run = switch (_running) {
       final previous? => previous.then((_) => _delete()),
@@ -153,6 +159,7 @@ class CircleHistoryDeletion {
     final prefs = _ref.read(sharedPreferencesProvider);
     final plans = _ref.read(circlePlansProvider.notifier);
     final insights = _ref.read(insightsProvider.notifier);
+    final preservations = _ref.read(preservationWritesProvider);
     // The intent first, confirmed on disk — tried once more if the store
     // refuses it — before anything else: no write is stopped, nothing is
     // cleared from memory and nothing is removed until it is (founder
@@ -176,8 +183,18 @@ class CircleHistoryDeletion {
       _ref.invalidate(recommendationProvider);
       // Every step is awaited, even once one has failed, so none is left
       // running behind the error.
-      await _all([firstPass, stale, evidence, snapshots]);
-      await _clearRecordedCircles(prefs);
+      await _all([
+        firstPass,
+        stale,
+        evidence,
+        snapshots,
+        preservations.settledAll(),
+      ]);
+      await _all([
+        _clearRecordedCircles(prefs),
+        for (final key in [circlePlansUnreadableKey, insightsUnreadableKey])
+          writeConfirmed(prefs, key, null, restoreOnFailure: false),
+      ]);
       await writeConfirmed(prefs, historyDeletionPendingKey, null);
     } catch (_) {
       // Not finished: the intent stays recorded, so the next start finishes

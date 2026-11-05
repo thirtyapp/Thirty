@@ -104,6 +104,17 @@ abstract final class ComposedCopy {
       'Spoken guidance isn’t available for this saved Circle. You can still '
       'follow each part.';
 
+  /// A saved Circle already under way whose own instructions couldn't be
+  /// recovered, so today's are shown (R8.1 RL-2) — founder-approved copy
+  /// (2026-11-05), shown with every part, never voiced.
+  static const unverifiedWordingTitle =
+      'Some saved instructions are unavailable.';
+
+  /// See [unverifiedWordingTitle] — founder-approved copy (2026-11-05).
+  static const unverifiedWordingBody =
+      'THIRTY is showing the current instructions, which may differ from '
+      'what you saved. Spoken guidance isn’t available for this Circle.';
+
   static String partCue(int minutes) =>
       minutes == 1 ? 'About 1 minute' : 'About $minutes minutes';
 }
@@ -117,6 +128,7 @@ class ComposedSession {
     this.keptName,
     this.stage,
     this.wording,
+    this.wordingUnverified = false,
   });
 
   final CirclePlan plan;
@@ -136,6 +148,36 @@ class ComposedSession {
   /// what it runs with, never today's catalogue's. `null` otherwise.
   final List<PartWording>? wording;
 
+  /// A kept Circle whose saved words were stored damaged — present, but not
+  /// one readable wording per part — and couldn't be restored from the kept
+  /// Circle itself (R8.1, Astra N06). Its words can't be shown to be its
+  /// own, so THIRTY's voice never speaks it ([voiced]), and [wording] holds
+  /// none; Today never offers such a Circle to start.
+  final bool wordingUnverified;
+
+  /// Whether the stored [raw] session names a kept Circle whose saved words
+  /// are present but damaged (R8.1, Astra N06) — never read as "no words".
+  static bool hasDamagedWording(Object? raw) {
+    if (raw is! Map<String, Object?> || raw['keptCircleId'] is! String) {
+      return false;
+    }
+    if (!raw.containsKey('wording')) return false;
+    final plan = CirclePlan.fromSaved(raw['parts']);
+    return plan == null ||
+        PartWording.listFromJson(raw['wording'], plan.parts.length) == null;
+  }
+
+  /// This kept Circle, running with [words] — its own saved words, read from
+  /// the kept Circle itself (R8.1, Astra N06).
+  ComposedSession withWording(List<PartWording>? words) => ComposedSession(
+    plan: plan,
+    basis: basis,
+    keptCircleId: keptCircleId,
+    keptName: keptName,
+    stage: stage,
+    wording: words,
+  );
+
   bool get isKept => keptCircleId != null;
 
   /// The words the part at [position] runs with ([partWordingFor]).
@@ -147,6 +189,7 @@ class ComposedSession {
   /// runs on screen and paced instead — the voice never says something else
   /// than the screen shows.
   bool voicedAt(int position) =>
+      !wordingUnverified &&
       wordingAt(position) == PartWording.of(plan.parts[position].definition);
 
   /// Whether THIRTY's voice may speak this Circle at all (audit remediation
@@ -165,8 +208,16 @@ class ComposedSession {
   /// for safety; or — when THIRTY's voice would otherwise speak
   /// ([voiceAvailable]) — that it doesn't guide this saved Circle ([voiced]).
   /// Nothing past the last part, when the ending is on show.
+  ///
+  /// R8.1 RL-2: a Circle whose saved words couldn't be recovered
+  /// ([wordingUnverified]) says so on every part instead — whether or not
+  /// THIRTY's voice is available, since it is about the words on screen.
   String? partNote(int position, {required bool voiceAvailable}) {
     if (position < 0 || position >= plan.parts.length) return null;
+    if (wordingUnverified) {
+      return '${ComposedCopy.unverifiedWordingTitle} '
+          '${ComposedCopy.unverifiedWordingBody}';
+    }
     final part = plan.parts[position];
     if (partWordingCorrectedForSafety(part, wording?[position])) {
       return ComposedCopy.correctedForSafety;
@@ -213,6 +264,7 @@ class ComposedSession {
       wording: keptCircleId is String
           ? PartWording.listFromJson(raw['wording'], plan.parts.length)
           : null,
+      wordingUnverified: hasDamagedWording(raw),
     );
   }
 }

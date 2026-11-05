@@ -561,9 +561,11 @@ class MemoryDetailSheet extends ConsumerWidget {
 
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    void done(String message) {
+    // R8.1 (Astra N05): said only once the store has confirmed it; a change
+    // that wasn't saved closes the sheet and the app shell says so.
+    void done(bool saved, String message) {
       navigator.pop();
-      messenger.showSnackBar(SnackBar(content: Text(message)));
+      if (saved) messenger.showSnackBar(SnackBar(content: Text(message)));
     }
 
     final prefs = ref.read(suggestionPreferencesProvider.notifier);
@@ -618,8 +620,10 @@ class MemoryDetailSheet extends ConsumerWidget {
             label: 'Suggest again',
             variant: ThirtyButtonVariant.secondary,
             onPressed: () async {
-              await prefs.allowAgain(activity, need);
-              done('THIRTY may suggest $title for $label again.');
+              done(
+                await prefs.allowAgain(activity, need),
+                'THIRTY may suggest $title for $label again.',
+              );
             },
           )
         else ...[
@@ -628,8 +632,10 @@ class MemoryDetailSheet extends ConsumerWidget {
               label: 'Suggest again',
               variant: ThirtyButtonVariant.secondary,
               onPressed: () async {
-                await prefs.liftRest(activity, need);
-                done('$title can come up for $label again.');
+                done(
+                  await prefs.liftRest(activity, need),
+                  '$title can come up for $label again.',
+                );
               },
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -637,8 +643,10 @@ class MemoryDetailSheet extends ConsumerWidget {
           ThirtyTextAction(
             label: 'Don’t suggest it for $label',
             onPressed: () async {
-              await prefs.dontSuggest(activity, need);
-              done('THIRTY won’t suggest $title for $label.');
+              done(
+                await prefs.dontSuggest(activity, need),
+                'THIRTY won’t suggest $title for $label.',
+              );
             },
           ),
         ],

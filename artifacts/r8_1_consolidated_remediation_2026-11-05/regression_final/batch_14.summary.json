@@ -1,0 +1,275 @@
+{
+ "files": {
+  "test/features/r81/r81_n06_n07_damaged_records_test.dart": {
+   "passed": 21,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81_n08_n09_aud2_time_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81_n10_failure_notices_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81b_rl1_pending_state_test.dart": {
+   "passed": 17,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81b_rl2_unverified_words_copy_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81b_rl3_field_preservation_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/application/reminder_after_close_test.dart": {
+   "passed": 17,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/application/reminder_personalization_test.dart": {
+   "passed": 27,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/application/reminder_provider_test.dart": {
+   "passed": 24,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/presentation/widgets/reminder_invitation_card_large_text_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/reminder/presentation/widgets/reminder_invitation_card_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/settings/application/first_name_provider_test.dart": {
+   "passed": 23,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 173,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/features/r81/r81_n06_n07_damaged_records_test.dart": [
+   "N06 \u2014 Today's kept Circle with damaged saved words one item not words, not started, kept Circle intact: restored with its own saved words from the kept Circle \u2014 never today's, never voiced as if they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words one item not words, not started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words one item not words, started, kept Circle intact: restored with its own saved words from the kept Circle \u2014 never today's, never voiced as if they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words one item not words, started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words the wrong length, not started, kept Circle intact: restored with its own saved words from the kept Circle \u2014 never today's, never voiced as if they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words the wrong length, not started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words the wrong length, started, kept Circle intact: restored with its own saved words from the kept Circle \u2014 never today's, never voiced as if they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words the wrong length, started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words not a list, not started, kept Circle intact: restored with its own saved words from the kept Circle \u2014 never today's, never voiced as if they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words not a list, not started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words not a list, started, kept Circle intact: restored with its own saved words from the kept Circle \u2014 never today's, never voiced as if they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words not a list, started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words the words field missing from Today's copy while the kept Circle has its words: they come from the kept Circle",
+   "N07 \u2014 damaged or unknown data inside a readable record AUD-3 \u2014 a Plan this build doesn't know (a newer build's) is kept byte for byte through a Plan save",
+   "N07 \u2014 damaged or unknown data inside a readable record a Plan whose cycle is damaged is kept as stored, never rewritten without it",
+   "N07 \u2014 damaged or unknown data inside a readable record a damaged stage record inside a readable cycle is kept through a save",
+   "N07 \u2014 damaged or unknown data inside a readable record unknown fields of the Plans record itself are written back",
+   "N07 \u2014 damaged or unknown data inside a readable record a Plans record of a newer whole-record version stays unreadable and is kept aside, not reinterpreted",
+   "N07 \u2014 damaged or unknown data inside a readable record AUD-4 / N07-A \u2014 Insights whose snapshots field is present but not a list are kept, never replaced unkept",
+   "N07 \u2014 damaged or unknown data inside a readable record unknown fields of the Insights record itself are written back",
+   "N07 \u2014 damaged or unknown data inside a readable record regression \u2014 an Insights record without a snapshots field (none yet) is readable, as before"
+  ],
+  "test/features/r81/r81_n08_n09_aud2_time_test.dart": [
+   "N08 \u2014 a no-touch choice after midnight: the served stage is dated with the Circle's own day, so a lapse before Close keeps the legitimate credit",
+   "N09 \u2014 closed at the first 02:30 of 25 October 2026, reflection open, restart at 08:00: 6h30 really elapsed, so it is not carried over",
+   "N09 \u2014 closed at the second 02:30 of 25 October 2026, reflection open, restart at 08:00: 5h30 really elapsed, so it is carried over",
+   "N09 \u2014 the two 02:30 Closes are stored differently: an instant, not a wall-clock time",
+   "N09 \u2014 an older offset-free Start still reads as before (local), and the six-hour rule holds for it",
+   "AUD-2 \u2014 the carried-over Circle finished and its reflection answered after midnight: today's Circle can be chosen without another resume (with a touch)",
+   "AUD-2 \u2014 the carried-over Circle finished and its reflection answered after midnight: today's Circle can be chosen without another resume (no touch \u2014 screen reader or switch)",
+   "AUD-2 regression \u2014 the carried-over Circle closed but its reflection still open stays on show (contract: until answered)"
+  ],
+  "test/features/r81/r81_n10_failure_notices_test.dart": [
+   "a store failure while the History notice is open is told after it closes \u2014 with no further change",
+   "a second Circle's History failure while a store notice is open is told after it closes",
+   "several store failures while one notice is open: told once more after it closes, never stacked",
+   "a failed Keep (throws) then a successful one: Kept Circles are no longer marked unsaved",
+   "a failed Keep (returnsFalse) then a successful one: Kept Circles are no longer marked unsaved"
+  ],
+  "test/features/r81/r81b_rl1_pending_state_test.dart": [
+   "throws: a Plan start still being saved, then today's choice: the stage Circle may show while pending; once the save fails the Plan is off the screen and the Circle is never saved on it \u2014 on disk and after a restart",
+   "throws: a Plan start still being saved, then today's choice; the save lands: Plan, served stage and Circle are all saved",
+   "throws: a failed Plan save, then a new user action: the failed change is not on screen, so the user's retry is a real change and lands once the store heals",
+   "throws: a failed pause is undone on screen: the Plan still steers today as the disk says",
+   "throws: Premium lapses while a Plan start is pending, and its save fails: no stage Circle, nothing served, the Plan is off the screen",
+   "throws: a new Insight whose save fails is not kept on screen; a later assessment generates and saves it",
+   "throws: \"Not now\" whose save fails: the Insight is current again on screen and on disk; a restart agrees; a retry lands",
+   "throws: a restart while a Plan start is pending reads only the disk",
+   "returnsFalse: a Plan start still being saved, then today's choice: the stage Circle may show while pending; once the save fails the Plan is off the screen and the Circle is never saved on it \u2014 on disk and after a restart",
+   "returnsFalse: a Plan start still being saved, then today's choice; the save lands: Plan, served stage and Circle are all saved",
+   "returnsFalse: a failed Plan save, then a new user action: the failed change is not on screen, so the user's retry is a real change and lands once the store heals",
+   "returnsFalse: a failed pause is undone on screen: the Plan still steers today as the disk says",
+   "returnsFalse: Premium lapses while a Plan start is pending, and its save fails: no stage Circle, nothing served, the Plan is off the screen",
+   "returnsFalse: a new Insight whose save fails is not kept on screen; a later assessment generates and saves it",
+   "returnsFalse: \"Not now\" whose save fails: the Insight is current again on screen and on disk; a restart agrees; a retry lands",
+   "returnsFalse: a restart while a Plan start is pending reads only the disk",
+   "Insights decide from the confirmed Plans: a Plan start that fails never withdraws, or is counted by, an Insight"
+  ],
+  "test/features/r81/r81b_rl2_unverified_words_copy_test.dart": [
+   "the copy is exactly the approved wording",
+   "shown on every part only when the fallback happens \u2014 with or without a voice \u2014 and never past the end",
+   "a running Circle shows the note to a screen reader, keeps running, and THIRTY's voice says nothing"
+  ],
+  "test/features/r81/r81b_rl3_field_preservation_test.dart": [
+   "Plans \u2014 inside a readable cycle a stage record with damaged list items and a future field, and damaged set-aside reasons: kept byte for byte through repeated saves and restarts; what is readable stays usable",
+   "Plans \u2014 inside a readable cycle a stage record with damaged list items and a future field, and damaged set-aside reasons: kept byte for byte through a save that throws; what is readable stays usable",
+   "Plans \u2014 inside a readable cycle a stage record with damaged list items and a future field, and damaged set-aside reasons: kept byte for byte through a save that returnsFalse; what is readable stays usable",
+   "Plans \u2014 inside a readable cycle revisit entries that aren't stage numbers are kept, and the readable ones still count",
+   "Plans \u2014 inside a readable cycle a cycle ended by a reason a newer THIRTY added is kept as stored, never read as not ended",
+   "Suggestion preferences a damaged item beside valid ones is kept through saves and a restart; the valid ones still apply",
+   "Suggestion preferences a damaged item beside valid ones is kept through a save that throws; the valid ones still apply",
+   "Suggestion preferences a damaged item beside valid ones is kept through a save that returnsFalse; the valid ones still apply",
+   "Suggestion preferences a record THIRTY can't read (a newer version) is never written over by a change; the user is told; Reset \u2014 the user's own erasure \u2014 still works",
+   "Suggestion preferences a record THIRTY can't read (not JSON) is never written over by a change; the user is told; Reset \u2014 the user's own erasure \u2014 still works",
+   "Suggestion preferences a record THIRTY can't read (a list field that is not a list) is never written over by a change; the user is told; Reset \u2014 the user's own erasure \u2014 still works",
+   "Suggestion preferences regression \u2014 the retired Phase D routines field is still dropped by the next save (pre-release migration, ADR-024)"
+  ],
+  "test/features/reminder/application/reminder_after_close_test.dart": [
+   "A \u2014 not started: today's reminder stays, then comes every day",
+   "C \u2014 closing today's Circle moves a reminder still ahead today to tomorrow, with no Settings screen anywhere",
+   "B/E \u2014 starting alone already skips today, and reflecting after Close never brings today back",
+   "the original time passes silently; tomorrow's reminder is delivered once",
+   "no app reopen for several days: after Close, every following day still gets its reminder \u2014 none skipped, none twice",
+   "ignored reminders never pile up: each day's replaces the last",
+   "D \u2014 a time changed after Close still skips today, then repeats daily at the new time",
+   "D \u2014 disabling leaves nothing scheduled; re-enabling after Close skips today",
+   "disabled, the reminder stays silent for days",
+   "a rename after Close updates the greeting and still skips today",
+   "F/G \u2014 killed after Close and relaunched later the same day: today stays skipped",
+   "H \u2014 a reboot after Close keeps today skipped and the days after covered, before THIRTY is ever opened again",
+   "a phone off through reminder time never delivers it late; the next day's still comes",
+   "the next day, opening THIRTY before reminder time keeps that day's reminder",
+   "a reminder time already past today stays daily after Close",
+   "without exact-alarm access nothing is armed \u2014 never an inexact fallback",
+   "the plugin's own repeating schedule \u2014 the source of the stale reminder \u2014 is never used, and an alarm it armed in an earlier version is retired"
+  ],
+  "test/features/reminder/application/reminder_personalization_test.dart": [
+   "reminderNotificationTitle (pure) 8:00 \u2192 \"Good morning, Thomas.\" / \"Good morning.\"",
+   "reminderNotificationTitle (pure) 14:00 \u2192 \"Good afternoon, Thomas.\" / \"Good afternoon.\"",
+   "reminderNotificationTitle (pure) 20:00 \u2192 \"Good evening, Thomas.\" / \"Good evening.\"",
+   "reminderNotificationTitle (pure) 4:30 \u2192 \"Good evening, Thomas.\" / \"Good evening.\"",
+   "reminderNotificationTitle (pure) 4:59 \u2192 \"Good evening, Thomas.\" / \"Good evening.\"",
+   "reminderNotificationTitle (pure) 5:00 \u2192 \"Good morning, Thomas.\" / \"Good morning.\"",
+   "reminderNotificationTitle (pure) 11:59 \u2192 \"Good morning, Thomas.\" / \"Good morning.\"",
+   "reminderNotificationTitle (pure) 12:00 \u2192 \"Good afternoon, Thomas.\" / \"Good afternoon.\"",
+   "reminderNotificationTitle (pure) 17:59 \u2192 \"Good afternoon, Thomas.\" / \"Good afternoon.\"",
+   "reminderNotificationTitle (pure) 18:00 \u2192 \"Good evening, Thomas.\" / \"Good evening.\"",
+   "reminderNotificationTitle (pure) the body is fixed and carries nothing personal",
+   "Scheduled notification content reminder at 8:0, Thomas \u2192 \"Good morning, Thomas.\"",
+   "Scheduled notification content reminder at 14:0, Thomas \u2192 \"Good afternoon, Thomas.\"",
+   "Scheduled notification content reminder at 20:0, Thomas \u2192 \"Good evening, Thomas.\"",
+   "Scheduled notification content reminder at 4:30, Thomas \u2192 \"Good evening, Thomas.\"",
+   "Scheduled notification content reminder at 8:0, no name \u2192 \"Good morning.\"",
+   "Scheduled notification content reminder at 14:0, no name \u2192 \"Good afternoon.\"",
+   "Scheduled notification content reminder at 20:0, no name \u2192 \"Good evening.\"",
+   "Scheduled notification content the title follows the reminder time, not the moment it is scheduled: scheduled at 09:00 for 20:00 \u2192 evening",
+   "Name lifecycle enabled + add a name \u2192 the future notification is re-established with it",
+   "Name lifecycle enabled + change the name \u2192 updated",
+   "Name lifecycle enabled + remove the name \u2192 neutral greeting",
+   "Name lifecycle disabled + change the name \u2192 nothing is scheduled",
+   "Name lifecycle a name edit never asks for notification permission again, and keeps the reminder time and state",
+   "Name lifecycle saving the same name again changes nothing",
+   "Reminder time lifecycle changing the reminder time changes the greeting's daypart",
+   "Reminder time lifecycle enabling picks the greeting for the chosen time"
+  ],
+  "test/features/reminder/application/reminder_provider_test.dart": [
+   "nextReminderOccurrence (pure) today, when the time has not yet passed and today is not suppressed",
+   "nextReminderOccurrence (pure) tomorrow, when the time has already passed today",
+   "nextReminderOccurrence (pure) tomorrow, when today is suppressed even though the time has not passed yet",
+   "nextReminderOccurrence (pure) tomorrow at the exact boundary \u2014 \"already passed\" includes the exact minute",
+   "ReminderNotifier build() restores defaults and never touches the gateway",
+   "ReminderNotifier restores a previously persisted enabled state",
+   "ReminderNotifier initialize() (called at cold launch) never requests notification permission or exact-alarm access \u2014 only checks them \u2014 matching \"no permission request at cold launch\" (parent \u00a727, extended to exact-alarm special access)",
+   "ReminderNotifier enable() requests permission, persists, and schedules exactly once when notification permission and exact-alarm access are both granted",
+   "ReminderNotifier enable() with denied notification permission still records the user's choice truthfully, but schedules nothing",
+   "ReminderNotifier enable() with notification permission granted but exact-alarm access missing schedules nothing \u2014 never an inexact fallback",
+   "ReminderNotifier requestExactAlarmAccess() invokes the platform request exactly once and, once access is actually granted, re-checks live and the reminder becomes active",
+   "ReminderNotifier user returns from the exact-alarm access screen without granting it \u2014 the reminder remains inactive/needs access, not scheduled",
+   "ReminderNotifier exact-alarm access revoked later (e.g. from system settings while backgrounded) is reconciled without crashing \u2014 schedules nothing and the state reflects it truthfully",
+   "ReminderNotifier repeatedly reconciling with exact-alarm access still denied never triggers the platform request itself \u2014 no permission nag loop; the request only ever happens from the dedicated explicit user action",
+   "ReminderNotifier disable() cancels pending work and persists",
+   "ReminderNotifier setTime() reschedules with the new time while active",
+   "ReminderNotifier setTime() while disabled never schedules \u2014 only cancels (a no-op, nothing was scheduled)",
+   "ReminderNotifier reschedules automatically when today's Circle starts \u2014 suppressing an unnecessary later reminder the same day",
+   "ReminderNotifier never reschedules on unrelated recommendation changes with the same status (no redundant work)",
+   "ReminderNotifier closing today's Circle (after starting it) suppresses the same day, targeting the same next occurrence as starting alone \u2014 never pushed further out by the second status change",
+   "ReminderNotifier Close cancels the same-day alarm before anything else runs \u2014 the alarm is already gone even if the process never gets past that first step (simulated by a permission check that never resolves)",
+   "ReminderNotifier a failed re-arm after a successful cancel fails closed \u2014 today's alarm is not reintroduced merely because tomorrow's reschedule attempt failed",
+   "ReminderNotifier Day N+1: a stale Day-N started/closed status cannot suppress the new day's reminder \u2014 eligibility is restored automatically, exactly the founder-approved \"reminds again the next day automatically\" behavior (rule 4/5 of the reminder contract amendment). This models a fresh app session on the new day \u2014 THIRTY's own Dart code has no way to run at midnight with no app open at all; that guarantee is provided entirely by `flutter_local_notifications`' native Android `ScheduledNotificationReceiver`, which re-arms its own next occurrence purely in native code once a notification has actually fired (verified by reading that plugin's Java source directly) \u2014 a platform boundary no Flutter-side test can exercise. What THIS test proves is the one thing entirely within THIRTY's own control: if the Day-N session correctly targeted Day N+1 (already covered above) and the app happens to be reopened on Day N+1, it must never remain incorrectly suppressed by Day N's leftover status.",
+   "ReminderNotifier refreshPermission() reconciles the schedule after an external permission change"
+  ],
+  "test/features/reminder/presentation/widgets/reminder_invitation_card_large_text_test.dart": [
+   "100% text: side by side, unchanged 320pt",
+   "100% text: side by side, unchanged 360pt",
+   "100% text: side by side, unchanged 412pt",
+   "200% text: stacked when the pair would truncate 320pt: stacked, same order, full width, nothing cut off",
+   "200% text: stacked when the pair would truncate 320pt: \"Not now\" still closes the invitation for the session",
+   "200% text: stacked when the pair would truncate 320pt: \"Choose a time\" still opens the time picker and enables the reminder",
+   "200% text: stacked when the pair would truncate 360pt: stacked, same order, full width, nothing cut off",
+   "200% text: stacked when the pair would truncate 360pt: \"Not now\" still closes the invitation for the session",
+   "200% text: stacked when the pair would truncate 360pt: \"Choose a time\" still opens the time picker and enables the reminder"
+  ],
+  "test/features/reminder/presentation/widgets/reminder_invitation_card_test.dart": [
+   "renders nothing before any Circle has ever been closed",
+   "renders the invitation after the first closed Circle",
+   "marks itself shown once meaningfully visible, not merely rendered (founder decision after B3)",
+   "tapping \"Not now\" dismisses it immediately without enabling reminders",
+   "choosing a time enables the reminder and dismisses the card",
+   "never renders once reminders are already enabled",
+   "Phase A2 \u2014 stays compact: it shares height with the Home hero, so it keeps the default card padding"
+  ],
+  "test/features/settings/application/first_name_provider_test.dart": [
+   "firstNameProvider \u2014 reading no stored value \u2192 null",
+   "firstNameProvider \u2014 reading a stored valid name rehydrates",
+   "firstNameProvider \u2014 reading an empty stored string \u2192 null",
+   "firstNameProvider \u2014 reading a whitespace-only stored string \u2192 null",
+   "firstNameProvider \u2014 reading a wrong-type stored value (an int) \u2192 null, without throwing",
+   "firstNameProvider \u2014 reading a wrong-type stored value (a bool) \u2192 null, without throwing",
+   "firstNameProvider \u2014 reading a wrong-type stored value (a string list) \u2192 null, without throwing",
+   "firstNameProvider \u2014 reading a stored value over the cap (bad data) \u2192 null",
+   "firstNameProvider \u2014 writing saving a valid name persists it",
+   "firstNameProvider \u2014 writing saving trims leading and trailing whitespace",
+   "firstNameProvider \u2014 writing saving a blank name removes the key rather than storing \"\"",
+   "firstNameProvider \u2014 writing clearing removes the key \u2014 and only that key",
+   "firstNameProvider \u2014 writing a name of exactly 40 code points is accepted",
+   "firstNameProvider \u2014 writing over 40 code points is rejected \u2014 never truncated \u2014 and changes nothing",
+   "firstNameProvider \u2014 writing the cap counts code points: 20 emoji (40 UTF-16 units) fit, 41 code points do not",
+   "firstNameProvider \u2014 writing Unicode name \"Zo\u00eb\" is stored exactly",
+   "firstNameProvider \u2014 writing Unicode name \"S\u00f8ren\" is stored exactly",
+   "firstNameProvider \u2014 writing Unicode name \"\u0141ukasz\" is stored exactly",
+   "firstNameProvider \u2014 writing Unicode name \"Ng\u1ecdc\" is stored exactly",
+   "firstNameProvider \u2014 writing Unicode name \"Jos\u00e9 Mar\u00eda\" is stored exactly",
+   "firstNameProvider \u2014 writing Unicode name \"\u3055\u304f\u3089\" is stored exactly",
+   "firstNameProvider \u2014 writing Unicode name \"\u0410\u043d\u044f\" is stored exactly",
+   "firstNameProvider \u2014 writing a saved name survives a cold start (new container, same storage)"
+  ]
+ },
+ "batch": 14,
+ "exit": 0,
+ "seconds": 15,
+ "command": "flutter test --concurrency=1 --reporter json test/features/r81/r81_n06_n07_damaged_records_test.dart test/features/r81/r81_n08_n09_aud2_time_test.dart test/features/r81/r81_n10_failure_notices_test.dart test/features/r81/r81b_rl1_pending_state_test.dart test/features/r81/r81b_rl2_unverified_words_copy_test.dart test/features/r81/r81b_rl3_field_preservation_test.dart test/features/reminder/application/reminder_after_close_test.dart test/features/reminder/application/reminder_personalization_test.dart test/features/reminder/application/reminder_provider_test.dart test/features/reminder/presentation/widgets/reminder_invitation_card_large_text_test.dart test/features/reminder/presentation/widgets/reminder_invitation_card_test.dart test/features/settings/application/first_name_provider_test.dart"
+}

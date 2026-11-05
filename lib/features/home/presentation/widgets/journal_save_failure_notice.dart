@@ -82,7 +82,17 @@ class _JournalSaveFailureNoticeState
         title: JournalSaveCopy.changeNotSavedTitle,
         body: JournalSaveCopy.changeNotSavedBody,
       ),
-    ).whenComplete(() => _showing = false);
+    ).whenComplete(_closed);
+  }
+
+  /// A notice closed (R8.1, Astra N10): a failure that happened while it
+  /// was open — in any store, for any Circle — is told now, with no
+  /// further change needed to bring it up.
+  void _closed() {
+    _showing = false;
+    if (!mounted) return;
+    _check(ref.read(journalSaveStatusProvider));
+    _checkStores(ref.read(storeSaveFailuresProvider));
   }
 
   void _check(Map<String, bool> outcomes) {
@@ -100,7 +110,7 @@ class _JournalSaveFailureNoticeState
             title: JournalSaveCopy.notSavedTitle,
             body: JournalSaveCopy.notSavedBody,
           ),
-        ).whenComplete(() => _showing = false);
+        ).whenComplete(_closed);
       }
     }
   }

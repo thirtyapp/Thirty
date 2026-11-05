@@ -8,6 +8,7 @@ import '../../../core/activity_category.dart';
 import '../../../core/analytics/analytics_event_type.dart';
 import '../../../core/analytics/analytics_service.dart';
 
+import '../../../core/premium/entitlement_status.dart';
 import '../../../core/premium/premium_access.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
@@ -718,6 +719,11 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// next step ([_ensureCurrent]); one begun during a deletion waits for it.
   Future<void> _writes = Future<void>.value();
 
+  /// Billing's answer at each stage Circle's Start, by Circle (R8.1 RL-1):
+  /// what its Plan record of the Start is written from — again, if that
+  /// save failed and was taken back off the screen — never a later answer.
+  final _startVerdicts = <String, EntitlementStatus>{};
+
   ///
   /// Audit remediation R8 (Astra R7-A01): a write that fails is never
   /// silent. Each step reports its own failure where it happens — the day
@@ -821,6 +827,17 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     }
     final all = {..._pendingDayWrite(prefs), ...carry, ...values};
     try {
+      // R8.1 RL-1: a stage Circle is saved only once the Plan state it was
+      // composed from — its served stage — is on disk; never on a Plan
+      // change still pending or one that failed.
+      final shown = state.recommendation;
+      final stage = shown?.composed?.stage;
+      if (stage != null && shown!.circleId == circleId) {
+        await ref
+            .read(circlePlansProvider.notifier)
+            .confirmServed(stage, circleId: circleId);
+        _ensureCurrent(epoch);
+      }
       if (stored != null && stored != circleId) {
         await _recordBeforeOverwrite(epoch, _DayKeys(prefs), stored);
       }
@@ -1021,19 +1038,14 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     }
     final mirrored = _journalHolds(restored, entry);
     final stage = recommendation.composed?.stage;
+    // R8.1 (Astra N01): credited means credited on disk — a credit only in
+    // memory is caught up (written again) like a missing one.
     final credited =
         restored.status != RecommendationStatus.closed ||
         stage == null ||
-        (ref
-                .read(circlePlansProvider)
-                .plans[stage.planId]
-                ?.cycles
-                .any(
-                  (c) => c.records.any(
-                    (r) => r.circleId == recommendation.circleId,
-                  ),
-                ) ??
-            false);
+        ref
+            .read(circlePlansProvider.notifier)
+            .isCreditedDurably(stage.planId, circleId: recommendation.circleId);
     if (mirrored && credited) return;
     _enqueue((epoch) async {
       if (!mirrored) await _recordInJournal(epoch, restored);
@@ -1093,12 +1105,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
 
     final storedStatus = RecommendationStatus.values
         .asNameMap()[prefs.getString(recommendationStatusKey)];
-    final storedStartedAt = DateTime.tryParse(
-      prefs.getString(recommendationStartedAtKey) ?? '',
+    final storedStartedAt = _storedInstant(
+      prefs.getString(recommendationStartedAtKey),
     );
     // V2 Phase C: the session runtime — a pause and a Guided position.
-    final storedPausedAt = DateTime.tryParse(
-      prefs.getString(recommendationPausedAtKey) ?? '',
+    final storedPausedAt = _storedInstant(
+      prefs.getString(recommendationPausedAtKey),
     );
     final storedPausedTotal = Duration(
       milliseconds: (prefs.getInt(recommendationPausedMsKey) ?? 0).clamp(
@@ -1139,8 +1151,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         );
 
       case RecommendationStatus.closed:
-        final storedClosedAt = DateTime.tryParse(
-          prefs.getString(recommendationClosedAtKey) ?? '',
+        final storedClosedAt = _storedInstant(
+          prefs.getString(recommendationClosedAtKey),
         );
         // Same reasoning as above: a "closed" record needs both a valid
         // startedAt and closedAt to be conceptually valid — and a closedAt
@@ -1188,6 +1200,17 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     }
   }
 
+  /// A stored Start, Close or pause, read back as local time (R8.1, Astra
+  /// N09 / Claude AUD-5). Written as a UTC instant ([_instantValue]), it is
+  /// exactly the moment it happened — each 02:30 of an autumn clock change
+  /// its own. An older value without an offset reads as before, as local
+  /// time; its offset was never stored and is never guessed.
+  static DateTime? _storedInstant(String? raw) =>
+      DateTime.tryParse(raw ?? '')?.toLocal();
+
+  /// [at] as stored: a UTC instant (R8.1, Astra N09 / Claude AUD-5).
+  static String? _instantValue(DateTime? at) => at?.toUtc().toIso8601String();
+
   /// Answers the Daily Context Question for today: Recommendation Engine
   /// V2 decides today's one activity for [intention] and [window] (by
   /// default the time currently chosen, [timeWindowChoiceProvider]) from the
@@ -1211,17 +1234,21 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// ([CirclePlansNotifier.steerToday]); a stage that waits or is set aside
   /// leaves today to the ordinary Personal Guided Circle.
   void chooseIntention(Intention intention, {TimeWindow? window}) {
-    if (state.recommendation != null) return;
+    final now = _choiceTime();
+    final today = dateKey(now);
+    // R8.1 (Claude AUD-2): an earlier day's Circle still on show once it is
+    // finished — closed, its reflection answered — no longer holds today's
+    // choice, with or without a touch or a resume.
+    if (state.recommendation != null && !_finishedEarlierDay(today)) return;
     // Audit remediation R3: never a Circle a pending deletion would erase.
     if (_historyDeletionPending) return;
 
-    final now = _choiceTime();
-    final today = dateKey(now);
     // An earlier day's Close that is saved but not yet credited counts
-    // before today's Plan stage is chosen.
+    // before today's Plan stage is chosen. Not confirmed here: the day's
+    // publication waits for it ([_recordBeforeOverwrite]).
     final stored = _DayKeys(ref.read(sharedPreferencesProvider));
     if (_earlierSession(stored, today) case final earlier?) {
-      unawaited(_creditGuided(earlier));
+      _creditGuided(earlier).ignore();
     }
     final TimeWindow chosen = ref.read(timeWindowChoiceProvider);
     final timeWindow = window ?? chosen;
@@ -1248,6 +1275,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
             ComposerContext(date: now, need: intention, window: timeWindow),
             history,
             preferences,
+            circleId: today,
           )
         : null;
     if (composed != null) {
@@ -1294,6 +1322,20 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         );
   }
 
+  /// Whether the Circle on show is an earlier day's, finished: closed, and
+  /// either closed on its own day or its reflection answered (R8.1, Claude
+  /// AUD-2) — so the day [today] can begin. A running Circle, or one closed
+  /// after midnight with its reflection still open, never is.
+  bool _finishedEarlierDay(String today) {
+    final shown = state.recommendation;
+    final closedAt = state.closedAt;
+    return shown != null &&
+        shown.circleId.compareTo(today) < 0 &&
+        state.status == RecommendationStatus.closed &&
+        closedAt != null &&
+        (state.reflectionAnswered || state.isOnItsOwnDayAt(closedAt));
+  }
+
   /// When a choice is being made (audit remediation R8, Claude F-2): the
   /// real time — so "shown" is when it was — and the day it falls on. A
   /// screen reader, keyboard or switch brings no touch for the app to notice
@@ -1308,11 +1350,15 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// stage first, when it steers today; otherwise the ordinary Personal
   /// Guided Circle — or `null` when no honest composition exists. The
   /// caller has already checked Premium.
+  ///
+  /// [circleId] is the Circle being composed (R8.1, Astra N08): a stage it
+  /// follows is served under that Circle's own day.
   ComposedSession? _composeToday(
     ComposerContext context,
     List<PastCircle> history,
-    SuggestionPreferences preferences,
-  ) {
+    SuggestionPreferences preferences, {
+    required String circleId,
+  }) {
     final planDay = ref
         .read(circlePlansProvider.notifier)
         .steerToday(
@@ -1320,6 +1366,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
           history,
           controls: preferences.controls,
           leftOut: preferences.leftOut,
+          circleId: circleId,
         );
     final stageCircle = planDay.circle;
     final composed =
@@ -1369,6 +1416,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       ),
       ref.read(pastCirclesProvider),
       ref.read(suggestionPreferencesProvider),
+      circleId: current.circleId,
     );
     if (composed == null) return UpgradeTodayResult.noComposition;
     final upgraded = _fromComposed(
@@ -1557,6 +1605,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final recommendation = state.recommendation;
     if (recommendation == null) return;
     if (state.status != RecommendationStatus.notStarted) return;
+    // R8.1 (Astra N06): never a kept Circle whose words aren't its own.
+    if (recommendation.composed?.wordingUnverified ?? false) return;
     // R6 final (founder decision 2026-11-03): one Circle a day — an offer
     // not started before local midnight is never started afterwards under
     // its day. Start opens the new day instead, and nothing starts; the
@@ -1569,11 +1619,18 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
 
     // A stage Circle's start is noted on its served evidence first
     // (CirclePlansNotifier.noteStart), and saved before the start itself.
+    final verdict = ref.read(entitlementStatusProvider);
     final noted = switch (recommendation.composed?.stage) {
-      final stage? =>
-        ref
+      final stage? => () {
+        _startVerdicts[recommendation.circleId] = verdict;
+        return ref
             .read(circlePlansProvider.notifier)
-            .noteStart(stage, circleId: recommendation.circleId),
+            .noteStart(
+              stage,
+              circleId: recommendation.circleId,
+              status: verdict,
+            );
+      }(),
       null => Future<void>.value(),
     };
     final startedAt = ref.read(eventClockProvider)();
@@ -1841,7 +1898,10 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       clearUsefulness: !isAffirmative,
     );
     final snapshot = state;
-    _enqueue((epoch) => _persist(epoch, snapshot));
+    _enqueue((epoch) async {
+      await _persist(epoch, snapshot);
+      _openNewDayAfter(snapshot);
+    });
     ref
         .read(analyticsServiceProvider)
         .track(
@@ -1869,13 +1929,30 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
 
     state = state.copyWith(usefulnessResponse: response);
     final snapshot = state;
-    _enqueue((epoch) => _persist(epoch, snapshot));
+    _enqueue((epoch) async {
+      await _persist(epoch, snapshot);
+      _openNewDayAfter(snapshot);
+    });
     ref
         .read(analyticsServiceProvider)
         .track(
           AnalyticsEventType.circleUsefulnessReported,
           metadata: {'response': response.wireName},
         );
+  }
+
+  /// Once [finished] — an earlier day's Circle, carried over, its
+  /// reflection now answered and saved — is still the one on show, the new
+  /// day opens (R8.1, Claude AUD-2): no resume or touch is needed, so a
+  /// screen reader, keyboard or switch reaches today's choice too.
+  void _openNewDayAfter(RecommendationState finished) {
+    if (!ref.mounted || !finished.reflectionAnswered) return;
+    final circleId = finished.recommendation?.circleId;
+    final today = dateKey(ref.read(eventClockProvider)());
+    if (circleId == null || circleId.compareTo(today) >= 0) return;
+    if (state.recommendation?.circleId != circleId) return;
+    ref.invalidate(nowProvider);
+    ref.invalidateSelf();
   }
 
   /// "Remove this answer" (V2 Phase C): removes the usefulness answer of
@@ -1894,15 +1971,48 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     }
     final snapshot = state;
     final isToday = today?.circleId == circleId;
+    // R8.1 (Astra N03): the day's recovery keys are cleared first —
+    // whichever day they hold — and History only once they are, so a
+    // removed answer is never written back from them. Cut short before
+    // History, the answer stays everywhere and the user is told.
     _enqueue((epoch) async {
-      if (isToday) await _persist(epoch, snapshot);
+      if (isToday) {
+        await _persist(epoch, snapshot);
+      } else {
+        await _removeFromDayKeys(
+          epoch,
+          circleId,
+          includingAttempt: includingAttempt,
+        );
+      }
       final changed = await _journalFor(
         epoch,
       ).removeAnswer(circleId, includingAttempt: includingAttempt);
       if (changed && ref.mounted) {
         ref.invalidate(circleJournalRepositoryProvider);
       }
-    });
+    }, forCircle: circleId);
+  }
+
+  /// [circleId]'s answers removed from the day keys, when they hold that
+  /// Circle — not on show, as on the next day before a new Circle is chosen
+  /// (R8.1, Astra N03) — as one publication ([_publish]).
+  Future<void> _removeFromDayKeys(
+    int epoch,
+    String circleId, {
+    required bool includingAttempt,
+  }) async {
+    final keys = _DayKeys(ref.read(sharedPreferencesProvider));
+    if (keys.getString(recommendationDayKey) != circleId) return;
+    final values = <String, Object?>{
+      if (keys.getString(recommendationUsefulnessResponseKey) != null)
+        recommendationUsefulnessResponseKey: null,
+      if (includingAttempt &&
+          keys.getString(recommendationAttemptResponseKey) != null)
+        recommendationAttemptResponseKey: null,
+    };
+    if (values.isEmpty) return;
+    await _publish(epoch, circleId: circleId, values: values);
   }
 
   /// Builds today's [Recommendation] for ([intention], [activityId]) on local
@@ -2026,6 +2136,20 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         composed = null;
       }
     }
+    if (composed != null && composed.isKept) {
+      composed = _withKeptWording(composed);
+      // R8.1 (Astra N06): a kept Circle whose words can't be shown to be its
+      // own is never offered to run. Not started, today's choice is asked
+      // again; the stored bytes stay as they were until a new choice.
+      if (composed.wordingUnverified) {
+        final status = RecommendationStatus.values
+            .asNameMap()[prefs.getString(recommendationStatusKey)];
+        if (status != RecommendationStatus.started &&
+            status != RecommendationStatus.closed) {
+          return null;
+        }
+      }
+    }
 
     CircleSessionRecord? retiredSession;
     final rawSession = prefs.getString(recommendationSessionKey);
@@ -2069,6 +2193,24 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       composerFellBack:
           prefs.getBool(recommendationComposerFallbackKey) ?? false,
     );
+  }
+
+  /// Today's kept Circle [composed] with its saved words as the kept Circle
+  /// itself holds them (R8.1, Astra N06), when Today's copy of them is
+  /// damaged or missing and the kept Circle is readable with the same
+  /// parts: its own words, never today's catalogue's. Otherwise [composed]
+  /// as it is — still unverified when its stored words were damaged.
+  ComposedSession _withKeptWording(ComposedSession composed) {
+    if (!composed.wordingUnverified && composed.wording != null) {
+      return composed;
+    }
+    final kept = ref.read(keptCirclesProvider).keptById(composed.keptCircleId!);
+    if (kept == null ||
+        kept.wording == null ||
+        jsonEncode(kept.plan.toWire()) != jsonEncode(composed.plan.toWire())) {
+      return composed;
+    }
+    return composed.withWording(kept.wording);
   }
 
   /// Persists today's freshly-chosen [recommendation] alongside
@@ -2209,6 +2351,12 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// Audit remediation R3: the day written is the Circle's own
   /// ([Recommendation.circleId]), never the clock's when the write runs, and
   /// the keys are one publication ([_publish]).
+  ///
+  /// R8.1 (Astra N04): a started or closed stage Circle is saved only once
+  /// its Plan's record of the Start is on disk exactly as shown
+  /// ([CirclePlansNotifier.confirmStartNoted]) — so no Close, pause or
+  /// answer is ever saved over a Start whose evidence didn't land, and a
+  /// restart can never credit what this session refused.
   Future<void> _persist(int epoch, RecommendationState state) async {
     final recommendation = state.recommendation;
     if (recommendation == null) return;
@@ -2217,6 +2365,22 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final closedAt = state.closedAt;
     final attemptResponse = state.attemptResponse;
     final usefulnessResponse = state.usefulnessResponse;
+    final stage = recommendation.composed?.stage;
+    if (stage != null && state.status != RecommendationStatus.notStarted) {
+      final plans = ref.read(circlePlansProvider.notifier);
+      final verdict = _startVerdicts[circleId];
+      try {
+        // Written from the Start's own billing answer when this session
+        // started it (R8.1 RL-1); otherwise it was saved before a restart.
+        await (verdict != null
+            ? plans.noteStart(stage, circleId: circleId, status: verdict)
+            : plans.confirmStartNoted(stage.planId));
+      } on StorageWriteFailed {
+        _markUnsaved(circleId);
+        rethrow;
+      }
+      _ensureCurrent(epoch);
+    }
 
     await _publish(
       epoch,
@@ -2224,17 +2388,17 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       values: {
         recommendationDayKey: circleId,
         recommendationStatusKey: state.status.name,
-        recommendationStartedAtKey: ?startedAt?.toIso8601String(),
+        recommendationStartedAtKey: ?_instantValue(startedAt),
         // A started (not yet closed) persist must never leave a stale
         // closedAt from an earlier day/session behind. build()'s `started`
         // restore branch already never reads this key regardless, but an
         // explicit clear keeps the persisted record itself honest, not just
         // the code path that happens to read it today.
-        recommendationClosedAtKey: closedAt?.toIso8601String(),
+        recommendationClosedAtKey: _instantValue(closedAt),
         recommendationAttemptResponseKey: attemptResponse?.name,
         recommendationUsefulnessResponseKey: usefulnessResponse?.name,
         // V2 Phase C: the session runtime, as timestamps and small state.
-        recommendationPausedAtKey: state.pausedAt?.toIso8601String(),
+        recommendationPausedAtKey: _instantValue(state.pausedAt),
         recommendationPausedMsKey: state.pausedTotal > Duration.zero
             ? state.pausedTotal.inMilliseconds
             : null,

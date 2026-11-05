@@ -1,0 +1,3 @@
+file,line,kind,literal (truncated),status,source
+lib/features/personal_circle/domain/composed_session.dart,110,ui,"Some saved instructions are unavailable.",founder-approved RL-2 2026-11-05,R8.1
+lib/features/personal_circle/domain/composed_session.dart,114,ui,"THIRTY is showing the current instructions, which may differ from what you saved. Spoken guidance isn’t available for this Circle.",founder-approved RL-2 2026-11-05,R8.1

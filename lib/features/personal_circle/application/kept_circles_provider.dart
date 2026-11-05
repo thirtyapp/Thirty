@@ -249,7 +249,15 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
       return next;
     });
     _writes = run.then(
-      (_) {},
+      // R8.1 (Astra N10): a confirmed save holds everything shown, so an
+      // earlier failure's "unsaved" status is cleared.
+      (_) {
+        if (ref.mounted) {
+          ref
+              .read(storeSaveFailuresProvider.notifier)
+              .saved(UserStore.keptCircles);
+        }
+      },
       onError: (Object _) {
         if (ref.mounted) {
           ref

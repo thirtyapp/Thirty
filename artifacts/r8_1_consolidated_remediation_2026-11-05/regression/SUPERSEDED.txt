@@ -1,0 +1,1 @@
+Superseded (2026-11-05): the 2,567-test run of the R8.1 tree BEFORE the RL-1/RL-2/RL-3 founder corrections. Kept as history; NOT final evidence for the changed code. Final evidence: ../regression_final/.

@@ -1,0 +1,305 @@
+{
+  "baseline": {
+    "repository": "thirtyapp/Thirty",
+    "branch": "step5-billing-integration",
+    "auditedCommit": "58b179c99866e234acd63e4e241590af36b9b186",
+    "parent": "8ece26f6dbd41f573e854b8fc82f44a6942282e3"
+  },
+  "auditInputs": {
+    "astra": {
+      "path": "docs/audits/THIRTY_INDEPENDENT_POST_R8_AUDIT.md",
+      "sha256": "afc3631cbb54a67aaf02968a99ecc35431645621d71e0d5f0eb50cf9192f0ab1",
+      "verdict": "FAIL — 3 HIGH, 6 MEDIUM, 1 LOW",
+      "readInFull": true,
+      "modified": false
+    },
+    "claude": {
+      "path": "docs/audits/THIRTY_CLAUDE_POST_R8_AUDIT_REPORT.md",
+      "source": "final message of Claude Code session e03b043d-dedb-4c90-bb8a-44a62e1206ad (2026-11-04T17:29:46Z), copied verbatim",
+      "sha256": "2519e0b2e6794dc06532ac8a8a40b83d0fe7debdf4aada825558460d9164f1c0",
+      "verdict": "CONDITIONAL PASS — 2 MEDIUM, 4 LOW",
+      "readInFull": true,
+      "modified": false,
+      "reproductionFile": "audit_inputs/claude_audit_r8_repro_test.dart.txt (sha256 efd63d49a1147cc18ae2404da0e41e03b2eb90a2163dbe0d06c41f8436b2b36f), copied verbatim; never run from the repository",
+      "sha256Note": "Canonical: the audit text exactly as delivered (LF), equal to the committed blob (`git show <commit>:docs/audits/THIRTY_CLAUDE_POST_R8_AUDIT_REPORT.md | sha256sum`). 8ebec3ce203dd419… is the same text with CRLF line endings — the earlier local Windows copy."
+    }
+  },
+  "register": [
+    {
+      "id": "R81-01",
+      "astra": "N01",
+      "astraSeverity": "HIGH",
+      "claude": "AUD-1",
+      "claudeSeverity": "MEDIUM",
+      "workingSeverity": "HIGH",
+      "title": "Optimistic in-memory Plan credit satisfied the durable-credit prerequisite; the next day's choice overwrote the last recoverable evidence",
+      "rootCause": "CirclePlansNotifier._set shows state before the save and keeps it when the save fails. recordGuided's duplicate guard (identical(next, state)) read that memory and returned a completed Future, so _recordBeforeOverwrite awaited a no-op; _mirrorInJournal's 'credited' check also read memory.",
+      "fix": "The Plans notifier tracks the state the store last confirmed (_durable). ensureSaved() rewrites the whole record until confirmed. recordGuided and noteStart, finding the change already in memory but not on disk, retry instead of returning. Recovery reads isCreditedDurably. The day keys therefore never move on while the credit is only in memory.",
+      "files": [
+        "lib/features/plans/application/circle_plans_provider.dart",
+        "lib/features/home/application/recommendation_provider.dart"
+      ],
+      "tests": "test/features/r81/r81_n01_durable_plan_credit_test.dart (8: AUD-1 exact x2, Astra N01 exact x2, persistent same-session x2, noteStart retry x2)",
+      "failingBefore": 8,
+      "status": "FIXED"
+    },
+    {
+      "id": "R81-02",
+      "astra": "N02",
+      "astraSeverity": "HIGH",
+      "claude": null,
+      "workingSeverity": "HIGH",
+      "title": "Untracked build-time preservation writes: pending cache value counted as a preserved copy; a delayed copy could land after a successful Delete",
+      "rootCause": "Plans and Insights started the unreadable-record side copy from build() with .ignore(): outside their write queue and the History gate. _protectStored accepted aside == text from the SharedPreferences cache, which holds the value before the platform confirms it.",
+      "fix": "New container-scoped PreservationWrites tracker (lib/core/storage/preservation_writes.dart). _protectStored waits for a pending copy before reading the cache, so a failed copy (rolled back) is retried, and the original is never overwritten unkept. Delete Circle history waits for every pending copy, then clears both aside keys again in its last pass, before removing its intent.",
+      "files": [
+        "lib/core/storage/preservation_writes.dart",
+        "lib/features/plans/application/circle_plans_provider.dart",
+        "lib/features/insights/application/insights_provider.dart",
+        "lib/features/home/application/circle_history_deletion.dart",
+        "test/support/r8_fault_disk.dart (one-shot hold latch)"
+      ],
+      "tests": "test/features/r81/r81_n02_preservation_writes_test.dart (10: reproduction A x4, persistent copy failure x2, idempotent retry x2, reproduction B, B with failing copy)",
+      "failingBefore": 7,
+      "status": "FIXED"
+    },
+    {
+      "id": "R81-03",
+      "astra": "N03",
+      "astraSeverity": "HIGH",
+      "claude": null,
+      "workingSeverity": "HIGH",
+      "title": "An answer removed from History was written back from the day's recovery keys",
+      "rootCause": "removeAnswer updated the day keys only when the current recommendation was that Circle. On the next day, before a choice, the keys still held yesterday's answer; recovery (_mirrorInJournal, _recordBeforeOverwrite) treated it as unsaved evidence and restored it.",
+      "fix": "removeAnswer clears the answer from the day keys whenever they hold that Circle, as one confirmed publication, and only then removes it from History. Cut short before History, the answer stays everywhere (nothing half-removed) and the Circle is reported not saved; a retry completes it. Removal never adds or reverses anything else.",
+      "files": [
+        "lib/features/home/application/recommendation_provider.dart"
+      ],
+      "tests": "test/features/r81/r81_n03_removed_answers_test.dart (13: next day + restart, next day + choice, same session, same day — each for usefulness and both answers; interrupted day-key write x2; History failure x2; no invention)",
+      "failingBefore": 8,
+      "status": "FIXED"
+    },
+    {
+      "id": "R81-04",
+      "astra": "N04",
+      "astraSeverity": "MEDIUM",
+      "claude": "AUD-6 (contributing)",
+      "workingSeverity": "MEDIUM",
+      "title": "A failed expiry-at-Start record could be bypassed by a later Close or pause, granting Plan credit after restart",
+      "rootCause": "Start skipped its own save when noteStart failed, but later lifecycle writes (_persist for Close, pause, answers) saved the started/closed session regardless; on disk the served record still lacked startedAfterExpiry.",
+      "fix": "_persist saves a started or closed stage Circle only once the Plan's served-stage record is on disk exactly as shown (confirmStartNoted); otherwise the Circle is reported not saved and nothing is written. noteStart retries an unsaved record instead of returning.",
+      "files": [
+        "lib/features/home/application/recommendation_provider.dart",
+        "lib/features/plans/application/circle_plans_provider.dart"
+      ],
+      "tests": "test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart (N04 group: 7, incl. the legitimate lapse-before-Close credit regression)",
+      "failingBefore": 6,
+      "status": "FIXED"
+    },
+    {
+      "id": "R81-05",
+      "astra": "N05",
+      "astraSeverity": "MEDIUM",
+      "claude": "AUD-6",
+      "claudeSeverity": "LOW",
+      "workingSeverity": "MEDIUM",
+      "title": "I1/I2/I3 recorded as applied (and reported done) while their own change was not durable; suggestion-preference writes ignored false",
+      "rootCause": "Only I4 awaited its target action. Plan actions returned done synchronously; LeaveOut was unawaited; SuggestionPreferences._save used raw setString/remove and ignored false; the applied marker was written with .ignore().",
+      "fix": "Plans: confirmed(action) completes only once ensureSaved() succeeds and takes an unsaved change back off the screen. Insights.apply awaits I1/I2 through it and I3 through the preferences store, and writes the applied marker (awaited) only after the target is confirmed. SuggestionPreferences now commit like Kept Circles: serialized, writeConfirmed, shown only once saved, failures told (UserStore.suggestionPreferences). Memory's preference snackbars appear only when saved.",
+      "files": [
+        "lib/features/insights/application/insights_provider.dart",
+        "lib/features/plans/application/circle_plans_provider.dart",
+        "lib/features/home/application/suggestion_preferences.dart",
+        "lib/core/storage/store_save_failures.dart",
+        "lib/features/home/presentation/memory_page.dart"
+      ],
+      "tests": "test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart (N05 group: 11)",
+      "failingBefore": 8,
+      "status": "FIXED — N05 and, after founder decision RL-1 (2026-11-05), AUD-6"
+    },
+    {
+      "id": "R81-06",
+      "astra": "N06",
+      "astraSeverity": "MEDIUM",
+      "claude": null,
+      "workingSeverity": "MEDIUM",
+      "title": "Damaged saved wording of Today's kept Circle fell back to current catalogue wording and voice",
+      "rootCause": "ComposedSession.fromJson passed PartWording.listFromJson's null through for a present but damaged wording field; execution then used catalogue words and voiced == true.",
+      "fix": "Damaged present wording is detected (hasDamagedWording) and never read as 'no words'. Today restores the Circle's own words from the readable kept Circle with identical parts; otherwise the session is wordingUnverified: never voiced, holds no words, never started; not started, it isn't offered (the daily question is asked again) and its stored bytes stay as they were.",
+      "files": [
+        "lib/features/personal_circle/domain/composed_session.dart",
+        "lib/features/home/application/recommendation_provider.dart"
+      ],
+      "tests": "test/features/r81/r81_n06_n07_damaged_records_test.dart (N06 group: 13)",
+      "failingBefore": 13,
+      "status": "FIXED — incl. RL-2 approved copy (2026-11-05)"
+    },
+    {
+      "id": "R81-07",
+      "astra": "N07",
+      "astraSeverity": "MEDIUM",
+      "claude": "AUD-3, AUD-4",
+      "claudeSeverity": "LOW, LOW",
+      "workingSeverity": "MEDIUM",
+      "title": "Readable Plans/Insights wrappers silently dropped unknown or damaged records on the next save",
+      "rootCause": "PlanProgress.fromJson returned null for unknown Plan ids and damaged cycles were filtered; StageRecord failures were filtered; InsightsState.fromJson read a non-list snapshots field as empty; unknown wrapper fields were not written back.",
+      "fix": "Plans keep unreadable Plan entries by id (unknown id, damaged cycle, bad shape) byte for byte, damaged stage records per cycle, and unknown wrapper fields; an unreadable Plan is never started over; Delete removes what may hold stage evidence. A present non-list Insights snapshots field makes the record unreadable (kept aside); unknown Insights wrapper fields are written back. Whole-wrapper versions stay unreadable as before.",
+      "files": [
+        "lib/features/plans/domain/circle_plan.dart",
+        "lib/features/insights/domain/insight.dart"
+      ],
+      "tests": "test/features/r81/r81_n06_n07_damaged_records_test.dart (N07 group: 8)",
+      "failingBefore": 6,
+      "status": "FIXED — incl. RL-3 field-level preservation (2026-11-05)"
+    },
+    {
+      "id": "R81-08",
+      "astra": "N08",
+      "astraSeverity": "MEDIUM",
+      "claude": null,
+      "workingSeverity": "MEDIUM",
+      "title": "A no-touch choice after midnight dated the Plan's served stage under the cached day",
+      "rootCause": "steerToday stored served provenance with _today (cached nowProvider) while the Circle id came from real event time.",
+      "fix": "steerToday takes the Circle id; Today passes the choice's own day (and upgradeToday the offer's).",
+      "files": [
+        "lib/features/plans/application/circle_plans_provider.dart",
+        "lib/features/home/application/recommendation_provider.dart"
+      ],
+      "tests": "test/features/r81/r81_n08_n09_aud2_time_test.dart (N08: 1)",
+      "failingBefore": 1,
+      "status": "FIXED"
+    },
+    {
+      "id": "R81-09",
+      "astra": "N09",
+      "astraSeverity": "MEDIUM",
+      "claude": "AUD-5",
+      "claudeSeverity": "LOW",
+      "workingSeverity": "MEDIUM",
+      "title": "Offset-free local timestamps could not enforce real six-hour carry-over across the repeated 02:30",
+      "rootCause": "Start/Close/pause were stored as toIso8601String() of local DateTimes, without an offset.",
+      "fix": "Newly stored Start, Close and pause are UTC instants (toUtc().toIso8601String()), read back as local; older offset-free values read exactly as before and their offset is never guessed.",
+      "files": [
+        "lib/features/home/application/recommendation_provider.dart"
+      ],
+      "tests": "test/features/r81/r81_n08_n09_aud2_time_test.dart (N09: 4 — both 02:30 occurrences of 25 Oct 2026 Europe/Brussels, distinct storage, legacy compatibility)",
+      "failingBefore": 2,
+      "status": "FIXED for the six-hour rule; RL-4 accepted as a documented limitation (2026-11-05)"
+    },
+    {
+      "id": "R81-10",
+      "astra": null,
+      "claude": "AUD-2",
+      "claudeSeverity": "MEDIUM",
+      "workingSeverity": "MEDIUM",
+      "title": "After a carried-over Circle was finished, today's Circle could not be chosen until another resume",
+      "rootCause": "The resume invalidated nowProvider, so the shell's _newDay stayed false; chooseIntention returned while any recommendation existed.",
+      "fix": "Once a carried-over Circle's reflection is answered and saved, the new day opens (no touch or resume needed). chooseIntention also proceeds when the Circle on show is an earlier day's finished one. A running Circle, or one closed after midnight with its reflection open, still holds.",
+      "files": [
+        "lib/features/home/application/recommendation_provider.dart"
+      ],
+      "tests": "test/features/r81/r81_n08_n09_aud2_time_test.dart (AUD-2: 3 — with touch, without touch, reflection-open regression)",
+      "failingBefore": 2,
+      "status": "FIXED"
+    },
+    {
+      "id": "R81-11",
+      "astra": "N10",
+      "astraSeverity": "LOW",
+      "claude": null,
+      "workingSeverity": "LOW",
+      "title": "Failures during an open notice could go untold; a successful Keep didn't clear stale unsaved status",
+      "rootCause": "The notice ignored failures while _showing and didn't re-check on close; Kept _commit never called saved().",
+      "fix": "Closing any notice re-checks History and store failures; a confirmed Kept save clears its unsaved status.",
+      "files": [
+        "lib/features/home/presentation/widgets/journal_save_failure_notice.dart",
+        "lib/features/personal_circle/application/kept_circles_provider.dart"
+      ],
+      "tests": "test/features/r81/r81_n10_failure_notices_test.dart (5, incl. screen-reader label)",
+      "failingBefore": 5,
+      "status": "FIXED"
+    }
+  ],
+  "originalIdentifiersCovered": {
+    "astra": [
+      "N01",
+      "N02",
+      "N03",
+      "N04",
+      "N05",
+      "N06",
+      "N07",
+      "N08",
+      "N09",
+      "N10"
+    ],
+    "claude": [
+      "AUD-1",
+      "AUD-2",
+      "AUD-3",
+      "AUD-4",
+      "AUD-5",
+      "AUD-6"
+    ]
+  },
+  "residualLimitations": [
+    {
+      "id": "RL-1",
+      "from": "AUD-6 (LOW)",
+      "severity": "LOW",
+      "text": "The Plans tab's own actions (Start, Pause, Carry on, Leave, revisit, gentler) and Insights' Not now / assess are still shown before the store confirms them. They never claim success, a failure is told and the change is retried by the next save. Making them confirm-before-show changes a synchronous API used at ~49 sites, year simulations included; not done without founder approval.",
+      "founderDecision": "FIX BEFORE COMMIT",
+      "statusAfterDecision": "FIXED"
+    },
+    {
+      "id": "RL-2",
+      "from": "N06",
+      "severity": "LOW",
+      "text": "A kept Circle already started whose stored words are damaged and cannot be restored from the kept Circle (kept Circle removed or itself damaged) continues on screen, never voiced, holding no words of its own; the parts show their names and today's instructions. No new copy saying so was added (copy needs founder approval).",
+      "founderDecision": "COPY APPROVED",
+      "statusAfterDecision": "FIXED"
+    },
+    {
+      "id": "RL-3",
+      "from": "N07",
+      "severity": "LOW",
+      "text": "Inside a readable Plan record, individual malformed items in a stage record's parts/skipped/drawsOn/setAsideBecause lists and non-integer revisitsUsed entries are still filtered on decode (no new migration).",
+      "founderDecision": "FIX BEFORE COMMIT",
+      "statusAfterDecision": "FIXED"
+    },
+    {
+      "id": "RL-4",
+      "from": "N09 / AUD-5",
+      "severity": "LOW",
+      "text": "Journal, Kept Circle and other stores' timestamps are still serialized as local time without an offset. None feeds the six-hour rule. Changing them changes the journal/export format and is left for a decision.",
+      "founderDecision": "ACCEPT AS DOCUMENTED LIMITATION",
+      "statusAfterDecision": "ACCEPTED — NOT FIXED"
+    }
+  ],
+  "founderDecisions2026_11_05": {
+    "RL-1": {
+      "decision": "FIX BEFORE COMMIT",
+      "status": "FIXED",
+      "summary": "A failed latest Plans/Insights save takes the change back off the screen (state reverts to the last confirmed state); Insights decide from confirmed Plans; a stage Circle is saved only once its served-stage record is on disk; Today keeps the Start's billing answer to rewrite the Start record. Pending (in-flight) changes may show. Plan action API unchanged (no call-site rewrite).",
+      "tests": "test/features/r81/r81b_rl1_pending_state_test.dart (17)"
+    },
+    "RL-2": {
+      "decision": "COPY APPROVED",
+      "status": "FIXED",
+      "summary": "ComposedCopy.unverifiedWordingTitle/Body shown as the part note on every part of a started Circle whose saved words could not be recovered; inside the part's live-region semantics label; no dialog; never voiced.",
+      "tests": "test/features/r81/r81b_rl2_unverified_words_copy_test.dart (3)",
+      "localization": "LOCALIZATION_INVENTORY_ADDITIONS_R8_1.csv"
+    },
+    "RL-3": {
+      "decision": "FIX BEFORE COMMIT",
+      "status": "FIXED",
+      "summary": "Stage records are written back exactly as read; non-integer revisit entries, damaged/unknown cycle and Plan fields kept; an unknown cycle end makes the Plan unreadable (kept as stored). Suggestion Preferences: damaged items and unknown fields kept; a record unreadable as a whole is never written over by a change (refused, user told) — only Reset removes it; the retired Phase D routines field is still dropped.",
+      "tests": "test/features/r81/r81b_rl3_field_preservation_test.dart (12)"
+    },
+    "RL-4": {
+      "decision": "ACCEPT AS DOCUMENTED LIMITATION",
+      "status": "ACCEPTED — NOT FIXED",
+      "record": "LIMITATION_RL4_OFFSET_FREE_TIMESTAMPS.md"
+    }
+  }
+}

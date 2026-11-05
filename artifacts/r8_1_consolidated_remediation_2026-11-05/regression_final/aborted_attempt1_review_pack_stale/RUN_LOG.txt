@@ -1,0 +1,7 @@
+batch 1: exit 0, 76 passed, 0 failed, 0 skipped, 12/12 files, 13 s, done=True
+batch 2: exit 0, 99 passed, 0 failed, 0 skipped, 12/12 files, 29 s, done=True
+batch 3: exit 0, 121 passed, 0 failed, 0 skipped, 12/12 files, 45 s, done=True
+batch 4: exit 0, 157 passed, 0 failed, 0 skipped, 12/12 files, 19 s, done=True
+batch 5: exit 0, 88 passed, 0 failed, 0 skipped, 12/12 files, 11 s, done=True
+batch 6: exit 1, 225 passed, 1 failed, 0 skipped, 12/12 files, 34 s, done=True
+  FAIL test/features/b8/b8_review_pack_test.dart: the review pack is generated from production and matches its manifest

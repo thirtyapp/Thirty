@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Which of the user's own stores a save failed for (audit remediation R8).
-enum UserStore { keptCircles, circlePlans, insights }
+/// Which of the user's own stores a save failed for (audit remediation R8;
+/// suggestion preferences since R8.1, Astra N05).
+enum UserStore { keptCircles, circlePlans, insights, suggestionPreferences }
 
 /// Saves of the user's own things — kept Circles, Circle Plans, Insights —
 /// that the local store didn't confirm (audit remediation R8, Claude F-6,
@@ -33,10 +34,12 @@ class StoreSaveFailures extends Notifier<StoreSaveState> {
   }
 }
 
-/// The failures told so far ([count], [last]) and which stores hold a
-/// change on screen that isn't on disk yet ([unsaved] — pending retry by
-/// that store's next save, and gone after a restart). A store not in
-/// [unsaved] is durably saved.
+/// The failures told so far ([count], [last]) and which stores' last save
+/// failed with no confirmed save since ([unsaved]) — what it tried to save
+/// isn't on disk. Since R8.1 RL-1 a Plans or Insights change that failed is
+/// also taken back off the screen; its store stays in [unsaved] until a
+/// later save of it is confirmed, and is gone after a restart. A store not
+/// in [unsaved] is durably saved.
 class StoreSaveState {
   const StoreSaveState({this.count = 0, this.last, this.unsaved = const {}});
 

@@ -1,0 +1,17 @@
+{
+ "test/features/personal_circle/personal_circle_simulation_test.dart": {
+  "declared": 13,
+  "ran": 13,
+  "parts": [
+   "batch_17a.summary.json",
+   "batch_17b.summary.json",
+   "batch_17c.summary.json",
+   "batch_17d.summary.json",
+   "batch_17e.summary.json"
+  ],
+  "eachExactlyOnce": true,
+  "notRun": [],
+  "repeated": [],
+  "undeclared": []
+ }
+}

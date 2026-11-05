@@ -1,0 +1,1 @@
+Attempt 1 of the final regression (2026-11-05): batches 1–5 clean; batch 6 failed one test, b8_review_pack_test, because the content review pack predated the RL-2 copy. The pack was then regenerated with its own export flag (diff: +2 approved strings, counts/header only). Not counted; the whole regression was rerun from batch 1.

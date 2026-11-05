@@ -9,6 +9,7 @@ import '../../../core/premium/premium_access.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../../../core/storage/confirmed_write.dart';
+import '../../../core/storage/preservation_writes.dart';
 import '../../../core/storage/store_save_failures.dart';
 import '../../../core/utils/date_key.dart';
 import '../../home/application/circle_journal.dart';
@@ -36,6 +37,11 @@ enum PlanActionResult {
 
   /// The action doesn't apply to the Plan as it stands: nothing changed.
   notAvailable,
+
+  /// The store didn't confirm the change (R8.1, Astra N05 — only from
+  /// [CirclePlansNotifier.confirmed]): it isn't saved, and nothing may be
+  /// recorded as following from it.
+  notSaved,
 }
 
 /// The user's explicit usefulness answers in [journal], by Circle id.
@@ -57,11 +63,31 @@ StageAnswers stageAnswersFrom(Iterable<CircleJournalEntry> journal) => {
 class CirclePlansNotifier extends Notifier<CirclePlansState> {
   Future<void> _writes = Future<void>.value();
 
+  /// The Plans as the store last confirmed them (R8.1, Astra N01 / Claude
+  /// AUD-1): read from disk at [build], then each state whose save was
+  /// confirmed. [state] may be ahead of it — shown, not yet saved — and
+  /// nothing that must be durable is ever judged by [state] alone.
+  CirclePlansState _durable = CirclePlansState.empty;
+
+  /// The state the last queued save is writing, while it may still land,
+  /// and that save — so [ensureSaved] waits for it instead of writing the
+  /// same record twice.
+  CirclePlansState? _queued;
+  Future<void>? _queuedWrite;
+
   SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
 
   @override
   CirclePlansState build() {
     final prefs = ref.watch(sharedPreferencesProvider);
+    final read = _read(prefs);
+    _durable = read;
+    _queued = null;
+    _queuedWrite = null;
+    return read;
+  }
+
+  CirclePlansState _read(SharedPreferences prefs) {
     final raw = prefs.getString(circlePlansKey);
     if (raw == null) return CirclePlansState.empty;
     try {
@@ -70,47 +96,108 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
     } catch (_) {
       // Unreadable: kept aside below.
     }
-    // Kept aside at once; a save that follows confirms the copy first
-    // ([_protectStored]), so the original is never written over unkept.
+    // Kept aside at once — a tracked write (R8.1, Astra N02): a save that
+    // follows waits for it and confirms the copy first ([_protectStored]),
+    // and Delete Circle history waits for it, so the original is never
+    // written over unkept and the copy never lands after a deletion.
     if (prefs.get(circlePlansUnreadableKey) == null) {
-      writeConfirmed(prefs, circlePlansUnreadableKey, raw).ignore();
+      ref
+          .read(preservationWritesProvider)
+          .keepAside(prefs, circlePlansUnreadableKey, raw);
     }
     return CirclePlansState.empty;
   }
+
+  /// Whether what is shown holds a change the store hasn't confirmed —
+  /// pending: one still being written (R8.1 RL-1; a failed one is taken
+  /// back off the screen, [_set]).
+  bool get hasUnsavedChanges => !identical(state, _durable);
+
+  /// The Plans as the store has confirmed them (R8.1 RL-1, founder decision
+  /// 2026-11-05): what decisions that depend on the Plans — Insights, and
+  /// whether a stage Circle may be saved ([confirmServed]) — read, never a
+  /// change still pending.
+  CirclePlansState get confirmedState => _durable;
+
+  /// Completes once the store holds the Plans as shown — at once when it
+  /// already does, otherwise by (re)writing the whole record; fails with
+  /// [StorageWriteFailed] when the store doesn't confirm it (R8.1, Astra
+  /// N01/N04/N05). Never reports as saved what is only in memory.
+  Future<void> ensureSaved() {
+    if (!hasUnsavedChanges) return Future<void>.value();
+    if (identical(state, _queued) && _queuedWrite != null) {
+      return _queuedWrite!;
+    }
+    return _set(state);
+  }
+
+  /// Whether the store holds [circleId]'s guided credit on [planId] — what
+  /// recovery reads, never memory (R8.1, Astra N01).
+  bool isCreditedDurably(String planId, {required String circleId}) =>
+      _credited(_durable, planId, circleId);
+
+  static bool _credited(
+    CirclePlansState plans,
+    String planId,
+    String circleId,
+  ) =>
+      plans.plans[planId]?.cycles.any(
+        (c) => c.records.any((r) => r.circleId == circleId),
+      ) ??
+      false;
 
   bool get _premium => ref.read(premiumEntitlementProvider);
   String get _today => dateKey(ref.read(nowProvider));
 
   /// Shows [next] and saves it. Audit remediation R8 (Claude F-6): the save
-  /// must be confirmed by the store ([writeConfirmed]). One that isn't stays
-  /// in memory — a Plan's served-stage evidence included, so Today's credit
-  /// rules still hold in this session — is retried by the next save, which
-  /// writes the whole record, and, with [report], is shown to the user
-  /// ([storeSaveFailuresProvider]); Today reports its own. Never over a
+  /// must be confirmed by the store ([writeConfirmed]). One that isn't is,
+  /// with [report], shown to the user ([storeSaveFailuresProvider]); Today
+  /// reports its own, and keeps what it needs to write it again (the
+  /// Start's billing answer, [noteStart]). Never over a
   /// stored record THIRTY can't read until a copy is confirmed aside
   /// ([_protectStored]). The returned future fails when the save does.
+  ///
+  /// R8.1 (Astra N01): once confirmed, [next] is what the store holds
+  /// ([_durable]).
+  ///
+  /// R8.1 RL-1 (founder decision 2026-11-05): a change the store refuses is
+  /// never left on screen as if it were made. When the latest save fails,
+  /// the Plans go back to what the store holds — the change, and anything
+  /// computed from it, is undone in memory — and the user is told. A change
+  /// still being written is pending: shown, but nothing that must be
+  /// durable is decided on it ([confirmedState], [confirmServed]).
   Future<void> _set(CirclePlansState next, {bool report = true}) {
     state = next;
     final json = jsonEncode(next.toJson());
     final prefs = _prefs;
+    final preservations = ref.read(preservationWritesProvider);
     final write = _writes.then((_) async {
-      await _protectStored(prefs);
+      await _protectStored(prefs, preservations);
       await writeConfirmed(prefs, circlePlansKey, json);
+      _durable = next;
     });
+    _queued = next;
+    _queuedWrite = write;
     _writes = write.then(
       (_) {
-        if (ref.mounted) {
+        if (identical(_queued, next)) _queued = _queuedWrite = null;
+        if (ref.mounted && !hasUnsavedChanges) {
           ref
               .read(storeSaveFailuresProvider.notifier)
               .saved(UserStore.circlePlans);
         }
       },
       onError: (Object _) {
-        if (ref.mounted) {
-          ref
-              .read(storeSaveFailuresProvider.notifier)
-              .record(UserStore.circlePlans, notify: report);
-        }
+        final latest = identical(_queued, next);
+        if (latest) _queued = _queuedWrite = null;
+        if (!ref.mounted) return;
+        ref
+            .read(storeSaveFailuresProvider.notifier)
+            .record(UserStore.circlePlans, notify: report);
+        // The latest save failed: what is shown goes back to what is on
+        // disk, so nothing unsaved stays on screen (R8.1 RL-1). The store
+        // stays marked unsaved until a later save of it is confirmed.
+        if (latest && identical(state, next)) state = _durable;
       },
     );
     return write;
@@ -120,7 +207,14 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   /// kept aside, exactly as stored, and the store has confirmed that (audit
   /// remediation R8). A different record already kept aside is never
   /// replaced: the save is refused instead.
-  static Future<void> _protectStored(SharedPreferences prefs) async {
+  ///
+  /// R8.1 (Astra N02): a copy still being written is waited for first, so
+  /// a value that is only in the store's memory never counts as kept.
+  static Future<void> _protectStored(
+    SharedPreferences prefs,
+    PreservationWrites preservations,
+  ) async {
+    await preservations.settled(circlePlansUnreadableKey);
     final raw = prefs.get(circlePlansKey);
     if (raw == null) return;
     if (raw is String && _readable(raw)) return;
@@ -149,6 +243,44 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
     if (next == null) return PlanActionResult.notAvailable;
     _set(next).ignore();
     return PlanActionResult.done;
+  }
+
+  /// [action] — one of this notifier's Plan actions — completed only once
+  /// the store has confirmed the Plans as they then stand (R8.1, Astra N05):
+  /// [PlanActionResult.done] means saved; [PlanActionResult.notSaved] that
+  /// it isn't — the change is then off the screen ([_set]) — and nothing may
+  /// be recorded as following from it.
+  Future<PlanActionResult> confirmed(
+    PlanActionResult Function(CirclePlansNotifier plans) action,
+  ) async {
+    final result = action(this);
+    if (result != PlanActionResult.done) return result;
+    try {
+      await ensureSaved();
+      return PlanActionResult.done;
+    } on StorageWriteFailed {
+      return PlanActionResult.notSaved;
+    }
+  }
+
+  /// Completes once the store holds [stage] as served for [circleId] — the
+  /// Plan state that stage Circle was composed from (R8.1 RL-1): at once
+  /// when it already does; after the pending save when that save holds it;
+  /// otherwise it fails with [StorageWriteFailed]. Today saves a stage
+  /// Circle only after this, so no Circle is ever saved on a Plan change
+  /// that didn't land.
+  Future<void> confirmServed(
+    PlanStageProvenance stage, {
+    required String circleId,
+  }) async {
+    if (_durable.wasServed(stage, circleId: circleId)) return;
+    if (state.wasServed(stage, circleId: circleId)) await ensureSaved();
+    if (!_durable.wasServed(stage, circleId: circleId)) {
+      throw const StorageWriteFailed(
+        circlePlansKey,
+        'the stage this Circle was composed for is not on disk',
+      );
+    }
   }
 
   /// Start [planId] (pausing any other active Plan at its place); a paused
@@ -188,11 +320,16 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   /// Today's Circle for the active Plan ([planToday]): today's set-asides
   /// and any end are kept. Without Premium, nothing applies and nothing
   /// changes.
+  ///
+  /// [circleId] is the Circle the stage is served for (R8.1, Astra N08):
+  /// the day of the choice itself — by default [context]'s date, never the
+  /// cached day, which a choice after midnight with no touch still holds.
   PlanDay steerToday(
     ComposerContext context,
     Iterable<PastCircle> history, {
     SuggestionControls controls = SuggestionControls.none,
     Set<ElementId> leftOut = const {},
+    String? circleId,
   }) {
     final premium = _premium;
     if (!premium || state.active == null) return PlanDay(state);
@@ -209,7 +346,7 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
     // stage: what credits it at Close (recordGuided).
     final stage = day.stage;
     final next = stage != null && day.circle != null
-        ? day.state.served(stage, circleId: _today)
+        ? day.state.served(stage, circleId: circleId ?? dateKey(context.date))
         : day.state;
     if (!identical(next, state)) _set(next).ignore();
     return day;
@@ -249,11 +386,19 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   /// being checked or unavailable proves nothing, so nothing is recorded.
   /// Completes once the record is written, so the start that follows can
   /// never be saved without it.
+  ///
+  /// [status] is billing's answer at the Start itself — by default, now.
+  /// R8.1 RL-1: Today keeps it, so a record whose save failed (and so is
+  /// off the screen) is written again from the same answer, never from a
+  /// later one.
   Future<void> noteStart(
     PlanStageProvenance stage, {
     required String circleId,
+    EntitlementStatus? status,
   }) {
-    final next = switch (ref.read(entitlementStatusProvider)) {
+    final EntitlementStatus verdict =
+        status ?? ref.read(entitlementStatusProvider);
+    final next = switch (verdict) {
       EntitlementStatus.active => state.noteStart(
         stage,
         circleId: circleId,
@@ -266,10 +411,24 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
       ),
       EntitlementStatus.initializing || EntitlementStatus.unavailable => state,
     };
-    if (identical(next, state)) return Future<void>.value();
+    // R8.1 (Astra N01/N04): already noted but still pending is not saved —
+    // this completes only once the store confirms it.
+    if (identical(next, state)) return confirmStartNoted(stage.planId);
     // Today reports a Start whose evidence wasn't saved (audit remediation
     // R8): it never saves the Start without it.
     return _set(next, report: false);
+  }
+
+  /// Completes once [planId]'s served-stage evidence — what [noteStart]
+  /// recorded about the Start — is on disk exactly as shown; fails with
+  /// [StorageWriteFailed] otherwise (R8.1, Astra N04). Today's later
+  /// lifecycle writes of a stage Circle wait for it, so no Close, pause or
+  /// recovery is ever saved over a Start record that didn't land.
+  Future<void> confirmStartNoted(String planId) {
+    final shown = state.plans[planId]?.lastServed?.toJson();
+    final stored = _durable.plans[planId]?.lastServed?.toJson();
+    if (jsonEncode(shown) == jsonEncode(stored)) return Future<void>.value();
+    return ensureSaved();
   }
 
   /// Today's stage Circle was started and has now been closed: the stage
@@ -305,7 +464,15 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
       parts: parts,
       skipped: skipped,
     );
-    if (identical(next, state)) return Future<void>.value();
+    if (identical(next, state)) {
+      // R8.1 (Astra N01 / Claude AUD-1): a credit already in memory but not
+      // on disk is not a recorded credit — it is written again, and this
+      // completes only once the store confirms it.
+      final unsaved =
+          _credited(state, stage.planId, circleId) &&
+          !_credited(_durable, stage.planId, circleId);
+      return unsaved ? ensureSaved() : Future<void>.value();
+    }
     return _set(next);
   }
 
@@ -320,6 +487,7 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   Future<void> forgetStageEvidence() {
     final next = state.forgetStageEvidence();
     state = next;
+    _queued = _queuedWrite = null;
     final json = jsonEncode(next.toJson());
     final prefs = _prefs;
     // Removed at once, and confirmed (the intent to delete is already on
@@ -339,7 +507,8 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
             restoreOnFailure: false,
           ),
         )
-        .then((_) => setAside);
+        .then((_) => setAside)
+        .then((_) => _durable = next);
     _writes = written.then((_) {}, onError: (Object _) {});
     return written;
   }

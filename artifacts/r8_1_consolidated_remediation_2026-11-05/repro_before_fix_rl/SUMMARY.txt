@@ -1,0 +1,31 @@
+FAILURE | b_rl1_pending_state_test.dart | throws: a Plan start still being saved, then today's choice: the stage Circle may show while pending; once the save fails the Plan is off the screen a
+SUCCESS | b_rl1_pending_state_test.dart | throws: a Plan start still being saved, then today's choice; the save lands: Plan, served stage and Circle are all saved
+FAILURE | b_rl1_pending_state_test.dart | throws: a failed Plan save, then a new user action: the failed change is not on screen, so the user's retry is a real change and lands once the store 
+FAILURE | b_rl1_pending_state_test.dart | throws: a failed pause is undone on screen: the Plan still steers today as the disk says
+FAILURE | b_rl1_pending_state_test.dart | throws: Premium lapses while a Plan start is pending, and its save fails: no stage Circle, nothing served, the Plan is off the screen
+FAILURE | b_rl1_pending_state_test.dart | throws: a new Insight whose save fails is not kept on screen; a later assessment generates and saves it
+FAILURE | b_rl1_pending_state_test.dart | throws: "Not now" whose save fails: the Insight is current again on screen and on disk; a restart agrees; a retry lands
+SUCCESS | b_rl1_pending_state_test.dart | throws: a restart while a Plan start is pending reads only the disk
+FAILURE | b_rl1_pending_state_test.dart | returnsFalse: a Plan start still being saved, then today's choice: the stage Circle may show while pending; once the save fails the Plan is off the sc
+SUCCESS | b_rl1_pending_state_test.dart | returnsFalse: a Plan start still being saved, then today's choice; the save lands: Plan, served stage and Circle are all saved
+FAILURE | b_rl1_pending_state_test.dart | returnsFalse: a failed Plan save, then a new user action: the failed change is not on screen, so the user's retry is a real change and lands once the 
+FAILURE | b_rl1_pending_state_test.dart | returnsFalse: a failed pause is undone on screen: the Plan still steers today as the disk says
+FAILURE | b_rl1_pending_state_test.dart | returnsFalse: Premium lapses while a Plan start is pending, and its save fails: no stage Circle, nothing served, the Plan is off the screen
+FAILURE | b_rl1_pending_state_test.dart | returnsFalse: a new Insight whose save fails is not kept on screen; a later assessment generates and saves it
+FAILURE | b_rl1_pending_state_test.dart | returnsFalse: "Not now" whose save fails: the Insight is current again on screen and on disk; a restart agrees; a retry lands
+SUCCESS | b_rl1_pending_state_test.dart | returnsFalse: a restart while a Plan start is pending reads only the disk
+FAILURE | b_rl1_pending_state_test.dart | Insights decide from the confirmed Plans: a Plan start that fails never withdraws, or is counted by, an Insight
+ERROR | b_rl2_unverified_words_copy_test.dart | loading C:/Users/thoma/Desktop/THIRTY App/Development/Thirty-step5-billing-integration/test/features/r81/r81b_rl2_unverified_words_copy_test.dart
+FAILURE | b_rl3_field_preservation_test.dart | Plans — inside a readable cycle a stage record with damaged list items and a future field, and damaged set-aside reasons: kept byte for byte through r
+SUCCESS | b_rl3_field_preservation_test.dart | Plans — inside a readable cycle a stage record with damaged list items and a future field, and damaged set-aside reasons: kept byte for byte through a
+SUCCESS | b_rl3_field_preservation_test.dart | Plans — inside a readable cycle a stage record with damaged list items and a future field, and damaged set-aside reasons: kept byte for byte through a
+FAILURE | b_rl3_field_preservation_test.dart | Plans — inside a readable cycle revisit entries that aren't stage numbers are kept, and the readable ones still count
+FAILURE | b_rl3_field_preservation_test.dart | Plans — inside a readable cycle a cycle ended by a reason a newer THIRTY added is kept as stored, never read as not ended
+FAILURE | b_rl3_field_preservation_test.dart | Suggestion preferences a damaged item beside valid ones is kept through saves and a restart; the valid ones still apply
+SUCCESS | b_rl3_field_preservation_test.dart | Suggestion preferences a damaged item beside valid ones is kept through a save that throws; the valid ones still apply
+SUCCESS | b_rl3_field_preservation_test.dart | Suggestion preferences a damaged item beside valid ones is kept through a save that returnsFalse; the valid ones still apply
+FAILURE | b_rl3_field_preservation_test.dart | Suggestion preferences a record THIRTY can't read (a newer version) is never written over by a change; the user is told; Reset — the user's own erasur
+FAILURE | b_rl3_field_preservation_test.dart | Suggestion preferences a record THIRTY can't read (not JSON) is never written over by a change; the user is told; Reset — the user's own erasure — sti
+FAILURE | b_rl3_field_preservation_test.dart | Suggestion preferences a record THIRTY can't read (a list field that is not a list) is never written over by a change; the user is told; Reset — the u
+SUCCESS | b_rl3_field_preservation_test.dart | Suggestion preferences regression — the retired Phase D routines field is still dropped by the next save (pre-release migration, ADR-024)
+{'failure': 20, 'success': 9, 'error': 1}

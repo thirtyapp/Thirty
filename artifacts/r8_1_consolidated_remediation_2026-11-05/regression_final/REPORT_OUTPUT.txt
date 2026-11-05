@@ -1,0 +1,16 @@
+{
+ "inventoryFiles": 179,
+ "coveredFiles": 179,
+ "notRun": [],
+ "unexpected": [],
+ "incompleteBatches": [],
+ "emptyRuns": [],
+ "nonZeroExit": [],
+ "doneNotSuccess": [],
+ "totals": {
+  "passed": 2599,
+  "failed": 0,
+  "skipped": 0
+ }
+}
+EVIDENCE OK

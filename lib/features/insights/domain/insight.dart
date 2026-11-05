@@ -376,7 +376,11 @@ class InsightSnapshot {
 
 /// Every snapshot kept, oldest first.
 class InsightsState {
-  const InsightsState([this.snapshots = const [], this.unreadable = const []]);
+  const InsightsState([
+    this.snapshots = const [],
+    this.unreadable = const [],
+    this.extra = const {},
+  ]);
 
   static const empty = InsightsState();
 
@@ -388,11 +392,15 @@ class InsightsState {
   /// Delete Circle history.
   final List<Object?> unreadable;
 
-  bool get isEmpty => snapshots.isEmpty && unreadable.isEmpty;
+  /// Fields of the stored record this build doesn't know, written back as
+  /// stored (R8.1, Astra N07).
+  final Map<String, Object?> extra;
+
+  bool get isEmpty => snapshots.isEmpty && unreadable.isEmpty && extra.isEmpty;
 
   /// These snapshots, with what THIRTY can't read still kept.
   InsightsState withSnapshots(List<InsightSnapshot> next) =>
-      InsightsState(next, unreadable);
+      InsightsState(next, unreadable, extra);
 
   InsightSnapshot? byId(String id) {
     for (final s in snapshots) {
@@ -401,24 +409,33 @@ class InsightsState {
     return null;
   }
 
-  InsightsState replacing(InsightSnapshot snapshot) => InsightsState([
-    for (final s in snapshots) s.id == snapshot.id ? snapshot : s,
-  ], unreadable);
+  InsightsState replacing(InsightSnapshot snapshot) => InsightsState(
+    [for (final s in snapshots) s.id == snapshot.id ? snapshot : s],
+    unreadable,
+    extra,
+  );
 
   Map<String, Object?> toJson() => {
+    ...extra,
     'schemaVersion': insightsSchemaVersion,
     'snapshots': [for (final s in snapshots) s.toJson(), ...unreadable],
   };
 
-  /// `null` when [raw] isn't a readable record; snapshots THIRTY can't read
-  /// are kept one by one, as stored ([unreadable]).
+  /// `null` when [raw] isn't a readable record — a version this build
+  /// doesn't know, or a present `snapshots` field that isn't a list (R8.1,
+  /// Astra N07 / Claude AUD-4: never read as "none", so it is kept aside
+  /// before anything is written). Snapshots THIRTY can't read are kept one
+  /// by one, as stored ([unreadable]); a record without the field holds
+  /// none yet.
   static InsightsState? fromJson(Object? raw) {
     if (raw is! Map<String, Object?>) return null;
     if (raw['schemaVersion'] != insightsSchemaVersion) return null;
     final list = switch (raw['snapshots']) {
       final List list => list,
-      _ => const <Object?>[],
+      null => const <Object?>[],
+      _ => null,
     };
+    if (list == null) return null;
     final read = <InsightSnapshot>[];
     final kept = <Object?>[];
     for (final s in list) {
@@ -429,7 +446,10 @@ class InsightsState {
           kept.add(s);
       }
     }
-    return InsightsState(read, kept);
+    return InsightsState(read, kept, {
+      for (final e in raw.entries)
+        if (e.key != 'schemaVersion' && e.key != 'snapshots') e.key: e.value,
+    });
   }
 }
 

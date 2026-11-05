@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-04T14:58:16.576072Z from the working tree at HEAD `8ece26f6dbd41f573e854b8fc82f44a6942282e3` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-05T10:45:02.076160Z from the working tree at HEAD `58b179c99866e234acd63e4e241590af36b9b186` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -456,6 +456,8 @@
 - Keep going
 - This part has updated guidance for safety. Your saved Circle is unchanged.
 - Spoken guidance isn’t available for this saved Circle. You can still follow each part.
+- Some saved instructions are unavailable.
+- THIRTY is showing the current instructions, which may differ from what you saved. Spoken guidance isn’t available for this Circle.
 - About 1 minute
 
 **`features/personal_circle/presentation/keep_circle_card.dart`**
@@ -1087,4 +1089,4 @@ Voices: Locke, Heather, Milo, Brittney
 - Thin: moreEnergy at ≈10 has 19 materially distinct sessions and 6 main pieces (ADR-024 §10 known risk).
 - Thin: moreEnergy at ≈30 has 19 materially distinct sessions and 7 main pieces (ADR-024 §10 known risk).
 - “Your routine” is still shown for History records from retired routines (development devices only; ADR-024 §3 keeps such records readable).
-- Apostrophes are mixed: 9 live strings use a straight one (e.g. “Nothing recorded yet. Your Circle history will appear here once you've had a few days with THIRTY.”, “You won't be able to reopen it until tomorrow.”, “You won't be able to reopen it.”, “Begin today's Circle”, “Today's Circle”, “Your Circle is here when you're ready.”) while 91 use ’.
+- Apostrophes are mixed: 9 live strings use a straight one (e.g. “Nothing recorded yet. Your Circle history will appear here once you've had a few days with THIRTY.”, “You won't be able to reopen it until tomorrow.”, “You won't be able to reopen it.”, “Begin today's Circle”, “Today's Circle”, “Your Circle is here when you're ready.”) while 92 use ’.
