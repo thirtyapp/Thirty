@@ -1,0 +1,223 @@
+{
+ "files": {
+  "test/core/qa/qa_scenario_test.dart": {
+   "passed": 15,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/release_build_guard_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/reminder/local_notifications_reminder_gateway_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/routing/app_router_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/routing/app_shell_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/routing/b7_four_tab_shell_test.dart": {
+   "passed": 25,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/routing/floating_nav_surface_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/routing/premium_billing_navigation_test.dart": {
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/theme/app_colors_a4_test.dart": {
+   "passed": 18,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/theme/app_spacing_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/theme/app_theme_a5_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/theme/app_theme_test.dart": {
+   "passed": 17,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 121,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/core/qa/qa_scenario_test.dart": [
+   "only the lapsed scenarios fix their entitlement (inactive)",
+   "scenario wire names are the ones the walkthrough uses",
+   "synthetic history never includes the reference day itself, so today's Circle is still open to walk \u2014 unless a V2 Phase C scenario sets today up on purpose",
+   "the same scenario and reference date always build the same store",
+   "V2 Phase D2 \u2014 recurring Premium proofs D2-A \u2014 d2_first_premium: two weeks of Free, then the first Personal Guided Circle is one choice away",
+   "V2 Phase D2 \u2014 recurring Premium proofs D2-B \u2014 d2_month: composed days, a skip, a part left out, a kept Circle",
+   "V2 Phase D2 \u2014 recurring Premium proofs D2-C \u2014 d2_running: today\u2019s composed Circle on its second part, moving on by itself",
+   "V2 Phase D2 \u2014 recurring Premium proofs D2-D \u2014 d2_lapsed: Today is Free\u2019s; the kept Circle is the user\u2019s to use today",
+   "V2 Phase D2 \u2014 recurring Premium proofs D2-E \u2014 d2_back: subscribed again, composition returns",
+   "ADR-024 B3 \u2014 Circle Plan proofs D3-A \u2014 d3_plan_stage: More Energy steers stage 2, closing it moves the Plan on once; another need leaves it untouched",
+   "ADR-024 B3 \u2014 Circle Plan proofs D3-A on INACTIVE: Free, the place kept",
+   "ADR-024 B3 \u2014 Circle Plan proofs D3-B \u2014 d3_plan_set_aside: at \u224810, Fresh air is set aside and stage 5 is today's Circle",
+   "ADR-024 B3 \u2014 Circle Plan proofs D4-A \u2014 d4_plan_review: two real cycles of Making room, the second reviewed against the first, with Circles to keep",
+   "ADR-024 B3 \u2014 Circle Plan proofs D4-B \u2014 d4_plan_review_unanswered: Slowing down through once with no answer \u2014 the review says so (case A)",
+   "ADR-024 B3 \u2014 Circle Plan proofs D4-C \u2014 d4_plan_review_none_useful: every stage said Not useful \u2014 no last Circle, and the review says why (case D)"
+  ],
+  "test/core/release_build_guard_test.dart": [
+   "every release Gradle build runs the billing release check, before release signing is resolved",
+   "there is no bypass: the check always runs to its verdict, and no flag, environment value or committed key can skip it",
+   "debug and profile builds never run the release check",
+   "the release check script judges with RevenueCatConfig.releaseProblems",
+   "Flutter deep linking is off: no external location reaches the router",
+   "unconfigured billing (as in this build) resolves to the unavailable gateway and never grants Premium"
+  ],
+  "test/core/reminder/local_notifications_reminder_gateway_test.dart": [
+   "LocalNotificationsReminderGateway (mocked platform channels) \u2014 REAL DEVICE TEST REQUIRED for actual delivery hands the whole schedule to THIRTY's native scheduler: first eligible date, time and the caller's exact title and body",
+   "LocalNotificationsReminderGateway (mocked platform channels) \u2014 REAL DEVICE TEST REQUIRED for actual delivery never schedules through the plugin's own repeat, and retires the alarm earlier versions armed with it",
+   "LocalNotificationsReminderGateway (mocked platform channels) \u2014 REAL DEVICE TEST REQUIRED for actual delivery schedules nothing \u2014 never a silent inexact fallback \u2014 when exact-alarm access is not granted",
+   "LocalNotificationsReminderGateway (mocked platform channels) \u2014 REAL DEVICE TEST REQUIRED for actual delivery reports the native scheduler's own refusal truthfully, and a failure as failed \u2014 never throws",
+   "LocalNotificationsReminderGateway (mocked platform channels) \u2014 REAL DEVICE TEST REQUIRED for actual delivery cancel() clears the native schedule and the plugin's legacy alarm, and never throws",
+   "LocalNotificationsReminderGateway (mocked platform channels) \u2014 REAL DEVICE TEST REQUIRED for actual delivery requestPermission()/hasPermission() never throw (REAL DEVICE TEST REQUIRED to confirm the actual Android 13+ permission dialog)",
+   "LocalNotificationsReminderGateway (mocked platform channels) \u2014 REAL DEVICE TEST REQUIRED for actual delivery hasExactAlarmAccess() reflects canScheduleExactNotifications() truthfully in both directions"
+  ],
+  "test/core/routing/app_router_test.dart": [
+   "the root route shows HomePage, starting with the Circle-first Ready state, then the Daily Context Question, and moving to the Circle Hero once an intention is chosen",
+   "/history remains reachable as a secondary/compatibility route \u2014 no longer linked from any primary-nav element since the founder IA correction retired Journal as a bottom-nav destination",
+   "ADR-024 B1/B4/B6: a retired location never opens a retired page \u2014 the Toolkit and its kept Circles lead to Yours (inside You), Paths and routines lead to Today, a V1 Plan to the Circle Plans page \u2014 and /insights is the Insights tab (B7)",
+   "the /showcase route shows the design system showcase",
+   "the dev-only Quiet Trail Hero preview route shows QuietTrailHeroAssetView",
+   "buildAppRoutes debug gating omits the dev preview route when includeDevPreview is false",
+   "buildAppRoutes debug gating includes the dev preview route when includeDevPreview is true",
+   "buildAppRoutes debug gating profile and release (includeDevPreview false) never register /showcase",
+   "buildAppRoutes debug gating debug (includeDevPreview true) registers /showcase",
+   "buildAppRoutes debug gating the developer-only routes are the only difference between debug and release routing"
+  ],
+  "test/core/routing/app_shell_test.dart": [
+   "four destinations \u2014 Today, Plans, Insights and You \u2014 each with its own page; no Toolkit and no Journal tab",
+   "Yours is one tap from You, Premium or not (entitled: true)",
+   "Yours is one tap from You, Premium or not (entitled: false)",
+   "history is one tap from You (it used to sit in Insights)",
+   "at 360pt width and 200% text no tab overflows, and every label stays visible",
+   "a very small screen (320\u00d7568) never overflows",
+   "the shell branches are exactly Today, Plans, Insights and You, in order \u2014 no Toolkit branch",
+   "/history and /history/:date stay top-level routes, outside the shell"
+  ],
+  "test/core/routing/b7_four_tab_shell_test.dart": [
+   "the four tabs exactly Today | Plans | Insights | You, in that order; no Toolkit, Journal, Paths or Coach tab",
+   "the four tabs / is the Today root, inside the shell, with Today selected",
+   "the four tabs /plans is the Plans root, inside the shell, with Plans selected",
+   "the four tabs /insights is the Insights root, inside the shell, with Insights selected",
+   "the four tabs /settings is the You root, inside the shell, with You selected",
+   "the four tabs TalkBack hears each tab by name and position, and which is selected",
+   "the four tabs no tab carries a badge or a lock, and opening Plans or Insights on Free never opens the offer",
+   "Back at a tab root, Back never bounces through the tabs visited before",
+   "Back Plan detail \u2192 Plans",
+   "Back Insights \u2192 a date \u2192 History list \u2192 back to Insights, the tab still selected",
+   "Back the offer returns to the surface that opened it \u2014 Back, or Not now",
+   "Back an Insight's Plan opens over Insights and returns to it",
+   "Back /history/2026-10-12 opened by its own location: Back leads to Insights, never out of the app",
+   "Back /history opened by its own location: Back leads to Insights, never out of the app",
+   "Back /premium opened by its own location: Back leads to Today, never out of the app",
+   "Back /memory opened by its own location: Back leads to You, never out of the app",
+   "state across tabs switching tabs keeps each tab where it was: the Insights month, a Plan opened in Plans",
+   "direct routes in every entitlement state initializing: /plans, /plans/:id, /insights, /history, /history/:date and /premium open safely; no route runs a paid action",
+   "direct routes in every entitlement state active: /plans, /plans/:id, /insights, /history, /history/:date and /premium open safely; no route runs a paid action",
+   "direct routes in every entitlement state inactive: /plans, /plans/:id, /insights, /history, /history/:date and /premium open safely; no route runs a paid action",
+   "direct routes in every entitlement state unavailable: /plans, /plans/:id, /insights, /history, /history/:date and /premium open safely; no route runs a paid action",
+   "direct routes in every entitlement state lapsed: the saved Plan place and its page stay; the paid action leads to the offer, never runs",
+   "direct routes in every entitlement state invalid ids are safe: an unknown Plan opens Plans; an unknown or malformed date says the record is not there",
+   "direct routes in every entitlement state retired roots lead to current pages: no Toolkit, Path or routine page exists",
+   "every launch Plan id is a direct route"
+  ],
+  "test/core/routing/floating_nav_surface_test.dart": [
+   "FloatingNavSurface \u2014 light one authoritative surface: the container owns color, 24pt radius and shadow; no outer border",
+   "FloatingNavSurface \u2014 light nothing paints outside the rounded corners",
+   "FloatingNavSurface \u2014 light at 360pt and 200% text every label still fits",
+   "FloatingNavSurface \u2014 dark one authoritative surface: the container owns color, 24pt radius and shadow; no outer border",
+   "FloatingNavSurface \u2014 dark nothing paints outside the rounded corners",
+   "FloatingNavSurface \u2014 dark at 360pt and 200% text every label still fits"
+  ],
+  "test/core/routing/premium_billing_navigation_test.dart": [
+   "the /settings route shows SettingsPage",
+   "the /premium route shows PremiumOfferPage",
+   "the \"You\" bottom-nav destination opens SettingsPage \u2014 reachable regardless of entitlement (founder IA correction: \"You\" replaced the old AppBar Settings icon as the access path)",
+   "tapping \"Become Premium\" in Settings opens the offer page"
+  ],
+  "test/core/theme/app_colors_a4_test.dart": [
+   "Phase A4 token values light",
+   "Phase A4 token values dark",
+   "Phase A4 token values brand Mist Sage is unchanged (the illustration paints with it)",
+   "Phase A4 token values lerp and copyWith carry the new roles",
+   "Phase A4 \u2014 light Material accent/container slots are THIRTY roles, never the generated lime/teal",
+   "Phase A4 \u2014 light Phase D1 nav: no pill; the selected label is sage and the unselected label textSecondary, both AA on the nav surface; the selected segment keeps the soft selection role",
+   "Phase A4 \u2014 light time picker: selected vs unselected is >= 3:1 and every digit is AA",
+   "Phase A4 \u2014 light destructive text clears AA on surface and page",
+   "Phase A4 \u2014 light Circle arc vs track is >= 3:1",
+   "Phase A4 \u2014 light ThirtyProgressCircle defaults to the Circle roles",
+   "Phase A4 \u2014 light dividers use the divider role",
+   "Phase A4 \u2014 dark Material accent/container slots are THIRTY roles, never the generated lime/teal",
+   "Phase A4 \u2014 dark Phase D1 nav: no pill; the selected label is sage and the unselected label textSecondary, both AA on the nav surface; the selected segment keeps the soft selection role",
+   "Phase A4 \u2014 dark time picker: selected vs unselected is >= 3:1 and every digit is AA",
+   "Phase A4 \u2014 dark destructive text clears AA on surface and page",
+   "Phase A4 \u2014 dark Circle arc vs track is >= 3:1",
+   "Phase A4 \u2014 dark ThirtyProgressCircle defaults to the Circle roles",
+   "Phase A4 \u2014 dark dividers use the divider role"
+  ],
+  "test/core/theme/app_spacing_test.dart": [
+   "Phase A2 keeps the existing semantic spacing values unchanged",
+   "featuredCard is the opt-in roomier card padding"
+  ],
+  "test/core/theme/app_theme_a5_test.dart": [
+   "Phase A5 dialog shape light: dialogs and the time picker share the 24pt card radius",
+   "Phase A5 dialog shape dark: dialogs and the time picker share the 24pt card radius",
+   "Phase A5 dialog shape a rendered AlertDialog uses the 24pt radius"
+  ],
+  "test/core/theme/app_theme_test.dart": [
+   "AppTheme light theme is built with light brightness and AppColors.light",
+   "AppTheme dark theme is built with dark brightness and AppColors.dark",
+   "AppTheme a TextTheme slot outside the THIRTY scale still uses Inter",
+   "AppTheme renders without errors under the light theme",
+   "AppTheme renders without errors under the dark theme",
+   "AppTheme \u2014 Phase A3 component themes light: AppBar uses the page background with no tint or elevation",
+   "AppTheme \u2014 Phase A3 component themes light: an AppBar paints the exact page background at rest and while content scrolls under it",
+   "AppTheme \u2014 Phase A3 component themes light: generated surface/container roles are pinned to THIRTY surfaces (dialogs, time pickers, nav, AppBar scroll state)",
+   "AppTheme \u2014 Phase A3 component themes light: the nav bar paints no surface of its own (the floating container owns it) and, since Phase D1, no indicator pill",
+   "AppTheme \u2014 Phase A3 component themes light: an unselected switch clears 3:1 non-text contrast against the surface it sits on",
+   "AppTheme \u2014 Phase A3 component themes light: dividers use the divider token, not the generated outlineVariant",
+   "AppTheme \u2014 Phase A3 component themes dark: AppBar uses the page background with no tint or elevation",
+   "AppTheme \u2014 Phase A3 component themes dark: an AppBar paints the exact page background at rest and while content scrolls under it",
+   "AppTheme \u2014 Phase A3 component themes dark: generated surface/container roles are pinned to THIRTY surfaces (dialogs, time pickers, nav, AppBar scroll state)",
+   "AppTheme \u2014 Phase A3 component themes dark: the nav bar paints no surface of its own (the floating container owns it) and, since Phase D1, no indicator pill",
+   "AppTheme \u2014 Phase A3 component themes dark: an unselected switch clears 3:1 non-text contrast against the surface it sits on",
+   "AppTheme \u2014 Phase A3 component themes dark: dividers use the divider token, not the generated outlineVariant"
+  ]
+ },
+ "batch": 3,
+ "exit": 0,
+ "seconds": 54,
+ "command": "flutter test --concurrency=1 --reporter json test/core/qa/qa_scenario_test.dart test/core/release_build_guard_test.dart test/core/reminder/local_notifications_reminder_gateway_test.dart test/core/routing/app_router_test.dart test/core/routing/app_shell_test.dart test/core/routing/b7_four_tab_shell_test.dart test/core/routing/floating_nav_surface_test.dart test/core/routing/premium_billing_navigation_test.dart test/core/theme/app_colors_a4_test.dart test/core/theme/app_spacing_test.dart test/core/theme/app_theme_a5_test.dart test/core/theme/app_theme_test.dart"
+}

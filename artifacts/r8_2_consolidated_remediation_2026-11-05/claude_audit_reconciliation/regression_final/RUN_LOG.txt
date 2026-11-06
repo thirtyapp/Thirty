@@ -1,0 +1,27 @@
+start 2026-11-06T09:24:38+01:00
+batch 1: exit 0, 76 passed, 0 failed, 0 skipped, 12/12 files, 16 s, done=True
+batch 2: exit 0, 99 passed, 0 failed, 0 skipped, 12/12 files, 36 s, done=True
+batch 3: exit 0, 121 passed, 0 failed, 0 skipped, 12/12 files, 53 s, done=True
+batch 4: exit 0, 157 passed, 0 failed, 0 skipped, 12/12 files, 19 s, done=True
+batch 5: exit 0, 88 passed, 0 failed, 0 skipped, 12/12 files, 11 s, done=True
+batch 6: exit 0, 226 passed, 0 failed, 0 skipped, 12/12 files, 39 s, done=True
+batch 7: exit 0, 241 passed, 0 failed, 0 skipped, 12/12 files, 32 s, done=True
+batch 8: exit 0, 154 passed, 0 failed, 0 skipped, 12/12 files, 24 s, done=True
+batch 9: exit 0, 164 passed, 0 failed, 0 skipped, 12/12 files, 24 s, done=True
+batch 10: exit 0, 267 passed, 0 failed, 0 skipped, 12/12 files, 19 s, done=True
+batch 11: exit 0, 187 passed, 0 failed, 0 skipped, 12/12 files, 29 s, done=True
+batch 12: exit 0, 282 passed, 0 failed, 0 skipped, 12/12 files, 32 s, done=True
+batch 13: exit 0, 159 passed, 0 failed, 0 skipped, 12/12 files, 16 s, done=True
+batch 14: exit 0, 142 passed, 0 failed, 0 skipped, 12/12 files, 14 s, done=True
+batch 15: exit 0, 162 passed, 0 failed, 0 skipped, 12/12 files, 13 s, done=True
+batch 16: exit 0, 209 passed, 0 failed, 0 skipped, 10/10 files, 28 s, done=True
+batch 17: exit 0, 6 passed, 0 failed, 0 skipped, 1/1 files, 304 s, done=True
+batch 18a: exit 0, 3 passed, 0 failed, 0 skipped, 1/1 files, 271 s, done=True
+batch 18b: exit 0, 3 passed, 0 failed, 0 skipped, 1/1 files, 313 s, done=True
+batch 18c: exit 0, 3 passed, 0 failed, 0 skipped, 1/1 files, 217 s, done=True
+batch 18d: exit 0, 2 passed, 0 failed, 0 skipped, 1/1 files, 141 s, done=True
+batch 18e: exit 0, 2 passed, 0 failed, 0 skipped, 1/1 files, 139 s, done=True
+report exit 0
+cases exit 0
+fingerprints identical
+end 2026-11-06T09:54:45+01:00

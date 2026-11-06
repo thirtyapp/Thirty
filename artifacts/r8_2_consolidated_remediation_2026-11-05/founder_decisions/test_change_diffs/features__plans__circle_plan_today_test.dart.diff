@@ -1,0 +1,10 @@
+--- R8.2 pre-decision: test/features/plans/circle_plan_today_test.dart
++++ after founder decisions: test/features/plans/circle_plan_today_test.dart
+@@ -111,6 +111,7 @@
+   /// Today's Circle, started and closed.
+   Future<void> walk(ProviderContainer c) async {
+     today(c).start();
++    await settle();
+     today(c).close();
+     await settle();
+   }

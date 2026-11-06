@@ -1,0 +1,208 @@
+// Independent post-R8.1 audit reproductions. Scratch export only; never part
+// of the repository. Each test asserts the CORRECT (expected) behaviour, so a
+// failing test is a reproduced defect.
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+
+import '../support/r8_fault_disk.dart';
+import '../support/r8_harness.dart';
+
+void main() {
+  final morning = DateTime(2026, 10, 12, 9);
+  late R8Harness h;
+
+  setUp(() async {
+    h = R8Harness(morning);
+    await h.boot();
+  });
+
+  RecommendationNotifier today(ProviderContainer c) =>
+      c.read(recommendationProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+  Future<Map<String, Object>> disk() => h.disk.stored();
+  CircleJournalEntry? entryFor(ProviderContainer c, String id) => c
+      .read(circleJournalRepositoryProvider)
+      .readAll()
+      .where((e) => e.circleId == id)
+      .firstOrNull;
+
+  /// A Plan started and today's stage Circle chosen — all durably saved.
+  Future<(ProviderContainer, String)> servedStageCircle() async {
+    final c = h.open();
+    expect(plans(c).start('getting_going'), PlanActionResult.done);
+    await R8Harness.settle();
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    await R8Harness.settle();
+    final rec = c.read(recommendationProvider).recommendation!;
+    expect(rec.composed?.stage, isNotNull, reason: 'precondition: stage');
+    expect((await disk())[circlePlansKey], contains('"lastServed"'));
+    expect((await disk())[recommendationDayKey], rec.circleId);
+    return (c, rec.circleId);
+  }
+
+  group('A1 — a Plan action that resets lastServed strands today\'s '
+      'durably-served stage Circle (no storage fault at all)', () {
+    test('Start saved; Leave + "Go through it again"; Close: the Close must '
+        'reach the day keys and History', () async {
+      final (c, id) = await servedStageCircle();
+      today(c).start();
+      await R8Harness.settle();
+      expect((await disk())[recommendationStatusKey], 'started');
+
+      expect(plans(c).leave('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      expect(plans(c).goThroughAgain('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      expect(plans(c).hasUnsavedChanges, isFalse, reason: 'Plans durable');
+
+      today(c).close();
+      await R8Harness.settle();
+      expect(
+        c.read(recommendationProvider).status,
+        RecommendationStatus.closed,
+      );
+      final stored = await disk();
+      expect(
+        c.read(journalSaveStatusProvider)[id],
+        isNot(false),
+        reason: 'the Close was reported NOT SAVED',
+      );
+      expect(stored[recommendationStatusKey], 'closed',
+          reason: 'day keys never received the Close');
+      expect(entryFor(c, id)?.closedAt, isNotNull,
+          reason: 'History never received the Close');
+    });
+
+    test('Closed and credited; Leave + "Go through it again"; then the '
+        'reflection answer must be saved', () async {
+      final (c, id) = await servedStageCircle();
+      today(c).start();
+      await R8Harness.settle();
+      today(c).close();
+      await R8Harness.settle();
+      expect(entryFor(c, id)?.closedAt, isNotNull);
+
+      plans(c).leave('getting_going');
+      await R8Harness.settle();
+      plans(c).goThroughAgain('getting_going');
+      await R8Harness.settle();
+
+      today(c).reportAttempt(CircleAttemptResponse.yes);
+      await R8Harness.settle();
+      expect(
+        c.read(journalSaveStatusProvider)[id],
+        isNot(false),
+        reason: 'the reflection answer was reported NOT SAVED',
+      );
+      expect(entryFor(c, id)?.attemptResponse, CircleAttemptResponse.yes,
+          reason: 'History never received the answer');
+      expect((await disk())[recommendationAttemptResponseKey], 'yes');
+    });
+  });
+
+  for (final fault in DiskFault.values) {
+    group('${fault.name}:', () {
+      test('A2 — ONE transient failure of the served-stage write: the user '
+          'can still run and Close the Circle after the store heals, and '
+          'History must record it', () async {
+        final c = h.open();
+        plans(c).start('getting_going');
+        await R8Harness.settle();
+        h.disk.fail(circlePlansKey, fault, times: 1);
+        today(c).chooseIntention(
+          Intention.moreEnergy,
+          window: TimeWindow.about20,
+        );
+        await R8Harness.settle();
+        final rec = c.read(recommendationProvider).recommendation!;
+        expect(rec.composed?.stage, isNotNull,
+            reason: 'stays on screen (accepted limitation)');
+        // Store is healthy again (times: 1 consumed). The user runs it.
+        today(c).start();
+        await R8Harness.settle();
+        expect(c.read(recommendationProvider).status,
+            RecommendationStatus.started,
+            reason: 'Start is not refused in memory');
+        today(c).close();
+        await R8Harness.settle();
+        expect(c.read(recommendationProvider).status,
+            RecommendationStatus.closed);
+        expect(entryFor(c, rec.circleId)?.closedAt, isNotNull,
+            reason: 'a Circle the user really ran and closed, on a healthy '
+                'store, never reaches History');
+      });
+
+      test('A3 — a failed Delete leaves _durable at pre-deletion evidence: '
+          'a later failed Plan save puts deleted stage evidence back in '
+          'memory, and the next successful save writes it to disk', () async {
+        final (c, id) = await servedStageCircle();
+        today(c).start();
+        await R8Harness.settle();
+        today(c).close();
+        await R8Harness.settle();
+        expect(
+          c.read(circlePlansProvider).active!.current.records,
+          isNotEmpty,
+          reason: 'precondition: credited stage record',
+        );
+
+        h.disk.fail(circlePlansKey, fault);
+        try {
+          await c.read(circleHistoryDeletionProvider).delete();
+        } catch (_) {}
+        await R8Harness.settle();
+        expect(
+          c.read(circlePlansProvider).active?.current.records ?? const [],
+          isEmpty,
+          reason: 'deleted in memory',
+        );
+        // A later Plan action fails too (store still failing).
+        plans(c).keepGentler('getting_going');
+        await R8Harness.settle();
+        expect(
+          c.read(circlePlansProvider).plans['getting_going']!.cycles
+              .expand((cy) => cy.records),
+          isEmpty,
+          reason: 'deleted stage evidence is back in memory after a failed '
+              'unrelated save',
+        );
+        h.disk.healAll();
+        plans(c).keepGentler('getting_going');
+        await R8Harness.settle();
+        expect(
+          (await disk())[circlePlansKey],
+          isNot(contains(id)),
+          reason: 'deleted stage evidence written back to disk',
+        );
+      });
+
+      test('A4 — confirmed(): an action whose own write fails but whose change '
+          'lands through a later queued save must not be reported notSaved',
+          () async {
+        final c = h.open();
+        plans(c).start('getting_going');
+        await R8Harness.settle();
+        h.disk.fail(circlePlansKey, fault, times: 1);
+        final result = plans(c).confirmed((p) => p.keepGentler('getting_going'));
+        // Another, unrelated Plans change queued while the first is pending.
+        plans(c).requestRevisit('getting_going', 1);
+        plans(c).pause('getting_going');
+        await R8Harness.settle();
+        final stored = await disk();
+        final gentlerOnDisk = '${stored[circlePlansKey]}'.contains(
+          'gentlerSince',
+        );
+        expect(gentlerOnDisk, isTrue, reason: 'precondition: change landed');
+        expect(await result, PlanActionResult.done,
+            reason: 'reported notSaved although the change is on disk');
+      });
+    });
+  }
+}

@@ -253,6 +253,7 @@ void main() {
       final offer = c.read(recommendationProvider).recommendation!;
       expect(offer.composed!.stage!.stageNumber, 2);
       today.start();
+      await pumpEventQueue();
       today.close();
       // The Plan moves on once the Close is saved (audit remediation R3).
       await pumpEventQueue();

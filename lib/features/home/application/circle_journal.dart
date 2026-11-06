@@ -18,6 +18,7 @@
 /// the OS's own cloud-backup mechanism.
 library;
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -694,17 +695,33 @@ const circleJournalMaxRecords = 366;
 /// [recordUsefulness] — never more than [circleJournalMaxRecords]
 /// entries kept at once.
 class CircleJournalRepository {
-  CircleJournalRepository(this._prefs, {this.onSaved});
+  CircleJournalRepository(this._prefs, {this.onSaved, this.writes});
 
   final SharedPreferences _prefs;
 
   /// Told the outcome of every save, by Circle (R6 final).
   final void Function(String circleId, {required bool saved})? onSaved;
 
+  /// History's writes still waiting for the disk (R8.2, Astra R81-A07) —
+  /// shared by every repository of the app ([journalWritesProvider]).
+  final JournalWrites? writes;
+
+  /// The stored journal as stored — text, or (R8.2, Astra R81-A09) a value
+  /// of another native type, which this build can't read.
+  Object? get _stored => _prefs.get(circleJournalKey);
+
+  /// The copies kept of journals THIRTY couldn't read (R6c).
+  List<String> get _preserved => switch (_prefs.get(circleJournalPreservedKey)) {
+    final List<Object?> kept => [
+      for (final copy in kept)
+        if (copy is String) copy,
+    ],
+    _ => <String>[],
+  };
+
   /// Some earlier History couldn't be opened, and a copy of it is kept
   /// ([circleJournalPreservedKey], R6c).
-  bool get hasPreservedHistory =>
-      (_prefs.getStringList(circleJournalPreservedKey) ?? const []).isNotEmpty;
+  bool get hasPreservedHistory => _preserved.isNotEmpty;
 
   /// Whether anything of History is stored, readable or not (audit
   /// remediation R8, Astra R7-A06): records, a journal THIRTY can't open,
@@ -719,13 +736,26 @@ class CircleJournalRepository {
   /// The stored journal is one THIRTY can't open — damaged, or written by a
   /// newer THIRTY — and it is still exactly as stored (R6c).
   bool get storedHistoryUnopened {
-    final raw = _prefs.getString(circleJournalKey);
+    final raw = _stored;
     return raw != null && _classifyStored(raw) != _StoredJournal.readable;
   }
 
   /// All journal entries currently retained, oldest local date first.
   List<CircleJournalEntry> readAll() {
     final entries = _readRaw();
+    entries.sort((a, b) => a.localDate.compareTo(b.localDate));
+    return entries;
+  }
+
+  /// [readAll] as the disk has confirmed it (R8.2, Astra R81-A07). While a
+  /// write is still pending, the store's memory already shows it; what a
+  /// durable decision — an Insight, a Plan's stage 5 — rests on is History
+  /// before that write, until the disk confirms it. Without a pending write
+  /// the two are the same.
+  List<CircleJournalEntry> readConfirmed() {
+    final writes = this.writes;
+    if (writes == null || !writes.isWriting) return readAll();
+    final entries = _decode(writes.confirmed);
     entries.sort((a, b) => a.localDate.compareTo(b.localDate));
     return entries;
   }
@@ -1110,9 +1140,8 @@ class CircleJournalRepository {
   }) {
     final entries = readAll();
     final unreadable = _unreadableStored();
-    final storedRaw = _prefs.getString(circleJournalKey);
-    final preserved =
-        _prefs.getStringList(circleJournalPreservedKey) ?? const <String>[];
+    final storedRaw = _stored;
+    final preserved = _preserved;
     const encoder = JsonEncoder.withIndent('  ');
     return encoder.convert({
       'schemaVersion': circleJournalSchemaVersion,
@@ -1245,9 +1274,19 @@ class CircleJournalRepository {
     // Audit remediation R8 (Claude F-5, Astra R7-A01): a write that throws
     // or returns `false` is put back as it was in memory too, so History,
     // Insights and Today's own checks never read a record that isn't on
-    // disk.
+    // disk. R8.2 (Astra R81-A07): while it is pending, [readConfirmed]
+    // still reads History as it was.
     try {
-      await writeConfirmed(_prefs, circleJournalKey, json);
+      final writes = this.writes;
+      if (writes == null) {
+        await writeConfirmed(_prefs, circleJournalKey, json);
+      } else {
+        await writes._track(
+          _prefs,
+          json,
+          () => writeConfirmed(_prefs, circleJournalKey, json),
+        );
+      }
     } on StorageWriteFailed {
       throw const JournalWriteRefused('the journal could not be written');
     }
@@ -1260,10 +1299,15 @@ class CircleJournalRepository {
   /// kept earlier is never replaced. A journal written by a newer THIRTY is
   /// never written over: the save is refused. Either refusal throws
   /// [JournalWriteRefused], and nothing is written.
+  ///
+  /// R8.2 (Astra R81-A09): a stored value of another native type than text
+  /// is a journal THIRTY can't read; its copy is the value as JSON — an
+  /// integer, Boolean or list exactly, type included.
   Future<void> _protectStored() async {
-    final raw = _prefs.getString(circleJournalKey);
-    if (raw == null) return;
-    switch (_classifyStored(raw)) {
+    final stored = _stored;
+    if (stored == null) return;
+    final raw = stored is String ? stored : jsonEncode(stored);
+    switch (_classifyStored(stored)) {
       case _StoredJournal.readable:
         return;
       case _StoredJournal.newer:
@@ -1271,7 +1315,7 @@ class CircleJournalRepository {
           'the stored journal was written by a newer THIRTY',
         );
       case _StoredJournal.unreadable:
-        final kept = _prefs.getStringList(circleJournalPreservedKey) ?? [];
+        final kept = _preserved;
         if (kept.contains(raw)) return;
         // A copy the disk refused is put back out of memory too, so a later
         // save keeps the original again instead of trusting a copy that
@@ -1295,8 +1339,8 @@ class CircleJournalRepository {
   /// only by Delete Circle history ([clearAll]). Empty when the stored
   /// wrapper itself can't be read — that case is not changed here.
   List<Object?> _unreadableStored() {
-    final raw = _prefs.getString(circleJournalKey);
-    if (raw == null) return const [];
+    final raw = _stored;
+    if (raw is! String) return const [];
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! Map<String, Object?> ||
@@ -1324,9 +1368,11 @@ class CircleJournalRepository {
   /// malformed entries within an otherwise valid wrapper are dropped one
   /// at a time by [CircleJournalEntry.fromJson] instead — a single bad
   /// record must never take down the rest of the journal.
-  List<CircleJournalEntry> _readRaw() {
-    final raw = _prefs.getString(circleJournalKey);
-    if (raw == null) return [];
+  List<CircleJournalEntry> _readRaw() => _decode(_stored);
+
+  /// The entries [raw] — a stored journal value — holds, as [_readRaw].
+  static List<CircleJournalEntry> _decode(Object? raw) {
+    if (raw is! String) return [];
 
     try {
       final decoded = jsonDecode(raw);
@@ -1362,8 +1408,69 @@ final circleJournalRepositoryProvider = Provider<CircleJournalRepository>((
   return CircleJournalRepository(
     ref.watch(sharedPreferencesProvider),
     onSaved: status.record,
+    writes: ref.read(journalWritesProvider),
   );
 });
+
+/// History's writes still waiting for the disk, and History as the disk
+/// last confirmed it while one is (R8.2, Astra R81-A07).
+///
+/// [SharedPreferences] shows a value in its memory before the platform has
+/// written it. A reader of [CircleJournalRepository.readAll] sees that
+/// pending value — right for what is on screen, never the premise of a
+/// durable decision: [CircleJournalRepository.readConfirmed] reads the last
+/// confirmed journal instead, until every pending write has landed or been
+/// refused (and put back, [writeConfirmed]).
+class JournalWrites {
+  var _pending = 0;
+  var _generation = 0;
+  Object? _confirmed;
+  Completer<void>? _idle;
+
+  /// Whether a History write is waiting for the disk.
+  bool get isWriting => _pending > 0;
+
+  /// The stored journal as last confirmed, while [isWriting].
+  Object? get confirmed => _confirmed;
+
+  /// Completes, never failing, once no History write is waiting.
+  Future<void> idle() => _idle?.future ?? Future<void>.value();
+
+  Future<void> _track(
+    SharedPreferences prefs,
+    String value,
+    Future<void> Function() write,
+  ) async {
+    final generation = _generation;
+    if (_pending == 0) {
+      _confirmed = prefs.get(circleJournalKey);
+      _idle = Completer<void>();
+    }
+    _pending++;
+    try {
+      await write();
+      if (generation == _generation) _confirmed = value;
+    } finally {
+      if (generation == _generation && --_pending == 0) {
+        _idle?.complete();
+        _idle = null;
+      }
+    }
+  }
+
+  /// Delete Circle history has begun (R8.2): no History is confirmed any
+  /// more, and no write begun before it counts.
+  void forget() {
+    _generation++;
+    _pending = 0;
+    _confirmed = null;
+    _idle?.complete();
+    _idle = null;
+  }
+}
+
+/// The app's [JournalWrites].
+final journalWritesProvider = Provider<JournalWrites>((ref) => JournalWrites());
 
 /// What is stored under [circleJournalKey] (audit remediation R6c).
 enum _StoredJournal {
@@ -1379,7 +1486,8 @@ enum _StoredJournal {
   newer,
 }
 
-_StoredJournal _classifyStored(String raw) {
+_StoredJournal _classifyStored(Object raw) {
+  if (raw is! String) return _StoredJournal.unreadable;
   try {
     final decoded = jsonDecode(raw);
     if (decoded is Map<String, Object?>) {

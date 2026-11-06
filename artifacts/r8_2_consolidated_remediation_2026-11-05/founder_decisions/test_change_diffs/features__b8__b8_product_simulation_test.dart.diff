@@ -1,0 +1,10 @@
+--- R8.2 pre-decision: test/features/b8/b8_product_simulation_test.dart
++++ after founder decisions: test/features/b8/b8_product_simulation_test.dart
+@@ -274,6 +274,7 @@
+ 
+         // The Circle itself.
+         notifier.start();
++        await _settle();
+         final plan = r.composed?.plan;
+         if (plan != null && plan.parts.length > 1) {
+           final (skip, leaveOut) =

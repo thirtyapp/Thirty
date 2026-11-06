@@ -1,0 +1,260 @@
+// R8.2 reconciliation: ADAPTED forms of the independent Claude post-R8.1
+// audit reproductions (audit_r81_repro_test.dart / audit_r81_stage5_test.dart,
+// which are kept unchanged). Scratch only; never part of the repository.
+// Each test asserts the auditor's own acceptance condition, phrased so that it
+// does not depend on R8.1-only behaviour:
+//   R-A2  "A Circle that can't be confirmed must either be saved without stage
+//          credit or be refused at Start. It must never be silently run and
+//          then lost." (The original asserted the R8.1 limitation "stays on
+//          screen" as a precondition.)
+//   R-A3  The original's last check, `isNot(contains(id))`, matches the
+//          Circle id (a date) against the cycle's own startedOn/gentlerSince
+//          dates; here the stage records on disk are counted instead.
+//   R-L   NEW-1 trigger "Leaving and then starting the Plan again mid-Circle"
+//          (start on a left Plan; not in the R8.2 action list).
+//   R-I1  NEW-1 trigger "apply the I1 Insight" after stage 5 ended — the I1
+//          application calls goThroughAgain (byInsight: on R8.2); a restart
+//          is added.
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/providers/clock_provider.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+
+import '../support/r8_fault_disk.dart';
+import '../support/r8_harness.dart';
+
+void main() {
+  final morning = DateTime(2026, 10, 12, 9);
+  late R8Harness h;
+
+  setUp(() async {
+    h = R8Harness(morning);
+    await h.boot();
+  });
+
+  RecommendationNotifier today(ProviderContainer c) =>
+      c.read(recommendationProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+  CircleJournalEntry? entryFor(ProviderContainer c, String id) => c
+      .read(circleJournalRepositoryProvider)
+      .readAll()
+      .where((e) => e.circleId == id)
+      .firstOrNull;
+  int diskRecords(Object? raw) => raw == null
+      ? -1
+      : [
+          for (final p in ((jsonDecode('$raw') as Map)['plans'] as Map).values)
+            for (final cy in (p as Map)['cycles'] as List)
+              ...((cy as Map)['records'] as List? ?? const []),
+        ].length;
+
+  Future<void> closeAndReflect(ProviderContainer c, String id) async {
+    today(c).close();
+    await R8Harness.settle();
+    today(c).reportAttempt(CircleAttemptResponse.yes);
+    await R8Harness.settle();
+    today(c).reportUsefulness(CircleUsefulnessResponse.veryUseful);
+    await R8Harness.settle();
+  }
+
+  Future<void> expectSavedAcrossRestart(String id) async {
+    final stored = await h.disk.stored();
+    expect(stored[recommendationStatusKey], 'closed', reason: 'Close lost');
+    expect(stored[recommendationUsefulnessResponseKey], 'veryUseful');
+    await h.restart();
+    final again = h.open();
+    expect(again.read(recommendationProvider).status,
+        RecommendationStatus.closed);
+    final e = entryFor(again, id);
+    expect(e?.closedAt, isNotNull, reason: 'History lost the Close');
+    expect(e?.attemptResponse, CircleAttemptResponse.yes);
+    expect(e?.usefulnessResponse, CircleUsefulnessResponse.veryUseful);
+  }
+
+  for (final fault in DiskFault.values) {
+    group('${fault.name}:', () {
+      test('R-A2 — ONE transient failure of the served-stage write at choice '
+          'time: the Circle is never run and then lost (either it is saved, '
+          'or it is refused / taken back with the user told and today\'s '
+          'choice can be made again and saved)', () async {
+        final c = h.open();
+        plans(c).start('getting_going');
+        await R8Harness.settle();
+        h.disk.fail(circlePlansKey, fault, times: 1);
+        today(c).chooseIntention(
+          Intention.moreEnergy,
+          window: TimeWindow.about20,
+        );
+        final id = c.read(recommendationProvider).recommendation!.circleId;
+        await R8Harness.settle();
+        final shown = c.read(recommendationProvider).recommendation;
+        if (shown != null) {
+          // Still on screen: whatever the user runs must reach History.
+          today(c).start();
+          await R8Harness.settle();
+          if (c.read(recommendationProvider).status ==
+              RecommendationStatus.started) {
+            await closeAndReflect(c, shown.circleId);
+            expect(entryFor(c, shown.circleId)?.closedAt, isNotNull,
+                reason: 'a Circle the user ran and closed on a healthy store '
+                    'never reaches History');
+            await expectSavedAcrossRestart(shown.circleId);
+          } else {
+            expect(c.read(journalSaveStatusProvider)[id], isFalse,
+                reason: 'Start refused silently');
+          }
+          return;
+        }
+        // Taken back: the user was told, and a new choice is saved and runs.
+        expect(c.read(journalSaveStatusProvider)[id], isFalse,
+            reason: 'offer withdrawn without telling the user');
+        expect((await h.disk.stored())[recommendationStatusKey], isNull);
+        today(c).chooseIntention(
+          Intention.moreEnergy,
+          window: TimeWindow.about20,
+        );
+        await R8Harness.settle();
+        final again = c.read(recommendationProvider).recommendation!;
+        expect((await h.disk.stored())[recommendationDayKey], again.circleId);
+        today(c).start();
+        await R8Harness.settle();
+        expect(c.read(recommendationProvider).status,
+            RecommendationStatus.started);
+        await closeAndReflect(c, again.circleId);
+        await expectSavedAcrossRestart(again.circleId);
+      });
+
+      test('R-A3 — failed Delete, a later failed unrelated Plan save, then '
+          'the store heals: no deleted stage record in memory or on disk, '
+          'also after a restart', () async {
+        final c = h.open();
+        plans(c).start('getting_going');
+        await R8Harness.settle();
+        today(c).chooseIntention(
+          Intention.moreEnergy,
+          window: TimeWindow.about20,
+        );
+        await R8Harness.settle();
+        today(c).start();
+        await R8Harness.settle();
+        today(c).close();
+        await R8Harness.settle();
+        expect(c.read(circlePlansProvider).active!.current.records,
+            isNotEmpty, reason: 'precondition: credited stage record');
+        h.disk.fail(circlePlansKey, fault);
+        try {
+          await c.read(circleHistoryDeletionProvider).delete();
+        } catch (_) {}
+        await R8Harness.settle();
+        plans(c).keepGentler('getting_going');
+        await R8Harness.settle();
+        expect(
+          c.read(circlePlansProvider).plans['getting_going']!.cycles
+              .expand((cy) => cy.records),
+          isEmpty,
+          reason: 'deleted stage evidence back in memory',
+        );
+        h.disk.healAll();
+        plans(c).keepGentler('getting_going');
+        await R8Harness.settle();
+        expect(diskRecords((await h.disk.stored())[circlePlansKey]),
+            lessThanOrEqualTo(0),
+            reason: 'deleted stage evidence written back to disk');
+        await h.restart();
+        final again = h.open();
+        expect(diskRecords((await h.disk.stored())[circlePlansKey]),
+            lessThanOrEqualTo(0));
+        expect(
+          again.read(circlePlansProvider).plans.values
+              .expand((p) => p.cycles)
+              .expand((cy) => cy.records),
+          isEmpty,
+        );
+      });
+    });
+  }
+
+  test('R-L — NEW-1: stage Circle started; Leave, then Start the same Plan '
+      'again mid-Circle; Close and reflection are saved, also after a '
+      'restart', () async {
+    final c = h.open();
+    plans(c).start('getting_going');
+    await R8Harness.settle();
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    await R8Harness.settle();
+    final id = c.read(recommendationProvider).recommendation!.circleId;
+    today(c).start();
+    await R8Harness.settle();
+    expect((await h.disk.stored())[recommendationStatusKey], 'started');
+    expect(plans(c).leave('getting_going'), PlanActionResult.done);
+    await R8Harness.settle();
+    expect(plans(c).start('getting_going'), PlanActionResult.done);
+    await R8Harness.settle();
+    expect(plans(c).hasUnsavedChanges, isFalse);
+    h.clock.value = morning.add(const Duration(minutes: 25));
+    await closeAndReflect(c, id);
+    expect(c.read(journalSaveStatusProvider)[id], isNot(false));
+    await expectSavedAcrossRestart(id);
+  });
+
+  test('R-I1 — NEW-1: stage 5 closed, Plan ended; the I1 application\'s '
+      'goThroughAgain (byInsight where the tree has it); the stage-5 '
+      'reflection is saved, also after a restart', () async {
+    var c = h.open();
+    c.read(circlePlansProvider.notifier).start('getting_going');
+    await R8Harness.settle();
+    String? lastId;
+    for (var day = 0; day < 8; day++) {
+      if (c.read(circlePlansProvider).plans['getting_going']!.lifecycle ==
+          PlanLifecycle.ended) {
+        break;
+      }
+      today(c).chooseIntention(Intention.moreEnergy,
+          window: TimeWindow.about20);
+      await R8Harness.settle();
+      lastId = c.read(recommendationProvider).recommendation!.circleId;
+      today(c).start();
+      await R8Harness.settle();
+      today(c).close();
+      await R8Harness.settle();
+      if (c.read(circlePlansProvider).plans['getting_going']!.lifecycle ==
+          PlanLifecycle.ended) {
+        break;
+      }
+      today(c).reportAttempt(CircleAttemptResponse.yes);
+      await R8Harness.settle();
+      h.clock.value = h.clock.value.add(const Duration(days: 1));
+      await h.restart();
+      c = h.open();
+      c.read(nowProvider);
+    }
+    expect(c.read(circlePlansProvider).plans['getting_going']!.lifecycle,
+        PlanLifecycle.ended,
+        reason: 'precondition: stage 5 closed and credited');
+    final id = lastId!;
+    final dynamic notifier = plans(c);
+    Object? result;
+    try {
+      result = notifier.goThroughAgain('getting_going', byInsight: 'i1_proxy');
+    } on NoSuchMethodError {
+      result = notifier.goThroughAgain('getting_going');
+    }
+    expect(result, PlanActionResult.done);
+    await R8Harness.settle();
+    today(c).reportAttempt(CircleAttemptResponse.yes);
+    await R8Harness.settle();
+    today(c).reportUsefulness(CircleUsefulnessResponse.veryUseful);
+    await R8Harness.settle();
+    expect(c.read(journalSaveStatusProvider)[id], isNot(false));
+    await expectSavedAcrossRestart(id);
+  });
+}

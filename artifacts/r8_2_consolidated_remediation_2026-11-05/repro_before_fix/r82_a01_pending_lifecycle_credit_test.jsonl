@@ -1,0 +1,106 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 99.0.0 (111.0.0 available)
+  analyzer 12.1.0 (14.7.0 available)
+  app_links 7.2.1 (7.2.2 available)
+  app_links_linux 1.0.3 (1.0.4 available)
+  app_links_web 1.0.4 (1.0.5 available)
+  clock 1.1.2 (1.1.3 available)
+  coverage 1.15.1 (1.16.0 available)
+  crypto 3.0.7 (3.0.8 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  equatable 2.1.0 (3.0.0 available)
+  flutter_local_notifications 22.3.0 (22.3.3 available)
+  flutter_local_notifications_linux 8.0.1 (8.0.2 available)
+  flutter_riverpod 3.4.2 (3.4.3 available)
+  flutter_svg 2.3.0 (2.3.2 available)
+  flutter_timezone 5.1.0 (5.1.1 available)
+  frontend_server_client 4.0.0 (4.2.0 available)
+  functions_client 2.6.4 (2.7.1 available)
+  glob 2.1.3 (2.2.0 available)
+  go_router 17.3.0 (18.1.2 available)
+  gotrue 2.26.0 (2.27.3 available)
+  http_multi_server 3.2.2 (3.2.3 available)
+  io 1.0.5 (1.1.0 available)
+  listen 1.0.0-beta.4 (1.0.1 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.0 (1.19.0 available)
+  mime 2.0.0 (2.1.0 available)
+  package_config 2.2.0 (3.0.0 available)
+  passkeys_platform_interface 2.9.0 (2.11.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pool 1.5.2 (1.5.3 available)
+  postgrest 2.8.0 (2.9.1 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  purchases_flutter 10.11.0 (11.0.0 available)
+  realtime_client 2.11.0 (2.13.2 available)
+  riverpod 3.4.2 (3.4.3 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.5.4 available)
+  shared_preferences_foundation 2.5.6 (2.6.1 available)
+  shelf 1.4.2 (1.4.3 available)
+  shelf_static 1.1.3 (1.2.0 available)
+  source_maps 0.10.13 (0.10.14 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  storage_client 2.6.0 (2.8.1 available)
+  supabase 2.14.0 (2.16.5 available)
+  supabase_flutter 2.16.0 (2.18.3 available)
+  test 1.31.0 (1.33.0 available)
+  test_api 0.7.11 (0.7.15 available)
+  test_core 0.6.17 (0.6.21 available)
+  timezone 0.11.1 (0.11.2 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_graphics 1.2.3 (1.2.6 available)
+  vector_graphics_compiler 1.3.0 (1.3.4 available)
+  vector_math 2.2.0 (2.4.4 available)
+  vm_service 15.2.0 (15.4.0 available)
+  web 1.1.1 (1.1.2 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+65 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+{"protocolVersion":"0.1.1","runnerVersion":"1.31.0","pid":34640,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"count":1,"time":2,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":6417}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":10,"line":null,"column":null,"url":null},"type":"group","time":6418}
+{"group":{"id":3,"suiteID":0,"parentID":2,"name":"throws:","metadata":{"skip":false,"skipReason":null},"testCount":4,"line":117,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"group","time":6419}
+{"test":{"id":4,"name":"throws: A01 as reported — a pending Pause, the next day's Free choice, then the Pause fails: the earlier day's credit is saved before the day keys move on, and survives two restarts","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":118,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"testStart","time":6419}
+{"testID":4,"error":"Expected: '2026-10-12'\n  Actual: '2026-10-13'\n   Which: is different.\n          Expected: 2026-10-12\n            Actual: 2026-10-13\n                             ^\n           Differ at offset 9\nthe earlier session was written over while its credit was blocked by a Plan change still being saved\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a01_pending_lifecycle_credit_test.dart 128:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":6553}
+{"testID":4,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":6553}
+{"test":{"id":5,"name":"throws: a pending Leave, the next day's choice, then the Leave fails: the credit is saved first — never lost to a competing Plan action that did not land","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":149,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"testStart","time":6553}
+{"testID":5,"error":"Expected: '2026-10-12'\n  Actual: '2026-10-13'\n   Which: is different.\n          Expected: 2026-10-12\n            Actual: 2026-10-13\n                             ^\n           Differ at offset 9\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a01_pending_lifecycle_credit_test.dart 158:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":6587}
+{"testID":5,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":6587}
+{"test":{"id":6,"name":"throws: the Pause lands: by the Plan rules a paused Plan is not credited — the credit is legitimately unnecessary, the day keys move on, and nothing is credited later","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":167,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"testStart","time":6587}
+{"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":6616}
+{"test":{"id":7,"name":"throws: a restart while the Pause is still pending reads only the disk: the active Plan is credited from the retained day keys","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":187,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"testStart","time":6616}
+{"testID":7,"error":"Expected: '2026-10-12'\n  Actual: '2026-10-13'\n   Which: is different.\n          Expected: 2026-10-12\n            Actual: 2026-10-13\n                             ^\n           Differ at offset 9\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a01_pending_lifecycle_credit_test.dart 195:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":6639}
+{"testID":7,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":6639}
+{"group":{"id":8,"suiteID":0,"parentID":2,"name":"returnsFalse:","metadata":{"skip":false,"skipReason":null},"testCount":4,"line":117,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"group","time":6639}
+{"test":{"id":9,"name":"returnsFalse: A01 as reported — a pending Pause, the next day's Free choice, then the Pause fails: the earlier day's credit is saved before the day keys move on, and survives two restarts","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":118,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"testStart","time":6639}
+{"testID":9,"error":"Expected: '2026-10-12'\n  Actual: '2026-10-13'\n   Which: is different.\n          Expected: 2026-10-12\n            Actual: 2026-10-13\n                             ^\n           Differ at offset 9\nthe earlier session was written over while its credit was blocked by a Plan change still being saved\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a01_pending_lifecycle_credit_test.dart 128:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":6662}
+{"testID":9,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":6664}
+{"test":{"id":10,"name":"returnsFalse: a pending Leave, the next day's choice, then the Leave fails: the credit is saved first — never lost to a competing Plan action that did not land","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":149,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"testStart","time":6664}
+{"testID":10,"error":"Expected: '2026-10-12'\n  Actual: '2026-10-13'\n   Which: is different.\n          Expected: 2026-10-12\n            Actual: 2026-10-13\n                             ^\n           Differ at offset 9\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a01_pending_lifecycle_credit_test.dart 158:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":6686}
+{"testID":10,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":6686}
+{"test":{"id":11,"name":"returnsFalse: the Pause lands: by the Plan rules a paused Plan is not credited — the credit is legitimately unnecessary, the day keys move on, and nothing is credited later","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":167,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"testStart","time":6686}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":6706}
+{"test":{"id":12,"name":"returnsFalse: a restart while the Pause is still pending reads only the disk: the active Plan is credited from the retained day keys","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":187,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"testStart","time":6707}
+{"testID":12,"error":"Expected: '2026-10-12'\n  Actual: '2026-10-13'\n   Which: is different.\n          Expected: 2026-10-12\n            Actual: 2026-10-13\n                             ^\n           Differ at offset 9\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a01_pending_lifecycle_credit_test.dart 195:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":6731}
+{"testID":12,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":6731}
+{"test":{"id":13,"name":"the credit itself is refused again after the Pause fails: the day keys still never move on; once healed, the next write credits yesterday exactly once, then moves on","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":208,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"testStart","time":6732}
+{"testID":13,"error":"Expected: '2026-10-12'\n  Actual: '2026-10-13'\n   Which: is different.\n          Expected: 2026-10-12\n            Actual: 2026-10-13\n                             ^\n           Differ at offset 9\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a01_pending_lifecycle_credit_test.dart 221:5  main.<fn>\n","isFailure":true,"type":"error","time":6757}
+{"testID":13,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":6757}
+{"test":{"id":14,"name":"domain: a paused or left Plan is never credited — the policy the notifier distinguishes from a pending change","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":234,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a01_pending_lifecycle_credit_test.dart"},"type":"testStart","time":6757}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":6759}
+{"success":false,"type":"done","time":6787}

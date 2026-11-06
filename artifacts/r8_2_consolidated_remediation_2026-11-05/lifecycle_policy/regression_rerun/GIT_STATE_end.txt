@@ -1,0 +1,16 @@
+captured 2026-11-06T13:26:20+01:00
+branch step5-billing-integration
+HEAD e935112c408c16d99835280f4e1fafd722d47ed1
+upstream e935112c408c16d99835280f4e1fafd722d47ed1
+staged: 0
+stash: 0
+tracked modified: 27
+--- untracked outside artifacts/
+?? AGENTS.md
+?? android/build/
+?? artwork/
+?? assets/worlds/quiet_trail/quiet_trail_walk_card_morning_v1.png
+?? assets/worlds/quiet_trail/quiet_trail_walk_hero_morning_v1.png
+?? docs/audits/THIRTY_CLAUDE_POST_R8_1_AUDIT_REPORT.txt
+?? docs/audits/THIRTY_INDEPENDENT_POST_R8_1_AUDIT.md
+?? test/features/r82/

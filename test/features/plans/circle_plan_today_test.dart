@@ -111,6 +111,7 @@ void main() {
   /// Today's Circle, started and closed.
   Future<void> walk(ProviderContainer c) async {
     today(c).start();
+    await settle();
     today(c).close();
     await settle();
   }

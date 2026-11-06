@@ -1,0 +1,27 @@
+--- R8.2 pre-decision: test/features/r82/r82_a03_new1_stage_publication_test.dart
++++ after founder decisions: test/features/r82/r82_a03_new1_stage_publication_test.dart
+@@ -173,8 +173,13 @@
+         expect(await unservedStageOnDisk(), isFalse);
+       });
+ 
+-      test('the same, started while its Plan save was still pending: the '
+-          'session is not left running unsaveable — it is taken back, the '
++      // Founder decision B (R8.2 acceptance review, 2026-11-05) replaces the
++      // earlier expectation here (the Circle started at once, then taken
++      // back): Start now waits for the Circle's Plan save, so it never
++      // starts on one that fails.
++      test('the same, Start tapped while its Plan save was still pending: '
++          'the Circle does not start before that save lands; it fails, so '
++          'the Start is refused, the unsaveable offer is taken back, the '
+           'user is told, and nothing of it is on disk', () async {
+         final c = h.open();
+         final held = h.disk.hold(circlePlansKey);
+@@ -187,7 +192,7 @@
+         today(c).start();
+         expect(
+           c.read(recommendationProvider).status,
+-          RecommendationStatus.started,
++          RecommendationStatus.notStarted,
+         );
+         h.disk.fail(circlePlansKey, fault);
+         held.release(fault);

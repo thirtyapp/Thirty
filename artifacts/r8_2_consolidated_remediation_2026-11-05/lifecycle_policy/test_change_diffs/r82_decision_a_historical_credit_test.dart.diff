@@ -1,0 +1,66 @@
+--- artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/baseline_pre_fix/test/features/r82/r82_decision_a_historical_credit_test.dart.txt	2026-11-06 10:30:34.679684700 +0100
++++ test/features/r82/r82_decision_a_historical_credit_test.dart	2026-11-06 10:36:14.890882300 +0100
+@@ -19,8 +19,10 @@
+ /// credit's own write failed: the later lifecycle change can't erase it.
+ /// The credit goes to the original cycle and Circle, once, under the same
+ /// Premium rules; nothing is reactivated, and a new cycle is never moved
+-/// on. A Pause or Leave before the Close was durable keeps the existing
+-/// rule (no credit) — a separate policy case, flagged, not extended here.
++/// on. A Pause or Leave before the Close was durable is decided by the R8.2
++/// final Plan lifecycle policy (founder directive, 2026-11-06; see
++/// r82_lifecycle_policy_test.dart): a Pause after the Start keeps the
++/// credit; a Leave before the Close does not.
+ void main() {
+   final day1 = DateTime(2026, 10, 12, 9);
+   late R8Harness h;
+@@ -281,9 +283,13 @@
+     expect(await creditsOnDisk(id), isEmpty);
+   });
+ 
+-  group('not extended (separate policy case, flagged for the founder)', () {
+-    test('Pause BEFORE the Close: the existing rule stands — a Circle '
+-        'closed after its Plan was paused earns no credit', () async {
++  // Founder directive 2026-11-06 (R8.2 final Plan lifecycle policy) decides
++  // the case this group held open: a stage Circle started before its Plan
++  // was paused keeps its credit once its Close is durable. The scenarios
++  // are unchanged; their expectations follow the decision.
++  group('Pause before the Close (decided: R8.2 lifecycle policy)', () {
++    test('Pause BEFORE the Close: the Circle started before the Pause is '
++        'credited once its Close is durable; the Plan stays paused', () async {
+       final c = h.open();
+       plans(c).start('getting_going');
+       today(
+@@ -299,13 +305,16 @@
+       today(c).close();
+       await R8Harness.settle();
+       expect((await h.disk.stored())[recommendationStatusKey], 'closed');
+-      expect(await creditsOnDisk(id), isEmpty);
++      expect(await creditsOnDisk(id), hasLength(1));
++      expect((await planOnDisk())['lifecycle'], 'paused');
+       await restarts(2);
+-      expect(await creditsOnDisk(id), isEmpty);
++      expect(await creditsOnDisk(id), hasLength(1));
++      expect((await planOnDisk())['lifecycle'], 'paused');
+     });
+ 
+-    test('Pause while the Close is still being written to History: the '
+-        'Close was not durable before the Pause, so it is not folded in', () async {
++    test('Pause while the Close is still being written to History: not '
++        'folded into the Pause (the Close was not durable yet), but credited '
++        'once the Close lands — the Start came before the Pause', () async {
+       final c = h.open();
+       plans(c).start('getting_going');
+       today(
+@@ -321,10 +330,11 @@
+       await journal.reached;
+       plans(c).pause('getting_going');
+       await R8Harness.settle();
++      expect(await creditsOnDisk(id), isEmpty, reason: 'Close not durable');
+       journal.release();
+       await R8Harness.settle();
+       expect((await planOnDisk())['lifecycle'], 'paused');
+-      expect(await creditsOnDisk(id), isEmpty);
++      expect(await creditsOnDisk(id), hasLength(1));
+     });
+   });
+ }

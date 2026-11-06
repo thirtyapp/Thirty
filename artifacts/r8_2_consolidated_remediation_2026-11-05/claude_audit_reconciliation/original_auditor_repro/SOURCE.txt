@@ -1,0 +1,1 @@
+Source: /c/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/e4b19f92-1134-47df-8c24-0945b6f2d6ba/scratchpad/repro/test/zz_audit (the auditor's scratch folder named in report §5). Copied unchanged as *.dart.txt so flutter analyze ignores them. Each copy's SHA-256 equals its original's.

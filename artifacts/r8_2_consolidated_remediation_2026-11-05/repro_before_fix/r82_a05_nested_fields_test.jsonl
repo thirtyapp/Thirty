@@ -1,0 +1,103 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 99.0.0 (111.0.0 available)
+  analyzer 12.1.0 (14.7.0 available)
+  app_links 7.2.1 (7.2.2 available)
+  app_links_linux 1.0.3 (1.0.4 available)
+  app_links_web 1.0.4 (1.0.5 available)
+  clock 1.1.2 (1.1.3 available)
+  coverage 1.15.1 (1.16.0 available)
+  crypto 3.0.7 (3.0.8 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  equatable 2.1.0 (3.0.0 available)
+  flutter_local_notifications 22.3.0 (22.3.3 available)
+  flutter_local_notifications_linux 8.0.1 (8.0.2 available)
+  flutter_riverpod 3.4.2 (3.4.3 available)
+  flutter_svg 2.3.0 (2.3.2 available)
+  flutter_timezone 5.1.0 (5.1.1 available)
+  frontend_server_client 4.0.0 (4.2.0 available)
+  functions_client 2.6.4 (2.7.1 available)
+  glob 2.1.3 (2.2.0 available)
+  go_router 17.3.0 (18.1.2 available)
+  gotrue 2.26.0 (2.27.3 available)
+  http_multi_server 3.2.2 (3.2.3 available)
+  io 1.0.5 (1.1.0 available)
+  listen 1.0.0-beta.4 (1.0.1 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.0 (1.19.0 available)
+  mime 2.0.0 (2.1.0 available)
+  package_config 2.2.0 (3.0.0 available)
+  passkeys_platform_interface 2.9.0 (2.11.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pool 1.5.2 (1.5.3 available)
+  postgrest 2.8.0 (2.9.1 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  purchases_flutter 10.11.0 (11.0.0 available)
+  realtime_client 2.11.0 (2.13.2 available)
+  riverpod 3.4.2 (3.4.3 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.5.4 available)
+  shared_preferences_foundation 2.5.6 (2.6.1 available)
+  shelf 1.4.2 (1.4.3 available)
+  shelf_static 1.1.3 (1.2.0 available)
+  source_maps 0.10.13 (0.10.14 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  storage_client 2.6.0 (2.8.1 available)
+  supabase 2.14.0 (2.16.5 available)
+  supabase_flutter 2.16.0 (2.18.3 available)
+  test 1.31.0 (1.33.0 available)
+  test_api 0.7.11 (0.7.15 available)
+  test_core 0.6.17 (0.6.21 available)
+  timezone 0.11.1 (0.11.2 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_graphics 1.2.3 (1.2.6 available)
+  vector_graphics_compiler 1.3.0 (1.3.4 available)
+  vector_math 2.2.0 (2.4.4 available)
+  vm_service 15.2.0 (15.4.0 available)
+  web 1.1.1 (1.1.2 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+65 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+{"protocolVersion":"0.1.1","runnerVersion":"1.31.0","pid":17832,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"count":1,"time":3,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":1704}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":8,"line":null,"column":null,"url":null},"type":"group","time":1706}
+{"group":{"id":3,"suiteID":0,"parentID":2,"name":"Suggestion Preferences — readable entries keep their own fields","metadata":{"skip":false,"skipReason":null},"testCount":2,"line":42,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart"},"type":"group","time":1707}
+{"test":{"id":4,"name":"Suggestion Preferences — readable entries keep their own fields A05 as reported — another part left out: the first entry keeps futureRule; so do the other lists, through two more saves and restarts","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":82,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart"},"type":"testStart","time":1707}
+{"testID":4,"error":"Expected: {\n            'elementId': 'openWindow',\n            'since': '2026-10-01T09:00:00.000+02:00',\n            'futureRule': {'keep': true}\n          }\n  Actual: {'elementId': 'openWindow', 'since': '2026-10-01T07:00:00.000Z'}\n   Which: has different length and is missing map key 'futureRule'\n","stackTrace":"package:matcher                                         expect\npackage:flutter_test/src/widget_tester.dart 473:18      expect\ntest\\features\\r82\\r82_a05_nested_fields_test.dart 72:7  main.<fn>.exactlyKept\n","isFailure":true,"type":"error","time":1772}
+{"testID":4,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1772}
+{"test":{"id":5,"name":"Suggestion Preferences — readable entries keep their own fields a malformed date is not read as a date: the entry is kept as stored and never applied","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":109,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart"},"type":"testStart","time":1772}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1777}
+{"group":{"id":6,"suiteID":0,"parentID":2,"name":"Plans — the last served record","metadata":{"skip":false,"skipReason":null},"testCount":5,"line":133,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart"},"type":"group","time":1778}
+{"test":{"id":7,"name":"Plans — the last served record A05 as reported — unknown fields of a valid last served record survive an unrelated Plan save and restarts","suiteID":0,"groupIDs":[2,6],"metadata":{"skip":false,"skipReason":null},"line":159,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart"},"type":"testStart","time":1778}
+{"testID":7,"error":"Expected: {\n            'circleId': '2026-10-29',\n            'stage': {\n              'planId': 'getting_going',\n              'cycleId': 'getting_going#1',\n              'stageNumber': 1,\n              'stageId': 'getting_going.1',\n              'futureStageField': 7\n            },\n            'futureServedField': 'kept'\n          }\n  Actual: {\n            'circleId': '2026-10-29',\n            'stage': {\n              'planId': 'getting_going',\n              'cycleId': 'getting_going#1',\n              'stageNumber': 1,\n              'stageId': 'getting_going.1'\n            }\n          }\n   Which: has different length and is missing map key 'futureServedField'\n","stackTrace":"package:matcher                                          expect\npackage:flutter_test/src/widget_tester.dart 473:18       expect\ntest\\features\\r82\\r82_a05_nested_fields_test.dart 168:7  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1795}
+{"testID":7,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1796}
+{"test":{"id":8,"name":"Plans — the last served record a malformed startedAfterExpiry (true) is never read as \"started under Premium\": no guided credit after a lapse, and it is written back as stored","suiteID":0,"groupIDs":[2,6],"metadata":{"skip":false,"skipReason":null},"line":178,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart"},"type":"testStart","time":1796}
+{"testID":8,"error":"Expected: false\n  Actual: <true>\na damaged flag coerced to a credit-earning default\n","stackTrace":"package:matcher                                          expect\npackage:flutter_test/src/widget_tester.dart 473:18       expect\ntest\\features\\r82\\r82_a05_nested_fields_test.dart 190:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1804}
+{"testID":8,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1804}
+{"test":{"id":9,"name":"Plans — the last served record a malformed startedAfterExpiry (1) is never read as \"started under Premium\": no guided credit after a lapse, and it is written back as stored","suiteID":0,"groupIDs":[2,6],"metadata":{"skip":false,"skipReason":null},"line":178,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart"},"type":"testStart","time":1805}
+{"testID":9,"error":"Expected: false\n  Actual: <true>\na damaged flag coerced to a credit-earning default\n","stackTrace":"package:matcher                                          expect\npackage:flutter_test/src/widget_tester.dart 473:18       expect\ntest\\features\\r82\\r82_a05_nested_fields_test.dart 190:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1813}
+{"testID":9,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1813}
+{"test":{"id":10,"name":"Plans — the last served record a malformed startedAfterExpiry (yes) is never read as \"started under Premium\": no guided credit after a lapse, and it is written back as stored","suiteID":0,"groupIDs":[2,6],"metadata":{"skip":false,"skipReason":null},"line":178,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart"},"type":"testStart","time":1813}
+{"testID":10,"error":"Expected: false\n  Actual: <true>\na damaged flag coerced to a credit-earning default\n","stackTrace":"package:matcher                                          expect\npackage:flutter_test/src/widget_tester.dart 473:18       expect\ntest\\features\\r82\\r82_a05_nested_fields_test.dart 190:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1819}
+{"testID":10,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1820}
+{"test":{"id":11,"name":"Plans — the last served record a malformed revisit flag in the served stage is not read as \"no revisit\"","suiteID":0,"groupIDs":[2,6],"metadata":{"skip":false,"skipReason":null},"line":203,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart"},"type":"testStart","time":1820}
+{"testID":11,"error":"Expected: false\n  Actual: <true>\n","stackTrace":"package:matcher                                          expect\npackage:flutter_test/src/widget_tester.dart 473:18       expect\ntest\\features\\r82\\r82_a05_nested_fields_test.dart 218:7  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1826}
+{"testID":11,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1826}
+{"group":{"id":12,"suiteID":0,"parentID":2,"name":"Insights — accepted snapshots keep nested values","metadata":{"skip":false,"skipReason":null},"testCount":1,"line":223,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart"},"type":"group","time":1827}
+{"test":{"id":13,"name":"Insights — accepted snapshots keep nested values A05 as reported — an object-valued fact, a non-text evidence item and unknown fields on a snapshot and its application survive an unrelated dismissal and restarts","suiteID":0,"groupIDs":[2,12],"metadata":{"skip":false,"skipReason":null},"line":268,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a05_nested_fields_test.dart"},"type":"testStart","time":1827}
+{"testID":13,"error":"Expected: {\n            'id': 'insight.useful_in_common@2026-10-30#insight.useful_in_common:clearerHead:writing',\n            'family': 'insight.useful_in_common',\n            'generatedOn': '2026-10-30',\n            'wordingVersion': 1,\n            'text': 'Writing was part of 4 of the 4 Clearer Head Circles you called useful, and 0 of the 3 other Clearer Head Circles in that time.',\n            'facts': {\n              'need': 'clearerHead',\n              'kind': 'writing',\n              'inUseful': 4,\n              'useful': 4,\n              'inOther': 0,\n              'other': 3,\n              'circleId': '2026-10-29',\n              'futureFact': {'nested': 1}\n            },\n            'evidence': [\n              '2026-10-10',\n              '2026-10-14',\n              '2026-10-17',\n              '2026-10-21',\n              '2026-10-23',\n              '2026-10-27',\n              '2026-10-29',\n              42\n            ],\n            'subject': 'insight.useful_in_common:clearerHead:writing',\n            'application': {'kind': 'keep', 'circleId': '2026-10-29', 'futureApplicationField': 'x'},\n            'futureSnapshotField': true\n          }\n  Actual: {\n            'id': 'insight.useful_in_common@2026-10-30#insight.useful_in_common:clearerHead:writing',\n            'family': 'insight.useful_in_common',\n            'generatedOn': '2026-10-30',\n            'wordingVersion': 1,\n            'text': 'Writing was part of 4 of the 4 Clearer Head Circles you called useful, and 0 of the 3 other Clearer Head Circles in that time.',\n            'facts': {\n              'need': 'clearerHead',\n              'kind': 'writing',\n              'inUseful': 4,\n              'useful': 4,\n              'inOther': 0,\n              'other': 3,\n              'circleId': '2026-10-29'\n            },\n            'evidence': [\n              '2026-10-10',\n              '2026-10-14',\n              '2026-10-17',\n              '2026-10-21',\n              '2026-10-23',\n              '2026-10-27',\n              '2026-10-29'\n            ],\n            'subject': 'insight.useful_in_common:clearerHead:writing',\n            'application': {'kind': 'keep', 'circleId': '2026-10-29'}\n          }\n   Which: has different length and is missing map key 'futureSnapshotField'\nnested values dropped\n","stackTrace":"package:matcher                                          expect\npackage:flutter_test/src/widget_tester.dart 473:18       expect\ntest\\features\\r82\\r82_a05_nested_fields_test.dart 308:7  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1862}
+{"testID":13,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1862}
+{"success":false,"type":"done","time":1887}

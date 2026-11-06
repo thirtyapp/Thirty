@@ -107,10 +107,7 @@ class CircleHistoryDeletion {
   /// While pending, no new Circle begins (audit remediation R3, founder
   /// decision): it would be erased when the deletion is finished.
   bool get isPending =>
-      (_ref
-              .read(sharedPreferencesProvider)
-              .getBool(historyDeletionPendingKey) ??
-          false) &&
+      _deletionRecorded(_ref.read(sharedPreferencesProvider)) &&
       !_ref.read(historyWriteGateProvider).isDeleting;
 
   /// Finishes a pending deletion, if there is one, before a new Circle
@@ -176,6 +173,9 @@ class CircleHistoryDeletion {
     }
     final stale = gate._begin();
     try {
+      // R8.2 (Astra R81-A07): no History write begun before counts as
+      // confirmed History any more.
+      _ref.read(journalWritesProvider).forget();
       final firstPass = _clearRecordedCircles(prefs);
       final evidence = plans.forgetStageEvidence();
       final snapshots = insights.forgetAll();
@@ -190,10 +190,21 @@ class CircleHistoryDeletion {
         snapshots,
         preservations.settledAll(),
       ]);
+      // R8.2 (Astra R81-A02, Claude NEW-2): every Plans and Insights save
+      // queued meanwhile has landed or failed before the last pass, so
+      // none is still able to write after a deletion reported done — and
+      // the last pass removes the Insights again, with anything such a
+      // save put back.
+      await _all([plans.idle(), insights.idle()]);
       await _all([
         _clearRecordedCircles(prefs),
-        for (final key in [circlePlansUnreadableKey, insightsUnreadableKey])
-          writeConfirmed(prefs, key, null, restoreOnFailure: false),
+        insights.forgetAll(),
+        writeConfirmed(
+          prefs,
+          circlePlansUnreadableKey,
+          null,
+          restoreOnFailure: false,
+        ),
       ]);
       await writeConfirmed(prefs, historyDeletionPendingKey, null);
     } catch (_) {
@@ -255,9 +266,13 @@ Future<void> _all(List<Future<void>> steps) async {
 /// marker goes last, only when all of them were confirmed (audit remediation
 /// R8: a removal that throws or returns `false` is a failure), and otherwise
 /// this completes with the error. Safe to repeat.
+///
+/// R8.2 (Astra R81-A09): every stored value is read as whatever native type
+/// it is, so a value of the wrong type never stops the app from starting.
+/// A marker that isn't THIRTY's own `true` records no deletion.
 Future<void> completeInterruptedHistoryDeletion(SharedPreferences prefs) async {
-  if (!(prefs.getBool(historyDeletionPendingKey) ?? false)) return;
-  final rawPlans = prefs.getString(circlePlansKey);
+  if (!_deletionRecorded(prefs)) return;
+  final rawPlans = prefs.get(circlePlansKey);
   await _all([
     _clearRecordedCircles(prefs),
     if (rawPlans != null)
@@ -265,7 +280,8 @@ Future<void> completeInterruptedHistoryDeletion(SharedPreferences prefs) async {
         prefs,
         circlePlansKey,
         jsonEncode(
-          (_plansFrom(rawPlans) ?? CirclePlansState.empty)
+          ((rawPlans is String ? _plansFrom(rawPlans) : null) ??
+                  CirclePlansState.empty)
               .forgetStageEvidence()
               .toJson(),
         ),
@@ -280,6 +296,10 @@ Future<void> completeInterruptedHistoryDeletion(SharedPreferences prefs) async {
   ]);
   await writeConfirmed(prefs, historyDeletionPendingKey, null);
 }
+
+/// Whether a Delete Circle history is recorded as pending.
+bool _deletionRecorded(SharedPreferences prefs) =>
+    prefs.get(historyDeletionPendingKey) == true;
 
 CirclePlansState? _plansFrom(String raw) {
   try {

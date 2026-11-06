@@ -1,0 +1,28 @@
+1c1
+< """(Copied unchanged from founder_decisions/regression_final/run_batches.py except OUT, for the Claude post-R8.1 report reconciliation run, 2026-11-06.)
+---
+> """(Copied unchanged from founder_decisions/regression_final/run_batches.py except OUT, for the R8.2 final Plan lifecycle policy run, 2026-11-06.)
+29,33c29,33
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final/run_batches.py plan
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final/run_batches.py run <batch-number>
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final/run_batches.py runpart <batch-number> <label>
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final/run_batches.py report
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final/run_batches.py cases
+---
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_final/run_batches.py plan
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_final/run_batches.py run <batch-number>
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_final/run_batches.py runpart <batch-number> <label>
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_final/run_batches.py report
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_final/run_batches.py cases
+42c42
+< OUT = os.path.join('artifacts', 'r8_2_consolidated_remediation_2026-11-05', 'claude_audit_reconciliation', 'regression_final')
+---
+> OUT = os.path.join('artifacts', 'r8_2_consolidated_remediation_2026-11-05', 'lifecycle_policy', 'regression_final')
+2c2
+< # R8.2 Claude post-R8.1 report reconciliation full regression driver: sequential batches (one flutter process at a
+---
+> # R8.2 R8.2 final Plan lifecycle policy full regression driver: sequential batches (one flutter process at a
+6c6
+< OUT=artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final
+---
+> OUT=artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_final

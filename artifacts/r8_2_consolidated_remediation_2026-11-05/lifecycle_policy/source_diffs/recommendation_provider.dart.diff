@@ -1,0 +1,72 @@
+--- artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/baseline_pre_fix/lib/features/home/application/recommendation_provider.dart.txt	2026-11-06 10:30:34.616516000 +0100
++++ lib/features/home/application/recommendation_provider.dart	2026-11-06 10:34:46.201310600 +0100
+@@ -1035,11 +1035,13 @@
+             _offerIdentity(shown) != identity,
+       );
+     }
++    _notePlanActions(restored);
+     _mirrorInJournal(restored);
+     // Audit remediation R3: a session of an earlier day, still the one
+     // stored (a Close just before midnight, cut short), catches up too —
+     // under its own day, never as today's.
+     if (_earlierSession(prefs, today) case final earlier?) {
++      _notePlanActions(earlier);
+       _mirrorInJournal(earlier);
+       // Audit remediation R8 (Astra R7-A08, Claude F-1): yesterday's Circle
+       // still under way — running, or closed after midnight with its
+@@ -1091,9 +1093,31 @@
+           on: recommendation.circleId,
+           parts: composed!.plan.toWire(),
+           skipped: [for (final e in closed.skipped) e.name],
++          startedAt: closed.startedAt,
++          closedAt: closed.closedAt,
+         );
+   }
+ 
++  /// R8.2 Plan lifecycle policy (founder directive, 2026-11-06): tells the
++  /// Plans the moment the user started, or asked to close, a stage Circle
++  /// ([CirclePlansNotifier.noteStarted],
++  /// [CirclePlansNotifier.noteCloseRequested]) — at the action itself, or
++  /// as restored after a restart — so a later Pause or Leave keeps the
++  /// actual order of the two, however slow storage is.
++  void _notePlanActions(RecommendationState session) {
++    final circleId = session.recommendation?.circleId;
++    if (circleId == null || session.recommendation?.composed?.stage == null) {
++      return;
++    }
++    final plans = ref.read(circlePlansProvider.notifier);
++    if (session.startedAt case final at?) plans.noteStarted(circleId, at);
++    if (session.status == RecommendationStatus.closed) {
++      if (session.closedAt case final at?) {
++        plans.noteCloseRequested(circleId, at);
++      }
++    }
++  }
++
+   /// Whether a Delete Circle history that didn't finish is still waiting
+   /// to be: no new Circle begins until it is (audit remediation R3).
+   bool get _historyDeletionPending =>
+@@ -1770,6 +1794,7 @@
+       status: RecommendationStatus.started,
+       startedAt: startedAt,
+     );
++    _notePlanActions(state);
+     final snapshot = state;
+     _enqueue((epoch) async {
+       // Audit remediation R8: a Start whose Plans evidence wasn't confirmed
+@@ -1869,6 +1894,7 @@
+         status: RecommendationStatus.started,
+         startedAt: ref.read(eventClockProvider)(),
+       );
++      _notePlanActions(state);
+       final snapshot = state;
+       ref
+           .read(analyticsServiceProvider)
+@@ -2090,6 +2116,7 @@
+       status: RecommendationStatus.closed,
+       closedAt: closedAt,
+     );
++    _notePlanActions(state);
+     final snapshot = state;
+     // ADR-024 B3: a stage Circle started and now closed in THIRTY is
+     // *guided* — never "done". The Plan moves on once for this Circle.

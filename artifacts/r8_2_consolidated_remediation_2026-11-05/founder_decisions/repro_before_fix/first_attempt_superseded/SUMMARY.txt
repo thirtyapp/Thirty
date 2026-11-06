@@ -1,0 +1,36 @@
+r82_decision_a_historical_credit_test.jsonl: 5 passed, 13 failed
+  FAIL  throws: paused — the Close was durable before the Pause: the credit lands with the Pause, on the original cycle and Circle, and the Plan stays paused
+        Expected: an object with length of <1>
+  FAIL  throws: left — the credit lands with the Leave on the cycle that was left; no new cycle, nothing reactivated
+        Expected: an object with length of <1>
+  FAIL  throws: left, then gone through again: the credit stays on the original cycle and the new cycle starts at stage 1 with nothing recorded
+        Expected: ['2026-10-12']
+  FAIL  throws: restarted — the app restarts with the credit still refused, then the Plan is paused: the credit lands with the Pause
+        Expected: an object with length of <1>
+  FAIL  throws: lapsed — Premium ended after the Close: the Circle served and started under Premium keeps its credit through the Pause
+        Expected: an object with length of <1>
+  FAIL  throws: repeated restarts after the Pause: exactly one credit, the Plan never reactivated, the next cycle never advanced
+        Expected: an object with length of <1>
+  FAIL  returnsFalse: paused — the Close was durable before the Pause: the credit lands with the Pause, on the original cycle and Circle, and the Plan stays paused
+        Expected: an object with length of <1>
+  FAIL  returnsFalse: left — the credit lands with the Leave on the cycle that was left; no new cycle, nothing reactivated
+        Expected: an object with length of <1>
+  FAIL  returnsFalse: left, then gone through again: the credit stays on the original cycle and the new cycle starts at stage 1 with nothing recorded
+        Expected: ['2026-10-12']
+  FAIL  returnsFalse: restarted — the app restarts with the credit still refused, then the Plan is paused: the credit lands with the Pause
+        Expected: an object with length of <1>
+  FAIL  returnsFalse: lapsed — Premium ended after the Close: the Circle served and started under Premium keeps its credit through the Pause
+        Expected: an object with length of <1>
+  FAIL  returnsFalse: repeated restarts after the Pause: exactly one credit, the Plan never reactivated, the next cycle never advanced
+        Expected: an object with length of <1>
+  FAIL  starting another Plan pauses this one: the earned credit lands with it
+        Expected: an object with length of <1>
+  PASS  the Pause that folds the credit in is refused too: both are taken back; the next start credits the still-active Plan, once
+  PASS  no duplicate — the credit already durable: the Pause adds nothing
+  PASS  Premium rules kept — a Circle started only after a verified expiry earns no credit through a later Pause either
+  PASS  not extended (separate policy case, flagged for the founder) Pause BEFORE the Close: the existing rule stands — a Circle closed after its Plan was paused earns no credit
+  PASS  not extended (separate policy case, flagged for the founder) Pause while the Close is still being written to History: the Close was not durable before the Pause, so it is not folded in
+r82_decision_b_start_persistence_test.jsonl: 0 passed, 0 failed, LOAD ERRORS: ['loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/pre_decisions_tree/test/features/r82/r82_decision_b_start_persistence_test.dart']
+r82_decision_c_insight_provenance_test.jsonl: 0 passed, 0 failed, LOAD ERRORS: ['loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/pre_decisions_tree/test/features/r82/r82_decision_c_insight_provenance_test.dart']
+
+TOTAL: 18 tests, 5 passed, 13 failed

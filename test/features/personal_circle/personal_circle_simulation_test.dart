@@ -210,6 +210,7 @@ class Simulation {
           continue;
         }
         notifier.start();
+        await _settle();
         // Skips and leave-outs, as this user would.
         final plan = r.composed?.plan;
         if (plan != null) {

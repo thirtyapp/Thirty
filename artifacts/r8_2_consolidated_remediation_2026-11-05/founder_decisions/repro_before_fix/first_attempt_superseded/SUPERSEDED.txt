@@ -1,0 +1,9 @@
+Superseded first failing-before attempt (2026-11-06).
+
+Decision A ran (5 passed, 13 failed). The Decision B and C test files did not
+compile against the pre-decision baseline: they named new API
+(UserStore.todaysCircle, CirclePlansState.withAppliedInsight), so these logs
+show load errors, not test results. Both files were then rewritten to use
+only API present in both trees (the store by its name; provenance as raw
+JSON), with the same assertions, and re-run. The definitive results are in
+the parent folder.

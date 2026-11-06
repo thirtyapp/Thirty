@@ -1,0 +1,8 @@
+SUPERSEDED as final R8.2 verification (label added 2026-11-06, before the R8.2 commit).
+This run: R8.2 remediation regression, 2026-11-05 20:58-21:47, 188/188 files, 2,702/0/0 (before founder decisions A-C).
+It was complete and valid for the tree it ran on, which later changed.
+Definitive full regression of the committed tree: ../lifecycle_policy/regression_rerun/
+(193/193 files, 2,774 passed, 0 failed, 0 skipped; EVIDENCE OK; CASES OK).
+Committed here as a short record: the batch summaries, run/report/cases
+output, fingerprints, manifest and runner. Its raw batch_*.jsonl reporter
+logs are kept in the local working tree only, not committed.

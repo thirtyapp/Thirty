@@ -60,6 +60,7 @@ void main() {
     final today = c.read(recommendationProvider.notifier);
     today.chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
     today.start();
+    await tester.pumpAndSettle();
     today.close();
     await tester.pumpAndSettle();
     expect(c.read(circleJournalRepositoryProvider).readAll(), hasLength(1));

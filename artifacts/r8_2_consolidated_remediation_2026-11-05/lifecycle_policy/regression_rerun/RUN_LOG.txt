@@ -1,0 +1,27 @@
+start 2026-11-06T12:50:26+01:00 driver pid 2552
+batch 1: exit 0, 76 passed, 0 failed, 0 skipped, 12/12 files, 38 s, done=True
+batch 2: exit 0, 99 passed, 0 failed, 0 skipped, 12/12 files, 35 s, done=True
+batch 3: exit 0, 121 passed, 0 failed, 0 skipped, 12/12 files, 54 s, done=True
+batch 4: exit 0, 157 passed, 0 failed, 0 skipped, 12/12 files, 20 s, done=True
+batch 5: exit 0, 88 passed, 0 failed, 0 skipped, 12/12 files, 11 s, done=True
+batch 6: exit 0, 226 passed, 0 failed, 0 skipped, 12/12 files, 42 s, done=True
+batch 7: exit 0, 241 passed, 0 failed, 0 skipped, 12/12 files, 32 s, done=True
+batch 8: exit 0, 154 passed, 0 failed, 0 skipped, 12/12 files, 23 s, done=True
+batch 9: exit 0, 164 passed, 0 failed, 0 skipped, 12/12 files, 24 s, done=True
+batch 10: exit 0, 267 passed, 0 failed, 0 skipped, 12/12 files, 19 s, done=True
+batch 11: exit 0, 187 passed, 0 failed, 0 skipped, 12/12 files, 27 s, done=True
+batch 12: exit 0, 282 passed, 0 failed, 0 skipped, 12/12 files, 30 s, done=True
+batch 13: exit 0, 159 passed, 0 failed, 0 skipped, 12/12 files, 15 s, done=True
+batch 14: exit 0, 142 passed, 0 failed, 0 skipped, 12/12 files, 14 s, done=True
+batch 15: exit 0, 176 passed, 0 failed, 0 skipped, 12/12 files, 13 s, done=True
+batch 16: exit 0, 216 passed, 0 failed, 0 skipped, 11/11 files, 29 s, done=True
+batch 17: exit 0, 6 passed, 0 failed, 0 skipped, 1/1 files, 321 s, done=True
+batch 18a: exit 0, 3 passed, 0 failed, 0 skipped, 1/1 files, 285 s, done=True
+batch 18b: exit 0, 3 passed, 0 failed, 0 skipped, 1/1 files, 310 s, done=True
+batch 18c: exit 0, 3 passed, 0 failed, 0 skipped, 1/1 files, 258 s, done=True
+batch 18d: exit 0, 2 passed, 0 failed, 0 skipped, 1/1 files, 165 s, done=True
+batch 18e: exit 0, 2 passed, 0 failed, 0 skipped, 1/1 files, 171 s, done=True
+report exit 0
+cases exit 0
+fingerprints identical
+end 2026-11-06T13:23:09+01:00

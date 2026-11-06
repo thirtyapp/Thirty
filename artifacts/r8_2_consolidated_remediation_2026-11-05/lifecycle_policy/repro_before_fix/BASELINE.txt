@@ -1,0 +1,1 @@
+Run on the unchanged R8.2 tree (fingerprint = claude_audit_reconciliation/regression_final/SOURCE_FINGERPRINT_end.sha256) plus this one new test file, 2026-11-06T10:30:34+01:00.

@@ -1,0 +1,6 @@
+R8.2 failing-before run — lib/ checked against the R8.1 commit e935112c
+HEAD: e935112c408c16d99835280f4e1fafd722d47ed1
+lib/ content diff vs HEAD (blob hashes):
+  (none listed = lib/ identical to R8.1)
+untracked lib files: 0
+date: 2026-11-05T20:32:50+01:00

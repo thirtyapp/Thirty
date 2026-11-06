@@ -1,0 +1,248 @@
+{
+ "r82_decision_a_historical_credit_test.jsonl": {
+  "passed": 5,
+  "failed": 13,
+  "load_errors": [],
+  "tests": [
+   {
+    "name": "throws: paused — the Close was durable before the Pause: the credit lands with the Pause, on the original cycle and Circle, and the Plan stays paused",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "throws: left — the credit lands with the Leave on the cycle that was left; no new cycle, nothing reactivated",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "throws: left, then gone through again: the credit stays on the original cycle and the new cycle starts at stage 1 with nothing recorded",
+    "result": "failure",
+    "error": "Expected: ['2026-10-12']"
+   },
+   {
+    "name": "throws: restarted — the app restarts with the credit still refused, then the Plan is paused: the credit lands with the Pause",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "throws: lapsed — Premium ended after the Close: the Circle served and started under Premium keeps its credit through the Pause",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "throws: repeated restarts after the Pause: exactly one credit, the Plan never reactivated, the next cycle never advanced",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "returnsFalse: paused — the Close was durable before the Pause: the credit lands with the Pause, on the original cycle and Circle, and the Plan stays paused",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "returnsFalse: left — the credit lands with the Leave on the cycle that was left; no new cycle, nothing reactivated",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "returnsFalse: left, then gone through again: the credit stays on the original cycle and the new cycle starts at stage 1 with nothing recorded",
+    "result": "failure",
+    "error": "Expected: ['2026-10-12']"
+   },
+   {
+    "name": "returnsFalse: restarted — the app restarts with the credit still refused, then the Plan is paused: the credit lands with the Pause",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "returnsFalse: lapsed — Premium ended after the Close: the Circle served and started under Premium keeps its credit through the Pause",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "returnsFalse: repeated restarts after the Pause: exactly one credit, the Plan never reactivated, the next cycle never advanced",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "starting another Plan pauses this one: the earned credit lands with it",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "the Pause that folds the credit in is refused too: both are taken back; the next start credits the still-active Plan, once",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "no duplicate — the credit already durable: the Pause adds nothing",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "Premium rules kept — a Circle started only after a verified expiry earns no credit through a later Pause either",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "not extended (separate policy case, flagged for the founder) Pause BEFORE the Close: the existing rule stands — a Circle closed after its Plan was paused earns no credit",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "not extended (separate policy case, flagged for the founder) Pause while the Close is still being written to History: the Close was not durable before the Pause, so it is not folded in",
+    "result": "success",
+    "error": ""
+   }
+  ]
+ },
+ "r82_decision_b_start_persistence_test.jsonl": {
+  "passed": 6,
+  "failed": 8,
+  "load_errors": [],
+  "tests": [
+   {
+    "name": "pending writes Start tapped while the offer is still being saved: not started until the store confirms it, then started and saved",
+    "result": "failure",
+    "error": "Expected: RecommendationStatus:<RecommendationStatus.notStarted>"
+   },
+   {
+    "name": "pending writes a stage Circle tapped while its Plan save is pending: started only once the served stage is on disk",
+    "result": "failure",
+    "error": "Expected: RecommendationStatus:<RecommendationStatus.notStarted>"
+   },
+   {
+    "name": "pending writes fast repeated taps while pending start the Circle once",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "throws: the offer was never saved: Start is refused with the user told, nothing is recorded; tapped again once the store heals, it starts and saves",
+    "result": "failure",
+    "error": "Expected: RecommendationStatus:<RecommendationStatus.notStarted>"
+   },
+   {
+    "name": "throws: the pending offer write fails while Start waits: the Start is refused, never started",
+    "result": "failure",
+    "error": "Expected: RecommendationStatus:<RecommendationStatus.notStarted>"
+   },
+   {
+    "name": "throws: a stage Circle whose Start record the Plans store refuses (a verified expiry since it was served): refused, then started on the retry with its record saved first",
+    "result": "failure",
+    "error": "Expected: RecommendationStatus:<RecommendationStatus.notStarted>"
+   },
+   {
+    "name": "throws: restart after a refused Start: nothing was started, and the offer on disk starts normally",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "throws: a Plan action after a confirmed Start fails: the started Circle stays, closes and is saved; its credit catches up later",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "returnsFalse: the offer was never saved: Start is refused with the user told, nothing is recorded; tapped again once the store heals, it starts and saves",
+    "result": "failure",
+    "error": "Expected: RecommendationStatus:<RecommendationStatus.notStarted>"
+   },
+   {
+    "name": "returnsFalse: the pending offer write fails while Start waits: the Start is refused, never started",
+    "result": "failure",
+    "error": "Expected: RecommendationStatus:<RecommendationStatus.notStarted>"
+   },
+   {
+    "name": "returnsFalse: a stage Circle whose Start record the Plans store refuses (a verified expiry since it was served): refused, then started on the retry with its record saved first",
+    "result": "failure",
+    "error": "Expected: RecommendationStatus:<RecommendationStatus.notStarted>"
+   },
+   {
+    "name": "returnsFalse: restart after a refused Start: nothing was started, and the offer on disk starts normally",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "returnsFalse: a Plan action after a confirmed Start fails: the started Circle stays, closes and is saved; its credit catches up later",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "a Free Circle whose offer is already saved starts at once",
+    "result": "success",
+    "error": ""
+   }
+  ]
+ },
+ "r82_decision_c_insight_provenance_test.jsonl": {
+  "passed": 4,
+  "failed": 9,
+  "load_errors": [],
+  "tests": [
+   {
+    "name": "a change made some other way is never claimed I1 — the app stopped while the Insight's Plan change was being written; the user then started the Plan themselves: the retry reports it not available and records nothing",
+    "result": "failure",
+    "error": "Expected: not InsightActionResult:<InsightActionResult.done>"
+   },
+   {
+    "name": "a change made some other way is never claimed I3 — the app stopped while the Insight's left-out part was being written; the user then left the part out from a skip: never claimed",
+    "result": "failure",
+    "error": "Expected: not InsightActionResult:<InsightActionResult.done>"
+   },
+   {
+    "name": "a change made some other way is never claimed I1 — provenance naming another Insight attributes nothing",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "a change made some other way is never claimed I2 — provenance for another cycle attributes nothing",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "the Insight's own change is recognized, never repeated I1 — residual: the Insights store refuses every write (throws); the change lands with its provenance; after a restart the retry records the mark and changes nothing",
+    "result": "failure",
+    "error": "Expected: contains 'insight.plan_for_need@2026-10-30#insight.plan_for_need:clearerHead'"
+   },
+   {
+    "name": "the Insight's own change is recognized, never repeated I1 — residual: the Insights store refuses every write (returnsFalse); the change lands with its provenance; after a restart the retry records the mark and changes nothing",
+    "result": "failure",
+    "error": "Expected: contains 'insight.plan_for_need@2026-10-30#insight.plan_for_need:clearerHead'"
+   },
+   {
+    "name": "the Insight's own change is recognized, never repeated I2 — residual: the Insights store refuses every write (throws); the change lands with its provenance; after a restart the retry records the mark and changes nothing",
+    "result": "failure",
+    "error": "Expected: contains 'insight.plan_pacing@2026-10-30#insight.plan_pacing:getting_going'"
+   },
+   {
+    "name": "the Insight's own change is recognized, never repeated I2 — residual: the Insights store refuses every write (returnsFalse); the change lands with its provenance; after a restart the retry records the mark and changes nothing",
+    "result": "failure",
+    "error": "Expected: contains 'insight.plan_pacing@2026-10-30#insight.plan_pacing:getting_going'"
+   },
+   {
+    "name": "the Insight's own change is recognized, never repeated I3 — residual: the Insights store refuses every write (throws); the change lands with its provenance; after a restart the retry records the mark and changes nothing",
+    "result": "failure",
+    "error": "Expected: contains 'insight.skipped_part@2026-10-30#insight.skipped_part:openWindow'"
+   },
+   {
+    "name": "the Insight's own change is recognized, never repeated I3 — residual: the Insights store refuses every write (returnsFalse); the change lands with its provenance; after a restart the retry records the mark and changes nothing",
+    "result": "failure",
+    "error": "Expected: contains 'insight.skipped_part@2026-10-30#insight.skipped_part:openWindow'"
+   },
+   {
+    "name": "the Insight's own change is recognized, never repeated I1 — provenance survives a later Pause and Go through again of the same Plan: the earlier application is still recorded",
+    "result": "failure",
+    "error": "Expected: 'insight.plan_for_need@2026-10-30#insight.plan_for_need:clearerHead'"
+   },
+   {
+    "name": "the provenance record a damaged record attributes nothing, and a later save writes it back exactly as stored",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "the provenance record a manual Plan action carries none",
+    "result": "success",
+    "error": ""
+   }
+  ]
+ }
+}

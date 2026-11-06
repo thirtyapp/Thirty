@@ -440,6 +440,7 @@ void main() {
           c,
         ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
         today(c).start();
+        await settle();
         today(c).close();
         await settle();
       }

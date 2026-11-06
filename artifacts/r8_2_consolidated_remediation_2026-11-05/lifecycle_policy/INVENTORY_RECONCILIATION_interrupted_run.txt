@@ -1,0 +1,12 @@
+OK       inventory == *_test.dart files under test/ — 193 planned, 193 on disk
+OK       every planned file ran (suite in raw logs) — missing: []
+OK       no suite outside the plan — extra: []
+OK       no (file, test) pair ran twice — 0 repeated
+OK       every result is success — {'success': 2765}
+TOTAL tests 2765 in 193 files; results {'success': 2765}
+vs artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final: 2753 → 2765 tests
+  count changed: test/features/personal_circle/personal_circle_simulation_test.dart: 13 → 4
+  count changed: test/features/r82/r82_lifecycle_policy_test.dart: 0 → 21
+INVENTORY OK
+
+NOTE: "INVENTORY OK" covers only the inventory: every planned file appeared, no pair repeated, no non-success result. It does not check per-file completeness. In this INTERRUPTED run, personal_circle_simulation_test.dart ran 4 of its 13 declared tests (p01–p04). p05, p06, p07, p08, p09, p10, p11, p13 and p14 never ran, so 9 tests of the expected 2,774 are missing. The runner's `cases` check, never reached here, is what catches that.

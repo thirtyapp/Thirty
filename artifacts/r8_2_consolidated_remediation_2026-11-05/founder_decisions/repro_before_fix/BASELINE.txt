@@ -1,0 +1,22 @@
+Failing-before run for the three founder decisions (R8.2 acceptance review).
+
+Tree: git archive of HEAD e935112c408c16d99835280f4e1fafd722d47ed1, with the
+R8.2 working-tree production files overlaid exactly as they stood before any
+founder-decision change: ../baseline_r8_2_pre_decisions/lib (11 files).
+Each of those files, and each test copy in ../baseline_r8_2_pre_decisions/test,
+was checked by `git hash-object --path` against the R8.2 regression's own
+manifest (../../regression_final/SOURCE_MANIFEST_git_blobs.txt): 27 of 27
+match — the baseline is exactly the tree R8.2 reported 2,702/0 on.
+
+Tests run: the three new decision files only, as they stand in the corrected
+tree, using only API present in both trees:
+  test/features/r82/r82_decision_a_historical_credit_test.dart
+  test/features/r82/r82_decision_b_start_persistence_test.dart
+  test/features/r82/r82_decision_c_insight_provenance_test.dart
+Command: flutter test --concurrency=1 --reporter json <file>, one at a time.
+No load (compile) errors. Results: SUMMARY.txt / SUMMARY.json, raw *.jsonl.
+
+Note: the baseline copies are stored with a `.txt` suffix (`*.dart.txt`) so
+the project-wide `flutter analyze` doesn't compile them; they were overlaid
+under their original names for this run. ../baseline_r8_2_pre_decisions/
+MANIFEST_CHECK.txt records the 27/27 manifest match after the rename.

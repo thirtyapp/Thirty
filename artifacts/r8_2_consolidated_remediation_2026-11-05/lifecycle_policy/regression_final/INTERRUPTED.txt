@@ -1,0 +1,13 @@
+INTERRUPTED RUN — NOT EVIDENCE OF A COMPLETE REGRESSION. Kept only as the record of what happened.
+(The folder couldn't be renamed: an editor process held a handle on it.)
+
+- Started 2026-11-06 10:39:09 (+01:00) with drive_regression.sh.
+- Batches 1–17 and 18a completed: exit 0, 0 failed. 2,764 tests passed, B8 6/6 among them (batch 17), plus year profiles p01–p03 (18a).
+- During 18b, Claude Code stopped the session's background shell because the system was critically low on memory. It reaped only the outer shell. The driver kept running.
+- The assistant took 18b's remaining test processes for orphans and stopped them. That ended 18b after p04 passed: batch_18b.summary.json reads done=false, exit 4294967295. This came from that stop, not from a test failure. p05 and p06 never ran.
+- The driver then started 18c, and the assistant stopped the whole driver tree, so batch_18c.jsonl is partial. 18d and 18e never ran.
+- report, cases and the end fingerprint were never produced.
+
+A complete full regression is still required. It must be written to a separate folder.
+
+Commit note (2026-11-06): this run is committed as its interruption record only (logs, summaries, fingerprint, runner). Its raw batch_*.jsonl reporter logs stay in the local working tree, not committed. Definitive run: ../regression_rerun/.

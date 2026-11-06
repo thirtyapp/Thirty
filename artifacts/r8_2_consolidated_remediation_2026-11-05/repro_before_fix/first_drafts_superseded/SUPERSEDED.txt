@@ -1,0 +1,2 @@
+SUPERSEDED — first drafts of the R8.2 tests, run on the unchanged R8.1 lib/ in this working tree before any production change (lib/ identical to e935112c, see BASELINE.txt).
+Three drafts were corrected afterwards for test-design reasons only (a one-shot fault consumed by a rollback write; a map compared by identity; a fixture activity id that does not exist), and A08 was restructured for the applying record. The definitive failing-before run of the final test files is in ../ (exported R8.1 tree).

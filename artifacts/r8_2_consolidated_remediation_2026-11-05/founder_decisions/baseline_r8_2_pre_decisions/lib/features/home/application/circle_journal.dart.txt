@@ -1,0 +1,1507 @@
+/// THIRTY's prospective local Circle journal (ADR-013, Batch 1 / V1
+/// Productization — §5 "Prospective Local Circle Journal").
+///
+/// This is the smallest versioned local record required by the frozen
+/// recurring Premium architecture's future Plans/Coach/Insights — but it
+/// is deliberately **not** any of those things yet, and it is not
+/// analytics: it is a bounded, versioned, on-device history of what
+/// actually happened on each local day's Circle, recorded prospectively
+/// (from the day this shipped forward) rather than reconstructed from
+/// Batch 2's short per-intention anti-repetition history or from Supabase
+/// analytics events — see [CircleJournalRepository]'s own doc comment for
+/// why neither of those sources is a legitimate substitute.
+///
+/// Device-local only: this is `SharedPreferences`, like every other piece
+/// of THIRTY's state (AGENTS.md §5), and is never sent anywhere. See
+/// `android/app/src/main/AndroidManifest.xml`'s `android:allowBackup`
+/// setting (ADR-013 §7) for how "device-local" is kept true even against
+/// the OS's own cloud-backup mechanism.
+library;
+
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../core/providers/shared_preferences_provider.dart';
+import '../../../core/storage/confirmed_write.dart';
+import '../../../core/utils/date_key.dart';
+import '../../plans/domain/plan_stage_provenance.dart';
+import 'activity_catalog.dart';
+
+/// The user's optional, self-reported answer to "Did you try this
+/// activity?", offered once today's Circle is closed (ADR-013 §4).
+///
+/// A `null` [CircleJournalEntry.attemptResponse] means **no answer was
+/// given** — deliberately distinct from [notToday], which is an explicit,
+/// reported non-action. Neither value is ever treated as verified
+/// completion, thirty elapsed minutes, or a wellbeing outcome — see this
+/// enum's call sites in `recommendation_provider.dart` and ADR-013 §4 for
+/// the exact semantics each value carries.
+enum CircleAttemptResponse { yes, aLittle, notToday }
+
+/// The wire-stable name [CircleAttemptResponse] is persisted/journalled as.
+extension CircleAttemptResponseWire on CircleAttemptResponse {
+  String get wireName => name;
+}
+
+/// The user's optional, self-reported usefulness rating — offered only
+/// after an affirmative [CircleAttemptResponse] ([CircleAttemptResponse.yes]
+/// or [CircleAttemptResponse.aLittle]), never after
+/// [CircleAttemptResponse.notToday] or no answer at all. Self-reported
+/// usefulness only — never treated as a verified health or wellbeing
+/// outcome (ADR-013 §4).
+enum CircleUsefulnessResponse { veryUseful, somewhatUseful, notUseful }
+
+/// The wire-stable name [CircleUsefulnessResponse] is persisted/journalled
+/// as.
+extension CircleUsefulnessResponseWire on CircleUsefulnessResponse {
+  String get wireName => name;
+}
+
+/// What THIRTY offered for a Circle, and why (V2 Phase B) — recorded with
+/// the day's journal entry. Every field is `null` on entries written before
+/// Phase B.
+class CircleOffer {
+  const CircleOffer({
+    this.timeWindow,
+    this.offeredMinutes,
+    this.reasonCode,
+    this.replacedFrom,
+    this.replacementReason,
+    this.session,
+    this.replacedFromStage,
+  });
+
+  /// The time the user said they had (`TimeWindow.name`).
+  final String? timeWindow;
+
+  /// The length offered (minutes).
+  final int? offeredMinutes;
+
+  /// The engine's reason code for the offer (`RecommendationReason.name`).
+  final String? reasonCode;
+
+  /// The activity first offered, if the user asked for another
+  /// ("Not this one today").
+  final ActivityId? replacedFrom;
+
+  /// Why (`ReplacementReason.name`). Never a usefulness answer.
+  final String? replacementReason;
+
+  /// V2 Phase D: what the Circle was when it was a routine or a Path step —
+  /// `null` for a single activity offered by the engine.
+  final CircleSessionRecord? session;
+
+  /// ADR-024 B5: the Plan stage of the Circle "Not this one today" replaced,
+  /// when it was a stage Circle — so the day stays a stage offer even when
+  /// its replacement isn't (Insight I2 counts these). A fact, never an
+  /// answer.
+  final PlanStageProvenance? replacedFromStage;
+}
+
+/// V2 Phase D: the routine or Path context of a Circle, as the journal
+/// keeps it. Its titles are captured when the Circle was offered, so the
+/// record stays readable after a routine is renamed or deleted; its pieces
+/// are kept so it can be understood later.
+class CircleSessionRecord {
+  const CircleSessionRecord({
+    required this.title,
+    this.modules = const [],
+    this.routineId,
+    this.routineVersionId,
+    this.routineVersionNumber,
+    this.pathRunId,
+    this.pathKind,
+    this.pathName,
+    this.pathCircle,
+    this.pathCircles,
+    this.pathReason,
+    this.replacedFromTitle,
+    this.replacedFromRoutineId,
+    this.parts = const [],
+    this.skipped = const [],
+    this.keptCircleId,
+    this.planStage,
+  });
+
+  /// What the Circle was called that day.
+  final String title;
+
+  /// Its pieces (`ModuleUse` wire form, e.g. `writeDown:short`).
+  final List<String> modules;
+
+  final String? routineId;
+  final String? routineVersionId;
+  final int? routineVersionNumber;
+
+  final String? pathRunId;
+
+  /// `build`, `tuneUp` or `shorter`.
+  final String? pathKind;
+  final String? pathName;
+  final int? pathCircle;
+  final int? pathCircles;
+
+  /// The step's internal reason code (`PathStepReason.name`).
+  final String? pathReason;
+
+  /// The routine or Path step "Not this one today" replaced, by name.
+  final String? replacedFromTitle;
+
+  /// The routine it replaced, when it was one.
+  final String? replacedFromRoutineId;
+
+  /// V2 Phase D2: a Personal Guided Circle's (or a kept Circle's) parts, in
+  /// `CirclePart` wire form (e.g. `getItOut:4`).
+  final List<String> parts;
+
+  /// V2 Phase D2: the elements skipped that day — never a usefulness
+  /// answer.
+  final List<String> skipped;
+
+  /// V2 Phase D2: the kept Circle this Circle ran, when it was one.
+  final String? keptCircleId;
+
+  /// ADR-024 B3 (journal schema 2): the Circle Plan stage this Circle was
+  /// composed for, when it was a stage Circle. It travels with the offer,
+  /// so a stage Circle replaced by an ordinary one stops saying it was a
+  /// stage. Unrelated to V1's retired Plan fields on [CircleJournalEntry].
+  final PlanStageProvenance? planStage;
+
+  /// This record with [skipped] as the day's skips.
+  CircleSessionRecord withSkipped(List<String> skipped) => CircleSessionRecord(
+    title: title,
+    modules: modules,
+    routineId: routineId,
+    routineVersionId: routineVersionId,
+    routineVersionNumber: routineVersionNumber,
+    pathRunId: pathRunId,
+    pathKind: pathKind,
+    pathName: pathName,
+    pathCircle: pathCircle,
+    pathCircles: pathCircles,
+    pathReason: pathReason,
+    replacedFromTitle: replacedFromTitle,
+    replacedFromRoutineId: replacedFromRoutineId,
+    parts: parts,
+    skipped: skipped,
+    keptCircleId: keptCircleId,
+    planStage: planStage,
+  );
+
+  Map<String, Object?> toJson() => {
+    'title': title,
+    'modules': modules,
+    'routineId': routineId,
+    'routineVersionId': routineVersionId,
+    'routineVersionNumber': routineVersionNumber,
+    'pathRunId': pathRunId,
+    'pathKind': pathKind,
+    'pathName': pathName,
+    'pathCircle': pathCircle,
+    'pathCircles': pathCircles,
+    'pathReason': pathReason,
+    'replacedFromTitle': replacedFromTitle,
+    'replacedFromRoutineId': replacedFromRoutineId,
+    if (parts.isNotEmpty) 'parts': parts,
+    if (skipped.isNotEmpty) 'skipped': skipped,
+    'keptCircleId': ?keptCircleId,
+    'planStage': ?planStage?.toJson(),
+  };
+
+  /// Opaque at this layer, like the Plan fields: right types are trusted,
+  /// anything else is absent. `null` when there is no usable title.
+  static CircleSessionRecord? fromJson(Object? raw) {
+    if (raw is! Map<String, Object?>) return null;
+    final title = raw['title'];
+    if (title is! String || title.isEmpty) return null;
+    String? text(String key) => raw[key] is String ? raw[key] as String : null;
+    int? number(String key) => raw[key] is int ? raw[key] as int : null;
+    final modules = raw['modules'];
+    List<String> strings(String key) => [
+      if (raw[key] case final List list)
+        for (final item in list)
+          if (item is String) item,
+    ];
+    return CircleSessionRecord(
+      title: title,
+      modules: [
+        if (modules is List)
+          for (final m in modules)
+            if (m is String) m,
+      ],
+      routineId: text('routineId'),
+      routineVersionId: text('routineVersionId'),
+      routineVersionNumber: number('routineVersionNumber'),
+      pathRunId: text('pathRunId'),
+      pathKind: text('pathKind'),
+      pathName: text('pathName'),
+      pathCircle: number('pathCircle'),
+      pathCircles: number('pathCircles'),
+      pathReason: text('pathReason'),
+      replacedFromTitle: text('replacedFromTitle'),
+      replacedFromRoutineId: text('replacedFromRoutineId'),
+      parts: strings('parts'),
+      skipped: strings('skipped'),
+      keptCircleId: text('keptCircleId'),
+      planStage: PlanStageProvenance.fromJson(raw['planStage']),
+    );
+  }
+}
+
+/// One local day's Circle journal record.
+///
+/// [circleId] and [localDate] are currently always equal — Free is bounded
+/// to one Circle per local calendar day, so the local date already is a
+/// stable, unique identity for that day's Circle. They are kept as two
+/// separate fields (matching ADR-013 §5's explicit list of required
+/// fields) so a future change to what makes a Circle's identity stable
+/// (e.g. if that ever stops being 1:1 with the calendar date) would not
+/// need a journal schema change, only a change to how [circleId] is
+/// computed.
+class CircleJournalEntry {
+  const CircleJournalEntry({
+    required this.schemaVersion,
+    required this.circleId,
+    required this.localDate,
+    required this.direction,
+    required this.activityId,
+    required this.catalogVersion,
+    required this.shownAt,
+    this.startedAt,
+    this.closedAt,
+    this.attemptResponse,
+    this.usefulnessResponse,
+    this.planId,
+    this.planVersion,
+    this.stageId,
+    this.planCycleId,
+    this.treatmentUsed,
+    this.revisitUsed,
+    this.treatmentSource,
+    this.timeWindow,
+    this.offeredMinutes,
+    this.reasonCode,
+    this.replacedFrom,
+    this.replacementReason,
+    this.minutesAtClose,
+    this.session,
+    this.replacedFromStage,
+  });
+
+  /// The journal record schema version this entry was written under — see
+  /// [circleJournalSchemaVersion].
+  final int schemaVersion;
+
+  /// This Circle's stable identity — see class doc comment.
+  final String circleId;
+
+  /// The local calendar date (`YYYY-MM-DD`, `date_key.dart`'s [dateKey]
+  /// format) this Circle belongs to.
+  final String localDate;
+
+  /// The direction ([Intention]) selected for this Circle.
+  final Intention direction;
+
+  /// The resolved [ActivityId] for this Circle.
+  final ActivityId activityId;
+
+  /// The [catalogVersion] the catalogue was at when [activityId] was
+  /// resolved — lets a future catalogue revision tell which version of an
+  /// activity's content a historical record actually refers to.
+  final int catalogVersion;
+
+  /// When this Circle's recommendation was resolved (`chooseIntention()`).
+  final DateTime shownAt;
+
+  /// When this Circle was started, or `null` if it never was.
+  final DateTime? startedAt;
+
+  /// When this Circle was closed, or `null` if it never was.
+  final DateTime? closedAt;
+
+  /// The user's optional "Did you try this activity?" answer — `null`
+  /// means no answer was given (UNKNOWN, never treated as a negative).
+  final CircleAttemptResponse? attemptResponse;
+
+  /// The user's optional self-reported usefulness rating — `null` means
+  /// no answer was given, or none was offered because [attemptResponse]
+  /// was not affirmative.
+  final CircleUsefulnessResponse? usefulnessResponse;
+
+  /// This Circle's Plan identity, if it was Plan-resolved
+  /// (`../../plans/application/plan_provider.dart`'s
+  /// `PlanSessionAssignment`) — `null` for a Free-selector-resolved Circle,
+  /// including every record written before Batch 2A. All five Plan fields
+  /// below are additive and independent of one another only in the sense
+  /// that an old record simply has none of them; a Plan-resolved record
+  /// always carries all five together.
+  final String? planId;
+
+  /// The `plan_catalog.dart` `planContentVersion` active when this Circle
+  /// was resolved — `null` iff [planId] is `null`.
+  final int? planVersion;
+
+  /// The assigned [StageId] (`../../plans/domain/plan_ids.dart`) — `null`
+  /// iff [planId] is `null`.
+  final String? stageId;
+
+  /// The Plan cycle this Circle belonged to
+  /// (`../../plans/domain/plan_state.dart`'s `PlanProgress.cycleId`) —
+  /// deliberately a separate field from [circleId]/[localDate] (a Plan
+  /// cycle spans many Circles, unlike this Circle's own 1:1 date
+  /// identity). `null` iff [planId] is `null`.
+  final String? planCycleId;
+
+  /// Which of the stage's two authored guidance texts was shown —
+  /// `'standard'` or `'lighter'`
+  /// (`../../plans/domain/plan_state.dart`'s `PlanTreatment.name`). `null`
+  /// iff [planId] is `null`.
+  final String? treatmentUsed;
+
+  /// Whether this Circle was assigned via a queued one-off revisit rather
+  /// than ordinary forward progression
+  /// (`../../plans/application/plan_provider.dart`'s
+  /// `PlanSessionAssignment.isRevisit`) — `null` iff [planId] is `null`,
+  /// never a bare `false` standing in for "not applicable."
+  final bool? revisitUsed;
+
+  /// Truthfully records *why* [treatmentUsed] is what it is — Batch 2B
+  /// (`../../plans/domain/plan_state.dart`'s `PlanTreatmentSource.name`):
+  /// `'ordinaryDefault'`, `'directChoice'`, or `'savedPreference'`. `null`
+  /// iff [planId] is `null`, and always `null` on every record written
+  /// before Batch 2B, exactly like [treatmentUsed] was for every
+  /// pre-Batch-2A record. Required so a future Insight can distinguish an
+  /// automatic application of an already-saved preference from a genuine
+  /// new user choice (ADR-015 §10).
+  final String? treatmentSource;
+
+  /// V2 Phase B — see [CircleOffer]. All `null` on older entries.
+  final String? timeWindow;
+  final int? offeredMinutes;
+  final String? reasonCode;
+  final ActivityId? replacedFrom;
+  final String? replacementReason;
+
+  /// V2 Phase C: the Circle's active minutes when it was closed — its time
+  /// less any pause. A fact about the Circle, never about the activity.
+  /// `null` on older entries.
+  final int? minutesAtClose;
+
+  /// V2 Phase D: the routine or Path context, when there was one.
+  final CircleSessionRecord? session;
+
+  /// ADR-024 B5 — see [CircleOffer.replacedFromStage].
+  final PlanStageProvenance? replacedFromStage;
+
+  /// The title shown for this Circle: the routine or Path step as it was
+  /// named that day, else the activity's.
+  String get title => session?.title ?? activityLabel(activityId);
+
+  /// A copy with the given fields changed. [clearUsefulness] removes the
+  /// usefulness answer (it may only follow an affirmative attempt);
+  /// [clearAttempt] removes the attempt answer, and with it any usefulness.
+  /// [activityId] and [offer] change only for a replacement.
+  CircleJournalEntry copyWith({
+    DateTime? startedAt,
+    DateTime? closedAt,
+    CircleAttemptResponse? attemptResponse,
+    CircleUsefulnessResponse? usefulnessResponse,
+    bool clearUsefulness = false,
+    bool clearAttempt = false,
+    int? minutesAtClose,
+    String? treatmentUsed,
+    String? treatmentSource,
+    ActivityId? activityId,
+    CircleOffer? offer,
+  }) {
+    return CircleJournalEntry(
+      schemaVersion: schemaVersion,
+      circleId: circleId,
+      localDate: localDate,
+      direction: direction,
+      activityId: activityId ?? this.activityId,
+      catalogVersion: catalogVersion,
+      shownAt: shownAt,
+      startedAt: startedAt ?? this.startedAt,
+      closedAt: closedAt ?? this.closedAt,
+      attemptResponse: clearAttempt
+          ? null
+          : (attemptResponse ?? this.attemptResponse),
+      usefulnessResponse: clearUsefulness || clearAttempt
+          ? null
+          : (usefulnessResponse ?? this.usefulnessResponse),
+      planId: planId,
+      planVersion: planVersion,
+      stageId: stageId,
+      planCycleId: planCycleId,
+      treatmentUsed: treatmentUsed ?? this.treatmentUsed,
+      revisitUsed: revisitUsed,
+      treatmentSource: treatmentSource ?? this.treatmentSource,
+      timeWindow: offer?.timeWindow ?? timeWindow,
+      offeredMinutes: offer?.offeredMinutes ?? offeredMinutes,
+      reasonCode: offer?.reasonCode ?? reasonCode,
+      replacedFrom: offer?.replacedFrom ?? replacedFrom,
+      replacementReason: offer?.replacementReason ?? replacementReason,
+      minutesAtClose: minutesAtClose ?? this.minutesAtClose,
+      // An offer always says exactly what the Circle was: a replacement
+      // that is a single activity clears the routine or Path it replaced.
+      session: offer == null ? session : offer.session,
+      replacedFromStage: offer?.replacedFromStage ?? replacedFromStage,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'schemaVersion': schemaVersion,
+    'circleId': circleId,
+    'localDate': localDate,
+    'direction': direction.name,
+    'activityId': activityId.name,
+    'catalogVersion': catalogVersion,
+    'shownAt': shownAt.toIso8601String(),
+    'startedAt': startedAt?.toIso8601String(),
+    'closedAt': closedAt?.toIso8601String(),
+    'attemptResponse': attemptResponse?.wireName,
+    'usefulnessResponse': usefulnessResponse?.wireName,
+    'planId': planId,
+    'planVersion': planVersion,
+    'stageId': stageId,
+    'planCycleId': planCycleId,
+    'treatmentUsed': treatmentUsed,
+    'revisitUsed': revisitUsed,
+    'treatmentSource': treatmentSource,
+    'timeWindow': timeWindow,
+    'offeredMinutes': offeredMinutes,
+    'reasonCode': reasonCode,
+    'replacedFromActivityId': replacedFrom?.name,
+    'replacementReason': replacementReason,
+    'minutesAtClose': minutesAtClose,
+    'session': session?.toJson(),
+    'replacedFromPlanStage': ?replacedFromStage?.toJson(),
+  };
+
+  /// Parses one journal entry, or `null` if [json] is missing or has an
+  /// invalid value for any required field — a single corrupt entry is
+  /// dropped, never allowed to make the rest of the journal unreadable
+  /// (see [CircleJournalRepository]'s read path).
+  static CircleJournalEntry? fromJson(Map<String, Object?> json) {
+    final schemaVersion = json['schemaVersion'];
+    final circleId = json['circleId'];
+    final localDate = json['localDate'];
+    final direction = Intention.values.asNameMap()[json['direction']];
+    final activityId = ActivityId.values.asNameMap()[json['activityId']];
+    final catalogVersion = json['catalogVersion'];
+    final shownAt = DateTime.tryParse('${json['shownAt']}');
+
+    // Audit remediation R6b (A2-09): a local date that isn't a real
+    // `YYYY-MM-DD` calendar date makes the record unreadable, like any
+    // other invalid required field — isolated here, never normalised and
+    // never able to break what reads dates downstream (Insights, History).
+    if (schemaVersion is! int ||
+        // Audit remediation R8 (Claude recommendation): a record written by
+        // a newer THIRTY may carry fields this build would drop on its next
+        // save, so it is kept as stored (written back verbatim, exported)
+        // instead of being read and rewritten.
+        schemaVersion > circleJournalSchemaVersion ||
+        circleId is! String ||
+        localDate is! String ||
+        !isCanonicalDateKey(localDate) ||
+        direction == null ||
+        activityId == null ||
+        catalogVersion is! int ||
+        shownAt == null) {
+      return null;
+    }
+    // V2 (Phase A): history is never dropped because the catalogue later
+    // changed an activity's need fit or retired it — the entry records what
+    // was actually shown that day. Whether its answers count as V2
+    // evidence is a separate question (`historicalEvidenceEligible`).
+
+    final startedAtRaw = json['startedAt'];
+    final startedAt = startedAtRaw == null
+        ? null
+        : DateTime.tryParse('$startedAtRaw');
+    final closedAtRaw = json['closedAt'];
+    final closedAt = closedAtRaw == null
+        ? null
+        : DateTime.tryParse('$closedAtRaw');
+
+    // Plan fields (Batch 2A) are additive and opaque at this layer — this
+    // file deliberately does not depend on `../../plans/` (which itself
+    // depends on `activity_catalog.dart`, so validating a stage/plan
+    // reference here would create an import cycle). A raw string/int/bool
+    // of the right type is trusted as-is; anything else is treated as
+    // absent, exactly like every other optional field above. Semantic
+    // validity of a Plan reference is `PlanNotifier`'s own responsibility
+    // (`../../plans/application/plan_provider.dart`), not the journal's.
+    final planIdRaw = json['planId'];
+    final planId = planIdRaw is String ? planIdRaw : null;
+    final planVersionRaw = json['planVersion'];
+    final planVersion = planVersionRaw is int ? planVersionRaw : null;
+    final stageIdRaw = json['stageId'];
+    final stageId = stageIdRaw is String ? stageIdRaw : null;
+    final planCycleIdRaw = json['planCycleId'];
+    final planCycleId = planCycleIdRaw is String ? planCycleIdRaw : null;
+    final treatmentUsedRaw = json['treatmentUsed'];
+    final treatmentUsed = treatmentUsedRaw is String ? treatmentUsedRaw : null;
+    final revisitUsedRaw = json['revisitUsed'];
+    final revisitUsed = revisitUsedRaw is bool ? revisitUsedRaw : null;
+    final treatmentSourceRaw = json['treatmentSource'];
+    final treatmentSource = treatmentSourceRaw is String
+        ? treatmentSourceRaw
+        : null;
+    // V2 Phase B offer fields — additive like the Plan fields: absent or
+    // malformed means not recorded.
+    final timeWindowRaw = json['timeWindow'];
+    final offeredMinutesRaw = json['offeredMinutes'];
+    final reasonCodeRaw = json['reasonCode'];
+    final replacementReasonRaw = json['replacementReason'];
+    final minutesAtCloseRaw = json['minutesAtClose'];
+
+    return CircleJournalEntry(
+      schemaVersion: schemaVersion,
+      circleId: circleId,
+      localDate: localDate,
+      direction: direction,
+      activityId: activityId,
+      catalogVersion: catalogVersion,
+      shownAt: shownAt,
+      startedAt: startedAt,
+      closedAt: closedAt,
+      attemptResponse: CircleAttemptResponse.values
+          .asNameMap()[json['attemptResponse']],
+      usefulnessResponse: CircleUsefulnessResponse.values
+          .asNameMap()[json['usefulnessResponse']],
+      planId: planId,
+      planVersion: planVersion,
+      stageId: stageId,
+      planCycleId: planCycleId,
+      treatmentUsed: treatmentUsed,
+      revisitUsed: revisitUsed,
+      treatmentSource: treatmentSource,
+      timeWindow: timeWindowRaw is String ? timeWindowRaw : null,
+      offeredMinutes: offeredMinutesRaw is int ? offeredMinutesRaw : null,
+      reasonCode: reasonCodeRaw is String ? reasonCodeRaw : null,
+      replacedFrom: ActivityId.values
+          .asNameMap()[json['replacedFromActivityId']],
+      replacementReason: replacementReasonRaw is String
+          ? replacementReasonRaw
+          : null,
+      minutesAtClose: minutesAtCloseRaw is int ? minutesAtCloseRaw : null,
+      session: CircleSessionRecord.fromJson(json['session']),
+      replacedFromStage: PlanStageProvenance.fromJson(
+        json['replacedFromPlanStage'],
+      ),
+    );
+  }
+}
+
+/// SharedPreferences key the entire journal is stored under, as one
+/// JSON-encoded object (see [CircleJournalRepository]) — a single
+/// coherent, versioned blob rather than one preference key per field, so a
+/// write is one atomic string replace instead of several independent
+/// preference writes that could observe a partial state between them.
+const circleJournalKey = 'circle_journal_v1';
+
+/// Where a journal THIRTY couldn't read as a whole is kept, exactly as it
+/// was stored, before anything is written over it (audit remediation R6c):
+/// every such copy, oldest first; never replaced by a later one.
+const circleJournalPreservedKey = 'circle_journal_preserved_v1';
+
+/// A journal save THIRTY refused, so nothing stored is lost (audit
+/// remediation R6c): the stored journal was written by a newer THIRTY, or
+/// one it can't read couldn't first be kept.
+class JournalWriteRefused implements Exception {
+  const JournalWriteRefused(this.reason);
+
+  final String reason;
+
+  @override
+  String toString() => 'JournalWriteRefused: $reason';
+}
+
+/// What became of the latest attempt to save each Circle to History (R6
+/// final, founder direction 2026-11-03): `true` saved, `false` not saved.
+/// THIRTY never says a Circle is in History unless its save succeeded; a
+/// failed one is shown to the user ([JournalSaveFailureNotice]).
+class JournalSaveStatus extends Notifier<Map<String, bool>> {
+  @override
+  Map<String, bool> build() => const {};
+
+  void record(String circleId, {required bool saved}) {
+    if (state[circleId] == saved) return;
+    state = {...state, circleId: saved};
+  }
+}
+
+final journalSaveStatusProvider =
+    NotifierProvider<JournalSaveStatus, Map<String, bool>>(
+      JournalSaveStatus.new,
+    );
+
+/// The current journal record-shape version. Bump only alongside a
+/// reviewed schema-migration change to [CircleJournalRepository]'s
+/// read/write path — never as an incidental side effect.
+///
+/// **2 (ADR-024 B3):** a Circle's [CircleSessionRecord] may carry the V2
+/// Circle Plan stage it was composed for ([CircleSessionRecord.planStage]).
+/// Nothing else changed: a version-1 journal reads exactly as before, its
+/// entries keep their own version, and the next write stores the wrapper
+/// as 2 ([circleJournalReadableVersions]).
+const circleJournalSchemaVersion = 2;
+
+/// Every wrapper version this build reads: the current one and every
+/// earlier one. A later version is unreadable — this build predates it.
+const circleJournalReadableVersions = {1, circleJournalSchemaVersion};
+
+/// The hard cap on retained journal entries: at most this many of the most
+/// recent local dates are kept, oldest dropped first.
+///
+/// The frozen recurring Premium architecture
+/// (`docs/product/RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md`
+/// §9, "Local history contract") states these as two separate figures: a
+/// **365-day rolling retention window**, and a **hard cap of 366 Circle
+/// records**. This constant is the latter — the actual enforced bound — not
+/// a "366 days" reinterpretation of the former; the retention window
+/// remains 365 days. One entry exists per local date, so in ordinary
+/// operation (no missed days) this cap is reached one day after the
+/// 365-day window itself would have started dropping entries — the source
+/// document does not explain the one-entry difference further, and none is
+/// invented here.
+const circleJournalMaxRecords = 366;
+
+/// Reads, writes, and bounds THIRTY's prospective local Circle journal.
+///
+/// **Not analytics.** The existing Supabase `analytics_events` table
+/// (`analytics_service.dart`) remains a narrow, pseudonymous, append-only
+/// behavioural-measurement sink with no per-user read path in the app
+/// itself — it was never designed to be queried back as a personal
+/// record, and doing so would also silently turn Supabase into exactly
+/// the "general application backend" AGENTS.md §5 and this batch's own
+/// authority both rule out.
+///
+/// **Not derived from Batch 2's anti-repetition history.**
+/// `recommendation_provider.dart`'s per-[Intention]
+/// `recommendationHistoryKeyFor` lists exist only to drive the diversity
+/// guard — they are short (`pool.length - 1` entries), unordered by date,
+/// carry no timestamps, and are silently truncated. Treating them as a
+/// historical record would fabricate a false journal, which ADR-013
+/// explicitly forbids.
+///
+/// One entry per local date, upserted as that date's Circle progresses
+/// through [recordShown]/[recordStarted]/[recordClosed]/[recordAttempt]/
+/// [recordUsefulness] — never more than [circleJournalMaxRecords]
+/// entries kept at once.
+class CircleJournalRepository {
+  CircleJournalRepository(this._prefs, {this.onSaved, this.writes});
+
+  final SharedPreferences _prefs;
+
+  /// Told the outcome of every save, by Circle (R6 final).
+  final void Function(String circleId, {required bool saved})? onSaved;
+
+  /// History's writes still waiting for the disk (R8.2, Astra R81-A07) —
+  /// shared by every repository of the app ([journalWritesProvider]).
+  final JournalWrites? writes;
+
+  /// The stored journal as stored — text, or (R8.2, Astra R81-A09) a value
+  /// of another native type, which this build can't read.
+  Object? get _stored => _prefs.get(circleJournalKey);
+
+  /// The copies kept of journals THIRTY couldn't read (R6c).
+  List<String> get _preserved => switch (_prefs.get(circleJournalPreservedKey)) {
+    final List<Object?> kept => [
+      for (final copy in kept)
+        if (copy is String) copy,
+    ],
+    _ => <String>[],
+  };
+
+  /// Some earlier History couldn't be opened, and a copy of it is kept
+  /// ([circleJournalPreservedKey], R6c).
+  bool get hasPreservedHistory => _preserved.isNotEmpty;
+
+  /// Whether anything of History is stored, readable or not (audit
+  /// remediation R8, Astra R7-A06): records, a journal THIRTY can't open,
+  /// records it can't read, or a copy it preserved. What can be exported
+  /// and deleted — never only what this build can read.
+  bool get holdsHistory =>
+      readAll().isNotEmpty ||
+      storedHistoryUnopened ||
+      hasPreservedHistory ||
+      _unreadableStored().isNotEmpty;
+
+  /// The stored journal is one THIRTY can't open — damaged, or written by a
+  /// newer THIRTY — and it is still exactly as stored (R6c).
+  bool get storedHistoryUnopened {
+    final raw = _stored;
+    return raw != null && _classifyStored(raw) != _StoredJournal.readable;
+  }
+
+  /// All journal entries currently retained, oldest local date first.
+  List<CircleJournalEntry> readAll() {
+    final entries = _readRaw();
+    entries.sort((a, b) => a.localDate.compareTo(b.localDate));
+    return entries;
+  }
+
+  /// [readAll] as the disk has confirmed it (R8.2, Astra R81-A07). While a
+  /// write is still pending, the store's memory already shows it; what a
+  /// durable decision — an Insight, a Plan's stage 5 — rests on is History
+  /// before that write, until the disk confirms it. Without a pending write
+  /// the two are the same.
+  List<CircleJournalEntry> readConfirmed() {
+    final writes = this.writes;
+    if (writes == null || !writes.isWriting) return readAll();
+    final entries = _decode(writes.confirmed);
+    entries.sort((a, b) => a.localDate.compareTo(b.localDate));
+    return entries;
+  }
+
+  /// Records (or, if [circleId] already has an entry, leaves unchanged —
+  /// `RecommendationNotifier.chooseIntention` is already a no-op past the
+  /// first call for a given day, so this should never actually overwrite
+  /// an existing entry) today's "shown" record.
+  ///
+  /// [planId]/[planVersion]/[stageId]/[planCycleId]/[treatmentUsed]/
+  /// [revisitUsed] (Batch 2A) are all `null` for a Free-selector-resolved
+  /// Circle — the caller (`recommendation_provider.dart`) passes them
+  /// together only when this Circle was Plan-resolved.
+  Future<void> recordShown({
+    required String circleId,
+    required String localDate,
+    required Intention direction,
+    required ActivityId activityId,
+    required DateTime shownAt,
+    String? planId,
+    int? planVersion,
+    String? stageId,
+    String? planCycleId,
+    String? treatmentUsed,
+    bool? revisitUsed,
+    String? treatmentSource,
+    CircleOffer? offer,
+  }) => _upsert(
+    circleId: circleId,
+    localDate: localDate,
+    direction: direction,
+    activityId: activityId,
+    fallbackShownAt: shownAt,
+    planId: planId,
+    planVersion: planVersion,
+    stageId: stageId,
+    planCycleId: planCycleId,
+    treatmentUsed: treatmentUsed,
+    revisitUsed: revisitUsed,
+    treatmentSource: treatmentSource,
+    takeCurrentTreatment: false,
+    offer: offer,
+    update: (entry) => entry,
+  );
+
+  /// Records today's current Plan treatment choice ([treatmentUsed] /
+  /// [treatmentSource]) on [circleId]'s entry while the Circle is still
+  /// unstarted — the user choosing (or changing back from) the lighter
+  /// guidance. Self-healing like [recordStarted]; see [_upsert] for why the
+  /// treatment, unlike the rest of the Plan fields, follows the latest
+  /// choice.
+  Future<void> recordTreatment({
+    required String circleId,
+    required String localDate,
+    required Intention direction,
+    required ActivityId activityId,
+    required DateTime chosenAt,
+    required String planId,
+    required int planVersion,
+    required String stageId,
+    required String planCycleId,
+    required String treatmentUsed,
+    required bool revisitUsed,
+    required String treatmentSource,
+    CircleOffer? offer,
+  }) => _upsert(
+    circleId: circleId,
+    localDate: localDate,
+    direction: direction,
+    activityId: activityId,
+    fallbackShownAt: chosenAt,
+    planId: planId,
+    planVersion: planVersion,
+    stageId: stageId,
+    planCycleId: planCycleId,
+    treatmentUsed: treatmentUsed,
+    revisitUsed: revisitUsed,
+    treatmentSource: treatmentSource,
+    offer: offer,
+    update: (entry) => entry,
+  );
+
+  /// Records [startedAt] on [circleId]'s entry.
+  ///
+  /// Self-healing rather than a strict update: if [circleId] has no entry
+  /// yet — e.g. the app was killed between [recordShown] and this call, or
+  /// a fire-and-forget write from `chooseIntention` simply hasn't landed
+  /// yet by the time the user taps Start — one is synthesized here from
+  /// [localDate]/[direction]/[activityId] instead of silently losing the
+  /// day's record. Its `shownAt` becomes [startedAt] in that case, the
+  /// closest honest estimate available (ADR-013 §3, "handle safely:
+  /// process interruption during writes"). See [recordShown] for the
+  /// optional Plan fields.
+  ///
+  /// The record of a Circle not yet started takes [activityId] and [offer]
+  /// too (audit remediation R3): the Circle started is what the day was, even
+  /// when the app stopped before a replacement — or "Make today's Circle" —
+  /// reached the journal.
+  Future<void> recordStarted({
+    required String circleId,
+    required String localDate,
+    required Intention direction,
+    required ActivityId activityId,
+    required DateTime startedAt,
+    String? planId,
+    int? planVersion,
+    String? stageId,
+    String? planCycleId,
+    String? treatmentUsed,
+    bool? revisitUsed,
+    String? treatmentSource,
+    CircleOffer? offer,
+  }) => _upsert(
+    circleId: circleId,
+    localDate: localDate,
+    direction: direction,
+    activityId: activityId,
+    fallbackShownAt: startedAt,
+    planId: planId,
+    planVersion: planVersion,
+    stageId: stageId,
+    planCycleId: planCycleId,
+    treatmentUsed: treatmentUsed,
+    revisitUsed: revisitUsed,
+    treatmentSource: treatmentSource,
+    offer: offer,
+    update: (entry) => entry.startedAt == null && offer != null
+        ? entry.copyWith(
+            startedAt: startedAt,
+            activityId: activityId,
+            offer: offer,
+          )
+        : entry.copyWith(startedAt: startedAt),
+  );
+
+  /// Records [closedAt] on [circleId]'s entry. See [recordStarted] for the
+  /// self-healing behaviour if the entry doesn't exist yet, and
+  /// [recordShown] for the optional Plan fields.
+  ///
+  /// [startedAt] is the Start this Close follows (audit remediation R8,
+  /// Astra R7-A05): recorded with the Close on an entry whose Start never
+  /// reached History — as [recordStarted] would have — so History never
+  /// shows a Close without its Start. A recorded Start is never changed.
+  Future<void> recordClosed({
+    required String circleId,
+    required String localDate,
+    required Intention direction,
+    required ActivityId activityId,
+    required DateTime closedAt,
+    DateTime? startedAt,
+    String? planId,
+    int? planVersion,
+    String? stageId,
+    String? planCycleId,
+    String? treatmentUsed,
+    bool? revisitUsed,
+    String? treatmentSource,
+    CircleOffer? offer,
+    int? minutesAtClose,
+  }) => _upsert(
+    circleId: circleId,
+    localDate: localDate,
+    direction: direction,
+    activityId: activityId,
+    fallbackShownAt: closedAt,
+    planId: planId,
+    planVersion: planVersion,
+    stageId: stageId,
+    planCycleId: planCycleId,
+    treatmentUsed: treatmentUsed,
+    revisitUsed: revisitUsed,
+    treatmentSource: treatmentSource,
+    offer: offer,
+    update: (entry) {
+      final started = switch ((entry.startedAt, startedAt)) {
+        (null, final at?) =>
+          offer == null
+              ? entry.copyWith(startedAt: at)
+              : entry.copyWith(
+                  startedAt: at,
+                  activityId: activityId,
+                  offer: offer,
+                ),
+        _ => entry,
+      };
+      return started.copyWith(
+        closedAt: closedAt,
+        minutesAtClose: minutesAtClose,
+      );
+    },
+  );
+
+  /// Records the user's "Did you try this activity?" answer on [circleId]'s
+  /// entry. Overwrites any earlier answer for the same [circleId] —
+  /// changing your mind is allowed, this is never a one-shot lock. A
+  /// non-affirmative [response] (or a changed answer that is no longer
+  /// affirmative) clears any previously recorded [CircleUsefulnessResponse]
+  /// on the same entry — usefulness may only ever follow an affirmative
+  /// attempt (ADR-013 §4). See [recordStarted] for the self-healing
+  /// behaviour if the entry doesn't exist yet.
+  Future<void> recordAttempt({
+    required String circleId,
+    required String localDate,
+    required Intention direction,
+    required ActivityId activityId,
+    required CircleAttemptResponse response,
+    required DateTime respondedAt,
+    String? planId,
+    int? planVersion,
+    String? stageId,
+    String? planCycleId,
+    String? treatmentUsed,
+    bool? revisitUsed,
+    String? treatmentSource,
+    CircleOffer? offer,
+  }) => _upsert(
+    circleId: circleId,
+    localDate: localDate,
+    direction: direction,
+    activityId: activityId,
+    fallbackShownAt: respondedAt,
+    planId: planId,
+    planVersion: planVersion,
+    stageId: stageId,
+    planCycleId: planCycleId,
+    treatmentUsed: treatmentUsed,
+    revisitUsed: revisitUsed,
+    treatmentSource: treatmentSource,
+    offer: offer,
+    update: (entry) => entry.copyWith(
+      attemptResponse: response,
+      clearUsefulness:
+          response != CircleAttemptResponse.yes &&
+          response != CircleAttemptResponse.aLittle,
+    ),
+  );
+
+  /// Records the user's optional usefulness rating on [circleId]'s entry.
+  /// See [recordAttempt].
+  Future<void> recordUsefulness({
+    required String circleId,
+    required String localDate,
+    required Intention direction,
+    required ActivityId activityId,
+    required CircleUsefulnessResponse response,
+    required DateTime respondedAt,
+    String? planId,
+    int? planVersion,
+    String? stageId,
+    String? planCycleId,
+    String? treatmentUsed,
+    bool? revisitUsed,
+    String? treatmentSource,
+    CircleOffer? offer,
+  }) => _upsert(
+    circleId: circleId,
+    localDate: localDate,
+    direction: direction,
+    activityId: activityId,
+    fallbackShownAt: respondedAt,
+    planId: planId,
+    planVersion: planVersion,
+    stageId: stageId,
+    planCycleId: planCycleId,
+    treatmentUsed: treatmentUsed,
+    revisitUsed: revisitUsed,
+    treatmentSource: treatmentSource,
+    offer: offer,
+    update: (entry) => entry.copyWith(usefulnessResponse: response),
+  );
+
+  /// Records today's replacement ("Not this one today", V2 Phase B):
+  /// [circleId]'s entry now names [activityId] — the activity actually
+  /// offered — and [offer] records what it replaced and why. Self-healing
+  /// like [recordStarted].
+  Future<void> recordReplaced({
+    required String circleId,
+    required String localDate,
+    required Intention direction,
+    required ActivityId activityId,
+    required DateTime replacedAt,
+    required CircleOffer offer,
+  }) => _upsert(
+    circleId: circleId,
+    localDate: localDate,
+    direction: direction,
+    activityId: activityId,
+    fallbackShownAt: replacedAt,
+    offer: offer,
+    takeCurrentTreatment: false,
+    update: (entry) => entry.copyWith(activityId: activityId, offer: offer),
+  );
+
+  /// V2 Phase D2: the parts skipped so far in [circleId]'s composed Circle
+  /// — a fact about the day, never an answer. Only an entry that is a
+  /// composed Circle changes.
+  Future<void> recordSkipped({
+    required String circleId,
+    required List<String> skipped,
+  }) async {
+    final entries = _readRaw();
+    final index = entries.indexWhere((entry) => entry.circleId == circleId);
+    if (index == -1) return;
+    final entry = entries[index];
+    final session = entry.session;
+    if (session == null || session.parts.isEmpty) return;
+    entries[index] = entry.copyWith(
+      offer: CircleOffer(session: session.withSkipped(skipped)),
+    );
+    await _save(entries, circleId: circleId);
+  }
+
+  /// "Remove this answer" (V2 Phase C): removes [circleId]'s usefulness
+  /// answer — and, with [includingAttempt], its "Did you try it?" answer
+  /// too. The Circle's own record (offered, started, closed) stays. Returns
+  /// whether anything changed.
+  Future<bool> removeAnswer(
+    String circleId, {
+    required bool includingAttempt,
+  }) async {
+    final entries = _readRaw();
+    final index = entries.indexWhere((entry) => entry.circleId == circleId);
+    if (index == -1) return false;
+    final entry = entries[index];
+    final hadAnswer = includingAttempt
+        ? entry.attemptResponse != null || entry.usefulnessResponse != null
+        : entry.usefulnessResponse != null;
+    if (!hadAnswer) return false;
+    entries[index] = entry.copyWith(
+      clearAttempt: includingAttempt,
+      clearUsefulness: true,
+    );
+    await _save(entries, circleId: circleId);
+    return true;
+  }
+
+  /// Permanently deletes the entire local journal (ADR-013 §6 — "local
+  /// deletion/reset control"). Irreversible; there is no undo and nothing
+  /// to restore it from, since nothing is ever sent off-device.
+  ///
+  /// Completes only once both removals are confirmed (audit remediation R8);
+  /// otherwise it fails with [StorageWriteFailed].
+  Future<void> clearAll() async {
+    await Future.wait([
+      writeConfirmed(_prefs, circleJournalKey, null, restoreOnFailure: false),
+      // R6c: every copy kept of a journal THIRTY couldn't read goes too.
+      writeConfirmed(
+        _prefs,
+        circleJournalPreservedKey,
+        null,
+        restoreOnFailure: false,
+      ),
+    ]);
+  }
+
+  /// The full retained journal, pretty-printed as JSON (ADR-013 §6 —
+  /// "local export capability"). Text-only, so it can be copied to the
+  /// system clipboard without adding a file-sharing dependency (AGENTS.md
+  /// §5 — no new packages beyond `pubspec.yaml`); see
+  /// `circle_history_page.dart` for where this is offered to the user.
+  ///
+  /// [suggestionPreferences] (V2 Phase C), when given, is exported beside
+  /// the entries under its own key — the user's explicit choices, kept
+  /// apart from what happened. So are [keptCircles] (ADR-024): the only
+  /// reusable thing the user owns; and [circlePlans] (ADR-024 B3): each
+  /// Plan's place, cycles and stage records; and [insights] (ADR-024 B5):
+  /// the Insight snapshots THIRTY showed — dated records of what was shown,
+  /// not a profile. Phase D's retired routines and Paths are never exported
+  /// as current objects; the journal entries of days that used them keep
+  /// their own labels. Nothing else derived is ever exported.
+  ///
+  /// Kept Circles are exported as stored (audit remediation R4, R4.1): one
+  /// THIRTY can't read is in [keptCircles] exactly as it is, and each whole
+  /// kept-Circle record THIRTY can't read is beside them, as its stored text
+  /// ([keptCirclesUnreadable]) — never left out.
+  String exportAsJson({
+    Map<String, Object?>? suggestionPreferences,
+    List<Object?>? keptCircles,
+    List<String>? keptCirclesUnreadable,
+    Map<String, Object?>? circlePlans,
+    Map<String, Object?>? insights,
+  }) {
+    final entries = readAll();
+    final unreadable = _unreadableStored();
+    final storedRaw = _stored;
+    final preserved = _preserved;
+    const encoder = JsonEncoder.withIndent('  ');
+    return encoder.convert({
+      'schemaVersion': circleJournalSchemaVersion,
+      'entries': entries.map((entry) => entry.toJson()).toList(),
+      // R6b (A2-09): records THIRTY can't read, as stored — never left out.
+      if (unreadable.isNotEmpty) 'entriesUnreadable': unreadable,
+      // R6c: a journal THIRTY can't read as a whole (or a newer THIRTY
+      // wrote), as stored, and every copy kept before a save wrote over one.
+      if (storedRaw != null &&
+          _classifyStored(storedRaw) != _StoredJournal.readable)
+        'journalStored': storedRaw,
+      if (preserved.isNotEmpty) 'journalPreserved': preserved,
+      'suggestionPreferences': ?suggestionPreferences,
+      'keptCircles': ?keptCircles,
+      'keptCirclesUnreadable': ?keptCirclesUnreadable,
+      'circlePlans': ?circlePlans,
+      'insights': ?insights,
+    });
+  }
+
+  /// Finds [circleId]'s entry and applies [update] to it, or — if none
+  /// exists yet — synthesizes one from [localDate]/[direction]/[activityId]
+  /// (with `shownAt` set to [fallbackShownAt]) and applies [update] to
+  /// that instead. See [recordStarted]'s doc comment for why this never
+  /// simply no-ops on a missing entry.
+  ///
+  /// [planId]/[planVersion]/[stageId]/[planCycleId]/[revisitUsed]
+  /// (Batch 2A) are the Circle's Plan identity: only ever used when
+  /// synthesizing a *new* entry (`index == -1`) — once an entry exists it is
+  /// never overwritten by a later call, matching how
+  /// [catalogVersion]/[activityId] are already fixed at creation.
+  ///
+  /// [treatmentUsed]/[treatmentSource] are different: they are the user's
+  /// current guidance choice, which `RecommendationNotifier.setPlanTreatment`
+  /// can change after the entry was first written. Every call that carries
+  /// the session's current treatment ([takeCurrentTreatment], the default)
+  /// therefore applies it to an existing entry too, so the history records
+  /// what the user actually chose. A `null` never clears a recorded value.
+  /// [recordShown] alone passes `false`: it writes the *initial* treatment
+  /// and must never overwrite a choice that landed first.
+  Future<void> _upsert({
+    required String circleId,
+    required String localDate,
+    required Intention direction,
+    required ActivityId activityId,
+    required DateTime fallbackShownAt,
+    required CircleJournalEntry Function(CircleJournalEntry entry) update,
+    String? planId,
+    int? planVersion,
+    String? stageId,
+    String? planCycleId,
+    String? treatmentUsed,
+    bool? revisitUsed,
+    String? treatmentSource,
+    CircleOffer? offer,
+    bool takeCurrentTreatment = true,
+  }) async {
+    final entries = _readRaw();
+    final index = entries.indexWhere((entry) => entry.circleId == circleId);
+    final base = index == -1
+        ? CircleJournalEntry(
+            schemaVersion: circleJournalSchemaVersion,
+            circleId: circleId,
+            localDate: localDate,
+            direction: direction,
+            activityId: activityId,
+            catalogVersion: catalogVersion,
+            shownAt: fallbackShownAt,
+            planId: planId,
+            planVersion: planVersion,
+            stageId: stageId,
+            planCycleId: planCycleId,
+            treatmentUsed: treatmentUsed,
+            revisitUsed: revisitUsed,
+            treatmentSource: treatmentSource,
+            timeWindow: offer?.timeWindow,
+            offeredMinutes: offer?.offeredMinutes,
+            reasonCode: offer?.reasonCode,
+            replacedFrom: offer?.replacedFrom,
+            replacementReason: offer?.replacementReason,
+            session: offer?.session,
+            replacedFromStage: offer?.replacedFromStage,
+          )
+        : entries[index];
+
+    var updated = update(base);
+    if (index != -1 && takeCurrentTreatment) {
+      updated = updated.copyWith(
+        treatmentUsed: treatmentUsed,
+        treatmentSource: treatmentSource,
+      );
+    }
+    if (index == -1) {
+      entries.add(updated);
+    } else {
+      entries[index] = updated;
+    }
+    await _save(entries, circleId: circleId);
+  }
+
+  Future<void> _save(
+    List<CircleJournalEntry> entries, {
+    required String circleId,
+  }) async {
+    try {
+      await _write(entries);
+    } catch (_) {
+      onSaved?.call(circleId, saved: false);
+      rethrow;
+    }
+    onSaved?.call(circleId, saved: true);
+  }
+
+  Future<void> _write(List<CircleJournalEntry> entries) async {
+    await _protectStored();
+    entries.sort((a, b) => a.localDate.compareTo(b.localDate));
+    final capped = entries.length > circleJournalMaxRecords
+        ? entries.sublist(entries.length - circleJournalMaxRecords)
+        : entries;
+
+    final json = jsonEncode({
+      'schemaVersion': circleJournalSchemaVersion,
+      'entries': [
+        ...capped.map((entry) => entry.toJson()),
+        // Audit remediation R6b (A2-09): what THIRTY can't read is written
+        // back exactly as stored — never erased by an ordinary save.
+        ..._unreadableStored(),
+      ],
+    });
+    // Audit remediation R8 (Claude F-5, Astra R7-A01): a write that throws
+    // or returns `false` is put back as it was in memory too, so History,
+    // Insights and Today's own checks never read a record that isn't on
+    // disk. R8.2 (Astra R81-A07): while it is pending, [readConfirmed]
+    // still reads History as it was.
+    try {
+      final writes = this.writes;
+      if (writes == null) {
+        await writeConfirmed(_prefs, circleJournalKey, json);
+      } else {
+        await writes._track(
+          _prefs,
+          json,
+          () => writeConfirmed(_prefs, circleJournalKey, json),
+        );
+      }
+    } on StorageWriteFailed {
+      throw const JournalWriteRefused('the journal could not be written');
+    }
+  }
+
+  /// Audit remediation R6c: nothing stored is written over unless THIRTY
+  /// can read it, or has first kept it. A journal it can't read as a whole
+  /// is added to [circleJournalPreservedKey] exactly as stored — and only
+  /// once the disk confirms that write — before the save goes ahead; a copy
+  /// kept earlier is never replaced. A journal written by a newer THIRTY is
+  /// never written over: the save is refused. Either refusal throws
+  /// [JournalWriteRefused], and nothing is written.
+  ///
+  /// R8.2 (Astra R81-A09): a stored value of another native type than text
+  /// is a journal THIRTY can't read; its copy is the value as JSON — an
+  /// integer, Boolean or list exactly, type included.
+  Future<void> _protectStored() async {
+    final stored = _stored;
+    if (stored == null) return;
+    final raw = stored is String ? stored : jsonEncode(stored);
+    switch (_classifyStored(stored)) {
+      case _StoredJournal.readable:
+        return;
+      case _StoredJournal.newer:
+        throw const JournalWriteRefused(
+          'the stored journal was written by a newer THIRTY',
+        );
+      case _StoredJournal.unreadable:
+        final kept = _preserved;
+        if (kept.contains(raw)) return;
+        // A copy the disk refused is put back out of memory too, so a later
+        // save keeps the original again instead of trusting a copy that
+        // isn't there ([writeConfirmed]).
+        try {
+          await writeConfirmed(_prefs, circleJournalPreservedKey, [
+            ...kept,
+            raw,
+          ]);
+        } on StorageWriteFailed {
+          throw const JournalWriteRefused(
+            'the unreadable journal could not be kept first',
+          );
+        }
+    }
+  }
+
+  /// The stored entries THIRTY can't read, exactly as stored (audit
+  /// remediation R6b, A2-09): set aside on read ([_readRaw]), written back by
+  /// every save, exported beside the entries ([exportAsJson]), and removed
+  /// only by Delete Circle history ([clearAll]). Empty when the stored
+  /// wrapper itself can't be read — that case is not changed here.
+  List<Object?> _unreadableStored() {
+    final raw = _stored;
+    if (raw is! String) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, Object?> ||
+          !circleJournalReadableVersions.contains(decoded['schemaVersion'])) {
+        return const [];
+      }
+      final stored = decoded['entries'];
+      if (stored is! List) return const [];
+      return [
+        for (final entry in stored)
+          if (entry is! Map<String, Object?> ||
+              CircleJournalEntry.fromJson(entry) == null)
+            entry,
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Reads and decodes the persisted journal, failing safe to an empty
+  /// list (never throwing) for anything unreadable: no stored value, a
+  /// non-JSON string, a wrapper missing/mismatching [circleJournalSchemaVersion]
+  /// (including a *future* version this build predates, which it has no
+  /// safe way to interpret), or a malformed `entries` list. Individual
+  /// malformed entries within an otherwise valid wrapper are dropped one
+  /// at a time by [CircleJournalEntry.fromJson] instead — a single bad
+  /// record must never take down the rest of the journal.
+  List<CircleJournalEntry> _readRaw() => _decode(_stored);
+
+  /// The entries [raw] — a stored journal value — holds, as [_readRaw].
+  static List<CircleJournalEntry> _decode(Object? raw) {
+    if (raw is! String) return [];
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, Object?>) return [];
+      if (!circleJournalReadableVersions.contains(decoded['schemaVersion'])) {
+        return [];
+      }
+
+      final rawEntries = decoded['entries'];
+      if (rawEntries is! List) return [];
+
+      final entries = <CircleJournalEntry>[];
+      for (final rawEntry in rawEntries) {
+        if (rawEntry is! Map<String, Object?>) continue;
+        final entry = CircleJournalEntry.fromJson(rawEntry);
+        if (entry != null) entries.add(entry);
+      }
+      return entries;
+    } catch (_) {
+      return [];
+    }
+  }
+}
+
+/// The [CircleJournalRepository] backed by the app's resolved
+/// [SharedPreferences] instance — read by `recommendation_provider.dart`
+/// (to record each Circle's progression) and `circle_history_page.dart`
+/// (to read, clear, and export it).
+final circleJournalRepositoryProvider = Provider<CircleJournalRepository>((
+  ref,
+) {
+  final status = ref.read(journalSaveStatusProvider.notifier);
+  return CircleJournalRepository(
+    ref.watch(sharedPreferencesProvider),
+    onSaved: status.record,
+    writes: ref.read(journalWritesProvider),
+  );
+});
+
+/// History's writes still waiting for the disk, and History as the disk
+/// last confirmed it while one is (R8.2, Astra R81-A07).
+///
+/// [SharedPreferences] shows a value in its memory before the platform has
+/// written it. A reader of [CircleJournalRepository.readAll] sees that
+/// pending value — right for what is on screen, never the premise of a
+/// durable decision: [CircleJournalRepository.readConfirmed] reads the last
+/// confirmed journal instead, until every pending write has landed or been
+/// refused (and put back, [writeConfirmed]).
+class JournalWrites {
+  var _pending = 0;
+  var _generation = 0;
+  Object? _confirmed;
+  Completer<void>? _idle;
+
+  /// Whether a History write is waiting for the disk.
+  bool get isWriting => _pending > 0;
+
+  /// The stored journal as last confirmed, while [isWriting].
+  Object? get confirmed => _confirmed;
+
+  /// Completes, never failing, once no History write is waiting.
+  Future<void> idle() => _idle?.future ?? Future<void>.value();
+
+  Future<void> _track(
+    SharedPreferences prefs,
+    String value,
+    Future<void> Function() write,
+  ) async {
+    final generation = _generation;
+    if (_pending == 0) {
+      _confirmed = prefs.get(circleJournalKey);
+      _idle = Completer<void>();
+    }
+    _pending++;
+    try {
+      await write();
+      if (generation == _generation) _confirmed = value;
+    } finally {
+      if (generation == _generation && --_pending == 0) {
+        _idle?.complete();
+        _idle = null;
+      }
+    }
+  }
+
+  /// Delete Circle history has begun (R8.2): no History is confirmed any
+  /// more, and no write begun before it counts.
+  void forget() {
+    _generation++;
+    _pending = 0;
+    _confirmed = null;
+    _idle?.complete();
+    _idle = null;
+  }
+}
+
+/// The app's [JournalWrites].
+final journalWritesProvider = Provider<JournalWrites>((ref) => JournalWrites());
+
+/// What is stored under [circleJournalKey] (audit remediation R6c).
+enum _StoredJournal {
+  /// A wrapper this build reads (its records may still be unreadable one by
+  /// one — those are written back as stored).
+  readable,
+
+  /// Not one this build can read: not JSON, not an object, no entries list,
+  /// or a version that isn't a known one.
+  unreadable,
+
+  /// A later wrapper version: written by a newer THIRTY.
+  newer,
+}
+
+_StoredJournal _classifyStored(Object raw) {
+  if (raw is! String) return _StoredJournal.unreadable;
+  try {
+    final decoded = jsonDecode(raw);
+    if (decoded is Map<String, Object?>) {
+      final version = decoded['schemaVersion'];
+      if (version is int && version > circleJournalSchemaVersion) {
+        return _StoredJournal.newer;
+      }
+      if (circleJournalReadableVersions.contains(version) &&
+          decoded['entries'] is List) {
+        return _StoredJournal.readable;
+      }
+    }
+  } catch (_) {
+    // Not JSON.
+  }
+  return _StoredJournal.unreadable;
+}

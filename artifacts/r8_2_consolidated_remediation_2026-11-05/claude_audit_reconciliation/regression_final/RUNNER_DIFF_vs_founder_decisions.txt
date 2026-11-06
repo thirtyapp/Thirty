@@ -1,0 +1,21 @@
+1c1,2
+< """Memory-bounded, sequential full-suite run for R8.2 consolidated remediation (2026-11-05).
+---
+> """(Copied unchanged from founder_decisions/regression_final/run_batches.py except OUT, for the Claude post-R8.1 report reconciliation run, 2026-11-06.)
+> Memory-bounded, sequential full-suite run for R8.2 consolidated remediation (2026-11-05).
+28,32c29,33
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/founder_decisions/regression_final/run_batches.py plan
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/founder_decisions/regression_final/run_batches.py run <batch-number>
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/founder_decisions/regression_final/run_batches.py runpart <batch-number> <label>
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/founder_decisions/regression_final/run_batches.py report
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/founder_decisions/regression_final/run_batches.py cases
+---
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final/run_batches.py plan
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final/run_batches.py run <batch-number>
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final/run_batches.py runpart <batch-number> <label>
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final/run_batches.py report
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final/run_batches.py cases
+41c42
+< OUT = os.path.join('artifacts', 'r8_2_consolidated_remediation_2026-11-05', 'founder_decisions', 'regression_final')
+---
+> OUT = os.path.join('artifacts', 'r8_2_consolidated_remediation_2026-11-05', 'claude_audit_reconciliation', 'regression_final')

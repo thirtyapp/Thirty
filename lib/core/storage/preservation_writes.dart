@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,7 +21,10 @@ class PreservationWrites {
   /// ([writeConfirmed]) — unless a copy under [key] is already being
   /// written. A failed copy is taken back out of memory, so nothing reads it
   /// as kept.
-  void keepAside(SharedPreferences prefs, String key, String raw) {
+  ///
+  /// R8.2 (Astra R81-A09): [raw] is the stored value as it is — text, or a
+  /// value of another native type, which keeps its type.
+  void keepAside(SharedPreferences prefs, String key, Object raw) {
     if (_pending.containsKey(key)) return;
     final write = writeConfirmed(prefs, key, raw);
     _pending[key] = write;
@@ -38,6 +43,10 @@ class PreservationWrites {
   Future<void> settledAll() =>
       Future.wait([for (final key in _pending.keys.toList()) settled(key)]);
 }
+
+/// Whether two stored values — text, numbers, Booleans or lists of text —
+/// are the same value of the same type (R8.2, Astra R81-A09).
+bool sameStoredValue(Object? a, Object? b) => jsonEncode(a) == jsonEncode(b);
 
 /// The app's [PreservationWrites].
 final preservationWritesProvider = Provider<PreservationWrites>(

@@ -1,0 +1,340 @@
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/premium/entitlement_status.dart';
+import 'package:thirty/core/premium/premium_access.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+
+import '../../support/r8_fault_disk.dart';
+import '../../support/r8_harness.dart';
+
+/// R8.2 founder decision A (acceptance review, 2026-11-05) — historical
+/// Plan credit. A stage Circle legitimately started and durably closed
+/// BEFORE a later Pause or Leave keeps its Plan credit even when the
+/// credit's own write failed: the later lifecycle change can't erase it.
+/// The credit goes to the original cycle and Circle, once, under the same
+/// Premium rules; nothing is reactivated, and a new cycle is never moved
+/// on. A Pause or Leave before the Close was durable is decided by the R8.2
+/// final Plan lifecycle policy (founder directive, 2026-11-06; see
+/// r82_lifecycle_policy_test.dart): a Pause after the Start keeps the
+/// credit; a Leave before the Close does not.
+void main() {
+  final day1 = DateTime(2026, 10, 12, 9);
+  late R8Harness h;
+
+  setUp(() async {
+    h = R8Harness(day1);
+    await h.boot();
+  });
+
+  RecommendationNotifier today(ProviderContainer c) =>
+      c.read(recommendationProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+  void entitle(ProviderContainer c, EntitlementStatus status) =>
+      (c.read(entitlementStatusProvider.notifier) as SettableEntitlement).set(
+        status,
+      );
+
+  Future<Map<String, Object?>> planOnDisk([
+    String planId = 'getting_going',
+  ]) async {
+    final raw = (await h.disk.stored())[circlePlansKey];
+    if (raw is! String) return {};
+    final stored = (jsonDecode(raw) as Map)['plans'] as Map;
+    return (stored[planId] as Map?)?.cast<String, Object?>() ?? {};
+  }
+
+  /// Every guided record of [circleId] on disk, as (cycle id, record).
+  Future<List<(String, Map)>> creditsOnDisk(String circleId) async {
+    final plan = await planOnDisk();
+    return [
+      for (final cycle in (plan['cycles'] as List?) ?? const [])
+        for (final r in (cycle as Map)['records'] as List)
+          if ((r as Map)['circleId'] == circleId) (cycle['id'] as String, r),
+    ];
+  }
+
+  Future<List<Map>> cyclesOnDisk() async => [
+    for (final c in ((await planOnDisk())['cycles'] as List?) ?? const [])
+      c as Map,
+  ];
+
+  /// A Premium stage Circle of 'getting_going' served, started and closed —
+  /// its Start, Close and History durable — while the Plans store refuses
+  /// [fault], so its credit is not on disk. Then the Plans store heals:
+  /// nothing has retried the credit yet.
+  Future<(ProviderContainer, String)> uncreditedClose(
+    DiskFault fault, {
+    EntitlementStatus status = EntitlementStatus.active,
+  }) async {
+    final c = h.open(status: status);
+    plans(c).start('getting_going');
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    await R8Harness.settle();
+    final rec = c.read(recommendationProvider).recommendation!;
+    expect(rec.composed?.stage, isNotNull);
+    today(c).start();
+    await R8Harness.settle();
+    h.disk.fail(circlePlansKey, fault);
+    h.clock.value = day1.add(const Duration(minutes: 25));
+    today(c).close();
+    await R8Harness.settle();
+    final stored = await h.disk.stored();
+    expect(stored[recommendationStatusKey], 'closed');
+    expect(await creditsOnDisk(rec.circleId), isEmpty);
+    h.disk.healAll();
+    expect(plans(c).hasUnsavedChanges, isFalse);
+    return (c, rec.circleId);
+  }
+
+  /// [times] fresh processes on what reached the disk, each one reading
+  /// Today (its catch-up) and the Plans.
+  Future<ProviderContainer> restarts(
+    int times, {
+    EntitlementStatus status = EntitlementStatus.active,
+  }) async {
+    late ProviderContainer c;
+    for (var i = 0; i < times; i++) {
+      await h.restart();
+      c = h.open(status: status);
+      c.read(recommendationProvider);
+      c.read(circlePlansProvider);
+      await R8Harness.settle();
+    }
+    return c;
+  }
+
+  for (final fault in DiskFault.values) {
+    group('${fault.name}:', () {
+      test('paused — the Close was durable before the Pause: the credit '
+          'lands with the Pause, on the original cycle and Circle, and the '
+          'Plan stays paused', () async {
+        final (c, id) = await uncreditedClose(fault);
+        expect(plans(c).pause('getting_going'), PlanActionResult.done);
+        await R8Harness.settle();
+        final plan = await planOnDisk();
+        expect(plan['lifecycle'], 'paused');
+        final credits = await creditsOnDisk(id);
+        expect(credits, hasLength(1), reason: 'earned credit erased');
+        expect(credits.single.$1, 'getting_going#1');
+        expect(credits.single.$2['stageNumber'], 1);
+        expect(credits.single.$2['outcome'], 'guided');
+        expect(credits.single.$2['localDate'], id);
+        expect((await cyclesOnDisk()).single['cursor'], 2);
+        // The served and Start provenance stays as it was.
+        expect((plan['lastServed'] as Map)['circleId'], id);
+        expect((plan['lastServed'] as Map)['startedAfterExpiry'], isNull);
+        expect(plan['lastAdvancedCircleId'], id);
+      });
+
+      test('left — the credit lands with the Leave on the cycle that was '
+          'left; no new cycle, nothing reactivated', () async {
+        final (c, id) = await uncreditedClose(fault);
+        expect(plans(c).leave('getting_going'), PlanActionResult.done);
+        await R8Harness.settle();
+        final plan = await planOnDisk();
+        expect(plan['lifecycle'], 'left');
+        final cycles = await cyclesOnDisk();
+        expect(cycles, hasLength(1));
+        expect(cycles.single['end'], 'left');
+        expect(await creditsOnDisk(id), hasLength(1));
+        final again = await restarts(2);
+        expect(again.read(circlePlansProvider).active, isNull);
+        expect(await creditsOnDisk(id), hasLength(1));
+      });
+
+      test('left, then gone through again: the credit stays on the original '
+          'cycle and the new cycle starts at stage 1 with nothing recorded', () async {
+        final (c, id) = await uncreditedClose(fault);
+        plans(c).leave('getting_going');
+        plans(c).goThroughAgain('getting_going');
+        await R8Harness.settle();
+        final cycles = await cyclesOnDisk();
+        expect(cycles, hasLength(2));
+        expect([for (final r in cycles.first['records'] as List) (r as Map)['circleId']], [id]);
+        expect(cycles.last['id'], 'getting_going#2');
+        expect(cycles.last['cursor'], 1, reason: 'new cycle advanced');
+        expect(cycles.last['records'], isEmpty);
+        // Today's catch-up after restarts never credits the new cycle.
+        await restarts(2);
+        final after = await cyclesOnDisk();
+        expect(after.last['cursor'], 1);
+        expect(after.last['records'], isEmpty);
+        expect(await creditsOnDisk(id), hasLength(1));
+      });
+
+      test('restarted — the app restarts with the credit still refused, then '
+          'the Plan is paused: the credit lands with the Pause', () async {
+        final (_, id) = await uncreditedClose(fault);
+        h.disk.fail(circlePlansKey, fault);
+        await h.restart(keepFaults: true);
+        final again = h.open();
+        again.read(recommendationProvider);
+        await R8Harness.settle();
+        expect(await creditsOnDisk(id), isEmpty, reason: 'catch-up refused');
+        h.disk.healAll();
+        expect(plans(again).pause('getting_going'), PlanActionResult.done);
+        await R8Harness.settle();
+        expect((await planOnDisk())['lifecycle'], 'paused');
+        expect(await creditsOnDisk(id), hasLength(1));
+      });
+
+      test('lapsed — Premium ended after the Close: the Circle served and '
+          'started under Premium keeps its credit through the Pause', () async {
+        final (c, id) = await uncreditedClose(fault);
+        entitle(c, EntitlementStatus.inactive);
+        expect(plans(c).pause('getting_going'), PlanActionResult.done);
+        await R8Harness.settle();
+        expect((await planOnDisk())['lifecycle'], 'paused');
+        expect(await creditsOnDisk(id), hasLength(1));
+      });
+
+      test('repeated restarts after the Pause: exactly one credit, the Plan '
+          'never reactivated, the next cycle never advanced', () async {
+        final (c, id) = await uncreditedClose(fault);
+        plans(c).pause('getting_going');
+        await R8Harness.settle();
+        final first = jsonEncode(await planOnDisk());
+        final again = await restarts(4, status: EntitlementStatus.inactive);
+        expect(await creditsOnDisk(id), hasLength(1));
+        expect((await planOnDisk())['lifecycle'], 'paused');
+        expect(again.read(circlePlansProvider).active, isNull);
+        expect(jsonEncode(await planOnDisk()), first);
+        final active = await restarts(2);
+        expect(active.read(circlePlansProvider).active, isNull);
+        expect(await creditsOnDisk(id), hasLength(1));
+      });
+    });
+  }
+
+  test('starting another Plan pauses this one: the earned credit lands with '
+      'it', () async {
+    final (c, id) = await uncreditedClose(DiskFault.returnsFalse);
+    expect(plans(c).start('making_room'), PlanActionResult.done);
+    await R8Harness.settle();
+    expect((await planOnDisk())['lifecycle'], 'paused');
+    expect((await planOnDisk('making_room'))['lifecycle'], 'active');
+    expect(await creditsOnDisk(id), hasLength(1));
+  });
+
+  test('the Pause that folds the credit in is refused too: both are taken '
+      'back; the next start credits the still-active Plan, once', () async {
+    final (c, id) = await uncreditedClose(DiskFault.throws);
+    h.disk.fail(circlePlansKey, DiskFault.throws);
+    plans(c).pause('getting_going');
+    await R8Harness.settle();
+    expect((await planOnDisk())['lifecycle'], 'active');
+    expect(await creditsOnDisk(id), isEmpty);
+    expect(c.read(circlePlansProvider).active?.planId, 'getting_going');
+    await restarts(1);
+    expect(await creditsOnDisk(id), hasLength(1));
+    expect((await planOnDisk())['lifecycle'], 'active');
+    await restarts(2);
+    expect(await creditsOnDisk(id), hasLength(1));
+  });
+
+  test('no duplicate — the credit already durable: the Pause adds nothing',
+      () async {
+    final c = h.open();
+    plans(c).start('getting_going');
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    await R8Harness.settle();
+    final id = c.read(recommendationProvider).recommendation!.circleId;
+    today(c).start();
+    await R8Harness.settle();
+    h.clock.value = day1.add(const Duration(minutes: 25));
+    today(c).close();
+    await R8Harness.settle();
+    expect(await creditsOnDisk(id), hasLength(1));
+    plans(c).pause('getting_going');
+    await R8Harness.settle();
+    expect(await creditsOnDisk(id), hasLength(1));
+    expect((await cyclesOnDisk()).single['cursor'], 2);
+  });
+
+  test('Premium rules kept — a Circle started only after a verified expiry '
+      'earns no credit through a later Pause either', () async {
+    final c = h.open();
+    plans(c).start('getting_going');
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    await R8Harness.settle();
+    final id = c.read(recommendationProvider).recommendation!.circleId;
+    entitle(c, EntitlementStatus.inactive);
+    today(c).start();
+    await R8Harness.settle();
+    expect(
+      c.read(recommendationProvider).status,
+      RecommendationStatus.started,
+    );
+    h.clock.value = day1.add(const Duration(minutes: 25));
+    today(c).close();
+    await R8Harness.settle();
+    expect((await h.disk.stored())[recommendationStatusKey], 'closed');
+    plans(c).pause('getting_going');
+    await R8Harness.settle();
+    expect(await creditsOnDisk(id), isEmpty);
+    await restarts(2, status: EntitlementStatus.inactive);
+    expect(await creditsOnDisk(id), isEmpty);
+  });
+
+  // Founder directive 2026-11-06 (R8.2 final Plan lifecycle policy) decides
+  // the case this group held open: a stage Circle started before its Plan
+  // was paused keeps its credit once its Close is durable. The scenarios
+  // are unchanged; their expectations follow the decision.
+  group('Pause before the Close (decided: R8.2 lifecycle policy)', () {
+    test('Pause BEFORE the Close: the Circle started before the Pause is '
+        'credited once its Close is durable; the Plan stays paused', () async {
+      final c = h.open();
+      plans(c).start('getting_going');
+      today(
+        c,
+      ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      today(c).start();
+      await R8Harness.settle();
+      plans(c).pause('getting_going');
+      await R8Harness.settle();
+      h.clock.value = day1.add(const Duration(minutes: 25));
+      today(c).close();
+      await R8Harness.settle();
+      expect((await h.disk.stored())[recommendationStatusKey], 'closed');
+      expect(await creditsOnDisk(id), hasLength(1));
+      expect((await planOnDisk())['lifecycle'], 'paused');
+      await restarts(2);
+      expect(await creditsOnDisk(id), hasLength(1));
+      expect((await planOnDisk())['lifecycle'], 'paused');
+    });
+
+    test('Pause while the Close is still being written to History: not '
+        'folded into the Pause (the Close was not durable yet), but credited '
+        'once the Close lands — the Start came before the Pause', () async {
+      final c = h.open();
+      plans(c).start('getting_going');
+      today(
+        c,
+      ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      today(c).start();
+      await R8Harness.settle();
+      final journal = h.disk.hold(circleJournalKey);
+      h.clock.value = day1.add(const Duration(minutes: 25));
+      today(c).close();
+      await journal.reached;
+      plans(c).pause('getting_going');
+      await R8Harness.settle();
+      expect(await creditsOnDisk(id), isEmpty, reason: 'Close not durable');
+      journal.release();
+      await R8Harness.settle();
+      expect((await planOnDisk())['lifecycle'], 'paused');
+      expect(await creditsOnDisk(id), hasLength(1));
+    });
+  });
+}

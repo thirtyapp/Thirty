@@ -1,0 +1,3 @@
+Source delta: this run's end fingerprint vs founder_decisions/regression_final end fingerprint
+348a349
+> ee7aff28c639db44e30c773ef54a9323b98590e610bc00956700413f2ada38a1 *test/features/r82/r82_claude_audit_new1_triggers_test.dart

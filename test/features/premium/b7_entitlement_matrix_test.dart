@@ -254,6 +254,7 @@ void main() {
           UseTodayResult.used,
         );
         today.start();
+        await settle();
         today.skipPart(leaveOut: true);
         await settle();
         // The skip itself is everyone's.

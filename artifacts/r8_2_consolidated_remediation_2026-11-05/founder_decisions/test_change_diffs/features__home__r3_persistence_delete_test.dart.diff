@@ -1,0 +1,10 @@
+--- R8.2 pre-decision: test/features/home/r3_persistence_delete_test.dart
++++ after founder decisions: test/features/home/r3_persistence_delete_test.dart
+@@ -440,6 +440,7 @@
+           c,
+         ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+         today(c).start();
++        await settle();
+         today(c).close();
+         await settle();
+       }

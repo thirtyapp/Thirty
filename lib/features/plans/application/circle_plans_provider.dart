@@ -75,7 +75,27 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   CirclePlansState? _queued;
   Future<void>? _queuedWrite;
 
+  /// How many Delete Circle histories have begun ([forgetStageEvidence]).
+  int _deletions = 0;
+
+  /// The most rounds a decision waits for pending Plan changes to settle
+  /// before it refuses (R8.2): each round waits for real writes, so only
+  /// a user changing the Plans again and again reaches it.
+  static const _maxRounds = 8;
+
   SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
+
+  /// Completes, never failing, once no Plans save is still being written —
+  /// each has landed, or failed and been taken back off the screen ([_set])
+  /// (R8.2). What a decision that must see the outcome of a pending change
+  /// waits for.
+  Future<void> idle() async {
+    for (;;) {
+      final pending = _writes;
+      await pending;
+      if (identical(pending, _writes)) return;
+    }
+  }
 
   @override
   CirclePlansState build() {
@@ -88,13 +108,17 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   }
 
   CirclePlansState _read(SharedPreferences prefs) {
-    final raw = prefs.getString(circlePlansKey);
+    // R8.2 (Astra R81-A09): read as whatever native type is stored — a
+    // value that isn't text is a record THIRTY can't read, never a crash.
+    final raw = prefs.get(circlePlansKey);
     if (raw == null) return CirclePlansState.empty;
-    try {
-      final state = CirclePlansState.fromJson(jsonDecode(raw));
-      if (state != null) return state;
-    } catch (_) {
-      // Unreadable: kept aside below.
+    if (raw is String) {
+      try {
+        final state = CirclePlansState.fromJson(jsonDecode(raw));
+        if (state != null) return state;
+      } catch (_) {
+        // Unreadable: kept aside below.
+      }
     }
     // Kept aside at once — a tracked write (R8.1, Astra N02): a save that
     // follows waits for it and confirms the copy first ([_protectStored]),
@@ -171,10 +195,14 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
     final json = jsonEncode(next.toJson());
     final prefs = _prefs;
     final preservations = ref.read(preservationWritesProvider);
+    final generation = _deletions;
     final write = _writes.then((_) async {
       await _protectStored(prefs, preservations);
       await writeConfirmed(prefs, circlePlansKey, json);
-      _durable = next;
+      // R8.2 (Astra R81-A02): a save queued before Delete Circle history
+      // began lands before the deletion's own write — but its stage
+      // evidence is never again what the Plans fall back to or decide on.
+      _durable = generation == _deletions ? next : next.forgetStageEvidence();
     });
     _queued = next;
     _queuedWrite = write;
@@ -218,16 +246,17 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
     final raw = prefs.get(circlePlansKey);
     if (raw == null) return;
     if (raw is String && _readable(raw)) return;
-    final text = '$raw';
+    // R8.2 (Astra R81-A09): kept as stored — a value of another native
+    // type keeps its type.
     final aside = prefs.get(circlePlansUnreadableKey);
-    if (aside == text) return;
+    if (sameStoredValue(aside, raw)) return;
     if (aside != null) {
       throw const StorageWriteFailed(
         circlePlansKey,
         'an earlier unreadable record is already kept aside',
       );
     }
-    await writeConfirmed(prefs, circlePlansUnreadableKey, text);
+    await writeConfirmed(prefs, circlePlansUnreadableKey, raw);
   }
 
   static bool _readable(String raw) {
@@ -245,22 +274,247 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
     return PlanActionResult.done;
   }
 
+  /// A change of a Plan's lifecycle — pausing, leaving, starting or carrying
+  /// on a Plan (which pauses the active one), going through one again —
+  /// made on the Plans with every credit already earned folded in first
+  /// ([_withEarnedCredits]), in the same save (R8.2, founder decision A).
+  /// [byInsight] names the Insight whose own action this is ([_byInsight]).
+  PlanActionResult _lifecycle(
+    String planId,
+    CirclePlansState? Function(CirclePlansState plans) change, {
+    required bool running,
+    String? byInsight,
+  }) {
+    if (running && !_premium) return PlanActionResult.needsPremium;
+    final earned = _withEarnedCredits(state);
+    final next = change(earned);
+    if (next == null) {
+      // The Plan as it stands doesn't allow the change — a credit folded
+      // in may have just ended it. The credit is still saved.
+      if (!identical(earned, state)) _set(earned).ignore();
+      return PlanActionResult.notAvailable;
+    }
+    return _apply(
+      _byInsight(_withActionOrder(earned, next), planId, byInsight),
+      running: running,
+    );
+  }
+
+  /// R8.2 Plan lifecycle policy (founder directive, 2026-11-06): what the
+  /// user did to today's stage Circle, and when — told by Today at the
+  /// moment of the action, before anything is saved, so the actual order
+  /// of a Start or Close and a later Pause or Leave is known however slow
+  /// storage is. In memory only; after a restart Today tells it again from
+  /// what it restores, and History's record stands in.
+  final Map<String, DateTime> _startedAt = {};
+  final Map<String, DateTime> _closeRequestedAt = {};
+
+  /// Today's stage Circle [circleId] was started at [at].
+  void noteStarted(String circleId, DateTime at) => _startedAt[circleId] = at;
+
+  /// The user asked to close today's stage Circle [circleId] at [at].
+  void noteCloseRequested(String circleId, DateTime at) =>
+      _closeRequestedAt[circleId] = at;
+
+  CircleJournalEntry? _shownInHistory(String circleId) => ref
+      .read(circleJournalRepositoryProvider)
+      .readAll()
+      .where((e) => e.circleId == circleId)
+      .firstOrNull;
+
+  /// [after] — a lifecycle change made on [before] — with the order of the
+  /// user's own actions on each Plan's served Circle recorded in the same
+  /// save ([CirclePlansState.stampServed]):
+  /// - a Plan paused (by Pause, or by starting another Plan) after its
+  ///   served Circle was started: that Start came first;
+  /// - a Plan left after the user asked to close its served Circle — the
+  ///   Close may still be being saved: that Close came first.
+  /// Nothing is credited here: [recordGuided] credits only a durable Close,
+  /// and only the very Start and Close recorded. A Circle already credited
+  /// needs nothing.
+  CirclePlansState _withActionOrder(
+    CirclePlansState before,
+    CirclePlansState after,
+  ) {
+    var next = after;
+    for (final MapEntry(key: planId, value: now) in after.plans.entries) {
+      final was = before.plans[planId];
+      final served = was?.lastServed;
+      if (was == null || served == null) continue;
+      if (served.stage.cycleId != was.current.id || was.current.isOver) {
+        continue;
+      }
+      final circleId = served.circleId;
+      if (_credited(before, planId, circleId)) continue;
+      final pausing =
+          was.lifecycle == PlanLifecycle.active &&
+          now.lifecycle == PlanLifecycle.paused;
+      final leaving =
+          now.lifecycle == PlanLifecycle.left &&
+          (was.lifecycle == PlanLifecycle.active ||
+              (was.lifecycle == PlanLifecycle.paused &&
+                  served.startedBeforePause != null));
+      if (pausing) {
+        final at =
+            _startedAt[circleId] ?? _shownInHistory(circleId)?.startedAt;
+        if (at != null) {
+          next = next.stampServed(
+            planId,
+            circleId: circleId,
+            startedBeforePause: at,
+          );
+        }
+      } else if (leaving) {
+        final at =
+            _closeRequestedAt[circleId] ?? _shownInHistory(circleId)?.closedAt;
+        if (at != null) {
+          next = next.stampServed(
+            planId,
+            circleId: circleId,
+            closedBeforeLeave: at,
+          );
+        }
+      }
+    }
+    return next;
+  }
+
+  /// [next] with [planId] marked as changed by Insight [insightId]'s own
+  /// action ([PlanProgress.appliedInsight], R8.2 founder decision C) — in
+  /// the same save as the change, so it is on disk exactly when the change
+  /// is.
+  CirclePlansState _byInsight(
+    CirclePlansState next,
+    String planId,
+    String? insightId,
+  ) => insightId == null
+      ? next
+      : next.withAppliedInsight(planId, insightId, today: _today);
+
+  /// [plans] with the guided credit of every stage Circle already started
+  /// and closed folded in (R8.2, founder decision A): the active Plan's last
+  /// served Circle, when History's store has confirmed its Close
+  /// ([CircleJournalRepository.readConfirmed]) and its credit isn't
+  /// recorded yet — because the credit's own save failed, or hasn't run.
+  /// The Close was durably recorded before the change about to be made, so
+  /// that change can't erase what it earned: the credit goes to the
+  /// original cycle and Circle, under the same rules as [recordGuided]
+  /// (served under Premium and not started after a verified expiry, or
+  /// Premium now), at most once. A Close not yet confirmed — a Pause or
+  /// Leave before it was durable — is not folded in: that order keeps the
+  /// rule that a paused or left Plan earns no credit.
+  CirclePlansState _withEarnedCredits(CirclePlansState plans) {
+    var next = plans;
+    List<CircleJournalEntry>? journal;
+    for (final plan in plans.plans.values) {
+      final served = plan.lastServed;
+      // R8.2 Plan lifecycle policy: a paused Plan's served Circle started
+      // before the Pause is owed its credit too ([recordGuided] decides).
+      if ((plan.lifecycle != PlanLifecycle.active &&
+              plan.lifecycle != PlanLifecycle.paused) ||
+          served == null ||
+          served.stage.cycleId != plan.current.id) {
+        continue;
+      }
+      journal ??= ref.read(circleJournalRepositoryProvider).readConfirmed();
+      final closed = journal
+          .where(
+            (e) =>
+                e.circleId == served.circleId &&
+                e.startedAt != null &&
+                e.closedAt != null,
+          )
+          .firstOrNull;
+      final session = closed?.session;
+      final recorded = session?.planStage;
+      if (closed == null ||
+          session == null ||
+          recorded == null ||
+          !served.matches(recorded, circleId: closed.circleId)) {
+        continue;
+      }
+      final stage = served.stage;
+      if (!_premium && !next.creditsServed(stage, circleId: closed.circleId)) {
+        continue;
+      }
+      next = next.recordGuided(
+        stage,
+        circleId: closed.circleId,
+        today: closed.localDate,
+        parts: session.parts,
+        skipped: session.skipped,
+        startedAt: closed.startedAt,
+        closedAt: closed.closedAt,
+      );
+    }
+    return next;
+  }
+
   /// [action] — one of this notifier's Plan actions — completed only once
   /// the store has confirmed the Plans as they then stand (R8.1, Astra N05):
   /// [PlanActionResult.done] means saved; [PlanActionResult.notSaved] that
   /// it isn't — the change is then off the screen ([_set]) — and nothing may
   /// be recorded as following from it.
+  ///
+  /// R8.2 (Claude NEW-3): saved means on disk, whichever save put it there.
+  /// When this action's own save fails, the saves still queued behind it
+  /// are waited for; if one of them landed holding exactly the change this
+  /// action made, it is [PlanActionResult.done]. A change no save landed is
+  /// never reported as saved.
   Future<PlanActionResult> confirmed(
     PlanActionResult Function(CirclePlansNotifier plans) action,
   ) async {
+    final before = state;
     final result = action(this);
     if (result != PlanActionResult.done) return result;
+    final after = state;
     try {
       await ensureSaved();
       return PlanActionResult.done;
     } on StorageWriteFailed {
-      return PlanActionResult.notSaved;
+      await idle();
+      return _holdsChange(_durable, before, after)
+          ? PlanActionResult.done
+          : PlanActionResult.notSaved;
     }
+  }
+
+  /// Whether [stored] holds every value that changed from [before] to
+  /// [after] — added, changed or removed — whatever else it holds.
+  static bool _holdsChange(
+    CirclePlansState stored,
+    CirclePlansState before,
+    CirclePlansState after,
+  ) {
+    final was = _leaves(before.toJson());
+    final now = _leaves(after.toJson());
+    final disk = _leaves(stored.toJson());
+    for (final path in {...was.keys, ...now.keys}) {
+      if (was[path] != now[path] && disk[path] != now[path]) return false;
+    }
+    return true;
+  }
+
+  /// [json] as its leaf values, by path.
+  static Map<String, String> _leaves(Object? json, [String path = '']) {
+    final out = <String, String>{};
+    void walk(Object? value, String at) {
+      switch (value) {
+        case final Map<Object?, Object?> map when map.isNotEmpty:
+          for (final MapEntry(:key, :value) in map.entries) {
+            walk(value, '$at/$key');
+          }
+        case final List<Object?> list when list.isNotEmpty:
+          for (final (i, item) in list.indexed) {
+            walk(item, '$at[$i]');
+          }
+        default:
+          out[at] = jsonEncode(value);
+      }
+    }
+
+    walk(json, path);
+    return out;
   }
 
   /// Completes once the store holds [stage] as served for [circleId] — the
@@ -285,21 +539,41 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
 
   /// Start [planId] (pausing any other active Plan at its place); a paused
   /// one carries on where it was.
-  PlanActionResult start(String planId) =>
-      _apply(state.start(planId, today: _today), running: true);
+  ///
+  /// [byInsight]: the Insight whose own action this is (R8.2, founder
+  /// decision C) — recorded with the change ([PlanProgress.appliedInsight]).
+  PlanActionResult start(String planId, {String? byInsight}) => _lifecycle(
+    planId,
+    (plans) => plans.start(planId, today: _today),
+    running: true,
+    byInsight: byInsight,
+  );
 
   PlanActionResult pause(String planId) =>
-      _apply(state.pause(planId), running: false);
+      _lifecycle(planId, (plans) => plans.pause(planId), running: false);
 
-  /// "Carry on".
-  PlanActionResult resume(String planId) =>
-      _apply(state.resume(planId), running: true);
+  /// "Carry on". [byInsight] as for [start].
+  PlanActionResult resume(String planId, {String? byInsight}) => _lifecycle(
+    planId,
+    (plans) => plans.resume(planId),
+    running: true,
+    byInsight: byInsight,
+  );
 
-  PlanActionResult leave(String planId) =>
-      _apply(state.leave(planId, today: _today), running: false);
+  PlanActionResult leave(String planId) => _lifecycle(
+    planId,
+    (plans) => plans.leave(planId, today: _today),
+    running: false,
+  );
 
-  PlanActionResult goThroughAgain(String planId) =>
-      _apply(state.goThroughAgain(planId, today: _today), running: true);
+  /// [byInsight] as for [start].
+  PlanActionResult goThroughAgain(String planId, {String? byInsight}) =>
+      _lifecycle(
+        planId,
+        (plans) => plans.goThroughAgain(planId, today: _today),
+        running: true,
+        byInsight: byInsight,
+      );
 
   /// "This stage again next time" / "Try this stage".
   PlanActionResult requestRevisit(String planId, int stageNumber) =>
@@ -307,15 +581,31 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
 
   /// ADR-024 I2's application, approved by the user: "Keep this Plan's
   /// Circles gentler for now" for the current cycle. Never stacked.
-  PlanActionResult keepGentler(String planId) =>
-      _apply(state.keepGentler(planId, today: _today), running: true);
+  ///
+  /// R8.2 (Astra R81-A04): with [cycleId], only that cycle — I2 changes the
+  /// cycle it was shown for, or nothing. [byInsight] as for [start].
+  PlanActionResult keepGentler(
+    String planId, {
+    String? cycleId,
+    String? byInsight,
+  }) => _apply(
+    switch (state.keepGentler(planId, today: _today, cycleId: cycleId)) {
+      final next? => _byInsight(next, planId, byInsight),
+      null => null,
+    },
+    running: true,
+  );
 
   /// Turns the gentler setting off — giving a setting up is never gated.
   PlanActionResult stopGentler(String planId) =>
       _apply(state.stopGentler(planId), running: false);
 
-  StageAnswers _answers() =>
-      stageAnswersFrom(ref.read(circleJournalRepositoryProvider).readAll());
+  /// The user's answers as History's store has confirmed them (R8.2, Astra
+  /// R81-A07): a stage — stage 5 above all — is never composed from an
+  /// answer, or a removal, still being written.
+  StageAnswers _answers() => stageAnswersFrom(
+    ref.read(circleJournalRepositoryProvider).readConfirmed(),
+  );
 
   /// Today's Circle for the active Plan ([planToday]): today's set-asides
   /// and any end are kept. Without Premium, nothing applies and nothing
@@ -398,37 +688,99 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   }) {
     final EntitlementStatus verdict =
         status ?? ref.read(entitlementStatusProvider);
-    final next = switch (verdict) {
-      EntitlementStatus.active => state.noteStart(
-        stage,
-        circleId: circleId,
-        active: true,
-      ),
-      EntitlementStatus.inactive => state.noteStart(
-        stage,
-        circleId: circleId,
-        active: false,
-      ),
-      EntitlementStatus.initializing || EntitlementStatus.unavailable => state,
-    };
-    // R8.1 (Astra N01/N04): already noted but still pending is not saved —
-    // this completes only once the store confirms it.
-    if (identical(next, state)) return confirmStartNoted(stage.planId);
-    // Today reports a Start whose evidence wasn't saved (audit remediation
-    // R8): it never saves the Start without it.
-    return _set(next, report: false);
+    return _settleStart(stage, circleId, switch (verdict) {
+      EntitlementStatus.active => true,
+      EntitlementStatus.inactive => false,
+      EntitlementStatus.initializing || EntitlementStatus.unavailable => null,
+    });
   }
 
-  /// Completes once [planId]'s served-stage evidence — what [noteStart]
-  /// recorded about the Start — is on disk exactly as shown; fails with
+  /// Completes once [circleId]'s served-stage evidence — what [noteStart]
+  /// recorded about its Start — is on disk exactly as shown; fails with
   /// [StorageWriteFailed] otherwise (R8.1, Astra N04). Today's later
   /// lifecycle writes of a stage Circle wait for it, so no Close, pause or
   /// recovery is ever saved over a Start record that didn't land.
-  Future<void> confirmStartNoted(String planId) {
-    final shown = state.plans[planId]?.lastServed?.toJson();
-    final stored = _durable.plans[planId]?.lastServed?.toJson();
-    if (jsonEncode(shown) == jsonEncode(stored)) return Future<void>.value();
-    return ensureSaved();
+  ///
+  /// R8.2 (Claude NEW-1): about [circleId]'s own record only. A later Plan
+  /// action — a new cycle, another Circle served — that replaced it is not
+  /// its concern: once nothing shown or stored holds that record, there is
+  /// nothing left of it to save, and its Close is never held back by it.
+  Future<void> confirmStartNoted(
+    PlanStageProvenance stage, {
+    required String circleId,
+  }) => _settleStart(stage, circleId, null);
+
+  /// Whether [circleId]'s Start under billing's [status] needs no Plans
+  /// write (R8.2, founder decision B): the stage it was served for is on
+  /// disk exactly as shown, and already says what [noteStart] would record.
+  /// Otherwise Today waits for [noteStart] before the Circle is started.
+  bool startNeedsNoWrite(
+    PlanStageProvenance stage, {
+    required String circleId,
+    required EntitlementStatus status,
+  }) {
+    final stored = _servedRecord(_durable, stage, circleId);
+    if (stored == null || _servedRecord(state, stage, circleId) != stored) {
+      return false;
+    }
+    final active = switch (status) {
+      EntitlementStatus.active => true,
+      EntitlementStatus.inactive => false,
+      EntitlementStatus.initializing || EntitlementStatus.unavailable => null,
+    };
+    return active == null ||
+        identical(
+          _durable.noteStart(stage, circleId: circleId, active: active),
+          _durable,
+        );
+  }
+
+  /// [noteStart] and [confirmStartNoted]: with [active], the Start is noted
+  /// on the served record first. Completes once that record is as shown on
+  /// disk too — or, when a pending change no longer shows it, once that
+  /// change has settled (it may have been rolled back, and the record with
+  /// it).
+  Future<void> _settleStart(
+    PlanStageProvenance stage,
+    String circleId,
+    bool? active,
+  ) async {
+    for (var round = 0; ; round++) {
+      if (round > _maxRounds) {
+        throw const StorageWriteFailed(
+          circlePlansKey,
+          'the Start record waits on Plan changes still being saved',
+        );
+      }
+      if (active != null) {
+        final next = state.noteStart(stage, circleId: circleId, active: active);
+        // Today reports a Start whose evidence wasn't saved (audit
+        // remediation R8): it never saves the Start without it.
+        if (!identical(next, state)) return _set(next, report: false);
+      }
+      final shown = _servedRecord(state, stage, circleId);
+      final stored = _servedRecord(_durable, stage, circleId);
+      if (shown == stored) return;
+      // R8.1 (Astra N01/N04): already noted but still pending is not saved.
+      if (shown != null) {
+        await ensureSaved();
+      } else {
+        await idle();
+      }
+    }
+  }
+
+  /// [circleId]'s served record in [plans], as stored text, or `null`.
+  static String? _servedRecord(
+    CirclePlansState plans,
+    PlanStageProvenance stage,
+    String circleId,
+  ) {
+    final served = plans.plans[stage.planId]?.lastServed;
+    if (served == null || !served.matches(stage, circleId: circleId)) {
+      return null;
+    }
+    return jsonEncode(served.toJson());
   }
 
   /// Today's stage Circle was started and has now been closed: the stage
@@ -447,33 +799,82 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   /// saved Close not yet credited on the next start.
   ///
   /// [on] is the Circle's own day (audit remediation R3) — by default, today.
+  ///
+  /// R8.2 (Astra R81-A01): completes only once the credit is resolved on
+  /// disk — never because the Plans *shown* make it a no-op:
+  /// - credited on disk already: done;
+  /// - credited on screen, not yet on disk (pending): it is saved first;
+  /// - not owed by the Plans on disk either — a Plan paused, left or moved
+  ///   on to another cycle there, a Circle not eligible: legitimately
+  ///   unnecessary, done;
+  /// - owed on disk but a no-op on screen, because a Plan change is still
+  ///   being saved: blocked. That change is waited for — it lands, or it
+  ///   fails and is rolled back, and the credit is resolved again. A credit
+  ///   still blocked after [_maxRounds] fails with [StorageWriteFailed], so
+  ///   Today never writes over the session it belongs to.
+  ///
+  /// Founder decision A (R8.2 acceptance review): a Pause, Leave or another
+  /// Plan started after this Close was durable folds the credit into its
+  /// own save ([_withEarnedCredits]) — the later change never erases it.
+  ///
+  /// R8.2 Plan lifecycle policy (founder directive, 2026-11-06): [startedAt]
+  /// and [closedAt] are this Circle's own Start and Close. A Plan paused
+  /// after that Start, or left after that Close was asked for, is still
+  /// credited ([CirclePlansState.recordGuided], [_withActionOrder]); a Plan
+  /// paused before the Start or left before the Close is not.
   Future<void> recordGuided(
     PlanStageProvenance stage, {
     required String circleId,
     required List<String> parts,
     required List<String> skipped,
     String? on,
-  }) {
-    if (!_premium && !state.creditsServed(stage, circleId: circleId)) {
-      return Future<void>.value();
+    DateTime? startedAt,
+    DateTime? closedAt,
+  }) async {
+    final today = on ?? _today;
+    CirclePlansState? credit(CirclePlansState plans) {
+      if (!_premium && !plans.creditsServed(stage, circleId: circleId)) {
+        return null;
+      }
+      final next = plans.recordGuided(
+        stage,
+        circleId: circleId,
+        today: today,
+        parts: parts,
+        skipped: skipped,
+        startedAt: startedAt,
+        closedAt: closedAt,
+      );
+      return identical(next, plans) ? null : next;
     }
-    final next = state.recordGuided(
-      stage,
-      circleId: circleId,
-      today: on ?? _today,
-      parts: parts,
-      skipped: skipped,
-    );
-    if (identical(next, state)) {
+
+    for (var round = 0; ; round++) {
+      if (credit(state) case final next?) return _set(next);
+      if (_credited(_durable, stage.planId, circleId)) return;
       // R8.1 (Astra N01 / Claude AUD-1): a credit already in memory but not
       // on disk is not a recorded credit — it is written again, and this
       // completes only once the store confirms it.
-      final unsaved =
-          _credited(state, stage.planId, circleId) &&
-          !_credited(_durable, stage.planId, circleId);
-      return unsaved ? ensureSaved() : Future<void>.value();
+      // Founder decision A (R8.2): it may be in memory because a Pause or
+      // Leave folded it in ([_withEarnedCredits]); if that save fails, both
+      // are rolled back and the credit is resolved again on what the disk
+      // then holds.
+      if (_credited(state, stage.planId, circleId)) {
+        try {
+          await ensureSaved();
+        } on StorageWriteFailed {
+          if (round >= _maxRounds) rethrow;
+        }
+        continue;
+      }
+      if (credit(_durable) == null) return;
+      if (round >= _maxRounds) {
+        throw const StorageWriteFailed(
+          circlePlansKey,
+          'the credit waits on a Plan change still being saved',
+        );
+      }
+      await idle();
     }
-    return _set(next);
   }
 
   /// Delete history: the stage evidence goes at once; each Plan's place
@@ -484,9 +885,18 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   ///
   /// Audit remediation R8 (Astra R7-A04): the write and the removal must both
   /// be confirmed by the store ([writeConfirmed]).
+  ///
+  /// R8.2 (Astra R81-A02, Claude NEW-2): from this moment the evidence is
+  /// gone from what the Plans fall back to and decide on, too
+  /// ([confirmedState]) — even before the write lands, and if it fails:
+  /// the intent to delete is on disk, so the next start removes it from
+  /// the store whatever happens. No Insight is ever assessed, and no failed
+  /// save ever rolled back, onto the deleted evidence.
   Future<void> forgetStageEvidence() {
     final next = state.forgetStageEvidence();
     state = next;
+    _deletions++;
+    _durable = _durable.forgetStageEvidence();
     _queued = _queuedWrite = null;
     final json = jsonEncode(next.toJson());
     final prefs = _prefs;

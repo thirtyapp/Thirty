@@ -1,0 +1,10 @@
+r82_a01_pending_lifecycle_credit_test.jsonl: 3 passed, 7 failed, compileError=False
+r82_a02_new2_delete_isolation_test.jsonl: 4 passed, 6 failed, compileError=False
+r82_a03_new1_stage_publication_test.jsonl: 7 passed, 8 failed, compileError=False
+r82_a04_a08_new3_insight_actions_test.jsonl: 6 passed, 19 failed, compileError=False
+r82_a05_nested_fields_test.jsonl: 1 passed, 7 failed, compileError=False
+r82_a06_reflection_completion_test.jsonl: 4 passed, 4 failed, compileError=False
+r82_a07_confirmed_history_test.jsonl: 3 passed, 4 failed, compileError=False
+r82_a09_native_types_test.jsonl: 0 passed, 14 failed, compileError=False
+r82_cross_store_adversarial_test.jsonl: 2 passed, 4 failed, compileError=False
+TOTAL: 30 passed, 73 failed (all failures are assertion or runtime failures unless compileError=True)

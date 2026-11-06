@@ -276,6 +276,7 @@ void main() {
       final stage = offer(c).composed!.stage!;
       billing(c, EntitlementStatus.inactive);
       today(c).start();
+      await settle();
       today(c).close();
       await settle();
 
@@ -343,6 +344,7 @@ void main() {
       final c = await served();
       billing(c, EntitlementStatus.inactive);
       today(c).start();
+      await settle();
       billing(c, EntitlementStatus.active);
       today(c).close();
       today(c).close();
@@ -660,8 +662,13 @@ void main() {
       expect(cycle.records.where((r) => r.revisit), hasLength(1));
     });
 
-    test('a Plan paused after its stage Circle was served is not moved at '
-        'Close', () async {
+    // R8.2 final Plan lifecycle policy (founder directive, 2026-11-06)
+    // replaces the earlier expectation here (not moved): a stage Circle
+    // served and started before its Plan was paused is credited once its
+    // Close is durable — billing still being checked at Close, as before —
+    // and the Plan stays paused.
+    test('a Plan paused after its stage Circle was served and started is '
+        'credited at Close, and stays paused', () async {
       final c = await servedAndStarted();
       expect(
         c.read(circlePlansProvider.notifier).pause('getting_going'),
@@ -671,8 +678,12 @@ void main() {
       final reopened = open(EntitlementStatus.initializing);
       today(reopened).close();
       await settle();
-      expect(cycleOf(reopened, 'getting_going').cursor, 1);
-      expect(cycleOf(reopened, 'getting_going').records, isEmpty);
+      expect(cycleOf(reopened, 'getting_going').cursor, 2);
+      expect(cycleOf(reopened, 'getting_going').records, hasLength(1));
+      expect(
+        reopened.read(circlePlansProvider).plans['getting_going']!.lifecycle,
+        PlanLifecycle.paused,
+      );
     });
 
     test('a Plan left after its stage Circle was served is not moved at '

@@ -1,0 +1,74 @@
+// Stage-5 end, then "Go through it again" from the review, then the
+// reflection answer (scratch only). Asserts correct behaviour.
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/providers/clock_provider.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+
+import '../support/r8_harness.dart';
+
+void main() {
+  test('stage 5 closed -> Plan ended -> "Go through it again" -> the '
+      'reflection answers of that stage-5 Circle must be saved', () async {
+    final h = R8Harness(DateTime(2026, 10, 12, 9));
+    await h.boot();
+    var c = h.open();
+    c.read(circlePlansProvider.notifier).start('getting_going');
+    await R8Harness.settle();
+    String? lastId;
+    for (var day = 0; day < 8; day++) {
+      final plan = c.read(circlePlansProvider).plans['getting_going']!;
+      if (plan.lifecycle == PlanLifecycle.ended) break;
+      final today = c.read(recommendationProvider.notifier);
+      today.chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final rec = c.read(recommendationProvider).recommendation!;
+      lastId = rec.circleId;
+      today.start();
+      await R8Harness.settle();
+      today.close();
+      await R8Harness.settle();
+      if (c.read(circlePlansProvider).plans['getting_going']!.lifecycle ==
+          PlanLifecycle.ended) {
+        break;
+      }
+      today.reportAttempt(CircleAttemptResponse.yes);
+      await R8Harness.settle();
+      h.clock.value = h.clock.value.add(const Duration(days: 1));
+      await h.restart();
+      c = h.open();
+      c.read(nowProvider);
+    }
+    expect(
+      c.read(circlePlansProvider).plans['getting_going']!.lifecycle,
+      PlanLifecycle.ended,
+      reason: 'precondition: stage 5 closed and credited',
+    );
+    final id = lastId!;
+    // The stage-5 review's "Go through it again" (plan_detail_page.dart).
+    expect(
+      c.read(circlePlansProvider.notifier).goThroughAgain('getting_going'),
+      PlanActionResult.done,
+    );
+    await R8Harness.settle();
+    c.read(recommendationProvider.notifier)
+      ..reportAttempt(CircleAttemptResponse.yes)
+      ..reportUsefulness(CircleUsefulnessResponse.veryUseful);
+    await R8Harness.settle();
+    final entry = c
+        .read(circleJournalRepositoryProvider)
+        .readAll()
+        .firstWhere((e) => e.circleId == id);
+    // ignore: avoid_print
+    print('STAGE5: id=$id saveStatus=${c.read(journalSaveStatusProvider)[id]} '
+        'hist.attempt=${entry.attemptResponse} '
+        'hist.useful=${entry.usefulnessResponse} '
+        'disk.attempt=${(await h.disk.stored())[recommendationAttemptResponseKey]}');
+    expect(entry.attemptResponse, CircleAttemptResponse.yes);
+    expect(entry.usefulnessResponse, CircleUsefulnessResponse.veryUseful);
+  });
+}

@@ -1,0 +1,149 @@
+--- artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/baseline_pre_fix/lib/features/plans/application/circle_plans_provider.dart.txt	2026-11-06 10:30:34.553412400 +0100
++++ lib/features/plans/application/circle_plans_provider.dart	2026-11-06 10:34:31.539610900 +0100
+@@ -294,7 +294,89 @@
+       if (!identical(earned, state)) _set(earned).ignore();
+       return PlanActionResult.notAvailable;
+     }
+-    return _apply(_byInsight(next, planId, byInsight), running: running);
++    return _apply(
++      _byInsight(_withActionOrder(earned, next), planId, byInsight),
++      running: running,
++    );
++  }
++
++  /// R8.2 Plan lifecycle policy (founder directive, 2026-11-06): what the
++  /// user did to today's stage Circle, and when — told by Today at the
++  /// moment of the action, before anything is saved, so the actual order
++  /// of a Start or Close and a later Pause or Leave is known however slow
++  /// storage is. In memory only; after a restart Today tells it again from
++  /// what it restores, and History's record stands in.
++  final Map<String, DateTime> _startedAt = {};
++  final Map<String, DateTime> _closeRequestedAt = {};
++
++  /// Today's stage Circle [circleId] was started at [at].
++  void noteStarted(String circleId, DateTime at) => _startedAt[circleId] = at;
++
++  /// The user asked to close today's stage Circle [circleId] at [at].
++  void noteCloseRequested(String circleId, DateTime at) =>
++      _closeRequestedAt[circleId] = at;
++
++  CircleJournalEntry? _shownInHistory(String circleId) => ref
++      .read(circleJournalRepositoryProvider)
++      .readAll()
++      .where((e) => e.circleId == circleId)
++      .firstOrNull;
++
++  /// [after] — a lifecycle change made on [before] — with the order of the
++  /// user's own actions on each Plan's served Circle recorded in the same
++  /// save ([CirclePlansState.stampServed]):
++  /// - a Plan paused (by Pause, or by starting another Plan) after its
++  ///   served Circle was started: that Start came first;
++  /// - a Plan left after the user asked to close its served Circle — the
++  ///   Close may still be being saved: that Close came first.
++  /// Nothing is credited here: [recordGuided] credits only a durable Close,
++  /// and only the very Start and Close recorded. A Circle already credited
++  /// needs nothing.
++  CirclePlansState _withActionOrder(
++    CirclePlansState before,
++    CirclePlansState after,
++  ) {
++    var next = after;
++    for (final MapEntry(key: planId, value: now) in after.plans.entries) {
++      final was = before.plans[planId];
++      final served = was?.lastServed;
++      if (was == null || served == null) continue;
++      if (served.stage.cycleId != was.current.id || was.current.isOver) {
++        continue;
++      }
++      final circleId = served.circleId;
++      if (_credited(before, planId, circleId)) continue;
++      final pausing =
++          was.lifecycle == PlanLifecycle.active &&
++          now.lifecycle == PlanLifecycle.paused;
++      final leaving =
++          now.lifecycle == PlanLifecycle.left &&
++          (was.lifecycle == PlanLifecycle.active ||
++              (was.lifecycle == PlanLifecycle.paused &&
++                  served.startedBeforePause != null));
++      if (pausing) {
++        final at =
++            _startedAt[circleId] ?? _shownInHistory(circleId)?.startedAt;
++        if (at != null) {
++          next = next.stampServed(
++            planId,
++            circleId: circleId,
++            startedBeforePause: at,
++          );
++        }
++      } else if (leaving) {
++        final at =
++            _closeRequestedAt[circleId] ?? _shownInHistory(circleId)?.closedAt;
++        if (at != null) {
++          next = next.stampServed(
++            planId,
++            circleId: circleId,
++            closedBeforeLeave: at,
++          );
++        }
++      }
++    }
++    return next;
+   }
+ 
+   /// [next] with [planId] marked as changed by Insight [insightId]'s own
+@@ -326,7 +408,14 @@
+     List<CircleJournalEntry>? journal;
+     for (final plan in plans.plans.values) {
+       final served = plan.lastServed;
+-      if (plan.lifecycle != PlanLifecycle.active || served == null) continue;
++      // R8.2 Plan lifecycle policy: a paused Plan's served Circle started
++      // before the Pause is owed its credit too ([recordGuided] decides).
++      if ((plan.lifecycle != PlanLifecycle.active &&
++              plan.lifecycle != PlanLifecycle.paused) ||
++          served == null ||
++          served.stage.cycleId != plan.current.id) {
++        continue;
++      }
+       journal ??= ref.read(circleJournalRepositoryProvider).readConfirmed();
+       final closed = journal
+           .where(
+@@ -354,6 +443,8 @@
+         today: closed.localDate,
+         parts: session.parts,
+         skipped: session.skipped,
++        startedAt: closed.startedAt,
++        closedAt: closed.closedAt,
+       );
+     }
+     return next;
+@@ -725,13 +816,20 @@
+   /// Founder decision A (R8.2 acceptance review): a Pause, Leave or another
+   /// Plan started after this Close was durable folds the credit into its
+   /// own save ([_withEarnedCredits]) — the later change never erases it.
+-  /// Only a Plan paused or left before the Close was durable earns nothing.
++  ///
++  /// R8.2 Plan lifecycle policy (founder directive, 2026-11-06): [startedAt]
++  /// and [closedAt] are this Circle's own Start and Close. A Plan paused
++  /// after that Start, or left after that Close was asked for, is still
++  /// credited ([CirclePlansState.recordGuided], [_withActionOrder]); a Plan
++  /// paused before the Start or left before the Close is not.
+   Future<void> recordGuided(
+     PlanStageProvenance stage, {
+     required String circleId,
+     required List<String> parts,
+     required List<String> skipped,
+     String? on,
++    DateTime? startedAt,
++    DateTime? closedAt,
+   }) async {
+     final today = on ?? _today;
+     CirclePlansState? credit(CirclePlansState plans) {
+@@ -744,6 +842,8 @@
+         today: today,
+         parts: parts,
+         skipped: skipped,
++        startedAt: startedAt,
++        closedAt: closedAt,
+       );
+       return identical(next, plans) ? null : next;
+     }

@@ -1,0 +1,10 @@
+--- R8.2 pre-decision: test/features/personal_circle/personal_circle_simulation_test.dart
++++ after founder decisions: test/features/personal_circle/personal_circle_simulation_test.dart
+@@ -210,6 +210,7 @@
+           continue;
+         }
+         notifier.start();
++        await _settle();
+         // Skips and leave-outs, as this user would.
+         final plan = r.composed?.plan;
+         if (plan != null) {

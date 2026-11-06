@@ -1,0 +1,10 @@
+--- R8.2 pre-decision: test/features/home/r3_delete_feedback_test.dart
++++ after founder decisions: test/features/home/r3_delete_feedback_test.dart
+@@ -60,6 +60,7 @@
+     final today = c.read(recommendationProvider.notifier);
+     today.chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+     today.start();
++    await tester.pumpAndSettle();
+     today.close();
+     await tester.pumpAndSettle();
+     expect(c.read(circleJournalRepositoryProvider).readAll(), hasLength(1));

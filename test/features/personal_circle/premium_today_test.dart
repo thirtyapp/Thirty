@@ -206,6 +206,7 @@ void main() {
           .composed!
           .plan;
       notifier.start();
+      await settle();
       final first = Duration(minutes: plan.parts.first.minutes);
       now = morning.add(first + const Duration(seconds: 5));
       var moment = c.read(recommendationProvider).partMomentAt(now)!;
@@ -235,6 +236,7 @@ void main() {
           .composed!
           .plan;
       notifier.start();
+      await settle();
       notifier.skipPart();
       final state = c.read(recommendationProvider);
       expect(state.skipped, [plan.parts.first.element]);
@@ -283,6 +285,7 @@ void main() {
           .composed!
           .plan;
       notifier.start();
+      await settle();
       notifier.skipPart(leaveOut: true);
       await settle();
       final element = plan.parts.first.element;
@@ -456,6 +459,7 @@ void main() {
           .composed!
           .plan;
       notifier.start();
+      await settle();
       notifier.skipPart(leaveOut: true);
       notifier.close();
       await c

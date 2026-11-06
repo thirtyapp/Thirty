@@ -1,0 +1,131 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 99.0.0 (111.0.0 available)
+  analyzer 12.1.0 (14.7.0 available)
+  app_links 7.2.1 (7.2.2 available)
+  app_links_linux 1.0.3 (1.0.4 available)
+  app_links_web 1.0.4 (1.0.5 available)
+  clock 1.1.2 (1.1.3 available)
+  coverage 1.15.1 (1.16.0 available)
+  crypto 3.0.7 (3.0.8 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  equatable 2.1.0 (3.0.0 available)
+  flutter_local_notifications 22.3.0 (22.3.3 available)
+  flutter_local_notifications_linux 8.0.1 (8.0.2 available)
+  flutter_riverpod 3.4.2 (3.4.3 available)
+  flutter_svg 2.3.0 (2.3.2 available)
+  flutter_timezone 5.1.0 (5.1.1 available)
+  frontend_server_client 4.0.0 (4.2.0 available)
+  functions_client 2.6.4 (2.7.1 available)
+  glob 2.1.3 (2.2.0 available)
+  go_router 17.3.0 (18.1.2 available)
+  gotrue 2.26.0 (2.27.3 available)
+  http_multi_server 3.2.2 (3.2.3 available)
+  io 1.0.5 (1.1.0 available)
+  listen 1.0.0-beta.4 (1.0.1 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.0 (1.19.0 available)
+  mime 2.0.0 (2.1.0 available)
+  package_config 2.2.0 (3.0.0 available)
+  passkeys_platform_interface 2.9.0 (2.11.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pool 1.5.2 (1.5.3 available)
+  postgrest 2.8.0 (2.9.1 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  purchases_flutter 10.11.0 (11.0.0 available)
+  realtime_client 2.11.0 (2.13.2 available)
+  riverpod 3.4.2 (3.4.3 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.5.4 available)
+  shared_preferences_foundation 2.5.6 (2.6.1 available)
+  shelf 1.4.2 (1.4.3 available)
+  shelf_static 1.1.3 (1.2.0 available)
+  source_maps 0.10.13 (0.10.14 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  storage_client 2.6.0 (2.8.1 available)
+  supabase 2.14.0 (2.16.5 available)
+  supabase_flutter 2.16.0 (2.18.3 available)
+  test 1.31.0 (1.33.0 available)
+  test_api 0.7.11 (0.7.15 available)
+  test_core 0.6.17 (0.6.21 available)
+  timezone 0.11.1 (0.11.2 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_graphics 1.2.3 (1.2.6 available)
+  vector_graphics_compiler 1.3.0 (1.3.4 available)
+  vector_math 2.2.0 (2.4.4 available)
+  vm_service 15.2.0 (15.4.0 available)
+  web 1.1.1 (1.1.2 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+65 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+{"protocolVersion":"0.1.1","runnerVersion":"1.31.0","pid":40472,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_diag_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_diag_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"suite":{"id":2,"platform":"vm","path":"C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart"},"type":"suite","time":3}
+{"test":{"id":3,"name":"loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart","suiteID":2,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":3}
+{"suite":{"id":4,"platform":"vm","path":"C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_stage5_test.dart"},"type":"suite","time":4}
+{"test":{"id":5,"name":"loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_stage5_test.dart","suiteID":4,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":4}
+{"count":3,"time":4,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":18148}
+{"group":{"id":6,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":4,"line":null,"column":null,"url":null},"type":"group","time":18150}
+{"test":{"id":7,"name":"CONTROL A1: Start then Close, no Plan action — saved","suiteID":0,"groupIDs":[6],"metadata":{"skip":false,"skipReason":null},"line":52,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_diag_test.dart"},"type":"testStart","time":18150}
+{"testID":7,"messageType":"print","message":"CONTROL A1: disk.status=closed disk.attempt=yes hist.started=true hist.closed=true hist.attempt=CircleAttemptResponse.yes saveStatus=true mem.status=closed","type":"print","time":18292}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":18301}
+{"test":{"id":8,"name":"DIAG A1: Start; Leave + Go through again; Close; answer; restart","suiteID":0,"groupIDs":[6],"metadata":{"skip":false,"skipReason":null},"line":68,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_diag_test.dart"},"type":"testStart","time":18302}
+{"testID":3,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":18334}
+{"group":{"id":9,"suiteID":2,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":8,"line":null,"column":null,"url":null},"type":"group","time":18335}
+{"group":{"id":10,"suiteID":2,"parentID":9,"name":"A1 — a Plan action that resets lastServed strands today's durably-served stage Circle (no storage fault at all)","metadata":{"skip":false,"skipReason":null},"testCount":2,"line":50,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart"},"type":"group","time":18335}
+{"test":{"id":11,"name":"A1 — a Plan action that resets lastServed strands today's durably-served stage Circle (no storage fault at all) Start saved; Leave + \"Go through it again\"; Close: the Close must reach the day keys and History","suiteID":2,"groupIDs":[9,10],"metadata":{"skip":false,"skipReason":null},"line":52,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart"},"type":"testStart","time":18335}
+{"testID":8,"messageType":"print","message":"DIAG A1 in-session: disk.status=started disk.attempt=null hist.started=true hist.closed=false hist.attempt=null saveStatus=false mem.status=closed","type":"print","time":18335}
+{"testID":8,"messageType":"print","message":"DIAG A1 after restart: disk.status=started disk.attempt=null hist.started=true hist.closed=false hist.attempt=null saveStatus=null mem.status=started","type":"print","time":18336}
+{"testID":8,"messageType":"print","message":"DIAG A1 restart+retry: disk.status=started disk.attempt=null hist.started=true hist.closed=false hist.attempt=null saveStatus=null mem.status=started","type":"print","time":18338}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":18338}
+{"test":{"id":12,"name":"DIAG A2 (returnsFalse once at choice): run it; restart","suiteID":0,"groupIDs":[6],"metadata":{"skip":false,"skipReason":null},"line":95,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_diag_test.dart"},"type":"testStart","time":18339}
+{"testID":12,"messageType":"print","message":"DIAG A2 in-session: disk.status=null disk.attempt=null hist.started=false hist.closed=false hist.attempt=null saveStatus=false mem.status=closed plansUnsaved=false","type":"print","time":18358}
+{"testID":12,"messageType":"print","message":"DIAG A2 after restart: disk.status=null disk.attempt=null hist.started=false hist.closed=false hist.attempt=null saveStatus=null mem.status=notStarted rec=null","type":"print","time":18358}
+{"testID":12,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":18358}
+{"test":{"id":13,"name":"DIAG A3: Delete fails; later failed save; heal; restart","suiteID":0,"groupIDs":[6],"metadata":{"skip":false,"skipReason":null},"line":119,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_diag_test.dart"},"type":"testStart","time":18358}
+{"testID":13,"messageType":"print","message":"DIAG A3: memRecords afterDelete=0 afterFailedSave=1 diskRecordsAfterHeal=1 deletionIntentStillPending=true diskRecordsAfterRestart=0 memAfterRestart=0","type":"print","time":18389}
+{"testID":13,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":18389}
+{"testID":11,"error":"Expected: not <false>\n  Actual: <false>\nthe Close was reported NOT SAVED\n","stackTrace":"package:matcher                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18  expect\ntest\\zz_audit\\audit_r81_repro_test.dart 72:7        main.<fn>.<fn>\n","isFailure":true,"type":"error","time":18469}
+{"testID":11,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":18469}
+{"test":{"id":14,"name":"A1 — a Plan action that resets lastServed strands today's durably-served stage Circle (no storage fault at all) Closed and credited; Leave + \"Go through it again\"; then the reflection answer must be saved","suiteID":2,"groupIDs":[9,10],"metadata":{"skip":false,"skipReason":null},"line":83,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart"},"type":"testStart","time":18469}
+{"testID":14,"error":"Expected: not <false>\n  Actual: <false>\nthe reflection answer was reported NOT SAVED\n","stackTrace":"package:matcher                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18  expect\ntest\\zz_audit\\audit_r81_repro_test.dart 99:7        main.<fn>.<fn>\n","isFailure":true,"type":"error","time":18507}
+{"testID":14,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":18508}
+{"group":{"id":15,"suiteID":2,"parentID":9,"name":"throws:","metadata":{"skip":false,"skipReason":null},"testCount":3,"line":111,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart"},"type":"group","time":18508}
+{"test":{"id":16,"name":"throws: A2 — ONE transient failure of the served-stage write: the user can still run and Close the Circle after the store heals, and History must record it","suiteID":2,"groupIDs":[9,15],"metadata":{"skip":false,"skipReason":null},"line":112,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart"},"type":"testStart","time":18508}
+{"testID":16,"error":"Expected: not null\n  Actual: <null>\na Circle the user really ran and closed, on a healthy store, never reaches History\n","stackTrace":"package:matcher                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18  expect\ntest\\zz_audit\\audit_r81_repro_test.dart 137:9       main.<fn>.<fn>\n","isFailure":true,"type":"error","time":18529}
+{"testID":16,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":18530}
+{"test":{"id":17,"name":"throws: A3 — a failed Delete leaves _durable at pre-deletion evidence: a later failed Plan save puts deleted stage evidence back in memory, and the next successful save writes it to disk","suiteID":2,"groupIDs":[9,15],"metadata":{"skip":false,"skipReason":null},"line":142,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart"},"type":"testStart","time":18530}
+{"testID":5,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":18565}
+{"group":{"id":18,"suiteID":4,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":1,"line":null,"column":null,"url":null},"type":"group","time":18565}
+{"test":{"id":19,"name":"stage 5 closed -> Plan ended -> \"Go through it again\" -> the reflection answers of that stage-5 Circle must be saved","suiteID":4,"groupIDs":[18],"metadata":{"skip":false,"skipReason":null},"line":15,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_stage5_test.dart"},"type":"testStart","time":18565}
+{"testID":17,"error":"Expected: empty\n  Actual: ExpandIterable<PlanCycle, StageRecord>:[Instance of 'StageRecord']\ndeleted stage evidence is back in memory after a failed unrelated save\n","stackTrace":"package:matcher                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18  expect\ntest\\zz_audit\\audit_r81_repro_test.dart 169:9       main.<fn>.<fn>\n","isFailure":true,"type":"error","time":18566}
+{"testID":17,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":18566}
+{"test":{"id":20,"name":"throws: A4 — confirmed(): an action whose own write fails but whose change lands through a later queued save must not be reported notSaved","suiteID":2,"groupIDs":[9,15],"metadata":{"skip":false,"skipReason":null},"line":186,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart"},"type":"testStart","time":18566}
+{"testID":20,"error":"Expected: PlanActionResult:<PlanActionResult.done>\n  Actual: PlanActionResult:<PlanActionResult.notSaved>\nreported notSaved although the change is on disk\n","stackTrace":"package:matcher                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18  expect\ntest\\zz_audit\\audit_r81_repro_test.dart 203:9       main.<fn>.<fn>\n","isFailure":true,"type":"error","time":18577}
+{"testID":20,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":18578}
+{"group":{"id":21,"suiteID":2,"parentID":9,"name":"returnsFalse:","metadata":{"skip":false,"skipReason":null},"testCount":3,"line":111,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart"},"type":"group","time":18578}
+{"test":{"id":22,"name":"returnsFalse: A2 — ONE transient failure of the served-stage write: the user can still run and Close the Circle after the store heals, and History must record it","suiteID":2,"groupIDs":[9,21],"metadata":{"skip":false,"skipReason":null},"line":112,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart"},"type":"testStart","time":18578}
+{"testID":22,"error":"Expected: not null\n  Actual: <null>\na Circle the user really ran and closed, on a healthy store, never reaches History\n","stackTrace":"package:matcher                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18  expect\ntest\\zz_audit\\audit_r81_repro_test.dart 137:9       main.<fn>.<fn>\n","isFailure":true,"type":"error","time":18598}
+{"testID":22,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":18598}
+{"test":{"id":23,"name":"returnsFalse: A3 — a failed Delete leaves _durable at pre-deletion evidence: a later failed Plan save puts deleted stage evidence back in memory, and the next successful save writes it to disk","suiteID":2,"groupIDs":[9,21],"metadata":{"skip":false,"skipReason":null},"line":142,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart"},"type":"testStart","time":18599}
+{"testID":23,"error":"Expected: empty\n  Actual: ExpandIterable<PlanCycle, StageRecord>:[Instance of 'StageRecord']\ndeleted stage evidence is back in memory after a failed unrelated save\n","stackTrace":"package:matcher                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18  expect\ntest\\zz_audit\\audit_r81_repro_test.dart 169:9       main.<fn>.<fn>\n","isFailure":true,"type":"error","time":18624}
+{"testID":23,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":18624}
+{"test":{"id":24,"name":"returnsFalse: A4 — confirmed(): an action whose own write fails but whose change lands through a later queued save must not be reported notSaved","suiteID":2,"groupIDs":[9,21],"metadata":{"skip":false,"skipReason":null},"line":186,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1aac19c5-ee8d-4fd3-80eb-247302276128/scratchpad/r81/test/zz_audit/audit_r81_repro_test.dart"},"type":"testStart","time":18625}
+{"testID":24,"error":"Expected: PlanActionResult:<PlanActionResult.done>\n  Actual: PlanActionResult:<PlanActionResult.notSaved>\nreported notSaved although the change is on disk\n","stackTrace":"package:matcher                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18  expect\ntest\\zz_audit\\audit_r81_repro_test.dart 203:9       main.<fn>.<fn>\n","isFailure":true,"type":"error","time":18635}
+{"testID":24,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":18635}
+{"testID":19,"messageType":"print","message":"STAGE5: id=2026-10-16 saveStatus=false hist.attempt=null hist.useful=null disk.attempt=null","type":"print","time":18834}
+{"testID":19,"error":"Expected: CircleAttemptResponse:<CircleAttemptResponse.yes>\n  Actual: <null>\n","stackTrace":"package:matcher                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18  expect\ntest\\zz_audit\\audit_r81_stage5_test.dart 71:5       main.<fn>\n","isFailure":true,"type":"error","time":18835}
+{"testID":19,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":18835}
+{"success":false,"type":"done","time":18856}

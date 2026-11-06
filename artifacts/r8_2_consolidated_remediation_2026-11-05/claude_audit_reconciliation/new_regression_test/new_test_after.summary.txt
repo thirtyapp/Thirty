@@ -1,0 +1,6 @@
+PASS Trigger A — no storage fault stage 5 closed, the Plan ended; "Go through it again" on the review page; that Circle's reflection is saved, also after a restart
+PASS Trigger A — no storage fault stage 5 closed, the Plan ended; the I1 application (its confirmed "Go through it again"); that Circle's reflection is saved, also after a restart
+PASS Trigger A — no storage fault a stage Circle started; Leave, then Start the same Plan again mid-Circle; its Close and reflection are saved, also after a restart
+PASS Trigger B (throws) — one transient failure of the served-stage write at choice time: the Circle is taken back before it can start and the user is told; the next choice is saved, runs, and reaches History
+PASS Trigger B (returnsFalse) — one transient failure of the served-stage write at choice time: the Circle is taken back before it can start and the user is told; the next choice is saved, runs, and reaches History
+TOTAL pass=5 fail=0

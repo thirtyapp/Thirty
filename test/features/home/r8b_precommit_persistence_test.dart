@@ -327,7 +327,16 @@ void main() {
       h.disk.fail(circlePlansKey, fault);
       today(c).start();
       await R8Harness.settle();
-      expect(c.read(journalSaveStatusProvider)[id], isFalse);
+      // R8.2 founder decision B: the Start is refused — the Circle isn't
+      // started — and told with "This change couldn't be saved. Please try
+      // again." (the offer itself is saved, so History's notice doesn't
+      // apply).
+      expect(
+        c.read(recommendationProvider).status,
+        RecommendationStatus.notStarted,
+      );
+      expect(c.read(recommendationProvider).recommendation?.circleId, id);
+      expect(c.read(storeSaveFailuresProvider).count, greaterThan(0));
       expect((await h.disk.stored())[recommendationStatusKey], 'notStarted');
       final again = await reopen();
       expect(

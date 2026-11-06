@@ -1,0 +1,10 @@
+--- R8.2 pre-decision: test/core/qa/qa_scenario_test.dart
++++ after founder decisions: test/core/qa/qa_scenario_test.dart
+@@ -253,6 +253,7 @@
+       final offer = c.read(recommendationProvider).recommendation!;
+       expect(offer.composed!.stage!.stageNumber, 2);
+       today.start();
++      await pumpEventQueue();
+       today.close();
+       // The Plan moves on once the Close is saved (audit remediation R3).
+       await pumpEventQueue();

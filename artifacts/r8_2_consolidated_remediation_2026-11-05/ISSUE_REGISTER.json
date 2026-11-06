@@ -1,0 +1,344 @@
+{
+ "title": "THIRTY R8.2 consolidated issue register (post-R8.1 audits)",
+ "baseline": {
+  "repository": "thirtyapp/Thirty",
+  "branch": "step5-billing-integration",
+  "auditedCommit": "e935112c408c16d99835280f4e1fafd722d47ed1",
+  "parent": "58b179c99866e234acd63e4e241590af36b9b186"
+ },
+ "inputs": {
+  "astra": {
+   "path": "docs/audits/THIRTY_INDEPENDENT_POST_R8_1_AUDIT.md",
+   "verdict": "FAIL",
+   "note": "Read verbatim, never edited; committed unchanged in the R8.2 commit (parent e935112c).",
+   "sha256": "afb0dd9ad6e82774bb963e67c6749b44a9505c18954af037ac8a3c565c0c375a",
+   "bytes": 104664
+  },
+  "claude": {
+   "path": "docs/audits/THIRTY_CLAUDE_POST_R8_1_AUDIT_REPORT.txt",
+   "verdict": "CONDITIONAL PASS (per founder directive)",
+   "note": "The complete Claude post-R8.1 report was not present anywhere in the workspace (repository, Desktop, Downloads, Documents, OneDrive searched by name and content). Its findings are registered from the founder directive's own description; their exact original wording, reproduction text and hash could not be preserved verbatim. FOUNDER ACTION: supply the report so it can be preserved under docs/audits/ and these entries checked against it.",
+   "acceptanceReview": "The R8.2 founder acceptance review (2026-11-05) states that the complete Claude post-R8.1 report is supplied as THIRTY_CLAUDE_POST_R8_1_AUDIT_REPORT.txt. That attachment did not reach this session: only the review's own text did. No file of that name, or with that content, exists on C:, D: or F: (searched by name across the user profile and the other drives, and by content in the paste cache). It was therefore not read, not preserved and not hashed, and the reconciliation is BLOCKED. The R8.2 entries derived from the directive stay as they were registered; nothing here claims the report was available at any point.",
+   "sha256": "96593e20a24cba993dc45973118d2ed021dcae25c465fa0078ac87b29e4c23a1",
+   "bytes": 52094,
+   "verdictVerbatim": "CONDITIONAL PASS. R8.1 baseline acceptance is blocked at e935112 until NEW-1 is fixed and delta re-audited.",
+   "reconciliation": "Supplied 2026-11-06 09:08 (+01:00), after the R8.2 remediation and founder decisions A–C were implemented; read in full, preserved unedited and reconciled after that. Every finding maps to an entry here; none is open on the current tree. The note and acceptanceReview above are kept as the record of when the report was not available. See artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/README.md."
+  }
+ },
+ "deduplication": [
+  "R81-A02 (Astra) and NEW-2 (Claude): one root cause — writers able to recreate Insight data derived from evidence being deleted — kept as one entry, tested by separate scenarios (assessment during Delete; queued payload landing after it; failed Delete then rollback; interrupted Delete; restarts).",
+  "R81-A08 (Astra) and Claude's I1/I2/I3 applied-marker retry observation: one root cause (no repair path after a target-success/marker-failure split), one entry.",
+  "R81-A03 (Astra) and NEW-1 (Claude) are related but distinct: kept as two entries, tested independently."
+ ],
+ "entries": [
+  {
+   "id": "R81-A01",
+   "auditor": "GPT-6 Astra",
+   "severity": "HIGH",
+   "title": "A pending failed Pause bypasses the durable-credit prerequisite",
+   "reproduction": "Close saved, credit refused; next day, lapsed; Pause held; Free choice; Pause fails; restart twice: the earlier day's credit is gone.",
+   "rootCause": "CirclePlansNotifier.recordGuided judged 'nothing to credit' by the shown (optimistic) Plans; a pending Pause made the domain a no-op, accepted as durable completion by Today's pre-overwrite gate.",
+   "fix": "recordGuided distinguishes credited on disk / pending on screen / not owed on disk (legitimately unnecessary) / owed on disk but blocked by a pending change — the last waits for that change to settle (idle()) and re-evaluates; still blocked after 8 rounds it fails, so Today never writes over the session.",
+   "files": [
+    "lib/features/plans/application/circle_plans_provider.dart"
+   ],
+   "tests": "test/features/r82/r82_a01_pending_lifecycle_credit_test.dart",
+   "status": "FIXED (R8.2 commit, parent e935112c; not yet independently audited)",
+   "founderDecisionAmendment": "Founder decision A (2026-11-05): the policy the original fix kept — \"the Pause lands: the credit is legitimately unnecessary\" — is reversed. A Close durably recorded before a Pause, Leave or another Plan started keeps its credit, saved with that change (see FD-A). The pending-change mechanism is unchanged; recordGuided now retries when the folded-in save is refused instead of failing at once."
+  },
+  {
+   "id": "R81-A02 / NEW-2",
+   "auditor": "GPT-6 Astra (A02, HIGH); independent Claude (NEW-2)",
+   "severity": "HIGH",
+   "title": "Delete can finish successfully with recreated Insight metadata",
+   "reproduction": "Completed Plan cycle with review; Delete with the Plan evidence write held; Insights opened during it; release; restart: a Plan-review snapshot naming deleted Circles survives.",
+   "rootCause": "Insights assessed from Plans' confirmed snapshot, which kept the deleted evidence until the Plans write landed (and for ever if it failed); nothing stopped generation during a Delete; Plans/Insights failed saves could roll back onto pre-delete snapshots; Delete did not wait for saves queued meanwhile.",
+   "fix": "forgetStageEvidence/forgetAll remove the deleted data from the rollback/decision snapshot at once (and a pre-delete save landing later never restores it, by a deletion generation); assess() generates nothing while a Delete is under way or pending; Delete waits for Plans and Insights queues to settle and clears Insights again in its last pass; History's pending-write tracker is reset.",
+   "files": [
+    "lib/features/plans/application/circle_plans_provider.dart",
+    "lib/features/insights/application/insights_provider.dart",
+    "lib/features/home/application/circle_history_deletion.dart"
+   ],
+   "tests": "test/features/r82/r82_a02_new2_delete_isolation_test.dart",
+   "status": "FIXED (R8.2 commit, parent e935112c; not yet independently audited)",
+   "originalReportCheck": "Original report: same root cause and sequence. Its A3 reproduction now finds 0 records in memory, on disk after the heal and after a restart; its final string check is a false positive (the Circle id is the cycle's own startedOn date)."
+  },
+  {
+   "id": "R81-A03",
+   "auditor": "GPT-6 Astra",
+   "severity": "MEDIUM",
+   "title": "Stage publication checks the live offer instead of the payload being saved",
+   "reproduction": "Earlier Today write held; Plan start held; stage choice; Kept Circle used today; Plan start refused; queued stage publication runs: stage Circle saved to the day keys with no durable served stage; survives restart.",
+   "rootCause": "_publish decided whether to await confirmServed from state.recommendation at write time, not from the Circle in the payload.",
+   "fix": "_publish gates on the stage of the payload it writes (or of the choice it carries); a stage Circle whose served stage can't be confirmed is never written and, if still on show (offered, started or closed), is taken back — today's choice opens again — so no unsaveable session runs.",
+   "files": [
+    "lib/features/home/application/recommendation_provider.dart"
+   ],
+   "tests": "test/features/r82/r82_a03_new1_stage_publication_test.dart",
+   "status": "FIXED (R8.2 commit, parent e935112c; not yet independently audited); supersedes the R8.1 accepted limitation 'pending-then-failed stage Circle stays on screen'",
+   "founderDecisionAmendment": "Founder decision B (2026-11-05): withdrawal is now limited to an offer not yet started. Start waits for the Circle to be saved first (see FD-B), so a started Circle is never taken back."
+  },
+  {
+   "id": "NEW-1",
+   "auditor": "independent Claude (per founder directive)",
+   "severity": "MEDIUM (blocking)",
+   "title": "An already-published stage Circle becomes unsaveable after legitimate Plan actions",
+   "reproduction": "Stage Circle published and started; Leave then Go through it again (lastServed replaced); Close and reflection are refused.",
+   "rootCause": "Every write of a shown stage Circle re-ran confirmServed against the Plan's mutable lastServed, and confirmStartNoted compared the Plan's current lastServed whatever Circle it named.",
+   "fix": "Publication is gated only when a write publishes a stage Circle (A03 fix); confirmStartNoted/noteStart settle that Circle's own served record only — a record no longer shown or stored is moot.",
+   "files": [
+    "lib/features/home/application/recommendation_provider.dart",
+    "lib/features/plans/application/circle_plans_provider.dart"
+   ],
+   "tests": "test/features/r82/r82_a03_new1_stage_publication_test.dart",
+   "status": "FIXED (R8.2 commit, parent e935112c; not yet independently audited)",
+   "originalReportCheck": "Original report: same root cause. It names more triggers than the directive did — stage 5 → Plan ended → \"Go through it again\" (its most natural case), the I1 application, Leave then Start the same Plan, and Trigger B (one transient Plans failure at choice time, after which the Circle could be run and lost) — and asks for a regression test for both triggers. The auditor's own reproductions pass on the current tree except where they assert the replaced R8.1 behaviour; the triggers are now in test/features/r82/r82_claude_audit_new1_triggers_test.dart (5 tests: 5/5 fail on R8.1, 5/5 pass now)."
+  },
+  {
+   "id": "R81-A04",
+   "auditor": "GPT-6 Astra",
+   "severity": "MEDIUM",
+   "title": "I2 checks cycle A but applies gentler to pending cycle B",
+   "reproduction": "Leave held, Go through it again (visible cycle B); apply I2 for cycle A: B made gentler, Insight marked applied for A.",
+   "rootCause": "_gentler validated confirmedState but keepGentler ran on the optimistic state with no cycle identity.",
+   "fix": "apply() waits for pending Plans (and History) writes to settle before validating; keepGentler takes the Insight's cycleId and refuses any other cycle.",
+   "files": [
+    "lib/features/insights/application/insights_provider.dart",
+    "lib/features/plans/application/circle_plans_provider.dart",
+    "lib/features/plans/domain/circle_plan.dart"
+   ],
+   "tests": "test/features/r82/r82_a04_a08_new3_insight_actions_test.dart",
+   "status": "FIXED (R8.2 commit, parent e935112c; not yet independently audited)"
+  },
+  {
+   "id": "R81-A05",
+   "auditor": "GPT-6 Astra",
+   "severity": "MEDIUM",
+   "title": "Readable nested records still lose unknown or damaged fields",
+   "reproduction": "futureRule on an elementsLeftOut entry; unknown metadata on lastServed; object-valued fact / non-text evidence / unknown fields on an Insight snapshot — lost on an unrelated save. Malformed startedAfterExpiry coerced to false.",
+   "rootCause": "Accepted items were rebuilt from known fields; '== true' and string-coercing date parses read malformed values as defaults.",
+   "fix": "Suggestion-preference entries, ServedStageCircle and InsightSnapshot keep the stored map they were read from and write it back (only the fields THIRTY sets change); a present non-Boolean startedAfterExpiry/revisit/gentler or non-text drawsOn makes lastServed unreadable (kept as stored, credits nothing); preference dates must be text.",
+   "files": [
+    "lib/features/home/application/suggestion_preferences.dart",
+    "lib/features/plans/domain/circle_plan.dart",
+    "lib/features/insights/domain/insight.dart"
+   ],
+   "tests": "test/features/r82/r82_a05_nested_fields_test.dart",
+   "status": "FIXED (R8.2 commit, parent e935112c; not yet independently audited)"
+  },
+  {
+   "id": "R81-A06",
+   "auditor": "GPT-6 Astra",
+   "severity": "MEDIUM",
+   "title": "Removing an overnight answer reopens finished reflection",
+   "reproduction": "Start 23:40, Close 00:10, answer; new day opens; remove the answer; restart 00:20: finished reflection reimposed, next choice blocked.",
+   "rootCause": "Completion was inferred only from the answers still retained.",
+   "fix": "Smallest backward-compatible durable marker: day key recommendation_reflection_finished (true once the reflection is answered as far as it goes), kept by answer removal, cleared by the next day's choice and by Delete; absent on older records, which read as before.",
+   "files": [
+    "lib/features/home/application/recommendation_provider.dart",
+    "lib/core/app/thirty_app.dart"
+   ],
+   "tests": "test/features/r82/r82_a06_reflection_completion_test.dart",
+   "status": "FIXED (R8.2 commit, parent e935112c; not yet independently audited)"
+  },
+  {
+   "id": "R81-A07",
+   "auditor": "GPT-6 Astra",
+   "severity": "MEDIUM",
+   "title": "Pending History cache state can create a durable Insight",
+   "reproduction": "I4 4/7 → 4/6: usefulness removed with the journal write held; Insights opened; write refused; restart: an I4 from unconfirmed History survives. Same boundary for Plan stage 5 answers (reproduced: stage 5 served from a removal later refused).",
+   "rootCause": "Insights and Plan stage answers read History from the SharedPreferences cache while its platform write was pending.",
+   "fix": "JournalWrites tracker (one per app) records History as last confirmed while a write is pending; readConfirmed() is what Insights, Plan stage answers and Insight application read; apply() waits for History writes to settle. No new persistence engine.",
+   "files": [
+    "lib/features/home/application/circle_journal.dart",
+    "lib/features/insights/application/insights_provider.dart",
+    "lib/features/plans/application/circle_plans_provider.dart"
+   ],
+   "tests": "test/features/r82/r82_a07_confirmed_history_test.dart",
+   "status": "FIXED (R8.2 commit, parent e935112c; not yet independently audited)"
+  },
+  {
+   "id": "R81-A08 / Claude marker-retry observation",
+   "auditor": "GPT-6 Astra (LOW); independent Claude (observation)",
+   "severity": "LOW",
+   "title": "I1–I3 cannot repair a failed applied marker after target success",
+   "reproduction": "Apply I1/I2/I3; target saved, marker refused; restart and retry: notAvailable, mark never recorded.",
+   "rootCause": "The status gate saw the Insight as no longer current (its change holds) and exited before any repair.",
+   "fix": "A stale, unmarked Insight whose own change is on disk — Plan made active by a cycle begun on or after the Insight's day, that very cycle made gentler then or later, that part left out then or later — is marked applied with the change's own date, without repeating the change. Premium check unchanged; I4 Keep rights unchanged.",
+   "files": [
+    "lib/features/insights/application/insights_provider.dart"
+   ],
+   "tests": "test/features/r82/r82_a04_a08_new3_insight_actions_test.dart",
+   "status": "FIXED (R8.2 commit, parent e935112c; not yet independently audited)",
+   "founderDecisionAmendment": "Founder decision C (2026-11-05): the R8.2 applying-intent record (InsightSnapshot.applyingOn) is removed. Repair now requires provenance saved in the change itself (see FD-C). The disclosed residual case — the Insights store refusing both the intent and the mark — was investigated: on the R8.2 baseline it left the change unattributable, and the same baseline also claimed a manual I1 start and a manual I3 leave-out as the Insight's application (failing-before evidence). Both are closed: the residual retry now repairs from the provenance, and a manual change is never claimed.",
+   "originalReportCheck": "Original report: the observation says the retry returns alreadyApplied without marking (while the Insight still reads as current); the register's notAvailable (from Astra A08) is the stale-status exit of the same gap. Both are covered by the A08 tests (same-session and after-restart retries)."
+  },
+  {
+   "id": "R81-A09",
+   "auditor": "GPT-6 Astra",
+   "severity": "MEDIUM",
+   "title": "Wrong native preference types bypass unreadable-store recovery",
+   "reproduction": "An int/Boolean/list under circlePlansKey, insightsKey, suggestionPreferencesKey or circleJournalKey: provider initialization throws a cast error.",
+   "rootCause": "SharedPreferences.getString casts before any try/catch.",
+   "fix": "Every JSON-text user store, Today's pending-write record and the start-up deletion/retirement steps read with prefs.get and treat a non-text value as unreadable: Plans/Insights keep it aside with its native type before any overwrite; Preferences refuse changes until Reset; History keeps a JSON copy in its preserved list; a non-true deletion marker records no deletion.",
+   "files": [
+    "lib/features/plans/application/circle_plans_provider.dart",
+    "lib/features/insights/application/insights_provider.dart",
+    "lib/features/home/application/suggestion_preferences.dart",
+    "lib/features/home/application/circle_journal.dart",
+    "lib/features/home/application/recommendation_provider.dart",
+    "lib/features/home/application/circle_history_deletion.dart",
+    "lib/features/home/application/phase_d_retirement.dart",
+    "lib/core/storage/preservation_writes.dart"
+   ],
+   "tests": "test/features/r82/r82_a09_native_types_test.dart",
+   "status": "FIXED (R8.2 commit, parent e935112c; not yet independently audited)"
+  },
+  {
+   "id": "NEW-3",
+   "auditor": "independent Claude (per founder directive)",
+   "severity": "LOW",
+   "title": "False notSaved when a later queued write already made the change durable",
+   "reproduction": "I2 apply: its Plans write refused, a later queued Plans write lands with gentler: reported notSaved, not marked.",
+   "rootCause": "confirmed() reported the outcome of the action's own earlier Future.",
+   "fix": "On failure confirmed() waits for queued saves and checks the confirmed final state holds every value the action changed (leaf-level diff); genuine failures stay notSaved.",
+   "files": [
+    "lib/features/plans/application/circle_plans_provider.dart"
+   ],
+   "tests": "test/features/r82/r82_a04_a08_new3_insight_actions_test.dart",
+   "status": "FIXED (R8.2 commit, parent e935112c; not yet independently audited)",
+   "originalReportCheck": "Original report: same root cause; its A4 reproduction (both faults) passes unchanged on the current tree."
+  },
+  {
+   "id": "E-1",
+   "auditor": "independent Claude (per founder directive)",
+   "severity": "evidence tooling",
+   "title": "Regression report accepts missing or incomplete declared batch parts",
+   "reproduction": "R8.1 runner report on a copy of its own evidence with part 17c missing, replaced by a copy of 17b, or an undeclared 17f: EVIDENCE OK.",
+   "rootCause": "report counted whatever part summaries were present.",
+   "fix": "New R8.2 runner (R8.1 runner and evidence untouched): parts declared in the plan; report requires exactly the declared summaries, each with its own identity, command and file set, complete, plus per-case coverage.",
+   "files": [
+    "artifacts/r8_2_consolidated_remediation_2026-11-05/regression_final/run_batches.py"
+   ],
+   "tests": "artifacts/r8_2_consolidated_remediation_2026-11-05/e1_runner_check/",
+   "status": "FIXED",
+   "originalReportCheck": "Original report: the mutation is one missing part summary. Run on a disposable copy of the R8.2 runner: report exit 1 EVIDENCE MISMATCH, cases exit 1 (claude_audit_reconciliation/e1_mutation/)."
+  },
+  {
+   "id": "RL-4",
+   "auditor": "founder-accepted R8.1 limitation",
+   "severity": "LOW (accepted)",
+   "title": "Offset-free historical timestamps",
+   "status": "ACCEPTED, unchanged. Boundary restated: the six-hour carry-over is exact only for UTC day-key instants written since R8.1; older offset-free day-key values stay ambiguous in the repeated hour. Lifted-rest comparison can be affected within that hour (not display-only).",
+   "originalReportCheck": "Original report: \"the founder's pre-commercial decision on RL-4\" must not be closed silently — still open for the founder."
+  },
+  {
+   "id": "FD-A",
+   "auditor": "Founder decision A (R8.2 acceptance review, 2026-11-05)",
+   "severity": "founder decision",
+   "title": "Historical Plan credit: a Close durable before a later Pause or Leave keeps its credit",
+   "reproduction": "Stage Circle started and closed (Close and History durable), its credit write refused; then Pause, Leave, another Plan started, or Leave + Go through again, also after a restart and after a lapse: on the R8.2 baseline the credit is never recorded.",
+   "rootCause": "The domain credits only an active Plan, and the later lifecycle change was saved without first resolving the credit the durable Close had already earned.",
+   "fix": "CirclePlansNotifier._lifecycle: Pause, Leave, Start/Carry on (which pause the active Plan) and Go through again are made on the Plans with the earned credit folded in first (_withEarnedCredits) — the active Plan's last served Circle whose Close History has confirmed on disk, under the same Premium rules as recordGuided — in the same save. Original cycle and Circle; served and Start provenance kept; at most once; nothing reactivated; a new cycle never advanced.",
+   "notExtended": "A Pause or Leave before the Close was durable (before the Close, or while its History write was pending) keeps the existing rule: no credit. Flagged for the founder, not decided here.",
+   "files": [
+    "lib/features/plans/application/circle_plans_provider.dart"
+   ],
+   "tests": "test/features/r82/r82_decision_a_historical_credit_test.dart",
+   "failingBefore": "artifacts/r8_2_consolidated_remediation_2026-11-05/founder_decisions/repro_before_fix (13 of 18 fail; 5 controls pass)",
+   "status": "IMPLEMENTED (R8.2 commit, parent e935112c; not yet independently audited)",
+   "notExtendedDecided": "Decided by the founder directive of 2026-11-06 (R8.2 final Plan lifecycle policy, entry FD-L): a Pause (or another Plan started) after the Start keeps the credit once the Close is durable; a Leave before the Close does not; a Close requested before the Leave keeps it once durable. The \"notExtended\" text above is the record of what was put to the founder."
+  },
+  {
+   "id": "FD-B",
+   "auditor": "Founder decision B (R8.2 acceptance review, 2026-11-05)",
+   "severity": "founder decision",
+   "title": "A Circle starts only once its first publication is on disk; a failed save refuses the Start instead of removing a started Circle",
+   "reproduction": "Start tapped while the offer, or a stage Circle's Plan record, is pending or refused: on the R8.2 baseline the Circle starts at once, runs unsaved, and a stage Circle is later taken back.",
+   "rootCause": "start() entered the started state synchronously, before anything it depended on was confirmed.",
+   "fix": "RecommendationNotifier.start: starts at once only when the offer is confirmed in the day keys (_offersOnDisk) and, for a stage Circle, its served record is on disk and already says what this Start records (startNeedsNoWrite). Otherwise the Start waits in the write queue, saves the offer again if needed and the Plan's Start record (noted at the tap, as before), and only then starts. Refused: not started, nothing recorded, told once per refusal (History's notice when its failure raised it, otherwise \"This change couldn't be saved. Please try again.\"), Start can be tapped again. Repeated taps and replacing or swapping the Circle are refused while it waits. _withdrawUnsaveable only takes back an unstarted offer. New store name UserStore.todaysCircle; no new copy.",
+   "files": [
+    "lib/features/home/application/recommendation_provider.dart",
+    "lib/features/plans/application/circle_plans_provider.dart",
+    "lib/core/storage/store_save_failures.dart"
+   ],
+   "tests": "test/features/r82/r82_decision_b_start_persistence_test.dart",
+   "failingBefore": "artifacts/r8_2_consolidated_remediation_2026-11-05/founder_decisions/repro_before_fix (8 of 14 fail; 6 controls pass; the Delete case was added after that run, see cross_store_review)",
+   "status": "IMPLEMENTED (R8.2 commit, parent e935112c; not yet independently audited)"
+  },
+  {
+   "id": "FD-C",
+   "auditor": "Founder decision C (R8.2 acceptance review, 2026-11-05)",
+   "severity": "founder decision",
+   "title": "An Insight is marked applied on a retry only from persisted provenance of its own change",
+   "reproduction": "The app stops while the I1 Plan change (or the I3 leave-out) is written; the user then starts the Plan (or leaves the part out) themselves; retry: on the R8.2 baseline it returns done and records the mark. Residual: the Insights store refuses every write; the change lands; the retry can't attribute it.",
+   "rootCause": "Attribution lived in the Insights store (applyingOn) and was checked against a target state — Plan active, part left out — that a manual action produces too.",
+   "fix": "The I1/I2 Plan change saves the Insight's id, its cycle and day on the Plan (PlanProgress.appliedInsight) and the I3 leave-out saves it on the part (ElementLeftOut.byInsight), in the change's own save. A retry marks applied only when that provenance names this Insight (for I2, the very cycle); otherwise it reports not available. No separate intent write, so none can fail apart from the change; the change is never made again. A damaged provenance record attributes nothing and is written back as stored.",
+   "files": [
+    "lib/features/insights/application/insights_provider.dart",
+    "lib/features/insights/domain/insight.dart",
+    "lib/features/plans/domain/circle_plan.dart",
+    "lib/features/plans/application/circle_plans_provider.dart",
+    "lib/features/home/application/suggestion_preferences.dart"
+   ],
+   "tests": "test/features/r82/r82_decision_c_insight_provenance_test.dart",
+   "failingBefore": "artifacts/r8_2_consolidated_remediation_2026-11-05/founder_decisions/repro_before_fix (9 of 13 fail; 4 controls pass)",
+   "status": "IMPLEMENTED (R8.2 commit, parent e935112c; not yet independently audited)"
+  },
+  {
+   "id": "FD-B-1",
+   "auditor": "Found during the founder-decision work (cross-store)",
+   "severity": "HIGH (introduced and fixed before any regression)",
+   "title": "A waiting Start opened a window for a credit after a verified expiry",
+   "reproduction": "The existing R2 test \"a second Start, a direct credit and a restart after a start past expiry: nothing credited\" failed on the first FD-B draft.",
+   "rootCause": "The first draft recorded the Start after expiry only once the Start's queued write ran, so a credit asked for meanwhile was judged on billing's earlier answer.",
+   "fix": "The Plan's Start record is noted at the tap, as in R8.1; only the started state waits for it.",
+   "tests": "test/features/plans/r2_plan_credit_provenance_test.dart (unchanged assertion)",
+   "status": "FIXED before the regression"
+  },
+  {
+   "id": "FD-B-2",
+   "auditor": "Found during the founder-decision work (cross-store review)",
+   "severity": "MEDIUM (introduced and fixed before the regression)",
+   "title": "After Delete Circle history, an identical offer chosen again could be taken as saved",
+   "reproduction": "artifacts/r8_2_consolidated_remediation_2026-11-05/founder_decisions/cross_store_review: the test fails without the fix (Start enters started with the offer refused) and passes with it.",
+   "rootCause": "The record of offers confirmed on disk survived the rebuild Delete causes.",
+   "fix": "Every later rebuild forgets any confirmation the day keys no longer hold; it only ever forgets.",
+   "tests": "test/features/r82/r82_decision_b_start_persistence_test.dart (\"after Delete Circle history …\")",
+   "status": "FIXED before the regression"
+  },
+  {
+   "id": "CR-1",
+   "auditor": "Reconciliation with the original Claude post-R8.1 report (2026-11-06)",
+   "severity": "test coverage (no defect)",
+   "title": "NEW-1's own trigger scenarios were not in the suite",
+   "reproduction": "The report's acceptance condition asks for a regression test for both triggers; the R8.2 NEW-1 tests covered the mechanism (Leave + Go through it again) but not stage 5 → \"Go through it again\", the I1 application, Leave then Start, or one transient failure at choice time.",
+   "fix": "New test file only; no production code or existing test changed.",
+   "files": [
+    "test/features/r82/r82_claude_audit_new1_triggers_test.dart"
+   ],
+   "tests": "test/features/r82/r82_claude_audit_new1_triggers_test.dart",
+   "failingBefore": "artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/new_regression_test (R8.1: 5 of 5 fail)",
+   "status": "ADDED (R8.2 commit, parent e935112c; not yet independently audited)"
+  },
+  {
+   "id": "FD-L",
+   "auditor": "Founder directive (R8.2 final Plan lifecycle policy correction, 2026-11-06)",
+   "severity": "founder decision",
+   "title": "Pause before Close keeps the credit; Leave before Close does not; a Close requested before Leave keeps it once durable",
+   "reproduction": "On the R8.2 tree: Start → Pause (or another Plan started) → Close, and Start → Close (write held) → Leave, earn no credit; 9 of 21 tests in r82_lifecycle_policy_test.dart fail.",
+   "rootCause": "The domain credited only an active Plan's current cycle, and nothing recorded whether the Start or Close came before the Pause or Leave.",
+   "fix": "Today tells the Plans the instant of the user's Start and Close as they happen (in memory; again from what it restores after a restart). Pause, an automatic pause and Leave record that order on the served record in their own save (lastServed.startedBeforePause / closedBeforeLeave, UTC instants). CirclePlansState.recordGuided credits a paused Plan's current cycle, or the cycle that was left, only for that very Start / Close, only once the Close is durable (Today calls it only then), under unchanged entitlement and at-most-once rules; the Plan stays paused or left; another active Plan stays active (latent activePlanId bug fixed); a new cycle after Go through it again is never credited.",
+   "notCovered": "Pause before the Start (served while active, paused, then started): existing rule kept, no credit. Flagged for the founder.",
+   "files": [
+    "lib/features/plans/domain/circle_plan.dart",
+    "lib/features/plans/application/circle_plans_provider.dart",
+    "lib/features/home/application/recommendation_provider.dart"
+   ],
+   "tests": "test/features/r82/r82_lifecycle_policy_test.dart",
+   "existingTestsChanged": "r82_decision_a_historical_credit_test.dart (2 tests: the \"not extended\" Pause cases), plans/r2_plan_credit_provenance_test.dart (1 test) — assertions follow the decision; diffs in lifecycle_policy/test_change_diffs/",
+   "failingBefore": "artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/repro_before_fix (9 of 21 fail; 12 controls pass)",
+   "status": "IMPLEMENTED (R8.2 commit, parent e935112c; not yet independently audited)"
+  }
+ ]
+}

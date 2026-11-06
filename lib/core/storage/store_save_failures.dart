@@ -1,8 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Which of the user's own stores a save failed for (audit remediation R8;
-/// suggestion preferences since R8.1, Astra N05).
-enum UserStore { keptCircles, circlePlans, insights, suggestionPreferences }
+/// suggestion preferences since R8.1, Astra N05; today's Circle since R8.2,
+/// founder decision B — a Start refused because the Circle, or its Plan's
+/// record of the Start, couldn't be saved first).
+enum UserStore {
+  keptCircles,
+  circlePlans,
+  insights,
+  suggestionPreferences,
+  todaysCircle,
+}
 
 /// Saves of the user's own things — kept Circles, Circle Plans, Insights —
 /// that the local store didn't confirm (audit remediation R8, Claude F-6,

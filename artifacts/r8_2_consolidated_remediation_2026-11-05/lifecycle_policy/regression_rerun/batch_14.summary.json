@@ -1,0 +1,244 @@
+{
+ "files": {
+  "test/features/r81/r81_n06_n07_damaged_records_test.dart": {
+   "passed": 21,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81_n08_n09_aud2_time_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81_n10_failure_notices_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81b_rl1_pending_state_test.dart": {
+   "passed": 17,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81b_rl2_unverified_words_copy_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81b_rl3_field_preservation_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_a01_pending_lifecycle_credit_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_a02_new2_delete_isolation_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_a03_new1_stage_publication_test.dart": {
+   "passed": 15,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_a04_a08_new3_insight_actions_test.dart": {
+   "passed": 25,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_a05_nested_fields_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_a06_reflection_completion_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 142,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/features/r81/r81_n06_n07_damaged_records_test.dart": [
+   "N06 \u2014 Today's kept Circle with damaged saved words one item not words, not started, kept Circle intact: restored with its own saved words from the kept Circle \u2014 never today's, never voiced as if they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words one item not words, not started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words one item not words, started, kept Circle intact: restored with its own saved words from the kept Circle \u2014 never today's, never voiced as if they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words one item not words, started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words the wrong length, not started, kept Circle intact: restored with its own saved words from the kept Circle \u2014 never today's, never voiced as if they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words the wrong length, not started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words the wrong length, started, kept Circle intact: restored with its own saved words from the kept Circle \u2014 never today's, never voiced as if they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words the wrong length, started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words not a list, not started, kept Circle intact: restored with its own saved words from the kept Circle \u2014 never today's, never voiced as if they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words not a list, not started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words not a list, started, kept Circle intact: restored with its own saved words from the kept Circle \u2014 never today's, never voiced as if they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words not a list, started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were",
+   "N06 \u2014 Today's kept Circle with damaged saved words the words field missing from Today's copy while the kept Circle has its words: they come from the kept Circle",
+   "N07 \u2014 damaged or unknown data inside a readable record AUD-3 \u2014 a Plan this build doesn't know (a newer build's) is kept byte for byte through a Plan save",
+   "N07 \u2014 damaged or unknown data inside a readable record a Plan whose cycle is damaged is kept as stored, never rewritten without it",
+   "N07 \u2014 damaged or unknown data inside a readable record a damaged stage record inside a readable cycle is kept through a save",
+   "N07 \u2014 damaged or unknown data inside a readable record unknown fields of the Plans record itself are written back",
+   "N07 \u2014 damaged or unknown data inside a readable record a Plans record of a newer whole-record version stays unreadable and is kept aside, not reinterpreted",
+   "N07 \u2014 damaged or unknown data inside a readable record AUD-4 / N07-A \u2014 Insights whose snapshots field is present but not a list are kept, never replaced unkept",
+   "N07 \u2014 damaged or unknown data inside a readable record unknown fields of the Insights record itself are written back",
+   "N07 \u2014 damaged or unknown data inside a readable record regression \u2014 an Insights record without a snapshots field (none yet) is readable, as before"
+  ],
+  "test/features/r81/r81_n08_n09_aud2_time_test.dart": [
+   "N08 \u2014 a no-touch choice after midnight: the served stage is dated with the Circle's own day, so a lapse before Close keeps the legitimate credit",
+   "N09 \u2014 closed at the first 02:30 of 25 October 2026, reflection open, restart at 08:00: 6h30 really elapsed, so it is not carried over",
+   "N09 \u2014 closed at the second 02:30 of 25 October 2026, reflection open, restart at 08:00: 5h30 really elapsed, so it is carried over",
+   "N09 \u2014 the two 02:30 Closes are stored differently: an instant, not a wall-clock time",
+   "N09 \u2014 an older offset-free Start still reads as before (local), and the six-hour rule holds for it",
+   "AUD-2 \u2014 the carried-over Circle finished and its reflection answered after midnight: today's Circle can be chosen without another resume (with a touch)",
+   "AUD-2 \u2014 the carried-over Circle finished and its reflection answered after midnight: today's Circle can be chosen without another resume (no touch \u2014 screen reader or switch)",
+   "AUD-2 regression \u2014 the carried-over Circle closed but its reflection still open stays on show (contract: until answered)"
+  ],
+  "test/features/r81/r81_n10_failure_notices_test.dart": [
+   "a store failure while the History notice is open is told after it closes \u2014 with no further change",
+   "a second Circle's History failure while a store notice is open is told after it closes",
+   "several store failures while one notice is open: told once more after it closes, never stacked",
+   "a failed Keep (throws) then a successful one: Kept Circles are no longer marked unsaved",
+   "a failed Keep (returnsFalse) then a successful one: Kept Circles are no longer marked unsaved"
+  ],
+  "test/features/r81/r81b_rl1_pending_state_test.dart": [
+   "throws: a Plan start still being saved, then today's choice: the stage Circle may show while pending; once the save fails the Plan is off the screen and the Circle is never saved on it \u2014 on disk and after a restart",
+   "throws: a Plan start still being saved, then today's choice; the save lands: Plan, served stage and Circle are all saved",
+   "throws: a failed Plan save, then a new user action: the failed change is not on screen, so the user's retry is a real change and lands once the store heals",
+   "throws: a failed pause is undone on screen: the Plan still steers today as the disk says",
+   "throws: Premium lapses while a Plan start is pending, and its save fails: no stage Circle, nothing served, the Plan is off the screen",
+   "throws: a new Insight whose save fails is not kept on screen; a later assessment generates and saves it",
+   "throws: \"Not now\" whose save fails: the Insight is current again on screen and on disk; a restart agrees; a retry lands",
+   "throws: a restart while a Plan start is pending reads only the disk",
+   "returnsFalse: a Plan start still being saved, then today's choice: the stage Circle may show while pending; once the save fails the Plan is off the screen and the Circle is never saved on it \u2014 on disk and after a restart",
+   "returnsFalse: a Plan start still being saved, then today's choice; the save lands: Plan, served stage and Circle are all saved",
+   "returnsFalse: a failed Plan save, then a new user action: the failed change is not on screen, so the user's retry is a real change and lands once the store heals",
+   "returnsFalse: a failed pause is undone on screen: the Plan still steers today as the disk says",
+   "returnsFalse: Premium lapses while a Plan start is pending, and its save fails: no stage Circle, nothing served, the Plan is off the screen",
+   "returnsFalse: a new Insight whose save fails is not kept on screen; a later assessment generates and saves it",
+   "returnsFalse: \"Not now\" whose save fails: the Insight is current again on screen and on disk; a restart agrees; a retry lands",
+   "returnsFalse: a restart while a Plan start is pending reads only the disk",
+   "Insights decide from the confirmed Plans: a Plan start that fails never withdraws, or is counted by, an Insight"
+  ],
+  "test/features/r81/r81b_rl2_unverified_words_copy_test.dart": [
+   "the copy is exactly the approved wording",
+   "shown on every part only when the fallback happens \u2014 with or without a voice \u2014 and never past the end",
+   "a running Circle shows the note to a screen reader, keeps running, and THIRTY's voice says nothing"
+  ],
+  "test/features/r81/r81b_rl3_field_preservation_test.dart": [
+   "Plans \u2014 inside a readable cycle a stage record with damaged list items and a future field, and damaged set-aside reasons: kept byte for byte through repeated saves and restarts; what is readable stays usable",
+   "Plans \u2014 inside a readable cycle a stage record with damaged list items and a future field, and damaged set-aside reasons: kept byte for byte through a save that throws; what is readable stays usable",
+   "Plans \u2014 inside a readable cycle a stage record with damaged list items and a future field, and damaged set-aside reasons: kept byte for byte through a save that returnsFalse; what is readable stays usable",
+   "Plans \u2014 inside a readable cycle revisit entries that aren't stage numbers are kept, and the readable ones still count",
+   "Plans \u2014 inside a readable cycle a cycle ended by a reason a newer THIRTY added is kept as stored, never read as not ended",
+   "Suggestion preferences a damaged item beside valid ones is kept through saves and a restart; the valid ones still apply",
+   "Suggestion preferences a damaged item beside valid ones is kept through a save that throws; the valid ones still apply",
+   "Suggestion preferences a damaged item beside valid ones is kept through a save that returnsFalse; the valid ones still apply",
+   "Suggestion preferences a record THIRTY can't read (a newer version) is never written over by a change; the user is told; Reset \u2014 the user's own erasure \u2014 still works",
+   "Suggestion preferences a record THIRTY can't read (not JSON) is never written over by a change; the user is told; Reset \u2014 the user's own erasure \u2014 still works",
+   "Suggestion preferences a record THIRTY can't read (a list field that is not a list) is never written over by a change; the user is told; Reset \u2014 the user's own erasure \u2014 still works",
+   "Suggestion preferences regression \u2014 the retired Phase D routines field is still dropped by the next save (pre-release migration, ADR-024)"
+  ],
+  "test/features/r82/r82_a01_pending_lifecycle_credit_test.dart": [
+   "throws: A01 as reported \u2014 a pending Pause, the next day's Free choice, then the Pause fails: the earlier day's credit is saved before the day keys move on, and survives two restarts",
+   "throws: a pending Leave, the next day's choice, then the Leave fails: the credit is saved first \u2014 never lost to a competing Plan action that did not land",
+   "throws: the Pause lands: the Close was durable before it, so its credit lands with the Pause \u2014 once, on the original cycle \u2014 the day keys move on, and the Plan stays paused across two restarts",
+   "throws: a restart while the Pause is still pending reads only the disk: the active Plan is credited from the retained day keys",
+   "returnsFalse: A01 as reported \u2014 a pending Pause, the next day's Free choice, then the Pause fails: the earlier day's credit is saved before the day keys move on, and survives two restarts",
+   "returnsFalse: a pending Leave, the next day's choice, then the Leave fails: the credit is saved first \u2014 never lost to a competing Plan action that did not land",
+   "returnsFalse: the Pause lands: the Close was durable before it, so its credit lands with the Pause \u2014 once, on the original cycle \u2014 the day keys move on, and the Plan stays paused across two restarts",
+   "returnsFalse: a restart while the Pause is still pending reads only the disk: the active Plan is credited from the retained day keys",
+   "the credit itself is refused again after the Pause fails: the day keys still never move on; once healed, the next write credits yesterday exactly once, then moves on",
+   "domain: a paused or left Plan is never credited \u2014 the policy the notifier distinguishes from a pending change"
+  ],
+  "test/features/r82/r82_a02_new2_delete_isolation_test.dart": [
+   "A02 as reported \u2014 Insights opened while Delete waits for the Plan evidence write: no review is recreated, and Delete succeeds with nothing derived left on disk or after restarts",
+   "NEW-2 \u2014 an assessment queued during Delete whose payload lands only after the deletion is never written",
+   "a stale Insight payload captured before Delete and still being written lands before the deletion, never after it",
+   "throws: Delete whose Plan evidence write fails, then an unrelated Plan action that also fails: the screen never goes back to the deleted evidence, and no later write republishes it",
+   "throws: Delete whose Insights removal fails, then a failing Insights save: the deleted snapshots are never shown or saved again",
+   "throws: an interrupted Delete (process stopped mid-way) is finished at the next start: nothing derived survives two restarts",
+   "returnsFalse: Delete whose Plan evidence write fails, then an unrelated Plan action that also fails: the screen never goes back to the deleted evidence, and no later write republishes it",
+   "returnsFalse: Delete whose Insights removal fails, then a failing Insights save: the deleted snapshots are never shown or saved again",
+   "returnsFalse: an interrupted Delete (process stopped mid-way) is finished at the next start: nothing derived survives two restarts",
+   "History is gone too, and the journal stays empty across restarts"
+  ],
+  "test/features/r82/r82_a03_new1_stage_publication_test.dart": [
+   "throws: A03 as reported \u2014 a stage choice queued behind an earlier write, then a kept Circle used today; the Plan start is refused: the stage Circle is never written to the day keys, and a restart never shows it",
+   "throws: a stage Circle whose served stage is refused, not yet started: once that is certain it is taken off the screen \u2014 today's choice opens again \u2014 and the user is told",
+   "throws: the same, Start tapped while its Plan save was still pending: the Circle does not start before that save lands; it fails, so the Start is refused, the unsaveable offer is taken back, the user is told, and nothing of it is on disk",
+   "returnsFalse: A03 as reported \u2014 a stage choice queued behind an earlier write, then a kept Circle used today; the Plan start is refused: the stage Circle is never written to the day keys, and a restart never shows it",
+   "returnsFalse: a stage Circle whose served stage is refused, not yet started: once that is certain it is taken off the screen \u2014 today's choice opens again \u2014 and the user is told",
+   "returnsFalse: the same, Start tapped while its Plan save was still pending: the Circle does not start before that save lands; it fails, so the Start is refused, the unsaveable offer is taken back, the user is told, and nothing of it is on disk",
+   "NEW-1 \u2014 \"Pause\" after the stage Circle was published and started: its Close and reflection are still saved, on disk and after a restart",
+   "NEW-1 \u2014 \"Leave\" after the stage Circle was published and started: its Close and reflection are still saved, on disk and after a restart",
+   "NEW-1 \u2014 \"Restart the Plan (Leave, then Go through it again)\" after the stage Circle was published and started: its Close and reflection are still saved, on disk and after a restart",
+   "NEW-1 \u2014 \"Go through it again after leaving it earlier\" after the stage Circle was published and started: its Close and reflection are still saved, on disk and after a restart",
+   "NEW-1 \u2014 \"Keep it gentler (I2's application)\" after the stage Circle was published and started: its Close and reflection are still saved, on disk and after a restart",
+   "NEW-1 \u2014 \"Start another Plan\" after the stage Circle was published and started: its Close and reflection are still saved, on disk and after a restart",
+   "NEW-1 (throws) \u2014 \"Go through it again\" still being saved when the Circle closes, then refused: the Close and reflection are still saved",
+   "NEW-1 (returnsFalse) \u2014 \"Go through it again\" still being saved when the Circle closes, then refused: the Close and reflection are still saved",
+   "NEW-1 \u2014 the Circle's own credit completes its stage; the reflection after it is still saved, and credited exactly once"
+  ],
+  "test/features/r82/r82_a04_a08_new3_insight_actions_test.dart": [
+   "A04 \u2014 I2 changes the cycle it was validated for A04 as reported \u2014 a pending Leave, then Go through it again; I2 for cycle A applied: cycle B is never made gentler, and the Insight is not marked applied for a change it did not make",
+   "A04 \u2014 I2 changes the cycle it was validated for A04 (throws) \u2014 the competing Leave and Go through again are refused and rolled back: I2 then applies to cycle A itself, durably",
+   "A04 \u2014 I2 changes the cycle it was validated for A04 (returnsFalse) \u2014 the competing Leave and Go through again are refused and rolled back: I2 then applies to cycle A itself, durably",
+   "A04 \u2014 I2 changes the cycle it was validated for domain: Keep it gentler names its cycle \u2014 another cycle is never changed",
+   "A08 \u2014 repairing a refused applied mark I1 (Plan direction) \u2014 change saved, mark refused (throws); retried after a restart: the mark is recorded, the change is not made again",
+   "A08 \u2014 repairing a refused applied mark I1 (Plan direction) \u2014 change saved, mark refused (returnsFalse); retried after a restart: the mark is recorded, the change is not made again",
+   "A08 \u2014 repairing a refused applied mark I1 (Plan direction) \u2014 the same retry in the same session, without a restart",
+   "A08 \u2014 repairing a refused applied mark I1 (Plan direction) \u2014 the repair keeps the entitlement check: after a lapse nothing is recorded",
+   "A08 \u2014 repairing a refused applied mark I2 (gentler Plan) \u2014 change saved, mark refused (throws); retried after a restart: the mark is recorded, the change is not made again",
+   "A08 \u2014 repairing a refused applied mark I2 (gentler Plan) \u2014 change saved, mark refused (returnsFalse); retried after a restart: the mark is recorded, the change is not made again",
+   "A08 \u2014 repairing a refused applied mark I2 (gentler Plan) \u2014 the same retry in the same session, without a restart",
+   "A08 \u2014 repairing a refused applied mark I2 (gentler Plan) \u2014 the repair keeps the entitlement check: after a lapse nothing is recorded",
+   "A08 \u2014 repairing a refused applied mark I3 (leave a part out) \u2014 change saved, mark refused (throws); retried after a restart: the mark is recorded, the change is not made again",
+   "A08 \u2014 repairing a refused applied mark I3 (leave a part out) \u2014 change saved, mark refused (returnsFalse); retried after a restart: the mark is recorded, the change is not made again",
+   "A08 \u2014 repairing a refused applied mark I3 (leave a part out) \u2014 the same retry in the same session, without a restart",
+   "A08 \u2014 repairing a refused applied mark I3 (leave a part out) \u2014 the repair keeps the entitlement check: after a lapse nothing is recorded",
+   "A08 \u2014 repairing a refused applied mark I2 \u2014 the cycle changes after the change landed (Leave, Go through it again): the repair records the original cycle's application, and the new cycle is not made gentler",
+   "A08 \u2014 repairing a refused applied mark I1 \u2014 a Plan the user started some other way after the Insight was shown is never claimed as its application",
+   "A08 \u2014 repairing a refused applied mark residual, closed \u2014 the Insights store refuses every write: the change still lands, as before, and the user is told; after a restart the retry finds the Insight's own provenance on the Plan and records the mark, without changing the Plan again",
+   "A08 \u2014 repairing a refused applied mark I3 \u2014 a part left out by the user before the Insight was shown is not claimed as the Insight's application",
+   "NEW-3 \u2014 saved means what is on disk I2 (throws) \u2014 its own write refused, a later queued Plans write landed with the same change: reported done, and marked",
+   "NEW-3 \u2014 saved means what is on disk I2 (throws) \u2014 the later write is refused too: genuinely not saved, never reported as saved",
+   "NEW-3 \u2014 saved means what is on disk I2 (returnsFalse) \u2014 its own write refused, a later queued Plans write landed with the same change: reported done, and marked",
+   "NEW-3 \u2014 saved means what is on disk I2 (returnsFalse) \u2014 the later write is refused too: genuinely not saved, never reported as saved",
+   "NEW-3 \u2014 saved means what is on disk Plans.confirmed \u2014 an earlier write refused, the later one holding the change confirmed: done"
+  ],
+  "test/features/r82/r82_a05_nested_fields_test.dart": [
+   "Suggestion Preferences \u2014 readable entries keep their own fields A05 as reported \u2014 another part left out: the first entry keeps futureRule; so do the other lists, through two more saves and restarts",
+   "Suggestion Preferences \u2014 readable entries keep their own fields a malformed date is not read as a date: the entry is kept as stored and never applied",
+   "Plans \u2014 the last served record A05 as reported \u2014 unknown fields of a valid last served record survive an unrelated Plan save and restarts",
+   "Plans \u2014 the last served record a malformed startedAfterExpiry (true) is never read as \"started under Premium\": no guided credit after a lapse, and it is written back as stored",
+   "Plans \u2014 the last served record a malformed startedAfterExpiry (1) is never read as \"started under Premium\": no guided credit after a lapse, and it is written back as stored",
+   "Plans \u2014 the last served record a malformed startedAfterExpiry (yes) is never read as \"started under Premium\": no guided credit after a lapse, and it is written back as stored",
+   "Plans \u2014 the last served record a malformed revisit flag in the served stage is not read as \"no revisit\"",
+   "Insights \u2014 accepted snapshots keep nested values A05 as reported \u2014 an object-valued fact, a non-text evidence item and unknown fields on a snapshot and its application survive an unrelated dismissal and restarts"
+  ],
+  "test/features/r82/r82_a06_reflection_completion_test.dart": [
+   "A06 as reported \u2014 \"Yes and useful\", the new day opens, the useful answer removed, restart at 00:20: the reflection stays finished and the next Circle can be chosen",
+   "A06 as reported \u2014 \"Yes and useful\", the new day opens, both answers removed, restart at 00:20: the reflection stays finished and the next Circle can be chosen",
+   "A06 as reported \u2014 \"Not today\", the new day opens, both answers removed, restart at 00:20: the reflection stays finished and the next Circle can be chosen",
+   "the same in one session: recovery at 00:20 (a resume) does not bring the finished Circle back",
+   "control \u2014 a reflection genuinely still open after midnight is still carried over (no invented answer, no invented completion)",
+   "control \u2014 an answer only half given (\"Yes\", no usefulness) is not a finished reflection: removing nothing, it is still carried over",
+   "control \u2014 six hours after the Close an open reflection is no longer carried over; a finished one, answers removed, is not either",
+   "the completion is the session's own: a new day's choice clears it with the rest of the earlier session"
+  ]
+ },
+ "batch": 14,
+ "exit": 0,
+ "seconds": 14,
+ "command": "flutter test --concurrency=1 --reporter json test/features/r81/r81_n06_n07_damaged_records_test.dart test/features/r81/r81_n08_n09_aud2_time_test.dart test/features/r81/r81_n10_failure_notices_test.dart test/features/r81/r81b_rl1_pending_state_test.dart test/features/r81/r81b_rl2_unverified_words_copy_test.dart test/features/r81/r81b_rl3_field_preservation_test.dart test/features/r82/r82_a01_pending_lifecycle_credit_test.dart test/features/r82/r82_a02_new2_delete_isolation_test.dart test/features/r82/r82_a03_new1_stage_publication_test.dart test/features/r82/r82_a04_a08_new3_insight_actions_test.dart test/features/r82/r82_a05_nested_fields_test.dart test/features/r82/r82_a06_reflection_completion_test.dart"
+}

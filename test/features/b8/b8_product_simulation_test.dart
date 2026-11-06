@@ -274,6 +274,7 @@ class B8Run {
 
         // The Circle itself.
         notifier.start();
+        await _settle();
         final plan = r.composed?.plan;
         if (plan != null && plan.parts.length > 1) {
           final (skip, leaveOut) =

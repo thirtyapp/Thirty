@@ -75,18 +75,32 @@ void main() {
       return (c, rec.circleId);
     }
 
+    // R8.2 founder decision B (2026-11-05): a Start whose Plan record can't
+    // be saved is refused — the Circle never runs without it. Where these
+    // N04 cases started the Circle anyway, they now check the refusal; the
+    // N04 guarantees themselves (no unauthorized credit, never a Close
+    // saved without its Start record) are asserted as before.
     for (final fault in DiskFault.values) {
       test('as reported (${fault.name}, Plans refusing): Start after a '
           'verified expiry, then Close with daily and History writes allowed '
-          '— a restart never credits the Plan', () async {
+          '— the Start is refused and told, and a restart never credits the '
+          'Plan', () async {
         final (c, id) = await servedThenLapsed();
         h.disk.fail(circlePlansKey, fault);
         today(c).start();
         await R8Harness.settle();
+        expect(
+          c.read(recommendationProvider).status,
+          RecommendationStatus.notStarted,
+        );
+        expect(c.read(storeSaveFailuresProvider).count, greaterThan(0));
         h.clock.value = morning.add(const Duration(minutes: 25));
         today(c).close();
         await R8Harness.settle();
-        expect(c.read(journalSaveStatusProvider)[id], isFalse);
+        expect(
+          c.read(recommendationProvider).status,
+          RecommendationStatus.notStarted,
+        );
 
         h.disk.healAll();
         await h.restart();
@@ -109,13 +123,24 @@ void main() {
       });
 
       test(
-        'the evidence write ${fault.name} once at Start: the Close '
-        'writes it first, then saves — no credit, now or after a restart',
+        'the evidence write ${fault.name} once at Start: that Start is '
+        'refused; tapped again, the evidence is written first, then the '
+        'Circle starts and closes — no credit, now or after a restart',
         () async {
           final (c, id) = await servedThenLapsed();
           h.disk.fail(circlePlansKey, fault, times: 1);
           today(c).start();
           await R8Harness.settle();
+          expect(
+            c.read(recommendationProvider).status,
+            RecommendationStatus.notStarted,
+          );
+          today(c).start();
+          await R8Harness.settle();
+          expect(
+            c.read(recommendationProvider).status,
+            RecommendationStatus.started,
+          );
           h.clock.value = morning.add(const Duration(minutes: 25));
           today(c).close();
           await R8Harness.settle();

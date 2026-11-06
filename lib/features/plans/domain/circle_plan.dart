@@ -9,6 +9,7 @@
 /// Circle was started and later closed in THIRTY — never "done".
 library;
 
+import '../../../core/utils/date_key.dart';
 import '../../home/application/activity_catalog.dart';
 import '../../home/domain/recommendation_engine.dart';
 import '../../home/domain/recommendation_policy.dart';
@@ -494,6 +495,7 @@ class PlanProgress {
     required this.cycles,
     this.lastAdvancedCircleId,
     this.lastServed,
+    this.appliedInsight,
     this.extra = const {},
   });
 
@@ -516,6 +518,13 @@ class PlanProgress {
   /// (audit remediation R2, founder decision D2).
   final ServedStageCircle? lastServed;
 
+  /// The Insight whose own action last changed this Plan (R8.2, founder
+  /// decision C): written in the same save as that change, so it is on
+  /// disk exactly when the change is — what a retry reads to record the
+  /// Insight as applied. A change the user made some other way never
+  /// carries it.
+  final AppliedInsight? appliedInsight;
+
   PlanCycle get current => cycles.last;
   CirclePlanDefinition get definition => circlePlanById[planId]!;
 
@@ -524,16 +533,19 @@ class PlanProgress {
     List<PlanCycle>? cycles,
     String? lastAdvancedCircleId,
     ServedStageCircle? lastServed,
+    AppliedInsight? appliedInsight,
   }) => PlanProgress(
     planId: planId,
     lifecycle: lifecycle ?? this.lifecycle,
     cycles: cycles ?? this.cycles,
     lastAdvancedCircleId: lastAdvancedCircleId ?? this.lastAdvancedCircleId,
     lastServed: lastServed ?? this.lastServed,
+    appliedInsight: appliedInsight ?? this.appliedInsight,
     extra: {
       for (final MapEntry(:key, :value) in extra.entries)
         if (!(key == 'lastServed' && lastServed != null) &&
-            !(key == 'lastAdvancedCircleId' && lastAdvancedCircleId != null))
+            !(key == 'lastAdvancedCircleId' && lastAdvancedCircleId != null) &&
+            !(key == 'appliedInsight' && appliedInsight != null))
           key: value,
     },
   );
@@ -542,12 +554,18 @@ class PlanProgress {
   PlanProgress withCurrent(PlanCycle cycle) =>
       copyWith(cycles: [...cycles.take(cycles.length - 1), cycle]);
 
+  /// [cycle] in place of the cycle with its id — the current one or an
+  /// earlier one (R8.2 Plan lifecycle policy: a left cycle credited later).
+  PlanProgress withCycle(PlanCycle cycle) =>
+      copyWith(cycles: [for (final c in cycles) c.id == cycle.id ? cycle : c]);
+
   Map<String, Object?> toJson() => {
     ...extra,
     'lifecycle': lifecycle.name,
     'cycles': [for (final c in cycles) c.toJson()],
     'lastAdvancedCircleId': ?lastAdvancedCircleId,
     'lastServed': ?lastServed?.toJson(),
+    'appliedInsight': ?appliedInsight?.toJson(),
   };
 
   static PlanProgress? fromJson(String planId, Object? raw) {
@@ -571,21 +589,67 @@ class PlanProgress {
     if (cycles.isEmpty) return null;
     final last = raw['lastAdvancedCircleId'];
     final served = ServedStageCircle.fromJson(raw['lastServed']);
-    const known = {'lifecycle', 'cycles', 'lastAdvancedCircleId', 'lastServed'};
+    final insight = AppliedInsight.fromJson(raw['appliedInsight']);
+    const known = {
+      'lifecycle',
+      'cycles',
+      'lastAdvancedCircleId',
+      'lastServed',
+      'appliedInsight',
+    };
     return PlanProgress(
       planId: planId,
       lifecycle: lifecycle,
       cycles: cycles,
       lastAdvancedCircleId: last is String ? last : null,
       lastServed: served,
+      appliedInsight: insight,
       extra: {
         for (final MapEntry(:key, :value) in raw.entries)
           if (!known.contains(key)) key: value,
         if (last != null && last is! String) 'lastAdvancedCircleId': last,
         if (raw['lastServed'] != null && served == null)
           'lastServed': raw['lastServed'],
+        // A damaged record is kept as stored and attributes nothing.
+        if (raw['appliedInsight'] != null && insight == null)
+          'appliedInsight': raw['appliedInsight'],
       },
     );
+  }
+}
+
+/// Which Insight's own action changed a Plan, for which cycle, and on which
+/// day ([PlanProgress.appliedInsight], R8.2 founder decision C).
+class AppliedInsight {
+  const AppliedInsight({
+    required this.insightId,
+    required this.cycleId,
+    required this.on,
+  });
+
+  final String insightId;
+
+  /// The Plan's current cycle once the change was made.
+  final String cycleId;
+
+  /// The local date of the change (`YYYY-MM-DD`).
+  final String on;
+
+  Map<String, Object?> toJson() => {
+    'insightId': insightId,
+    'cycleId': cycleId,
+    'on': on,
+  };
+
+  /// `null` for anything that isn't a whole record.
+  static AppliedInsight? fromJson(Object? raw) {
+    if (raw is! Map<String, Object?>) return null;
+    final id = raw['insightId'];
+    final cycleId = raw['cycleId'];
+    final on = raw['on'];
+    if (id is! String || cycleId is! String || on is! String) return null;
+    if (!isCanonicalDateKey(on)) return null;
+    return AppliedInsight(insightId: id, cycleId: cycleId, on: on);
   }
 }
 
@@ -596,7 +660,29 @@ class ServedStageCircle {
     required this.circleId,
     required this.stage,
     this.startedAfterExpiry = false,
+    this.startedBeforePause,
+    this.closedBeforeLeave,
+    this.source,
   });
+
+  /// The stored record this was read from (R8.2, Astra R81-A05): written
+  /// back with every field it holds — a newer build's too — and only the
+  /// fields THIRTY changes on it ([startedAfterExpiry], [startedBeforePause],
+  /// [closedBeforeLeave]) as now.
+  final Map<String, Object?>? source;
+
+  /// R8.2 Plan lifecycle policy (founder directive, 2026-11-06): the instant
+  /// (UTC, ISO 8601) this Circle was started, recorded when its Plan was
+  /// paused after that Start — by Pause, or by starting another Plan. That
+  /// Circle's Close, once durable, still earns its credit on the paused
+  /// Plan. Never set for a Circle started only after the Pause.
+  final String? startedBeforePause;
+
+  /// The same policy: the instant (UTC) the user asked to close this Circle,
+  /// recorded when the Plan was left after that request — even while the
+  /// Close was still being saved. That Close, and no other, still earns its
+  /// credit on the cycle that was left, once it is durable.
+  final String? closedBeforeLeave;
 
   final String circleId;
   final PlanStageProvenance stage;
@@ -616,22 +702,79 @@ class ServedStageCircle {
       stage.stageId == this.stage.stageId &&
       stage.revisit == this.stage.revisit;
 
+  /// Whether [stamp] names the same instant as [at].
+  static bool sameInstant(String? stamp, DateTime? at) {
+    if (stamp == null || at == null) return false;
+    return DateTime.tryParse(stamp)?.isAtSameMomentAs(at) ?? false;
+  }
+
+  /// The instant [at] as stored in a stamp.
+  static String instant(DateTime at) => at.toUtc().toIso8601String();
+
+  ServedStageCircle copyWith({
+    bool? startedAfterExpiry,
+    String? startedBeforePause,
+    String? closedBeforeLeave,
+  }) => ServedStageCircle(
+    circleId: circleId,
+    stage: stage,
+    startedAfterExpiry: startedAfterExpiry ?? this.startedAfterExpiry,
+    startedBeforePause: startedBeforePause ?? this.startedBeforePause,
+    closedBeforeLeave: closedBeforeLeave ?? this.closedBeforeLeave,
+    source: source,
+  );
+
   Map<String, Object?> toJson() => {
+    ...?source,
     'circleId': circleId,
-    'stage': stage.toJson(),
+    'stage': source?['stage'] ?? stage.toJson(),
     if (startedAfterExpiry) 'startedAfterExpiry': true,
+    'startedBeforePause': ?startedBeforePause,
+    'closedBeforeLeave': ?closedBeforeLeave,
   };
 
   /// `null` for anything that isn't a whole served stage.
+  ///
+  /// R8.2 (Astra R81-A05): a flag that decides credit — the Start after an
+  /// expiry, the stage's revisit or gentler — that is present but isn't a
+  /// Boolean, or stage 5's sources that aren't text, make the record
+  /// unreadable: never read as the default. It is then kept as stored
+  /// ([PlanProgress.extra]) and credits nothing after a lapse.
   static ServedStageCircle? fromJson(Object? raw) {
     if (raw is! Map<String, Object?>) return null;
     final circleId = raw['circleId'];
-    final stage = PlanStageProvenance.fromJson(raw['stage']);
+    final rawStage = raw['stage'];
+    final stage = PlanStageProvenance.fromJson(rawStage);
     if (circleId is! String || stage == null) return null;
+    bool damaged(Object? flag) => flag != null && flag is! bool;
+    final flag = raw['startedAfterExpiry'];
+    if (damaged(flag)) return null;
+    // The lifecycle-policy stamps decide credit too: present but not an
+    // instant makes the record unreadable, never read as absent.
+    String? stamp(Object? value) =>
+        value is String && DateTime.tryParse(value) != null ? value : null;
+    final paused = raw['startedBeforePause'];
+    final left = raw['closedBeforeLeave'];
+    if ((paused != null && stamp(paused) == null) ||
+        (left != null && stamp(left) == null)) {
+      return null;
+    }
+    if (rawStage is Map<String, Object?>) {
+      final drawsOn = rawStage['drawsOn'];
+      if (damaged(rawStage['revisit']) ||
+          damaged(rawStage['gentler']) ||
+          (drawsOn != null &&
+              (drawsOn is! List || drawsOn.any((id) => id is! String)))) {
+        return null;
+      }
+    }
     return ServedStageCircle(
       circleId: circleId,
       stage: stage,
-      startedAfterExpiry: raw['startedAfterExpiry'] == true,
+      startedAfterExpiry: flag == true,
+      startedBeforePause: stamp(paused),
+      closedBeforeLeave: stamp(left),
+      source: raw,
     );
   }
 }
@@ -771,11 +914,18 @@ extension CirclePlanActions on CirclePlansState {
       number: number,
       startedOn: today,
     );
+    // R8.2 Plan lifecycle policy: a Circle the user asked to close before
+    // leaving keeps its served record into the new cycle, so its Close can
+    // still credit the cycle that was left once it is durable. It names
+    // that earlier cycle, so it never moves the new one on.
+    final carried = plan?.lastServed;
     return PlanProgress(
       planId: planId,
       lifecycle: PlanLifecycle.active,
       cycles: [...?plan?.cycles, cycle],
       lastAdvancedCircleId: plan?.lastAdvancedCircleId,
+      lastServed: carried?.closedBeforeLeave != null ? carried : null,
+      appliedInsight: plan?.appliedInsight,
       extra: plan?.extra ?? const {},
     );
   }
@@ -867,13 +1017,43 @@ extension CirclePlanActions on CirclePlansState {
   /// ADR-024 I2, applied by the user: "Keep this Plan's Circles gentler for
   /// now" for the active [planId]'s current cycle. `null` if it doesn't
   /// apply — including when it is already on (never stacked).
-  CirclePlansState? keepGentler(String planId, {required String today}) {
+  ///
+  /// With [cycleId] (R8.2, Astra R81-A04), `null` too unless that cycle is
+  /// the current one: I2 never changes a cycle it wasn't shown for.
+  CirclePlansState? keepGentler(
+    String planId, {
+    required String today,
+    String? cycleId,
+  }) {
     final plan = plans[planId];
     if (plan == null || plan.lifecycle != PlanLifecycle.active) return null;
     final cycle = plan.current;
+    if (cycleId != null && cycle.id != cycleId) return null;
     if (cycle.isOver || cycle.isGentler) return null;
     return _with(
       plan.withCurrent(cycle.copyWith(gentlerSince: today)),
+      activePlanId: activePlanId,
+    );
+  }
+
+  /// [planId] as changed by Insight [insightId]'s own action on [today]
+  /// (R8.2, founder decision C): its current cycle named with it. `this`
+  /// when there is no such Plan.
+  CirclePlansState withAppliedInsight(
+    String planId,
+    String insightId, {
+    required String today,
+  }) {
+    final plan = plans[planId];
+    if (plan == null) return this;
+    return _with(
+      plan.copyWith(
+        appliedInsight: AppliedInsight(
+          insightId: insightId,
+          cycleId: plan.current.id,
+          on: today,
+        ),
+      ),
       activePlanId: activePlanId,
     );
   }
@@ -891,20 +1071,57 @@ extension CirclePlanActions on CirclePlansState {
 
   /// A stage Circle was started and later closed in THIRTY: the stage is
   /// guided, and the place moves on once — never twice for one Circle,
-  /// never for a Plan that is paused, left or in another cycle.
+  /// never for another cycle.
+  ///
+  /// R8.2 Plan lifecycle policy (founder directive, 2026-11-06), for the
+  /// Circle THIRTY served ([PlanProgress.lastServed]) and the very Start
+  /// ([startedAt]) and Close ([closedAt]) being credited:
+  /// - an active Plan's current cycle: credited, as before;
+  /// - a paused Plan's current cycle: credited only when that Start came
+  ///   before the Pause ([ServedStageCircle.startedBeforePause]); the Plan
+  ///   stays paused (stage 5 ends its cycle, as it would have);
+  /// - a cycle that was left: credited only when that Close was asked for
+  ///   before the Leave ([ServedStageCircle.closedBeforeLeave]) — the left
+  ///   cycle, not a later one; it stays left;
+  /// - anything else — a Plan paused before the Start, left before the
+  ///   Close — never.
+  /// No other Plan is touched, and nothing is reactivated.
   CirclePlansState recordGuided(
     PlanStageProvenance stage, {
     required String circleId,
     required String today,
     required List<String> parts,
     required List<String> skipped,
+    DateTime? startedAt,
+    DateTime? closedAt,
   }) {
     final plan = plans[stage.planId];
-    if (plan == null || plan.lifecycle != PlanLifecycle.active) return this;
+    if (plan == null) return this;
     if (plan.lastAdvancedCircleId == circleId) return this;
-    final cycle = plan.current;
-    if (cycle.id != stage.cycleId || cycle.isOver) return this;
+    final cycle = plan.cycles.where((c) => c.id == stage.cycleId).firstOrNull;
+    if (cycle == null) return this;
     if (cycle.records.any((r) => r.circleId == circleId)) return this;
+    final served = plan.lastServed;
+    final isServed =
+        served != null && served.matches(stage, circleId: circleId);
+    final startedFirst =
+        isServed &&
+        ServedStageCircle.sameInstant(served.startedBeforePause, startedAt);
+    final closedFirst =
+        isServed &&
+        ServedStageCircle.sameInstant(served.closedBeforeLeave, closedAt) &&
+        (served.startedBeforePause == null || startedFirst);
+    final left = cycle.end == CycleEnd.left;
+    final eligible = left
+        ? closedFirst
+        : identical(cycle, plan.current) &&
+              !cycle.isOver &&
+              switch (plan.lifecycle) {
+                PlanLifecycle.active => true,
+                PlanLifecycle.paused => startedFirst,
+                _ => false,
+              };
+    if (!eligible) return this;
     final expected = stage.revisit ? cycle.pendingRevisit : cycle.cursor;
     if (expected != stage.stageNumber) return this;
     final record = StageRecord(
@@ -920,8 +1137,16 @@ extension CirclePlanActions on CirclePlansState {
     final records = [...cycle.records, record];
     final PlanProgress moved;
     if (stage.revisit) {
-      moved = plan.withCurrent(
+      moved = plan.withCycle(
         cycle.copyWith(records: records, clearRevisit: true),
+      );
+    } else if (left) {
+      // The cycle that was left keeps its end; only its place is recorded.
+      moved = plan.withCycle(
+        cycle.copyWith(
+          records: records,
+          cursor: stage.stageNumber < 5 ? stage.stageNumber + 1 : null,
+        ),
       );
     } else if (stage.stageNumber == 5) {
       moved = plan
@@ -938,9 +1163,13 @@ extension CirclePlanActions on CirclePlansState {
         cycle.copyWith(records: records, cursor: stage.stageNumber + 1),
       );
     }
+    // Another Plan that is active stays active (a paused Plan credited
+    // while the user runs another one).
     return _with(
       moved.copyWith(lastAdvancedCircleId: circleId),
-      activePlanId: moved.lifecycle == PlanLifecycle.active
+      activePlanId:
+          moved.lifecycle == PlanLifecycle.active ||
+              activePlanId != plan.planId
           ? activePlanId
           : null,
     );
@@ -993,11 +1222,36 @@ extension CirclePlanActions on CirclePlansState {
       return this;
     }
     return _with(
+      plan.copyWith(lastServed: served.copyWith(startedAfterExpiry: !active)),
+      activePlanId: activePlanId,
+    );
+  }
+
+  /// R8.2 Plan lifecycle policy: [planId]'s served Circle [circleId] with
+  /// the order of the user's own actions recorded on it — started before
+  /// its Plan was paused ([startedBeforePause]), asked to close before the
+  /// Plan was left ([closedBeforeLeave]). `this` when that Circle isn't the
+  /// one served for the Plan.
+  CirclePlansState stampServed(
+    String planId, {
+    required String circleId,
+    DateTime? startedBeforePause,
+    DateTime? closedBeforeLeave,
+  }) {
+    final plan = plans[planId];
+    final served = plan?.lastServed;
+    if (plan == null || served == null || served.circleId != circleId) {
+      return this;
+    }
+    return _with(
       plan.copyWith(
-        lastServed: ServedStageCircle(
-          circleId: served.circleId,
-          stage: served.stage,
-          startedAfterExpiry: !active,
+        lastServed: served.copyWith(
+          startedBeforePause: startedBeforePause == null
+              ? null
+              : ServedStageCircle.instant(startedBeforePause),
+          closedBeforeLeave: closedBeforeLeave == null
+              ? null
+              : ServedStageCircle.instant(closedBeforeLeave),
         ),
       ),
       activePlanId: activePlanId,

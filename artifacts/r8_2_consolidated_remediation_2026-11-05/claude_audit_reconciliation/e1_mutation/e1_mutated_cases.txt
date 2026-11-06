@@ -1,0 +1,28 @@
+{
+ "test/features/personal_circle/personal_circle_simulation_test.dart": {
+  "declared": 13,
+  "ran": 10,
+  "eachExactlyOnce": false,
+  "notRun": [
+   "p07_mostly_10_minutes",
+   "p08_mostly_20_minutes",
+   "p09_mostly_30_minutes"
+  ],
+  "repeated": [],
+  "undeclared": [],
+  "parts": [
+   "batch_18a.summary.json",
+   "batch_18b.summary.json",
+   "batch_18d.summary.json",
+   "batch_18e.summary.json"
+  ],
+  "declaredParts": [
+   "18a",
+   "18b",
+   "18c",
+   "18d",
+   "18e"
+  ]
+ }
+}
+CASES MISMATCH

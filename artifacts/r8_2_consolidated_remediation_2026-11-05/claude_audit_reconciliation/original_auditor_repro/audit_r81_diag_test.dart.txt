@@ -1,0 +1,162 @@
+// Diagnostics + controls for the audit reproductions (scratch only).
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+
+import '../support/r8_fault_disk.dart';
+import '../support/r8_harness.dart';
+
+void main() {
+  final morning = DateTime(2026, 10, 12, 9);
+  late R8Harness h;
+  setUp(() async {
+    h = R8Harness(morning);
+    await h.boot();
+  });
+  RecommendationNotifier today(ProviderContainer c) =>
+      c.read(recommendationProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+  CircleJournalEntry? entryFor(ProviderContainer c, String id) => c
+      .read(circleJournalRepositoryProvider)
+      .readAll()
+      .where((e) => e.circleId == id)
+      .firstOrNull;
+  Future<String> facts(ProviderContainer c, String id) async {
+    final d = await h.disk.stored();
+    final e = entryFor(c, id);
+    return 'disk.status=${d[recommendationStatusKey]} '
+        'disk.attempt=${d[recommendationAttemptResponseKey]} '
+        'hist.started=${e?.startedAt != null} hist.closed=${e?.closedAt != null} '
+        'hist.attempt=${e?.attemptResponse} '
+        'saveStatus=${c.read(journalSaveStatusProvider)[id]} '
+        'mem.status=${c.read(recommendationProvider).status.name}';
+  }
+
+  Future<(ProviderContainer, String)> served() async {
+    final c = h.open();
+    plans(c).start('getting_going');
+    await R8Harness.settle();
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    await R8Harness.settle();
+    return (c, c.read(recommendationProvider).recommendation!.circleId);
+  }
+
+  test('CONTROL A1: Start then Close, no Plan action — saved', () async {
+    final (c, id) = await served();
+    today(c).start();
+    await R8Harness.settle();
+    today(c).close();
+    await R8Harness.settle();
+    today(c).reportAttempt(CircleAttemptResponse.yes);
+    await R8Harness.settle();
+    final f = await facts(c, id);
+    // ignore: avoid_print
+    print('CONTROL A1: $f');
+    expect(f, contains('disk.status=closed'));
+    expect(f, contains('hist.closed=true'));
+    expect(f, contains('hist.attempt=CircleAttemptResponse.yes'));
+  });
+
+  test('DIAG A1: Start; Leave + Go through again; Close; answer; restart',
+      () async {
+    final (c, id) = await served();
+    today(c).start();
+    await R8Harness.settle();
+    plans(c).leave('getting_going');
+    await R8Harness.settle();
+    plans(c).goThroughAgain('getting_going');
+    await R8Harness.settle();
+    today(c).close();
+    await R8Harness.settle();
+    today(c).reportAttempt(CircleAttemptResponse.yes);
+    await R8Harness.settle();
+    // ignore: avoid_print
+    print('DIAG A1 in-session: ${await facts(c, id)}');
+    await h.restart();
+    final again = h.open();
+    again.read(recommendationProvider);
+    await R8Harness.settle();
+    // ignore: avoid_print
+    print('DIAG A1 after restart: ${await facts(again, id)}');
+    today(again).reportAttempt(CircleAttemptResponse.yes);
+    await R8Harness.settle();
+    // ignore: avoid_print
+    print('DIAG A1 restart+retry: ${await facts(again, id)}');
+  });
+
+  test('DIAG A2 (returnsFalse once at choice): run it; restart', () async {
+    final c = h.open();
+    plans(c).start('getting_going');
+    await R8Harness.settle();
+    h.disk.fail(circlePlansKey, DiskFault.returnsFalse, times: 1);
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    await R8Harness.settle();
+    final id = c.read(recommendationProvider).recommendation!.circleId;
+    today(c).start();
+    await R8Harness.settle();
+    today(c).close();
+    await R8Harness.settle();
+    today(c).reportAttempt(CircleAttemptResponse.yes);
+    await R8Harness.settle();
+    // ignore: avoid_print
+    print('DIAG A2 in-session: ${await facts(c, id)} '
+        'plansUnsaved=${plans(c).hasUnsavedChanges}');
+    await h.restart();
+    final again = h.open();
+    // ignore: avoid_print
+    print('DIAG A2 after restart: ${await facts(again, id)} '
+        'rec=${again.read(recommendationProvider).recommendation?.circleId}');
+  });
+
+  test('DIAG A3: Delete fails; later failed save; heal; restart', () async {
+    final (c, id) = await served();
+    today(c).start();
+    await R8Harness.settle();
+    today(c).close();
+    await R8Harness.settle();
+    h.disk.fail(circlePlansKey, DiskFault.returnsFalse);
+    try {
+      await c.read(circleHistoryDeletionProvider).delete();
+    } catch (_) {}
+    await R8Harness.settle();
+    int recs(ProviderContainer x) => x
+        .read(circlePlansProvider)
+        .plans
+        .values
+        .expand((p) => p.cycles)
+        .expand((cy) => cy.records)
+        .length;
+    final afterDelete = recs(c);
+    plans(c).keepGentler('getting_going');
+    await R8Harness.settle();
+    final afterFailedSave = recs(c);
+    h.disk.healAll();
+    plans(c).keepGentler('getting_going');
+    await R8Harness.settle();
+    int diskRecs(Object? raw) => raw == null ? -1 : [
+          for (final p in ((jsonDecode('$raw') as Map)['plans'] as Map).values)
+            for (final cy in (p as Map)['cycles'] as List)
+              ...((cy as Map)['records'] as List? ?? const []),
+        ].length;
+    final onDisk = diskRecs((await h.disk.stored())[circlePlansKey]);
+    final pending =
+        (await h.disk.stored()).containsKey(historyDeletionPendingKey);
+    await h.restart();
+    final again = h.open();
+    final onDiskAfterRestart = diskRecs((await h.disk.stored())[circlePlansKey]);
+    // ignore: avoid_print
+    print('DIAG A3: memRecords afterDelete=$afterDelete '
+        'afterFailedSave=$afterFailedSave diskRecordsAfterHeal=$onDisk '
+        'deletionIntentStillPending=$pending '
+        'diskRecordsAfterRestart=$onDiskAfterRestart '
+        'memAfterRestart=${recs(again)}');
+  });
+}

@@ -720,6 +720,7 @@ void main() {
             .read(recommendationProvider.notifier)
             .chooseIntention(Intention.moreEnergy);
         container.read(recommendationProvider.notifier).start();
+        await pumpEventQueue();
         container.read(recommendationProvider.notifier).close();
 
         expect(analytics.events, [

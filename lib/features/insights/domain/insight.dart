@@ -221,7 +221,15 @@ class InsightSnapshot {
     this.appliedOn,
     this.notNowOn,
     this.declinedOn,
+    this.source,
   });
+
+  /// The stored record this snapshot was read from (R8.2, Astra R81-A05):
+  /// written back with everything it holds — a newer build's fields, a fact
+  /// or evidence item this build doesn't read — and only what THIRTY sets
+  /// on a snapshot after it was shown ([appliedOn], [notNowOn],
+  /// [declinedOn]) as now. Its text, facts and evidence never change.
+  final Map<String, Object?>? source;
 
   final String id;
   final InsightFamily family;
@@ -294,9 +302,20 @@ class InsightSnapshot {
     appliedOn: appliedOn ?? this.appliedOn,
     notNowOn: notNowOn ?? this.notNowOn,
     declinedOn: declinedOn ?? this.declinedOn,
+    source: source,
   );
 
-  Map<String, Object?> toJson() => {
+  Map<String, Object?> toJson() => switch (source) {
+    final stored? => {
+      ...stored,
+      'appliedOn': ?appliedOn,
+      'notNowOn': ?notNowOn,
+      'declinedOn': ?declinedOn,
+    },
+    null => _built(),
+  };
+
+  Map<String, Object?> _built() => {
     'id': id,
     'family': family.id,
     'generatedOn': generatedOn,
@@ -370,6 +389,7 @@ class InsightSnapshot {
       appliedOn: date('appliedOn'),
       notNowOn: date('notNowOn'),
       declinedOn: date('declinedOn'),
+      source: raw,
     );
   }
 }

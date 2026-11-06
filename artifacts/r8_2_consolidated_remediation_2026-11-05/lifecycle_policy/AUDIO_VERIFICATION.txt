@@ -1,0 +1,6 @@
+R8.2 lifecycle policy audio verification — 2026-11-06T10:59:31+01:00
+production manifest OK: 172 / 172
+framing manifest OK: 8 / 8
+bundled m4a: 180
+bundled set == union of manifests
+git diff --stat HEAD -- assets: []

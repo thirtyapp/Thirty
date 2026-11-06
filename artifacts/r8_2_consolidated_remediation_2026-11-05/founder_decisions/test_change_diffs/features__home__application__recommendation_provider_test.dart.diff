@@ -1,0 +1,10 @@
+--- R8.2 pre-decision: test/features/home/application/recommendation_provider_test.dart
++++ after founder decisions: test/features/home/application/recommendation_provider_test.dart
+@@ -720,6 +720,7 @@
+             .read(recommendationProvider.notifier)
+             .chooseIntention(Intention.moreEnergy);
+         container.read(recommendationProvider.notifier).start();
++        await pumpEventQueue();
+         container.read(recommendationProvider.notifier).close();
+ 
+         expect(analytics.events, [

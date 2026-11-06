@@ -1,0 +1,15 @@
+Definitive R8.2 failing-before run.
+Source: git archive of e935112c408c16d99835280f4e1fafd722d47ed1 (lib, test, pubspec.*, analysis_options.yaml, assets) exported to the session scratchpad, plus the final test/features/r82/*.dart copied in.
+lib/ blob check of the export against the commit:
+  (none listed = identical)
+test file sha256:
+f039d599a45dd6f7c72177ee24c95fb2c3d106780a79bc934031a01b7ec492b4 *test/features/r82/r82_a01_pending_lifecycle_credit_test.dart
+256c3a287a01201c08359b3e4b63aaed23d99ea98944f09091c4939e499f2e07 *test/features/r82/r82_a02_new2_delete_isolation_test.dart
+1aef963ac0052da9fb0c8eaa9346de136ec4933e22f2b742e0d65445e5fd4bc7 *test/features/r82/r82_a03_new1_stage_publication_test.dart
+2b1dc2a9a9eff34f796f47173626daa73ecb7ff217ff6218a5f82f1e32566161 *test/features/r82/r82_a04_a08_new3_insight_actions_test.dart
+628b7376628e2bcb74a9278c089a61380079e9214d4a6f18c1aeea902f3c54f4 *test/features/r82/r82_a05_nested_fields_test.dart
+bd90d5e33295ff994a55807bd0644f789b611f403cd645db9cc5f1d626fe2a2a *test/features/r82/r82_a06_reflection_completion_test.dart
+392112a0f2c39374f184e510b9836cc399988cd8ed973cddee76ccbeabe272f6 *test/features/r82/r82_a07_confirmed_history_test.dart
+76e12038e04d07f665639b9feb0304245d5eef34ccf26e20f348e4572b3291e4 *test/features/r82/r82_a09_native_types_test.dart
+302ca521b1fe7ed6ac12a7e3c64460b7c42ec04b5c4db0be600c78ae08bf8e2e *test/features/r82/r82_cross_store_adversarial_test.dart
+date: 2026-11-05T20:51:21+01:00

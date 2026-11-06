@@ -1,0 +1,105 @@
+// PRE-COMMIT PROBE (scratch export only; never part of the repository).
+// Question: do the `await settle()` lines added between start() and the
+// next action in existing tests hide a failure when that action is tapped
+// while the Start is still waiting for its save (founder decision B)?
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/premium/entitlement_status.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+
+import '../../support/r8_harness.dart';
+
+void main() {
+  final morning = DateTime(2026, 10, 30, 9);
+  late R8Harness h;
+
+  setUp(() async {
+    h = R8Harness(morning);
+    await h.boot();
+  });
+
+  RecommendationNotifier today(ProviderContainer c) =>
+      c.read(recommendationProvider.notifier);
+  List<CircleJournalEntry> historyOf(ProviderContainer c, String id) => c
+      .read(circleJournalRepositoryProvider)
+      .readAll()
+      .where((e) => e.circleId == id)
+      .toList();
+
+  void tapEverythingWhilePending(ProviderContainer c) {
+    today(c).close();
+    today(c).skipPart();
+    today(c).skipPart(leaveOut: true);
+    today(c).pause();
+    today(c).close();
+  }
+
+  test('Free Circle: Close/Skip/Leave out/Pause tapped while the Start '
+      'waits for the offer save do nothing; once started, one Close is '
+      'saved once', () async {
+    final held = h.disk.hold(recommendationPendingWriteKey);
+    final c = h.open(status: EntitlementStatus.inactive);
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    final id = c.read(recommendationProvider).recommendation!.circleId;
+    await held.reached;
+    today(c).start();
+    tapEverythingWhilePending(c);
+    await R8Harness.settle();
+    expect(c.read(recommendationProvider).status, RecommendationStatus.notStarted);
+    expect(c.read(recommendationProvider).closedAt, isNull);
+    final stored = await h.disk.stored();
+    expect(stored[recommendationStatusKey], isNot('closed'));
+    expect(stored[recommendationClosedAtKey], isNull);
+    expect(historyOf(c, id).where((e) => e.closedAt != null), isEmpty);
+
+    held.release();
+    await R8Harness.settle();
+    expect(c.read(recommendationProvider).status, RecommendationStatus.started);
+    final r = c.read(recommendationProvider).recommendation!;
+    expect(r.circleId, id);
+    // Nothing tapped during the wait was replayed.
+    expect(c.read(recommendationProvider).pausedAt, isNull);
+    expect(c.read(recommendationProvider).skipped, isEmpty);
+    today(c).close();
+    await R8Harness.settle();
+    expect(c.read(recommendationProvider).status, RecommendationStatus.closed);
+    expect(historyOf(c, id), hasLength(1));
+    expect(historyOf(c, id).single.closedAt, isNotNull);
+  });
+
+  test('stage Circle: the same taps while the Start waits for its Plan save '
+      'do nothing and credit nothing; once started and closed, credited once',
+      () async {
+    final c = h.open();
+    final held = h.disk.hold(circlePlansKey);
+    c.read(circlePlansProvider.notifier).start('getting_going');
+    await held.reached;
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    final id = c.read(recommendationProvider).recommendation!.circleId;
+    expect(c.read(recommendationProvider).recommendation!.composed?.stage, isNotNull);
+    today(c).start();
+    tapEverythingWhilePending(c);
+    await R8Harness.settle();
+    expect(c.read(recommendationProvider).status, RecommendationStatus.notStarted);
+    expect(historyOf(c, id).where((e) => e.closedAt != null), isEmpty);
+    PlanCycle cycle() =>
+        c.read(circlePlansProvider).plans['getting_going']!.current;
+    expect(cycle().records, isEmpty);
+
+    held.release();
+    await R8Harness.settle();
+    expect(c.read(recommendationProvider).status, RecommendationStatus.started);
+    expect(c.read(recommendationProvider).pausedAt, isNull);
+    expect(cycle().records, isEmpty);
+    today(c).close();
+    await R8Harness.settle();
+    expect(historyOf(c, id), hasLength(1));
+    expect(cycle().records, hasLength(1));
+    expect(cycle().cursor, 2);
+  });
+}

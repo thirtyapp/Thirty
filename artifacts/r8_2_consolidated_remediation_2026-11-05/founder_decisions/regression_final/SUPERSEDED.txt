@@ -1,0 +1,8 @@
+SUPERSEDED as final R8.2 verification (label added 2026-11-06, before the R8.2 commit).
+This run: founder decisions A-C regression, 191/191 files, 2,748/0/0 (before the Claude report reconciliation).
+It was complete and valid for the tree it ran on, which later changed.
+Definitive full regression of the committed tree: ../../lifecycle_policy/regression_rerun/
+(193/193 files, 2,774 passed, 0 failed, 0 skipped; EVIDENCE OK; CASES OK).
+Committed here as a short record: the batch summaries, run/report/cases
+output, fingerprints, manifest and runner. Its raw batch_*.jsonl reporter
+logs are kept in the local working tree only, not committed.

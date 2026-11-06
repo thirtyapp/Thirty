@@ -1,0 +1,115 @@
+{
+ "r82_decision_a_historical_credit_test.jsonl": {
+  "passed": 5,
+  "failed": 13,
+  "load_errors": [],
+  "tests": [
+   {
+    "name": "throws: paused — the Close was durable before the Pause: the credit lands with the Pause, on the original cycle and Circle, and the Plan stays paused",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "throws: left — the credit lands with the Leave on the cycle that was left; no new cycle, nothing reactivated",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "throws: left, then gone through again: the credit stays on the original cycle and the new cycle starts at stage 1 with nothing recorded",
+    "result": "failure",
+    "error": "Expected: ['2026-10-12']"
+   },
+   {
+    "name": "throws: restarted — the app restarts with the credit still refused, then the Plan is paused: the credit lands with the Pause",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "throws: lapsed — Premium ended after the Close: the Circle served and started under Premium keeps its credit through the Pause",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "throws: repeated restarts after the Pause: exactly one credit, the Plan never reactivated, the next cycle never advanced",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "returnsFalse: paused — the Close was durable before the Pause: the credit lands with the Pause, on the original cycle and Circle, and the Plan stays paused",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "returnsFalse: left — the credit lands with the Leave on the cycle that was left; no new cycle, nothing reactivated",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "returnsFalse: left, then gone through again: the credit stays on the original cycle and the new cycle starts at stage 1 with nothing recorded",
+    "result": "failure",
+    "error": "Expected: ['2026-10-12']"
+   },
+   {
+    "name": "returnsFalse: restarted — the app restarts with the credit still refused, then the Plan is paused: the credit lands with the Pause",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "returnsFalse: lapsed — Premium ended after the Close: the Circle served and started under Premium keeps its credit through the Pause",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "returnsFalse: repeated restarts after the Pause: exactly one credit, the Plan never reactivated, the next cycle never advanced",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "starting another Plan pauses this one: the earned credit lands with it",
+    "result": "failure",
+    "error": "Expected: an object with length of <1>"
+   },
+   {
+    "name": "the Pause that folds the credit in is refused too: both are taken back; the next start credits the still-active Plan, once",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "no duplicate — the credit already durable: the Pause adds nothing",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "Premium rules kept — a Circle started only after a verified expiry earns no credit through a later Pause either",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "not extended (separate policy case, flagged for the founder) Pause BEFORE the Close: the existing rule stands — a Circle closed after its Plan was paused earns no credit",
+    "result": "success",
+    "error": ""
+   },
+   {
+    "name": "not extended (separate policy case, flagged for the founder) Pause while the Close is still being written to History: the Close was not durable before the Pause, so it is not folded in",
+    "result": "success",
+    "error": ""
+   }
+  ]
+ },
+ "r82_decision_b_start_persistence_test.jsonl": {
+  "passed": 0,
+  "failed": 0,
+  "load_errors": [
+   "loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/pre_decisions_tree/test/features/r82/r82_decision_b_start_persistence_test.dart"
+  ],
+  "tests": []
+ },
+ "r82_decision_c_insight_provenance_test.jsonl": {
+  "passed": 0,
+  "failed": 0,
+  "load_errors": [
+   "loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/pre_decisions_tree/test/features/r82/r82_decision_c_insight_provenance_test.dart"
+  ],
+  "tests": []
+ }
+}

@@ -37,9 +37,11 @@ const phaseDPremiumRetiredKey = 'phase_d_premium_retired';
 /// interrupted: each step is independent, the marker is written last, and
 /// running it again changes nothing.
 Future<void> retirePhaseDPremium(SharedPreferences prefs) async {
-  if (prefs.getBool(phaseDPremiumRetiredKey) ?? false) return;
+  if (prefs.get(phaseDPremiumRetiredKey) == true) return;
 
-  final rawKept = prefs.getString(keptCirclesKey);
+  // R8.2 (Astra R81-A09): read as whatever native type is stored — a value
+  // that isn't text is left untouched, and never stops the app starting.
+  final rawKept = prefs.get(keptCirclesKey);
   final kept = _decode(rawKept);
   if (kept != null &&
       kept['schemaVersion'] == keptCirclesSchemaVersion &&
@@ -48,7 +50,7 @@ Future<void> retirePhaseDPremium(SharedPreferences prefs) async {
     await prefs.setString(keptCirclesKey, jsonEncode(kept));
   }
 
-  final rawPreferences = prefs.getString(suggestionPreferencesKey);
+  final rawPreferences = prefs.get(suggestionPreferencesKey);
   final preferences = _decode(rawPreferences);
   if (preferences != null &&
       preferences.containsKey(retiredRoutinesNotSuggestedField)) {
@@ -59,8 +61,8 @@ Future<void> retirePhaseDPremium(SharedPreferences prefs) async {
   await prefs.setBool(phaseDPremiumRetiredKey, true);
 }
 
-Map<String, Object?>? _decode(String? raw) {
-  if (raw == null) return null;
+Map<String, Object?>? _decode(Object? raw) {
+  if (raw is! String) return null;
   try {
     final decoded = jsonDecode(raw);
     return decoded is Map<String, Object?> ? decoded : null;

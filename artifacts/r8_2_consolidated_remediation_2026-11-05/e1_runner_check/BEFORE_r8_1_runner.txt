@@ -1,0 +1,9 @@
+runner: artifacts/r8_1_consolidated_remediation_2026-11-05/regression_final/run_batches.py
+ACCEPTED  (expected ACCEPTED)  intact (control)
+ACCEPTED  (expected REJECTED)  year-simulation part 17c missing
+REJECTED  (expected REJECTED)  year-simulation part 17d incomplete
+ACCEPTED  (expected REJECTED)  part 17c is a copy of 17b
+ACCEPTED  (expected REJECTED)  an undeclared part 17f
+REJECTED  (expected REJECTED)  whole batch 9 missing
+REJECTED  (expected REJECTED)  batch 3 reports a file it was not given
+E-1 CHECK FAIL

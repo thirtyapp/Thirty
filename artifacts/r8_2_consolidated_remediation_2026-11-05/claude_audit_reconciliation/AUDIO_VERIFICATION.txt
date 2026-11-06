@@ -1,0 +1,9 @@
+R8.2 reconciliation audio verification — 2026-11-06T09:21:02+01:00
+production manifest:
+172
+framing manifest:
+8
+bundled m4a: 180
+bundled set == union of manifests
+git diff --stat HEAD -- assets: []
+untracked under assets: assets/worlds/quiet_trail/quiet_trail_walk_card_morning_v1.png assets/worlds/quiet_trail/quiet_trail_walk_hero_morning_v1.png 

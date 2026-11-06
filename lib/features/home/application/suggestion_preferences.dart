@@ -25,25 +25,38 @@ class NotSuggested {
     required this.activity,
     required this.need,
     required this.since,
+    this.source,
   });
 
   final ActivityId activity;
   final Intention need;
   final DateTime since;
 
-  Map<String, Object?> toJson() => {
-    'activityId': activity.name,
-    'need': need.name,
-    'since': since.toIso8601String(),
-  };
+  /// The stored item this was read from, written back exactly as stored
+  /// (R8.2, Astra R81-A05) — a newer build's fields too. An item is never
+  /// changed in place, only added or removed.
+  final Map<String, Object?>? source;
+
+  Map<String, Object?> toJson() =>
+      source ??
+      {
+        'activityId': activity.name,
+        'need': need.name,
+        'since': since.toIso8601String(),
+      };
 
   static NotSuggested? fromJson(Object? json) {
     if (json is! Map<String, Object?>) return null;
     final activity = ActivityId.values.asNameMap()[json['activityId']];
     final need = Intention.values.asNameMap()[json['need']];
-    final since = DateTime.tryParse('${json['since']}');
+    final since = _storedDate(json['since']);
     if (activity == null || need == null || since == null) return null;
-    return NotSuggested(activity: activity, need: need, since: since);
+    return NotSuggested(
+      activity: activity,
+      need: need,
+      since: since,
+      source: json,
+    );
   }
 }
 
@@ -55,25 +68,31 @@ class RestLifted {
     required this.activity,
     required this.need,
     required this.at,
+    this.source,
   });
 
   final ActivityId activity;
   final Intention need;
   final DateTime at;
 
-  Map<String, Object?> toJson() => {
-    'activityId': activity.name,
-    'need': need.name,
-    'at': at.toIso8601String(),
-  };
+  /// As [NotSuggested.source].
+  final Map<String, Object?>? source;
+
+  Map<String, Object?> toJson() =>
+      source ??
+      {
+        'activityId': activity.name,
+        'need': need.name,
+        'at': at.toIso8601String(),
+      };
 
   static RestLifted? fromJson(Object? json) {
     if (json is! Map<String, Object?>) return null;
     final activity = ActivityId.values.asNameMap()[json['activityId']];
     final need = Intention.values.asNameMap()[json['need']];
-    final at = DateTime.tryParse('${json['at']}');
+    final at = _storedDate(json['at']);
     if (activity == null || need == null || at == null) return null;
-    return RestLifted(activity: activity, need: need, at: at);
+    return RestLifted(activity: activity, need: need, at: at, source: json);
   }
 }
 
@@ -87,24 +106,54 @@ const retiredRoutinesNotSuggestedField = 'routinesNotSuggested';
 /// chosen on [since]. An explicit preference about future composition,
 /// never a usefulness answer, and reversible in Memory.
 class ElementLeftOut {
-  const ElementLeftOut({required this.element, required this.since});
+  const ElementLeftOut({
+    required this.element,
+    required this.since,
+    this.byInsight,
+    this.source,
+  });
 
   final ElementId element;
   final DateTime since;
 
-  Map<String, Object?> toJson() => {
-    'elementId': element.name,
-    'since': since.toIso8601String(),
-  };
+  /// The Insight (I3) whose own action left [element] out, when it was one
+  /// (R8.2, founder decision C): saved with it, so a retry can tell that
+  /// Insight's change from the same part left out some other way.
+  final String? byInsight;
+
+  /// As [NotSuggested.source].
+  final Map<String, Object?>? source;
+
+  Map<String, Object?> toJson() =>
+      source ??
+      {
+        'elementId': element.name,
+        'since': since.toIso8601String(),
+        'byInsight': ?byInsight,
+      };
 
   static ElementLeftOut? fromJson(Object? json) {
     if (json is! Map<String, Object?>) return null;
     final element = ElementId.values.asNameMap()[json['elementId']];
-    final since = DateTime.tryParse('${json['since']}');
+    final since = _storedDate(json['since']);
     if (element == null || since == null) return null;
-    return ElementLeftOut(element: element, since: since);
+    final by = json['byInsight'];
+    return ElementLeftOut(
+      element: element,
+      since: since,
+      // Anything but text attributes nothing; it is kept as stored.
+      byInsight: by is String ? by : null,
+      source: json,
+    );
   }
 }
+
+/// A stored date: text THIRTY wrote with [DateTime.toIso8601String], or
+/// `null` (R8.2, Astra R81-A05) — a number or anything else is never read
+/// as a date; its item is kept as stored ([SuggestionPreferences
+/// .unreadable]) and never applied.
+DateTime? _storedDate(Object? raw) =>
+    raw is String ? DateTime.tryParse(raw) : null;
 
 class SuggestionPreferences {
   const SuggestionPreferences({
@@ -191,8 +240,12 @@ class SuggestionPreferences {
   /// [raw] read, or `null` when it is a record THIRTY can't read as a whole
   /// (R8.1 RL-3) — not JSON, not a record, a version this build doesn't
   /// know, or a list field that isn't a list. No record reads as [empty].
-  static SuggestionPreferences? tryRead(String? raw) {
+  ///
+  /// R8.2 (Astra R81-A09): [raw] is the stored value as it is; one that
+  /// isn't text can't be read either.
+  static SuggestionPreferences? tryRead(Object? raw) {
     if (raw == null) return empty;
+    if (raw is! String) return null;
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! Map<String, Object?>) return null;
@@ -245,9 +298,8 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
 
   @override
   SuggestionPreferences build() {
-    final raw = ref
-        .watch(sharedPreferencesProvider)
-        .getString(suggestionPreferencesKey);
+    // R8.2 (Astra R81-A09): read as whatever native type is stored.
+    final raw = ref.watch(sharedPreferencesProvider).get(suggestionPreferencesKey);
     final read = SuggestionPreferences.tryRead(raw);
     _storedUnreadable = read == null;
     return read ?? SuggestionPreferences.empty;
@@ -354,7 +406,10 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
 
   /// V2 Phase D2: "Leave this out next time" — [element] stays out of the
   /// user's Personal Guided Circles until they put it back.
-  Future<bool> leaveOut(ElementId element) {
+  ///
+  /// [byInsight]: the I3 Insight whose own action this is (R8.2, founder
+  /// decision C), saved with the part ([ElementLeftOut.byInsight]).
+  Future<bool> leaveOut(ElementId element, {String? byInsight}) {
     final since = ref.read(eventClockProvider)();
     return _save(
       (current) => current.isLeftOut(element)
@@ -362,7 +417,11 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
           : current.copyWith(
               elementsLeftOut: [
                 ...current.elementsLeftOut,
-                ElementLeftOut(element: element, since: since),
+                ElementLeftOut(
+                  element: element,
+                  since: since,
+                  byInsight: byInsight,
+                ),
               ],
             ),
     );

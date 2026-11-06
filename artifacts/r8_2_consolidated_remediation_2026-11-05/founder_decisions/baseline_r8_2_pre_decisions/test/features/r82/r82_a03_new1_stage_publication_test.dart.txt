@@ -1,0 +1,308 @@
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/utils/date_key.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+
+import '../../support/r8_fault_disk.dart';
+import '../../support/r8_harness.dart';
+
+/// R8.2 — Astra R81-A03 (MEDIUM) and Claude NEW-1 (MEDIUM), related but
+/// distinct:
+///
+/// - A03: a queued publication is authorized by the exact Circle it writes,
+///   never by whichever Circle happens to be on show when the write runs.
+///   A stage Circle whose served stage never became durable is never saved
+///   — and, once that is certain, it is not left to run as a session that
+///   can't be saved.
+/// - NEW-1: a stage Circle already durably published stays saveable — its
+///   Start, Close and reflection — after any legitimate Plan action,
+///   whatever later replaces the Plan's last served record.
+void main() {
+  final morning = DateTime(2026, 10, 12, 9);
+  const oldCircle = '2026-10-05';
+  late R8Harness h;
+
+  String journalWithAnswer() {
+    final at = DateTime(2026, 10, 5, 9);
+    return jsonEncode({
+      'schemaVersion': circleJournalSchemaVersion,
+      'entries': [
+        CircleJournalEntry(
+          schemaVersion: circleJournalSchemaVersion,
+          circleId: oldCircle,
+          localDate: oldCircle,
+          direction: Intention.clearerHead,
+          activityId: ActivityId.values.first,
+          catalogVersion: catalogVersion,
+          shownAt: at,
+          startedAt: at,
+          closedAt: at,
+          attemptResponse: CircleAttemptResponse.yes,
+          usefulnessResponse: CircleUsefulnessResponse.veryUseful,
+        ).toJson(),
+      ],
+    });
+  }
+
+  setUp(() async {
+    h = R8Harness(morning);
+    await h.boot({circleJournalKey: journalWithAnswer()});
+  });
+
+  RecommendationNotifier today(ProviderContainer c) =>
+      c.read(recommendationProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+
+  /// Whether the day keys on disk hold a stage Circle whose served stage
+  /// the Plans on disk don't hold — invalid durable provenance.
+  Future<bool> unservedStageOnDisk() async {
+    final stored = await h.disk.stored();
+    final composed = stored[recommendationComposedKey];
+    if (composed is! String || !composed.contains('"stage"')) return false;
+    final rawPlans = stored[circlePlansKey];
+    final circleId = stored[recommendationDayKey];
+    if (rawPlans is! String) return true;
+    final served =
+        ((jsonDecode(rawPlans) as Map)['plans'] as Map)['getting_going']
+            as Map?;
+    final last = served?['lastServed'] as Map?;
+    return last == null || last['circleId'] != circleId;
+  }
+
+  for (final fault in DiskFault.values) {
+    group('${fault.name}:', () {
+      test('A03 as reported — a stage choice queued behind an earlier write, '
+          'then a kept Circle used today; the Plan start is refused: the '
+          'stage Circle is never written to the day keys, and a restart '
+          'never shows it', () async {
+        final c = h.open();
+        final kept = (await c
+            .read(keptCirclesProvider.notifier)
+            .keepCircle(
+              plan: CirclePlan.fromWire(const [
+                'getItOut:6',
+                'chooseOne:1',
+                'clearCorner:8',
+              ])!,
+              need: Intention.clearerHead,
+              circleId: oldCircle,
+            ))!;
+        await R8Harness.settle();
+
+        // An earlier Today write, held, so later ones queue behind it.
+        final heldJournal = h.disk.hold(circleJournalKey);
+        today(c).removeAnswer(oldCircle, includingAttempt: true);
+        await heldJournal.reached;
+
+        final heldPlans = h.disk.hold(circlePlansKey);
+        plans(c).start('getting_going');
+        await heldPlans.reached;
+        today(
+          c,
+        ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+        expect(
+          c.read(recommendationProvider).recommendation!.composed?.stage,
+          isNotNull,
+        );
+        expect(
+          today(c).useOwnedToday(keptCircleId: kept.id),
+          UseTodayResult.used,
+        );
+        expect(
+          c.read(recommendationProvider).recommendation!.composed?.stage,
+          isNull,
+        );
+
+        h.disk.fail(circlePlansKey, fault);
+        heldPlans.release(fault);
+        await R8Harness.settle();
+        expect(c.read(circlePlansProvider).active, isNull);
+
+        // The next History write — after the queued choice's publication —
+        // is held: the process is stopped there.
+        final next = h.disk.hold(circleJournalKey);
+        heldJournal.release();
+        await next.reached;
+        expect(
+          await unservedStageOnDisk(),
+          isFalse,
+          reason: 'a stage Circle saved on a Plan state that never landed',
+        );
+        await h.restart();
+        expect(await unservedStageOnDisk(), isFalse);
+        final again = h.open();
+        expect(
+          again.read(recommendationProvider).recommendation?.composed?.stage,
+          isNull,
+        );
+      });
+
+      test('a stage Circle whose served stage is refused, not yet started: '
+          'once that is certain it is taken off the screen — today\'s choice '
+          'opens again — and the user is told', () async {
+        final c = h.open();
+        final held = h.disk.hold(circlePlansKey);
+        plans(c).start('getting_going');
+        await held.reached;
+        today(
+          c,
+        ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+        final id = c.read(recommendationProvider).recommendation!.circleId;
+        h.disk.fail(circlePlansKey, fault);
+        held.release(fault);
+        await R8Harness.settle();
+        expect(c.read(journalSaveStatusProvider)[id], isFalse);
+        expect(
+          c.read(recommendationProvider).recommendation,
+          isNull,
+          reason: 'an unsaveable stage Circle left to run',
+        );
+        h.disk.healAll();
+        today(c).chooseIntention(Intention.moreEnergy);
+        await R8Harness.settle();
+        expect((await h.disk.stored())[recommendationDayKey], id);
+        expect(await unservedStageOnDisk(), isFalse);
+      });
+
+      test('the same, started while its Plan save was still pending: the '
+          'session is not left running unsaveable — it is taken back, the '
+          'user is told, and nothing of it is on disk', () async {
+        final c = h.open();
+        final held = h.disk.hold(circlePlansKey);
+        plans(c).start('getting_going');
+        await held.reached;
+        today(
+          c,
+        ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+        final id = c.read(recommendationProvider).recommendation!.circleId;
+        today(c).start();
+        expect(
+          c.read(recommendationProvider).status,
+          RecommendationStatus.started,
+        );
+        h.disk.fail(circlePlansKey, fault);
+        held.release(fault);
+        await R8Harness.settle();
+        expect(c.read(journalSaveStatusProvider)[id], isFalse);
+        expect(c.read(recommendationProvider).recommendation, isNull);
+        final stored = await h.disk.stored();
+        expect(stored[recommendationStatusKey], isNull);
+        expect(await unservedStageOnDisk(), isFalse);
+      });
+    });
+  }
+
+  /// Premium: a stage Circle durably chosen and started today.
+  Future<(ProviderContainer, String)> stageStarted() async {
+    final c = h.open();
+    plans(c).start('getting_going');
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    await R8Harness.settle();
+    final rec = c.read(recommendationProvider).recommendation!;
+    expect(rec.composed?.stage, isNotNull);
+    today(c).start();
+    await R8Harness.settle();
+    expect((await h.disk.stored())[recommendationStatusKey], 'started');
+    return (c, rec.circleId);
+  }
+
+  /// Close and the full reflection, then the disk and a fresh process.
+  Future<void> closesAndReflects(ProviderContainer c, String id) async {
+    h.clock.value = morning.add(const Duration(minutes: 25));
+    today(c).close();
+    await R8Harness.settle();
+    today(c).reportAttempt(CircleAttemptResponse.yes);
+    await R8Harness.settle();
+    today(c).reportUsefulness(CircleUsefulnessResponse.veryUseful);
+    await R8Harness.settle();
+    expect(c.read(journalSaveStatusProvider)[id], isNot(false));
+    final stored = await h.disk.stored();
+    expect(stored[recommendationStatusKey], 'closed', reason: 'Close lost');
+    expect(stored[recommendationUsefulnessResponseKey], 'veryUseful');
+    await h.restart();
+    final again = h.open();
+    final state = again.read(recommendationProvider);
+    expect(state.status, RecommendationStatus.closed);
+    expect(state.usefulnessResponse, CircleUsefulnessResponse.veryUseful);
+    final entry = again
+        .read(circleJournalRepositoryProvider)
+        .readAll()
+        .singleWhere((e) => e.circleId == id);
+    expect(entry.closedAt, isNotNull);
+    expect(entry.usefulnessResponse, CircleUsefulnessResponse.veryUseful);
+  }
+
+  final actions = <String, void Function(CirclePlansNotifier)>{
+    'Pause': (p) => p.pause('getting_going'),
+    'Leave': (p) => p.leave('getting_going'),
+    'Restart the Plan (Leave, then Go through it again)': (p) {
+      p.leave('getting_going');
+      p.goThroughAgain('getting_going');
+    },
+    'Go through it again after leaving it earlier': (p) {
+      p.leave('getting_going');
+      p.goThroughAgain('getting_going');
+      p.pause('getting_going');
+      p.resume('getting_going');
+    },
+    'Keep it gentler (I2\'s application)': (p) =>
+        p.keepGentler('getting_going'),
+    'Start another Plan': (p) => p.start('making_room'),
+  };
+
+  for (final MapEntry(key: name, value: act) in actions.entries) {
+    test('NEW-1 — "$name" after the stage Circle was published and started: '
+        'its Close and reflection are still saved, on disk and after a '
+        'restart', () async {
+      final (c, id) = await stageStarted();
+      act(plans(c));
+      await R8Harness.settle();
+      expect(plans(c).hasUnsavedChanges, isFalse);
+      await closesAndReflects(c, id);
+    });
+  }
+
+  for (final fault in DiskFault.values) {
+    test('NEW-1 (${fault.name}) — "Go through it again" still being saved '
+        'when the Circle closes, then refused: the Close and reflection are '
+        'still saved', () async {
+      final (c, id) = await stageStarted();
+      plans(c).leave('getting_going');
+      await R8Harness.settle();
+      final held = h.disk.hold(circlePlansKey);
+      plans(c).goThroughAgain('getting_going');
+      await held.reached;
+      h.clock.value = morning.add(const Duration(minutes: 25));
+      today(c).close();
+      await R8Harness.settle();
+      held.release(fault);
+      await R8Harness.settle();
+      today(c).reportAttempt(CircleAttemptResponse.yes);
+      today(c).reportUsefulness(CircleUsefulnessResponse.veryUseful);
+      await R8Harness.settle();
+      final stored = await h.disk.stored();
+      expect(stored[recommendationStatusKey], 'closed');
+      expect(stored[recommendationUsefulnessResponseKey], 'veryUseful');
+      expect(c.read(journalSaveStatusProvider)[id], isNot(false));
+    });
+  }
+
+  test('NEW-1 — the Circle\'s own credit completes its stage; the '
+      'reflection after it is still saved, and credited exactly once', () async {
+    final (c, id) = await stageStarted();
+    await closesAndReflects(c, id);
+    final raw = (await h.disk.stored())[circlePlansKey]! as String;
+    expect(RegExp('"circleId":"$id"').allMatches(raw).length, 2,
+        reason: 'one guided record and the served record');
+    expect(dateKey(morning), id);
+  });
+}

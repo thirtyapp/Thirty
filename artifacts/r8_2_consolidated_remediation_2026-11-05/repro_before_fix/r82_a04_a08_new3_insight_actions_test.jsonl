@@ -1,0 +1,149 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 99.0.0 (111.0.0 available)
+  analyzer 12.1.0 (14.7.0 available)
+  app_links 7.2.1 (7.2.2 available)
+  app_links_linux 1.0.3 (1.0.4 available)
+  app_links_web 1.0.4 (1.0.5 available)
+  clock 1.1.2 (1.1.3 available)
+  coverage 1.15.1 (1.16.0 available)
+  crypto 3.0.7 (3.0.8 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  equatable 2.1.0 (3.0.0 available)
+  flutter_local_notifications 22.3.0 (22.3.3 available)
+  flutter_local_notifications_linux 8.0.1 (8.0.2 available)
+  flutter_riverpod 3.4.2 (3.4.3 available)
+  flutter_svg 2.3.0 (2.3.2 available)
+  flutter_timezone 5.1.0 (5.1.1 available)
+  frontend_server_client 4.0.0 (4.2.0 available)
+  functions_client 2.6.4 (2.7.1 available)
+  glob 2.1.3 (2.2.0 available)
+  go_router 17.3.0 (18.1.2 available)
+  gotrue 2.26.0 (2.27.3 available)
+  http_multi_server 3.2.2 (3.2.3 available)
+  io 1.0.5 (1.1.0 available)
+  listen 1.0.0-beta.4 (1.0.1 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.0 (1.19.0 available)
+  mime 2.0.0 (2.1.0 available)
+  package_config 2.2.0 (3.0.0 available)
+  passkeys_platform_interface 2.9.0 (2.11.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pool 1.5.2 (1.5.3 available)
+  postgrest 2.8.0 (2.9.1 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  purchases_flutter 10.11.0 (11.0.0 available)
+  realtime_client 2.11.0 (2.13.2 available)
+  riverpod 3.4.2 (3.4.3 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.5.4 available)
+  shared_preferences_foundation 2.5.6 (2.6.1 available)
+  shelf 1.4.2 (1.4.3 available)
+  shelf_static 1.1.3 (1.2.0 available)
+  source_maps 0.10.13 (0.10.14 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  storage_client 2.6.0 (2.8.1 available)
+  supabase 2.14.0 (2.16.5 available)
+  supabase_flutter 2.16.0 (2.18.3 available)
+  test 1.31.0 (1.33.0 available)
+  test_api 0.7.11 (0.7.15 available)
+  test_core 0.6.17 (0.6.21 available)
+  timezone 0.11.1 (0.11.2 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_graphics 1.2.3 (1.2.6 available)
+  vector_graphics_compiler 1.3.0 (1.3.4 available)
+  vector_math 2.2.0 (2.4.4 available)
+  vm_service 15.2.0 (15.4.0 available)
+  web 1.1.1 (1.1.2 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+65 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+{"protocolVersion":"0.1.1","runnerVersion":"1.31.0","pid":30928,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"count":1,"time":2,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":1227}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":25,"line":null,"column":null,"url":null},"type":"group","time":1229}
+{"group":{"id":3,"suiteID":0,"parentID":2,"name":"A04 — I2 changes the cycle it was validated for","metadata":{"skip":false,"skipReason":null},"testCount":4,"line":154,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"group","time":1229}
+{"test":{"id":4,"name":"A04 — I2 changes the cycle it was validated for A04 as reported — a pending Leave, then Go through it again; I2 for cycle A applied: cycle B is never made gentler, and the Insight is not marked applied for a change it did not make","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":155,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":1229}
+{"testID":4,"error":"Expected: null\n  Actual: '2026-10-30'\ngentler applied to a cycle the Insight was not about\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a04_a08_new3_insight_actions_test.dart 180:7  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1313}
+{"testID":4,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1314}
+{"test":{"id":5,"name":"A04 — I2 changes the cycle it was validated for A04 (throws) — the competing Leave and Go through again are refused and rolled back: I2 then applies to cycle A itself, durably","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":201,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":1314}
+{"testID":5,"error":"Expected: an object with length of <1>\n  Actual: [\n            {\n              'id': 'getting_going#1',\n              'number': 1,\n              'startedOn': '2026-10-01',\n              'cursor': 1,\n              'records': [],\n              'endedOn': '2026-10-30',\n              'end': 'left'\n            },\n            {\n              'id': 'getting_going#2',\n              'number': 2,\n              'startedOn': '2026-10-30',\n              'cursor': 1,\n              'records': [],\n              'gentlerSince': '2026-10-30'\n            }\n          ]\n   Which: has length of <2>\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a04_a08_new3_insight_actions_test.dart 220:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1336}
+{"testID":5,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1336}
+{"test":{"id":6,"name":"A04 — I2 changes the cycle it was validated for A04 (returnsFalse) — the competing Leave and Go through again are refused and rolled back: I2 then applies to cycle A itself, durably","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":201,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":1336}
+{"testID":6,"error":"Expected: an object with length of <1>\n  Actual: [\n            {\n              'id': 'getting_going#1',\n              'number': 1,\n              'startedOn': '2026-10-01',\n              'cursor': 1,\n              'records': [],\n              'endedOn': '2026-10-30',\n              'end': 'left'\n            },\n            {\n              'id': 'getting_going#2',\n              'number': 2,\n              'startedOn': '2026-10-30',\n              'cursor': 1,\n              'records': [],\n              'gentlerSince': '2026-10-30'\n            }\n          ]\n   Which: has length of <2>\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a04_a08_new3_insight_actions_test.dart 220:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1352}
+{"testID":6,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1352}
+{"test":{"id":7,"name":"A04 — I2 changes the cycle it was validated for domain: Keep it gentler names its cycle — another cycle is never changed","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":227,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":1352}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1355}
+{"group":{"id":8,"suiteID":0,"parentID":2,"name":"A08 — repairing a refused applied mark","metadata":{"skip":false,"skipReason":null},"testCount":16,"line":239,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"group","time":1355}
+{"test":{"id":9,"name":"A08 — repairing a refused applied mark I1 (Plan direction) — change saved, mark refused (throws); retried after a restart: the mark is recorded, the change is not made again","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":276,"column":9,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":1355}
+{"testID":9,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":31365}
+{"testID":9,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":31365}
+{"test":{"id":10,"name":"A08 — repairing a refused applied mark I1 (Plan direction) — change saved, mark refused (returnsFalse); retried after a restart: the mark is recorded, the change is not made again","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":276,"column":9,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":31365}
+{"testID":10,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":61371}
+{"testID":10,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":61371}
+{"test":{"id":11,"name":"A08 — repairing a refused applied mark I1 (Plan direction) — the same retry in the same session, without a restart","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":318,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":61371}
+{"testID":11,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":91383}
+{"testID":11,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":91384}
+{"test":{"id":12,"name":"A08 — repairing a refused applied mark I1 (Plan direction) — the repair keeps the entitlement check: after a lapse nothing is recorded","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":337,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":91384}
+{"testID":12,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":121401}
+{"testID":12,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":121402}
+{"test":{"id":13,"name":"A08 — repairing a refused applied mark I2 (gentler Plan) — change saved, mark refused (throws); retried after a restart: the mark is recorded, the change is not made again","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":276,"column":9,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":121402}
+{"testID":13,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":151420}
+{"testID":13,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":151420}
+{"test":{"id":14,"name":"A08 — repairing a refused applied mark I2 (gentler Plan) — change saved, mark refused (returnsFalse); retried after a restart: the mark is recorded, the change is not made again","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":276,"column":9,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":151420}
+{"testID":14,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":181438}
+{"testID":14,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":181438}
+{"test":{"id":15,"name":"A08 — repairing a refused applied mark I2 (gentler Plan) — the same retry in the same session, without a restart","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":318,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":181439}
+{"testID":15,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":211447}
+{"testID":15,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":211447}
+{"test":{"id":16,"name":"A08 — repairing a refused applied mark I2 (gentler Plan) — the repair keeps the entitlement check: after a lapse nothing is recorded","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":337,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":211448}
+{"testID":16,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":241465}
+{"testID":16,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":241466}
+{"test":{"id":17,"name":"A08 — repairing a refused applied mark I3 (leave a part out) — change saved, mark refused (throws); retried after a restart: the mark is recorded, the change is not made again","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":276,"column":9,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":241466}
+{"testID":17,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":271487}
+{"testID":17,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":271488}
+{"test":{"id":18,"name":"A08 — repairing a refused applied mark I3 (leave a part out) — change saved, mark refused (returnsFalse); retried after a restart: the mark is recorded, the change is not made again","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":276,"column":9,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":271488}
+{"testID":18,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":301505}
+{"testID":18,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":301505}
+{"test":{"id":19,"name":"A08 — repairing a refused applied mark I3 (leave a part out) — the same retry in the same session, without a restart","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":318,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":301505}
+{"testID":19,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":331526}
+{"testID":19,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":331526}
+{"test":{"id":20,"name":"A08 — repairing a refused applied mark I3 (leave a part out) — the repair keeps the entitlement check: after a lapse nothing is recorded","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":337,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":331526}
+{"testID":20,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":361539}
+{"testID":20,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":361539}
+{"test":{"id":21,"name":"A08 — repairing a refused applied mark I2 — the cycle changes after the change landed (Leave, Go through it again): the repair records the original cycle's application, and the new cycle is not made gentler","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":357,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":361539}
+{"testID":21,"error":"TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts","stackTrace":"dart:isolate  _RawReceivePort._handleMessage\n","isFailure":false,"type":"error","time":391554}
+{"testID":21,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":391555}
+{"test":{"id":22,"name":"A08 — repairing a refused applied mark I1 — a Plan the user started some other way after the Insight was shown is never claimed as its application","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":383,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":391555}
+{"testID":22,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":391571}
+{"test":{"id":23,"name":"A08 — repairing a refused applied mark residual — the Insights store refuses both the applying record and the mark: the change still lands, as before, and the user is told; a later retry cannot attribute it and claims nothing","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":400,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":391571}
+{"testID":23,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":391586}
+{"test":{"id":24,"name":"A08 — repairing a refused applied mark I3 — a part left out by the user before the Insight was shown is not claimed as the Insight's application","suiteID":0,"groupIDs":[2,8],"metadata":{"skip":false,"skipReason":null},"line":422,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":391587}
+{"testID":24,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":391602}
+{"group":{"id":25,"suiteID":0,"parentID":2,"name":"NEW-3 — saved means what is on disk","metadata":{"skip":false,"skipReason":null},"testCount":5,"line":449,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"group","time":391603}
+{"test":{"id":26,"name":"NEW-3 — saved means what is on disk I2 (throws) — its own write refused, a later queued Plans write landed with the same change: reported done, and marked","suiteID":0,"groupIDs":[2,25],"metadata":{"skip":false,"skipReason":null},"line":451,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":391603}
+{"testID":26,"error":"Expected: InsightActionResult:<InsightActionResult.done>\n  Actual: InsightActionResult:<InsightActionResult.notSaved>\nfalse not-saved\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a04_a08_new3_insight_actions_test.dart 467:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":391626}
+{"testID":26,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":391627}
+{"test":{"id":27,"name":"NEW-3 — saved means what is on disk I2 (throws) — the later write is refused too: genuinely not saved, never reported as saved","suiteID":0,"groupIDs":[2,25],"metadata":{"skip":false,"skipReason":null},"line":471,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":391627}
+{"testID":27,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":391641}
+{"test":{"id":28,"name":"NEW-3 — saved means what is on disk I2 (returnsFalse) — its own write refused, a later queued Plans write landed with the same change: reported done, and marked","suiteID":0,"groupIDs":[2,25],"metadata":{"skip":false,"skipReason":null},"line":451,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":391641}
+{"testID":28,"error":"Expected: InsightActionResult:<InsightActionResult.done>\n  Actual: InsightActionResult:<InsightActionResult.notSaved>\nfalse not-saved\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a04_a08_new3_insight_actions_test.dart 467:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":391658}
+{"testID":28,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":391658}
+{"test":{"id":29,"name":"NEW-3 — saved means what is on disk I2 (returnsFalse) — the later write is refused too: genuinely not saved, never reported as saved","suiteID":0,"groupIDs":[2,25],"metadata":{"skip":false,"skipReason":null},"line":471,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":391658}
+{"testID":29,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":391670}
+{"test":{"id":30,"name":"NEW-3 — saved means what is on disk Plans.confirmed — an earlier write refused, the later one holding the change confirmed: done","suiteID":0,"groupIDs":[2,25],"metadata":{"skip":false,"skipReason":null},"line":492,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a04_a08_new3_insight_actions_test.dart"},"type":"testStart","time":391670}
+{"testID":30,"error":"Expected: PlanActionResult:<PlanActionResult.done>\n  Actual: PlanActionResult:<PlanActionResult.notSaved>\n","stackTrace":"package:matcher                                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18                  expect\ntest\\features\\r82\\r82_a04_a08_new3_insight_actions_test.dart 503:7  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":391681}
+{"testID":30,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":391682}
+{"success":false,"type":"done","time":391712}

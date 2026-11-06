@@ -1,0 +1,31 @@
+FAIL Pause before Close Start → Pause → Close: credited to the original Plan, cycle, stage and Circle once the Close is durable; the Plan stays paused; served and Start provenance kept; the same after repeated restarts
+   error: Expected: an object with length of <1> |   Actual: [] |    Which: has length of <0>
+FAIL Pause before Close Start → another Plan started (which pauses this one) → Close: credited to the original Plan only; the other Plan stays active and does not move on
+   error: Expected: an object with length of <1> |   Actual: [] |    Which: has length of <0>
+PASS Pause before Close Start → Pause → Carry on → Close: credited once, Plan active at stage 2
+FAIL Pause before Close Premium lapses after the Start, before the Close: the existing entitlement rule — served and started under Premium — still credits it
+   error: Expected: an object with length of <1> |   Actual: [] |    Which: has length of <0>
+PASS Pause before Close a Start after a verified expiry earns nothing, Pause or not (entitlement rule unchanged)
+FAIL Pause before Close failed Close (throws: its History write refused), then recovery after a restart: credited once, Plan still paused
+   error: Expected: an object with length of <1> |   Actual: [] |    Which: has length of <0>
+PASS Pause before Close failed Close (throws) that never becomes durable: no credit, also after restarts
+FAIL Pause before Close failed Close (returnsFalse: its History write refused), then recovery after a restart: credited once, Plan still paused
+   error: Expected: an object with length of <1> |   Actual: [] |    Which: has length of <0>
+PASS Pause before Close failed Close (returnsFalse) that never becomes durable: no credit, also after restarts
+PASS Leave before Close Start → Leave → Close: the Close is recorded in History; the abandoned cycle never moves on; the same after repeated restarts
+PASS Leave before Close Start → Pause → Leave → Close: no credit; History keeps the Close
+FAIL Close requested before Leave Start → Close → Leave while the Close's day keys write is held: credited once the Close lands, to the cycle that was left; nothing reactivated; the same after restarts
+   error: Expected: an object with length of <1> |   Actual: [] |    Which: has length of <0>
+PASS Close requested before Leave the same, the held day keys write then refused (throws) and never durable: no credit, also after restarts
+PASS Close requested before Leave the same, the held day keys write then refused (returnsFalse) and never durable: no credit, also after restarts
+FAIL Close requested before Leave Start → Close → Leave while the Close's History write is held: credited once the Close lands, to the cycle that was left; nothing reactivated; the same after restarts
+   error: Expected: an object with length of <1> |   Actual: [] |    Which: has length of <0>
+PASS Close requested before Leave the same, the held History write then refused (throws) and never durable: no credit, also after restarts
+PASS Close requested before Leave the same, the held History write then refused (returnsFalse) and never durable: no credit, also after restarts
+FAIL Close requested before Leave Close → Leave + Go through it again while the Close is held: the credit goes to the cycle that was left; the new cycle never moves on
+   error: Expected: an object with length of <1> |   Actual: [] |    Which: has length of <0>
+FAIL Close requested before Leave Close failed while its History write was refused, Leave, then recovery after a restart: it is the same Close, so it is credited to the left cycle once
+   error: Expected: an object with length of <1> |   Actual: [] |    Which: has length of <0>
+PASS Close requested before Leave a Close refused outright, Leave, and the Circle closed again after a restart: that Close came after the Leave — no credit
+PASS not covered by the policy (existing rule kept, flagged) Pause BEFORE the Start: a stage Circle started only after its Plan was paused earns no credit
+TOTAL pass=12 fail=9

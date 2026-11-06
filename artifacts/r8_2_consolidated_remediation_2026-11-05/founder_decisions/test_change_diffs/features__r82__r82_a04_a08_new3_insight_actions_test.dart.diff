@@ -1,0 +1,72 @@
+--- R8.2 pre-decision: test/features/r82/r82_a04_a08_new3_insight_actions_test.dart
++++ after founder decisions: test/features/r82/r82_a04_a08_new3_insight_actions_test.dart
+@@ -237,18 +237,17 @@
+ 
+   // ------------------------------------------------------- A08 / marker
+   group('A08 — repairing a refused applied mark', () {
+-    /// Applies [id] with its applying record landing and only the applied
+-    /// mark refused, as [fault].
++    /// Applies [id] with its change landing and only the applied mark
++    /// refused, as [fault]. (Founder decision C: the change carries the
++    /// Insight's provenance, so there is no separate intent write before it
++    /// — the only Insights write is the mark.)
+     Future<InsightActionResult> markRefused(
+       ProviderContainer c,
+       String id,
+       DiskFault fault,
+     ) async {
+-      final intent = h.disk.hold(insightsKey);
+-      final applying = insights(c).apply(id);
+-      await intent.reached;
+       final mark = h.disk.hold(insightsKey);
+-      intent.release();
++      final applying = insights(c).apply(id);
+       await mark.reached;
+       mark.release(fault);
+       return applying;
+@@ -397,9 +396,15 @@
+       expect((await snapshotOnDisk(shown.id))?['appliedOn'], isNull);
+     });
+ 
+-    test('residual — the Insights store refuses both the applying record and '
+-        'the mark: the change still lands, as before, and the user is told; '
+-        'a later retry cannot attribute it and claims nothing', () async {
++    // Founder decision C (R8.2 acceptance review, 2026-11-05): the residual
++    // case this test disclosed — the Insights store refusing every write, so
++    // nothing could attribute the change — is investigated and closed: the
++    // attribution now travels in the change's own save, not in the Insights
++    // store, so the retry repairs the mark from it.
++    test('residual, closed — the Insights store refuses every write: the '
++        'change still lands, as before, and the user is told; after a '
++        'restart the retry finds the Insight\'s own provenance on the Plan '
++        'and records the mark, without changing the Plan again', () async {
+       await h.boot(i2);
+       final c = h.open();
+       final shown = insights(c).assess().added.single;
+@@ -407,16 +412,22 @@
+       h.disk.fail(insightsKey, DiskFault.returnsFalse);
+       expect(await insights(c).apply(shown.id), InsightActionResult.done);
+       await R8Harness.settle();
+-      expect((await cyclesOnDisk('getting_going')).single['gentlerSince'],
+-          isNotNull);
++      expect(
++        (await cyclesOnDisk('getting_going')).single['gentlerSince'],
++        isNotNull,
++      );
++      expect((await snapshotOnDisk(shown.id))?['appliedOn'], isNull);
++      final changed = jsonEncode(await cyclesOnDisk('getting_going'));
+       h.disk.healAll();
+       await h.restart();
+       final again = h.open();
+       expect(
+         await insights(again).apply(shown.id),
+-        InsightActionResult.notAvailable,
++        InsightActionResult.done,
+       );
+-      expect((await snapshotOnDisk(shown.id))?['appliedOn'], isNull);
++      await R8Harness.settle();
++      expect((await snapshotOnDisk(shown.id))?['appliedOn'], isNotNull);
++      expect(jsonEncode(await cyclesOnDisk('getting_going')), changed);
+     });
+ 
+     test('I3 — a part left out by the user before the Insight was shown is '

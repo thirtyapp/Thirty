@@ -1,0 +1,7 @@
+PASS throws: R-A2 — ONE transient failure of the served-stage write at choice time: the Circle is never run and then lost (either it is saved, or it is refused / taken back with the user told and today's choice can be made again and saved)
+PASS throws: R-A3 — failed Delete, a later failed unrelated Plan save, then the store heals: no deleted stage record in memory or on disk, also after a restart
+PASS returnsFalse: R-A2 — ONE transient failure of the served-stage write at choice time: the Circle is never run and then lost (either it is saved, or it is refused / taken back with the user told and today's choice can be made again and saved)
+PASS returnsFalse: R-A3 — failed Delete, a later failed unrelated Plan save, then the store heals: no deleted stage record in memory or on disk, also after a restart
+PASS R-L — NEW-1: stage Circle started; Leave, then Start the same Plan again mid-Circle; Close and reflection are saved, also after a restart
+PASS R-I1 — NEW-1: stage 5 closed, Plan ended; the I1 application's goThroughAgain (byInsight where the tree has it); the stage-5 reflection is saved, also after a restart
+TOTAL pass=6 fail=0

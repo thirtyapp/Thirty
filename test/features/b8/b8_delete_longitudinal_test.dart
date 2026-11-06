@@ -74,6 +74,7 @@ void main() {
     today.chooseIntention(need, window: TimeWindow.about20);
     final r = c.read(recommendationProvider).recommendation!;
     today.start();
+    await settle();
     today.close();
     if (answer != null) {
       today.reportAttempt(CircleAttemptResponse.yes);

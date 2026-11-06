@@ -1,0 +1,31 @@
+PASS CONTROL A1: Start then Close, no Plan action — saved
+   print: CONTROL A1: disk.status=closed disk.attempt=yes hist.started=true hist.closed=true hist.attempt=CircleAttemptResponse.yes saveStatus=true mem.status=closed
+PASS DIAG A1: Start; Leave + Go through again; Close; answer; restart
+   print: DIAG A1 in-session: disk.status=started disk.attempt=null hist.started=true hist.closed=false hist.attempt=null saveStatus=false mem.status=closed
+   print: DIAG A1 after restart: disk.status=started disk.attempt=null hist.started=true hist.closed=false hist.attempt=null saveStatus=null mem.status=started
+   print: DIAG A1 restart+retry: disk.status=started disk.attempt=null hist.started=true hist.closed=false hist.attempt=null saveStatus=null mem.status=started
+PASS DIAG A2 (returnsFalse once at choice): run it; restart
+   print: DIAG A2 in-session: disk.status=null disk.attempt=null hist.started=false hist.closed=false hist.attempt=null saveStatus=false mem.status=closed plansUnsaved=false
+   print: DIAG A2 after restart: disk.status=null disk.attempt=null hist.started=false hist.closed=false hist.attempt=null saveStatus=null mem.status=notStarted rec=null
+PASS DIAG A3: Delete fails; later failed save; heal; restart
+   print: DIAG A3: memRecords afterDelete=0 afterFailedSave=1 diskRecordsAfterHeal=1 deletionIntentStillPending=true diskRecordsAfterRestart=0 memAfterRestart=0
+FAIL A1 — a Plan action that resets lastServed strands today's durably-served stage Circle (no storage fault at all) Start saved; Leave + "Go through it again"; Close: the Close must reach the day keys and History
+   error: Expected: not <false> |   Actual: <false> | the Close was reported NOT SAVED
+FAIL A1 — a Plan action that resets lastServed strands today's durably-served stage Circle (no storage fault at all) Closed and credited; Leave + "Go through it again"; then the reflection answer must be saved
+   error: Expected: not <false> |   Actual: <false> | the reflection answer was reported NOT SAVED
+FAIL throws: A2 — ONE transient failure of the served-stage write: the user can still run and Close the Circle after the store heals, and History must record it
+   error: Expected: not null |   Actual: <null> | a Circle the user really ran and closed, on a healthy store, never reaches History
+FAIL throws: A3 — a failed Delete leaves _durable at pre-deletion evidence: a later failed Plan save puts deleted stage evidence back in memory, and the next successful save writes it to disk
+   error: Expected: empty |   Actual: ExpandIterable<PlanCycle, StageRecord>:[Instance of 'StageRecord'] | deleted stage evidence is back in memory after a failed unrelated save
+FAIL throws: A4 — confirmed(): an action whose own write fails but whose change lands through a later queued save must not be reported notSaved
+   error: Expected: PlanActionResult:<PlanActionResult.done> |   Actual: PlanActionResult:<PlanActionResult.notSaved> | reported notSaved although the change is on disk
+FAIL returnsFalse: A2 — ONE transient failure of the served-stage write: the user can still run and Close the Circle after the store heals, and History must record it
+   error: Expected: not null |   Actual: <null> | a Circle the user really ran and closed, on a healthy store, never reaches History
+FAIL returnsFalse: A3 — a failed Delete leaves _durable at pre-deletion evidence: a later failed Plan save puts deleted stage evidence back in memory, and the next successful save writes it to disk
+   error: Expected: empty |   Actual: ExpandIterable<PlanCycle, StageRecord>:[Instance of 'StageRecord'] | deleted stage evidence is back in memory after a failed unrelated save
+FAIL returnsFalse: A4 — confirmed(): an action whose own write fails but whose change lands through a later queued save must not be reported notSaved
+   error: Expected: PlanActionResult:<PlanActionResult.done> |   Actual: PlanActionResult:<PlanActionResult.notSaved> | reported notSaved although the change is on disk
+FAIL stage 5 closed -> Plan ended -> "Go through it again" -> the reflection answers of that stage-5 Circle must be saved
+   print: STAGE5: id=2026-10-16 saveStatus=false hist.attempt=null hist.useful=null disk.attempt=null
+   error: Expected: CircleAttemptResponse:<CircleAttemptResponse.yes> |   Actual: <null> | 
+TOTAL pass=4 fail=9

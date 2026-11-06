@@ -1,0 +1,105 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 99.0.0 (111.0.0 available)
+  analyzer 12.1.0 (14.7.0 available)
+  app_links 7.2.1 (7.2.2 available)
+  app_links_linux 1.0.3 (1.0.4 available)
+  app_links_web 1.0.4 (1.0.5 available)
+  clock 1.1.2 (1.1.3 available)
+  coverage 1.15.1 (1.16.0 available)
+  crypto 3.0.7 (3.0.8 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  equatable 2.1.0 (3.0.0 available)
+  flutter_local_notifications 22.3.0 (22.3.3 available)
+  flutter_local_notifications_linux 8.0.1 (8.0.2 available)
+  flutter_riverpod 3.4.2 (3.4.3 available)
+  flutter_svg 2.3.0 (2.3.2 available)
+  flutter_timezone 5.1.0 (5.1.1 available)
+  frontend_server_client 4.0.0 (4.2.0 available)
+  functions_client 2.6.4 (2.7.1 available)
+  glob 2.1.3 (2.2.0 available)
+  go_router 17.3.0 (18.1.2 available)
+  gotrue 2.26.0 (2.27.3 available)
+  http_multi_server 3.2.2 (3.2.3 available)
+  io 1.0.5 (1.1.0 available)
+  listen 1.0.0-beta.4 (1.0.1 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.0 (1.19.0 available)
+  mime 2.0.0 (2.1.0 available)
+  package_config 2.2.0 (3.0.0 available)
+  passkeys_platform_interface 2.9.0 (2.11.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pool 1.5.2 (1.5.3 available)
+  postgrest 2.8.0 (2.9.1 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  purchases_flutter 10.11.0 (11.0.0 available)
+  realtime_client 2.11.0 (2.13.2 available)
+  riverpod 3.4.2 (3.4.3 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.5.4 available)
+  shared_preferences_foundation 2.5.6 (2.6.1 available)
+  shelf 1.4.2 (1.4.3 available)
+  shelf_static 1.1.3 (1.2.0 available)
+  source_maps 0.10.13 (0.10.14 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  storage_client 2.6.0 (2.8.1 available)
+  supabase 2.14.0 (2.16.5 available)
+  supabase_flutter 2.16.0 (2.18.3 available)
+  test 1.31.0 (1.33.0 available)
+  test_api 0.7.11 (0.7.15 available)
+  test_core 0.6.17 (0.6.21 available)
+  timezone 0.11.1 (0.11.2 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_graphics 1.2.3 (1.2.6 available)
+  vector_graphics_compiler 1.3.0 (1.3.4 available)
+  vector_math 2.2.0 (2.4.4 available)
+  vm_service 15.2.0 (15.4.0 available)
+  web 1.1.1 (1.1.2 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+65 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+{"protocolVersion":"0.1.1","runnerVersion":"1.31.0","pid":39348,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"count":1,"time":2,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":1303}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":10,"line":null,"column":null,"url":null},"type":"group","time":1304}
+{"test":{"id":3,"name":"A02 as reported — Insights opened while Delete waits for the Plan evidence write: no review is recreated, and Delete succeeds with nothing derived left on disk or after restarts","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":94,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"testStart","time":1304}
+{"testID":3,"error":"Expected: empty\n  Actual: [Instance of 'InsightSnapshot']\nan Insight generated from evidence being deleted\n","stackTrace":"package:matcher                                                  expect\npackage:flutter_test/src/widget_tester.dart 473:18               expect\ntest\\features\\r82\\r82_a02_new2_delete_isolation_test.dart 108:5  main.<fn>\n","isFailure":true,"type":"error","time":1383}
+{"testID":3,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1383}
+{"test":{"id":4,"name":"NEW-2 — an assessment queued during Delete whose payload lands only after the deletion is never written","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":121,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"testStart","time":1384}
+{"testID":4,"error":"Expected: empty\n  Actual: [\n            {\n              'id': 'insight.plan_review@2026-10-30#insight.plan_review:making_room:making_room#1',\n              'family': 'insight.plan_review',\n              'generatedOn': '2026-10-30',\n              'wordingVersion': 1,\n              'text': 'Making room: what you told THIRTY, 15 October.',\n              'facts': {\n                'planId': 'making_room',\n                'cycleId': 'making_room#1',\n                'cycle': 1,\n                'endedOn': '2026-10-15'\n              },\n              'evidence': ['2026-10-11', '2026-10-12', '2026-10-13', '2026-10-14', '2026-10-15'],\n              'subject': 'insight.plan_review:making_room:making_room#1',\n              'application': {'kind': 'planReview', 'planId': 'making_room', 'cycleId': 'making_room#1'}\n            }\n          ]\ndeleted Insight data\n","stackTrace":"package:matcher                                                 expect\npackage:flutter_test/src/widget_tester.dart 473:18              expect\ntest\\features\\r82\\r82_a02_new2_delete_isolation_test.dart 69:7  main.nothingDerivedOnDisk\n","isFailure":true,"type":"error","time":1400}
+{"testID":4,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1400}
+{"test":{"id":5,"name":"a stale Insight payload captured before Delete and still being written lands before the deletion, never after it","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":136,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"testStart","time":1400}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1417}
+{"group":{"id":6,"suiteID":0,"parentID":2,"name":"throws:","metadata":{"skip":false,"skipReason":null},"testCount":3,"line":153,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"group","time":1417}
+{"test":{"id":7,"name":"throws: Delete whose Plan evidence write fails, then an unrelated Plan action that also fails: the screen never goes back to the deleted evidence, and no later write republishes it","suiteID":0,"groupIDs":[2,6],"metadata":{"skip":false,"skipReason":null},"line":154,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"testStart","time":1417}
+{"testID":7,"error":"Expected: empty\n  Actual: [\n            Instance of 'StageRecord',\n            Instance of 'StageRecord',\n            Instance of 'StageRecord',\n            Instance of 'StageRecord',\n            Instance of 'StageRecord'\n          ]\nrolled back to the pre-delete Plans\n","stackTrace":"package:matcher                                                  expect\npackage:flutter_test/src/widget_tester.dart 473:18               expect\ntest\\features\\r82\\r82_a02_new2_delete_isolation_test.dart 169:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1434}
+{"testID":7,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1434}
+{"test":{"id":8,"name":"throws: Delete whose Insights removal fails, then a failing Insights save: the deleted snapshots are never shown or saved again","suiteID":0,"groupIDs":[2,6],"metadata":{"skip":false,"skipReason":null},"line":192,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"testStart","time":1434}
+{"testID":8,"error":"Expected: null\n  Actual: <Instance of 'InsightSnapshot'>\n","stackTrace":"package:matcher                                                  expect\npackage:flutter_test/src/widget_tester.dart 473:18               expect\ntest\\features\\r82\\r82_a02_new2_delete_isolation_test.dart 209:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1451}
+{"testID":8,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1451}
+{"test":{"id":9,"name":"throws: an interrupted Delete (process stopped mid-way) is finished at the next start: nothing derived survives two restarts","suiteID":0,"groupIDs":[2,6],"metadata":{"skip":false,"skipReason":null},"line":219,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"testStart","time":1451}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1468}
+{"group":{"id":10,"suiteID":0,"parentID":2,"name":"returnsFalse:","metadata":{"skip":false,"skipReason":null},"testCount":3,"line":153,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"group","time":1468}
+{"test":{"id":11,"name":"returnsFalse: Delete whose Plan evidence write fails, then an unrelated Plan action that also fails: the screen never goes back to the deleted evidence, and no later write republishes it","suiteID":0,"groupIDs":[2,10],"metadata":{"skip":false,"skipReason":null},"line":154,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"testStart","time":1468}
+{"testID":11,"error":"Expected: empty\n  Actual: [\n            Instance of 'StageRecord',\n            Instance of 'StageRecord',\n            Instance of 'StageRecord',\n            Instance of 'StageRecord',\n            Instance of 'StageRecord'\n          ]\nrolled back to the pre-delete Plans\n","stackTrace":"package:matcher                                                  expect\npackage:flutter_test/src/widget_tester.dart 473:18               expect\ntest\\features\\r82\\r82_a02_new2_delete_isolation_test.dart 169:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1481}
+{"testID":11,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1481}
+{"test":{"id":12,"name":"returnsFalse: Delete whose Insights removal fails, then a failing Insights save: the deleted snapshots are never shown or saved again","suiteID":0,"groupIDs":[2,10],"metadata":{"skip":false,"skipReason":null},"line":192,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"testStart","time":1481}
+{"testID":12,"error":"Expected: null\n  Actual: <Instance of 'InsightSnapshot'>\n","stackTrace":"package:matcher                                                  expect\npackage:flutter_test/src/widget_tester.dart 473:18               expect\ntest\\features\\r82\\r82_a02_new2_delete_isolation_test.dart 209:9  main.<fn>.<fn>\n","isFailure":true,"type":"error","time":1494}
+{"testID":12,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1494}
+{"test":{"id":13,"name":"returnsFalse: an interrupted Delete (process stopped mid-way) is finished at the next start: nothing derived survives two restarts","suiteID":0,"groupIDs":[2,10],"metadata":{"skip":false,"skipReason":null},"line":219,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"testStart","time":1494}
+{"testID":13,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1508}
+{"test":{"id":14,"name":"History is gone too, and the journal stays empty across restarts","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":242,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/e16ada45-f42d-4347-8550-8291b58812d9/scratchpad/r81tree/test/features/r82/r82_a02_new2_delete_isolation_test.dart"},"type":"testStart","time":1509}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1519}
+{"success":false,"type":"done","time":1542}

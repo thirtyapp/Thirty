@@ -129,7 +129,7 @@ class _ThirtyAppState extends ConsumerState<ThirtyApp>
     if (state.status == RecommendationStatus.closed &&
         closedAt != null &&
         !state.isOnItsOwnDayAt(closedAt) &&
-        !state.reflectionAnswered) {
+        !state.reflectionDone) {
       return;
     }
     ref.invalidate(nowProvider);

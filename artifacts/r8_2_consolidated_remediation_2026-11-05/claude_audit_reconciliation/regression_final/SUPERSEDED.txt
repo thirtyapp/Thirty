@@ -1,0 +1,8 @@
+SUPERSEDED as final R8.2 verification (label added 2026-11-06, before the R8.2 commit).
+This run: Claude post-R8.1 report reconciliation regression, 2026-11-06 09:24-09:54, 192/192 files, 2,753/0/0; the retained pre-fix evidence for the lifecycle policy.
+It was complete and valid for the tree it ran on, which later changed.
+Definitive full regression of the committed tree: ../../lifecycle_policy/regression_rerun/
+(193/193 files, 2,774 passed, 0 failed, 0 skipped; EVIDENCE OK; CASES OK).
+Committed here as a short record: the batch summaries, run/report/cases
+output, fingerprints, manifest and runner. Its raw batch_*.jsonl reporter
+logs are kept in the local working tree only, not committed.

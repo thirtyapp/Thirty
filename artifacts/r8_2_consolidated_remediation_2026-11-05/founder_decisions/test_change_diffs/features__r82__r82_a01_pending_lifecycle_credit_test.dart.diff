@@ -1,0 +1,32 @@
+--- R8.2 pre-decision: test/features/r82/r82_a01_pending_lifecycle_credit_test.dart
++++ after founder decisions: test/features/r82/r82_a01_pending_lifecycle_credit_test.dart
+@@ -164,9 +164,13 @@
+         expect(await creditsOnDisk(id), 1);
+       });
+ 
+-      test('the Pause lands: by the Plan rules a paused Plan is not credited '
+-          '— the credit is legitimately unnecessary, the day keys move on, '
+-          'and nothing is credited later', () async {
++      // Founder decision A (R8.2 acceptance review, 2026-11-05) replaces the
++      // earlier expectation here ("a paused Plan is not credited — nothing
++      // is credited later"): a Close durably recorded before the Pause keeps
++      // its credit, saved with the Pause itself.
++      test('the Pause lands: the Close was durable before it, so its credit '
++          'lands with the Pause — once, on the original cycle — the day keys '
++          'move on, and the Plan stays paused across two restarts', () async {
+         final (c, id) = await uncreditedClose(fault);
+         final held = h.disk.hold(circlePlansKey);
+         plans(c).pause('getting_going');
+@@ -178,9 +182,10 @@
+         expect(await lifecycleOnDisk(), 'paused');
+         final newId = c.read(recommendationProvider).recommendation!.circleId;
+         expect((await h.disk.stored())[recommendationDayKey], newId);
+-        expect(await creditsOnDisk(id), 0);
++        expect(await creditsOnDisk(id), 1);
+         final again = await restartTwice();
+-        expect(await creditsOnDisk(id), 0);
++        expect(await creditsOnDisk(id), 1);
++        expect(await lifecycleOnDisk(), 'paused');
+         expect(historyOf(again, id)?.closedAt, isNotNull);
+       });
+ 

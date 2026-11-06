@@ -1,0 +1,18 @@
+--- R8.2 pre-decision: test/features/plans/r2_plan_credit_provenance_test.dart
++++ after founder decisions: test/features/plans/r2_plan_credit_provenance_test.dart
+@@ -276,6 +276,7 @@
+       final stage = offer(c).composed!.stage!;
+       billing(c, EntitlementStatus.inactive);
+       today(c).start();
++      await settle();
+       today(c).close();
+       await settle();
+ 
+@@ -343,6 +344,7 @@
+       final c = await served();
+       billing(c, EntitlementStatus.inactive);
+       today(c).start();
++      await settle();
+       billing(c, EntitlementStatus.active);
+       today(c).close();
+       today(c).close();

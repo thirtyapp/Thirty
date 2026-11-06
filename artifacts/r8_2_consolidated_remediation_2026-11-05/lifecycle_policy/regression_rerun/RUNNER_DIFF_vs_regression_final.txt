@@ -1,0 +1,47 @@
+1c1
+< """(Copied unchanged from founder_decisions/regression_final/run_batches.py except OUT, for the R8.2 final Plan lifecycle policy run, 2026-11-06.)
+---
+> """(Copied unchanged from founder_decisions/regression_final/run_batches.py except OUT, for the R8.2 complete regression rerun authorized by the founder, 2026-11-06.)
+29,33c29,33
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_final/run_batches.py plan
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_final/run_batches.py run <batch-number>
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_final/run_batches.py runpart <batch-number> <label>
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_final/run_batches.py report
+<   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_final/run_batches.py cases
+---
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_rerun/run_batches.py plan
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_rerun/run_batches.py run <batch-number>
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_rerun/run_batches.py runpart <batch-number> <label>
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_rerun/run_batches.py report
+>   python -I artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_rerun/run_batches.py cases
+42c42
+< OUT = os.path.join('artifacts', 'r8_2_consolidated_remediation_2026-11-05', 'lifecycle_policy', 'regression_final')
+---
+> OUT = os.path.join('artifacts', 'r8_2_consolidated_remediation_2026-11-05', 'lifecycle_policy', 'regression_rerun')
+2,3c2,7
+< # R8.2 R8.2 final Plan lifecycle policy full regression driver: sequential batches (one flutter process at a
+< # time), a memory guard before each, source fingerprints at start and end.
+---
+> # R8.2 complete regression rerun driver (founder authorization, 2026-11-06).
+> # Copied from ../regression_final/drive_regression.sh, with these changes:
+> # - OUT is regression_rerun;
+> # - the memory guard needs 4.0 GB free (was 2.5); it waits up to 10 min, then stops;
+> # - the driver's PID and any dart/flutter_tester processes are logged before each batch.
+> # Sequential batches (one flutter process at a time), source fingerprints at start and end.
+6c10
+< OUT=artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_final
+---
+> OUT=artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_rerun
+7a12
+> MIN_GB=4.0
+11a17
+> testers() { powershell -NoProfile -Command "(Get-CimInstance Win32_Process | Where-Object { \$_.Name -eq 'flutter_tester.exe' -or (\$_.Name -eq 'dart.exe' -and \$_.CommandLine -match ' test ') } | Measure-Object).Count" | tr -d '\r'; }
+14c20,21
+<     f=$(free_gb); if awk "BEGIN{exit !($f >= 2.5)}"; then echo "free before $1: $f GB" >> $OUT/MEMORY_LOG.txt; return 0; fi
+---
+>     f=$(free_gb); if awk "BEGIN{exit !($f >= $MIN_GB)}"; then echo "$(date +%H:%M:%S) free before $1: $f GB; test processes alive: $(testers)" >> $OUT/MEMORY_LOG.txt; return 0; fi
+>     echo "$(date +%H:%M:%S) waiting before $1: $f GB" >> $OUT/MEMORY_LOG.txt
+21c28
+< echo "start $(date -Iseconds)" > $OUT/RUN_LOG.txt
+---
+> echo "start $(date -Iseconds) driver pid $$" > $OUT/RUN_LOG.txt

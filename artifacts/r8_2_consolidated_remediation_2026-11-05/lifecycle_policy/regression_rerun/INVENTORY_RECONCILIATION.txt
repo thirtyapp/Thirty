@@ -1,0 +1,10 @@
+OK       inventory == *_test.dart files under test/ — 193 planned, 193 on disk
+OK       every planned file ran (suite in raw logs) — missing: []
+OK       no suite outside the plan — extra: []
+OK       no (file, test) pair ran twice — 0 repeated
+OK       every result is success — {'success': 2774}
+TOTAL tests 2774 in 193 files; results {'success': 2774}
+vs artifacts/r8_2_consolidated_remediation_2026-11-05/claude_audit_reconciliation/regression_final: 2753 → 2774 tests
+  count changed: test/features/r82/r82_lifecycle_policy_test.dart: 0 → 21
+INVENTORY OK
+reconcile exit 0

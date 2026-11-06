@@ -1,0 +1,24 @@
+R8.1 tested manifest: 357 files; R8.2 tested manifest: 366 files
+changed vs R8.1 (11):
+  lib/core/app/thirty_app.dart
+  lib/core/storage/preservation_writes.dart
+  lib/features/home/application/circle_history_deletion.dart
+  lib/features/home/application/circle_journal.dart
+  lib/features/home/application/phase_d_retirement.dart
+  lib/features/home/application/recommendation_provider.dart
+  lib/features/home/application/suggestion_preferences.dart
+  lib/features/insights/application/insights_provider.dart
+  lib/features/insights/domain/insight.dart
+  lib/features/plans/application/circle_plans_provider.dart
+  lib/features/plans/domain/circle_plan.dart
+added (9):
+  test/features/r82/r82_a01_pending_lifecycle_credit_test.dart
+  test/features/r82/r82_a02_new2_delete_isolation_test.dart
+  test/features/r82/r82_a03_new1_stage_publication_test.dart
+  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart
+  test/features/r82/r82_a05_nested_fields_test.dart
+  test/features/r82/r82_a06_reflection_completion_test.dart
+  test/features/r82/r82_a07_confirmed_history_test.dart
+  test/features/r82/r82_a09_native_types_test.dart
+  test/features/r82/r82_cross_store_adversarial_test.dart
+removed (0):

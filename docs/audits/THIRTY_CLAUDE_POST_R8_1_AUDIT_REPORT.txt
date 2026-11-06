@@ -1,0 +1,309 @@
+THIRTY — INDEPENDENT POST-R8.1 AUDIT
+
+Verdict: CONDITIONAL PASS. R8.1 baseline acceptance is blocked at e935112 until NEW-1 is fixed and delta re-audited.
+
+All 19 original findings are closed in production code: Astra N01–N10, Claude AUD-1–AUD-6, and the founder corrections RL-1 to RL-3. RL-1 counts as partial, because its new gate causes NEW-1.
+
+My own full test run matches the reported results exactly. I found no unauthorized Premium access and no regression in Keep or I4.
+
+R8.1 does introduce one new MEDIUM defect, on healthy storage. A stage Circle that was durably saved can no longer be saved again after a normal Plan action. In the most natural case, the user finishes stage 5 and taps "Go through it again", and that Circle's reflection answers are then refused, permanently. The same sequence saves correctly on R8.
+
+This is not a commercial release approval. THIRTY Phase E remains HOLD.
+
+1. Target
+
+┌─────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│    Item     │                                                                                     Verified                                                                                     │
+├─────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Target      │ e935112c408c16d99835280f4e1fafd722d47ed1, the tip of local and origin/step5-billing-integration                                                                                  │
+├─────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Parent      │ 58b179c99866e234acd63e4e241590af36b9b186, as expected                                                                                                                            │
+├─────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Subject     │ fix(thirty): close R8.1 independent audit persistence findings (143 paths)                                                                                                       │
+├─────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Audited     │ Clean git archive exports in my scratch folder. The local worktree is on main (a8b4088) with uncommitted changes; it was not used, and it is unchanged before and after the      │
+│ tree        │ audit.                                                                                                                                                                           │
+├─────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Input       │ Astra afc3631c…2f0ab1, Claude 2519e0b2…64f1c0, reproduction file efd63d49…2b36f. All three match the handoff.                                                                    │
+│ hashes      │                                                                                                                                                                                  │
+└─────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+2. Method and limitations
+
+I executed independently (Flutter 3.44.8, Dart 3.12.2):
+- pub get --offline --enforce-lockfile, then flutter analyze;
+- the full suite in one process (--concurrency=2 --reporter=json);
+- 11 adversarial reproductions of my own, plus 4 control and diagnostic tests;
+- the A1, A2, A3 and stage-5 sequences run again on R8's own lib/, to show whether R8.1 introduced them;
+- Python checks of the evidence (git blobs, raw logs, runner, audio).
+
+I inspected but did not rerun:
+- the implementer's repro_before_fix* logs;
+- the B8 review-pack regeneration.
+
+Established by reading the source: concurrency and rollback reasoning beyond the reproductions.
+
+Not validated:
+- a real device or process kill;
+- the real Android SharedPreferences commit semantics;
+- RevenueCat and Play lifecycle;
+- TalkBack;
+- backup and migration.
+
+3. Closure matrix
+
+All the tests named below are ones I ran myself and saw pass.
+
+┌───────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬──────────────────────────────────────┐
+│      ID       │                                                R8.1 production fix (verified in source)                                                 │               Verdict                │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ N01 / AUD-1   │ _durable is the state the store last confirmed. A credit that is only in memory is written again (recordGuided → ensureSaved). Recovery │ FIXED                                │
+│               │  reads isCreditedDurably. _recordBeforeOverwrite throws if the credit isn't confirmed, so the day keys don't move on.                   │                                      │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│               │ Copies of unreadable records are now tracked by PreservationWrites. _protectStored waits for the copy before trusting it. Delete waits  │                                      │
+│ N02           │ for every copy (settledAll), then clears both aside keys in its last pass. A save's own aside write runs inside the Plans queue, which  │ FIXED                                │
+│               │ Delete's forget step waits for, and the last pass covers it too.                                                                        │                                      │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ N03           │ _removeFromDayKeys clears the answer from the day keys that hold that Circle, as one confirmed publication, before History. The         │ FIXED                                │
+│               │ write-ahead record is overridden too, because values are applied after the pending record.                                              │                                      │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ N04           │ _persist saves a started or closed stage Circle only after noteStart or confirmStartNoted. _startVerdicts keeps billing's answer at the │ FIXED                                │
+│               │  Start, so a failed record is rewritten from that same answer.                                                                          │                                      │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ N05 / AUD-6   │ confirmed() with rollback; I1, I2 and I3 are awaited; the applied mark is written only after the target change is confirmed.            │ FIXED. Residual issue NEW-3 (LOW).   │
+│               │ Preferences are serialized through writeConfirmed and shown only once saved.                                                            │                                      │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ N06           │ hasDamagedWording / wordingUnverified. The Circle's own words are restored from the kept Circle when its parts match. Otherwise the     │ FIXED                                │
+│               │ Circle is never voiced, never started, and an unstarted one isn't offered.                                                              │                                      │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ N07 / AUD-3 / │ Plans keep unreadablePlans, unreadable stage records and revisits, and extra fields. A damaged cycle makes its whole Plan unreadable    │ FIXED                                │
+│  AUD-4        │ instead of being dropped. A non-list Insights snapshots makes the record unreadable.                                                    │                                      │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ N08           │ steerToday(circleId:) is called with the choice's own day; upgradeToday passes current.circleId.                                        │ FIXED                                │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ N09 / AUD-5   │ Start, Close and pause are written as toUtc() and read back through the single reader _storedInstant().toLocal(). No other production   │ FIXED for the six-hour rule. RL-4 is │
+│               │ code reads these keys; the QA seeder writes offset-free values, as documented.                                                          │  the remaining accepted limitation.  │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ N10           │ Closing a notice re-checks pending failures. A confirmed Kept save calls saved(). Notices are counted, so there is no reopen loop.      │ FIXED                                │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ AUD-2         │ _finishedEarlierDay lets today's choice go ahead. _openNewDayAfter opens the new day once the reflection is saved.                      │ FIXED                                │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│               │ Rollback to _durable, Insights decide from confirmedState, the confirmServed gate, and the Plan action API unchanged — all implemented  │ PARTIAL. The gate has no way to      │
+│ RL-1          │ as specified.                                                                                                                           │ re-establish a served record, which  │
+│               │                                                                                                                                         │ causes NEW-1.                        │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ RL-2          │ The approved note sits in the part's live-region label; never voiced.                                                                   │ FIXED                                │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ RL-3          │ StageRecord.source, extra and unreadableRevisits are kept. Preferences use tryRead; isEmpty counts preserved items, so removing the     │ FIXED                                │
+│               │ last readable item doesn't delete the record.                                                                                           │                                      │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+│ RL-4          │ Not fixed, by decision: offset-free times remain in History, Kept Circles and preferences. The six-hour rule is unaffected.             │ Accepted LOW. I found no worse       │
+│ (accepted)    │                                                                                                                                         │ consequence than the record states.  │
+└───────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴──────────────────────────────────────┘
+
+4. New findings
+
+NEW-1 — MEDIUM, blocks baseline acceptance — R8.1 regression: a stage Circle becomes permanently unsaveable once lastServed no longer matches it
+
+Root cause:
+- _publish now requires confirmServed for any stage Circle on show (recommendation_provider.dart:833–840).
+- confirmServed throws StorageWriteFailed unless the Plans' single lastServed slot still matches that Circle (circle_plans_provider.dart:272–284).
+- _persist calls _publish before _recordInJournal (:2385–2416), so neither the day keys nor History receive the Start, Close or answers.
+- Nothing ever restores lastServed. _newCycle (circle_plan.dart:767–781) builds a PlanProgress without it, and both start on a left or ended Plan (:786) and goThroughAgain (:831) go through _newCycle.
+
+Trigger A — no storage fault. The user finishes stage 5, so the Plan ends. They tap "Go through it again" on the review page (plan_detail_page.dart:367–376), or apply the I1 Insight (insights_provider.dart:300–305). Then they answer that Circle's reflection.
+- Leaving and then starting the Plan again mid-Circle (plan_actions.dart:36–39, :90) has the same effect on the Close itself.
+
+Trigger B — one transient Plans failure at choice time. The served write fails once and the Plans roll back. The Circle stays on screen; the user can still Start, run, Close and answer it, and none of it is saved.
+
+What I observed:
+
+┌─────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬───────────────────┐
+│                    Reproduction                     │                                                        R8.1                                                         │  R8 lib/ (same    │
+│                                                     │                                                                                                                     │       test)       │
+├─────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────┤
+│ Stage 5 → "Go through it again" → answers           │ saveStatus=false; attempt and usefulness null in History and on disk                                                │ saved             │
+├─────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────┤
+│ Start → Leave + "Go through it again" → Close →     │ Disk stays started; History has no Close. After restart the Circle is restored as started and can never be closed   │ saved             │
+│ restart                                             │ that day.                                                                                                           │                   │
+├─────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────┤
+│ Trigger B (throws / returns false, once)            │ Ran and closed in memory. After restart: no History record at all, not even "shown"                                 │ saved             │
+├─────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────┤
+│ Control: same flow without the Plan action          │ saved                                                                                                               │ saved             │
+└─────────────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴───────────────────┘
+
+Why it matters:
+- Explicit user answers, or a Close, are lost on healthy storage in a normal flow.
+- Retrying can't help.
+- The notice dedupes per Circle (_told, journal_save_failure_notice.dart:98–115), so every refusal after the first one is silent.
+
+The accepted limitation understates this. "Pending-then-failed stage Circle stays visible … never saved" does not say that:
+- a single transient failure is enough;
+- the user can still run and close the whole Circle;
+- History then loses all of it.
+
+Test gap: no R8.1 test runs a stage Circle through any Plan lifecycle action. The B8 simulation runs "Go through again" only when endedOn != today (b8_product_simulation_test.dart:228–233), which avoids exactly this path.
+
+Acceptance condition:
+- A stage Circle whose served record was once confirmed must stay publishable after a Plan action. For example, Today could remember that confirmation the way it keeps _startVerdicts, or the new-cycle actions could keep lastServed.
+- A Circle that can't be confirmed must either be saved without stage credit or be refused at Start. It must never be silently run and then lost.
+- Plus a regression test for both triggers.
+
+NEW-2 — LOW — After a failed Delete, a later failed Plans or Insights save brings deleted evidence back in memory
+
+- forgetStageEvidence and forgetAll advance _durable only when they succeed (circle_plans_provider.dart:511, insights_provider.dart:433). The RL-1 rollback (:200, :139) therefore goes back to the pre-deletion state.
+- Reproduced (throws and returns false):
+  - Delete fails, so memory holds 0 stage records.
+  - A later unrelated save fails: memory holds 1 record again.
+  - After the store heals, the next save writes that state.
+  - The deletion intent stays on disk, and restart removes the record (0 on disk, 0 in memory).
+- Impact: limited to that session, but it is user-deleted data shown and re-saved. R8 didn't revert memory.
+
+NEW-3 — LOW — confirmed() can report notSaved for a change that is on disk
+
+- ensureSaved returns the action's own write. If that write fails while a later queued save carrying the same change lands, the rollback is skipped (latest is false) and the change is durable, yet notSaved is returned.
+- Reproduced: the store is told it failed, the gentler setting is on disk, and the result is notSaved.
+- Related observation (not a finding): if only the I1, I2 or I3 applied mark fails, a retry returns alreadyApplied without marking. Only I4 retries the mark. The Insight then goes stale rather than showing as applied; the change itself stands.
+
+E-1 — LOW (evidence tooling) — run_batches.py report doesn't detect a missing partial batch
+
+- With batch_17c.summary.json removed, report printed EVIDENCE OK with 2,596 tests, exit 0 (run_batches.py:185–236 checks coverage by file, not by test count).
+- cases does catch it (exit 1). Both commands must be run.
+- The committed evidence itself is complete.
+
+5. Reproductions executed
+
+┌────────────────────────────┬─────────────────────────────────────────────────┬───────────────────────────────────────────────┐
+│    File (scratch only)     │                      Cases                      │                Result on R8.1                 │
+├────────────────────────────┼─────────────────────────────────────────────────┼───────────────────────────────────────────────┤
+│ audit_r81_repro_test.dart  │ A1 ×2, A2 ×2, A3 ×2, A4 ×2                      │ 8 / 8 fail, as predicted                      │
+├────────────────────────────┼─────────────────────────────────────────────────┼───────────────────────────────────────────────┤
+│ audit_r81_diag_test.dart   │ control A1, plus diagnostics for A1, A2, A3     │ Control passes; diagnostics as reported above │
+├────────────────────────────┼─────────────────────────────────────────────────┼───────────────────────────────────────────────┤
+│ audit_r81_stage5_test.dart │ five real days, stage 5 → "Go through it again" │ Fails on R8.1, passes on R8                   │
+└────────────────────────────┴─────────────────────────────────────────────────┴───────────────────────────────────────────────┘
+
+The files are in C:\Users\thoma\AppData\Local\Temp\claude\b7fd4c17e92f619e\e4b19f92-1134-47df-8c24-0945b6f2d6ba\scratchpad\repro\test\zz_audit\. They were never written to the repository.
+
+6. Independent test results
+
+┌─────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                    Check                    │                                                                   Result                                                                    │
+├─────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ flutter analyze                             │ No issues                                                                                                                                   │
+├─────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Full suite (one process, about 32 min)      │ 2,599 passed, 0 failed, 0 skipped; 179 files; done.success=true; exit 0; stderr empty                                                       │
+├─────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Per-file counts, mine vs. the implementer's │ Identical for all 179 files                                                                                                                 │
+├─────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Year-long simulations                       │ All 13 profiles ran once (p01–p11, p13, p14; there is no p12). Each profile is a single test, so the five --name filters cover all of them. │
+├─────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ B8 simulations                              │ All 6 passed: A–D, voice-entitlement, E                                                                                                     │
+└─────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+7. Evidence and source manifest
+
+- Blob manifest: all 357 blobs equal git ls-tree of the target; the diff is empty. Manifest sha256 784401a3…fe72a.
+- Raw logs, parsed with my own script:
+  - 21 logs, 2,599 successes, 0 errors;
+  - every log has done.success=true, and every summary has exit 0;
+  - no duplicate (file, test) pair.
+- Runner (run in a disposable copy): report gives EVIDENCE OK and cases gives CASES OK. A summary mutated to doneSuccess=false makes report exit 1. See E-1 for the missing-part case.
+- Audio:
+  - 180/180 SHA-1 match (172 production + 8 framing);
+  - the bundled files are exactly the union of the two manifests;
+  - no asset changed from R8 to R8.1.
+- Unchanged R8 → R8.1: lib/core/premium, lib/features/premium, kept_circle.dart, android/, ios/, supabase/, and both pubspec files.
+
+8. Durable data integrity
+
+Sound:
+- Plans and Insights rollback with several saves queued: each save writes the whole record, and only the latest failure reverts.
+- ensureSaved deduplication.
+- Credit across a lapse together with a failed Start.
+- Removing an answer, then recovery, then the next day's choice.
+- Preservation copies racing a successful Delete.
+- Lossless write-back of malformed and future-schema data.
+- Wording of damaged kept Circles.
+- Midnight, the six-hour carry-over, both 02:30s of the DST night, and no-touch provenance.
+- Failure notices when several stores fail (counted, one follow-up).
+
+Weak:
+- The new stage-Circle gate (NEW-1);
+- rollback after a failed Delete (NEW-2).
+
+Deliberate: Delete also drops unreadable Plans and Plan-level unknown fields, as possible evidence. That is consistent with what Delete promises.
+
+9. Premium and ownership
+
+- RevenueCat remains the only authority: only active grants Premium, and that code is unchanged.
+- I found no invalid Plan credit. N04 is closed, and NEW-1 loses data rather than granting anything.
+- I4's historical Keep after a lapse passes, the 8-Circle limit holds, and restore wording is unchanged.
+- No unauthorized access, false restore confirmation or ownership bypass was established.
+- Deleted data coming back: limited to NEW-2, within one session.
+- Loss of personal History: NEW-1.
+
+10. Scorecard (d89a035 framework: 0–10, certainty, no overall average)
+
+Of the 31 dimensions, 26 are not re-scored: 1–10, 13–18 and 20–28 (Core problem clarity through Founder-labor scalability), plus 31 (Overall commercial design strength). Their d89a035 values are not endorsed as current.
+
+┌─────┬──────────────────────────┬───────────┬───────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│  #  │        Dimension         │  d89a035  │ Post-R8.1 │                                                                 Why                                                                  │
+├─────┼──────────────────────────┼───────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 11  │ Trust                    │ 7         │ 7         │ Up: all 19 original findings closed, honest pending state and rollback. Held back: NEW-1 loses answers on healthy storage.           │
+│     │                          │ (MEDIUM)  │ (MEDIUM)  │                                                                                                                                      │
+├─────┼──────────────────────────┼───────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 12  │ Accessibility /          │ 7 (LOW)   │ 7         │ Up: AUD-2 (the new day opens with no touch); the RL-2 note sits in the live region; suite independently reproduced. Held back: no    │
+│     │ robustness               │           │ (MEDIUM)  │ device or TalkBack QA.                                                                                                               │
+├─────┼──────────────────────────┼───────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 19  │ Routine ownership value  │ 9 (HIGH)  │ 9 (HIGH)  │ Keep and I4 are durable, N06 is closed, and historical rights survive a lapse.                                                       │
+├─────┼──────────────────────────┼───────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 29  │ Pre-release readiness    │ 7         │ 6         │ One blocking regression; the commercial gates are still open.                                                                        │
+│     │                          │ (MEDIUM)  │ (MEDIUM)  │                                                                                                                                      │
+├─────┼──────────────────────────┼───────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 30  │ Overall product quality  │ 7         │ 7         │ Coherent and thoroughly tested, with one regression in the remediation itself.                                                       │
+│     │                          │ (MEDIUM)  │ (MEDIUM)  │                                                                                                                                      │
+└─────┴──────────────────────────┴───────────┴───────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Engineering score — NEW, NOT HISTORICALLY COMPARABLE. This is the rubric my post-R8 report defined; no other historical total exists.
+
+┌──────────────────────────────────────────┬──────────┐
+│              Area (weight)               │  Score   │
+├──────────────────────────────────────────┼──────────┤
+│ Persistence correctness and honesty (30) │ 24       │
+├──────────────────────────────────────────┼──────────┤
+│ Recovery and deletion (20)               │ 18       │
+├──────────────────────────────────────────┼──────────┤
+│ Entitlement and ownership (15)           │ 14       │
+├──────────────────────────────────────────┼──────────┤
+│ Test and evidence integrity (15)         │ 13       │
+├──────────────────────────────────────────┼──────────┤
+│ Time and day semantics (10)              │ 9        │
+├──────────────────────────────────────────┼──────────┤
+│ Damaged and future-schema data (10)      │ 9        │
+├──────────────────────────────────────────┼──────────┤
+│ Total                                    │ 87 / 100 │
+└──────────────────────────────────────────┴──────────┘
+
+11. Blockers
+
+Blocking R8.1 baseline acceptance:
+- NEW-1. The fix produces a new SHA, which needs a delta re-audit.
+
+Must not be closed silently:
+- NEW-2, NEW-3 and E-1;
+- a corrected description of the "pending-then-failed" limitation;
+- the founder's pre-commercial decision on RL-4.
+
+Commercial gates (all still OPEN):
+- A2-06: analytics and privacy;
+- A2-07: backup, migration and Premium restoration;
+- billing and APK security;
+- six-language localization and native-language QA;
+- multilingual audio;
+- real-device QA;
+- the final commercial release audit.
+
+12. Final verdict
+
+CONDITIONAL PASS. R8.1 is not accepted as the baseline at e935112 until NEW-1 is fixed and delta re-audited. All original findings are otherwise closed, and the 2,599-test result is independently reproduced. This is not a commercial release approval. THIRTY Phase E remains HOLD.

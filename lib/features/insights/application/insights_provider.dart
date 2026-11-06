@@ -11,6 +11,7 @@ import '../../../core/storage/confirmed_write.dart';
 import '../../../core/storage/preservation_writes.dart';
 import '../../../core/storage/store_save_failures.dart';
 import '../../../core/utils/date_key.dart';
+import '../../home/application/circle_history_deletion.dart';
 import '../../home/application/circle_journal.dart';
 import '../../home/application/suggestion_preferences.dart';
 import '../../personal_circle/application/kept_circles_provider.dart';
@@ -66,7 +67,26 @@ class InsightsNotifier extends Notifier<InsightsState> {
   InsightsState _durable = InsightsState.empty;
   InsightsState? _queued;
 
+  /// How many Delete Circle histories have begun ([forgetAll]).
+  int _deletions = 0;
+
   SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
+
+  /// Completes, never failing, once no Insights save is being written.
+  Future<void> idle() async {
+    for (;;) {
+      final pending = _writes;
+      await pending;
+      if (identical(pending, _writes)) return;
+    }
+  }
+
+  /// Whether Delete Circle history is under way, or waiting to be finished
+  /// (R8.2, Astra R81-A02 / Claude NEW-2): nothing new is generated from
+  /// the evidence it is deleting.
+  bool get _deletionUnderWay =>
+      ref.read(historyWriteGateProvider).isDeleting ||
+      ref.read(circleHistoryDeletionProvider).isPending;
 
   @override
   InsightsState build() {
@@ -77,13 +97,17 @@ class InsightsNotifier extends Notifier<InsightsState> {
   }
 
   InsightsState _read(SharedPreferences prefs) {
-    final raw = prefs.getString(insightsKey);
+    // R8.2 (Astra R81-A09): a stored value that isn't text is a record
+    // THIRTY can't read, never a crash.
+    final raw = prefs.get(insightsKey);
     if (raw == null) return InsightsState.empty;
-    try {
-      final state = InsightsState.fromJson(jsonDecode(raw));
-      if (state != null) return state;
-    } catch (_) {
-      // Unreadable: kept aside below.
+    if (raw is String) {
+      try {
+        final state = InsightsState.fromJson(jsonDecode(raw));
+        if (state != null) return state;
+      } catch (_) {
+        // Unreadable: kept aside below.
+      }
     }
     // Kept aside at once — a tracked write (R8.1, Astra N02): a save that
     // follows waits for it and confirms the copy first ([_protectStored]),
@@ -117,10 +141,14 @@ class InsightsNotifier extends Notifier<InsightsState> {
     final prefs = _prefs;
     final json = next.isEmpty ? null : jsonEncode(next.toJson());
     final preservations = ref.read(preservationWritesProvider);
+    final generation = _deletions;
     final write = _writes.then((_) async {
       await _protectStored(prefs, preservations);
       await writeConfirmed(prefs, insightsKey, json);
-      _durable = next;
+      // R8.2 (Astra R81-A02): a save queued before Delete Circle history
+      // began lands before the deletion's own removal, but is never again
+      // what the Insights fall back to.
+      _durable = generation == _deletions ? next : InsightsState.empty;
     });
     _writes = write.then(
       (_) {
@@ -157,16 +185,16 @@ class InsightsNotifier extends Notifier<InsightsState> {
     final raw = prefs.get(insightsKey);
     if (raw == null) return;
     if (raw is String && _readable(raw)) return;
-    final text = '$raw';
+    // R8.2 (Astra R81-A09): kept as stored, its native type included.
     final aside = prefs.get(insightsUnreadableKey);
-    if (aside == text) return;
+    if (sameStoredValue(aside, raw)) return;
     if (aside != null) {
       throw const StorageWriteFailed(
         insightsKey,
         'an earlier unreadable record is already kept aside',
       );
     }
-    await writeConfirmed(prefs, insightsUnreadableKey, text);
+    await writeConfirmed(prefs, insightsUnreadableKey, raw);
   }
 
   static bool _readable(String raw) {
@@ -183,8 +211,11 @@ class InsightsNotifier extends Notifier<InsightsState> {
     final kept = collection.kept;
     return InsightInputs(
       today: _now,
+      // R8.2 (Astra R81-A07): History as its store has confirmed it — never
+      // an answer, or a removal, still being written.
       circles: [
-        for (final entry in ref.read(circleJournalRepositoryProvider).readAll())
+        for (final entry
+            in ref.read(circleJournalRepositoryProvider).readConfirmed())
           InsightCircle.fromJournal(entry),
       ],
       // R8.1 RL-1: the Plans as confirmed on disk — an Insight is never
@@ -207,8 +238,12 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// Opening Insights: with Premium, Plan reviews appear at once and at
   /// most one new ordinary Insight per 7 days; without, nothing new is
   /// generated and what was shown stays readable.
+  ///
+  /// R8.2 (Astra R81-A02, Claude NEW-2): never while Delete Circle history
+  /// is under way or still to be finished — what it would be generated
+  /// from is being deleted.
   InsightAssessment assess() {
-    if (!_premium) return read();
+    if (!_premium || _deletionUnderWay) return read();
     final result = assessInsights(inputs(), state.snapshots, generate: true);
     if (result.added.isNotEmpty ||
         result.snapshots.length != state.snapshots.length) {
@@ -246,7 +281,28 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// ([InsightActionResult.notSaved]) and it can be tried again. The
   /// applied record itself is awaited: if only it fails, the change stands
   /// (it was confirmed) and the failure is told.
+  ///
+  /// R8.2 (Astra R81-A04/A07): decided on what is on disk — a Plan change
+  /// or History write still pending is waited for first, so the cycle, Plan
+  /// or part it validates is the one it changes ([CirclePlansNotifier
+  /// .keepGentler] names its cycle).
+  ///
+  /// R8.2 (Astra R81-A08, Claude's marker-retry observation; founder
+  /// decision C): I1–I3 save their change with the Insight's own id on it —
+  /// the Plan ([PlanProgress.appliedInsight], with its cycle) or the
+  /// left-out part ([ElementLeftOut.byInsight]) — in the change's own save,
+  /// so that provenance is on disk exactly when the change is. When the
+  /// change landed and only the applied mark didn't, the Insight is no
+  /// longer current; a retry finds that provenance ([_appliedOn]) and
+  /// records the mark, never making the change again. The Plan being
+  /// active, the cycle gentler or the part left out is never enough on its
+  /// own: a change the user made some other way carries no such record and
+  /// is never claimed — the Insight is then reported not available, never
+  /// applied. No separate record of the intent is needed, so none can fail
+  /// apart from the change.
   Future<InsightActionResult> apply(String snapshotId) async {
+    await ref.read(circlePlansProvider.notifier).idle();
+    await ref.read(journalWritesProvider).idle();
     final snapshot = state.byId(snapshotId);
     final keepsOwnCircle = snapshot?.application is KeepCircleFromHistory;
     if (!_premium && !keepsOwnCircle) return InsightActionResult.needsPremium;
@@ -257,16 +313,22 @@ class InsightsNotifier extends Notifier<InsightsState> {
         return InsightActionResult.alreadyApplied;
       case InsightStatus.current:
         break;
+      case InsightStatus.stale:
+        if (_appliedOn(snapshot, i) case final on?) {
+          return _markApplied(snapshot, on);
+        }
+        return InsightActionResult.notAvailable;
       case _:
         return InsightActionResult.notAvailable;
     }
     final result = switch (snapshot.application) {
-      PlanDirection(:final planId) => await _direct(planId),
+      PlanDirection(:final planId) => await _direct(planId, snapshotId),
       KeepGentler(:final planId, :final cycleId) => await _gentler(
         planId,
         cycleId,
+        snapshotId,
       ),
-      LeaveOutPart(:final element) => await _leaveOut(element, i),
+      LeaveOutPart(:final element) => await _leaveOut(element, i, snapshotId),
       KeepCircleFromHistory(:final circleId) => await _keep(circleId),
       OpenPlanReview() ||
       NothingToChange() => InsightActionResult.nothingToApply,
@@ -277,16 +339,61 @@ class InsightsNotifier extends Notifier<InsightsState> {
     if (result == InsightActionResult.done || keptAlready) {
       final current = state.byId(snapshotId) ?? snapshot;
       try {
-        await _set(state.replacing(current.copyWith(appliedOn: dateKey(_now))));
+        await _set(
+          state.replacing(current.copyWith(appliedOn: dateKey(_now))),
+        );
       } on StorageWriteFailed {
         // The change itself is confirmed; only its record here isn't — and
-        // the user is told ([_set]). It is never shown as recorded.
+        // the user is told ([_set]). It is never shown as recorded; its
+        // provenance lets a retry record it ([_appliedOn]).
       }
     }
     return result;
   }
 
-  Future<InsightActionResult> _direct(String planId) async {
+  /// The day [snapshot]'s own change was made, when that change is on disk
+  /// carrying this Insight's id although the Insight isn't marked applied
+  /// (R8.2, Astra R81-A08, founder decision C): its Plan changed by it
+  /// ([PlanProgress.appliedInsight]) — for I2, on the very cycle it names —
+  /// or its part left out by it ([ElementLeftOut.byInsight]). Whatever has
+  /// happened to the Plan or cycle since. `null` otherwise: the same state
+  /// reached some other way is never this Insight's application.
+  String? _appliedOn(InsightSnapshot snapshot, InsightInputs i) {
+    switch (snapshot.application) {
+      case PlanDirection(:final planId):
+        final by = i.plans.plans[planId]?.appliedInsight;
+        return by?.insightId == snapshot.id ? by!.on : null;
+      case KeepGentler(:final planId, :final cycleId):
+        final by = i.plans.plans[planId]?.appliedInsight;
+        return by?.insightId == snapshot.id && by!.cycleId == cycleId
+            ? by.on
+            : null;
+      case LeaveOutPart(:final element):
+        for (final e in ref.read(suggestionPreferencesProvider).elementsLeftOut) {
+          if (e.element.name == element && e.byInsight == snapshot.id) {
+            return dateKey(e.since);
+          }
+        }
+        return null;
+      case _:
+        return null;
+    }
+  }
+
+  /// Records [snapshot] as applied on [on] — its change already on disk.
+  Future<InsightActionResult> _markApplied(
+    InsightSnapshot snapshot,
+    String on,
+  ) async {
+    try {
+      await _set(state.replacing(snapshot.copyWith(appliedOn: on)));
+      return InsightActionResult.done;
+    } on StorageWriteFailed {
+      return InsightActionResult.notSaved;
+    }
+  }
+
+  Future<InsightActionResult> _direct(String planId, String insightId) async {
     final lifecycle = ref
         .read(circlePlansProvider.notifier)
         .confirmedState
@@ -299,15 +406,22 @@ class InsightsNotifier extends Notifier<InsightsState> {
           .read(circlePlansProvider.notifier)
           .confirmed(
             (plans) => switch (lifecycle) {
-              PlanLifecycle.paused => plans.resume(planId),
-              PlanLifecycle.neverStarted => plans.start(planId),
-              _ => plans.goThroughAgain(planId),
+              PlanLifecycle.paused => plans.resume(planId, byInsight: insightId),
+              PlanLifecycle.neverStarted => plans.start(
+                planId,
+                byInsight: insightId,
+              ),
+              _ => plans.goThroughAgain(planId, byInsight: insightId),
             },
           ),
     );
   }
 
-  Future<InsightActionResult> _gentler(String planId, String cycleId) async {
+  Future<InsightActionResult> _gentler(
+    String planId,
+    String cycleId,
+    String insightId,
+  ) async {
     final plan = ref
         .read(circlePlansProvider.notifier)
         .confirmedState
@@ -319,7 +433,13 @@ class InsightsNotifier extends Notifier<InsightsState> {
     return _fromPlan(
       await ref
           .read(circlePlansProvider.notifier)
-          .confirmed((plans) => plans.keepGentler(planId)),
+          .confirmed(
+            (plans) => plans.keepGentler(
+              planId,
+              cycleId: cycleId,
+              byInsight: insightId,
+            ),
+          ),
     );
   }
 
@@ -330,13 +450,17 @@ class InsightsNotifier extends Notifier<InsightsState> {
     PlanActionResult.notSaved => InsightActionResult.notSaved,
   };
 
-  Future<InsightActionResult> _leaveOut(String wire, InsightInputs i) async {
+  Future<InsightActionResult> _leaveOut(
+    String wire,
+    InsightInputs i,
+    String insightId,
+  ) async {
     final element = ElementId.values.asNameMap()[wire];
     if (element == null) return InsightActionResult.notAvailable;
     if (i.leftOut.contains(element)) return InsightActionResult.alreadyApplied;
     final saved = await ref
         .read(suggestionPreferencesProvider.notifier)
-        .leaveOut(element);
+        .leaveOut(element, byInsight: insightId);
     return saved ? InsightActionResult.done : InsightActionResult.notSaved;
   }
 
@@ -412,8 +536,15 @@ class InsightsNotifier extends Notifier<InsightsState> {
   ///
   /// Audit remediation R8 (Astra R7-A04): both removals must be confirmed by
   /// the store ([writeConfirmed]).
+  ///
+  /// R8.2 (Astra R81-A02, Claude NEW-2): from this moment nothing deleted
+  /// is what the Insights fall back to — a save that fails later is never
+  /// rolled back onto the deleted snapshots, even if this removal fails
+  /// (the intent to delete is on disk; the next start finishes it).
   Future<void> forgetAll() {
     state = InsightsState.empty;
+    _deletions++;
+    _durable = InsightsState.empty;
     _queued = null;
     final prefs = _prefs;
     // Removed at once, and confirmed (the intent to delete is already on

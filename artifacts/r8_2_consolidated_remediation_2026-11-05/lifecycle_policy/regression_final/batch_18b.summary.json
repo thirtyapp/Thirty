@@ -1,0 +1,26 @@
+{
+ "files": {
+  "test/features/personal_circle/personal_circle_simulation_test.dart": {
+   "passed": 1,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": false,
+ "doneSuccess": null,
+ "testNames": {
+  "test/features/personal_circle/personal_circle_simulation_test.dart": [
+   "p04_mixed \u2014 365 days, structurally sound"
+  ]
+ },
+ "batch": "18b",
+ "exit": 4294967295,
+ "seconds": 146,
+ "command": "flutter test --concurrency=1 --reporter json --name p0[4-6]_ test/features/personal_circle/personal_circle_simulation_test.dart"
+}
