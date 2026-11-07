@@ -1,0 +1,329 @@
+// Independent post-R8.2 audit — temporary adversarial reproductions.
+// Lives only in the auditor's scratch copy; never committed.
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/premium/entitlement_status.dart';
+import 'package:thirty/core/premium/premium_access.dart';
+import 'package:thirty/core/providers/clock_provider.dart';
+import 'package:thirty/core/storage/store_save_failures.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+
+import '../support/r8_fault_disk.dart';
+import '../support/r8_harness.dart';
+
+void main() {
+  final day1 = DateTime(2026, 10, 12, 9);
+  late R8Harness h;
+
+  setUp(() async {
+    h = R8Harness(day1);
+    await h.boot();
+  });
+
+  RecommendationNotifier today(ProviderContainer c) =>
+      c.read(recommendationProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+  void entitle(ProviderContainer c, EntitlementStatus s) =>
+      (c.read(entitlementStatusProvider.notifier) as SettableEntitlement).set(
+        s,
+      );
+
+  Future<Map<String, Object?>> planOnDisk([
+    String planId = 'getting_going',
+  ]) async {
+    final raw = (await h.disk.stored())[circlePlansKey];
+    if (raw is! String) return {};
+    final stored = (jsonDecode(raw) as Map)['plans'] as Map?;
+    return (stored?[planId] as Map?)?.cast<String, Object?>() ?? {};
+  }
+
+  Future<int> creditsOnDisk(String circleId) async {
+    final raw = (await h.disk.stored())[circlePlansKey];
+    if (raw is! String) return 0;
+    var n = 0;
+    for (final plan in ((jsonDecode(raw) as Map)['plans'] as Map).values) {
+      for (final cycle in ((plan as Map)['cycles'] as List)) {
+        for (final r in (cycle as Map)['records'] as List) {
+          if ((r as Map)['circleId'] == circleId) n++;
+        }
+      }
+    }
+    return n;
+  }
+
+  group('AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source', () {
+    test('domain: a served record read from disk with startedAfterExpiry '
+        'true, re-noted as started under verified Premium, still writes '
+        'true', () {
+      var s = CirclePlansState.empty.start('getting_going', today: '2026-10-12')!;
+      final plan = s.plans['getting_going']!;
+      // Build a served stage the way Today does, via JSON round trip.
+      final stageJson = {
+        'planId': 'getting_going',
+        'cycleId': plan.current.id,
+        'stageNumber': 1,
+        'stageId': 'getting_going.1',
+      };
+      final raw = s.toJson();
+      ((raw['plans'] as Map)['getting_going'] as Map)['lastServed'] = {
+        'circleId': '2026-10-12',
+        'stage': stageJson,
+        'startedAfterExpiry': true,
+      };
+      s = CirclePlansState.fromJson(jsonDecode(jsonEncode(raw)))!;
+      final stage = s.plans['getting_going']!.lastServed!.stage;
+      expect(s.creditsServed(stage, circleId: '2026-10-12'), isFalse);
+      final noted = s.noteStart(stage, circleId: '2026-10-12', active: true);
+      expect(identical(noted, s), isFalse, reason: 'noteStart did change it');
+      expect(
+        noted.creditsServed(stage, circleId: '2026-10-12'),
+        isTrue,
+        reason: 'in memory: started under Premium',
+      );
+      final reread = CirclePlansState.fromJson(
+        jsonDecode(jsonEncode(noted.toJson())),
+      )!;
+      expect(
+        reread.creditsServed(stage, circleId: '2026-10-12'),
+        isTrue,
+        reason: 'on disk the record must say the same as in memory',
+      );
+    });
+
+    test('end to end: Start after verified expiry, process stops after the '
+        'Plans note lands; resubscribe, Start under Premium; Premium lapses '
+        'and the app restarts before Close → credit expected (founder rule: '
+        'served and started under Premium)', () async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final rec = c.read(recommendationProvider).recommendation!;
+      final id = rec.circleId;
+      expect(rec.composed?.stage, isNotNull);
+
+      entitle(c, EntitlementStatus.inactive);
+      // Only the next landed write reaches the disk: the Plans note of the
+      // Start (FD-B writes it before the Start itself). Then the process dies.
+      h.disk.stopAfter = h.disk.log.length + 1;
+      today(c).start();
+      await R8Harness.settle();
+      final served1 = (await planOnDisk())['lastServed'] as Map;
+      expect(served1['startedAfterExpiry'], true);
+      expect((await h.disk.stored())[recommendationStatusKey], isNot('started'));
+
+      // New process; the user has resubscribed.
+      await h.restart();
+      final c2 = h.open();
+      c2.read(circlePlansProvider);
+      expect(c2.read(recommendationProvider).recommendation?.circleId, id);
+      expect(c2.read(recommendationProvider).status, RecommendationStatus.notStarted);
+      today(c2).start();
+      await R8Harness.settle();
+      expect((await h.disk.stored())[recommendationStatusKey], 'started');
+      final stage = c2.read(recommendationProvider).recommendation!.composed!.stage!;
+      // ignore: avoid_print
+      print('AUD-N1 memory creditsServed='
+          '${c2.read(circlePlansProvider).creditsServed(stage, circleId: id)} '
+          'disk lastServed=${(await planOnDisk())['lastServed']}');
+
+      // Premium lapses; app restarts before the Close.
+      await h.restart();
+      final c3 = h.open(status: EntitlementStatus.inactive);
+      c3.read(circlePlansProvider);
+      expect(c3.read(recommendationProvider).status, RecommendationStatus.started);
+      h.clock.value = day1.add(const Duration(minutes: 25));
+      today(c3).close();
+      await R8Harness.settle();
+      expect((await h.disk.stored())[recommendationStatusKey], 'closed');
+      // ignore: avoid_print
+      print('AUD-N1 credits on disk after Close: ${await creditsOnDisk(id)}');
+      expect(
+        await creditsOnDisk(id),
+        1,
+        reason: 'started under verified Premium, lapsed before Close',
+      );
+    });
+
+    test('control: same sequence without the final restart is credited', () async {
+      final c = h.open();
+      plans(c).start('getting_going');
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      entitle(c, EntitlementStatus.inactive);
+      h.disk.stopAfter = h.disk.log.length + 1;
+      today(c).start();
+      await R8Harness.settle();
+      await h.restart();
+      final c2 = h.open();
+      c2.read(circlePlansProvider);
+      today(c2).start();
+      await R8Harness.settle();
+      entitle(c2, EntitlementStatus.inactive);
+      h.clock.value = day1.add(const Duration(minutes: 25));
+      today(c2).close();
+      await R8Harness.settle();
+      // ignore: avoid_print
+      print('AUD-N1 control credits: ${await creditsOnDisk(id)}');
+      expect(await creditsOnDisk(id), 1);
+    });
+  });
+
+  group('AUD-N2 lifecycle-order instants survive Delete', () {
+    test('Start, Delete history, same-day stage Circle re-served, Plan paused '
+        'before its Start: the deleted session\'s Start instant is written '
+        'to the Plans', () async {
+      final c = h.open();
+      plans(c).start('getting_going');
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      today(c).start();
+      await R8Harness.settle();
+      final deletedStart = c.read(recommendationProvider).startedAt!;
+      expect((await h.disk.stored())[recommendationStatusKey], 'started');
+
+      h.clock.value = day1.add(const Duration(minutes: 40));
+      await c.read(circleHistoryDeletionProvider).delete();
+      await R8Harness.settle();
+      final afterDelete = await h.disk.stored();
+      expect(afterDelete.containsKey(circleJournalKey), isFalse);
+      expect(afterDelete.containsKey(recommendationStartedAtKey), isFalse);
+
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final rec2 = c.read(recommendationProvider).recommendation;
+      // ignore: avoid_print
+      print('AUD-N2 re-served id=${rec2?.circleId} stage=${rec2?.composed?.stage?.stageId}');
+      expect(rec2?.circleId, id);
+      expect(rec2?.composed?.stage, isNotNull);
+
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final served = (await planOnDisk())['lastServed'] as Map?;
+      // ignore: avoid_print
+      print('AUD-N2 lastServed after Pause: $served ; deleted start '
+          '${deletedStart.toUtc().toIso8601String()}');
+      expect(
+        served?['startedBeforePause'],
+        isNull,
+        reason: 'a Start instant of a deleted session written after Delete',
+      );
+    });
+  });
+
+  for (final fault in DiskFault.values) {
+    test('AUD-A2-indep (${fault.name}): one transient served-stage failure at '
+        'choice → offer taken back and user told; next choice runs, closes, '
+        'reaches History and is credited, also after restarts', () async {
+      final c = h.open();
+      plans(c).start('getting_going');
+      await R8Harness.settle();
+      h.disk.fail(circlePlansKey, fault, times: 1);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final withdrawn = c.read(recommendationProvider).recommendation;
+      final told = c.read(journalSaveStatusProvider);
+      final failures = c.read(storeSaveFailuresProvider);
+      // ignore: avoid_print
+      print('AUD-A2 after fault: rec=${withdrawn?.circleId} told=$told '
+          'storeFailures=${failures.count} disk day='
+          '${(await h.disk.stored())[recommendationDayKey]}');
+      expect(withdrawn, isNull);
+      expect(told.values.contains(false) || failures.count > 0, isTrue,
+          reason: 'withdrawal must be told');
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final rec = c.read(recommendationProvider).recommendation!;
+      expect(rec.composed?.stage, isNotNull);
+      today(c).start();
+      await R8Harness.settle();
+      h.clock.value = day1.add(const Duration(minutes: 25));
+      today(c).close();
+      await R8Harness.settle();
+      final journal = (await h.disk.stored())[circleJournalKey] as String;
+      expect(journal, contains('"closedAt"'));
+      expect(await creditsOnDisk(rec.circleId), 1);
+      for (var i = 0; i < 2; i++) {
+        await h.restart();
+        final again = h.open();
+        again.read(recommendationProvider);
+        again.read(circlePlansProvider);
+        await R8Harness.settle();
+        expect(await creditsOnDisk(rec.circleId), 1);
+        expect(again.read(recommendationProvider).status,
+            RecommendationStatus.closed);
+      }
+    });
+  }
+
+  group('AUD-N4 waiting Start across a Today rebuild (app resume)', () {
+    test('Start waits for its Plans record; the app is resumed meanwhile '
+        '(nowProvider invalidated); the record lands: is the Start '
+        'carried out, or refused with a notice?', () async {
+      final c = h.open();
+      plans(c).start('getting_going');
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      entitle(c, EntitlementStatus.inactive);
+      final held = h.disk.hold(circlePlansKey);
+      today(c).start();
+      await held.reached;
+      expect(c.read(recommendationProvider).status, RecommendationStatus.notStarted);
+      c.invalidate(nowProvider);
+      c.read(recommendationProvider);
+      held.release();
+      await R8Harness.settle();
+      final failures = c.read(storeSaveFailuresProvider);
+      // ignore: avoid_print
+      print('AUD-N4 status=${c.read(recommendationProvider).status} '
+          'disk status=${(await h.disk.stored())[recommendationStatusKey]} '
+          'notices=${failures.count} '
+          'lastServed=${(await planOnDisk())['lastServed']}');
+      expect(
+        c.read(recommendationProvider).status == RecommendationStatus.started ||
+            failures.count > 0,
+        isTrue,
+        reason: 'a tapped Start silently dropped',
+      );
+    });
+  });
+
+  group('AUD-N3 Delete begun while a failing Plan change is in flight', () {
+    test('the failure is reported, yet Delete writes the change to disk', () async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final held = h.disk.hold(circlePlansKey);
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await held.reached;
+      final deleted = c.read(circleHistoryDeletionProvider).delete();
+      await R8Harness.settle();
+      held.release(DiskFault.throws);
+      await deleted;
+      await R8Harness.settle();
+      final failures = c.read(storeSaveFailuresProvider);
+      // ignore: avoid_print
+      print('AUD-N3 failures count=${failures.count} last=${failures.last} '
+          'unsaved=${failures.unsaved} disk lifecycle='
+          '${(await planOnDisk())['lifecycle']} shown='
+          '${c.read(circlePlansProvider).plans['getting_going']?.lifecycle}');
+      expect(failures.last, UserStore.circlePlans, reason: 'user told it failed');
+      expect(
+        (await planOnDisk())['lifecycle'],
+        'active',
+        reason: 'a change reported as not saved must not be on disk',
+      );
+    });
+  });
+}

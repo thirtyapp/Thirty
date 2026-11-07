@@ -300,24 +300,40 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// is never claimed — the Insight is then reported not available, never
   /// applied. No separate record of the intent is needed, so none can fail
   /// apart from the change.
+  ///
+  /// R8.3 (Astra R82-N01, founder decision D3; architecture review contract
+  /// 2): that provenance is looked for first, whatever the Insight's claim
+  /// says today. A change the user reversed by hand since — a Plan paused
+  /// or left, gentler turned off — can make the claim hold again; the
+  /// Insight's own change already happened, so its mark is recorded, on the
+  /// day of that change, and the change is never made again over the
+  /// user's later choice. Without that provenance — never made, or another
+  /// Insight's since — nothing is claimed.
+  ///
+  /// R8.3 (Astra R82-N02): the preferences are waited for too, so a part
+  /// left out by hand and still being written is seen as left out; and the
+  /// Insight is marked applied only when its own change was the one saved
+  /// ([PreferenceChange.changed]).
   Future<InsightActionResult> apply(String snapshotId) async {
     await ref.read(circlePlansProvider.notifier).idle();
     await ref.read(journalWritesProvider).idle();
+    await ref.read(suggestionPreferencesProvider.notifier).idle();
     final snapshot = state.byId(snapshotId);
     final keepsOwnCircle = snapshot?.application is KeepCircleFromHistory;
     if (!_premium && !keepsOwnCircle) return InsightActionResult.needsPremium;
     if (snapshot == null) return InsightActionResult.notAvailable;
     final i = inputs();
-    switch (statusOf(snapshot, i)) {
+    final status = statusOf(snapshot, i);
+    switch (status) {
       case InsightStatus.applied:
         return InsightActionResult.alreadyApplied;
-      case InsightStatus.current:
-        break;
-      case InsightStatus.stale:
+      case InsightStatus.current || InsightStatus.stale:
         if (_appliedOn(snapshot, i) case final on?) {
           return _markApplied(snapshot, on);
         }
-        return InsightActionResult.notAvailable;
+        if (status == InsightStatus.stale) {
+          return InsightActionResult.notAvailable;
+        }
       case _:
         return InsightActionResult.notAvailable;
     }
@@ -458,10 +474,16 @@ class InsightsNotifier extends Notifier<InsightsState> {
     final element = ElementId.values.asNameMap()[wire];
     if (element == null) return InsightActionResult.notAvailable;
     if (i.leftOut.contains(element)) return InsightActionResult.alreadyApplied;
-    final saved = await ref
+    final outcome = await ref
         .read(suggestionPreferencesProvider.notifier)
-        .leaveOut(element, byInsight: insightId);
-    return saved ? InsightActionResult.done : InsightActionResult.notSaved;
+        .leaveOutChange(element, byInsight: insightId);
+    return switch (outcome) {
+      PreferenceChange.changed => InsightActionResult.done,
+      // Left out by something else meanwhile: never this Insight's.
+      PreferenceChange.unchanged => InsightActionResult.alreadyApplied,
+      PreferenceChange.refused ||
+      PreferenceChange.notSaved => InsightActionResult.notSaved,
+    };
   }
 
   Future<InsightActionResult> _keep(String circleId) async {

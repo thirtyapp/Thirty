@@ -1,0 +1,13 @@
+1c1,2
+< """R8.3 bounded integrity hardening (2026-11-07): copied from
+---
+> """(R8.3.1, 2026-11-07: copied unchanged from artifacts/r8_3_bounded_integrity_hardening_2026-11-07/regression/run_batches.py except OUT.)
+> R8.3 bounded integrity hardening (2026-11-07): copied from
+61c62
+< OUT = os.path.join('artifacts', 'r8_3_bounded_integrity_hardening_2026-11-07', 'regression')
+---
+> OUT = os.path.join('artifacts', 'r8_3_1_founder_lifecycle_correction_2026-11-07', 'regression')
+16c16
+< OUT=artifacts/r8_3_bounded_integrity_hardening_2026-11-07/regression
+---
+> OUT=artifacts/r8_3_1_founder_lifecycle_correction_2026-11-07/regression

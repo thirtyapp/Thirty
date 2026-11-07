@@ -1,0 +1,10 @@
+preflight 2026-11-07T09:14:41+01:00 (run 2; run 1 in ../regression_run1_INCOMPLETE)
+free GB: 9.29
+test processes alive: 0
+  dart 13068 started 11/07/2026 08:27:30
+  dart 17832 started 11/07/2026 08:27:29
+  dart 39584 started 11/07/2026 08:27:29
+  dart 40548 started 11/07/2026 08:27:29
+  dartvm 29340 started 11/07/2026 08:27:29
+HEAD e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8 upstream e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8; staged: 0
+same tree as run 1

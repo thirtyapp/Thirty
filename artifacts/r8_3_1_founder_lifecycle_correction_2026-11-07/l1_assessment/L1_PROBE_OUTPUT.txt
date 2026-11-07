@@ -1,0 +1,3 @@
+"message":"L1 [newer schema (v2)] appliedLeftOut={} deleteMarkerGone=true bytesUnchanged=true attributionStillStored=true exportCarriesRecord=false"
+"message":"L1 [list field not a list] appliedLeftOut={} deleteMarkerGone=true bytesUnchanged=true attributionStillStored=true exportCarriesRecord=false"
+"message":"L1 [not JSON] appliedLeftOut={} deleteMarkerGone=true bytesUnchanged=true attributionStillStored=true exportCarriesRecord=false"

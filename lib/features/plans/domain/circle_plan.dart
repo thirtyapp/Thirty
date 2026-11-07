@@ -496,10 +496,22 @@ class PlanProgress {
     this.lastAdvancedCircleId,
     this.lastServed,
     this.appliedInsight,
+    this.startedWhilePaused,
     this.extra = const {},
   });
 
   final String planId;
+
+  /// R8.3.1 (founder decision on R83-F1, 2026-11-07, Option B): the stage
+  /// Circle whose valid Start was made while this Plan was paused. Plan
+  /// credit follows the eligibility of that original Start: this Circle
+  /// never earns any ([CirclePlansState.recordGuided]) — not at its Close,
+  /// and not after the Plan is carried on, restarted or caught up, even
+  /// once a later Circle has been served. Its History record stays. Kept
+  /// on the Plan rather than on [lastServed], which the next serve
+  /// replaces; one is enough, since only one day's Circle is ever still
+  /// to be caught up. Stage evidence: Delete Circle history removes it.
+  final String? startedWhilePaused;
 
   /// Fields this build doesn't know, and known fields whose stored value it
   /// can't read, exactly as stored (R8.1 RL-3): written back until THIRTY
@@ -534,6 +546,7 @@ class PlanProgress {
     String? lastAdvancedCircleId,
     ServedStageCircle? lastServed,
     AppliedInsight? appliedInsight,
+    String? startedWhilePaused,
   }) => PlanProgress(
     planId: planId,
     lifecycle: lifecycle ?? this.lifecycle,
@@ -541,6 +554,7 @@ class PlanProgress {
     lastAdvancedCircleId: lastAdvancedCircleId ?? this.lastAdvancedCircleId,
     lastServed: lastServed ?? this.lastServed,
     appliedInsight: appliedInsight ?? this.appliedInsight,
+    startedWhilePaused: startedWhilePaused ?? this.startedWhilePaused,
     extra: {
       for (final MapEntry(:key, :value) in extra.entries)
         if (!(key == 'lastServed' && lastServed != null) &&
@@ -566,6 +580,7 @@ class PlanProgress {
     'lastAdvancedCircleId': ?lastAdvancedCircleId,
     'lastServed': ?lastServed?.toJson(),
     'appliedInsight': ?appliedInsight?.toJson(),
+    'startedWhilePaused': ?startedWhilePaused,
   };
 
   static PlanProgress? fromJson(String planId, Object? raw) {
@@ -590,12 +605,17 @@ class PlanProgress {
     final last = raw['lastAdvancedCircleId'];
     final served = ServedStageCircle.fromJson(raw['lastServed']);
     final insight = AppliedInsight.fromJson(raw['appliedInsight']);
+    // R8.3.1: it decides credit, so present but not text makes the whole
+    // Plan unreadable — kept as stored, never read as absent.
+    final pausedStart = raw['startedWhilePaused'];
+    if (pausedStart != null && pausedStart is! String) return null;
     const known = {
       'lifecycle',
       'cycles',
       'lastAdvancedCircleId',
       'lastServed',
       'appliedInsight',
+      'startedWhilePaused',
     };
     return PlanProgress(
       planId: planId,
@@ -604,6 +624,7 @@ class PlanProgress {
       lastAdvancedCircleId: last is String ? last : null,
       lastServed: served,
       appliedInsight: insight,
+      startedWhilePaused: pausedStart as String?,
       extra: {
         for (final MapEntry(:key, :value) in raw.entries)
           if (!known.contains(key)) key: value,
@@ -625,6 +646,7 @@ class AppliedInsight {
     required this.insightId,
     required this.cycleId,
     required this.on,
+    this.extra = const {},
   });
 
   final String insightId;
@@ -635,7 +657,15 @@ class AppliedInsight {
   /// The local date of the change (`YYYY-MM-DD`).
   final String on;
 
+  /// R8.3 (Astra R82-N04): the fields of a stored record this build doesn't
+  /// know, written back as stored. A new application is a new record, with
+  /// none.
+  final Map<String, Object?> extra;
+
+  static const _known = {'insightId', 'cycleId', 'on'};
+
   Map<String, Object?> toJson() => {
+    ...extra,
     'insightId': insightId,
     'cycleId': cycleId,
     'on': on,
@@ -649,7 +679,15 @@ class AppliedInsight {
     final on = raw['on'];
     if (id is! String || cycleId is! String || on is! String) return null;
     if (!isCanonicalDateKey(on)) return null;
-    return AppliedInsight(insightId: id, cycleId: cycleId, on: on);
+    return AppliedInsight(
+      insightId: id,
+      cycleId: cycleId,
+      on: on,
+      extra: {
+        for (final MapEntry(:key, :value) in raw.entries)
+          if (!_known.contains(key)) key: value,
+      },
+    );
   }
 }
 
@@ -724,8 +762,23 @@ class ServedStageCircle {
     source: source,
   );
 
+  /// The fields this build reads and writes itself.
+  static const _known = {
+    'circleId',
+    'stage',
+    'startedAfterExpiry',
+    'startedBeforePause',
+    'closedBeforeLeave',
+  };
+
+  /// R8.3 (Astra R82-N03, Claude AUD-N1): every known field is written as
+  /// the model now holds it — a flag set back to false, or a stamp absent,
+  /// is written absent, never inherited from [source]; only the fields this
+  /// build doesn't know are kept from it. The stage is still written back
+  /// as stored (R8.2, Astra R81-A05).
   Map<String, Object?> toJson() => {
-    ...?source,
+    for (final MapEntry(:key, :value) in (source ?? const {}).entries)
+      if (!_known.contains(key)) key: value,
     'circleId': circleId,
     'stage': source?['stage'] ?? stage.toJson(),
     if (startedAfterExpiry) 'startedAfterExpiry': true,
@@ -1086,6 +1139,12 @@ extension CirclePlanActions on CirclePlansState {
   /// - anything else — a Plan paused before the Start, left before the
   ///   Close — never.
   /// No other Plan is touched, and nothing is reactivated.
+  ///
+  /// R8.3.1 (founder decision on R83-F1, Option B): a Circle whose valid
+  /// Start was made while its Plan was paused ([PlanProgress
+  /// .startedWhilePaused]) is never credited — whatever the Plan's
+  /// lifecycle when this runs: at its Close, in a later lifecycle change's
+  /// fold, or in a restart's or the next day's catch-up.
   CirclePlansState recordGuided(
     PlanStageProvenance stage, {
     required String circleId,
@@ -1098,6 +1157,7 @@ extension CirclePlanActions on CirclePlansState {
     final plan = plans[stage.planId];
     if (plan == null) return this;
     if (plan.lastAdvancedCircleId == circleId) return this;
+    if (plan.startedWhilePaused == circleId) return this;
     final cycle = plan.cycles.where((c) => c.id == stage.cycleId).firstOrNull;
     if (cycle == null) return this;
     if (cycle.records.any((r) => r.circleId == circleId)) return this;
@@ -1223,6 +1283,30 @@ extension CirclePlanActions on CirclePlansState {
     }
     return _with(
       plan.copyWith(lastServed: served.copyWith(startedAfterExpiry: !active)),
+      activePlanId: activePlanId,
+    );
+  }
+
+  /// R8.3.1 (founder decision on R83-F1, Option B): [stage]'s served Circle
+  /// [circleId] is being validly started now. If its Plan is paused, that
+  /// Start is not eligible for Plan credit, and this says so on the Plan
+  /// ([PlanProgress.startedWhilePaused]); `this` otherwise — an active Plan,
+  /// a Circle that isn't the one served, or one already recorded.
+  CirclePlansState noteStartedWhilePaused(
+    PlanStageProvenance stage, {
+    required String circleId,
+  }) {
+    final plan = plans[stage.planId];
+    final served = plan?.lastServed;
+    if (plan == null ||
+        plan.lifecycle != PlanLifecycle.paused ||
+        served == null ||
+        !served.matches(stage, circleId: circleId) ||
+        plan.startedWhilePaused == circleId) {
+      return this;
+    }
+    return _with(
+      plan.copyWith(startedWhilePaused: circleId),
       activePlanId: activePlanId,
     );
   }

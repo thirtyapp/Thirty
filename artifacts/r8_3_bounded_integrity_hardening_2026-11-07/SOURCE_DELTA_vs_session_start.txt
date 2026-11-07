@@ -1,0 +1,27 @@
+changed:
+  lib/core/analytics/analytics_consent.dart
+  lib/core/analytics/tester_identity_provider.dart
+  lib/features/home/application/circle_history_deletion.dart
+  lib/features/home/application/first_breath_provider.dart
+  lib/features/home/application/recommendation_provider.dart
+  lib/features/home/application/suggestion_preferences.dart
+  lib/features/home/application/v1_premium_retirement.dart
+  lib/features/insights/application/insights_provider.dart
+  lib/features/plans/application/circle_plans_provider.dart
+  lib/features/plans/domain/circle_plan.dart
+  lib/features/premium/application/premium_offer_provider.dart
+  lib/features/premium/presentation/widgets/premium_offer_invitation_card.dart
+  lib/features/reminder/application/reminder_invitation_provider.dart
+  lib/features/reminder/application/reminder_provider.dart
+  lib/features/reminder/presentation/widgets/reminder_invitation_card.dart
+  test/support/r8_fault_disk.dart
+added:
+  test/features/r83/r83_codec_law_test.dart
+  test/features/r83/r83_cross_store_test.dart
+  test/features/r83/r83_delete_boundary_test.dart
+  test/features/r83/r83_harness_selftest_test.dart
+  test/features/r83/r83_insight_attribution_test.dart
+  test/features/r83/r83_start_boundary_test.dart
+  test/features/r83/r83_startup_types_test.dart
+  test/support/r83_invariants.dart
+removed: []

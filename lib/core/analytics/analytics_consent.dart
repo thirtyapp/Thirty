@@ -26,7 +26,10 @@ class AnalyticsConsentNotifier extends Notifier<bool> {
   @override
   bool build() {
     final prefs = ref.watch(sharedPreferencesProvider);
-    return prefs.getBool(analyticsConsentKey) ?? false;
+    // R8.3 (founder decision D5, Claude O-2): read on the first frame, as
+    // whatever native type is stored — only THIRTY's own `true` is consent;
+    // anything else is none, and is never written over here.
+    return prefs.get(analyticsConsentKey) == true;
   }
 
   /// Sets the user's explicit analytics choice. Independent of reminder

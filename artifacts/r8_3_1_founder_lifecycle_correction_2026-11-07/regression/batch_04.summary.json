@@ -1,0 +1,260 @@
+{
+ "files": {
+  "test/core/theme/app_typography_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/theme/snackbar_c5_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/utils/date_key_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/r6_button_busy_label_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_app_bar_test.dart": {
+   "passed": 14,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_button_large_text_test.dart": {
+   "passed": 42,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_button_shape_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_button_test.dart": {
+   "passed": 18,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_card_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_confirm_dialog_test.dart": {
+   "passed": 22,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/thirty_progress_circle_test.dart": {
+   "passed": 14,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/widgets/viewport_visibility_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 157,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/core/theme/app_typography_test.dart": [
+   "AppTypography.textTheme \u2014 every slot screens read is designed light: size, weight, height and letterSpacing as resolved through Theme.of",
+   "AppTypography.textTheme \u2014 every slot screens read is designed dark: size, weight, height and letterSpacing as resolved through Theme.of",
+   "AppTypography.textTheme \u2014 every slot screens read is designed colors follow the palette, secondary only for supporting roles",
+   "AppTypography.textTheme \u2014 every slot screens read is designed undesigned fallback slots keep Inter and the palette text color, not the default seed scheme",
+   "AppTypography.editorialDisplay is Newsreader Regular at the approved size/height/spacing",
+   "AppTypography.editorialDisplay follows textPrimary per palette, not a hardcoded color"
+  ],
+  "test/core/theme/snackbar_c5_test.dart": [
+   "320pt, 200%, light: floats 8pt above the floating nav on You",
+   "320pt, 200%, light: floats 8pt above the screen edge on Circle history (no nav)",
+   "320pt, 200%, dark: floats 8pt above the floating nav on You",
+   "320pt, 200%, dark: floats 8pt above the screen edge on Circle history (no nav)",
+   "360pt, 200%, light: floats 8pt above the floating nav on You",
+   "360pt, 200%, light: floats 8pt above the screen edge on Circle history (no nav)",
+   "360pt, 200%, dark: floats 8pt above the floating nav on You",
+   "360pt, 200%, dark: floats 8pt above the screen edge on Circle history (no nav)",
+   "light: 24pt corners, no shadow, inverseSurface colours",
+   "dark: 24pt corners, no shadow, inverseSurface colours",
+   "copy, 4s duration, no action and live-region semantics are unchanged"
+  ],
+  "test/core/utils/date_key_test.dart": [
+   "dateKey formats a date as zero-padded YYYY-MM-DD",
+   "dateKey ignores the time-of-day component",
+   "dateKey pads single-digit month and day"
+  ],
+  "test/core/widgets/r6_button_busy_label_test.dart": [
+   "R6 \u2014 the busy label is English loading: \"<label>, in progress\", disabled, a live region \u2014 no Dutch",
+   "R6 \u2014 the busy label is English not loading: the label alone, enabled, no live region",
+   "R6 \u2014 the busy label is English disabled (no action), not loading: the label alone",
+   "R6 \u2014 the busy label is English a focused loading button keeps the English label",
+   "R6 \u2014 the busy label is English the busy label is built in one place"
+  ],
+  "test/core/widgets/thirty_app_bar_test.dart": [
+   "scrolled-under edge light: none at the top, 1pt divider edge while scrolled, gone back at the top; nothing else changes",
+   "scrolled-under edge dark: none at the top, 1pt divider edge while scrolled, gone back at the top; nothing else changes",
+   "scrolled-under edge the edge never changes the AppBar height",
+   "scrolled-under edge horizontal scrolling never shows the edge",
+   "scrolled-under edge a nested scroll view never shows the edge",
+   "scrolled-under edge horizontal scrolling while scrolled keeps the edge",
+   "screens /settings/yours uses ThirtyAppBar",
+   "screens /settings/yours/kept/any uses ThirtyAppBar",
+   "screens /premium uses ThirtyAppBar",
+   "screens /history uses ThirtyAppBar",
+   "screens /history/2026-09-01 uses ThirtyAppBar",
+   "screens Home has no pinned bar: its header scrolls with the Circle",
+   "screens You has no pinned bar either: its header scrolls with the page (You convergence)",
+   "screens on the Premium offer page, scrolling shows the edge and returning to the top hides it"
+  ],
+  "test/core/widgets/thirty_button_large_text_test.dart": [
+   "100% text: exactly 48pt / 56pt, unchanged 320pt, regular, primary, trailing icon: false",
+   "100% text: exactly 48pt / 56pt, unchanged 320pt, regular, primary, trailing icon: true",
+   "100% text: exactly 48pt / 56pt, unchanged 320pt, regular, secondary, trailing icon: false",
+   "100% text: exactly 48pt / 56pt, unchanged 320pt, regular, secondary, trailing icon: true",
+   "100% text: exactly 48pt / 56pt, unchanged 320pt, hero, primary, trailing icon: false",
+   "100% text: exactly 48pt / 56pt, unchanged 320pt, hero, primary, trailing icon: true",
+   "100% text: exactly 48pt / 56pt, unchanged 320pt, hero, secondary, trailing icon: false",
+   "100% text: exactly 48pt / 56pt, unchanged 320pt, hero, secondary, trailing icon: true",
+   "100% text: exactly 48pt / 56pt, unchanged 360pt, regular, primary, trailing icon: false",
+   "100% text: exactly 48pt / 56pt, unchanged 360pt, regular, primary, trailing icon: true",
+   "100% text: exactly 48pt / 56pt, unchanged 360pt, regular, secondary, trailing icon: false",
+   "100% text: exactly 48pt / 56pt, unchanged 360pt, regular, secondary, trailing icon: true",
+   "100% text: exactly 48pt / 56pt, unchanged 360pt, hero, primary, trailing icon: false",
+   "100% text: exactly 48pt / 56pt, unchanged 360pt, hero, primary, trailing icon: true",
+   "100% text: exactly 48pt / 56pt, unchanged 360pt, hero, secondary, trailing icon: false",
+   "100% text: exactly 48pt / 56pt, unchanged 360pt, hero, secondary, trailing icon: true",
+   "200% text: wraps to two lines instead of truncating \"Upgrade to Premium\" at 224pt",
+   "200% text: wraps to two lines instead of truncating \"Upgrade to Premium\" at 264pt",
+   "200% text: wraps to two lines instead of truncating \"Become Premium\" at 224pt",
+   "200% text: wraps to two lines instead of truncating \"Become Premium\" at 264pt",
+   "200% text: wraps to two lines instead of truncating \"Manage subscription\" at 224pt",
+   "200% text: wraps to two lines instead of truncating \"Manage subscription\" at 264pt",
+   "200% text: wraps to two lines instead of truncating \"Restore purchases\" at 224pt",
+   "200% text: wraps to two lines instead of truncating \"Restore purchases\" at 264pt",
+   "200% text: wraps to two lines instead of truncating \"Begin today's Circle\" at 231pt",
+   "200% text: wraps to two lines instead of truncating \"Begin today's Circle\" at 265pt",
+   "200% text: wraps to two lines instead of truncating \"Close Circle\" at 231pt",
+   "200% text: wraps to two lines instead of truncating \"Close Circle\" at 265pt",
+   "200% text: wraps to two lines instead of truncating \"Copy as text\" at 132pt",
+   "200% text: wraps to two lines instead of truncating \"Copy as text\" at 152pt",
+   "200% text: wraps to two lines instead of truncating \"Delete all\" at 132pt",
+   "200% text: wraps to two lines instead of truncating \"Delete all\" at 152pt",
+   "200% text: wraps to two lines instead of truncating \"Standard\" at 132pt",
+   "200% text: wraps to two lines instead of truncating \"Standard\" at 152pt",
+   "200% text: wraps to two lines instead of truncating \"Lighter\" at 132pt",
+   "200% text: wraps to two lines instead of truncating \"Lighter\" at 152pt",
+   "200% text: wraps to two lines instead of truncating \"Open Premium\" at 272pt",
+   "200% text: wraps to two lines instead of truncating \"Open Premium\" at 312pt",
+   "200% text: wraps to two lines instead of truncating a wrapped button keeps one semantics node with its full label, and loading keeps its size",
+   "Consumers at 200% text Circle history data controls: the pair shares one height and neither label is cut off",
+   "Consumers at 200% text 320pt: Home Start keeps its centered label and trailing arrow, uncut and unoverlapped",
+   "Consumers at 200% text 360pt: Home Start keeps its centered label and trailing arrow, uncut and unoverlapped"
+  ],
+  "test/core/widgets/thirty_button_shape_test.dart": [
+   "the two-line limit stays the default",
+   "one line: the pill",
+   "two lines (default limit, 200%): still the pill",
+   "a long label under the default limit still ellipsizes at two lines, as a pill",
+   "unlimited, but rendering in two lines: the pill",
+   "unlimited, three or more lines at 200% (224pt): complete label, 24pt corners",
+   "unlimited, three or more lines at 200% (264pt): complete label, 24pt corners",
+   "the taller shape keeps semantics and the loading size"
+  ],
+  "test/core/widgets/thirty_button_test.dart": [
+   "ThirtyButton shows its label",
+   "ThirtyButton fires onPressed when enabled and tapped",
+   "ThirtyButton does not fire onPressed when disabled",
+   "ThirtyButton shows a spinner and ignores taps while loading",
+   "ThirtyButton keeps the same size between the normal and loading state",
+   "ThirtyButton exposes accessible button semantics",
+   "ThirtyButton communicates disabled state via semantics",
+   "ThirtyButton communicates the loading status via semantics",
+   "ThirtyButton shows an icon when provided",
+   "ThirtyButton replaces the default splash with a quiet local pressed overlay",
+   "ThirtyButton gives primary and secondary distinct, non-null pressed overlays (variant-aware, accessibility-verified \u2014 Premium Pass 01D Experiment 3B)",
+   "ThirtyButton \u2014 Phase A3 pill shape primary, enabled: true \u2014 fully rounded, still 48pt tall",
+   "ThirtyButton \u2014 Phase A3 pill shape primary, enabled: false \u2014 fully rounded, still 48pt tall",
+   "ThirtyButton \u2014 Phase A3 pill shape secondary, enabled: true \u2014 fully rounded, still 48pt tall",
+   "ThirtyButton \u2014 Phase A3 pill shape secondary, enabled: false \u2014 fully rounded, still 48pt tall",
+   "ThirtyButton \u2014 Phase B1 hero size hero is 56pt tall and still fully rounded",
+   "ThirtyButton \u2014 Phase B1 hero size trailingIcon renders after the label and stays out of semantics",
+   "ThirtyButton \u2014 Phase B1 hero size regular (48pt) stays the default size"
+  ],
+  "test/core/widgets/thirty_card_test.dart": [
+   "ThirtyCard renders its child",
+   "ThirtyCard fires onTap when tapped",
+   "ThirtyCard renders without a tap handler",
+   "ThirtyCard has an InkWell only when onTap is provided",
+   "ThirtyCard has no InkWell when onTap is absent",
+   "ThirtyCard \u2014 Phase A3 surface language light: radius 24, soft two-layer shadow, borderless",
+   "ThirtyCard \u2014 Phase A3 surface language dark: radius 24, dark shadow, borderless like light (A5)",
+   "ThirtyCard \u2014 Phase A3 surface language shadows stay short so history cards 8pt apart do not bleed"
+  ],
+  "test/core/widgets/thirty_confirm_dialog_test.dart": [
+   "200% text: fully reachable, nothing cut or broken mid-word 320pt, light: \"Delete your Circle history?\"",
+   "200% text: fully reachable, nothing cut or broken mid-word 320pt, light: \"Close this Circle?\"",
+   "200% text: fully reachable, nothing cut or broken mid-word 320pt, light: \"Allow Alarms & reminders\"",
+   "200% text: fully reachable, nothing cut or broken mid-word 320pt, dark: \"Delete your Circle history?\"",
+   "200% text: fully reachable, nothing cut or broken mid-word 320pt, dark: \"Close this Circle?\"",
+   "200% text: fully reachable, nothing cut or broken mid-word 320pt, dark: \"Allow Alarms & reminders\"",
+   "200% text: fully reachable, nothing cut or broken mid-word 360pt, light: \"Delete your Circle history?\"",
+   "200% text: fully reachable, nothing cut or broken mid-word 360pt, light: \"Close this Circle?\"",
+   "200% text: fully reachable, nothing cut or broken mid-word 360pt, light: \"Allow Alarms & reminders\"",
+   "200% text: fully reachable, nothing cut or broken mid-word 360pt, dark: \"Delete your Circle history?\"",
+   "200% text: fully reachable, nothing cut or broken mid-word 360pt, dark: \"Close this Circle?\"",
+   "200% text: fully reachable, nothing cut or broken mid-word 360pt, dark: \"Allow Alarms & reminders\"",
+   "100% text: laid out exactly as before C5 360pt, light: \"Delete your Circle history?\"",
+   "100% text: laid out exactly as before C5 360pt, light: \"Close this Circle?\"",
+   "100% text: laid out exactly as before C5 360pt, light: \"Allow Alarms & reminders\"",
+   "100% text: laid out exactly as before C5 360pt, dark: \"Delete your Circle history?\"",
+   "100% text: laid out exactly as before C5 360pt, dark: \"Close this Circle?\"",
+   "100% text: laid out exactly as before C5 360pt, dark: \"Allow Alarms & reminders\"",
+   "behaviour cancel pops false",
+   "behaviour confirm pops true",
+   "behaviour a barrier tap pops null",
+   "behaviour destructive confirm uses errorText; plain confirm does not"
+  ],
+  "test/core/widgets/thirty_progress_circle_test.dart": [
+   "ThirtyProgressCircle renders for progress values across the valid range",
+   "ThirtyProgressCircle renders progress 1.0 without throwing",
+   "ThirtyProgressCircle clamps out-of-range progress values",
+   "ThirtyProgressCircle exposes progress via semantics",
+   "ThirtyProgressCircle defaults to announcing the rounded percentage",
+   "ThirtyProgressCircle uses a custom semantic value when provided, instead of the percentage",
+   "ThirtyProgressCircle renders optional center content",
+   "ThirtyProgressCircle accepts valid size/strokeWidth combinations",
+   "ThirtyProgressCircle asserts size must be greater than 0",
+   "ThirtyProgressCircle asserts strokeWidth must be greater than 0",
+   "ThirtyProgressCircle asserts strokeWidth must be smaller than size",
+   "ThirtyProgressCircle thumb (Phase D1) marks the arc's leading end in the progress colour",
+   "ThirtyProgressCircle thumb (Phase D1) sits at the top when progress is 0",
+   "ThirtyProgressCircle thumb (Phase D1) is off by default"
+  ],
+  "test/core/widgets/viewport_visibility_test.dart": [
+   "does not fire while the child is below the fold",
+   "fires once after the dwell once scrolled into view, and never again when scrolled away and back",
+   "a pass through the viewport shorter than the dwell does not count",
+   "needs at least half of the child in view",
+   "does not fire inside an inactive (TickerMode-disabled) subtree, like an offstage tab",
+   "does not fire while another route covers it"
+  ]
+ },
+ "batch": 4,
+ "exit": 0,
+ "seconds": 18,
+ "command": "flutter test --concurrency=1 --reporter json test/core/theme/app_typography_test.dart test/core/theme/snackbar_c5_test.dart test/core/utils/date_key_test.dart test/core/widgets/r6_button_busy_label_test.dart test/core/widgets/thirty_app_bar_test.dart test/core/widgets/thirty_button_large_text_test.dart test/core/widgets/thirty_button_shape_test.dart test/core/widgets/thirty_button_test.dart test/core/widgets/thirty_card_test.dart test/core/widgets/thirty_confirm_dialog_test.dart test/core/widgets/thirty_progress_circle_test.dart test/core/widgets/viewport_visibility_test.dart",
+ "rawSha256": "b9761f0d3a4505e77bef0eb726ca068b4c7d081f11081677b5437954039b3470"
+}

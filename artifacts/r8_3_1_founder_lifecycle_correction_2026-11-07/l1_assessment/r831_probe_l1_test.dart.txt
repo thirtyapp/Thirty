@@ -1,0 +1,56 @@
+import 'dart:convert';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/suggestion_preferences.dart';
+
+import '../../support/r8_harness.dart';
+
+/// R8.3.1 L-1 assessment probe (evidence only — not in the regression
+/// suite). A Suggestion Preferences record THIRTY can't read as a whole,
+/// holding an Insight's id on a left-out part, as a newer THIRTY could
+/// have written it.
+void main() {
+  late R8Harness h;
+  setUp(() async {
+    h = R8Harness(DateTime(2026, 10, 12, 9));
+    await h.boot();
+  });
+
+  final records = <String, Object>{
+    'newer schema (v2)': jsonEncode({
+      'schemaVersion': suggestionPreferencesSchemaVersion + 1,
+      'elementsLeftOut': [
+        {'elementId': 'openWindow', 'since': '2026-10-01T09:00:00.000',
+         'byInsight': 'insight.skipped_part@2026-10-01#openWindow'},
+      ],
+      'futureField': {'kept': true},
+    }),
+    'list field not a list': jsonEncode({
+      'schemaVersion': suggestionPreferencesSchemaVersion,
+      'elementsLeftOut': {'byInsight': 'insight.skipped_part@x'},
+    }),
+    'not JSON': 'byInsight=insight.skipped_part@x',
+  };
+
+  for (final MapEntry(key: kind, value: stored) in records.entries) {
+    test('L-1 $kind: what Delete and Export do', () async {
+      await h.boot({suggestionPreferencesKey: stored});
+      final c = h.open();
+      final read = c.read(suggestionPreferencesProvider);
+      await c.read(circleHistoryDeletionProvider).delete();
+      await R8Harness.settle();
+      final after = (await h.disk.stored())[suggestionPreferencesKey];
+      final export = c.read(circleJournalRepositoryProvider).exportAsJson(
+        suggestionPreferences: read.isEmpty ? null : read.toJson(),
+      );
+      // ignore: avoid_print
+      print('L1 [$kind] appliedLeftOut=${read.leftOut} '
+          'deleteMarkerGone=${!(await h.disk.stored()).containsKey(historyDeletionPendingKey)} '
+          'bytesUnchanged=${after == stored} '
+          'attributionStillStored=${'$after'.contains('byInsight')} '
+          'exportCarriesRecord=${export.contains('byInsight') || export.contains('futureField')}');
+    });
+  }
+}

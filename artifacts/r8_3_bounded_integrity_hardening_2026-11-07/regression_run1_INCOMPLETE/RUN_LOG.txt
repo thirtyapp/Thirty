@@ -1,0 +1,29 @@
+start 2026-11-07T08:59:37+01:00 driver pid 307
+batch 1: exit 0, 76 passed, 0 failed, 0 skipped, 12/12 files, 13 s, done=True
+batch 2: exit 0, 99 passed, 0 failed, 0 skipped, 12/12 files, 31 s, done=True
+batch 3: exit 0, 121 passed, 0 failed, 0 skipped, 12/12 files, 47 s, done=True
+batch 4: exit 0, 157 passed, 0 failed, 0 skipped, 12/12 files, 18 s, done=True
+batch 5: exit 0, 88 passed, 0 failed, 0 skipped, 12/12 files, 11 s, done=True
+batch 6: exit 0, 226 passed, 0 failed, 0 skipped, 12/12 files, 38 s, done=True
+batch 7: exit 0, 241 passed, 0 failed, 0 skipped, 12/12 files, 29 s, done=True
+batch 8: exit 0, 154 passed, 0 failed, 0 skipped, 12/12 files, 23 s, done=True
+batch 9: exit 0, 164 passed, 0 failed, 0 skipped, 12/12 files, 24 s, done=True
+batch 10: exit 0, 267 passed, 0 failed, 0 skipped, 12/12 files, 19 s, done=True
+batch 11: exit 0, 187 passed, 0 failed, 0 skipped, 12/12 files, 28 s, done=True
+batch 12: exit 0, 282 passed, 0 failed, 0 skipped, 12/12 files, 30 s, done=True
+batch 13: exit 0, 159 passed, 0 failed, 0 skipped, 12/12 files, 16 s, done=True
+batch 14: exit 0, 142 passed, 0 failed, 0 skipped, 12/12 files, 14 s, done=True
+batch 15: exit 0, 139 passed, 0 failed, 0 skipped, 12/12 files, 12 s, done=True
+batch 16: exit 0, 213 passed, 0 failed, 0 skipped, 12/12 files, 20 s, done=True
+batch 17: exit 0, 114 passed, 0 failed, 0 skipped, 6/6 files, 18 s, done=True
+batch 18: exit 0, 6 passed, 0 failed, 0 skipped, 1/1 files, 264 s, done=True
+part 19a is not declared in artifacts\r8_3_bounded_integrity_hardening_2026-11-07\regression\batch_plan.json
+part 19b is not declared in artifacts\r8_3_bounded_integrity_hardening_2026-11-07\regression\batch_plan.json
+part 19c is not declared in artifacts\r8_3_bounded_integrity_hardening_2026-11-07\regression\batch_plan.json
+part 19d is not declared in artifacts\r8_3_bounded_integrity_hardening_2026-11-07\regression\batch_plan.json
+batch 19e: exit 0, 2 passed, 0 failed, 0 skipped, 1/1 files, 166 s, done=True
+report exit 1
+cases exit 1
+fingerprints identical
+blob manifests identical
+end 2026-11-07T09:13:42+01:00

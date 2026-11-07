@@ -26,7 +26,11 @@ class FirstBreathNotifier extends Notifier<bool> {
   bool build() {
     final prefs = ref.watch(sharedPreferencesProvider);
     final today = dateKey(ref.watch(nowProvider));
-    final lastPlayedDate = prefs.getString(firstBreathLastPlayedDateKey);
+    // R8.3 (founder decision D5, Claude O-2): read on Today's first frame,
+    // as whatever native type is stored — a value of another type is no
+    // date, so the ritual plays; [markPlayedToday] then records today.
+    final stored = prefs.get(firstBreathLastPlayedDateKey);
+    final lastPlayedDate = stored is String ? stored : null;
     return lastPlayedDate != today;
   }
 

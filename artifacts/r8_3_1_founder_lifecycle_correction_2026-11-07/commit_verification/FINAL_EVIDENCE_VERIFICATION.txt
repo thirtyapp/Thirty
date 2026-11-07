@@ -1,0 +1,19 @@
+raw logs: 23 (batches 1-19, parts of 19: ['a', 'b', 'c', 'd', 'e'])
+test files with results: 201 / on disk 201
+results: {'success': 2872, 'failure': 0, 'error': 0, 'skipped': 0}
+duplicate (file, test) pairs: 0
+year profiles (13): ['p01_sparse_feedback', 'p02_frequent_feedback', 'p03_stable_positive', 'p04_mixed', 'p05_one_need_dominant', 'p06_all_three_needs', 'p07_mostly_10_minutes', 'p08_mostly_20_minutes', 'p09_mostly_30_minutes', 'p10_lapse_and_resubscribe', 'p11_many_exclusions', 'p13_no_routine', 'p14_more_energy_dominant']
+profiles each once: True
+B8 cases (6), all success (no failures counted above)
+R8.3/R8.3.1 files: {
+"test/features/r83/r831_start_eligibility_test.dart": 24,
+"test/features/r83/r83_codec_law_test.dart": 14,
+"test/features/r83/r83_cross_store_test.dart": 4,
+"test/features/r83/r83_delete_boundary_test.dart": 12,
+"test/features/r83/r83_harness_selftest_test.dart": 10,
+"test/features/r83/r83_insight_attribution_test.dart": 10,
+"test/features/r83/r83_start_boundary_test.dart": 9,
+"test/features/r83/r83_startup_types_test.dart": 15
+}
+FINAL EVIDENCE VERIFIED
+exit 0

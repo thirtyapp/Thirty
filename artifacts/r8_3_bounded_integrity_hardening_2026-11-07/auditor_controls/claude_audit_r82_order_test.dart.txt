@@ -1,0 +1,44 @@
+// Independent post-R8.2 audit — temporary reproduction (scratch only).
+import 'dart:convert';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+
+import '../support/r8_harness.dart';
+
+void main() {
+  final day1 = DateTime(2026, 10, 12, 9);
+  test('AUD-O3: Start tapped while its offer save is pending, then Plan '
+      'Pause, then Close under Premium: credited?', () async {
+    final h = R8Harness(day1);
+    await h.boot();
+    final c = h.open();
+    final plans = c.read(circlePlansProvider.notifier);
+    final today = c.read(recommendationProvider.notifier);
+    plans.start('getting_going');
+    await R8Harness.settle();
+    final held = h.disk.hold(recommendationDayKey);
+    today.chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    await held.reached;
+    final id = c.read(recommendationProvider).recommendation!.circleId;
+    today.start();
+    expect(c.read(recommendationProvider).status, RecommendationStatus.notStarted);
+    expect(plans.pause('getting_going'), PlanActionResult.done);
+    held.release();
+    await R8Harness.settle();
+    expect(c.read(recommendationProvider).status, RecommendationStatus.started);
+    h.clock.value = day1.add(const Duration(minutes: 25));
+    today.close();
+    await R8Harness.settle();
+    final raw = (await h.disk.stored())[circlePlansKey] as String;
+    final plan = ((jsonDecode(raw) as Map)['plans'] as Map)['getting_going'] as Map;
+    final records = ((plan['cycles'] as List).last as Map)['records'] as List;
+    // ignore: avoid_print
+    print('AUD-O3 lifecycle=${plan['lifecycle']} records=${records.length} '
+        'lastServed=${plan['lastServed']} history closed='
+        '${(await h.disk.stored())[recommendationStatusKey]} id=$id');
+  });
+}

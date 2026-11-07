@@ -1,0 +1,246 @@
+diff --git a/C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/14329e33-cd2b-42ed-863b-aad24f98b868/scratchpad/r83_lib/lib/features/plans/domain/circle_plan.dart b/lib/features/plans/domain/circle_plan.dart
+index 90cfcaf..aa2d21f 100644
+--- a/C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/14329e33-cd2b-42ed-863b-aad24f98b868/scratchpad/r83_lib/lib/features/plans/domain/circle_plan.dart
++++ b/lib/features/plans/domain/circle_plan.dart
+@@ -496,11 +496,23 @@ class PlanProgress {
+     this.lastAdvancedCircleId,
+     this.lastServed,
+     this.appliedInsight,
++    this.startedWhilePaused,
+     this.extra = const {},
+   });
+ 
+   final String planId;
+ 
++  /// R8.3.1 (founder decision on R83-F1, 2026-11-07, Option B): the stage
++  /// Circle whose valid Start was made while this Plan was paused. Plan
++  /// credit follows the eligibility of that original Start: this Circle
++  /// never earns any ([CirclePlansState.recordGuided]) — not at its Close,
++  /// and not after the Plan is carried on, restarted or caught up, even
++  /// once a later Circle has been served. Its History record stays. Kept
++  /// on the Plan rather than on [lastServed], which the next serve
++  /// replaces; one is enough, since only one day's Circle is ever still
++  /// to be caught up. Stage evidence: Delete Circle history removes it.
++  final String? startedWhilePaused;
++
+   /// Fields this build doesn't know, and known fields whose stored value it
+   /// can't read, exactly as stored (R8.1 RL-3): written back until THIRTY
+   /// itself sets that field again.
+@@ -534,6 +546,7 @@ class PlanProgress {
+     String? lastAdvancedCircleId,
+     ServedStageCircle? lastServed,
+     AppliedInsight? appliedInsight,
++    String? startedWhilePaused,
+   }) => PlanProgress(
+     planId: planId,
+     lifecycle: lifecycle ?? this.lifecycle,
+@@ -541,6 +554,7 @@ class PlanProgress {
+     lastAdvancedCircleId: lastAdvancedCircleId ?? this.lastAdvancedCircleId,
+     lastServed: lastServed ?? this.lastServed,
+     appliedInsight: appliedInsight ?? this.appliedInsight,
++    startedWhilePaused: startedWhilePaused ?? this.startedWhilePaused,
+     extra: {
+       for (final MapEntry(:key, :value) in extra.entries)
+         if (!(key == 'lastServed' && lastServed != null) &&
+@@ -566,6 +580,7 @@ class PlanProgress {
+     'lastAdvancedCircleId': ?lastAdvancedCircleId,
+     'lastServed': ?lastServed?.toJson(),
+     'appliedInsight': ?appliedInsight?.toJson(),
++    'startedWhilePaused': ?startedWhilePaused,
+   };
+ 
+   static PlanProgress? fromJson(String planId, Object? raw) {
+@@ -590,12 +605,17 @@ class PlanProgress {
+     final last = raw['lastAdvancedCircleId'];
+     final served = ServedStageCircle.fromJson(raw['lastServed']);
+     final insight = AppliedInsight.fromJson(raw['appliedInsight']);
++    // R8.3.1: it decides credit, so present but not text makes the whole
++    // Plan unreadable — kept as stored, never read as absent.
++    final pausedStart = raw['startedWhilePaused'];
++    if (pausedStart != null && pausedStart is! String) return null;
+     const known = {
+       'lifecycle',
+       'cycles',
+       'lastAdvancedCircleId',
+       'lastServed',
+       'appliedInsight',
++      'startedWhilePaused',
+     };
+     return PlanProgress(
+       planId: planId,
+@@ -604,6 +624,7 @@ class PlanProgress {
+       lastAdvancedCircleId: last is String ? last : null,
+       lastServed: served,
+       appliedInsight: insight,
++      startedWhilePaused: pausedStart as String?,
+       extra: {
+         for (final MapEntry(:key, :value) in raw.entries)
+           if (!known.contains(key)) key: value,
+@@ -1118,6 +1139,12 @@ extension CirclePlanActions on CirclePlansState {
+   /// - anything else — a Plan paused before the Start, left before the
+   ///   Close — never.
+   /// No other Plan is touched, and nothing is reactivated.
++  ///
++  /// R8.3.1 (founder decision on R83-F1, Option B): a Circle whose valid
++  /// Start was made while its Plan was paused ([PlanProgress
++  /// .startedWhilePaused]) is never credited — whatever the Plan's
++  /// lifecycle when this runs: at its Close, in a later lifecycle change's
++  /// fold, or in a restart's or the next day's catch-up.
+   CirclePlansState recordGuided(
+     PlanStageProvenance stage, {
+     required String circleId,
+@@ -1130,6 +1157,7 @@ extension CirclePlanActions on CirclePlansState {
+     final plan = plans[stage.planId];
+     if (plan == null) return this;
+     if (plan.lastAdvancedCircleId == circleId) return this;
++    if (plan.startedWhilePaused == circleId) return this;
+     final cycle = plan.cycles.where((c) => c.id == stage.cycleId).firstOrNull;
+     if (cycle == null) return this;
+     if (cycle.records.any((r) => r.circleId == circleId)) return this;
+@@ -1259,6 +1287,30 @@ extension CirclePlanActions on CirclePlansState {
+     );
+   }
+ 
++  /// R8.3.1 (founder decision on R83-F1, Option B): [stage]'s served Circle
++  /// [circleId] is being validly started now. If its Plan is paused, that
++  /// Start is not eligible for Plan credit, and this says so on the Plan
++  /// ([PlanProgress.startedWhilePaused]); `this` otherwise — an active Plan,
++  /// a Circle that isn't the one served, or one already recorded.
++  CirclePlansState noteStartedWhilePaused(
++    PlanStageProvenance stage, {
++    required String circleId,
++  }) {
++    final plan = plans[stage.planId];
++    final served = plan?.lastServed;
++    if (plan == null ||
++        plan.lifecycle != PlanLifecycle.paused ||
++        served == null ||
++        !served.matches(stage, circleId: circleId) ||
++        plan.startedWhilePaused == circleId) {
++      return this;
++    }
++    return _with(
++      plan.copyWith(startedWhilePaused: circleId),
++      activePlanId: activePlanId,
++    );
++  }
++
+   /// R8.2 Plan lifecycle policy: [planId]'s served Circle [circleId] with
+   /// the order of the user's own actions recorded on it — started before
+   /// its Plan was paused ([startedBeforePause]), asked to close before the
+diff --git a/C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/14329e33-cd2b-42ed-863b-aad24f98b868/scratchpad/r83_lib/lib/features/plans/application/circle_plans_provider.dart b/lib/features/plans/application/circle_plans_provider.dart
+index 7a8427f..759171b 100644
+--- a/C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/14329e33-cd2b-42ed-863b-aad24f98b868/scratchpad/r83_lib/lib/features/plans/application/circle_plans_provider.dart
++++ b/lib/features/plans/application/circle_plans_provider.dart
+@@ -719,6 +719,14 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+     required String circleId,
+     required EntitlementStatus status,
+   }) {
++    // R8.3.1: a Start while the Plan is paused records that first
++    // ([noteStartWhilePaused]) — a write the Start waits for.
++    if (!identical(
++      state.noteStartedWhilePaused(stage, circleId: circleId),
++      state,
++    )) {
++      return false;
++    }
+     final stored = _servedRecord(_durable, stage, circleId);
+     if (stored == null || _servedRecord(state, stage, circleId) != stored) {
+       return false;
+@@ -770,6 +778,34 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+     }
+   }
+ 
++  /// R8.3.1 (founder decision on R83-F1, Option B): today's stage Circle
++  /// [circleId] is about to become validly started (Today, at the moment
++  /// it does). When its Plan is paused — as shown, so the user's own order
++  /// of Pause and Start is what counts — that Start earns no Plan credit,
++  /// now or later; this records it on the Plan
++  /// ([CirclePlansState.noteStartedWhilePaused]) and completes once the
++  /// store has confirmed it. Fails with [StorageWriteFailed] otherwise:
++  /// Today then refuses the Start (founder decision B), and the user is
++  /// told there. Nothing to record for an active Plan.
++  Future<void> noteStartWhilePaused(
++    PlanStageProvenance stage, {
++    required String circleId,
++  }) async {
++    final next = state.noteStartedWhilePaused(stage, circleId: circleId);
++    if (!identical(next, state)) return _set(next, report: false);
++    final planId = stage.planId;
++    if (state.plans[planId]?.startedWhilePaused == circleId &&
++        _durable.plans[planId]?.startedWhilePaused != circleId) {
++      await ensureSaved();
++      if (_durable.plans[planId]?.startedWhilePaused != circleId) {
++        throw const StorageWriteFailed(
++          circlePlansKey,
++          'the Start made while the Plan is paused is not on disk',
++        );
++      }
++    }
++  }
++
+   /// [circleId]'s served record in [plans], as stored text, or `null`.
+   static String? _servedRecord(
+     CirclePlansState plans,
+diff --git a/C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/14329e33-cd2b-42ed-863b-aad24f98b868/scratchpad/r83_lib/lib/features/home/application/recommendation_provider.dart b/lib/features/home/application/recommendation_provider.dart
+index e1779e3..95ddadb 100644
+--- a/C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/14329e33-cd2b-42ed-863b-aad24f98b868/scratchpad/r83_lib/lib/features/home/application/recommendation_provider.dart
++++ b/lib/features/home/application/recommendation_provider.dart
+@@ -1883,21 +1883,50 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
+         if (error is! _StaleWrite) _refuseStart(circleId, toldBefore);
+         rethrow;
+       }
+-      if (identical(_startWaiting, recommendation)) _startWaiting = null;
+       // Replaced, taken back or already started meanwhile: nothing starts.
+-      if (!identical(state.recommendation, recommendation) ||
+-          state.status != RecommendationStatus.notStarted) {
+-        return;
+-      }
+       // R8.3 (Astra R82-N05): the Circle would start now, so its day is
+       // checked again now — local midnight may have passed while its save
+       // was pending. An offer of a day that has ended is never started
+       // afterwards (R6 final, founder decision 2026-11-03): nothing starts,
+       // and the new day opens, as for a Start tapped after midnight.
+-      if (circleId != dateKey(ref.read(eventClockProvider)())) {
+-        if (ref.mounted) ref.invalidate(nowProvider);
++      bool stillStartable() {
++        if (!identical(state.recommendation, recommendation) ||
++            state.status != RecommendationStatus.notStarted) {
++          return false;
++        }
++        if (circleId != dateKey(ref.read(eventClockProvider)())) {
++          if (ref.mounted) ref.invalidate(nowProvider);
++          return false;
++        }
++        return true;
++      }
++
++      if (!stillStartable()) {
++        if (identical(_startWaiting, recommendation)) _startWaiting = null;
+         return;
+       }
++      // R8.3.1 (founder decision on R83-F1, Option B): this is the valid
++      // Start. Made while its Plan is paused, it earns no Plan credit — now
++      // or after the Plan is carried on — and that is saved before the
++      // Circle starts (founder decision B); refused, the Start is refused.
++      // The conditions are checked again after the wait.
++      if (stage != null) {
++        try {
++          await ref
++              .read(circlePlansProvider.notifier)
++              .noteStartWhilePaused(stage, circleId: circleId);
++          _ensureCurrent(epoch);
++        } catch (error) {
++          if (identical(_startWaiting, recommendation)) _startWaiting = null;
++          if (error is! _StaleWrite) _refuseStart(circleId, toldBefore);
++          rethrow;
++        }
++        if (!stillStartable()) {
++          if (identical(_startWaiting, recommendation)) _startWaiting = null;
++          return;
++        }
++      }
++      if (identical(_startWaiting, recommendation)) _startWaiting = null;
+       state = RecommendationState(
+         recommendation: recommendation,
+         status: RecommendationStatus.started,

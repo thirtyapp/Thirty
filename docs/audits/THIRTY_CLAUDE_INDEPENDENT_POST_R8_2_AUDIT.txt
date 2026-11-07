@@ -1,0 +1,326 @@
+THIRTY — INDEPENDENT POST-R8.2 AUDIT
+
+Verdict: CONDITIONAL PASS. The R8.2 baseline at e744f505 is not accepted as-is. It can be accepted once AUD-N1 and AUD-N2 are fixed, each with a regression test, and a delta audit of that fix passes. This is not commercial release approval: THIRTY Phase E remains HOLD.
+
+All 13 original findings are closed in behaviour, except R81-A05, which is PARTIAL because its own fix introduced AUD-N1. The full suite reproduced independently: 2,774 passed, 0 failed. My own adversarial tests found two defects that R8.2 introduced:
+- AUD-N1: a Plan credit can be wrongly withheld after a restart.
+- AUD-N2: a deleted session's Start time can be written back to disk after Delete.
+
+1. Exact SHA and immutable source
+
+┌───────────────────────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│               Check               │                                                                        Result                                                                        │
+├───────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Target commit                     │ e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8 exists. origin/step5-billing-integration points to it.                                                      │
+├───────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Parent                            │ e935112c408c16d99835280f4e1fafd722d47ed1, as expected                                                                                                │
+├───────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Commit inventory                  │ git diff --name-status shows 423 paths (398 added, 25 modified). This equals COMMIT_PATHS.txt exactly: 423 lines, no duplicates, empty diff.         │
+├───────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Source and test changes           │ 39 files: 12 lib/ files, 13 existing tests, 14 new test/features/r82/ files. This matches COMMIT_INVENTORY.md.                                       │
+├───────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 371-file manifest                 │ git ls-tree of the commit equals SOURCE_MANIFEST_git_blobs.txt: committed source == tested source.                                                   │
+├───────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Working-tree fingerprints         │ All 371 entries equal committed blob bytes, 228 as LF and 143 as a CRLF checkout, 0 mismatches. Preflight, start and end fingerprints are identical. │
+├───────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Original audit reports            │ Astra afb0dd9a…c0c375a (104,664 bytes) and Claude 96593e20…4c23a1 (52,094 bytes). Both match the handoff.                                            │
+├───────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Secret scan                       │ No key, JWT or private-key patterns in the R8.2 diff                                                                                                 │
+├───────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Billing, audio, localization code │ Not changed by R8.2. assets/ diff is empty.                                                                                                          │
+└───────────────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Line endings. The repository has core.autocrlf=true, and the implementer's working tree mixed LF and CRLF. A plain git archive export therefore does not byte-match the fingerprints. Comparing against the git blob manifest does.
+
+I audited only a clean export of the commit (git -c core.autocrlf=false archive), never a working tree.
+
+2. Methodology and limitations
+
+Evidence types used:
+
+- Executed independently (Flutter 3.44.8, Dart 3.12.2):
+  - the full suite, with my own batching runner;
+  - flutter analyze;
+  - the original Claude auditor reproductions;
+  - 9 new adversarial tests of my own, kept only in a scratch copy;
+  - three of those also run against the R8.1 parent, to classify them as new or pre-existing.
+- Verified independently:
+  - manifests, fingerprints and inventory;
+  - the implementer's raw JSON reporter logs, re-parsed;
+  - audio SHA-1 manifests;
+  - the E-1 runner, by mutating disposable copies of the evidence.
+- Static source analysis:
+  - the full diffs of all 12 production files;
+  - a complete read of circle_plans_provider.dart and circle_history_deletion.dart.
+
+Not done:
+- no Android device, S25 or TalkBack run;
+- no real process kill;
+- no real storage-failure test.
+
+Every "restart" below is the harness's in-process simulation (test/support/r8_harness.dart). For native write behaviour I read plugin source; nothing was run on Android.
+
+No repository file was changed, staged or committed.
+
+3. Original finding closure
+
+┌─────────────────────────┬───────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│         Finding         │      Status       │                                                                    Evidence                                                                     │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ R81-A01 (HIGH) pending  │                   │ recordGuided (circle_plans_provider.dart:825–878) now separates four cases: credited on disk, pending, not owed on disk, and owed but blocked.  │
+│ failed Pause skips      │ FIXED             │ A blocked credit waits for pending writes (idle()), and fails after 8 rounds so Today never overwrites the session. r82_a01_* passes in my run. │
+│ durable credit          │                   │                                                                                                                                                 │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ R81-A02 / NEW-2 (HIGH)  │                   │ <ul><li>A deletion counter keeps saves queued before Delete from restoring deleted evidence (_set:205, Insights equivalent).</li><li>_durable   │
+│ Delete leaves recreated │ FIXED             │ forgets the evidence immediately.</li><li>assess() is blocked while a Delete runs or is pending.</li><li>Delete waits for the Plans and         │
+│  Insight data           │                   │ Insights queues, then clears Insights again.</li><li>Claude's DIAG A3, re-run by me, shows 0 records in memory, on disk and after               │
+│                         │                   │ restart.</li></ul>A separate new residue exists (AUD-N2).                                                                                       │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ R81-A03 (MEDIUM) stage  │                   │                                                                                                                                                 │
+│ publication checks the  │ FIXED             │ _publish now checks the stage of the payload being written. An offer that can't be saved is taken back.                                         │
+│ live offer              │                   │                                                                                                                                                 │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ NEW-1 (MEDIUM,          │                   │ <ul><li>The served-stage check applies only when publishing.</li><li>confirmStartNoted and noteStart look only at that Circle's own served      │
+│ blocking) stage Circle  │ FIXED             │ record.</li><li>r82_claude_audit_new1_triggers_test reads disk and History after restart.</li><li>My own A2 follow-through test passes, throws  │
+│ becomes unsaveable      │                   │ and returns-false variants.</li></ul>                                                                                                           │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ R81-A04 (MEDIUM) I2     │                   │                                                                                                                                                 │
+│ checks one cycle and    │ FIXED             │ apply() waits for Plans and History writes. keepGentler(cycleId:) returns null for any other cycle.                                             │
+│ changes another         │                   │                                                                                                                                                 │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ R81-A05 (MEDIUM) nested │                   │ Unknown fields are now kept, and malformed flags make the record unreadable. But the source spread in ServedStageCircle.toJson                  │
+│  records lose unknown   │ PARTIAL           │ (circle_plan.dart:727) means startedAfterExpiry can never be cleared on disk. That is AUD-N1, introduced by this fix.                           │
+│ fields                  │                   │                                                                                                                                                 │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ R81-A06 (MEDIUM)        │                   │                                                                                                                                                 │
+│ removing an answer      │ FIXED             │ Durable recommendation_reflection_finished key. A new day's choice and Delete clear it; removing an answer keeps it.                            │
+│ reopens a finished      │                   │                                                                                                                                                 │
+│ reflection              │                   │                                                                                                                                                 │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ R81-A07 (MEDIUM)        │                   │                                                                                                                                                 │
+│ pending History cache   │ FIXED             │ The JournalWrites tracker plus readConfirmed(), used by Insights, Plan stage answers and the decision-A credit fold.                            │
+│ creates a durable       │                   │                                                                                                                                                 │
+│ Insight                 │                   │                                                                                                                                                 │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ R81-A08 / Claude marker │ FIXED (with the   │ Founder decision C: provenance is saved in the change's own save (PlanProgress.appliedInsight, ElementLeftOut.byInsight). A manual change is    │
+│  retry / I1–I3 (LOW)    │ documented LOW    │ never attributed to an Insight.                                                                                                                 │
+│                         │ limitation)       │                                                                                                                                                 │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ R81-A09 (MEDIUM) wrong  │ FIXED within its  │ All JSON user stores, the day keys (_DayKeys is type-safe) and the start-up steps read with prefs.get. Outside that scope: analytics consent,   │
+│ native preference types │ stated scope      │ tester id and first-breath still use typed getters (observation O-2).                                                                           │
+│  crash recovery         │                   │                                                                                                                                                 │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ NEW-3 (LOW) confirmed() │                   │                                                                                                                                                 │
+│  reports notSaved for a │ FIXED             │ On failure it waits for the queue, then compares every changed value with what is on disk. Claude's A4 passes unchanged.                        │
+│  saved change           │                   │                                                                                                                                                 │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ E-1 (evidence tooling)  │                   │ My own mutation test: the intact copy gives EVIDENCE OK. With part 18c deleted, or 18c replaced by a copy of 18b, both report and cases exit 1  │
+│ runner accepts missing  │ FIXED             │ with EVIDENCE MISMATCH.                                                                                                                         │
+│ parts                   │                   │                                                                                                                                                 │
+├─────────────────────────┼───────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ R7/R8/R8.1 guarantees   │ No regression     │ Except the two below; their tests pass.                                                                                                         │
+│ (N01–N10, AUD-1–6)      │ found             │                                                                                                                                                 │
+└─────────────────────────┴───────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+4. Founder-policy verification
+
+┌────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                             Policy                             │                                                            Result                                                             │
+├────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ A: a Close that was durable before a later Pause, Leave, other │ Verified in source (_withEarnedCredits reads only confirmed History) and by passing tests                                     │
+│  Plan start or "Go through it again" keeps its credit          │                                                                                                                               │
+├────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ B: a Start is refused until its saves succeed                  │ Verified: a fast path when everything is on disk, otherwise the Start waits in the queue. A refusal is told once, and a       │
+│                                                                │ started Circle is never taken back. My test of a Start tapped during an app resume passed (it was not a defect).              │
+├────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ C: I1–I3 marker repair only from saved provenance              │ Verified                                                                                                                      │
+├────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Pause before Close                                             │ Credited. Verified, also after Premium lapses.                                                                                │
+├────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Leave before Close                                             │ Not credited, and the Close is kept in History. Verified.                                                                     │
+├────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Close requested before Leave, storage still pending            │ Credited once the Close is durable, to the cycle that was left. Matched by exact instant (isAtSameMomentAs).                  │
+├────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Stage 5 transitions                                            │ As documented: stage 5 credited on a paused Plan ends it; a left stage-5 cycle stays "left"                                   │
+├────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Premium lapse during a session                                 │ Correct within one session. Broken across a restart in one path (AUD-N1).                                                     │
+├────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Ordering across failure, retry and restart                     │ Consistent, except AUD-N1 and AUD-N2. One edge case is O-3.                                                                   │
+└────────────────────────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+O-3 (policy edge, executed). On slow storage, the user taps Start, then pauses the Plan, then closes the Circle:
+- The Start is only recorded once its save lands, so the Pause counts as coming first.
+- Result: the Circle runs and closes, and earns no credit.
+
+This follows the letter of "Pause before a valid Start earns no credit" under decision B, but not the order the user tapped. The founder should confirm this is intended.
+
+5. New findings
+
+AUD-N1 — MEDIUM — R8.2 regression — a stale "started after expiry" flag withholds a credit the user is owed after a restart
+
+- Where:
+  - lib/features/plans/domain/circle_plan.dart:727–733: toJson copies the whole stored record (...?source) and only ever adds startedAfterExpiry: true.
+  - noteStart (:1211–1227) flips the flag from true to false in memory.
+  - The false value is never written: disk keeps true.
+- This contradicts:
+  - the founder rule "credited if served and started under Premium";
+  - LIMITATIONS_R8_2.md item 5: "the next Start rewrites it";
+  - the R81-A05 claim that only the fields THIRTY sets are changed.
+- Reproduced (audit_r82_adversarial_test.dart):
+  a. The user starts a stage Circle after a verified expiry.
+  b. The process stops right after the Plans note lands. (Decision B writes that note first; I simulated the stop with the harness's stopAfter.)
+  c. The user restarts and resubscribes, then starts the Circle under verified Premium. In memory creditsServed is true, but disk still says startedAfterExpiry: true.
+  d. Premium lapses, the app restarts, and the user closes the Circle. Credits on disk: 0 (expected 1).
+- Controls:
+  - The same sequence without the final restart is credited (1).
+  - The domain-level test passes on R8.1 (e935112c) and fails on R8.2, which proves R8.2 introduced it.
+- Impact: credit withheld, never wrongly granted. Whether the user gets the credit depends on whether the app restarted. The trigger is rare.
+
+AUD-N2 — LOW — R8.2 regression — a deleted session's Start time is written back after Delete
+
+- Where:
+  - CirclePlansNotifier._startedAt and _closeRequestedAt (circle_plans_provider.dart:309–317) are never cleared, including by forgetStageEvidence (:895–924).
+  - Circle ids are day keys, so a stage Circle served again on the same day after Delete gets the same id.
+  - _withActionOrder (:335–380) then uses the deleted session's time.
+- Reproduced:
+  a. Start a stage Circle at 09:00.
+  b. Delete Circle history; it succeeds, and History and the day keys are gone.
+  c. The same stage Circle is served again for the same day.
+  d. Pause the Plan before starting it. Disk now holds lastServed.startedBeforePause: "2026-10-12T07:00:00.000Z", the deleted session's Start.
+- The Leave/Close variant follows the same code path (static analysis, not run).
+- Impact:
+  - It breaks the Delete contract (today's session is deleted) with one timestamp that persists until the next served Circle or the next Delete.
+  - It grants no wrong credit, because the time can never match a later Start.
+  - On R8.1 the field did not exist (the test passes there).
+
+AUD-N3 — LOW — pre-existing since R8.1 — Delete saves a Plan change that was reported as not saved
+
+- Where: circle_history_deletion.dart:180 calls forgetStageEvidence() without first waiting for the Plans queue. That clears _queued, so when the earlier failing write is refused, its rollback is skipped. Delete then writes the optimistic state.
+- Reproduced on both R8.2 and R8.1:
+  a. Hold the Plans write for a Pause.
+  b. Start Delete.
+  c. Release the held write as a failure.
+  - Result: the user is told the save failed (last=circlePlans), yet disk says paused, and unsaved stays set.
+- Impact: a false failure notice; no data is lost and nothing false is confirmed.
+
+Observations (not blocking)
+
+- O-1 (static). Delete keeps the new ElementLeftOut.byInsight ids in Suggestion Preferences. These ids encode the Insight family, date and part of a deleted Insight. Minor residue; the founder should decide.
+- O-2 (static, not run). analyticsConsentKey, the tester id and cohort keys, and firstBreathLastPlayedDateKey still use typed getters. A wrong native type would throw on read. This is outside A09's stated scope.
+- O-3: see §4.
+- Hypothesis disproven by execution: a Start waiting for its save is not silently dropped when the app resumes (AUD-N4 passed).
+
+6. Reproductions and execution results
+
+┌───────────────────────────────────────────────────────────────────────────┬───────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   Test                                    │           Tree            │                                         Result                                         │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ Full suite, my own runner (--concurrency=1, 16×12-file batches, B8 alone, │ e744f50 (LF export)       │ 193/193 files, 2,774 passed, 0 failed, 0 skipped. Every batch exited 0 with a terminal │
+│  the year-long profile file in 5 parts)                                   │                           │  done success=true. Tree unchanged during the run.                                     │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ (file, test) inventory                                                    │ mine vs the implementer's │ 2,774 = 2,774 unique pairs; 0 only in mine, 0 only in theirs; 0 duplicates; 193 suites │
+│                                                                           │  raw logs                 │  = 193 test files on disk                                                              │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ Year-long profiles                                                        │                           │ 13/13 (p01–p11, p13, p14), each once. p12 does not exist in the source.                │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ B8                                                                        │                           │ 6/6                                                                                    │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ flutter analyze                                                           │ e744f50                   │ No issues found                                                                        │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ Original Claude reproductions (hashes verified against the original       │ e744f50                   │ 8 pass / 5 fail, exactly as claimed                                                    │
+│ auditor's scratch folder)                                                 │                           │                                                                                        │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ AUD-A2 (my own follow-through, throws and returns-false)                  │ e744f50                   │ Pass                                                                                   │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ AUD-N1 domain / end-to-end / control                                      │ e744f50                   │ Fail / Fail (0 credits) / Pass (1)                                                     │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ AUD-N1 domain                                                             │ e935112c (R8.1)           │ Pass, so R8.2 introduced it                                                            │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ AUD-N2                                                                    │ e744f50 / R8.1            │ Fail / Pass, so R8.2 introduced it                                                     │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ AUD-N3                                                                    │ e744f50 / R8.1            │ Fail / Fail, so it existed before R8.2                                                 │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ AUD-N4 (Start during app resume)                                          │ e744f50                   │ Pass                                                                                   │
+├───────────────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ AUD-O3 (Start pending → Pause → Close)                                    │ e744f50                   │ Runs; 0 credits; Plan paused                                                           │
+└───────────────────────────────────────────────────────────────────────────┴───────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────┘
+
+My assessment of the five remaining original failures:
+
+- A2 ×2 and DIAG A2: obsolete expectation.
+  - Each first requires the R8.1 behaviour "stays on screen (accepted limitation)", then dereferences an offer that R8.2 correctly takes back.
+  - My follow-through test shows the rest of the expected behaviour holds. After the withdrawal:
+    - the user is told (History status false, plus a notice);
+    - nothing is on disk;
+    - the next choice starts, closes, reaches History and is credited once, also after two restarts.
+  - This meets Claude's own NEW-1 acceptance condition.
+- A3 ×2: defective test. The check isNot(contains(id)) on the Plans text fails because the Circle id 2026-10-12 is also the cycle's startedOn and gentlerSince dates. The value on disk contains "records":[], no lastServed and no lastAdvancedCircleId. The test's own in-memory assertions pass, and DIAG A3 prints 0 everywhere.
+- Neither reflects a remaining defect.
+
+7. Regression and evidence integrity
+
+- The reported numbers are confirmed: 193 files, 2,774 passed, 0 failed, 0 skipped, 13/13 profiles, 6/6 B8, analyze clean.
+  - Re-parsing the implementer's 22 raw logs gives the same per-batch counts, every one ending in done success=true.
+  - My independent run reproduces the identical test inventory.
+- Audio: 172/172 production and 8/8 framing SHA-1 match. 180 bundled .m4a files, exactly the union of the two manifests. assets/ is unchanged since R8.1.
+- Assertion changes to existing tests:
+  - r2_plan_credit_provenance: "paused after Start is credited" follows the founder's lifecycle policy.
+  - r81_n04_n05_*: "Start refused" follows decision B.
+  - r8b_precommit_persistence_test adds six settle() calls. I accept the implementer's probe explanation but count it as weaker evidence.
+  - None of the changes removes a disk-level or restart-level check.
+- Caveat: passing tests did not cover AUD-N1 or AUD-N2. The suite is strong evidence, not proof.
+
+8. Persistence, recovery and deletion
+
+Native write behaviour. shared_preferences_android 2.4.27's legacy plugin, which SharedPreferences.getInstance uses, calls commit() (LegacySharedPreferencesPlugin.kt:53–101). So on Android, writeConfirmed returning true means the platform has committed the write to its file. This is from reading source only.
+
+Memory-held action order is acceptable. The Start/Close order is saved atomically inside the Pause or Leave save. If the process dies before that save, there is nothing to order. If the Close is not durable, the user closes again later, and that Close earns no credit, as the policy says. I found no case where a process kill grants a wrong credit.
+
+Two restart risks remain:
+- AUD-N1 is a restart-dependent divergence between memory and disk.
+- A kill between the platform commit and Dart's confirmation (an untested risk, not an observed defect) is safe for Plans and Today, because they re-read the disk on start.
+
+Deletion. R81-A02 and NEW-2 are closed. AUD-N2 (new) and AUD-N3 (old) remain.
+
+Malformed and future-schema data. Preserved, except the AUD-N1 write-back defect.
+
+9. Premium, credit and ownership
+
+- No unauthorized Premium behaviour and no wrongly granted credit found.
+- At-most-once crediting holds (lastAdvancedCircleId plus a record check). The original cycle and Circle are respected. No Plan is reactivated, and the latent activePlanId bug was correctly fixed.
+- I1–I3 attribution is truthful: a manual change is never claimed for an Insight.
+- AUD-N1 is a wrongly withheld credit.
+- I did not deeply re-test Kept Circle ownership. Its code is unchanged in R8.2 and its tests pass.
+
+10. Accepted limitations
+
+These are reasonable at the engineering level:
+- RL-4, the repeated autumn hour (it can only withhold credit, never grant it);
+- one provenance record per Plan;
+- no "starting" indicator;
+- the wording of one refusal notice;
+- unreadable Plan and Preferences restrictions;
+- the stage-5 lifecycle LOW points.
+3. A delta audit of that fix.
+
+Recommended but not blocking: AUD-N3, O-1, O-2, and founder confirmation of O-3.
+
+Commercial (unchanged):
+- real Android process-kill and storage-failure testing; S25 and TalkBack;
+- RL-4 pre-commercial decision;
+- analytics, privacy and retention;
+- backup and migration, and real Premium restore;
+- billing and release-APK security review;
+- six-language localization and audio QA;
+- content-safety and final commercial release audit.
+
+13. Final verdict
+
+CONDITIONAL PASS.
+- The R8.2 technical baseline at e744f505 may not be accepted as-is.
+- It may be accepted after AUD-N1 and AUD-N2 are fixed and a delta audit confirms the fix.
+- This audit authorizes no commercial release. THIRTY Phase E remains HOLD.
+
+My temporary tests are in C:\Users\thoma\AppData\Local\Temp\claude\b7fd4c17e92f619e\035596f4-b2b2-4c8c-a0d8-3bc57a5acfa9\scratchpad\adv\test\zz_audit\. My run logs are in C:\Users\thoma\AppData\Local\Temp\claude\b7fd4c17e92f619e\035596f4-b2b2-4c8c-a0d8-3bc57a5acfa9\scratchpad\run\.
+
+If you want to share this with the founder or the other auditor, I can publish it as a private page.

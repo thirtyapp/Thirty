@@ -1,0 +1,11 @@
+DONE success= True
+passed 9 failed 0
+PASS features/r83/r831_probe_l1_test.dart :: L-1 newer schema (v2): what Delete and Export do
+PASS features/r83/r831_probe_l1_test.dart :: L-1 list field not a list: what Delete and Export do
+PASS features/r83/r831_probe_l1_test.dart :: L-1 not JSON: what Delete and Export do
+PASS features/r83/r83_probe_d2_later_credit_test.dart :: P1 pending Start, Pause, Close, Resume, restart catch-up
+PASS features/r83/r83_probe_d2_later_credit_test.dart :: P2 no pending: Pause, Start, Close, Resume, restart
+PASS features/r83/r83_probe_d2_later_credit_test.dart :: P3 pending Start, Pause, Close, Resume, then Pause again (fold; no restart)
+PASS features/r83/r83_probe_d2_later_credit_test.dart :: P4 Pause, Start, Resume, Close (Plan active at Close)
+PASS features/r83/r83_probe_d2_later_credit_test.dart :: P5 pending Start, Pause, Close; restart only (Plan stays paused)
+PASS features/r83/r83_probe_d2_later_credit_test.dart :: P6 control: fault-free, no pause at all

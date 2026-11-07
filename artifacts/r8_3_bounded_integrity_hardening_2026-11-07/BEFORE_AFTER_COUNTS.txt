@@ -1,0 +1,9 @@
+file                                        R8.2 pass/fail  R8.3 pass/fail
+features/r83/r83_codec_law_test.dart            10/4            14/0      
+features/r83/r83_cross_store_test.dart           4/0             4/0      
+features/r83/r83_delete_boundary_test.dart       5/7            12/0      
+features/r83/r83_harness_selftest_test.dart      10/0            10/0      
+features/r83/r83_insight_attribution_test.dart       5/5            10/0      
+features/r83/r83_start_boundary_test.dart        6/3             9/0      
+features/r83/r83_startup_types_test.dart         4/11           15/0      
+TOTAL                                           44/30           74/0      

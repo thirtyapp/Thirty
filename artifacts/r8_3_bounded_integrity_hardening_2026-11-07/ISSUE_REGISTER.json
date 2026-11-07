@@ -1,0 +1,143 @@
+{
+  "phase": "R8.3 bounded integrity hardening (founder directive 2026-11-06, Option B; decisions D1-D5)",
+  "baseline": "e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8",
+  "evidenceNote": "before = the R8.3 tests run on a clean git-archive export of e744f505 (repro_before_fix/); after = the same tests on the working tree (passing_after/ and regression/).",
+  "openPreReleaseBlockers": ["L-1"],
+  "entries": [
+    {
+      "ids": ["L-1 (Claude O-1 residual; R8.3 LIMITATIONS L-1)"],
+      "status": "OPEN — PRE-RELEASE BLOCKER",
+      "founderDisposition": "2026-11-07: DEFERRED as a mandatory, explicitly documented pre-release blocker. Not fixed, not waived, not authorized for implementation in R8.3. A deliberate scope deferral, not acceptance of the behaviour.",
+      "title": "A wholly unreadable Suggestion Preferences record survives Delete Circle history with retained Insight attribution, and Export omits it",
+      "details": [
+        "A preferences record THIRTY can't read as a whole (newer schema, malformed list field, not JSON) is left exactly as stored by Delete, which reports success; any Insight attribution inside it remains durable.",
+        "Export does not include the unreadable record (Export passes the in-memory preferences, which read as empty).",
+        "Such a record is not applied to recommendations, Plan stage 5 or Insights.",
+        "Deleting or rewriting it automatically could destroy explicit user-owned preferences or newer-schema fields (R8.1 RL-3)."
+      ],
+      "releaseCondition": "No commercial release until a safe Delete/Export disposition is implemented and verified.",
+      "evidence": "artifacts/r8_3_1_founder_lifecycle_correction_2026-11-07/l1_assessment/ (L1_ASSESSMENT.md, probe, raw log); r83_delete_boundary_test.dart control 'a preferences record THIRTY can't read is left exactly as stored by the Delete'.",
+      "auditNote": "Independent auditors are informed and assess its impact on technical-baseline acceptance themselves; they are not instructed to waive it."
+    },
+    {
+      "ids": ["Astra R82-N01"],
+      "title": "Insight I1/I2 retry repeats the action after a manual reversal",
+      "invariants": ["II", "III"],
+      "rootCause": "InsightsNotifier.apply consulted the Insight's own provenance only in the stale branch; a manual Pause, Leave or stopGentler can make the claim current again, so the retry acted again (and dated the mark with the retry day).",
+      "fix": "insights_provider.dart apply(): provenance first for current and stale snapshots (_appliedOn), mark from the provenance date, never act; then current/stale (architecture contract 2; founder decision D3).",
+      "tests": ["r83_insight_attribution_test.dart: R82-N01 I1 Pause, I1 Leave, I2 stopGentler, D3 original date", "auditor_controls: Astra Appendix B R82-N01 x3"],
+      "before": "FAIL (4/4 R8.3; 3/3 Astra Appendix B)",
+      "after": "PASS",
+      "status": "FIXED"
+    },
+    {
+      "ids": ["Astra R82-N02"],
+      "title": "A queued manual I3 exclusion is recorded as the Insight's application",
+      "invariants": ["I", "II"],
+      "rootCause": "apply() did not wait for the preference queue, and SuggestionPreferencesNotifier._save returned true for a no-op, which _leaveOut mapped to done.",
+      "fix": "suggestion_preferences.dart: PreferenceChange outcome (changed / unchanged / refused / notSaved), leaveOutChange(), idle(); insights_provider.dart: apply waits for the preferences, maps unchanged to alreadyApplied (no mark). Public Future<bool> API kept.",
+      "tests": ["r83_insight_attribution_test.dart: R82-N02 I3 + 2 controls", "auditor_controls: Astra Appendix B R82-N02"],
+      "before": "FAIL", "after": "PASS", "status": "FIXED"
+    },
+    {
+      "ids": ["Astra R82-N03", "Claude AUD-N1"],
+      "title": "startedAfterExpiry cannot be cleared on disk; credit wrongly withheld after a restart",
+      "invariants": ["V", "IV"],
+      "rootCause": "ServedStageCircle.toJson spread the stored source map and wrote startedAfterExpiry only when true, so a cleared flag kept the stored true; _durable held the model, hiding the divergence until restart.",
+      "fix": "circle_plan.dart ServedStageCircle.toJson: source minus every known key, then the known fields from the model (absence for false/null). Stage still written back as stored (A05).",
+      "tests": ["r83_codec_law_test.dart (2)", "r83_start_boundary_test.dart AUD-N1 end to end + 2 controls", "auditor_controls: Claude AUD-N1 domain and end-to-end; Astra Appendix B R82-N03"],
+      "before": "FAIL", "after": "PASS", "status": "FIXED"
+    },
+    {
+      "ids": ["Astra R82-N04"],
+      "title": "Valid AppliedInsight extension fields are discarded",
+      "invariants": ["V"],
+      "rootCause": "AppliedInsight kept only its three known fields for a valid record.",
+      "fix": "circle_plan.dart AppliedInsight.extra: unknown fields of a stored valid record written back; a new application is a new record without them.",
+      "tests": ["r83_codec_law_test.dart (2) + 2 controls", "auditor_controls: Astra Appendix B R82-N04"],
+      "before": "FAIL", "after": "PASS", "status": "FIXED"
+    },
+    {
+      "ids": ["Astra R82-N05"],
+      "title": "A pending Start crossing local midnight starts yesterday's offer",
+      "invariants": ["IV"],
+      "rootCause": "The day was checked at the tap only; the post-save continuation of _startOnceSaved checked identity and status, not the day.",
+      "fix": "recommendation_provider.dart _startOnceSaved: the day is checked again immediately before the started transition; if it has passed, nothing starts and nowProvider is invalidated (the existing tap-after-midnight behaviour, no new copy).",
+      "tests": ["r83_start_boundary_test.dart R82-N05 Free, stage + control", "auditor_controls: Astra Appendix B R82-N05"],
+      "before": "FAIL", "after": "PASS", "status": "FIXED"
+    },
+    {
+      "ids": ["Claude AUD-N2"],
+      "title": "A deleted session's Start / Close-request instant is written back after Delete",
+      "invariants": ["VI", "IV"],
+      "rootCause": "CirclePlansNotifier._startedAt/_closeRequestedAt were not cleared by forgetStageEvidence; Circle ids are day keys, so a same-day re-serve matched.",
+      "fix": "circle_plans_provider.dart forgetStageEvidence clears both maps in Delete's synchronous phase.",
+      "tests": ["r83_delete_boundary_test.dart AUD-N2 Pause and Leave variants + control", "auditor_controls: Claude AUD-N2"],
+      "before": "FAIL", "after": "PASS", "status": "FIXED"
+    },
+    {
+      "ids": ["Claude AUD-N3"],
+      "title": "Delete persists a Plan change that was reported as not saved",
+      "invariants": ["I"],
+      "rootCause": "Delete computed its Plans write from the optimistic state at the moment Delete began and dropped _queued, so a later-refused pending change was written by the Delete and its rollback skipped.",
+      "fix": "circle_plans_provider.dart forgetStageEvidence (founder decision D4): memory still cleared at once; the write is computed at its own queue turn from the last confirmed Plans (_durable) without evidence; on success or failure what is shown returns to that confirmed state unless the user changed it since.",
+      "tests": ["r83_delete_boundary_test.dart AUD-N3 + held-success control + refused-intent control", "auditor_controls: Claude AUD-N3"],
+      "before": "FAIL (control tests PASS)", "after": "PASS", "status": "FIXED"
+    },
+    {
+      "ids": ["Claude O-1"],
+      "title": "Insight attribution (ElementLeftOut.byInsight) survives Delete Circle history",
+      "invariants": ["VI"],
+      "decision": "D1 approved: remove the attribution, keep the preference",
+      "fix": "suggestion_preferences.dart forgetInsightProvenance() (queued behind earlier preference writes, notify:false, fails Delete when not confirmed) and forgetInsightProvenanceIn(prefs) for start-up completion; circle_history_deletion.dart runs it after the intent is durable, again in the last pass, and in completeInterruptedHistoryDeletion.",
+      "tests": ["r83_delete_boundary_test.dart D1: success, pending Insight write, removal refused, app stops after intent, + 2 controls"],
+      "before": "FAIL (4) / controls PASS", "after": "PASS", "status": "FIXED",
+      "limitation": "A preferences record THIRTY can't read as a whole is left exactly as stored (R8.1 RL-3); any attribution inside it is not removed. See LIMITATIONS_R8_3.md L-1.",
+      "r831Reassessment": "Verified (artifacts/r8_3_1_founder_lifecycle_correction_2026-11-07/l1_assessment/): with such a record, Delete reports success while the attribution stays stored, and Export does not carry the record. Founder 2026-11-07: OPEN — PRE-RELEASE BLOCKER (deferred); see entry L-1."
+    },
+    {
+      "ids": ["Claude O-2", "architecture review O-2 addition"],
+      "title": "Typed native getters on the start-up path",
+      "invariants": ["V"],
+      "decision": "D5 approved for demonstrated start-up / initialization risks",
+      "fix": "Type-safe reads (prefs.get + type check) at: v1_premium_retirement.dart (main awaited), reminder_provider.dart build (main reads the notifier before runApp) and _persist (writes only what the user set), analytics_consent.dart and tester_identity_provider.dart (appOpened on the first frame), first_breath_provider.dart, premium_offer_provider.dart + card, reminder_invitation_provider.dart + card (Today's first frame with a Circle). Foreign-typed values are never written over by a default.",
+      "tests": ["r83_startup_types_test.dart: 15 (11 fail before, 4 controls pass)"],
+      "before": "FAIL (crash: TypeError cast, including 3 ThirtyApp cold starts)", "after": "PASS", "status": "FIXED",
+      "remaining": "No typed getter on a start-up path remains in lib/ outside the type-safe _DayKeys and the QA-only/dev-preview code; see LIMITATIONS_R8_3.md L-3."
+    },
+    {
+      "ids": ["Claude O-3"],
+      "title": "Pause while a Start is pending",
+      "decision": "D2 approved: no credit",
+      "result": "Verified: the pending Start + Pause + Close earns no credit, the Plan stays paused, no stamp, also after a restart; a refused Pause leaves the Plan active and the Close credits normally. No code change.",
+      "tests": ["r83_start_boundary_test.dart D2 (3)", "auditor_controls: Claude AUD-O3"],
+      "status": "VERIFIED",
+      "newFinding": "R83-F1"
+    },
+    {
+      "ids": ["E-1 residual (Astra post-R8.2 section 7)"],
+      "title": "Evidence validator accepted empty or damaged raw reporter logs",
+      "fix": "regression/run_batches.py (copy of the R8.2 runner): report/cases validate each summary's own raw log (start event, exactly one terminal done with success, each test started and finished once, re-summarized equal to the summary, SHA-256 recorded by R8.3 runs).",
+      "tests": ["e1_raw_validation/check_raw_evidence.py: 17 scenarios"],
+      "before": "R8.2 runner: 10/10 raw damages ACCEPTED", "after": "R8.3 runner: 10/10 REJECTED, 6/6 summary damages REJECTED, intact ACCEPTED; historical evidence unchanged",
+      "status": "FIXED"
+    },
+    {
+      "ids": ["R83-F1 (new, found by this work)"],
+      "title": "A stage Circle whose Plan was paused before its valid Start is credited later, once the Plan is active again",
+      "invariants": ["III", "IV"],
+      "evidence": "repro_before_fix/r83_probe_d2_later_credit_test.dart.txt: P1 (pending Start, Pause, Close, Resume, restart) 1 credit; P2 (no pending: Pause, Start, Close, Resume, restart) 1 credit; P3 (Resume then Pause again, no restart) 1 credit; identical on R8.2 and after R8.3.",
+      "cause": "recordGuided judges eligibility by the Plan's lifecycle at the moment it runs; the restart catch-up (_mirrorInJournal) and the decision-A fold (_withEarnedCredits) re-run it after a Resume, when the Plan is active, with nothing recording that the Close happened while it was paused.",
+      "severity": "LOW-MEDIUM: a Plan stage credited that the founder's rule says earns none; no Premium access, no data loss.",
+      "status": "OPEN - founder decision required (stop condition: historical credit semantics). Not fixed: a fix needs a new persisted fact on the served record and a policy answer for P4 (Pause, Start, Resume, Close - currently credited).",
+      "r831": {
+        "founderDecision": "2026-11-07: Option B - the eligibility of the Circle's original valid Start determines historical Plan credit; a later lifecycle change never makes an ineligible Start eligible.",
+        "rootCauseConfirmed": "recordGuided judged eligibility by the Plan's lifecycle when it ran. It is re-run after a Resume by (1) the restart catch-up (_mirrorInJournal), (2) the decision-A fold (_withEarnedCredits) on the next lifecycle change, and (3) the next day's overwrite safety net (_recordBeforeOverwrite), which runs after the new day's serve has replaced lastServed. Nothing durable recorded that the valid Start was made while paused.",
+        "fix": "PlanProgress.startedWhilePaused (optional circleId; damaged value makes the Plan unreadable; unknown fields kept). Written - and confirmed - at the valid Start when the Plan is paused as shown (Today _startOnceSaved; the fast path is refused when it is needed, so the Start waits, decision B; refused, the Start is refused). recordGuided never credits that Circle. Removed by Delete with the other stage evidence.",
+        "tests": "test/features/r83/r831_start_eligibility_test.dart (24): R8.2 export 13 pass / 11 fail; R8.3 tree 13 / 11; after R8.3.1 24 / 0. Probe P1-P5: 0 credits after.",
+        "evidence": "artifacts/r8_3_1_founder_lifecycle_correction_2026-11-07/",
+        "status": "FIXED in R8.3.1 (working tree, uncommitted)"
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+OK       inventory == *_test.dart files under test/ — 200 planned, 200 on disk
+OK       every planned file ran (suite in raw logs) — missing: []
+OK       no suite outside the plan — extra: []
+OK       no (file, test) pair ran twice — 0 repeated
+OK       every result is success — {'success': 2848}
+TOTAL tests 2848 in 200 files; results {'success': 2848}
+vs artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_rerun: 2774 → 2848 tests
+  count changed: test/features/r83/r83_codec_law_test.dart: 0 → 14
+  count changed: test/features/r83/r83_cross_store_test.dart: 0 → 4
+  count changed: test/features/r83/r83_delete_boundary_test.dart: 0 → 12
+  count changed: test/features/r83/r83_harness_selftest_test.dart: 0 → 10
+  count changed: test/features/r83/r83_insight_attribution_test.dart: 0 → 10
+  count changed: test/features/r83/r83_start_boundary_test.dart: 0 → 9
+  count changed: test/features/r83/r83_startup_types_test.dart: 0 → 15
+INVENTORY OK
+exit 0

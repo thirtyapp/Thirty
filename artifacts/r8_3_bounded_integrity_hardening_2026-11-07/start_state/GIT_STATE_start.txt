@@ -1,0 +1,13 @@
+date: 2026-11-07T08:32:32+01:00
+HEAD: e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8
+branch: step5-billing-integration
+upstream: e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8
+live origin: e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8	refs/heads/step5-billing-integration
+parent: e935112c408c16d99835280f4e1fafd722d47ed1
+staged: 0
+stash entries: 0
+tracked modified (content diff, ignoring EOL):
+warning: in the working copy of 'lib/core/world_rendering/quiet_trail_hero_asset_view.dart', LF will be replaced by CRLF the next time Git touches it
+tracked modified (porcelain):
+ M lib/core/world_rendering/quiet_trail_hero_asset_view.dart
+ M test/features/personal_circle/r6_kept_voice_whole_circle_test.dart

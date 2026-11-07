@@ -719,6 +719,14 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
     required String circleId,
     required EntitlementStatus status,
   }) {
+    // R8.3.1: a Start while the Plan is paused records that first
+    // ([noteStartWhilePaused]) — a write the Start waits for.
+    if (!identical(
+      state.noteStartedWhilePaused(stage, circleId: circleId),
+      state,
+    )) {
+      return false;
+    }
     final stored = _servedRecord(_durable, stage, circleId);
     if (stored == null || _servedRecord(state, stage, circleId) != stored) {
       return false;
@@ -766,6 +774,34 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
         await ensureSaved();
       } else {
         await idle();
+      }
+    }
+  }
+
+  /// R8.3.1 (founder decision on R83-F1, Option B): today's stage Circle
+  /// [circleId] is about to become validly started (Today, at the moment
+  /// it does). When its Plan is paused — as shown, so the user's own order
+  /// of Pause and Start is what counts — that Start earns no Plan credit,
+  /// now or later; this records it on the Plan
+  /// ([CirclePlansState.noteStartedWhilePaused]) and completes once the
+  /// store has confirmed it. Fails with [StorageWriteFailed] otherwise:
+  /// Today then refuses the Start (founder decision B), and the user is
+  /// told there. Nothing to record for an active Plan.
+  Future<void> noteStartWhilePaused(
+    PlanStageProvenance stage, {
+    required String circleId,
+  }) async {
+    final next = state.noteStartedWhilePaused(stage, circleId: circleId);
+    if (!identical(next, state)) return _set(next, report: false);
+    final planId = stage.planId;
+    if (state.plans[planId]?.startedWhilePaused == circleId &&
+        _durable.plans[planId]?.startedWhilePaused != circleId) {
+      await ensureSaved();
+      if (_durable.plans[planId]?.startedWhilePaused != circleId) {
+        throw const StorageWriteFailed(
+          circlePlansKey,
+          'the Start made while the Plan is paused is not on disk',
+        );
       }
     }
   }
@@ -892,13 +928,25 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   /// the intent to delete is on disk, so the next start removes it from
   /// the store whatever happens. No Insight is ever assessed, and no failed
   /// save ever rolled back, onto the deleted evidence.
+  ///
+  /// R8.3 (Claude AUD-N2): the order of the deleted session's own actions —
+  /// its Start and Close instants, held in memory ([noteStarted],
+  /// [noteCloseRequested]) — goes at once too: a stage Circle served again
+  /// the same day has the same id, and is never stamped with them.
+  ///
+  /// R8.3 (Claude AUD-N3, founder decision D4): what is written is the
+  /// Plans as last confirmed, without the evidence — computed at this
+  /// write's turn, once every save queued before it has landed or failed.
+  /// A change still being saved when the Delete began is written only if
+  /// its own save landed; one refused is never written by the Delete, and
+  /// is then off the screen too, as for any refused save (R8.1 RL-1).
   Future<void> forgetStageEvidence() {
-    final next = state.forgetStageEvidence();
-    state = next;
+    _startedAt.clear();
+    _closeRequestedAt.clear();
+    final shown = state.forgetStageEvidence();
+    state = shown;
     _deletions++;
     _durable = _durable.forgetStageEvidence();
-    _queued = _queuedWrite = null;
-    final json = jsonEncode(next.toJson());
     final prefs = _prefs;
     // Removed at once, and confirmed (the intent to delete is already on
     // disk): nothing set aside stays readable while earlier writes finish.
@@ -908,18 +956,36 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
       null,
       restoreOnFailure: false,
     )..ignore();
-    final written = _writes
-        .then(
-          (_) => writeConfirmed(
-            prefs,
-            circlePlansKey,
-            json,
-            restoreOnFailure: false,
-          ),
-        )
-        .then((_) => setAside)
-        .then((_) => _durable = next);
-    _writes = written.then((_) {}, onError: (Object _) {});
+    final written = _writes.then((_) async {
+      final kept = _durable.forgetStageEvidence();
+      await writeConfirmed(
+        prefs,
+        circlePlansKey,
+        jsonEncode(kept.toJson()),
+        restoreOnFailure: false,
+      );
+      await setAside;
+      _durable = kept;
+      if (ref.mounted && identical(state, shown)) state = kept;
+    });
+    _queued = shown;
+    _queuedWrite = written;
+    _writes = written.then(
+      (_) {
+        if (identical(_queued, shown)) _queued = _queuedWrite = null;
+        if (ref.mounted && !hasUnsavedChanges) {
+          ref
+              .read(storeSaveFailuresProvider.notifier)
+              .saved(UserStore.circlePlans);
+        }
+      },
+      onError: (Object _) {
+        if (identical(_queued, shown)) _queued = _queuedWrite = null;
+        // Not written: what is shown is what was last confirmed, without
+        // the evidence; the next start finishes the Delete.
+        if (ref.mounted && identical(state, shown)) state = _durable;
+      },
+    );
     return written;
   }
 }

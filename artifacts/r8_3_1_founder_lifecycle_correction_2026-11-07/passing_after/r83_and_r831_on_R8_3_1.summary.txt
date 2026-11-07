@@ -1,0 +1,100 @@
+DONE success= True
+passed 98 failed 0
+PASS features/r83/r831_start_eligibility_test.dart :: the founder's table Start → Close: credited once, also after two restarts
+PASS features/r83/r831_start_eligibility_test.dart :: the founder's table Start → Pause → Close: credited once, also after two restarts
+PASS features/r83/r831_start_eligibility_test.dart :: the founder's table Start → Pause → Resume → Close: credited once, also after two restarts
+PASS features/r83/r831_start_eligibility_test.dart :: the founder's table Pause → Start → Close: no Plan credit, also after two restarts
+PASS features/r83/r831_start_eligibility_test.dart :: the founder's table Pause → Start → Resume → Close: no Plan credit, also after two restarts
+PASS features/r83/r831_start_eligibility_test.dart :: the founder's table Pause → Start → Close → Resume: no Plan credit, also after two restarts
+PASS features/r83/r831_start_eligibility_test.dart :: the founder's table Pause → Start → Close → Resume → Pause: no Plan credit, also after two restarts
+PASS features/r83/r831_start_eligibility_test.dart :: the founder's table Start → Leave → Close: no Plan credit, also after two restarts
+PASS features/r83/r831_start_eligibility_test.dart :: the founder's table Start: no Plan credit, also after two restarts
+PASS features/r83/r831_start_eligibility_test.dart :: the founder's table Start → Close requested → Leave while it is being saved: the original cycle credited once, after the Close is durable
+PASS features/r83/r831_start_eligibility_test.dart :: the founder's table Close never durable: no credit, also after a restart and Resume
+PASS features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit Start tapped while its offer is being saved, Plan paused, the Start becomes valid, Close, Resume, restarts: never credited
+PASS features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit the next day: Resume and a new choice catch up yesterday's Circle — it stays without credit, and today's Circle earns its stage
+PASS features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit the Start's record that it was made while paused is refused by the store: the Start is refused and the user told; tapped again, 
+PASS features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit Premium lapsed while paused, Start, Close; resubscribed, Resume, restarts: never credited
+PASS features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit control — Start under Premium, lapse, Close: credited once (the served exception)
+PASS features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit a second Plan started before this Circle's Start pauses this Plan: no credit, also once this Plan is carried on again
+PASS features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit control — a second Plan started after this Circle's Start: this Plan is credited once, the other stays active
+PASS features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit at most once: Start, Pause, Close, Resume, three restarts — one credit
+PASS features/r83/r831_start_eligibility_test.dart :: stage 5 Pause, stage 5 started and closed: the Plan stays paused, its cycle not ended — and carrying on never ends it
+PASS features/r83/r831_start_eligibility_test.dart :: the record of a Start made while paused stored, it is honoured: an active Plan does not credit that Circle; a save writes it back with the unknown fields
+PASS features/r83/r831_start_eligibility_test.dart :: the record of a Start made while paused control — another Circle is credited as before
+PASS features/r83/r831_start_eligibility_test.dart :: the record of a Start made while paused damaged, it is never read as absent: the Plan is kept as stored and runs nothing
+PASS features/r83/r831_start_eligibility_test.dart :: the record of a Start made while paused Delete Circle history removes it with the other stage evidence
+PASS features/r83/r83_codec_law_test.dart :: ServedStageCircle — known fields are what the model says R82-N03 / AUD-N1: a stored expiry note of true, cleared by a later Start under verified Premium, is written as cl
+PASS features/r83/r83_codec_law_test.dart :: ServedStageCircle — known fields are what the model says R82-N03 / AUD-N1 through the Plans: noteStart under verified Premium on a record read from disk credits after a r
+PASS features/r83/r83_codec_law_test.dart :: ServedStageCircle — known fields are what the model says control: true is written and read back as true
+PASS features/r83/r83_codec_law_test.dart :: ServedStageCircle — known fields are what the model says control: the lifecycle stamps are written as set, and unknown fields of the record are kept
+PASS features/r83/r83_codec_law_test.dart :: ServedStageCircle — known fields are what the model says control: the stored stage is written back as stored (R8.2 A05), its unknown fields too
+PASS features/r83/r83_codec_law_test.dart :: ServedStageCircle — known fields are what the model says control: a damaged flag still makes the record unreadable
+PASS features/r83/r83_codec_law_test.dart :: AppliedInsight — a whole record keeps what it does not know R82-N04: a valid record with an extension field writes it back
+PASS features/r83/r83_codec_law_test.dart :: AppliedInsight — a whole record keeps what it does not know R82-N04 through the Plans: an unrelated Plan change keeps the extension
+PASS features/r83/r83_codec_law_test.dart :: AppliedInsight — a whole record keeps what it does not know control: a new record is exactly its three fields
+PASS features/r83/r83_codec_law_test.dart :: AppliedInsight — a whole record keeps what it does not know control: a damaged record attributes nothing and is kept as stored by its Plan
+PASS features/r83/r83_codec_law_test.dart :: controls — every other persisted record round-trips CirclePlansState, PlanProgress, PlanCycle and StageRecord: decode ∘ encode is the identity on THIRTY's own bytes
+PASS features/r83/r83_codec_law_test.dart :: controls — every other persisted record round-trips CirclePlansState, PlanProgress, PlanCycle and StageRecord keep unknown fields through a change
+PASS features/r83/r83_codec_law_test.dart :: controls — every other persisted record round-trips InsightSnapshot and InsightsState: decode ∘ encode is the identity, unknown fields kept
+PASS features/r83/r83_codec_law_test.dart :: controls — every other persisted record round-trips Suggestion Preferences and their items: decode ∘ encode is the identity, unknown fields kept
+PASS features/r83/r83_cross_store_test.dart :: a Plans credit that lands but whose answer is lost the answer is lost: the credit is resolved on what the disk holds, and after a restart it is there exactly once
+PASS features/r83/r83_cross_store_test.dart :: a Plans credit that lands but whose answer is lost the app stops right after the credit lands: after a restart it is there once, never twice
+PASS features/r83/r83_cross_store_test.dart :: stage 5 lifecycle boundaries stage 5 started, Plan paused, Close durable: credited once; the cycle reaches its end and the Plan ends — never active again
+PASS features/r83/r83_cross_store_test.dart :: stage 5 lifecycle boundaries stage 5 Close asked for, the Plan left while that Close is still being saved: credited to the left cycle once; it stays left
+PASS features/r83/r83_delete_boundary_test.dart :: Claude AUD-N2 — no deleted action instant comes back Start, Delete, the same stage Circle served again the same day, Plan paused before its Start: no Start instant is sta
+PASS features/r83/r83_delete_boundary_test.dart :: Claude AUD-N2 — no deleted action instant comes back Close requested, Delete, re-served the same day, Plan left: no Close instant is stamped
+PASS features/r83/r83_delete_boundary_test.dart :: Claude AUD-N2 — no deleted action instant comes back control — without a Delete, a Start before the Pause is stamped
+PASS features/r83/r83_delete_boundary_test.dart :: Claude AUD-N3 — a change reported not saved is never saved by the Delete a Pause being written when Delete begins, then refused: the user is told, and disk and screen bot
+PASS features/r83/r83_delete_boundary_test.dart :: Claude AUD-N3 — a change reported not saved is never saved by the Delete control — a Pause being written when Delete begins, then landing: paused on disk, nothing reporte
+PASS features/r83/r83_delete_boundary_test.dart :: Claude AUD-N3 — a change reported not saved is never saved by the Delete control — the Delete intent refused while a Pause is pending: nothing is deleted, the Pause lands
+PASS features/r83/r83_delete_boundary_test.dart :: founder decision D1 — an Insight's attribution goes with History after a Delete that succeeds, the left-out part no longer names the Insight; the part, its date and every
+PASS features/r83/r83_delete_boundary_test.dart :: founder decision D1 — an Insight's attribution goes with History the Insight's own "Leave this out" still being written when the Delete begins: it lands, and the Delete r
+PASS features/r83/r83_delete_boundary_test.dart :: founder decision D1 — an Insight's attribution goes with History the attribution's removal refused: the Delete reports failure and stays pending; the next start finishes 
+PASS features/r83/r83_delete_boundary_test.dart :: founder decision D1 — an Insight's attribution goes with History the app stops right after the Delete intent lands: the next start removes the attribution and keeps the p
+PASS features/r83/r83_delete_boundary_test.dart :: founder decision D1 — an Insight's attribution goes with History control — the Delete intent refused: the preferences are not touched, the attribution included
+PASS features/r83/r83_delete_boundary_test.dart :: founder decision D1 — an Insight's attribution goes with History control — a preferences record THIRTY can't read is left exactly as stored by the Delete
+PASS features/r83/r83_harness_selftest_test.dart :: the ack-lost fault the value lands and the call throws; writeConfirmed then puts the previous value back, which lands too
+PASS features/r83/r83_harness_selftest_test.dart :: the ack-lost fault with thenStop the value lands and the process stops: the call never completes, nothing after it lands
+PASS features/r83/r83_harness_selftest_test.dart :: the ack-lost fault distinct from a refused write, which never lands
+PASS features/r83/r83_harness_selftest_test.dart :: the ack-lost fault a held write released as ack-lost lands, then fails
+PASS features/r83/r83_harness_selftest_test.dart :: the single-writer guard two writes of one key in flight at once are recorded
+PASS features/r83/r83_harness_selftest_test.dart :: the single-writer guard one write after another is not
+PASS features/r83/r83_harness_selftest_test.dart :: the durable-state oracle a clean disk shows no violation
+PASS features/r83/r83_harness_selftest_test.dart :: the durable-state oracle V: a record whose re-encoding differs is reported
+PASS features/r83/r83_harness_selftest_test.dart :: the durable-state oracle IV: a Circle started on another day than its own is reported
+PASS features/r83/r83_harness_selftest_test.dart :: the durable-state oracle VI: residue after a Delete is reported
+PASS features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark I1 — the Insight started the Plan, its mark was refused, the user then chose Pause: after a restart the re
+PASS features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark I1 — the Insight started the Plan, its mark was refused, the user then chose Leave: after a restart the re
+PASS features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark I2 — the Insight made the cycle gentler, its mark was refused, the user then turned gentler off: the retry
+PASS features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark D3 — the mark carries the day the change was made, not the day of the retry
+PASS features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark control (III) — with no reversal, repeated retries and restarts record the mark once and never change the 
+PASS features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark control — the mark's own write lands but its answer is lost: the change stands, the retry records the mark
+PASS features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark control — the app stops right after the mark lands: after a restart it is applied, and a retry changes not
+PASS features/r83/r83_insight_attribution_test.dart :: R82-N02 — a manual change queued ahead is never the Insight's I3 — "Leave this out" by hand is still being written when the Insight is applied: the part is left out by th
+PASS features/r83/r83_insight_attribution_test.dart :: R82-N02 — a manual change queued ahead is never the Insight's control — the I3 applied alone is done, saved with its provenance, and marked
+PASS features/r83/r83_insight_attribution_test.dart :: R82-N02 — a manual change queued ahead is never the Insight's control — the Plans equivalent: a manual Start still being written when I1 is applied is never claimed
+PASS features/r83/r83_startup_types_test.dart :: main(): the V1 retirement marker stored as String: retirement completes, the V1 records go, the marker is kept as stored
+PASS features/r83/r83_startup_types_test.dart :: main(): the V1 retirement marker stored as int: retirement completes, the V1 records go, the marker is kept as stored
+PASS features/r83/r83_startup_types_test.dart :: main(): the V1 retirement marker control — absent: retirement runs and records the marker
+PASS features/r83/r83_startup_types_test.dart :: main(): the V1 retirement marker control — true: nothing runs
+PASS features/r83/r83_startup_types_test.dart :: main(): the reminder state values of the wrong type read as the defaults, and stay stored
+PASS features/r83/r83_startup_types_test.dart :: main(): the reminder state a time the user sets is saved without writing the default over an enabled flag of the wrong type
+PASS features/r83/r83_startup_types_test.dart :: main(): the reminder state control — values of the right type are read
+PASS features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations analytics consent of the wrong type means no consent, kept as stored
+PASS features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations a tester id or cohort of the wrong type is never written over
+PASS features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations a First Breath date of the wrong type reads as not played today
+PASS features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations invitation flags of the wrong type never break Today, and are never written over
+PASS features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations cold start with today's Circle on show and a First Breath date and invitation flags of the wrong type: THIRTY starts and
+PASS features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations cold start with analytics consent stored as text: THIRTY starts and shows Today
+PASS features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations cold start with consent given, tester id and cohort stored as numbers: THIRTY starts and shows Today
+PASS features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations cold start with First Breath date and invitation flags of the wrong type: THIRTY starts and shows Today
+PASS features/r83/r83_start_boundary_test.dart :: R82-N05 — a pending Start does not cross local midnight a Free offer tapped at 23:59:59 whose save lands after midnight is not started; the new day opens
+PASS features/r83/r83_start_boundary_test.dart :: R82-N05 — a pending Start does not cross local midnight a stage Circle whose Start record is still being saved at midnight is not started, and earns nothing
+PASS features/r83/r83_start_boundary_test.dart :: R82-N05 — a pending Start does not cross local midnight control — the same save landing before midnight starts the Circle, which carries on past midnight
+PASS features/r83/r83_start_boundary_test.dart :: Claude AUD-N1 — an expiry note cleared by a later Start Start after a verified expiry; the app stops after the Plans note lands; resubscribed, Start under Premium; Premiu
+PASS features/r83/r83_start_boundary_test.dart :: Claude AUD-N1 — an expiry note cleared by a later Start control — the same sequence without the last restart is credited once
+PASS features/r83/r83_start_boundary_test.dart :: Claude AUD-N1 — an expiry note cleared by a later Start control — a Start after a verified expiry, never resubscribed, earns nothing after a restart
+PASS features/r83/r83_start_boundary_test.dart :: founder decision D2 — Pause while a Start is pending the Circle starts and closes; the Plan stays paused and earns nothing, also after a restart
+PASS features/r83/r83_start_boundary_test.dart :: founder decision D2 — Pause while a Start is pending control — the Plan paused after a valid Start is credited at the durable Close (lifecycle policy)
+PASS features/r83/r83_start_boundary_test.dart :: founder decision D2 — Pause while a Start is pending control — a Pause whose save is refused while the Start is pending leaves the Plan active; the Start then credits nor

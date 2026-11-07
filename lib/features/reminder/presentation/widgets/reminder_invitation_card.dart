@@ -47,7 +47,10 @@ class _ReminderInvitationCardState
 
   void _markShown() {
     final prefs = ref.read(sharedPreferencesProvider);
-    if (prefs.getBool(reminderInvitationShownKey) ?? false) return;
+    // R8.3 (founder decision D5): as the flag is read — anything but
+    // `false` or nothing is shown already, and is never written over.
+    final shown = prefs.get(reminderInvitationShownKey);
+    if (shown != null && shown != false) return;
     prefs.setBool(reminderInvitationShownKey, true);
   }
 

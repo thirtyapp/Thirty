@@ -1,0 +1,76 @@
+{
+ "inventoryFiles": 200,
+ "coveredFiles": 200,
+ "notRun": [],
+ "unexpected": [],
+ "declaredParts": {
+  "19": [
+   [
+    "a",
+    "p0[1-3]_"
+   ],
+   [
+    "b",
+    "p0[4-6]_"
+   ],
+   [
+    "c",
+    "p0[7-9]_"
+   ],
+   [
+    "d",
+    "p1[01]_"
+   ],
+   [
+    "e",
+    "p1[34]_"
+   ]
+  ]
+ },
+ "missing": [
+  "batch_19a.summary.json",
+  "batch_19b.summary.json",
+  "batch_19c.summary.json",
+  "batch_19d.summary.json"
+ ],
+ "stray": [],
+ "wrongIdentity": [],
+ "wrongCommand": [],
+ "wrongFiles": [],
+ "incomplete": [],
+ "emptyRuns": [],
+ "nonZeroExit": [],
+ "doneNotSuccess": [],
+ "caseCoverage": [
+  "test/features/personal_circle/personal_circle_simulation_test.dart"
+ ],
+ "rawLog": [],
+ "caseDetail": {
+  "test/features/personal_circle/personal_circle_simulation_test.dart": {
+   "declared": 13,
+   "ran": 2,
+   "eachExactlyOnce": false,
+   "notRun": [
+    "p01_sparse_feedback",
+    "p02_frequent_feedback",
+    "p03_stable_positive",
+    "p04_mixed",
+    "p05_one_need_dominant",
+    "p06_all_three_needs",
+    "p07_mostly_10_minutes",
+    "p08_mostly_20_minutes",
+    "p09_mostly_30_minutes",
+    "p10_lapse_and_resubscribe",
+    "p11_many_exclusions"
+   ],
+   "repeated": [],
+   "undeclared": []
+  }
+ },
+ "totals": {
+  "passed": 2837,
+  "failed": 0,
+  "skipped": 0
+ }
+}
+EVIDENCE MISMATCH

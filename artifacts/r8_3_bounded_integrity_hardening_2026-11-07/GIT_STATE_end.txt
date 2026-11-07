@@ -1,0 +1,50 @@
+end state 2026-11-07T09:43:31+01:00
+HEAD e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8
+upstream e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8
+live origin: e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8	refs/heads/step5-billing-integration
+staged: 0
+stash entries: 0
+a6f5984b0681bb375a407e450de277ce0a29912105d096943006096ca35e9e43 *docs/audits/THIRTY_INDEPENDENT_POST_R8_2_AUDIT.md
+2fc8766eb1916758e6bf369261e168da622fb00abb4af12a1f64ac457932cc8f *docs/audits/THIRTY_CLAUDE_INDEPENDENT_POST_R8_2_AUDIT.txt
+bfb9acfab9419a546f05eb4894dc0bf116864f488749fe04e2cfae6740eb7581 *artifacts/pre_r8_3_architecture_review_2026-11-06/ARCHITECTURE_REVIEW.md
+tracked changes (porcelain, lib/test):
+ M lib/core/analytics/analytics_consent.dart
+ M lib/core/analytics/tester_identity_provider.dart
+ M lib/core/world_rendering/quiet_trail_hero_asset_view.dart
+ M lib/features/home/application/circle_history_deletion.dart
+ M lib/features/home/application/first_breath_provider.dart
+ M lib/features/home/application/recommendation_provider.dart
+ M lib/features/home/application/suggestion_preferences.dart
+ M lib/features/home/application/v1_premium_retirement.dart
+ M lib/features/insights/application/insights_provider.dart
+ M lib/features/plans/application/circle_plans_provider.dart
+ M lib/features/plans/domain/circle_plan.dart
+ M lib/features/premium/application/premium_offer_provider.dart
+ M lib/features/premium/presentation/widgets/premium_offer_invitation_card.dart
+ M lib/features/reminder/application/reminder_invitation_provider.dart
+ M lib/features/reminder/application/reminder_provider.dart
+ M lib/features/reminder/presentation/widgets/reminder_invitation_card.dart
+ M test/features/personal_circle/r6_kept_voice_whole_circle_test.dart
+ M test/support/r8_fault_disk.dart
+?? test/features/r83/
+?? test/support/r83_invariants.dart
+untracked/changed elsewhere, new since session start:
+ M lib/core/analytics/analytics_consent.dart
+ M lib/core/analytics/tester_identity_provider.dart
+ M lib/features/home/application/circle_history_deletion.dart
+ M lib/features/home/application/first_breath_provider.dart
+ M lib/features/home/application/recommendation_provider.dart
+ M lib/features/home/application/suggestion_preferences.dart
+ M lib/features/home/application/v1_premium_retirement.dart
+ M lib/features/insights/application/insights_provider.dart
+ M lib/features/plans/application/circle_plans_provider.dart
+ M lib/features/plans/domain/circle_plan.dart
+ M lib/features/premium/application/premium_offer_provider.dart
+ M lib/features/premium/presentation/widgets/premium_offer_invitation_card.dart
+ M lib/features/reminder/application/reminder_invitation_provider.dart
+ M lib/features/reminder/application/reminder_provider.dart
+ M lib/features/reminder/presentation/widgets/reminder_invitation_card.dart
+ M test/support/r8_fault_disk.dart
+?? artifacts/r8_3_bounded_integrity_hardening_2026-11-07/
+?? test/features/r83/
+?? test/support/r83_invariants.dart

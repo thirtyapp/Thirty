@@ -12,6 +12,7 @@ import '../../plans/application/circle_plans_provider.dart';
 import '../../plans/domain/circle_plan.dart';
 import 'circle_journal.dart';
 import 'recommendation_provider.dart';
+import 'suggestion_preferences.dart';
 
 /// Present from the moment "Delete Circle history" begins until every store
 /// has been cleared (audit remediation R3). If the app stops in between, the
@@ -90,7 +91,8 @@ final historyWriteGateProvider = Provider<HistoryWriteGate>(
 /// "Delete Circle history" (contract, Delete / Export): the journal, today's
 /// Circle session, each Circle Plan's stage evidence and reviews, and every
 /// Insight snapshot. Kept Circles, each Plan's place and the user's
-/// suggestion preferences stay.
+/// suggestion preferences stay — R8.3 (founder decision D1): a left-out
+/// part no longer names the Insight that left it out; it stays left out.
 class CircleHistoryDeletion {
   CircleHistoryDeletion(this._ref);
 
@@ -156,6 +158,7 @@ class CircleHistoryDeletion {
     final prefs = _ref.read(sharedPreferencesProvider);
     final plans = _ref.read(circlePlansProvider.notifier);
     final insights = _ref.read(insightsProvider.notifier);
+    final preferences = _ref.read(suggestionPreferencesProvider.notifier);
     final preservations = _ref.read(preservationWritesProvider);
     // The intent first, confirmed on disk — tried once more if the store
     // refuses it — before anything else: no write is stopped, nothing is
@@ -179,6 +182,12 @@ class CircleHistoryDeletion {
       final firstPass = _clearRecordedCircles(prefs);
       final evidence = plans.forgetStageEvidence();
       final snapshots = insights.forgetAll();
+      // R8.3 (founder decision D1, Claude O-1): an Insight's id on a
+      // left-out part is History's evidence — only once the intent is on
+      // disk, in turn behind any preference change already queued.
+      // Awaited below with the other steps; never reported unhandled
+      // while an earlier step is awaited.
+      final attribution = preferences.forgetInsightProvenance()..ignore();
       _ref.invalidate(circleJournalRepositoryProvider);
       _ref.invalidate(recommendationProvider);
       // Every step is awaited, even once one has failed, so none is left
@@ -188,17 +197,19 @@ class CircleHistoryDeletion {
         stale,
         evidence,
         snapshots,
+        attribution,
         preservations.settledAll(),
       ]);
       // R8.2 (Astra R81-A02, Claude NEW-2): every Plans and Insights save
       // queued meanwhile has landed or failed before the last pass, so
       // none is still able to write after a deletion reported done — and
       // the last pass removes the Insights again, with anything such a
-      // save put back.
-      await _all([plans.idle(), insights.idle()]);
+      // save put back. R8.3: the preferences too.
+      await _all([plans.idle(), insights.idle(), preferences.idle()]);
       await _all([
         _clearRecordedCircles(prefs),
         insights.forgetAll(),
+        preferences.forgetInsightProvenance()..ignore(),
         writeConfirmed(
           prefs,
           circlePlansUnreadableKey,
@@ -261,7 +272,8 @@ Future<void> _all(List<Future<void>> steps) async {
 /// that failed ([historyDeletionPendingKey]) — before anything reads the
 /// store (`main.dart`). Clears what the deletion clears, from the stored
 /// records themselves: the journal, today's session, each Plan's stage
-/// evidence (its place stays) and every Insight snapshot. Every step is
+/// evidence (its place stays), every Insight snapshot and (R8.3, founder
+/// decision D1) every Insight's id on a left-out part. Every step is
 /// begun at once, so even if one fails nothing deleted is read back; the
 /// marker goes last, only when all of them were confirmed (audit remediation
 /// R8: a removal that throws or returns `false` is a failure), and otherwise
@@ -293,6 +305,8 @@ Future<void> completeInterruptedHistoryDeletion(SharedPreferences prefs) async {
       insightsUnreadableKey,
     ])
       writeConfirmed(prefs, key, null, restoreOnFailure: false),
+    // R8.3 (founder decision D1): the Insights' ids on left-out parts.
+    forgetInsightProvenanceIn(prefs),
   ]);
   await writeConfirmed(prefs, historyDeletionPendingKey, null);
 }

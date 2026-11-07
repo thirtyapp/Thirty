@@ -1883,12 +1883,50 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
         if (error is! _StaleWrite) _refuseStart(circleId, toldBefore);
         rethrow;
       }
-      if (identical(_startWaiting, recommendation)) _startWaiting = null;
       // Replaced, taken back or already started meanwhile: nothing starts.
-      if (!identical(state.recommendation, recommendation) ||
-          state.status != RecommendationStatus.notStarted) {
+      // R8.3 (Astra R82-N05): the Circle would start now, so its day is
+      // checked again now — local midnight may have passed while its save
+      // was pending. An offer of a day that has ended is never started
+      // afterwards (R6 final, founder decision 2026-11-03): nothing starts,
+      // and the new day opens, as for a Start tapped after midnight.
+      bool stillStartable() {
+        if (!identical(state.recommendation, recommendation) ||
+            state.status != RecommendationStatus.notStarted) {
+          return false;
+        }
+        if (circleId != dateKey(ref.read(eventClockProvider)())) {
+          if (ref.mounted) ref.invalidate(nowProvider);
+          return false;
+        }
+        return true;
+      }
+
+      if (!stillStartable()) {
+        if (identical(_startWaiting, recommendation)) _startWaiting = null;
         return;
       }
+      // R8.3.1 (founder decision on R83-F1, Option B): this is the valid
+      // Start. Made while its Plan is paused, it earns no Plan credit — now
+      // or after the Plan is carried on — and that is saved before the
+      // Circle starts (founder decision B); refused, the Start is refused.
+      // The conditions are checked again after the wait.
+      if (stage != null) {
+        try {
+          await ref
+              .read(circlePlansProvider.notifier)
+              .noteStartWhilePaused(stage, circleId: circleId);
+          _ensureCurrent(epoch);
+        } catch (error) {
+          if (identical(_startWaiting, recommendation)) _startWaiting = null;
+          if (error is! _StaleWrite) _refuseStart(circleId, toldBefore);
+          rethrow;
+        }
+        if (!stillStartable()) {
+          if (identical(_startWaiting, recommendation)) _startWaiting = null;
+          return;
+        }
+      }
+      if (identical(_startWaiting, recommendation)) _startWaiting = null;
       state = RecommendationState(
         recommendation: recommendation,
         status: RecommendationStatus.started,

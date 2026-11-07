@@ -34,7 +34,10 @@ class _PremiumOfferInvitationCardState
     extends ConsumerState<PremiumOfferInvitationCard> {
   void _markShown() {
     final prefs = ref.read(sharedPreferencesProvider);
-    if (prefs.getBool(premiumOfferInvitationShownKey) ?? false) return;
+    // R8.3 (founder decision D5): as the flag is read — anything but
+    // `false` or nothing is shown already, and is never written over.
+    final shown = prefs.get(premiumOfferInvitationShownKey);
+    if (shown != null && shown != false) return;
     prefs.setBool(premiumOfferInvitationShownKey, true);
   }
 

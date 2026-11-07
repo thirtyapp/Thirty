@@ -59,14 +59,21 @@ class TesterIdentityNotifier extends Notifier<TesterIdentity> {
   TesterIdentity build() {
     final prefs = ref.watch(sharedPreferencesProvider);
 
-    var testerId = prefs.getString(analyticsTesterIdKey);
+    // R8.3 (founder decision D5, Claude O-2): read on the first frame, as
+    // whatever native type is stored. A value of another type is never
+    // written over: this run uses an id (or cohort) of its own, unsaved.
+    final storedId = prefs.get(analyticsTesterIdKey);
+    var testerId = storedId is String ? storedId : null;
     if (testerId == null) {
       testerId = _generateTesterId();
-      unawaited(prefs.setString(analyticsTesterIdKey, testerId));
+      if (storedId == null) {
+        unawaited(prefs.setString(analyticsTesterIdKey, testerId));
+      }
     }
 
+    final rawCohort = prefs.get(analyticsCohortKey);
     final storedCohort = cohortFromWireName(
-      prefs.getString(analyticsCohortKey),
+      rawCohort is String ? rawCohort : null,
     );
     final Cohort cohort;
     if (storedCohort != null) {
@@ -76,7 +83,9 @@ class TesterIdentityNotifier extends Notifier<TesterIdentity> {
           prefs.containsKey(recommendationDayKey) ||
           prefs.containsKey(firstBreathLastPlayedDateKey);
       cohort = hasPriorUsageEvidence ? Cohort.preFix : Cohort.postFixBatch1;
-      unawaited(prefs.setString(analyticsCohortKey, cohort.wireName));
+      if (rawCohort == null || rawCohort is String) {
+        unawaited(prefs.setString(analyticsCohortKey, cohort.wireName));
+      }
     }
 
     return TesterIdentity(testerId: testerId, cohort: cohort);

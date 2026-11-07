@@ -132,6 +132,18 @@ class ElementLeftOut {
         'byInsight': ?byInsight,
       };
 
+  /// R8.3 (founder decision D1): this part, still left out, no longer
+  /// naming the Insight that left it out — every other field as stored.
+  ElementLeftOut withoutInsight() => ElementLeftOut(
+    element: element,
+    since: since,
+    source: source == null ? null : withoutInsightField(source!),
+  );
+
+  /// [item] without the `byInsight` field.
+  static Map<String, Object?> withoutInsightField(Map<String, Object?> item) =>
+      {...item}..remove('byInsight');
+
   static ElementLeftOut? fromJson(Object? json) {
     if (json is! Map<String, Object?>) return null;
     final element = ElementId.values.asNameMap()[json['elementId']];
@@ -209,6 +221,39 @@ class SuggestionPreferences {
 
   bool isNotSuggested(ActivityId activity, Intention need) =>
       notSuggested.any((n) => n.activity == activity && n.need == need);
+
+  /// R8.3 (founder decision D1, Claude O-1): these preferences with no
+  /// left-out part naming an Insight — an item THIRTY can't read too — and
+  /// everything else exactly as it is; `null` when none does. The Insight's
+  /// id is evidence from History, which Delete Circle history removes; the
+  /// user's own choice to leave the part out stays.
+  SuggestionPreferences? withoutInsightProvenance() {
+    bool names(Object? item) =>
+        item is Map<String, Object?> && item.containsKey('byInsight');
+    final unreadableLeftOut = unreadable['elementsLeftOut'] ?? const [];
+    if (!elementsLeftOut.any(
+          (e) => e.byInsight != null || names(e.source),
+        ) &&
+        !unreadableLeftOut.any(names)) {
+      return null;
+    }
+    return SuggestionPreferences(
+      notSuggested: notSuggested,
+      restsLifted: restsLifted,
+      elementsLeftOut: [for (final e in elementsLeftOut) e.withoutInsight()],
+      unreadable: {
+        ...unreadable,
+        if (unreadable.containsKey('elementsLeftOut'))
+          'elementsLeftOut': [
+            for (final item in unreadableLeftOut)
+              item is Map<String, Object?>
+                  ? ElementLeftOut.withoutInsightField(item)
+                  : item,
+          ],
+      },
+      extra: extra,
+    );
+  }
 
   /// What Recommendation Engine V2 and the memory page read.
   SuggestionControls get controls => SuggestionControls(
@@ -290,6 +335,41 @@ class SuggestionPreferences {
   }
 }
 
+/// What a preference change did (R8.3, architecture review contract 1).
+enum PreferenceChange {
+  /// This change was written, and the store confirmed it.
+  changed,
+
+  /// The preferences were already as asked — nothing was written.
+  unchanged,
+
+  /// Not written: the stored record is one THIRTY can't read (R8.1 RL-3).
+  refused,
+
+  /// Not written: the store didn't confirm it.
+  notSaved,
+}
+
+/// The start-up form of [SuggestionPreferencesNotifier
+/// .forgetInsightProvenance], for a Delete Circle history the app stopped
+/// in the middle of (`completeInterruptedHistoryDeletion`): from the stored
+/// record itself, before anything reads it. A record THIRTY can't read is
+/// left exactly as stored. Fails with [StorageWriteFailed] when the store
+/// doesn't confirm the write.
+Future<void> forgetInsightProvenanceIn(SharedPreferences prefs) async {
+  final stored = SuggestionPreferences.tryRead(
+    prefs.get(suggestionPreferencesKey),
+  );
+  final next = stored?.withoutInsightProvenance();
+  if (next == null) return;
+  await writeConfirmed(
+    prefs,
+    suggestionPreferencesKey,
+    next.isEmpty ? null : jsonEncode(next.toJson()),
+    restoreOnFailure: false,
+  );
+}
+
 class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
   /// Whether the stored record is one THIRTY can't read as a whole (R8.1
   /// RL-3): then no change is written over it — only Reset, the user's own
@@ -309,32 +389,52 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
 
   Future<void> _writes = Future<void>.value();
 
+  /// Completes, never failing, once no preference change is still queued
+  /// or being written (R8.3, Astra R82-N02) — what a decision that must see
+  /// the outcome of a pending change waits for, as for the Plans and the
+  /// Insights.
+  Future<void> idle() async {
+    for (;;) {
+      final pending = _writes;
+      await pending;
+      if (identical(pending, _writes)) return;
+    }
+  }
+
   /// Applies [change] to the preferences as they then stand, and shows the
   /// result once the store has confirmed it (R8.1, Astra N05; the R8 Kept
   /// Circles rule): a write that throws or returns `false` changes nothing —
   /// in memory or on disk — and the user is told
-  /// ([storeSaveFailuresProvider]). Completes with whether the preferences
-  /// now hold the change; changes run one after another, each on what the
-  /// one before it left. [change] returning `null` changes nothing.
+  /// ([storeSaveFailuresProvider]); changes run one after another, each on
+  /// what the one before it left.
+  ///
+  /// R8.3 (Astra R82-N02, architecture review contract 1): completes with
+  /// what happened — [PreferenceChange.changed] only when this change was
+  /// written and confirmed; [PreferenceChange.unchanged] when [change]
+  /// returned `null`, the preferences already being as asked (by whatever
+  /// did it); [PreferenceChange.refused] and [PreferenceChange.notSaved]
+  /// when nothing was saved. One answer never stands for another.
   ///
   /// R8.1 RL-3: never over a stored record THIRTY can't read ([tryRead]):
   /// the change is refused, the stored bytes stay, and the user is told —
-  /// unless [erase] (Reset).
-  Future<bool> _save(
+  /// unless [erase] (Reset). With [notify] `false` the caller tells the
+  /// user its own way.
+  Future<PreferenceChange> _change(
     SuggestionPreferences? Function(SuggestionPreferences current) change, {
     bool erase = false,
+    bool notify = true,
   }) {
     final prefs = _prefs;
     final run = _writes.then((_) async {
       final next = change(state);
-      if (next == null) return true;
+      if (next == null) return PreferenceChange.unchanged;
       if (_storedUnreadable && !erase) {
         if (ref.mounted) {
           ref
               .read(storeSaveFailuresProvider.notifier)
-              .record(UserStore.suggestionPreferences);
+              .record(UserStore.suggestionPreferences, notify: notify);
         }
-        return false;
+        return PreferenceChange.refused;
       }
       try {
         await writeConfirmed(
@@ -346,9 +446,9 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
         if (ref.mounted) {
           ref
               .read(storeSaveFailuresProvider.notifier)
-              .record(UserStore.suggestionPreferences);
+              .record(UserStore.suggestionPreferences, notify: notify);
         }
-        return false;
+        return PreferenceChange.notSaved;
       }
       _storedUnreadable = false;
       if (ref.mounted) {
@@ -357,11 +457,21 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
             .read(storeSaveFailuresProvider.notifier)
             .saved(UserStore.suggestionPreferences);
       }
-      return true;
+      return PreferenceChange.changed;
     });
     _writes = run.then((_) {}, onError: (Object _) {});
     return run;
   }
+
+  /// [_change], answering whether the preferences now hold the change —
+  /// what the memory page's own controls need.
+  Future<bool> _save(
+    SuggestionPreferences? Function(SuggestionPreferences current) change, {
+    bool erase = false,
+  }) async => switch (await _change(change, erase: erase)) {
+    PreferenceChange.changed || PreferenceChange.unchanged => true,
+    PreferenceChange.refused || PreferenceChange.notSaved => false,
+  };
 
   /// "Don't suggest" [activity] for [need] — until the user says otherwise.
   Future<bool> dontSuggest(ActivityId activity, Intention need) {
@@ -409,9 +519,22 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
   ///
   /// [byInsight]: the I3 Insight whose own action this is (R8.2, founder
   /// decision C), saved with the part ([ElementLeftOut.byInsight]).
-  Future<bool> leaveOut(ElementId element, {String? byInsight}) {
+  Future<bool> leaveOut(ElementId element, {String? byInsight}) async =>
+      switch (await leaveOutChange(element, byInsight: byInsight)) {
+        PreferenceChange.changed || PreferenceChange.unchanged => true,
+        PreferenceChange.refused || PreferenceChange.notSaved => false,
+      };
+
+  /// [leaveOut], answering what happened (R8.3, Astra R82-N02): an I3
+  /// records itself as applied only on [PreferenceChange.changed] — its own
+  /// change, saved with its id. A part already left out, however that came
+  /// about, is [PreferenceChange.unchanged] and is never its application.
+  Future<PreferenceChange> leaveOutChange(
+    ElementId element, {
+    String? byInsight,
+  }) {
     final since = ref.read(eventClockProvider)();
-    return _save(
+    return _change(
       (current) => current.isLeftOut(element)
           ? null
           : current.copyWith(
@@ -425,6 +548,33 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
               ],
             ),
     );
+  }
+
+  /// Delete Circle history's step here (R8.3, founder decision D1, Claude
+  /// O-1): every left-out part stays left out, with its date and every
+  /// other stored field, but no longer names the Insight that left it out —
+  /// that id is evidence from the History being deleted. Run in turn after
+  /// every change queued before it, so an Insight's own change still being
+  /// written lands first and then loses its attribution. Completes once
+  /// that is confirmed on disk, or at once when nothing names an Insight;
+  /// fails with [StorageWriteFailed] when the store doesn't confirm it — the
+  /// Delete then isn't done, and the next start finishes it
+  /// ([forgetInsightProvenanceIn]). Never mutates a preferences record
+  /// THIRTY can't read (R8.1 RL-3: only Reset removes one).
+  ///
+  /// Called by the Delete only once its intent is confirmed on disk.
+  Future<void> forgetInsightProvenance() async {
+    final outcome = await _change(
+      (current) => _storedUnreadable ? null : current.withoutInsightProvenance(),
+      notify: false,
+    );
+    if (outcome == PreferenceChange.notSaved ||
+        outcome == PreferenceChange.refused) {
+      throw const StorageWriteFailed(
+        suggestionPreferencesKey,
+        'the Insight attribution could not be removed',
+      );
+    }
   }
 
   /// V2 Phase D2: "Put it back" — [element] may be composed again.

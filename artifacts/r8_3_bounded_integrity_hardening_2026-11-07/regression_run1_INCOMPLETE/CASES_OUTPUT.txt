@@ -1,0 +1,40 @@
+{
+ "test/features/personal_circle/personal_circle_simulation_test.dart": {
+  "declared": 13,
+  "ran": 2,
+  "eachExactlyOnce": false,
+  "notRun": [
+   "p01_sparse_feedback",
+   "p02_frequent_feedback",
+   "p03_stable_positive",
+   "p04_mixed",
+   "p05_one_need_dominant",
+   "p06_all_three_needs",
+   "p07_mostly_10_minutes",
+   "p08_mostly_20_minutes",
+   "p09_mostly_30_minutes",
+   "p10_lapse_and_resubscribe",
+   "p11_many_exclusions"
+  ],
+  "repeated": [],
+  "undeclared": [],
+  "parts": [
+   "batch_19e.summary.json"
+  ],
+  "declaredParts": [
+   "19a",
+   "19b",
+   "19c",
+   "19d",
+   "19e"
+  ],
+  "rawAgrees": false,
+  "rawProblems": [
+   "batch_19a.jsonl",
+   "batch_19b.jsonl",
+   "batch_19c.jsonl",
+   "batch_19d.jsonl"
+  ]
+ }
+}
+CASES MISMATCH

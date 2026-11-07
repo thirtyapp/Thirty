@@ -1,0 +1,3 @@
+test/support/r83_invariants.dart (untracked since R8.3, so not reconstructable from HEAD + diff): R8.3.1 adds two lines to deletionResidue's field list:
++        // R8.3.1: which Circle was started while its Plan was paused.
++        'startedWhilePaused',

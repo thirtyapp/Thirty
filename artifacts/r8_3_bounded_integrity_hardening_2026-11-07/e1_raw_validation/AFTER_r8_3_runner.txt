@@ -1,0 +1,20 @@
+intact                                           report ACCEPTED  cases ACCEPTED
+summary: declared part 18c missing               report REJECTED  cases REJECTED
+summary: 18c replaced by a copy of 18b           report REJECTED  cases REJECTED
+summary: undeclared extra part 18f               report REJECTED  cases ACCEPTED
+summary: terminal success set false              report REJECTED  cases ACCEPTED
+summary: a test file left out                    report REJECTED  cases ACCEPTED
+summary: command changed                         report REJECTED  cases ACCEPTED
+raw: 18c emptied (Astra)                         report REJECTED  cases REJECTED
+raw: 18c deleted                                 report REJECTED  cases REJECTED
+raw: 05 emptied                                  report REJECTED  cases ACCEPTED
+raw: 05 truncated before its done event          report REJECTED  cases ACCEPTED
+raw: 05 truncated to half                        report REJECTED  cases ACCEPTED
+raw: 18c replaced by 18b's raw log               report REJECTED  cases REJECTED
+raw: 05 replaced by 06's raw log                 report REJECTED  cases ACCEPTED
+raw: one passed test flipped to failure          report REJECTED  cases ACCEPTED
+raw: a test reported done twice                  report REJECTED  cases ACCEPTED
+raw: a second done event appended                report REJECTED  cases ACCEPTED
+historical evidence unchanged: True
+ALL AS REQUIRED
+exit 0

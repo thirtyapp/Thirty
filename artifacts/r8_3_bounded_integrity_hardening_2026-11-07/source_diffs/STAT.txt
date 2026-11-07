@@ -1,0 +1,37 @@
+ lib/core/analytics/analytics_consent.dart          |   5 +-
+ lib/core/analytics/tester_identity_provider.dart   |  17 +-
+ .../home/application/circle_history_deletion.dart  |  22 ++-
+ .../home/application/first_breath_provider.dart    |   6 +-
+ .../home/application/recommendation_provider.dart  |   9 ++
+ .../home/application/suggestion_preferences.dart   | 176 +++++++++++++++++++--
+ .../home/application/v1_premium_retirement.dart    |  11 +-
+ .../insights/application/insights_provider.dart    |  38 ++++-
+ .../plans/application/circle_plans_provider.dart   |  62 ++++++--
+ lib/features/plans/domain/circle_plan.dart         |  36 ++++-
+ .../application/premium_offer_provider.dart        |   6 +-
+ .../widgets/premium_offer_invitation_card.dart     |   5 +-
+ .../application/reminder_invitation_provider.dart  |   6 +-
+ .../reminder/application/reminder_provider.dart    |  34 ++--
+ .../widgets/reminder_invitation_card.dart          |   5 +-
+ test/support/r8_fault_disk.dart                    |  84 +++++++++-
+ 16 files changed, 453 insertions(+), 69 deletions(-)
+ M lib/core/analytics/analytics_consent.dart
+ M lib/core/analytics/tester_identity_provider.dart
+ M lib/core/world_rendering/quiet_trail_hero_asset_view.dart
+ M lib/features/home/application/circle_history_deletion.dart
+ M lib/features/home/application/first_breath_provider.dart
+ M lib/features/home/application/recommendation_provider.dart
+ M lib/features/home/application/suggestion_preferences.dart
+ M lib/features/home/application/v1_premium_retirement.dart
+ M lib/features/insights/application/insights_provider.dart
+ M lib/features/plans/application/circle_plans_provider.dart
+ M lib/features/plans/domain/circle_plan.dart
+ M lib/features/premium/application/premium_offer_provider.dart
+ M lib/features/premium/presentation/widgets/premium_offer_invitation_card.dart
+ M lib/features/reminder/application/reminder_invitation_provider.dart
+ M lib/features/reminder/application/reminder_provider.dart
+ M lib/features/reminder/presentation/widgets/reminder_invitation_card.dart
+ M test/features/personal_circle/r6_kept_voice_whole_circle_test.dart
+ M test/support/r8_fault_disk.dart
+?? test/features/r83/
+?? test/support/r83_invariants.dart

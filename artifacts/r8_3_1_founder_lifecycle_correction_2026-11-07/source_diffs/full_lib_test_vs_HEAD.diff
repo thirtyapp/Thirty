@@ -1,0 +1,1177 @@
+diff --git a/lib/core/analytics/analytics_consent.dart b/lib/core/analytics/analytics_consent.dart
+index b3854d3..72f76c9 100644
+--- a/lib/core/analytics/analytics_consent.dart
++++ b/lib/core/analytics/analytics_consent.dart
+@@ -26,7 +26,10 @@ class AnalyticsConsentNotifier extends Notifier<bool> {
+   @override
+   bool build() {
+     final prefs = ref.watch(sharedPreferencesProvider);
+-    return prefs.getBool(analyticsConsentKey) ?? false;
++    // R8.3 (founder decision D5, Claude O-2): read on the first frame, as
++    // whatever native type is stored — only THIRTY's own `true` is consent;
++    // anything else is none, and is never written over here.
++    return prefs.get(analyticsConsentKey) == true;
+   }
+ 
+   /// Sets the user's explicit analytics choice. Independent of reminder
+diff --git a/lib/core/analytics/tester_identity_provider.dart b/lib/core/analytics/tester_identity_provider.dart
+index f021606..a695288 100644
+--- a/lib/core/analytics/tester_identity_provider.dart
++++ b/lib/core/analytics/tester_identity_provider.dart
+@@ -59,14 +59,21 @@ class TesterIdentityNotifier extends Notifier<TesterIdentity> {
+   TesterIdentity build() {
+     final prefs = ref.watch(sharedPreferencesProvider);
+ 
+-    var testerId = prefs.getString(analyticsTesterIdKey);
++    // R8.3 (founder decision D5, Claude O-2): read on the first frame, as
++    // whatever native type is stored. A value of another type is never
++    // written over: this run uses an id (or cohort) of its own, unsaved.
++    final storedId = prefs.get(analyticsTesterIdKey);
++    var testerId = storedId is String ? storedId : null;
+     if (testerId == null) {
+       testerId = _generateTesterId();
+-      unawaited(prefs.setString(analyticsTesterIdKey, testerId));
++      if (storedId == null) {
++        unawaited(prefs.setString(analyticsTesterIdKey, testerId));
++      }
+     }
+ 
++    final rawCohort = prefs.get(analyticsCohortKey);
+     final storedCohort = cohortFromWireName(
+-      prefs.getString(analyticsCohortKey),
++      rawCohort is String ? rawCohort : null,
+     );
+     final Cohort cohort;
+     if (storedCohort != null) {
+@@ -76,7 +83,9 @@ class TesterIdentityNotifier extends Notifier<TesterIdentity> {
+           prefs.containsKey(recommendationDayKey) ||
+           prefs.containsKey(firstBreathLastPlayedDateKey);
+       cohort = hasPriorUsageEvidence ? Cohort.preFix : Cohort.postFixBatch1;
+-      unawaited(prefs.setString(analyticsCohortKey, cohort.wireName));
++      if (rawCohort == null || rawCohort is String) {
++        unawaited(prefs.setString(analyticsCohortKey, cohort.wireName));
++      }
+     }
+ 
+     return TesterIdentity(testerId: testerId, cohort: cohort);
+diff --git a/lib/features/home/application/circle_history_deletion.dart b/lib/features/home/application/circle_history_deletion.dart
+index 94363a6..85640eb 100644
+--- a/lib/features/home/application/circle_history_deletion.dart
++++ b/lib/features/home/application/circle_history_deletion.dart
+@@ -12,6 +12,7 @@ import '../../plans/application/circle_plans_provider.dart';
+ import '../../plans/domain/circle_plan.dart';
+ import 'circle_journal.dart';
+ import 'recommendation_provider.dart';
++import 'suggestion_preferences.dart';
+ 
+ /// Present from the moment "Delete Circle history" begins until every store
+ /// has been cleared (audit remediation R3). If the app stops in between, the
+@@ -90,7 +91,8 @@ final historyWriteGateProvider = Provider<HistoryWriteGate>(
+ /// "Delete Circle history" (contract, Delete / Export): the journal, today's
+ /// Circle session, each Circle Plan's stage evidence and reviews, and every
+ /// Insight snapshot. Kept Circles, each Plan's place and the user's
+-/// suggestion preferences stay.
++/// suggestion preferences stay — R8.3 (founder decision D1): a left-out
++/// part no longer names the Insight that left it out; it stays left out.
+ class CircleHistoryDeletion {
+   CircleHistoryDeletion(this._ref);
+ 
+@@ -156,6 +158,7 @@ class CircleHistoryDeletion {
+     final prefs = _ref.read(sharedPreferencesProvider);
+     final plans = _ref.read(circlePlansProvider.notifier);
+     final insights = _ref.read(insightsProvider.notifier);
++    final preferences = _ref.read(suggestionPreferencesProvider.notifier);
+     final preservations = _ref.read(preservationWritesProvider);
+     // The intent first, confirmed on disk — tried once more if the store
+     // refuses it — before anything else: no write is stopped, nothing is
+@@ -179,6 +182,12 @@ class CircleHistoryDeletion {
+       final firstPass = _clearRecordedCircles(prefs);
+       final evidence = plans.forgetStageEvidence();
+       final snapshots = insights.forgetAll();
++      // R8.3 (founder decision D1, Claude O-1): an Insight's id on a
++      // left-out part is History's evidence — only once the intent is on
++      // disk, in turn behind any preference change already queued.
++      // Awaited below with the other steps; never reported unhandled
++      // while an earlier step is awaited.
++      final attribution = preferences.forgetInsightProvenance()..ignore();
+       _ref.invalidate(circleJournalRepositoryProvider);
+       _ref.invalidate(recommendationProvider);
+       // Every step is awaited, even once one has failed, so none is left
+@@ -188,17 +197,19 @@ class CircleHistoryDeletion {
+         stale,
+         evidence,
+         snapshots,
++        attribution,
+         preservations.settledAll(),
+       ]);
+       // R8.2 (Astra R81-A02, Claude NEW-2): every Plans and Insights save
+       // queued meanwhile has landed or failed before the last pass, so
+       // none is still able to write after a deletion reported done — and
+       // the last pass removes the Insights again, with anything such a
+-      // save put back.
+-      await _all([plans.idle(), insights.idle()]);
++      // save put back. R8.3: the preferences too.
++      await _all([plans.idle(), insights.idle(), preferences.idle()]);
+       await _all([
+         _clearRecordedCircles(prefs),
+         insights.forgetAll(),
++        preferences.forgetInsightProvenance()..ignore(),
+         writeConfirmed(
+           prefs,
+           circlePlansUnreadableKey,
+@@ -261,7 +272,8 @@ Future<void> _all(List<Future<void>> steps) async {
+ /// that failed ([historyDeletionPendingKey]) — before anything reads the
+ /// store (`main.dart`). Clears what the deletion clears, from the stored
+ /// records themselves: the journal, today's session, each Plan's stage
+-/// evidence (its place stays) and every Insight snapshot. Every step is
++/// evidence (its place stays), every Insight snapshot and (R8.3, founder
++/// decision D1) every Insight's id on a left-out part. Every step is
+ /// begun at once, so even if one fails nothing deleted is read back; the
+ /// marker goes last, only when all of them were confirmed (audit remediation
+ /// R8: a removal that throws or returns `false` is a failure), and otherwise
+@@ -293,6 +305,8 @@ Future<void> completeInterruptedHistoryDeletion(SharedPreferences prefs) async {
+       insightsUnreadableKey,
+     ])
+       writeConfirmed(prefs, key, null, restoreOnFailure: false),
++    // R8.3 (founder decision D1): the Insights' ids on left-out parts.
++    forgetInsightProvenanceIn(prefs),
+   ]);
+   await writeConfirmed(prefs, historyDeletionPendingKey, null);
+ }
+diff --git a/lib/features/home/application/first_breath_provider.dart b/lib/features/home/application/first_breath_provider.dart
+index c70d967..f8577c8 100644
+--- a/lib/features/home/application/first_breath_provider.dart
++++ b/lib/features/home/application/first_breath_provider.dart
+@@ -26,7 +26,11 @@ class FirstBreathNotifier extends Notifier<bool> {
+   bool build() {
+     final prefs = ref.watch(sharedPreferencesProvider);
+     final today = dateKey(ref.watch(nowProvider));
+-    final lastPlayedDate = prefs.getString(firstBreathLastPlayedDateKey);
++    // R8.3 (founder decision D5, Claude O-2): read on Today's first frame,
++    // as whatever native type is stored — a value of another type is no
++    // date, so the ritual plays; [markPlayedToday] then records today.
++    final stored = prefs.get(firstBreathLastPlayedDateKey);
++    final lastPlayedDate = stored is String ? stored : null;
+     return lastPlayedDate != today;
+   }
+ 
+diff --git a/lib/features/home/application/recommendation_provider.dart b/lib/features/home/application/recommendation_provider.dart
+index 3f355fd..95ddadb 100644
+--- a/lib/features/home/application/recommendation_provider.dart
++++ b/lib/features/home/application/recommendation_provider.dart
+@@ -1883,12 +1883,50 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
+         if (error is! _StaleWrite) _refuseStart(circleId, toldBefore);
+         rethrow;
+       }
+-      if (identical(_startWaiting, recommendation)) _startWaiting = null;
+       // Replaced, taken back or already started meanwhile: nothing starts.
+-      if (!identical(state.recommendation, recommendation) ||
+-          state.status != RecommendationStatus.notStarted) {
++      // R8.3 (Astra R82-N05): the Circle would start now, so its day is
++      // checked again now — local midnight may have passed while its save
++      // was pending. An offer of a day that has ended is never started
++      // afterwards (R6 final, founder decision 2026-11-03): nothing starts,
++      // and the new day opens, as for a Start tapped after midnight.
++      bool stillStartable() {
++        if (!identical(state.recommendation, recommendation) ||
++            state.status != RecommendationStatus.notStarted) {
++          return false;
++        }
++        if (circleId != dateKey(ref.read(eventClockProvider)())) {
++          if (ref.mounted) ref.invalidate(nowProvider);
++          return false;
++        }
++        return true;
++      }
++
++      if (!stillStartable()) {
++        if (identical(_startWaiting, recommendation)) _startWaiting = null;
+         return;
+       }
++      // R8.3.1 (founder decision on R83-F1, Option B): this is the valid
++      // Start. Made while its Plan is paused, it earns no Plan credit — now
++      // or after the Plan is carried on — and that is saved before the
++      // Circle starts (founder decision B); refused, the Start is refused.
++      // The conditions are checked again after the wait.
++      if (stage != null) {
++        try {
++          await ref
++              .read(circlePlansProvider.notifier)
++              .noteStartWhilePaused(stage, circleId: circleId);
++          _ensureCurrent(epoch);
++        } catch (error) {
++          if (identical(_startWaiting, recommendation)) _startWaiting = null;
++          if (error is! _StaleWrite) _refuseStart(circleId, toldBefore);
++          rethrow;
++        }
++        if (!stillStartable()) {
++          if (identical(_startWaiting, recommendation)) _startWaiting = null;
++          return;
++        }
++      }
++      if (identical(_startWaiting, recommendation)) _startWaiting = null;
+       state = RecommendationState(
+         recommendation: recommendation,
+         status: RecommendationStatus.started,
+diff --git a/lib/features/home/application/suggestion_preferences.dart b/lib/features/home/application/suggestion_preferences.dart
+index 1aae4e3..f3b17dc 100644
+--- a/lib/features/home/application/suggestion_preferences.dart
++++ b/lib/features/home/application/suggestion_preferences.dart
+@@ -132,6 +132,18 @@ class ElementLeftOut {
+         'byInsight': ?byInsight,
+       };
+ 
++  /// R8.3 (founder decision D1): this part, still left out, no longer
++  /// naming the Insight that left it out — every other field as stored.
++  ElementLeftOut withoutInsight() => ElementLeftOut(
++    element: element,
++    since: since,
++    source: source == null ? null : withoutInsightField(source!),
++  );
++
++  /// [item] without the `byInsight` field.
++  static Map<String, Object?> withoutInsightField(Map<String, Object?> item) =>
++      {...item}..remove('byInsight');
++
+   static ElementLeftOut? fromJson(Object? json) {
+     if (json is! Map<String, Object?>) return null;
+     final element = ElementId.values.asNameMap()[json['elementId']];
+@@ -210,6 +222,39 @@ class SuggestionPreferences {
+   bool isNotSuggested(ActivityId activity, Intention need) =>
+       notSuggested.any((n) => n.activity == activity && n.need == need);
+ 
++  /// R8.3 (founder decision D1, Claude O-1): these preferences with no
++  /// left-out part naming an Insight — an item THIRTY can't read too — and
++  /// everything else exactly as it is; `null` when none does. The Insight's
++  /// id is evidence from History, which Delete Circle history removes; the
++  /// user's own choice to leave the part out stays.
++  SuggestionPreferences? withoutInsightProvenance() {
++    bool names(Object? item) =>
++        item is Map<String, Object?> && item.containsKey('byInsight');
++    final unreadableLeftOut = unreadable['elementsLeftOut'] ?? const [];
++    if (!elementsLeftOut.any(
++          (e) => e.byInsight != null || names(e.source),
++        ) &&
++        !unreadableLeftOut.any(names)) {
++      return null;
++    }
++    return SuggestionPreferences(
++      notSuggested: notSuggested,
++      restsLifted: restsLifted,
++      elementsLeftOut: [for (final e in elementsLeftOut) e.withoutInsight()],
++      unreadable: {
++        ...unreadable,
++        if (unreadable.containsKey('elementsLeftOut'))
++          'elementsLeftOut': [
++            for (final item in unreadableLeftOut)
++              item is Map<String, Object?>
++                  ? ElementLeftOut.withoutInsightField(item)
++                  : item,
++          ],
++      },
++      extra: extra,
++    );
++  }
++
+   /// What Recommendation Engine V2 and the memory page read.
+   SuggestionControls get controls => SuggestionControls(
+     notSuggested: {for (final n in notSuggested) (n.activity, n.need)},
+@@ -290,6 +335,41 @@ class SuggestionPreferences {
+   }
+ }
+ 
++/// What a preference change did (R8.3, architecture review contract 1).
++enum PreferenceChange {
++  /// This change was written, and the store confirmed it.
++  changed,
++
++  /// The preferences were already as asked — nothing was written.
++  unchanged,
++
++  /// Not written: the stored record is one THIRTY can't read (R8.1 RL-3).
++  refused,
++
++  /// Not written: the store didn't confirm it.
++  notSaved,
++}
++
++/// The start-up form of [SuggestionPreferencesNotifier
++/// .forgetInsightProvenance], for a Delete Circle history the app stopped
++/// in the middle of (`completeInterruptedHistoryDeletion`): from the stored
++/// record itself, before anything reads it. A record THIRTY can't read is
++/// left exactly as stored. Fails with [StorageWriteFailed] when the store
++/// doesn't confirm the write.
++Future<void> forgetInsightProvenanceIn(SharedPreferences prefs) async {
++  final stored = SuggestionPreferences.tryRead(
++    prefs.get(suggestionPreferencesKey),
++  );
++  final next = stored?.withoutInsightProvenance();
++  if (next == null) return;
++  await writeConfirmed(
++    prefs,
++    suggestionPreferencesKey,
++    next.isEmpty ? null : jsonEncode(next.toJson()),
++    restoreOnFailure: false,
++  );
++}
++
+ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
+   /// Whether the stored record is one THIRTY can't read as a whole (R8.1
+   /// RL-3): then no change is written over it — only Reset, the user's own
+@@ -309,32 +389,52 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
+ 
+   Future<void> _writes = Future<void>.value();
+ 
++  /// Completes, never failing, once no preference change is still queued
++  /// or being written (R8.3, Astra R82-N02) — what a decision that must see
++  /// the outcome of a pending change waits for, as for the Plans and the
++  /// Insights.
++  Future<void> idle() async {
++    for (;;) {
++      final pending = _writes;
++      await pending;
++      if (identical(pending, _writes)) return;
++    }
++  }
++
+   /// Applies [change] to the preferences as they then stand, and shows the
+   /// result once the store has confirmed it (R8.1, Astra N05; the R8 Kept
+   /// Circles rule): a write that throws or returns `false` changes nothing —
+   /// in memory or on disk — and the user is told
+-  /// ([storeSaveFailuresProvider]). Completes with whether the preferences
+-  /// now hold the change; changes run one after another, each on what the
+-  /// one before it left. [change] returning `null` changes nothing.
++  /// ([storeSaveFailuresProvider]); changes run one after another, each on
++  /// what the one before it left.
++  ///
++  /// R8.3 (Astra R82-N02, architecture review contract 1): completes with
++  /// what happened — [PreferenceChange.changed] only when this change was
++  /// written and confirmed; [PreferenceChange.unchanged] when [change]
++  /// returned `null`, the preferences already being as asked (by whatever
++  /// did it); [PreferenceChange.refused] and [PreferenceChange.notSaved]
++  /// when nothing was saved. One answer never stands for another.
+   ///
+   /// R8.1 RL-3: never over a stored record THIRTY can't read ([tryRead]):
+   /// the change is refused, the stored bytes stay, and the user is told —
+-  /// unless [erase] (Reset).
+-  Future<bool> _save(
++  /// unless [erase] (Reset). With [notify] `false` the caller tells the
++  /// user its own way.
++  Future<PreferenceChange> _change(
+     SuggestionPreferences? Function(SuggestionPreferences current) change, {
+     bool erase = false,
++    bool notify = true,
+   }) {
+     final prefs = _prefs;
+     final run = _writes.then((_) async {
+       final next = change(state);
+-      if (next == null) return true;
++      if (next == null) return PreferenceChange.unchanged;
+       if (_storedUnreadable && !erase) {
+         if (ref.mounted) {
+           ref
+               .read(storeSaveFailuresProvider.notifier)
+-              .record(UserStore.suggestionPreferences);
++              .record(UserStore.suggestionPreferences, notify: notify);
+         }
+-        return false;
++        return PreferenceChange.refused;
+       }
+       try {
+         await writeConfirmed(
+@@ -346,9 +446,9 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
+         if (ref.mounted) {
+           ref
+               .read(storeSaveFailuresProvider.notifier)
+-              .record(UserStore.suggestionPreferences);
++              .record(UserStore.suggestionPreferences, notify: notify);
+         }
+-        return false;
++        return PreferenceChange.notSaved;
+       }
+       _storedUnreadable = false;
+       if (ref.mounted) {
+@@ -357,12 +457,22 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
+             .read(storeSaveFailuresProvider.notifier)
+             .saved(UserStore.suggestionPreferences);
+       }
+-      return true;
++      return PreferenceChange.changed;
+     });
+     _writes = run.then((_) {}, onError: (Object _) {});
+     return run;
+   }
+ 
++  /// [_change], answering whether the preferences now hold the change —
++  /// what the memory page's own controls need.
++  Future<bool> _save(
++    SuggestionPreferences? Function(SuggestionPreferences current) change, {
++    bool erase = false,
++  }) async => switch (await _change(change, erase: erase)) {
++    PreferenceChange.changed || PreferenceChange.unchanged => true,
++    PreferenceChange.refused || PreferenceChange.notSaved => false,
++  };
++
+   /// "Don't suggest" [activity] for [need] — until the user says otherwise.
+   Future<bool> dontSuggest(ActivityId activity, Intention need) {
+     final since = ref.read(eventClockProvider)();
+@@ -409,9 +519,22 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
+   ///
+   /// [byInsight]: the I3 Insight whose own action this is (R8.2, founder
+   /// decision C), saved with the part ([ElementLeftOut.byInsight]).
+-  Future<bool> leaveOut(ElementId element, {String? byInsight}) {
++  Future<bool> leaveOut(ElementId element, {String? byInsight}) async =>
++      switch (await leaveOutChange(element, byInsight: byInsight)) {
++        PreferenceChange.changed || PreferenceChange.unchanged => true,
++        PreferenceChange.refused || PreferenceChange.notSaved => false,
++      };
++
++  /// [leaveOut], answering what happened (R8.3, Astra R82-N02): an I3
++  /// records itself as applied only on [PreferenceChange.changed] — its own
++  /// change, saved with its id. A part already left out, however that came
++  /// about, is [PreferenceChange.unchanged] and is never its application.
++  Future<PreferenceChange> leaveOutChange(
++    ElementId element, {
++    String? byInsight,
++  }) {
+     final since = ref.read(eventClockProvider)();
+-    return _save(
++    return _change(
+       (current) => current.isLeftOut(element)
+           ? null
+           : current.copyWith(
+@@ -427,6 +550,33 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
+     );
+   }
+ 
++  /// Delete Circle history's step here (R8.3, founder decision D1, Claude
++  /// O-1): every left-out part stays left out, with its date and every
++  /// other stored field, but no longer names the Insight that left it out —
++  /// that id is evidence from the History being deleted. Run in turn after
++  /// every change queued before it, so an Insight's own change still being
++  /// written lands first and then loses its attribution. Completes once
++  /// that is confirmed on disk, or at once when nothing names an Insight;
++  /// fails with [StorageWriteFailed] when the store doesn't confirm it — the
++  /// Delete then isn't done, and the next start finishes it
++  /// ([forgetInsightProvenanceIn]). Never mutates a preferences record
++  /// THIRTY can't read (R8.1 RL-3: only Reset removes one).
++  ///
++  /// Called by the Delete only once its intent is confirmed on disk.
++  Future<void> forgetInsightProvenance() async {
++    final outcome = await _change(
++      (current) => _storedUnreadable ? null : current.withoutInsightProvenance(),
++      notify: false,
++    );
++    if (outcome == PreferenceChange.notSaved ||
++        outcome == PreferenceChange.refused) {
++      throw const StorageWriteFailed(
++        suggestionPreferencesKey,
++        'the Insight attribution could not be removed',
++      );
++    }
++  }
++
+   /// V2 Phase D2: "Put it back" — [element] may be composed again.
+   Future<bool> putBack(ElementId element) => _save(
+     (current) => current.copyWith(
+diff --git a/lib/features/home/application/v1_premium_retirement.dart b/lib/features/home/application/v1_premium_retirement.dart
+index cc7e10c..4a5e813 100644
+--- a/lib/features/home/application/v1_premium_retirement.dart
++++ b/lib/features/home/application/v1_premium_retirement.dart
+@@ -22,10 +22,17 @@ const v1PremiumRetiredKey = 'v1_premium_retired';
+ ///
+ /// Safe if interrupted: each removal is independent, the marker is written
+ /// last, and running it again removes nothing that wasn't V1.
++///
++/// R8.3 (founder decision D5, Claude O-2): `main()` awaits this before the
++/// app starts, so the marker is read as whatever native type is stored — a
++/// value of another type never stops THIRTY from starting. Such a value
++/// records no retirement: the retirement runs (it only removes V1's
++/// records), and the value is left as stored rather than written over.
+ Future<void> retireV1Premium(SharedPreferences prefs) async {
+-  if (prefs.getBool(v1PremiumRetiredKey) ?? false) return;
++  final marker = prefs.get(v1PremiumRetiredKey);
++  if (marker == true) return;
+   for (final key in [...retiredV1PremiumKeys, ...retiredPlanDayKeys]) {
+     await prefs.remove(key);
+   }
+-  await prefs.setBool(v1PremiumRetiredKey, true);
++  if (marker == null) await prefs.setBool(v1PremiumRetiredKey, true);
+ }
+diff --git a/lib/features/insights/application/insights_provider.dart b/lib/features/insights/application/insights_provider.dart
+index 3285651..5e92732 100644
+--- a/lib/features/insights/application/insights_provider.dart
++++ b/lib/features/insights/application/insights_provider.dart
+@@ -300,24 +300,40 @@ class InsightsNotifier extends Notifier<InsightsState> {
+   /// is never claimed — the Insight is then reported not available, never
+   /// applied. No separate record of the intent is needed, so none can fail
+   /// apart from the change.
++  ///
++  /// R8.3 (Astra R82-N01, founder decision D3; architecture review contract
++  /// 2): that provenance is looked for first, whatever the Insight's claim
++  /// says today. A change the user reversed by hand since — a Plan paused
++  /// or left, gentler turned off — can make the claim hold again; the
++  /// Insight's own change already happened, so its mark is recorded, on the
++  /// day of that change, and the change is never made again over the
++  /// user's later choice. Without that provenance — never made, or another
++  /// Insight's since — nothing is claimed.
++  ///
++  /// R8.3 (Astra R82-N02): the preferences are waited for too, so a part
++  /// left out by hand and still being written is seen as left out; and the
++  /// Insight is marked applied only when its own change was the one saved
++  /// ([PreferenceChange.changed]).
+   Future<InsightActionResult> apply(String snapshotId) async {
+     await ref.read(circlePlansProvider.notifier).idle();
+     await ref.read(journalWritesProvider).idle();
++    await ref.read(suggestionPreferencesProvider.notifier).idle();
+     final snapshot = state.byId(snapshotId);
+     final keepsOwnCircle = snapshot?.application is KeepCircleFromHistory;
+     if (!_premium && !keepsOwnCircle) return InsightActionResult.needsPremium;
+     if (snapshot == null) return InsightActionResult.notAvailable;
+     final i = inputs();
+-    switch (statusOf(snapshot, i)) {
++    final status = statusOf(snapshot, i);
++    switch (status) {
+       case InsightStatus.applied:
+         return InsightActionResult.alreadyApplied;
+-      case InsightStatus.current:
+-        break;
+-      case InsightStatus.stale:
++      case InsightStatus.current || InsightStatus.stale:
+         if (_appliedOn(snapshot, i) case final on?) {
+           return _markApplied(snapshot, on);
+         }
+-        return InsightActionResult.notAvailable;
++        if (status == InsightStatus.stale) {
++          return InsightActionResult.notAvailable;
++        }
+       case _:
+         return InsightActionResult.notAvailable;
+     }
+@@ -458,10 +474,16 @@ class InsightsNotifier extends Notifier<InsightsState> {
+     final element = ElementId.values.asNameMap()[wire];
+     if (element == null) return InsightActionResult.notAvailable;
+     if (i.leftOut.contains(element)) return InsightActionResult.alreadyApplied;
+-    final saved = await ref
++    final outcome = await ref
+         .read(suggestionPreferencesProvider.notifier)
+-        .leaveOut(element, byInsight: insightId);
+-    return saved ? InsightActionResult.done : InsightActionResult.notSaved;
++        .leaveOutChange(element, byInsight: insightId);
++    return switch (outcome) {
++      PreferenceChange.changed => InsightActionResult.done,
++      // Left out by something else meanwhile: never this Insight's.
++      PreferenceChange.unchanged => InsightActionResult.alreadyApplied,
++      PreferenceChange.refused ||
++      PreferenceChange.notSaved => InsightActionResult.notSaved,
++    };
+   }
+ 
+   Future<InsightActionResult> _keep(String circleId) async {
+diff --git a/lib/features/plans/application/circle_plans_provider.dart b/lib/features/plans/application/circle_plans_provider.dart
+index c5f35e4..759171b 100644
+--- a/lib/features/plans/application/circle_plans_provider.dart
++++ b/lib/features/plans/application/circle_plans_provider.dart
+@@ -719,6 +719,14 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+     required String circleId,
+     required EntitlementStatus status,
+   }) {
++    // R8.3.1: a Start while the Plan is paused records that first
++    // ([noteStartWhilePaused]) — a write the Start waits for.
++    if (!identical(
++      state.noteStartedWhilePaused(stage, circleId: circleId),
++      state,
++    )) {
++      return false;
++    }
+     final stored = _servedRecord(_durable, stage, circleId);
+     if (stored == null || _servedRecord(state, stage, circleId) != stored) {
+       return false;
+@@ -770,6 +778,34 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+     }
+   }
+ 
++  /// R8.3.1 (founder decision on R83-F1, Option B): today's stage Circle
++  /// [circleId] is about to become validly started (Today, at the moment
++  /// it does). When its Plan is paused — as shown, so the user's own order
++  /// of Pause and Start is what counts — that Start earns no Plan credit,
++  /// now or later; this records it on the Plan
++  /// ([CirclePlansState.noteStartedWhilePaused]) and completes once the
++  /// store has confirmed it. Fails with [StorageWriteFailed] otherwise:
++  /// Today then refuses the Start (founder decision B), and the user is
++  /// told there. Nothing to record for an active Plan.
++  Future<void> noteStartWhilePaused(
++    PlanStageProvenance stage, {
++    required String circleId,
++  }) async {
++    final next = state.noteStartedWhilePaused(stage, circleId: circleId);
++    if (!identical(next, state)) return _set(next, report: false);
++    final planId = stage.planId;
++    if (state.plans[planId]?.startedWhilePaused == circleId &&
++        _durable.plans[planId]?.startedWhilePaused != circleId) {
++      await ensureSaved();
++      if (_durable.plans[planId]?.startedWhilePaused != circleId) {
++        throw const StorageWriteFailed(
++          circlePlansKey,
++          'the Start made while the Plan is paused is not on disk',
++        );
++      }
++    }
++  }
++
+   /// [circleId]'s served record in [plans], as stored text, or `null`.
+   static String? _servedRecord(
+     CirclePlansState plans,
+@@ -892,13 +928,25 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+   /// the intent to delete is on disk, so the next start removes it from
+   /// the store whatever happens. No Insight is ever assessed, and no failed
+   /// save ever rolled back, onto the deleted evidence.
++  ///
++  /// R8.3 (Claude AUD-N2): the order of the deleted session's own actions —
++  /// its Start and Close instants, held in memory ([noteStarted],
++  /// [noteCloseRequested]) — goes at once too: a stage Circle served again
++  /// the same day has the same id, and is never stamped with them.
++  ///
++  /// R8.3 (Claude AUD-N3, founder decision D4): what is written is the
++  /// Plans as last confirmed, without the evidence — computed at this
++  /// write's turn, once every save queued before it has landed or failed.
++  /// A change still being saved when the Delete began is written only if
++  /// its own save landed; one refused is never written by the Delete, and
++  /// is then off the screen too, as for any refused save (R8.1 RL-1).
+   Future<void> forgetStageEvidence() {
+-    final next = state.forgetStageEvidence();
+-    state = next;
++    _startedAt.clear();
++    _closeRequestedAt.clear();
++    final shown = state.forgetStageEvidence();
++    state = shown;
+     _deletions++;
+     _durable = _durable.forgetStageEvidence();
+-    _queued = _queuedWrite = null;
+-    final json = jsonEncode(next.toJson());
+     final prefs = _prefs;
+     // Removed at once, and confirmed (the intent to delete is already on
+     // disk): nothing set aside stays readable while earlier writes finish.
+@@ -908,18 +956,36 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+       null,
+       restoreOnFailure: false,
+     )..ignore();
+-    final written = _writes
+-        .then(
+-          (_) => writeConfirmed(
+-            prefs,
+-            circlePlansKey,
+-            json,
+-            restoreOnFailure: false,
+-          ),
+-        )
+-        .then((_) => setAside)
+-        .then((_) => _durable = next);
+-    _writes = written.then((_) {}, onError: (Object _) {});
++    final written = _writes.then((_) async {
++      final kept = _durable.forgetStageEvidence();
++      await writeConfirmed(
++        prefs,
++        circlePlansKey,
++        jsonEncode(kept.toJson()),
++        restoreOnFailure: false,
++      );
++      await setAside;
++      _durable = kept;
++      if (ref.mounted && identical(state, shown)) state = kept;
++    });
++    _queued = shown;
++    _queuedWrite = written;
++    _writes = written.then(
++      (_) {
++        if (identical(_queued, shown)) _queued = _queuedWrite = null;
++        if (ref.mounted && !hasUnsavedChanges) {
++          ref
++              .read(storeSaveFailuresProvider.notifier)
++              .saved(UserStore.circlePlans);
++        }
++      },
++      onError: (Object _) {
++        if (identical(_queued, shown)) _queued = _queuedWrite = null;
++        // Not written: what is shown is what was last confirmed, without
++        // the evidence; the next start finishes the Delete.
++        if (ref.mounted && identical(state, shown)) state = _durable;
++      },
++    );
+     return written;
+   }
+ }
+diff --git a/lib/features/plans/domain/circle_plan.dart b/lib/features/plans/domain/circle_plan.dart
+index e467bc8..aa2d21f 100644
+--- a/lib/features/plans/domain/circle_plan.dart
++++ b/lib/features/plans/domain/circle_plan.dart
+@@ -496,11 +496,23 @@ class PlanProgress {
+     this.lastAdvancedCircleId,
+     this.lastServed,
+     this.appliedInsight,
++    this.startedWhilePaused,
+     this.extra = const {},
+   });
+ 
+   final String planId;
+ 
++  /// R8.3.1 (founder decision on R83-F1, 2026-11-07, Option B): the stage
++  /// Circle whose valid Start was made while this Plan was paused. Plan
++  /// credit follows the eligibility of that original Start: this Circle
++  /// never earns any ([CirclePlansState.recordGuided]) — not at its Close,
++  /// and not after the Plan is carried on, restarted or caught up, even
++  /// once a later Circle has been served. Its History record stays. Kept
++  /// on the Plan rather than on [lastServed], which the next serve
++  /// replaces; one is enough, since only one day's Circle is ever still
++  /// to be caught up. Stage evidence: Delete Circle history removes it.
++  final String? startedWhilePaused;
++
+   /// Fields this build doesn't know, and known fields whose stored value it
+   /// can't read, exactly as stored (R8.1 RL-3): written back until THIRTY
+   /// itself sets that field again.
+@@ -534,6 +546,7 @@ class PlanProgress {
+     String? lastAdvancedCircleId,
+     ServedStageCircle? lastServed,
+     AppliedInsight? appliedInsight,
++    String? startedWhilePaused,
+   }) => PlanProgress(
+     planId: planId,
+     lifecycle: lifecycle ?? this.lifecycle,
+@@ -541,6 +554,7 @@ class PlanProgress {
+     lastAdvancedCircleId: lastAdvancedCircleId ?? this.lastAdvancedCircleId,
+     lastServed: lastServed ?? this.lastServed,
+     appliedInsight: appliedInsight ?? this.appliedInsight,
++    startedWhilePaused: startedWhilePaused ?? this.startedWhilePaused,
+     extra: {
+       for (final MapEntry(:key, :value) in extra.entries)
+         if (!(key == 'lastServed' && lastServed != null) &&
+@@ -566,6 +580,7 @@ class PlanProgress {
+     'lastAdvancedCircleId': ?lastAdvancedCircleId,
+     'lastServed': ?lastServed?.toJson(),
+     'appliedInsight': ?appliedInsight?.toJson(),
++    'startedWhilePaused': ?startedWhilePaused,
+   };
+ 
+   static PlanProgress? fromJson(String planId, Object? raw) {
+@@ -590,12 +605,17 @@ class PlanProgress {
+     final last = raw['lastAdvancedCircleId'];
+     final served = ServedStageCircle.fromJson(raw['lastServed']);
+     final insight = AppliedInsight.fromJson(raw['appliedInsight']);
++    // R8.3.1: it decides credit, so present but not text makes the whole
++    // Plan unreadable — kept as stored, never read as absent.
++    final pausedStart = raw['startedWhilePaused'];
++    if (pausedStart != null && pausedStart is! String) return null;
+     const known = {
+       'lifecycle',
+       'cycles',
+       'lastAdvancedCircleId',
+       'lastServed',
+       'appliedInsight',
++      'startedWhilePaused',
+     };
+     return PlanProgress(
+       planId: planId,
+@@ -604,6 +624,7 @@ class PlanProgress {
+       lastAdvancedCircleId: last is String ? last : null,
+       lastServed: served,
+       appliedInsight: insight,
++      startedWhilePaused: pausedStart as String?,
+       extra: {
+         for (final MapEntry(:key, :value) in raw.entries)
+           if (!known.contains(key)) key: value,
+@@ -625,6 +646,7 @@ class AppliedInsight {
+     required this.insightId,
+     required this.cycleId,
+     required this.on,
++    this.extra = const {},
+   });
+ 
+   final String insightId;
+@@ -635,7 +657,15 @@ class AppliedInsight {
+   /// The local date of the change (`YYYY-MM-DD`).
+   final String on;
+ 
++  /// R8.3 (Astra R82-N04): the fields of a stored record this build doesn't
++  /// know, written back as stored. A new application is a new record, with
++  /// none.
++  final Map<String, Object?> extra;
++
++  static const _known = {'insightId', 'cycleId', 'on'};
++
+   Map<String, Object?> toJson() => {
++    ...extra,
+     'insightId': insightId,
+     'cycleId': cycleId,
+     'on': on,
+@@ -649,7 +679,15 @@ class AppliedInsight {
+     final on = raw['on'];
+     if (id is! String || cycleId is! String || on is! String) return null;
+     if (!isCanonicalDateKey(on)) return null;
+-    return AppliedInsight(insightId: id, cycleId: cycleId, on: on);
++    return AppliedInsight(
++      insightId: id,
++      cycleId: cycleId,
++      on: on,
++      extra: {
++        for (final MapEntry(:key, :value) in raw.entries)
++          if (!_known.contains(key)) key: value,
++      },
++    );
+   }
+ }
+ 
+@@ -724,8 +762,23 @@ class ServedStageCircle {
+     source: source,
+   );
+ 
++  /// The fields this build reads and writes itself.
++  static const _known = {
++    'circleId',
++    'stage',
++    'startedAfterExpiry',
++    'startedBeforePause',
++    'closedBeforeLeave',
++  };
++
++  /// R8.3 (Astra R82-N03, Claude AUD-N1): every known field is written as
++  /// the model now holds it — a flag set back to false, or a stamp absent,
++  /// is written absent, never inherited from [source]; only the fields this
++  /// build doesn't know are kept from it. The stage is still written back
++  /// as stored (R8.2, Astra R81-A05).
+   Map<String, Object?> toJson() => {
+-    ...?source,
++    for (final MapEntry(:key, :value) in (source ?? const {}).entries)
++      if (!_known.contains(key)) key: value,
+     'circleId': circleId,
+     'stage': source?['stage'] ?? stage.toJson(),
+     if (startedAfterExpiry) 'startedAfterExpiry': true,
+@@ -1086,6 +1139,12 @@ extension CirclePlanActions on CirclePlansState {
+   /// - anything else — a Plan paused before the Start, left before the
+   ///   Close — never.
+   /// No other Plan is touched, and nothing is reactivated.
++  ///
++  /// R8.3.1 (founder decision on R83-F1, Option B): a Circle whose valid
++  /// Start was made while its Plan was paused ([PlanProgress
++  /// .startedWhilePaused]) is never credited — whatever the Plan's
++  /// lifecycle when this runs: at its Close, in a later lifecycle change's
++  /// fold, or in a restart's or the next day's catch-up.
+   CirclePlansState recordGuided(
+     PlanStageProvenance stage, {
+     required String circleId,
+@@ -1098,6 +1157,7 @@ extension CirclePlanActions on CirclePlansState {
+     final plan = plans[stage.planId];
+     if (plan == null) return this;
+     if (plan.lastAdvancedCircleId == circleId) return this;
++    if (plan.startedWhilePaused == circleId) return this;
+     final cycle = plan.cycles.where((c) => c.id == stage.cycleId).firstOrNull;
+     if (cycle == null) return this;
+     if (cycle.records.any((r) => r.circleId == circleId)) return this;
+@@ -1227,6 +1287,30 @@ extension CirclePlanActions on CirclePlansState {
+     );
+   }
+ 
++  /// R8.3.1 (founder decision on R83-F1, Option B): [stage]'s served Circle
++  /// [circleId] is being validly started now. If its Plan is paused, that
++  /// Start is not eligible for Plan credit, and this says so on the Plan
++  /// ([PlanProgress.startedWhilePaused]); `this` otherwise — an active Plan,
++  /// a Circle that isn't the one served, or one already recorded.
++  CirclePlansState noteStartedWhilePaused(
++    PlanStageProvenance stage, {
++    required String circleId,
++  }) {
++    final plan = plans[stage.planId];
++    final served = plan?.lastServed;
++    if (plan == null ||
++        plan.lifecycle != PlanLifecycle.paused ||
++        served == null ||
++        !served.matches(stage, circleId: circleId) ||
++        plan.startedWhilePaused == circleId) {
++      return this;
++    }
++    return _with(
++      plan.copyWith(startedWhilePaused: circleId),
++      activePlanId: activePlanId,
++    );
++  }
++
+   /// R8.2 Plan lifecycle policy: [planId]'s served Circle [circleId] with
+   /// the order of the user's own actions recorded on it — started before
+   /// its Plan was paused ([startedBeforePause]), asked to close before the
+diff --git a/lib/features/premium/application/premium_offer_provider.dart b/lib/features/premium/application/premium_offer_provider.dart
+index 65bd252..9629252 100644
+--- a/lib/features/premium/application/premium_offer_provider.dart
++++ b/lib/features/premium/application/premium_offer_provider.dart
+@@ -42,7 +42,11 @@ final showPremiumOfferInvitationProvider = Provider<bool>((ref) {
+   if (ref.watch(showReminderInvitationProvider)) return false;
+ 
+   final prefs = ref.watch(sharedPreferencesProvider);
+-  if (prefs.getBool(premiumOfferInvitationShownKey) ?? false) return false;
++  // R8.3 (founder decision D5, Claude O-2): read on Today's first frame, as
++  // whatever native type is stored. Only `false` or nothing means not shown;
++  // a value of another type counts as shown, so it is never written over.
++  final shown = prefs.get(premiumOfferInvitationShownKey);
++  if (shown != null && shown != false) return false;
+ 
+   final entries = ref.watch(circleJournalRepositoryProvider).readAll();
+   final distinctClosedDates = <String>{
+diff --git a/lib/features/premium/presentation/widgets/premium_offer_invitation_card.dart b/lib/features/premium/presentation/widgets/premium_offer_invitation_card.dart
+index cf43716..4dec78b 100644
+--- a/lib/features/premium/presentation/widgets/premium_offer_invitation_card.dart
++++ b/lib/features/premium/presentation/widgets/premium_offer_invitation_card.dart
+@@ -34,7 +34,10 @@ class _PremiumOfferInvitationCardState
+     extends ConsumerState<PremiumOfferInvitationCard> {
+   void _markShown() {
+     final prefs = ref.read(sharedPreferencesProvider);
+-    if (prefs.getBool(premiumOfferInvitationShownKey) ?? false) return;
++    // R8.3 (founder decision D5): as the flag is read — anything but
++    // `false` or nothing is shown already, and is never written over.
++    final shown = prefs.get(premiumOfferInvitationShownKey);
++    if (shown != null && shown != false) return;
+     prefs.setBool(premiumOfferInvitationShownKey, true);
+   }
+ 
+diff --git a/lib/features/reminder/application/reminder_invitation_provider.dart b/lib/features/reminder/application/reminder_invitation_provider.dart
+index e219e0e..044193a 100644
+--- a/lib/features/reminder/application/reminder_invitation_provider.dart
++++ b/lib/features/reminder/application/reminder_invitation_provider.dart
+@@ -39,7 +39,11 @@ final showReminderInvitationProvider = Provider<bool>((ref) {
+   if (slot.owner != null) return false;
+ 
+   final prefs = ref.watch(sharedPreferencesProvider);
+-  if (prefs.getBool(reminderInvitationShownKey) ?? false) return false;
++  // R8.3 (founder decision D5, Claude O-2): read on Today's first frame, as
++  // whatever native type is stored. Only `false` or nothing means not shown;
++  // a value of another type counts as shown, so it is never written over.
++  final shown = prefs.get(reminderInvitationShownKey);
++  if (shown != null && shown != false) return false;
+ 
+   final hasClosedAnyCircleEver = ref
+       .watch(circleJournalRepositoryProvider)
+diff --git a/lib/features/reminder/application/reminder_provider.dart b/lib/features/reminder/application/reminder_provider.dart
+index d4b49ee..ecfedf0 100644
+--- a/lib/features/reminder/application/reminder_provider.dart
++++ b/lib/features/reminder/application/reminder_provider.dart
+@@ -117,10 +117,18 @@ class ReminderNotifier extends Notifier<ReminderState> {
+       if (previous != next) unawaited(_rescheduleIfNeeded());
+     });
+ 
++    // R8.3 (founder decision D5, Claude O-2): `main()` builds this before
++    // the app starts, so each value is read as whatever native type is
++    // stored — one of another type reads as the default and never stops
++    // THIRTY from starting. It stays stored until the user sets that value
++    // themselves ([_persist]).
++    final enabled = prefs.get(reminderEnabledKey);
++    final hour = prefs.get(reminderHourKey);
++    final minute = prefs.get(reminderMinuteKey);
+     return ReminderState(
+-      enabled: prefs.getBool(reminderEnabledKey) ?? false,
+-      hour: prefs.getInt(reminderHourKey) ?? _defaultHour,
+-      minute: prefs.getInt(reminderMinuteKey) ?? _defaultMinute,
++      enabled: enabled is bool && enabled,
++      hour: hour is int ? hour : _defaultHour,
++      minute: minute is int ? minute : _defaultMinute,
+       permissionGranted: false,
+     );
+   }
+@@ -160,7 +168,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
+     // back (session state only; `reminder_invitation_shown_v1` keeps its
+     // "was meaningfully visible" meaning).
+     ref.read(homeInvitationSlotProvider.notifier).closeReminderForSession();
+-    await _persist();
++    await _persist(enabled: true, time: true);
+     await _rescheduleIfNeeded();
+   }
+ 
+@@ -168,7 +176,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
+   Future<void> disable() async {
+     if (!state.enabled) return;
+     state = state.copyWith(enabled: false);
+-    await _persist();
++    await _persist(enabled: true, time: false);
+     await ref.read(reminderGatewayProvider).cancel();
+   }
+ 
+@@ -178,7 +186,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
+   /// happens only if the reminder is actually active.
+   Future<void> setTime({required int hour, required int minute}) async {
+     state = state.copyWith(hour: hour, minute: minute);
+-    await _persist();
++    await _persist(enabled: false, time: true);
+     await _rescheduleIfNeeded();
+   }
+ 
+@@ -208,11 +216,17 @@ class ReminderNotifier extends Notifier<ReminderState> {
+     await _rescheduleIfNeeded();
+   }
+ 
+-  Future<void> _persist() async {
++  /// Saves what the user just set: the on/off choice with [enabled], the
++  /// time with [time]. R8.3 (founder decision D5): a value the user didn't
++  /// set is never written — so a stored value of another type, read as the
++  /// default ([build]), is never replaced by that default.
++  Future<void> _persist({required bool enabled, required bool time}) async {
+     final prefs = ref.read(sharedPreferencesProvider);
+-    await prefs.setBool(reminderEnabledKey, state.enabled);
+-    await prefs.setInt(reminderHourKey, state.hour);
+-    await prefs.setInt(reminderMinuteKey, state.minute);
++    if (enabled) await prefs.setBool(reminderEnabledKey, state.enabled);
++    if (time) {
++      await prefs.setInt(reminderHourKey, state.hour);
++      await prefs.setInt(reminderMinuteKey, state.minute);
++    }
+   }
+ 
+   /// The one place that decides whether THIRTY's reminder should currently
+diff --git a/lib/features/reminder/presentation/widgets/reminder_invitation_card.dart b/lib/features/reminder/presentation/widgets/reminder_invitation_card.dart
+index c609b97..6b866ff 100644
+--- a/lib/features/reminder/presentation/widgets/reminder_invitation_card.dart
++++ b/lib/features/reminder/presentation/widgets/reminder_invitation_card.dart
+@@ -47,7 +47,10 @@ class _ReminderInvitationCardState
+ 
+   void _markShown() {
+     final prefs = ref.read(sharedPreferencesProvider);
+-    if (prefs.getBool(reminderInvitationShownKey) ?? false) return;
++    // R8.3 (founder decision D5): as the flag is read — anything but
++    // `false` or nothing is shown already, and is never written over.
++    final shown = prefs.get(reminderInvitationShownKey);
++    if (shown != null && shown != false) return;
+     prefs.setBool(reminderInvitationShownKey, true);
+   }
+ 
+diff --git a/test/support/r8_fault_disk.dart b/test/support/r8_fault_disk.dart
+index 39d0091..ec95f83 100644
+--- a/test/support/r8_fault_disk.dart
++++ b/test/support/r8_fault_disk.dart
+@@ -41,6 +41,17 @@ class FaultDisk extends InMemorySharedPreferencesStore {
+   /// Every write and removal attempted, landed or not.
+   final attempts = <String>[];
+ 
++  /// R8.3: every write or removal that landed although its call then
++  /// reported a failure ([ackLost]), in order (`set key` / `remove key`).
++  final ackLostLog = <String>[];
++
++  /// R8.3 single-writer guard: each write or removal that began while
++  /// another to the same key was still pending (held, or not yet landed),
++  /// as `op key`. Recorded, never failed here; a test asserts on it.
++  final overlaps = <String>[];
++
++  final _pendingByKey = <String, int>{};
++
+   /// The process stops once this many writes or removals have landed.
+   int? stopAfter;
+ 
+@@ -57,6 +68,33 @@ class FaultDisk extends InMemorySharedPreferencesStore {
+   /// [key] writes normally again.
+   void heal(String key) => _faults.remove(key);
+ 
++  final _ackLost = <String, (int, bool)>{};
++
++  /// R8.3: the next [times] writes or removals of [key] reach the disk —
++  /// the value lands — and the call then throws, as if the platform's
++  /// answer were lost after the write. With [thenStop] the process stops
++  /// right after the value lands instead ([stopAfter]): the call never
++  /// completes, as when the app dies between the platform's commit and
++  /// Dart hearing of it.
++  ///
++  /// A simulation inside one Dart process: it is not the behaviour of
++  /// Android's storage, and passing tests with it prove nothing about a
++  /// real process kill or a real device fault.
++  void ackLost(String key, {int times = 1, bool thenStop = false}) =>
++      _ackLost[_bare(key)] = (times, thenStop);
++
++  bool? _takeAckLost(String key) {
++    final entry = _ackLost[key];
++    if (entry == null) return null;
++    final (times, thenStop) = entry;
++    if (times <= 1) {
++      _ackLost.remove(key);
++    } else {
++      _ackLost[key] = (times - 1, thenStop);
++    }
++    return thenStop;
++  }
++
+   /// Every key writes normally again.
+   void healAll() => _faults.clear();
+ 
+@@ -91,10 +129,25 @@ class FaultDisk extends InMemorySharedPreferencesStore {
+     final bare = _bare(key);
+     attempts.add('$op $bare');
+     if (_stopped) return Completer<bool>().future;
++    if ((_pendingByKey[bare] ?? 0) > 0) overlaps.add('$op $bare');
++    _pendingByKey[bare] = (_pendingByKey[bare] ?? 0) + 1;
++    try {
++      return await _attemptOnce(op, bare, land);
++    } finally {
++      _pendingByKey[bare] = _pendingByKey[bare]! - 1;
++    }
++  }
++
++  Future<bool> _attemptOnce(
++    String op,
++    String bare,
++    Future<bool> Function() land,
++  ) async {
+     if (_holds.remove(bare) case final held?) {
+       held._reached.complete();
+-      final fault = await held._released.future;
+-      switch (fault) {
++      final release = await held._released.future;
++      if (release.ackLost) return _landThenFail(op, bare, land, false);
++      switch (release.fault) {
+         case DiskFault.throws:
+           throw StateError('disk $op failed for $bare');
+         case DiskFault.returnsFalse:
+@@ -104,6 +157,9 @@ class FaultDisk extends InMemorySharedPreferencesStore {
+           return land();
+       }
+     }
++    if (_takeAckLost(bare) case final thenStop?) {
++      return _landThenFail(op, bare, land, thenStop);
++    }
+     switch (_faultFor(bare)) {
+       case DiskFault.throws:
+         throw StateError('disk $op failed for $bare');
+@@ -116,6 +172,22 @@ class FaultDisk extends InMemorySharedPreferencesStore {
+     return land();
+   }
+ 
++  Future<bool> _landThenFail(
++    String op,
++    String bare,
++    Future<bool> Function() land,
++    bool thenStop,
++  ) async {
++    log.add('$op $bare');
++    ackLostLog.add('$op $bare');
++    await land();
++    if (thenStop) {
++      stopAfter = log.length;
++      return Completer<bool>().future;
++    }
++    throw StateError('disk $op landed for $bare; its answer was lost');
++  }
++
+   @override
+   Future<bool> setValue(String valueType, String key, Object value) =>
+       _attempt('set', key, () => super.setValue(valueType, key, value));
+@@ -136,7 +208,7 @@ class HeldWrite {
+   HeldWrite._();
+ 
+   final _reached = Completer<void>();
+-  final _released = Completer<DiskFault?>();
++  final _released = Completer<({DiskFault? fault, bool ackLost})>();
+ 
+   /// Completes once the write has arrived and is waiting.
+   Future<void> get reached => _reached.future;
+@@ -145,5 +217,9 @@ class HeldWrite {
+   bool get isWaiting => _reached.isCompleted && !_released.isCompleted;
+ 
+   /// Lets the write land — or fail as [fault].
+-  void release([DiskFault? fault]) => _released.complete(fault);
++  void release([DiskFault? fault]) =>
++      _released.complete((fault: fault, ackLost: false));
++
++  /// R8.3: lets the write land, then fails its call ([FaultDisk.ackLost]).
++  void releaseAckLost() => _released.complete((fault: null, ackLost: true));
+ }

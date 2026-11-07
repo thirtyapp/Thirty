@@ -117,10 +117,18 @@ class ReminderNotifier extends Notifier<ReminderState> {
       if (previous != next) unawaited(_rescheduleIfNeeded());
     });
 
+    // R8.3 (founder decision D5, Claude O-2): `main()` builds this before
+    // the app starts, so each value is read as whatever native type is
+    // stored — one of another type reads as the default and never stops
+    // THIRTY from starting. It stays stored until the user sets that value
+    // themselves ([_persist]).
+    final enabled = prefs.get(reminderEnabledKey);
+    final hour = prefs.get(reminderHourKey);
+    final minute = prefs.get(reminderMinuteKey);
     return ReminderState(
-      enabled: prefs.getBool(reminderEnabledKey) ?? false,
-      hour: prefs.getInt(reminderHourKey) ?? _defaultHour,
-      minute: prefs.getInt(reminderMinuteKey) ?? _defaultMinute,
+      enabled: enabled is bool && enabled,
+      hour: hour is int ? hour : _defaultHour,
+      minute: minute is int ? minute : _defaultMinute,
       permissionGranted: false,
     );
   }
@@ -160,7 +168,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
     // back (session state only; `reminder_invitation_shown_v1` keeps its
     // "was meaningfully visible" meaning).
     ref.read(homeInvitationSlotProvider.notifier).closeReminderForSession();
-    await _persist();
+    await _persist(enabled: true, time: true);
     await _rescheduleIfNeeded();
   }
 
@@ -168,7 +176,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
   Future<void> disable() async {
     if (!state.enabled) return;
     state = state.copyWith(enabled: false);
-    await _persist();
+    await _persist(enabled: true, time: false);
     await ref.read(reminderGatewayProvider).cancel();
   }
 
@@ -178,7 +186,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
   /// happens only if the reminder is actually active.
   Future<void> setTime({required int hour, required int minute}) async {
     state = state.copyWith(hour: hour, minute: minute);
-    await _persist();
+    await _persist(enabled: false, time: true);
     await _rescheduleIfNeeded();
   }
 
@@ -208,11 +216,17 @@ class ReminderNotifier extends Notifier<ReminderState> {
     await _rescheduleIfNeeded();
   }
 
-  Future<void> _persist() async {
+  /// Saves what the user just set: the on/off choice with [enabled], the
+  /// time with [time]. R8.3 (founder decision D5): a value the user didn't
+  /// set is never written — so a stored value of another type, read as the
+  /// default ([build]), is never replaced by that default.
+  Future<void> _persist({required bool enabled, required bool time}) async {
     final prefs = ref.read(sharedPreferencesProvider);
-    await prefs.setBool(reminderEnabledKey, state.enabled);
-    await prefs.setInt(reminderHourKey, state.hour);
-    await prefs.setInt(reminderMinuteKey, state.minute);
+    if (enabled) await prefs.setBool(reminderEnabledKey, state.enabled);
+    if (time) {
+      await prefs.setInt(reminderHourKey, state.hour);
+      await prefs.setInt(reminderMinuteKey, state.minute);
+    }
   }
 
   /// The one place that decides whether THIRTY's reminder should currently

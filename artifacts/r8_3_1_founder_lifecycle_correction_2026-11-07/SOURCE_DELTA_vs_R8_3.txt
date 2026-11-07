@@ -1,0 +1,8 @@
+changed since R8.3 end:
+  lib/features/home/application/recommendation_provider.dart
+  lib/features/plans/application/circle_plans_provider.dart
+  lib/features/plans/domain/circle_plan.dart
+  test/support/r83_invariants.dart
+added:
+  test/features/r83/r831_start_eligibility_test.dart
+removed: []

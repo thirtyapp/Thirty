@@ -1,0 +1,149 @@
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+
+import '../../support/r8_fault_disk.dart';
+import '../../support/r8_harness.dart';
+
+/// R8.3 characterization probe (evidence only — not part of the regression
+/// suite): how a stage Circle whose Plan was paused before its valid Start
+/// fares when the Plan is carried on later. Each case prints the credit
+/// count on disk; the expectation encodes founder decision D2 (no credit).
+void main() {
+  final day1 = DateTime(2026, 10, 12, 9);
+  late R8Harness h;
+
+  setUp(() async {
+    h = R8Harness(day1);
+    await h.boot();
+  });
+
+  RecommendationNotifier today(ProviderContainer c) =>
+      c.read(recommendationProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+
+  Future<int> credits(String circleId) async {
+    final raw = (await h.disk.stored())[circlePlansKey];
+    if (raw is! String) return 0;
+    var n = 0;
+    for (final plan in ((jsonDecode(raw) as Map)['plans'] as Map).values) {
+      for (final cycle in ((plan as Map)['cycles'] as List)) {
+        for (final r in (cycle as Map)['records'] as List) {
+          if ((r as Map)['circleId'] == circleId) n++;
+        }
+      }
+    }
+    return n;
+  }
+
+  Future<(ProviderContainer, String)> offered({bool pending = false}) async {
+    final c = h.open();
+    plans(c).start('getting_going');
+    await R8Harness.settle();
+    final held = pending ? h.disk.hold(recommendationPendingWriteKey) : null;
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    if (held != null) await held.reached;
+    await R8Harness.settle();
+    final id = c.read(recommendationProvider).recommendation!.circleId;
+    if (held != null) {
+      today(c).start();
+      await R8Harness.settle();
+      plans(c).pause('getting_going');
+      await R8Harness.settle();
+      held.release();
+      await R8Harness.settle();
+    }
+    return (c, id);
+  }
+
+  Future<void> close(ProviderContainer c) async {
+    h.clock.value = day1.add(const Duration(minutes: 25));
+    today(c).close();
+    await R8Harness.settle();
+  }
+
+  test('P1 pending Start, Pause, Close, Resume, restart catch-up', () async {
+    final (c, id) = await offered(pending: true);
+    await close(c);
+    final atClose = await credits(id);
+    plans(c).resume('getting_going');
+    await R8Harness.settle();
+    await h.restart();
+    h.open().read(recommendationProvider);
+    await R8Harness.settle();
+    // ignore: avoid_print
+    print('P1 credits at Close=$atClose after resume+restart=${await credits(id)}');
+    expect(await credits(id), 0);
+  });
+
+  test('P2 no pending: Pause, Start, Close, Resume, restart', () async {
+    final (c, id) = await offered();
+    plans(c).pause('getting_going');
+    await R8Harness.settle();
+    today(c).start();
+    await R8Harness.settle();
+    await close(c);
+    final atClose = await credits(id);
+    plans(c).resume('getting_going');
+    await R8Harness.settle();
+    await h.restart();
+    h.open().read(recommendationProvider);
+    await R8Harness.settle();
+    // ignore: avoid_print
+    print('P2 credits at Close=$atClose after resume+restart=${await credits(id)}');
+    expect(await credits(id), 0);
+  });
+
+  test('P3 pending Start, Pause, Close, Resume, then Pause again (fold; no '
+      'restart)', () async {
+    final (c, id) = await offered(pending: true);
+    await close(c);
+    plans(c).resume('getting_going');
+    await R8Harness.settle();
+    plans(c).pause('getting_going');
+    await R8Harness.settle();
+    // ignore: avoid_print
+    print('P3 credits after resume then pause=${await credits(id)}');
+    expect(await credits(id), 0);
+  });
+
+  test('P4 Pause, Start, Resume, Close (Plan active at Close)', () async {
+    final (c, id) = await offered();
+    plans(c).pause('getting_going');
+    await R8Harness.settle();
+    today(c).start();
+    await R8Harness.settle();
+    plans(c).resume('getting_going');
+    await R8Harness.settle();
+    await close(c);
+    // ignore: avoid_print
+    print('P4 credits (Plan resumed before Close)=${await credits(id)}');
+  });
+
+  test('P5 pending Start, Pause, Close; restart only (Plan stays paused)',
+      () async {
+    final (c, id) = await offered(pending: true);
+    await close(c);
+    await h.restart();
+    h.open().read(recommendationProvider);
+    await R8Harness.settle();
+    // ignore: avoid_print
+    print('P5 credits after restart, still paused=${await credits(id)}');
+    expect(await credits(id), 0);
+  });
+
+  test('P6 control: fault-free, no pause at all', () async {
+    final (c, id) = await offered();
+    today(c).start();
+    await R8Harness.settle();
+    await close(c);
+    expect(await credits(id), 1);
+    h.disk.healAll();
+  });
+}

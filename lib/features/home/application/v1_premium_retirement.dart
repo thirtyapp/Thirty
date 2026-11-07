@@ -22,10 +22,17 @@ const v1PremiumRetiredKey = 'v1_premium_retired';
 ///
 /// Safe if interrupted: each removal is independent, the marker is written
 /// last, and running it again removes nothing that wasn't V1.
+///
+/// R8.3 (founder decision D5, Claude O-2): `main()` awaits this before the
+/// app starts, so the marker is read as whatever native type is stored — a
+/// value of another type never stops THIRTY from starting. Such a value
+/// records no retirement: the retirement runs (it only removes V1's
+/// records), and the value is left as stored rather than written over.
 Future<void> retireV1Premium(SharedPreferences prefs) async {
-  if (prefs.getBool(v1PremiumRetiredKey) ?? false) return;
+  final marker = prefs.get(v1PremiumRetiredKey);
+  if (marker == true) return;
   for (final key in [...retiredV1PremiumKeys, ...retiredPlanDayKeys]) {
     await prefs.remove(key);
   }
-  await prefs.setBool(v1PremiumRetiredKey, true);
+  if (marker == null) await prefs.setBool(v1PremiumRetiredKey, true);
 }

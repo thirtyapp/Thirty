@@ -1,0 +1,133 @@
+1c1,19
+< """(Copied unchanged from founder_decisions/regression_final/run_batches.py except OUT, for the R8.2 complete regression rerun authorized by the founder, 2026-11-06.)
+---
+> """R8.3 bounded integrity hardening (2026-11-07): copied from
+> artifacts/r8_2_consolidated_remediation_2026-11-05/lifecycle_policy/regression_rerun/run_batches.py
+> (left exactly as committed). Changes, all listed in RUNNER_DIFF_vs_R8_2.txt:
+> 
+> - OUT is the R8.3 regression folder;
+> - E-1 residual (Astra post-R8.2 section 7): `report` and `cases` no longer
+>   trust the summaries alone. Every summary's own raw reporter log must
+>   exist, be non-empty and complete: it begins with the reporter's start
+>   event and has exactly one terminal `done` event, last, with success; every
+>   started test finishes exactly once; re-summarized, it gives exactly the
+>   summary's files, per-file counts, totals and test names; and, when the
+>   summary records it (every R8.3 run does), the log's SHA-256 matches.
+>   `cases` counts the year profiles from the raw logs themselves too, and
+>   requires them to agree with the summaries.
+> - `_execute` records the raw log's SHA-256 in its summary.
+> 
+> (The R8.2 header follows.)
+> 
+> (Copied unchanged from founder_decisions/regression_final/run_batches.py except OUT, for the R8.2 complete regression rerun authorized by the founder, 2026-11-06.)
+34a53
+> import hashlib
+42c61
+< OUT = os.path.join('artifacts', 'r8_2_consolidated_remediation_2026-11-05', 'lifecycle_policy', 'regression_rerun')
+---
+> OUT = os.path.join('artifacts', 'r8_3_bounded_integrity_hardening_2026-11-07', 'regression')
+99c118,119
+<                     'seconds': round(time.time() - started), 'command': ' '.join(cmd)})
+---
+>                     'seconds': round(time.time() - started), 'command': ' '.join(cmd),
+>                     'rawSha256': _sha256(log)})
+166a187,252
+> def _sha256(path):
+>     h = hashlib.sha256()
+>     with open(path, 'rb') as fh:
+>         for chunk in iter(lambda: fh.read(1 << 20), b''):
+>             h.update(chunk)
+>     return h.hexdigest()
+> 
+> 
+> def raw_problems(summary_name, summary):
+>     """R8.3 (E-1 residual): what is wrong with [summary_name]'s own raw
+>     reporter log, judged from the raw events alone and against the summary.
+>     An empty list means the raw log is complete and says exactly what the
+>     summary says."""
+>     log = os.path.join(OUT, summary_name.replace('.summary.json', '.jsonl'))
+>     if not os.path.exists(log):
+>         return ['raw log missing']
+>     if os.path.getsize(log) == 0:
+>         return ['raw log empty']
+>     out = []
+>     if 'rawSha256' in summary and summary['rawSha256'] != _sha256(log):
+>         out.append('raw log is not the one summarized (SHA-256 differs)')
+>     events, starts, dones = [], {}, {}
+>     for line in open(log, encoding='utf-8', errors='replace'):
+>         line = line.strip()
+>         if not line.startswith('{'):
+>             continue
+>         try:
+>             e = json.loads(line)
+>         except ValueError:
+>             out.append('malformed reporter event')
+>             continue
+>         if not isinstance(e, dict) or 'type' not in e:
+>             continue
+>         events.append(e)
+>         if e['type'] == 'testStart':
+>             tid = e['test']['id']
+>             starts[tid] = starts.get(tid, 0) + 1
+>         elif e['type'] == 'testDone':
+>             dones[e['testID']] = dones.get(e['testID'], 0) + 1
+>     if not events:
+>         return out + ['no reporter events']
+>     if events[0]['type'] != 'start':
+>         out.append('reporter stream does not begin with its start event')
+>     terminal = [i for i, e in enumerate(events) if e['type'] == 'done']
+>     if len(terminal) != 1:
+>         out.append(f'{len(terminal)} terminal done events')
+>     elif terminal[0] != len(events) - 1:
+>         out.append('events after the terminal done event')
+>     elif events[-1].get('success') is not True:
+>         out.append('terminal done is not success')
+>     if any(v != 1 for v in starts.values()):
+>         out.append('a test started more than once')
+>     if any(v != 1 for v in dones.values()):
+>         out.append('a test finished more than once')
+>     if set(starts) != set(dones):
+>         out.append('started and finished tests differ (truncated or extra)')
+>     again = summarize(log)
+>     for field in ('files', 'totals', 'done', 'doneSuccess'):
+>         if again[field] != summary.get(field):
+>             out.append(f'raw {field} differ from the summary')
+>     names = {f: sorted(v) for f, v in again['testNames'].items()}
+>     if names != {f: sorted(v) for f, v in summary.get('testNames', {}).items()}:
+>         out.append('raw test names differ from the summary')
+>     return out
+> 
+> 
+185c271
+<                 'doneNotSuccess': [], 'caseCoverage': []}
+---
+>                 'doneNotSuccess': [], 'caseCoverage': [], 'rawLog': []}
+220a307,308
+>             for problem in raw_problems(name, s):
+>                 problems['rawLog'].append(f'{name}: {problem}')
+258c346
+<         ran, found = [], []
+---
+>         ran, found, raw_ran, raw_bad = [], [], [], []
+263a352,361
+>             # R8.3 (E-1 residual): the profiles are counted from the raw
+>             # logs themselves too, and must agree with the summaries.
+>             log = name.replace('.summary.json', '.jsonl')
+>             if os.path.exists(log) and os.path.getsize(log) > 0:
+>                 raw = summarize(log)
+>                 if not raw['done'] or raw['doneSuccess'] is not True:
+>                     raw_bad.append(os.path.basename(log))
+>                 raw_ran += raw['testNames'].get(path, [])
+>             else:
+>                 raw_bad.append(os.path.basename(log))
+265c363,365
+<                         'declaredParts': [f'{n}{label}' for label, _ in parts]}
+---
+>                         'declaredParts': [f'{n}{label}' for label, _ in parts],
+>                         'rawAgrees': sorted(raw_ran) == sorted(ran) and not raw_bad,
+>                         'rawProblems': raw_bad}
+270c370,371
+<              and len(r['parts']) == len(r['declaredParts']) for r in result.values())
+---
+>              and len(r['parts']) == len(r['declaredParts']) and r['rawAgrees']
+>              for r in result.values())

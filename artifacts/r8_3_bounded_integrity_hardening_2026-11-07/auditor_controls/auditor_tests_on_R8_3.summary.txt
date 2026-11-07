@@ -1,0 +1,37 @@
+DONE success= False
+passed 30 failed 5
+PASS zz_audit/audit_r81_diag_test.dart :: CONTROL A1: Start then Close, no Plan action — saved
+PASS zz_audit/audit_r81_diag_test.dart :: DIAG A1: Start; Leave + Go through again; Close; answer; restart
+FAIL zz_audit/audit_r81_diag_test.dart :: DIAG A2 (returnsFalse once at choice): run it; restart
+PASS zz_audit/audit_r81_diag_test.dart :: DIAG A3: Delete fails; later failed save; heal; restart
+PASS zz_audit/audit_r81_reconciliation_adapted_test.dart :: throws: R-A2 — ONE transient failure of the served-stage write at choice time: the Circle is never run and then lost (either it is saved, or it is refused / taken back wi
+PASS zz_audit/audit_r81_reconciliation_adapted_test.dart :: throws: R-A3 — failed Delete, a later failed unrelated Plan save, then the store heals: no deleted stage record in memory or on disk, also after a restart
+PASS zz_audit/audit_r81_reconciliation_adapted_test.dart :: returnsFalse: R-A2 — ONE transient failure of the served-stage write at choice time: the Circle is never run and then lost (either it is saved, or it is refused / taken b
+PASS zz_audit/audit_r81_reconciliation_adapted_test.dart :: returnsFalse: R-A3 — failed Delete, a later failed unrelated Plan save, then the store heals: no deleted stage record in memory or on disk, also after a restart
+PASS zz_audit/audit_r81_reconciliation_adapted_test.dart :: R-L — NEW-1: stage Circle started; Leave, then Start the same Plan again mid-Circle; Close and reflection are saved, also after a restart
+PASS zz_audit/audit_r81_reconciliation_adapted_test.dart :: R-I1 — NEW-1: stage 5 closed, Plan ended; the I1 application's goThroughAgain (byInsight where the tree has it); the stage-5 reflection is saved, also after a restart
+PASS zz_audit/audit_r81_repro_test.dart :: A1 — a Plan action that resets lastServed strands today's durably-served stage Circle (no storage fault at all) Start saved; Leave + "Go through it again"; Close: the Clo
+PASS zz_audit/audit_r81_repro_test.dart :: A1 — a Plan action that resets lastServed strands today's durably-served stage Circle (no storage fault at all) Closed and credited; Leave + "Go through it again"; then t
+FAIL zz_audit/audit_r81_repro_test.dart :: throws: A2 — ONE transient failure of the served-stage write: the user can still run and Close the Circle after the store heals, and History must record it
+FAIL zz_audit/audit_r81_repro_test.dart :: throws: A3 — a failed Delete leaves _durable at pre-deletion evidence: a later failed Plan save puts deleted stage evidence back in memory, and the next successful save w
+PASS zz_audit/audit_r81_repro_test.dart :: throws: A4 — confirmed(): an action whose own write fails but whose change lands through a later queued save must not be reported notSaved
+FAIL zz_audit/audit_r81_repro_test.dart :: returnsFalse: A2 — ONE transient failure of the served-stage write: the user can still run and Close the Circle after the store heals, and History must record it
+FAIL zz_audit/audit_r81_repro_test.dart :: returnsFalse: A3 — a failed Delete leaves _durable at pre-deletion evidence: a later failed Plan save puts deleted stage evidence back in memory, and the next successful 
+PASS zz_audit/audit_r81_repro_test.dart :: returnsFalse: A4 — confirmed(): an action whose own write fails but whose change lands through a later queued save must not be reported notSaved
+PASS zz_audit/audit_r81_stage5_test.dart :: stage 5 closed -> Plan ended -> "Go through it again" -> the reflection answers of that stage-5 Circle must be saved
+PASS zz_audit/audit_r82_adversarial_test.dart :: AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source domain: a served record read from disk with startedAfterExpiry true, re-noted as started under verified P
+PASS zz_audit/audit_r82_adversarial_test.dart :: AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source end to end: Start after verified expiry, process stops after the Plans note lands; resubscribe, Start und
+PASS zz_audit/audit_r82_adversarial_test.dart :: AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source control: same sequence without the final restart is credited
+PASS zz_audit/audit_r82_adversarial_test.dart :: AUD-N2 lifecycle-order instants survive Delete Start, Delete history, same-day stage Circle re-served, Plan paused before its Start: the deleted session's Start instant i
+PASS zz_audit/audit_r82_adversarial_test.dart :: AUD-A2-indep (throws): one transient served-stage failure at choice → offer taken back and user told; next choice runs, closes, reaches History and is credited, also afte
+PASS zz_audit/audit_r82_adversarial_test.dart :: AUD-A2-indep (returnsFalse): one transient served-stage failure at choice → offer taken back and user told; next choice runs, closes, reaches History and is credited, als
+PASS zz_audit/audit_r82_adversarial_test.dart :: AUD-N4 waiting Start across a Today rebuild (app resume) Start waits for its Plans record; the app is resumed meanwhile (nowProvider invalidated); the record lands: is th
+PASS zz_audit/audit_r82_adversarial_test.dart :: AUD-N3 Delete begun while a failing Plan change is in flight the failure is reported, yet Delete writes the change to disk
+PASS zz_audit/audit_r82_order_test.dart :: AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+PASS features/r82/astra_post_r82_appendix_b_test.dart :: R82-N01 I1 retry repairs only after manual pause
+PASS features/r82/astra_post_r82_appendix_b_test.dart :: R82-N01 I1 retry repairs only after manual leave
+PASS features/r82/astra_post_r82_appendix_b_test.dart :: R82-N01 I2 retry preserves a later manual stopGentler
+PASS features/r82/astra_post_r82_appendix_b_test.dart :: R82-N02 queued manual I3 target is never claimed by Insight
+PASS features/r82/astra_post_r82_appendix_b_test.dart :: R82-N03 decoded expiry true must serialize a later false
+PASS features/r82/astra_post_r82_appendix_b_test.dart :: R82-N04 valid AppliedInsight preserves nested extension fields
+PASS features/r82/astra_post_r82_appendix_b_test.dart :: R82-N05 delayed Start must revalidate its local day

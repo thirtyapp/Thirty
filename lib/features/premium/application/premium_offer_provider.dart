@@ -42,7 +42,11 @@ final showPremiumOfferInvitationProvider = Provider<bool>((ref) {
   if (ref.watch(showReminderInvitationProvider)) return false;
 
   final prefs = ref.watch(sharedPreferencesProvider);
-  if (prefs.getBool(premiumOfferInvitationShownKey) ?? false) return false;
+  // R8.3 (founder decision D5, Claude O-2): read on Today's first frame, as
+  // whatever native type is stored. Only `false` or nothing means not shown;
+  // a value of another type counts as shown, so it is never written over.
+  final shown = prefs.get(premiumOfferInvitationShownKey);
+  if (shown != null && shown != false) return false;
 
   final entries = ref.watch(circleJournalRepositoryProvider).readAll();
   final distinctClosedDates = <String>{

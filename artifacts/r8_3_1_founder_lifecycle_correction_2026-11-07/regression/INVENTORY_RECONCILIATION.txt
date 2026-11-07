@@ -1,0 +1,10 @@
+OK       inventory == *_test.dart files under test/ — 201 planned, 201 on disk
+OK       every planned file ran (suite in raw logs) — missing: []
+OK       no suite outside the plan — extra: []
+OK       no (file, test) pair ran twice — 0 repeated
+OK       every result is success — {'success': 2872}
+TOTAL tests 2872 in 201 files; results {'success': 2872}
+vs artifacts/r8_3_bounded_integrity_hardening_2026-11-07/regression: 2848 → 2872 tests
+  count changed: test/features/r83/r831_start_eligibility_test.dart: 0 → 24
+INVENTORY OK
+exit 0

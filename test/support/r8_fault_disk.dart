@@ -41,6 +41,17 @@ class FaultDisk extends InMemorySharedPreferencesStore {
   /// Every write and removal attempted, landed or not.
   final attempts = <String>[];
 
+  /// R8.3: every write or removal that landed although its call then
+  /// reported a failure ([ackLost]), in order (`set key` / `remove key`).
+  final ackLostLog = <String>[];
+
+  /// R8.3 single-writer guard: each write or removal that began while
+  /// another to the same key was still pending (held, or not yet landed),
+  /// as `op key`. Recorded, never failed here; a test asserts on it.
+  final overlaps = <String>[];
+
+  final _pendingByKey = <String, int>{};
+
   /// The process stops once this many writes or removals have landed.
   int? stopAfter;
 
@@ -56,6 +67,33 @@ class FaultDisk extends InMemorySharedPreferencesStore {
 
   /// [key] writes normally again.
   void heal(String key) => _faults.remove(key);
+
+  final _ackLost = <String, (int, bool)>{};
+
+  /// R8.3: the next [times] writes or removals of [key] reach the disk —
+  /// the value lands — and the call then throws, as if the platform's
+  /// answer were lost after the write. With [thenStop] the process stops
+  /// right after the value lands instead ([stopAfter]): the call never
+  /// completes, as when the app dies between the platform's commit and
+  /// Dart hearing of it.
+  ///
+  /// A simulation inside one Dart process: it is not the behaviour of
+  /// Android's storage, and passing tests with it prove nothing about a
+  /// real process kill or a real device fault.
+  void ackLost(String key, {int times = 1, bool thenStop = false}) =>
+      _ackLost[_bare(key)] = (times, thenStop);
+
+  bool? _takeAckLost(String key) {
+    final entry = _ackLost[key];
+    if (entry == null) return null;
+    final (times, thenStop) = entry;
+    if (times <= 1) {
+      _ackLost.remove(key);
+    } else {
+      _ackLost[key] = (times - 1, thenStop);
+    }
+    return thenStop;
+  }
 
   /// Every key writes normally again.
   void healAll() => _faults.clear();
@@ -91,10 +129,25 @@ class FaultDisk extends InMemorySharedPreferencesStore {
     final bare = _bare(key);
     attempts.add('$op $bare');
     if (_stopped) return Completer<bool>().future;
+    if ((_pendingByKey[bare] ?? 0) > 0) overlaps.add('$op $bare');
+    _pendingByKey[bare] = (_pendingByKey[bare] ?? 0) + 1;
+    try {
+      return await _attemptOnce(op, bare, land);
+    } finally {
+      _pendingByKey[bare] = _pendingByKey[bare]! - 1;
+    }
+  }
+
+  Future<bool> _attemptOnce(
+    String op,
+    String bare,
+    Future<bool> Function() land,
+  ) async {
     if (_holds.remove(bare) case final held?) {
       held._reached.complete();
-      final fault = await held._released.future;
-      switch (fault) {
+      final release = await held._released.future;
+      if (release.ackLost) return _landThenFail(op, bare, land, false);
+      switch (release.fault) {
         case DiskFault.throws:
           throw StateError('disk $op failed for $bare');
         case DiskFault.returnsFalse:
@@ -103,6 +156,9 @@ class FaultDisk extends InMemorySharedPreferencesStore {
           log.add('$op $bare');
           return land();
       }
+    }
+    if (_takeAckLost(bare) case final thenStop?) {
+      return _landThenFail(op, bare, land, thenStop);
     }
     switch (_faultFor(bare)) {
       case DiskFault.throws:
@@ -114,6 +170,22 @@ class FaultDisk extends InMemorySharedPreferencesStore {
     }
     log.add('$op $bare');
     return land();
+  }
+
+  Future<bool> _landThenFail(
+    String op,
+    String bare,
+    Future<bool> Function() land,
+    bool thenStop,
+  ) async {
+    log.add('$op $bare');
+    ackLostLog.add('$op $bare');
+    await land();
+    if (thenStop) {
+      stopAfter = log.length;
+      return Completer<bool>().future;
+    }
+    throw StateError('disk $op landed for $bare; its answer was lost');
   }
 
   @override
@@ -136,7 +208,7 @@ class HeldWrite {
   HeldWrite._();
 
   final _reached = Completer<void>();
-  final _released = Completer<DiskFault?>();
+  final _released = Completer<({DiskFault? fault, bool ackLost})>();
 
   /// Completes once the write has arrived and is waiting.
   Future<void> get reached => _reached.future;
@@ -145,5 +217,9 @@ class HeldWrite {
   bool get isWaiting => _reached.isCompleted && !_released.isCompleted;
 
   /// Lets the write land — or fail as [fault].
-  void release([DiskFault? fault]) => _released.complete(fault);
+  void release([DiskFault? fault]) =>
+      _released.complete((fault: fault, ackLost: false));
+
+  /// R8.3: lets the write land, then fails its call ([FaultDisk.ackLost]).
+  void releaseAckLost() => _released.complete((fault: null, ackLost: true));
 }

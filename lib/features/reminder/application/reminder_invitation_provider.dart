@@ -39,7 +39,11 @@ final showReminderInvitationProvider = Provider<bool>((ref) {
   if (slot.owner != null) return false;
 
   final prefs = ref.watch(sharedPreferencesProvider);
-  if (prefs.getBool(reminderInvitationShownKey) ?? false) return false;
+  // R8.3 (founder decision D5, Claude O-2): read on Today's first frame, as
+  // whatever native type is stored. Only `false` or nothing means not shown;
+  // a value of another type counts as shown, so it is never written over.
+  final shown = prefs.get(reminderInvitationShownKey);
+  if (shown != null && shown != false) return false;
 
   final hasClosedAnyCircleEver = ref
       .watch(circleJournalRepositoryProvider)

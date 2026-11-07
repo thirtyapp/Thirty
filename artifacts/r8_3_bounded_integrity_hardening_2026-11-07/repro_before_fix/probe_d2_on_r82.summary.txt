@@ -1,0 +1,8 @@
+DONE success= False
+passed 3 failed 3
+FAIL features/r83/r83_probe_d2_later_credit_test.dart :: P1 pending Start, Pause, Close, Resume, restart catch-up
+FAIL features/r83/r83_probe_d2_later_credit_test.dart :: P2 no pending: Pause, Start, Close, Resume, restart
+FAIL features/r83/r83_probe_d2_later_credit_test.dart :: P3 pending Start, Pause, Close, Resume, then Pause again (fold; no restart)
+PASS features/r83/r83_probe_d2_later_credit_test.dart :: P4 Pause, Start, Resume, Close (Plan active at Close)
+PASS features/r83/r83_probe_d2_later_credit_test.dart :: P5 pending Start, Pause, Close; restart only (Plan stays paused)
+PASS features/r83/r83_probe_d2_later_credit_test.dart :: P6 control: fault-free, no pause at all

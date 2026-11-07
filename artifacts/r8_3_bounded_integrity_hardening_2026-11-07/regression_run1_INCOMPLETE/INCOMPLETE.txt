@@ -1,0 +1,9 @@
+R8.3 regression run 1 (2026-11-07 08:59-09:13): INCOMPLETE - not counted.
+Batches 1-18 and part 19e ran (all exit 0, 0 failures). Parts 19a-19d of the
+year-long profile file were never run: the driver read its step list from a
+Python print, which emits CRLF on Windows, so their labels reached runpart as
+"a\r" ... "d\r" and were refused as undeclared. report and cases correctly
+returned EVIDENCE MISMATCH / CASES MISMATCH. Fingerprints and Git-blob
+manifests were identical at start and end. The driver was fixed (labels
+stripped of \r) and the complete regression was run again in ../regression/.
+Nothing from this run is combined with that one.

@@ -1,0 +1,28 @@
+{
+ "files": {
+  "test/features/personal_circle/personal_circle_simulation_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/features/personal_circle/personal_circle_simulation_test.dart": [
+   "p10_lapse_and_resubscribe \u2014 365 days, structurally sound",
+   "p11_many_exclusions \u2014 365 days, structurally sound"
+  ]
+ },
+ "batch": "19d",
+ "exit": 0,
+ "seconds": 157,
+ "command": "flutter test --concurrency=1 --reporter json --name p1[01]_ test/features/personal_circle/personal_circle_simulation_test.dart",
+ "rawSha256": "fe5672b0b2374442c58671b6b5f81a767dee07fa92c66c3d28f72376ecf3aa8a"
+}
