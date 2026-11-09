@@ -96,7 +96,38 @@ class FaultDisk extends InMemorySharedPreferencesStore {
   }
 
   /// Every key writes normally again.
-  void healAll() => _faults.clear();
+  void healAll() {
+    _faults.clear();
+    _matching.clear();
+  }
+
+  final _matching = <String, (bool Function(String value), DiskFault, int?)>{};
+
+  /// R8.3.2: the next writes of [key] whose text value [matches] fail as
+  /// [fault] — [times] times, or until [healAll] when `null`; other writes
+  /// of [key] land. A fault for one record's content (an Insight's applied
+  /// mark), wherever it falls among that key's writes.
+  void failWhere(
+    String key,
+    bool Function(String value) matches, {
+    DiskFault fault = DiskFault.returnsFalse,
+    int? times,
+  }) => _matching[_bare(key)] = (matches, fault, times);
+
+  DiskFault? _matchingFault(String key, Object value) {
+    final entry = _matching[key];
+    if (entry == null || value is! String) return null;
+    final (matches, fault, times) = entry;
+    if (!matches(value)) return null;
+    if (times != null) {
+      if (times <= 1) {
+        _matching.remove(key);
+      } else {
+        _matching[key] = (matches, fault, times - 1);
+      }
+    }
+    return fault;
+  }
 
   /// The fault to apply to this attempt on [key], if any.
   DiskFault? _faultFor(String key) {
@@ -189,8 +220,21 @@ class FaultDisk extends InMemorySharedPreferencesStore {
   }
 
   @override
-  Future<bool> setValue(String valueType, String key, Object value) =>
-      _attempt('set', key, () => super.setValue(valueType, key, value));
+  Future<bool> setValue(String valueType, String key, Object value) {
+    final bare = _bare(key);
+    if (!_stopped && _holds[bare] == null) {
+      switch (_matchingFault(bare, value)) {
+        case DiskFault.throws:
+          attempts.add('set $bare');
+          return Future.error(StateError('disk set failed for $bare'));
+        case DiskFault.returnsFalse:
+          attempts.add('set $bare');
+          return Future.value(false);
+        case null:
+      }
+    }
+    return _attempt('set', key, () => super.setValue(valueType, key, value));
+  }
 
   @override
   Future<bool> remove(String key) =>

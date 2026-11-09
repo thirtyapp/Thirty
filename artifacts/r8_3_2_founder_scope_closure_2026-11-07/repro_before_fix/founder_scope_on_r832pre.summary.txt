@@ -1,0 +1,80 @@
+FAIL | Insights R832-B1 — I3 retried after Put back B1-1 founder sequence: applied, Preferences confirmed, mark refused, Put back, retried: the part stays available, no action repeated, no application date
+     -> Expected: not contains ElementId:<ElementId.openWindow>
+        Expected: not contains ElementId:<ElementId.openWindow>
+        Actual: Set:[ElementId:ElementId.openWindow]
+FAIL | Insights R832-B1 — I3 retried after Put back B1-2 repeated retries and restarts change nothing
+     -> Expected: <null>
+        Expected: <null>
+        Actual: '{"schemaVersion":1,"notSuggested":[],"restsLifted":[],"elementsLeftOut":[{"elementId":"openWindow","since":"2026-10-30T09:00:00.000","byInsight":"insight.skipped_part@2026-10-30#insight.skipped_part:openWindow"}
+PASS | Insights R832-B1 — I3 retried after Put back B1-3 the Preferences write is refused (returns false): nothing was done, so a later retry applies it once
+FAIL | Insights R832-B1 — I3 retried after Put back B1-4 the Preferences write lands but its answer is lost: the outcome is uncertain — no replay, no application claimed
+     -> Expected: not contains ElementId:<ElementId.openWindow>
+        Expected: not contains ElementId:<ElementId.openWindow>
+        Actual: Set:[ElementId:ElementId.openWindow]
+N/A  | Insights R832-B1 — I3 retried after Put back B1-5 the app stops right after the attempt is recorded, before the change: no replay after the restart
+     -> PRECONDITION not constructible on this tree: the change was not made before the stop (an attempt record is the first write)
+PASS | Insights R832-B1 — I3 retried after Put back B1-6 the app stops after the change lands, before the mark: after a restart the mark is recorded with the original date, the change is not made twice
+PASS | Insights R832-B1 — I3 retried after Put back B1-ctl I3 applied normally: left out once, marked that day
+FAIL | Insights R832-B1 — I3 retried after Put back B1-ctl2 the attempt record itself is refused: no change is made
+     -> Expected: not contains ElementId:<ElementId.openWindow>
+        Expected: not contains ElementId:<ElementId.openWindow>
+        Actual: Set:[ElementId:ElementId.openWindow]
+FAIL | Insights R832-B2 — I4 retried after the kept Circle was removed B2-1 founder sequence: kept, Kept Circles confirmed, mark refused, the user removes it, retried: it stays removed, no application date
+     -> Expected: empty
+        Expected: empty
+        Actual: ['2026-10-29']
+FAIL | Insights R832-B2 — I4 retried after the kept Circle was removed B2-2 repeated retries and restarts recreate nothing
+     -> Expected: empty
+        Expected: empty
+        Actual: ['2026-10-29']
+FAIL | Insights R832-B2 — I4 retried after the kept Circle was removed B2-3 a Keep the user made independently is never attributed to I4
+     -> Expected: null
+        Expected: null
+        Actual: '2026-10-30'
+PASS | Insights R832-B2 — I4 retried after the kept Circle was removed B2-4 at the kept limit nothing is kept and nothing recorded; once a place is free, I4 keeps once
+PASS | Insights R832-B2 — I4 retried after the kept Circle was removed B2-5 the Kept Circles write is refused (returns false): nothing was kept, so a later retry keeps it once
+PASS | Insights R832-B2 — I4 retried after the kept Circle was removed B2-6 the Kept Circles write lands but its answer is lost: uncertain — never kept again, never claimed
+FAIL | Insights R832-B2 — I4 retried after the kept Circle was removed B2-7 the app stops after the Keep lands, before the mark: after a restart the mark is recorded with the original date; one kept Circle
+     -> Expected: '2026-10-30'
+        Expected: '2026-10-30'
+        Actual: '2026-10-31'
+        Which: is different.
+        Expected: 2026-10-30
+        Actual: 2026-10-31
+PASS | Insights R832-B2 — I4 retried after the kept Circle was removed B2-ctl I4 applied normally, also without Premium: kept once, marked that day
+N/A  | Insights The attempt record R1 it survives reassessment, a rebuild, another snapshot's change and restarts
+     -> PRECONDITION not constructible on this tree: an attempt record on this tree
+N/A  | Insights The attempt record R2 a damaged record makes the snapshot unreadable — kept as stored; a field this build doesn't know is kept
+     -> PRECONDITION not constructible on this tree: an attempt record on this tree
+PASS | Insights The attempt record R3 Delete Circle history removes it with the snapshots; the user's choices stay
+PASS | Insights Controls — I1 and I2 unchanged I1 applied: the Plan is started, marked that day
+PASS | Insights Controls — I1 and I2 unchanged I2 applied: the cycle is gentler, marked that day
+FAIL | N01-C — founder temporal policy N1 Paused → Start pending → Resume confirmed → the prerequisite resolves: the Start is cancelled; a fresh Start on the active Plan is credited once
+     -> Expected: 'notStarted'
+        Expected: 'notStarted'
+        Actual: 'started'
+        Which: is different.
+        Expected: notStarted ...
+        Actual: started
+FAIL | N01-C — founder temporal policy N2 Active → Start pending → Pause confirmed → the prerequisite resolves: the Start is cancelled; a fresh Start on the paused Plan is never credited
+     -> Expected: 'notStarted'
+        Expected: 'notStarted'
+        Actual: 'started'
+        Which: is different.
+        Expected: notStarted ...
+        Actual: started
+PASS | N01-C — founder temporal policy N3 the Pause is refused by the store: the Plan stayed active, so the pending Start goes ahead and is credited once
+PASS | N01-C — founder temporal policy N4 the Resume is refused by the store: the Plan stayed paused, so the pending Start goes ahead without credit
+PASS | N01-C — founder temporal policy N5 the paused-Start record is refused: the Start is refused; the next tap starts without credit
+PASS | N01-C — founder temporal policy N6 repeated taps during a pending Start, and after its cancellation, start the Circle once
+N/A  | N01-C — founder temporal policy N7 a restart after the cancellation: nothing was started, no paused-Start record; a fresh Start is credited once
+     -> PRECONDITION not constructible on this tree: cancelled
+FAIL | N01-C — founder temporal policy N8 Resume tapped while the paused Start's own record is being written: the Start is cancelled once the Resume is confirmed; the record left excludes nothing; a fresh Start is credited once
+     -> Expected: 'notStarted'
+        Expected: 'notStarted'
+        Actual: 'started'
+        Which: is different.
+        Expected: notStarted ...
+        Actual: started
+PASS | N01-C — founder temporal policy N-ctl Start → Pause → Close (a valid Start before the Pause) is credited once, also after restarts
+COUNTS {'FAIL': 11, 'PASS': 15, 'N/A': 4} DONE [False]

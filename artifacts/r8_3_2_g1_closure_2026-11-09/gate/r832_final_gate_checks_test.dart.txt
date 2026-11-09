@@ -1,0 +1,525 @@
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/providers/clock_provider.dart';
+import 'package:thirty/core/utils/date_key.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/application/suggestion_preferences.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart';
+import 'package:thirty/features/insights/domain/insight.dart';
+import 'package:thirty/features/insights/domain/insight_engine.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+import 'package:thirty/features/plans/domain/plan_stage_provenance.dart';
+
+import '../../support/r8_fault_disk.dart';
+import '../../support/r8_harness.dart';
+
+/// R8.3.2 final acceptance gate (founder directive 2026-11-07, §2 and §3):
+/// Check A (lifecycle ABA during a pending Start) and Check B (I3/I4
+/// receipt integrity, I1/I2 overwrite reconciliation). Gate evidence only —
+/// run outside the tested source tree.
+void main() {
+  void evidence(String id, Map<String, Object?> facts) {
+    // ignore: avoid_print
+    print('R832G-EVIDENCE ${jsonEncode({'test': id, ...facts})}');
+  }
+
+  void pre(bool holds, String what) {
+    if (!holds) fail('PRECONDITION not constructible on this tree: $what');
+  }
+
+  // -----------------------------------------------------------------------
+  group('Check A — lifecycle ABA while a Start is pending', () {
+    final day1 = DateTime(2026, 10, 12, 9);
+    late R8Harness h;
+
+    setUp(() async {
+      h = R8Harness(day1);
+      await h.boot();
+    });
+
+    RecommendationNotifier today(ProviderContainer c) =>
+        c.read(recommendationProvider.notifier);
+    CirclePlansNotifier plans(ProviderContainer c) =>
+        c.read(circlePlansProvider.notifier);
+    RecommendationStatus status(ProviderContainer c) =>
+        c.read(recommendationProvider).status;
+
+    Future<Map<String, Object?>> planOnDisk([
+      String id = 'getting_going',
+    ]) async {
+      final raw = (await h.disk.stored())[circlePlansKey];
+      if (raw is! String) return {};
+      return (((jsonDecode(raw) as Map)['plans'] as Map)[id] as Map?)
+              ?.cast<String, Object?>() ??
+          {};
+    }
+
+    Future<int> credits(String circleId) async {
+      var n = 0;
+      for (final c in (await planOnDisk())['cycles'] as List? ?? []) {
+        for (final r in (c as Map)['records'] as List) {
+          if ((r as Map)['circleId'] == circleId) n++;
+        }
+      }
+      return n;
+    }
+
+    Future<ProviderContainer> restart({int times = 1}) async {
+      late ProviderContainer c;
+      for (var i = 0; i < times; i++) {
+        await h.restart();
+        c = h.open();
+        c.read(circlePlansProvider);
+        c.read(recommendationProvider);
+        await R8Harness.settle();
+      }
+      return c;
+    }
+
+    Future<void> close(ProviderContainer c) async {
+      h.clock.value = h.clock.value.add(const Duration(minutes: 25));
+      today(c).close();
+      await R8Harness.settle();
+    }
+
+    Future<(ProviderContainer, String, HeldWrite)> pendingStart({
+      required bool paused,
+    }) async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final held = h.disk.hold(recommendationPendingWriteKey);
+      today(
+        c,
+      ).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await held.reached;
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      if (paused) {
+        expect(plans(c).pause('getting_going'), PlanActionResult.done);
+        await R8Harness.settle();
+      }
+      today(c).start();
+      await R8Harness.settle();
+      expect(status(c), RecommendationStatus.notStarted);
+      return (c, id, held);
+    }
+
+    Future<Map<String, Object?>> facts(ProviderContainer c, String id) async =>
+        {
+          'status': status(c).name,
+          'credits': await credits(id),
+          'lifecycle': (await planOnDisk())['lifecycle'],
+          'startedWhilePaused': (await planOnDisk())['startedWhilePaused'],
+        };
+
+    test(
+      'A1 Paused → Start pending → Resume confirmed → Pause confirmed '
+      '(same cycle) → the prerequisite resolves: the attempt is cancelled',
+      () async {
+        final (c, id, held) = await pendingStart(paused: true);
+        expect(plans(c).resume('getting_going'), PlanActionResult.done);
+        await R8Harness.settle();
+        expect(plans(c).pause('getting_going'), PlanActionResult.done);
+        await R8Harness.settle();
+        held.release();
+        await R8Harness.settle();
+        final after = await facts(c, id);
+        evidence('A1 P-A-P', after);
+        expect(
+          after['status'],
+          RecommendationStatus.notStarted.name,
+          reason:
+              'a confirmed Resume and Pause happened during the '
+              'unresolved Start',
+        );
+      },
+    );
+
+    test('A2 Active → Start pending → Pause confirmed → Resume confirmed '
+        '(same cycle) → resolves: the attempt is cancelled; a fresh Start is '
+        'credited once', () async {
+      final (c, id, held) = await pendingStart(paused: false);
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      held.release();
+      await R8Harness.settle();
+      final after = await facts(c, id);
+      evidence('A2 A-P-A', after);
+      expect(after['status'], RecommendationStatus.notStarted.name);
+    });
+
+    test('A3 Active → Start pending → another Plan started (this one paused) '
+        '→ this one carried on again → resolves: cancelled', () async {
+      final (c, id, held) = await pendingStart(paused: false);
+      expect(plans(c).start('making_room'), PlanActionResult.done);
+      await R8Harness.settle();
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      held.release();
+      await R8Harness.settle();
+      final after = await facts(c, id);
+      evidence('A3 other Plan', after);
+      expect(after['status'], RecommendationStatus.notStarted.name);
+    });
+
+    test(
+      'A4 Paused → Start pending → Resume refused → resolves: no '
+      'confirmed transition — the Start goes ahead, never credited',
+      () async {
+        final (c, id, held) = await pendingStart(paused: true);
+        h.disk.fail(circlePlansKey, DiskFault.returnsFalse, times: 1);
+        expect(
+          await plans(c).confirmed((p) => p.resume('getting_going')),
+          PlanActionResult.notSaved,
+        );
+        held.release();
+        await R8Harness.settle();
+        final started = status(c);
+        await close(c);
+        expect(plans(c).resume('getting_going'), PlanActionResult.done);
+        await R8Harness.settle();
+        await restart(times: 2);
+        evidence('A4 refused', {
+          'started': started.name,
+          ...await facts(c, id),
+        });
+        expect(started, RecommendationStatus.started);
+        expect(await credits(id), 0);
+      },
+    );
+
+    test('A5 a same-day rebuild while the Start is pending cancels it; a '
+        'restart leaves nothing started', () async {
+      final (c, id, held) = await pendingStart(paused: true);
+      h.clock.value = h.clock.value.add(const Duration(minutes: 1));
+      c.invalidate(nowProvider);
+      await R8Harness.settle();
+      held.release();
+      await R8Harness.settle();
+      final rebuilt = status(c);
+      final c2 = await restart();
+      evidence('A5 rebuild', {'rebuilt': rebuilt.name, ...await facts(c2, id)});
+      expect(rebuilt, RecommendationStatus.notStarted);
+      expect(status(c2), RecommendationStatus.notStarted);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  group('Check B — receipt integrity', () {
+    final morning = DateTime(2026, 10, 30, 9);
+    late R8Harness h;
+
+    setUp(() async {
+      h = R8Harness(morning);
+      await h.boot();
+    });
+
+    CirclePart part(ElementId e) => CirclePart(e, elementOf(e).minutes);
+    final window = [
+      part(ElementId.openWindow),
+      part(ElementId.standingStretch),
+      part(ElementId.sitAMinute),
+    ];
+    final reading = [part(ElementId.phoneFaceDown), part(ElementId.readPages)];
+    const head = Intention.clearerHead;
+    const energy = Intention.moreEnergy;
+
+    CircleJournalEntry entry(
+      int ago,
+      Intention need, {
+      List<CirclePart> parts = const [],
+      Set<ElementId> skipped = const {},
+      PlanStageProvenance? stage,
+      PlanStageProvenance? replacedFromStage,
+      String? reason,
+    }) {
+      final date = morning.subtract(Duration(days: ago));
+      return CircleJournalEntry(
+        schemaVersion: circleJournalSchemaVersion,
+        circleId: dateKey(date),
+        localDate: dateKey(date),
+        direction: need,
+        activityId: ActivityId.values.first,
+        catalogVersion: catalogVersion,
+        shownAt: date,
+        startedAt: date,
+        closedAt: date,
+        replacementReason: reason,
+        replacedFromStage: replacedFromStage,
+        session: parts.isEmpty
+            ? null
+            : CircleSessionRecord(
+                title: 'Circle',
+                parts: CirclePlan(parts).toWire(),
+                skipped: [for (final e in skipped) e.name],
+                planStage: stage,
+              ),
+      );
+    }
+
+    String journalOf(List<CircleJournalEntry> entries) => jsonEncode({
+      'schemaVersion': circleJournalSchemaVersion,
+      'entries': [for (final e in entries) e.toJson()],
+    });
+
+    final i3 = <String, Object>{
+      circleJournalKey: journalOf([
+        for (final ago in [2, 4, 6, 8, 10, 12, 15])
+          entry(ago, head, parts: reading),
+        for (final (k, ago) in [1, 5, 9, 11].indexed)
+          entry(
+            ago,
+            energy,
+            parts: window,
+            skipped: k == 1 ? const {} : {ElementId.openWindow},
+          ),
+      ]),
+    };
+    const stage = PlanStageProvenance(
+      planId: 'getting_going',
+      cycleId: 'getting_going#1',
+      stageNumber: 1,
+      stageId: 'getting_going.1',
+    );
+    final i2 = <String, Object>{
+      circlePlansKey: jsonEncode(
+        CirclePlansState.empty
+            .start('getting_going', today: '2026-10-01')!
+            .toJson(),
+      ),
+      circleJournalKey: journalOf([
+        for (final (k, ago) in [2, 5, 9, 13, 17].indexed)
+          k.isEven
+              ? entry(ago, energy, replacedFromStage: stage, reason: 'tooMuch')
+              : entry(ago, energy, parts: window, stage: stage),
+      ]),
+    };
+
+    InsightsNotifier insights(ProviderContainer c) =>
+        c.read(insightsProvider.notifier);
+
+    Future<Map<String, Object?>> json(String key) async {
+      final raw = (await h.disk.stored())[key];
+      return raw is String ? jsonDecode(raw) as Map<String, Object?> : {};
+    }
+
+    Future<Map?> snapshotOnDisk(String id) async {
+      for (final s in (await json(insightsKey))['snapshots'] as List? ?? []) {
+        if ((s as Map)['id'] == id) return s;
+      }
+      return null;
+    }
+
+    Future<Set<ElementId>> leftOutAfterRestart() async {
+      await h.restart();
+      return h.open().read(suggestionPreferencesProvider).leftOut;
+    }
+
+    String statusNow(String id) {
+      final c = h.open();
+      return insights(c).status(insights(c).state.byId(id)!).name;
+    }
+
+    Future<(ProviderContainer, InsightSnapshot)> shown(
+      Map<String, Object> seed,
+      InsightFamily family,
+    ) async {
+      await h.boot(seed);
+      final c = h.open();
+      final s = insights(c).assess().added.single;
+      expect(s.family, family);
+      await R8Harness.settle();
+      return (c, s);
+    }
+
+    test('Ba the Preferences write throws before storage: uncertain — never '
+        'replayed, never claimed; the receipt stays', () async {
+      final (c, s) = await shown(i3, InsightFamily.skippedPart);
+      h.disk.fail(suggestionPreferencesKey, DiskFault.throws, times: 1);
+      final first = await insights(c).apply(s.id);
+      await R8Harness.settle();
+      await h.restart();
+      final retried = await insights(h.open()).apply(s.id);
+      await R8Harness.settle();
+      final left = await leftOutAfterRestart();
+      evidence('Ba throws', {
+        'first': first.name,
+        'retry': retried.name,
+        'status': statusNow(s.id),
+        'snapshot': await snapshotOnDisk(s.id),
+      });
+      expect(left, isNot(contains(ElementId.openWindow)));
+      expect((await snapshotOnDisk(s.id))?['appliedOn'], isNull);
+      expect((await snapshotOnDisk(s.id))?['attempt'], isNotNull);
+    });
+
+    test(
+      'Bb the change confirmed, the mark refused, no reversal: opening '
+      'Insights records the mark with the original date (no retry tap)',
+      () async {
+        final (c, s) = await shown(i3, InsightFamily.skippedPart);
+        h.disk.failWhere(insightsKey, (v) => v.contains('"appliedOn"'));
+        expect(await insights(c).apply(s.id), InsightActionResult.done);
+        await R8Harness.settle();
+        h.disk.healAll();
+        h.clock.value = morning.add(const Duration(days: 2));
+        await h.restart();
+        insights(h.open()).assess();
+        await R8Harness.settle();
+        evidence('Bb reconcile', {'snapshot': await snapshotOnDisk(s.id)});
+        expect((await snapshotOnDisk(s.id))?['appliedOn'], dateKey(morning));
+        expect((await snapshotOnDisk(s.id))?['attempt'], isNull);
+        expect(statusNow(s.id), InsightStatus.applied.name);
+      },
+    );
+
+    test(
+      'Bc another Insight generated and applied while an I3 attempt is '
+      'unresolved: the receipt is untouched, the I3 never replayed',
+      () async {
+        final (c, s) = await shown(i3, InsightFamily.skippedPart);
+        h.disk.failWhere(insightsKey, (v) => v.contains('"appliedOn"'));
+        await insights(c).apply(s.id);
+        await R8Harness.settle();
+        h.disk.healAll();
+        await c
+            .read(suggestionPreferencesProvider.notifier)
+            .putBack(ElementId.openWindow);
+        await R8Harness.settle();
+        final receipt = (await snapshotOnDisk(s.id))?['attempt'];
+        h.clock.value = morning.add(const Duration(days: 7));
+        await h.restart();
+        final c2 = h.open();
+        final added = insights(c2).assess().added;
+        await R8Harness.settle();
+        pre(added.isNotEmpty, 'another Insight generated seven days on');
+        final other = added.first;
+        final otherResult = await insights(c2).apply(other.id);
+        await R8Harness.settle();
+        final retried = await insights(c2).apply(s.id);
+        await R8Harness.settle();
+        evidence('Bc other Insight', {
+          'other': other.family.id,
+          'otherResult': otherResult.name,
+          'retry': retried.name,
+          'receiptBefore': receipt,
+          'receiptAfter': (await snapshotOnDisk(s.id))?['attempt'],
+        });
+        expect((await snapshotOnDisk(s.id))?['attempt'], receipt);
+        expect(
+          await leftOutAfterRestart(),
+          isNot(contains(ElementId.openWindow)),
+        );
+      },
+    );
+
+    test('Bd an interrupted Delete Circle history (the app stops after its '
+        'intent): finished at the next start — snapshots and receipts gone, '
+        'the user\'s choices and kept Circles stay', () async {
+      final (c, s) = await shown(i3, InsightFamily.skippedPart);
+      h.disk.failWhere(insightsKey, (v) => v.contains('"appliedOn"'));
+      await insights(c).apply(s.id);
+      await R8Harness.settle();
+      h.disk.healAll();
+      await c
+          .read(keptCirclesProvider.notifier)
+          .keepCircle(plan: CirclePlan(reading), need: head, circleId: 'mine');
+      await R8Harness.settle();
+      h.disk.stopAfter = h.disk.log.length + 1;
+      c.read(circleHistoryDeletionProvider).delete().ignore();
+      await R8Harness.settle();
+      final mid = (await h.disk.stored())[historyDeletionPendingKey];
+      await h.restart();
+      final c2 = h.open();
+      final kept = c2.read(keptCirclesProvider).kept.length;
+      evidence('Bd interrupted Delete', {
+        'intentLanded': mid,
+        'insights': (await h.disk.stored())[insightsKey],
+        'prefs': (await h.disk.stored())[suggestionPreferencesKey],
+        'kept': kept,
+      });
+      pre(mid == true, 'the Delete intent landed before the stop');
+      expect((await h.disk.stored())[insightsKey], isNull);
+      expect(
+        c2.read(suggestionPreferencesProvider).leftOut,
+        contains(ElementId.openWindow),
+        reason: 'the user\'s Leave-it-out choice stays',
+      );
+      expect(
+        '${(await h.disk.stored())[suggestionPreferencesKey]}',
+        isNot(contains('byInsight')),
+      );
+      expect(kept, 1);
+    });
+
+    test('Be I1/I2: I2 applied, mark refused; seven days on, I1\'s '
+        'reconciliation of I2 lands and the app stops before I1\'s own '
+        'change: after a restart I2 is marked with its original date, the '
+        'Plan untouched; I1 then applies once', () async {
+      final (c, i2s) = await shown(i2, InsightFamily.planPacing);
+      h.disk.failWhere(insightsKey, (v) => v.contains('"appliedOn"'));
+      expect(await insights(c).apply(i2s.id), InsightActionResult.done);
+      await R8Harness.settle();
+      h.disk.healAll();
+      expect(
+        c.read(circlePlansProvider.notifier).stopGentler('getting_going'),
+        PlanActionResult.done,
+      );
+      expect(
+        c.read(circlePlansProvider.notifier).pause('getting_going'),
+        PlanActionResult.done,
+      );
+      await R8Harness.settle();
+      h.clock.value = morning.add(const Duration(days: 7));
+      await h.restart();
+      final c2 = h.open();
+      final i1 = insights(c2)
+          .assess()
+          .added
+          .where((s) => s.family == InsightFamily.planForNeed)
+          .firstOrNull;
+      await R8Harness.settle();
+      pre(i1 != null, 'I1 generated seven days on');
+      final planBefore = jsonEncode((await json(circlePlansKey))['plans']);
+      h.disk.ackLost(insightsKey, thenStop: true);
+      insights(c2).apply(i1!.id).ignore();
+      await R8Harness.settle();
+      await h.restart();
+      final planAfterStop = jsonEncode((await json(circlePlansKey))['plans']);
+      final i2Mark = (await snapshotOnDisk(i2s.id))?['appliedOn'];
+      final c3 = h.open();
+      final i1Result = await insights(c3).apply(i1.id);
+      await R8Harness.settle();
+      final i2Retry = await insights(c3).apply(i2s.id);
+      await R8Harness.settle();
+      final cycle =
+          ((((await json(circlePlansKey))['plans'] as Map)['getting_going']
+                          as Map)['cycles']
+                      as List)
+                  .last
+              as Map;
+      evidence('Be overwrite reconcile', {
+        'i2Mark': i2Mark,
+        'i1Result': i1Result.name,
+        'i2Retry': i2Retry.name,
+        'gentlerSince': cycle['gentlerSince'],
+      });
+      expect(planAfterStop, planBefore, reason: 'I1 changed the Plan');
+      expect(i2Mark, dateKey(morning));
+      expect(i1Result, InsightActionResult.done);
+      expect(i2Retry, InsightActionResult.alreadyApplied);
+      expect(cycle['gentlerSince'], isNull);
+    });
+  });
+}

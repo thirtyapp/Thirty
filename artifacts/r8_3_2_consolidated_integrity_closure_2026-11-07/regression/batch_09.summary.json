@@ -1,0 +1,267 @@
+{
+ "files": {
+  "test/features/home/presentation/widgets/phase_c_session_ui_test.dart": {
+   "passed": 22,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/premium_offer_invitation_card_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/today_card_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r2_make_today_circle_test.dart": {
+   "passed": 22,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r3_delete_feedback_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r3_persistence_delete_test.dart": {
+   "passed": 41,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r6_free_copy_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r6_journal_save_failure_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r6b_journal_unreadable_preserved_test.dart": {
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r6c_journal_store_safety_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r8_a01_daily_persistence_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/r8_a04_delete_durability_test.dart": {
+   "passed": 14,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 164,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/features/home/presentation/widgets/phase_c_session_ui_test.dart": [
+   "Open the session: the activity, its time, the first action \u2014 then each idea, then its ending; Close quiet until the time set aside is here",
+   "the natural end beat reached while here: the World warms over a moment, and TalkBack hears it once",
+   "the natural end beat found on arrival \u2014 after the background, or a restart \u2014 it is simply there: no replay, no announcement",
+   "the natural end beat reduced motion: the same end, at once \u2014 the meaning and the announcement, without the movement",
+   "the natural end beat an early Close never warms the World",
+   "the natural end beat the closed words: about the app's Circle, never the activity",
+   "Guided one step at a time: its name as the heading, its instruction and cue below; Next and Back; then \"To finish\"",
+   "Guided Pause stops the time and says so; Resume continues",
+   "Guided one filled action at a time: Next while the steps run; Close once on \"To finish\" or the time is reached \u2014 and no step controls after it",
+   "Guided every control is a full 48pt target",
+   "Guided natural end: time never fabricates step progress the heading never carries a step once the time is reached \u2014 whichever step was on show, paused or not",
+   "Guided natural end: time never fabricates step progress reached live on step 1: the end takes over, with one announcement and no step claimed",
+   "Guided natural end: time never fabricates step progress reached live on a middle step (2 of 5): the end takes over, with one announcement and no step claimed",
+   "Guided natural end: time never fabricates step progress reached live on the final step: the end takes over, with one announcement and no step claimed",
+   "Guided natural end: time never fabricates step progress reached in the background on step 2 of 5: on return the end is simply there \u2014 no replay, no announcement, no step",
+   "Guided natural end: time never fabricates step progress a restart after the time ran out on step 2 of 5: the same truthful end, still, and the step kept as it was",
+   "Paced (internal QA runtime) the bench's ring is named for what it is \u2014 a test session, never \"Today's Circle\"",
+   "Paced (internal QA runtime) leaving the foreground pauses it; coming back leaves it paused",
+   "Paced (internal QA runtime) the phase, in words and seconds; with reduced motion, nothing grows or pulses",
+   "nothing left to suggest the daily question says so plainly and points to memory \u2014 it never overrides the user",
+   "nothing left to suggest \"Review what THIRTY remembers\" opens memory on the need that has nothing left (S25 TalkBack finding)",
+   "nothing left to suggest below the fold, it brings itself into view \u2014 a tap is never answered by nothing (S25 finding)"
+  ],
+  "test/features/home/presentation/widgets/premium_offer_invitation_card_test.dart": [
+   "renders nothing before the second closed Circle",
+   "renders the quiet inline invitation after a second closed Circle on a distinct date",
+   "marks itself shown once meaningfully visible, not merely rendered, and stays for the session (founder decision after B3)",
+   "never renders while already entitled",
+   "Phase D1 \u2014 a flat \"Later today\" row: icon chip, copy and chevron, at least 64pt tall, no card"
+  ],
+  "test/features/home/presentation/widgets/today_card_test.dart": [
+   "TodayCard World art light: the art alone, at full opacity, with no backing",
+   "TodayCard World art dark: the art over its own Cream paper silhouette, lightly dimmed (WORLD_SYSTEM.md \u00a710a)",
+   "TodayCard World art the art is decorative in both themes",
+   "TodayCard World art large text hides the art in dark mode too",
+   "TodayCard World art one art viewport in both themes: right of the text content, full card height and more",
+   "TodayCard reason and first action (S25 device findings) at normal text, beside the World art, every reason fits two lines and every first action three, so the card stays compact",
+   "TodayCard reason and first action (S25 device findings) with enlarged text that still shows the World art, nothing is cut off \u2014 the card grows instead",
+   "TodayCard reason and first action (S25 device findings) V2 Phase B: the row's cue is always one line and, at normal text, never makes the card taller \u2014 on the S25 in full, on narrower phones in its short form"
+  ],
+  "test/features/home/r2_make_today_circle_test.dart": [
+   "entitlement transitions (D1) initializing \u2192 active: the Free offer stays until the tap, then becomes one composed Circle for the same need and time",
+   "entitlement transitions (D1) unavailable \u2192 active: the Free offer stays until the tap, then becomes one composed Circle for the same need and time",
+   "entitlement transitions (D1) inactive \u2192 active: the Free offer stays until the tap, then becomes one composed Circle for the same need and time",
+   "entitlement transitions (D1) inactive \u2192 active after a same-day purchase",
+   "entitlement transitions (D1) inactive \u2192 active after a restore",
+   "entitlement transitions (D1) a pending purchase grants nothing: the Free offer stays and cannot be made into a Circle",
+   "entitlement transitions (D1) active before the choice composes as before \u2014 nothing to make",
+   "the explicit action (D1) ignored: the Free offer stays, across a restart",
+   "the explicit action (D1) a double tap makes exactly one Circle",
+   "the explicit action (D1) nothing honest to compose: the original offer stays, nothing is written",
+   "the explicit action (D1) a restart before the tap: still offered; after it: the made Circle is restored, never the Free one",
+   "never for a committed or owned day (D1) a started Free Circle",
+   "never for a committed or owned day (D1) a closed Free Circle",
+   "never for a committed or owned day (D1) a replaced Free offer (\"Not this one today\")",
+   "never for a committed or owned day (D1) a kept Circle used today",
+   "never for a committed or owned day (D1) a Premium day's Free fallback (no honest composition then)",
+   "what the upgrade leaves alone (D1) a stage Circle made by the tap moves no Plan until it is started and closed",
+   "what the upgrade leaves alone (D1) earlier History and kept Circles are untouched",
+   "MakeTodayCircleCard hidden until Premium is verified; then one quiet row with the one action",
+   "MakeTodayCircleCard gone once today's Circle has started",
+   "MakeTodayCircleCard nothing to compose: says so calmly, keeps the offer, no second try",
+   "MakeTodayCircleCard readable at 2\u00d7 text: no overflow, the action reachable"
+  ],
+  "test/features/home/r3_delete_feedback_test.dart": [
+   "it worked: no message \u2014 the history is simply gone",
+   "a write to the journal fails: the founder's message, the intent kept, nothing deleted back on screen \u2014 and the next start finishes it",
+   "a write to today's Circle fails: the founder's message, the intent kept, nothing deleted back on screen \u2014 and the next start finishes it",
+   "a write to Plan stage evidence fails: the founder's message, the intent kept, nothing deleted back on screen \u2014 and the next start finishes it",
+   "a write to Insight snapshots fails: the founder's message, the intent kept, nothing deleted back on screen \u2014 and the next start finishes it",
+   "a write to the last step fails: the founder's message, the intent kept, nothing deleted back on screen \u2014 and the next start finishes it",
+   "recording the intent fails once: it is tried again, and the deletion completes \u2014 no message, nothing pending",
+   "the intent can't be recorded at all: nothing is deleted, and the user is told so \u2014 never that it will finish",
+   "a Delete still pending, then a need tapped: finished first when it can be; when it can't, the same message and no Circle",
+   "at 2\u00d7 text the message reads in full"
+  ],
+  "test/features/home/r3_persistence_delete_test.dart": [
+   "J4: a write begun before Delete never brings deleted history back a guidance part update in flight (released onDeletionIntent): the probe that reproduced J4 on 8bfd42c",
+   "J4: a write begun before Delete never brings deleted history back a guidance part update in flight (released onFirstRemoval): the probe that reproduced J4 on 8bfd42c",
+   "J4: a write begun before Delete never brings deleted history back a Start in flight",
+   "J4: a write begun before Delete never brings deleted history back a stage Circle Close in flight: never saved, so never credited \u2014 the Plan keeps the place it had; its evidence goes with the history",
+   "J4: a write begun before Delete never brings deleted history back \"Make today's Circle\" (R2 upgrade) in flight",
+   "J4: a write begun before Delete never brings deleted history back Today, Plan and Insight writes all queued at once: none restores what was deleted; kept Circles, the Plan's place and preferences stay",
+   "J4: a write begun before Delete never brings deleted history back BEFORE/AFTER control: settled writes, then Delete \u2014 the same outcome",
+   "after Delete reopened at once: the next Circle is a new one, recorded alone, and survives a restart",
+   "after Delete a choice made while the deletion is still running waits for it, then lands \u2014 it belongs to the new history",
+   "after Delete no stale provider rebuilds what was deleted: the old Today notifier, the guidance part moves, pickers and Insights",
+   "a Delete that does not finish the app stops after each step of it: the next start finishes it \u2014 never half deleted, never reported done",
+   "a Delete that does not finish a write fails: Delete completes with the error, the intent stays recorded, and the next start finishes it",
+   "a Delete that does not finish start-up with no deletion pending changes nothing",
+   "J5: a write of today cut short reads as before it or after it Free new day, the app stopping after every write: never yesterday's closed Circle as today's",
+   "J5: a write of today cut short reads as before it or after it Premium new day, the app stopping after every write: never yesterday's closed Circle as today's",
+   "J5: a write of today cut short reads as before it or after it \"Make today's Circle\" cut short after every write: the Free offer or the composed one \u2014 never a mix; Start then records the Circle actually started",
+   "J5: a write of today cut short reads as before it or after it a stage Circle's Close cut short after every write: closed and credited, or still open and credited once on closing again \u2014 never closed without its stage, never credited twice",
+   "J5: a write of today cut short reads as before it or after it a day change while an older write is still on its way: the older Circle's write keeps its own day and never becomes today's",
+   "J5: a write of today cut short reads as before it or after it the credit follows a saved Close: a slow Close holds it back; a Close saved with its credit cut short is credited at the next start, once",
+   "J5: a write of today cut short reads as before it or after it a write for one Circle never lands on another day's session; its own record still goes to the journal",
+   "J5: a write of today cut short reads as before it or after it Close and answers repeated: one Circle, one record, one credit",
+   "Today and History after \"Make today's Circle\" upgraded, then History opened at once: it names the Circle Today shows, not yet started",
+   "Today and History after \"Make today's Circle\" upgraded, then a restart before Start: Today and History both name the upgraded Circle",
+   "Today and History after \"Make today's Circle\" History behind Today (the upgrade reached Today, not History): the next start brings History level \u2014 and only that",
+   "Today and History after \"Make today's Circle\" upgrading again changes nothing: one record, one Circle",
+   "Today and History after \"Make today's Circle\" still one Circle a day: the need isn't asked again, \"Not this one today\" stays once, and nothing changes after Start",
+   "a write-in-progress record left by a stopped app a later Delete removes it with the rest: it brings nothing back, and nor does a restart",
+   "a write-in-progress record left by a stopped app a Delete itself cut short removes it on the next start",
+   "a write-in-progress record left by a stopped app yesterday's record never becomes today, and never overwrites the choice made today",
+   "a write-in-progress record left by a stopped app an upgrade cut short is carried forward, then replaced: neither the upgraded Circle nor the Free one comes back",
+   "a write-in-progress record left by a stopped app Plan and Insight evidence deleted after it never comes back",
+   "a Close just before midnight, cut short after the Close was saved: the next morning, its own day's record is closed and its stage credited once \u2014 and today is today",
+   "a Close just before midnight, cut short before the Close was saved: no Close is made up \u2014 the record stays started, nothing is credited, and the stage is still ahead",
+   "a Close just before midnight, cut short cut short after every write, opened the next morning: closed exactly when credited, never twice, never as today",
+   "a Close just before midnight, cut short a new day's Circle chosen at once, before anything settles: yesterday's saved Close is credited first, so today serves the next stage",
+   "a Close just before midnight, cut short billing still being checked the next morning: the stage served under Premium is credited from its saved Close all the same",
+   "a Delete still pending no new Circle begins \u2014 not by choosing a need, not by \"Use it today\" \u2014 and nothing is written for one",
+   "a Delete still pending finishing it again fails: still pending, still nothing new, nothing claimed",
+   "a Delete still pending finished on retry: the new Circle begins, and no later recovery erases it",
+   "a Delete still pending a restart that still can't finish it: the app opens, nothing deleted shows, no new Circle begins until it is finished",
+   "a Delete still pending the next start finishes it when it can: no Circle is lost to it"
+  ],
+  "test/features/home/r6_free_copy_test.dart": [
+   "A brisk walk \u2014 a step",
+   "Move to music \u2014 first action and a step",
+   "Phone-free walk \u2014 first action",
+   "the old wording is gone from all three activities",
+   "no recording changes: every spoken clip still names a bundled recording, in every voice \u2014 the Free activities have none of their own (the element \"A brisk walk\" already says the new walk line)"
+  ],
+  "test/features/home/r6_journal_save_failure_test.dart": [
+   "the outcome of each save a readable journal: saved \u2014 recorded as saved",
+   "the outcome of each save a journal from a newer THIRTY: not saved \u2014 recorded as not saved, the stored bytes unchanged, the Circle still usable",
+   "the outcome of each save a damaged journal whose copy can't be written: not saved, nothing written over; once the disk recovers, saved",
+   "what the user is told a failed save: the notice, in the founder's words, once for that Circle; announced by its title",
+   "what the user is told a successful save: nothing is shown",
+   "what the user is told the founder's words, exactly",
+   "History that couldn't be opened a journal from a newer THIRTY: said so \u2014 never \"nothing recorded\"",
+   "History that couldn't be opened a copy was kept before saving: said so, beside today's History",
+   "History that couldn't be opened an ordinary journal: no notice"
+  ],
+  "test/features/home/r6b_journal_unreadable_preserved_test.dart": [
+   "an ordinary save keeps every unreadable record, verbatim",
+   "repeated saves never duplicate or drop them",
+   "export carries them as stored, beside the entries; a clean journal exports exactly as before",
+   "Delete Circle history removes them with everything else"
+  ],
+  "test/features/home/r6c_journal_store_safety_test.dart": [
+   "a journal THIRTY can't read as a whole not JSON: kept byte for byte before the first save writes over it; the save then goes ahead",
+   "a journal THIRTY can't read as a whole not an object: kept byte for byte before the first save writes over it; the save then goes ahead",
+   "a journal THIRTY can't read as a whole no entries list: kept byte for byte before the first save writes over it; the save then goes ahead",
+   "a journal THIRTY can't read as a whole an unknown version: kept byte for byte before the first save writes over it; the save then goes ahead",
+   "a journal THIRTY can't read as a whole kept once across restarts and later saves \u2014 and an earlier kept copy is never replaced by a later one",
+   "a journal THIRTY can't read as a whole the copy can't be written: nothing is written over the original \u2014 and the next save tries to keep it again first",
+   "a journal written by a newer THIRTY is never written over: every save is refused, across restarts, and the stored bytes never change",
+   "a journal written by a newer THIRTY export shows it as stored; Delete Circle history still deletes it, at the user's request",
+   "a readable journal is unchanged ordinary saves keep no copy and write as before",
+   "a readable journal is unchanged no journal yet: the first save writes it, keeps no copy",
+   "Delete Circle history removes the kept copies too; export shows them until then"
+  ],
+  "test/features/home/r8_a01_daily_persistence_test.dart": [
+   "a day-key write at Start that throws is shown as not saved; the recovery record stays on disk; a restart restores the started Circle, and History agrees",
+   "the recovery record itself refused (throws): nothing else of the write lands, the failure is shown, and History never runs ahead of the day keys",
+   "a choice whose day key didn't land (throws): the Start after it still writes today's Circle \u2014 never skipped while History moves on",
+   "History refuses the save (throws): History and the Circles THIRTY learns from read what is on disk \u2014 nothing unsaved is shown as saved (Claude F-5)",
+   "Start's History write lost (throws), Close recovered after a restart: the record carries the Start the durable day keys hold \u2014 never a Close without its Start (Astra R7-A05)",
+   "Start's History write lost (throws) once, Close saved in the same session: one record, with its Start",
+   "a day-key write at Start that returnsFalse is shown as not saved; the recovery record stays on disk; a restart restores the started Circle, and History agrees",
+   "the recovery record itself refused (returnsFalse): nothing else of the write lands, the failure is shown, and History never runs ahead of the day keys",
+   "a choice whose day key didn't land (returnsFalse): the Start after it still writes today's Circle \u2014 never skipped while History moves on",
+   "History refuses the save (returnsFalse): History and the Circles THIRTY learns from read what is on disk \u2014 nothing unsaved is shown as saved (Claude F-5)",
+   "Start's History write lost (returnsFalse), Close recovered after a restart: the record carries the Start the durable day keys hold \u2014 never a Close without its Start (Astra R7-A05)",
+   "Start's History write lost (returnsFalse) once, Close saved in the same session: one record, with its Start",
+   "a failed write is retried by the next one, exactly once: the day keys and History end in one Circle, started and closed"
+  ],
+  "test/features/home/r8_a04_delete_durability_test.dart": [
+   "a removal that throws the journal's: Delete fails \u2014 never complete; the intent stays on disk; the next start finishes it",
+   "a removal that throws a day key's: Delete fails; the intent stays",
+   "a removal that throws the Plans' stage evidence write: Delete fails; the intent stays",
+   "a removal that throws the intent itself: nothing is removed before it is on disk, and Delete fails",
+   "a removal that throws the start-up completion's: it fails, and the intent stays for the next start",
+   "a removal that returnsFalse the journal's: Delete fails \u2014 never complete; the intent stays on disk; the next start finishes it",
+   "a removal that returnsFalse a day key's: Delete fails; the intent stays",
+   "a removal that returnsFalse the Plans' stage evidence write: Delete fails; the intent stays",
+   "a removal that returnsFalse the intent itself: nothing is removed before it is on disk, and Delete fails",
+   "a removal that returnsFalse the start-up completion's: it fails, and the intent stays for the next start",
+   "a failed Delete: a write queued before it never brings anything back, through the failure and the next start",
+   "Delete repeated: the second finds nothing and succeeds; history stays deleted",
+   "preserved copies of a journal THIRTY couldn't read are deleted with it, and their removal is confirmed too",
+   "Insights' removal refused: Delete fails; the intent stays"
+  ]
+ },
+ "batch": 9,
+ "exit": 0,
+ "seconds": 25,
+ "command": "flutter test --concurrency=1 --reporter json test/features/home/presentation/widgets/phase_c_session_ui_test.dart test/features/home/presentation/widgets/premium_offer_invitation_card_test.dart test/features/home/presentation/widgets/today_card_test.dart test/features/home/r2_make_today_circle_test.dart test/features/home/r3_delete_feedback_test.dart test/features/home/r3_persistence_delete_test.dart test/features/home/r6_free_copy_test.dart test/features/home/r6_journal_save_failure_test.dart test/features/home/r6b_journal_unreadable_preserved_test.dart test/features/home/r6c_journal_store_safety_test.dart test/features/home/r8_a01_daily_persistence_test.dart test/features/home/r8_a04_delete_durability_test.dart",
+ "rawSha256": "6b1259ad1fe022fd09037fc73e87b0bb96e1b66bc02c3aff548cb60c9680d975"
+}

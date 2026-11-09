@@ -1,0 +1,129 @@
+{
+  "register": "R8.3.2 consolidated integrity closure",
+  "date": "2026-11-07",
+  "baseline": "9c910773d7bfd3961be75fe3c9a44db41a1b7b27 (parent e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8)",
+  "note": "Every auditor's original finding ID is kept. 'before' columns come from final_gate/FINAL_repro_on_r82.jsonl and FINAL_repro_on_r83.jsonl (the exact final test file, sha256 cec71102977b0147bd36ad75c4d23ae35a7c90c08489a646a8e98d7afe0f4a79); 'after' from final_gate/FINAL_repro_on_after.jsonl and the full regression. N/A = not constructible on that tree (an R8.2 tree has no paused-Start record).",
+  "findings": [
+    {
+      "id": "AUD-R83-1", "auditor": "Claude", "severity": "MEDIUM", "group": "A",
+      "title": "The paused-Start fact is dropped by a new cycle (Leave + Go through again / Start on a left Plan)",
+      "reproduced": true, "tests": ["A1", "A2", "A3", "A4", "A5", "A6", "A7"],
+      "on_R8_2": "FAIL (pre-existing class: R83-F1)", "on_R8_3": "FAIL", "after": "PASS",
+      "root_cause": "CirclePlanActions._newCycle rebuilt PlanProgress without startedWhilePaused while carrying lastServed (closedBeforeLeave stamped because Leave came after an uncredited Close); the restart / next-day catch-up then took the left-cycle branch of recordGuided, which needs only closedFirst.",
+      "status": "FIXED"
+    },
+    {
+      "id": "AUD-R83-2", "auditor": "Claude", "severity": "LOW", "group": "C",
+      "title": "Start judged eligible from an optimistic Resume the store then refuses",
+      "reproduced": true, "tests": ["C2", "C2c", "C2b (control)"],
+      "on_R8_2": "FAIL (pre-existing class)", "on_R8_3": "FAIL", "after": "PASS",
+      "root_cause": "startNeedsNoWrite judged the shown Plan; a pending Resume made the fast path start with no paused-Start record; the refused Resume rolled the Plan back to paused, and a later Resume + catch-up credited the Circle.",
+      "status": "FIXED"
+    },
+    {
+      "id": "AUD-R83-3", "auditor": "Claude", "severity": "LOW", "group": "B",
+      "title": "Recorded paused Start that never became the Start (day-keys save failed) suppresses a later valid Start",
+      "reproduced": true, "tests": ["B2", "B3 (control)"],
+      "on_R8_2": "PASS (so introduced by R8.3.1)", "on_R8_3": "FAIL", "after": "PASS",
+      "root_cause": "The marker was a bare Circle id written before the Start existed; nothing distinguished it from a valid paused Start or superseded it.",
+      "status": "FIXED"
+    },
+    {
+      "id": "R83-N01", "auditor": "Astra", "severity": "MEDIUM", "group": "B",
+      "title": "Orphan paused-Start evidence suppresses a later legitimate Start",
+      "reproduced": true, "tests": ["B1 (N01-A)", "B4 (N01-B)", "B5 (N01-C)", "B6", "B7", "B-tie"],
+      "on_R8_2": "N/A (no marker on R8.2: introduced by R8.3.1)", "on_R8_3": "FAIL (B1, B4, B7, B-tie); B5 PASS", "after": "PASS",
+      "root_cause": "Same as AUD-R83-3; N01-B adds the same-process cancellation (a same-day rebuild makes the original continuation fail its identity check after the marker landed).",
+      "decision_point": "N01-C linearization: a Plan change tapped while the paused Start's own record is being written is ordered after that Start (eligibility = confirmed Plan at the valid Start). Implemented conservatively (no credit, as on R8.3); the alternative (wait for the pending change and credit if a Resume lands) needs a founder decision. See CONTRACTS_R8_3_2.md §A.4.",
+      "status": "FIXED"
+    },
+    {
+      "id": "R83-N02", "auditor": "Astra", "severity": "MEDIUM", "group": "C",
+      "title": "A resumed app can start on an optimistic, unconfirmed paused marker",
+      "reproduced": true, "tests": ["C1", "C1b", "C1c"],
+      "on_R8_2": "N/A (no marker: introduced by R8.3.1)", "on_R8_3": "FAIL (the second tap started before the marker was on disk, in all three release outcomes)", "after": "PASS",
+      "root_cause": "startNeedsNoWrite asked whether noting the marker would change the SHOWN Plan; an optimistic marker from the first tap made it a no-op, and the durable comparison covered only lastServed.",
+      "status": "FIXED"
+    },
+    {
+      "id": "R83-N02/C3", "auditor": "R8.3.2 (variant found while reproducing Group C)", "severity": "MEDIUM (same class)", "group": "C",
+      "title": "Pause lands, Resume refused, both pending at the Start tap: fast-path Start, later credit",
+      "reproduced": true, "tests": ["C3"],
+      "on_R8_2": "FAIL", "on_R8_3": "FAIL", "after": "PASS",
+      "status": "FIXED"
+    },
+    {
+      "id": "R83-N03", "auditor": "Astra", "severity": "MEDIUM", "group": "D",
+      "title": "Overwritten provenance lets an old Insight repeat its action",
+      "reproduced": true, "tests": ["D1", "D-ctl1", "D-ctl2", "D-ctl3"],
+      "on_R8_2": "FAIL (R8.2 also fails D-ctl2: R82-N01)", "on_R8_3": "FAIL (gentler re-enabled 2026-11-06, I2 marked with the retry date)", "after": "PASS",
+      "root_cause": "One AppliedInsight slot per Plan; a later Insight's own change replaced it while the earlier Insight's applied mark was not on disk, so the retry found no provenance and the current branch made the change again.",
+      "status": "FIXED"
+    },
+    {
+      "id": "R832-B1", "auditor": "R8.3.2 (new; Contract B probe)", "severity": "MEDIUM (D3 violation)", "group": "D-related",
+      "title": "I3: mark refused, the user puts the part back, the retry leaves it out again",
+      "reproduced": true, "tests": ["open_findings probe D2"],
+      "on_R8_2": "FAIL", "on_R8_3": "FAIL", "after": "FAIL (not implemented)",
+      "root_cause": "Put back removes the ElementLeftOut entry and with it the Insight's provenance; the I3 is current again and the retry cannot tell it was applied.",
+      "status": "OPEN — awaiting founder scope decision (open_findings/R832_B1_B2_SCOPE_DECISION.md)"
+    },
+    {
+      "id": "R832-B2", "auditor": "R8.3.2 (new; Contract B probe)", "severity": "MEDIUM (D3 violation)", "group": "D-related",
+      "title": "I4: mark refused, the user removes the kept Circle, the retry keeps it again",
+      "reproduced": true, "tests": ["open_findings probe D3"],
+      "on_R8_2": "FAIL", "on_R8_3": "FAIL", "after": "FAIL (not implemented)",
+      "root_cause": "Removing the kept Circle removes the only trace of I4's application; I4 is current again.",
+      "status": "OPEN — awaiting founder scope decision"
+    },
+    {
+      "id": "H1", "auditor": "Claude (hypothesis)",
+      "title": "I3 leaveOutChange queued around Delete's final Preferences pass",
+      "reproduced": false, "tests": ["H1 ×4 interleavings"],
+      "on_R8_2": "PASS", "on_R8_3": "PASS", "after": "PASS",
+      "assessment": "Not reachable by source: apply() reads the snapshot and enqueues the I3 change in one synchronous step; Delete empties the snapshots (forgetAll) in the same synchronous block that enqueues the first attribution pass, so an I3 change is either queued before that pass or never queued. Four executed interleavings (apply/Delete order × Preferences write held) leave no byInsight after a Delete reported done. Not a Delete violation; no scope stop.",
+      "status": "NOT REPRODUCED"
+    },
+    {
+      "id": "H2", "auditor": "Claude (hypothesis)",
+      "title": "A future build reading a downgraded L-1 record gets its byInsight ids back",
+      "status": "PART OF L-1 (unchanged, OPEN)"
+    },
+    {
+      "id": "Astra §7 O-malformed", "auditor": "Astra (observation, LOW)",
+      "title": "startedWhilePaused accepts '' and non-date strings",
+      "tests": ["O1"], "on_R8_3": "FAIL", "after": "PASS",
+      "assessment": "Resolved as part of redefining this field's codec (R8.3.2 had to change it): a value that names no day, or no instant, now makes the Plan unreadable — kept as stored. No other field changed.",
+      "status": "FIXED (within the changed field only)"
+    },
+    {
+      "id": "Astra §7 O-cohort / Claude D5 observation", "auditor": "Astra + Claude (LOW, analytics-only)",
+      "title": "Unknown analytics cohort String overwritten by a default (tester_identity_provider.dart:74-87)",
+      "assessment": "Confirmed by source reading; analytics-only, no user-data or entitlement effect. Outside R8.3.2's groups; not changed.",
+      "status": "OPEN — LOW, deferred (not in scope)"
+    },
+    {
+      "id": "Astra §5 single-slot replay", "auditor": "Astra (bounded risk)",
+      "title": "One paused-Start slot cannot by itself prove arbitrary historical replay safety",
+      "tests": ["S1"],
+      "assessment": "Production path executed (two paused Starts on consecutive days, Plan resumed between, restarts and catch-ups): neither credited, before and after. The domain-level replay of an older Close after a newer paused Start remains possible in recordGuided itself, but no production caller reaches it: the earlier day is resolved by _recordBeforeOverwrite before the next day's Circle is published, and the lifecycle fold reads only lastServed. Carried as a bounded limitation (LIMITATIONS_R8_3_2.md).",
+      "status": "BOUNDED — documented"
+    },
+    {
+      "id": "Claude coupling observation", "auditor": "Claude",
+      "title": "recordGuided's active branch does not require the Circle to be the one served",
+      "status": "UNCHANGED — documented (callers bound it; see single-slot entry)"
+    },
+    {
+      "id": "R83-F1", "auditor": "R8.3 (founder decision Option B)",
+      "title": "Retroactive credit after a Circle started while paused",
+      "assessment": "The R8.3 ISSUE_REGISTER.json still says 'OPEN – founder decision required' while the R8.3.1 README / LIMITATIONS L-4 say FIXED (Claude's documentation note). Correct status after R8.3.1: Option B implemented, PARTIAL per both post-R8.3 audits (AUD-R83-1/2/3, R83-N01/N02). After R8.3.2: the residual paths are closed (this register). Historical files are not rewritten.",
+      "status": "CLOSED IN R8.3.2 (pending independent re-audit)"
+    },
+    {
+      "id": "L-1", "auditor": "R8.3.1 (confirmed by both audits)",
+      "title": "Wholly unreadable Preferences record: Delete reports success with byInsight retained; Export omits the record",
+      "status": "OPEN — NOT FIXED — NOT WAIVED — PRE-RELEASE BLOCKER (not modified in R8.3.2)"
+    }
+  ]
+}

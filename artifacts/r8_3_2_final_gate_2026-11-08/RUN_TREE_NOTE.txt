@@ -1,0 +1,3 @@
+run tree lib == working tree lib
+The checks ran in a scratchpad copy whose lib/ and test/ equal the working tree (fingerprint == the 2,944-pass run), plus this one test file. The tested source tree was not modified.
+working-tree fingerprint still == 2,944 run

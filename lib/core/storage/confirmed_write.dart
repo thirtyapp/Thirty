@@ -3,11 +3,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// A write the local store did not confirm (audit remediation R8): the
 /// platform call threw, or returned `false`. Nothing is claimed for it.
 class StorageWriteFailed implements Exception {
-  const StorageWriteFailed(this.key, [this.reason = 'not confirmed']);
+  const StorageWriteFailed(
+    this.key, [
+    this.reason = 'not confirmed',
+    this.uncertain = false,
+  ]);
 
   /// The key that was being written or removed.
   final String key;
   final String reason;
+
+  /// R8.3.2 (founder scope decisions B1/B2): whether the value may have
+  /// reached the disk all the same — the platform call threw, as when its
+  /// answer is lost after the write landed. `false`: the store answered
+  /// that it didn't write it, or nothing was written.
+  final bool uncertain;
 
   @override
   String toString() => 'StorageWriteFailed($key): $reason';
@@ -36,20 +46,24 @@ Future<void> writeConfirmed(
 }) async {
   final previous = _copy(prefs.get(key));
   bool confirmed;
+  var threw = false;
   try {
     confirmed = await _write(prefs, key, value);
   } catch (_) {
     confirmed = false;
+    threw = true;
   }
   if (confirmed) return;
-  if (!restoreOnFailure) throw StorageWriteFailed(key);
+  if (!restoreOnFailure) {
+    throw StorageWriteFailed(key, 'not confirmed', threw);
+  }
   try {
     await _write(prefs, key, previous);
   } catch (_) {
     // Memory is put back before the disk call, which is all that matters
     // here: the disk never confirmed the value.
   }
-  throw StorageWriteFailed(key);
+  throw StorageWriteFailed(key, 'not confirmed', threw);
 }
 
 Object? _copy(Object? value) =>

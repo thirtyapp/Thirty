@@ -1,0 +1,30 @@
+HEAD 9c910773d7bfd3961be75fe3c9a44db41a1b7b27
+origin-tracking 9c910773d7bfd3961be75fe3c9a44db41a1b7b27
+9c910773d7bfd3961be75fe3c9a44db41a1b7b27	refs/heads/step5-billing-integration
+staged: 0
+== tracked modifications
+ M lib/core/storage/confirmed_write.dart
+ M lib/core/world_rendering/quiet_trail_hero_asset_view.dart
+ M lib/features/home/application/recommendation_provider.dart
+ M lib/features/home/application/suggestion_preferences.dart
+ M lib/features/insights/application/insights_provider.dart
+ M lib/features/insights/domain/insight.dart
+ M lib/features/insights/domain/insight_engine.dart
+ M lib/features/personal_circle/application/kept_circles_provider.dart
+ M lib/features/plans/application/circle_plans_provider.dart
+ M lib/features/plans/domain/circle_plan.dart
+ M test/features/home/r8b_precommit_persistence_test.dart
+ M test/features/personal_circle/r6_kept_voice_whole_circle_test.dart
+ M test/features/personal_circle/r8_kept_ownership_persistence_test.dart
+ M test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart
+ M test/features/r82/r82_a04_a08_new3_insight_actions_test.dart
+ M test/features/r82/r82_decision_c_insight_provenance_test.dart
+ M test/features/r83/r831_start_eligibility_test.dart
+ M test/features/r83/r83_start_boundary_test.dart
+ M test/support/r8_fault_disk.dart
+== untracked in R8.3.2 scope
+?? artifacts/r8_3_2_consolidated_integrity_closure_2026-11-07/
+?? artifacts/r8_3_2_founder_scope_closure_2026-11-07/
+?? docs/audits/THIRTY_INDEPENDENT_POST_R8_3_DELTA_AUDIT.md
+?? test/features/r832/
+untracked entries total: 392

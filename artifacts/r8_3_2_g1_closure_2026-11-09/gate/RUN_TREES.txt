@@ -1,0 +1,5 @@
+Both scratch trees were copies of this repository's analysis_options.yaml, pubspec.yaml, pubspec.lock, lib/, test/ and assets/, made on 2026-11-09:
+- tree_fixed: lib/ and test/ are byte-identical to the working tree (the end fingerprint of regression/), plus the final-gate file copied in as test/features/r832/r832_final_gate_checks_test.dart, plus the auditors' four original files from ../r8_3_2_consolidated_integrity_closure_2026-11-07/audit_inputs/claude_original_scratchpad/zz_audit/ (renamed back from .dart.txt) under test/zz_audit/.
+- tree_prefix: identical to tree_fixed, except lib/features/plans/application/circle_plans_provider.dart, which is the R8.3.2 file of the 2,944-pass run (sha256 4197ebad…, equal to ../r8_3_2_founder_scope_closure_2026-11-07/regression/SOURCE_FINGERPRINT_end.sha256), and except that the auditors' files are absent.
+Test files at run time: TEST_FILES_at_run.sha256. The G1 file run here is the final committed bytes (807cd5d2…).
+AUD-O3 (1 FAIL in AUDITOR_ORIGINALS_on_fixed) is the same supersession by N01-C recorded on the 2,944 tree. The file is unedited.

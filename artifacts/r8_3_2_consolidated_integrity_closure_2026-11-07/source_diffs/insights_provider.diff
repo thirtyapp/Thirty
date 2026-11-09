@@ -1,0 +1,65 @@
+diff --git a/lib/features/insights/application/insights_provider.dart b/lib/features/insights/application/insights_provider.dart
+index 5e92732..cec3470 100644
+--- a/lib/features/insights/application/insights_provider.dart
++++ b/lib/features/insights/application/insights_provider.dart
+@@ -314,10 +314,20 @@ class InsightsNotifier extends Notifier<InsightsState> {
+   /// left out by hand and still being written is seen as left out; and the
+   /// Insight is marked applied only when its own change was the one saved
+   /// ([PreferenceChange.changed]).
++  ///
++  /// R8.3.2 (Astra R83-N03): a Plan holds the provenance of one Insight —
++  /// the last whose own change it carries. Before this Insight's change
++  /// replaces it, an earlier Insight it names whose applied mark isn't on
++  /// disk is recorded as applied, from that provenance, on its own date
++  /// ([_keepDisplacedApplication]); if that can't be saved, nothing is
++  /// changed. So no Insight whose change landed is ever taken for one never
++  /// applied, and its retry never makes the change again.
+   Future<InsightActionResult> apply(String snapshotId) async {
+     await ref.read(circlePlansProvider.notifier).idle();
+     await ref.read(journalWritesProvider).idle();
+     await ref.read(suggestionPreferencesProvider.notifier).idle();
++    // R8.3.2: the marks as confirmed — one still being written may fail.
++    await idle();
+     final snapshot = state.byId(snapshotId);
+     final keepsOwnCircle = snapshot?.application is KeepCircleFromHistory;
+     if (!_premium && !keepsOwnCircle) return InsightActionResult.needsPremium;
+@@ -337,6 +347,13 @@ class InsightsNotifier extends Notifier<InsightsState> {
+       case _:
+         return InsightActionResult.notAvailable;
+     }
++    switch (snapshot.application) {
++      case PlanDirection(:final planId) || KeepGentler(:final planId):
++        if (!await _keepDisplacedApplication(planId, snapshotId, i)) {
++          return InsightActionResult.notSaved;
++        }
++      case _:
++    }
+     final result = switch (snapshot.application) {
+       PlanDirection(:final planId) => await _direct(planId, snapshotId),
+       KeepGentler(:final planId, :final cycleId) => await _gentler(
+@@ -396,6 +413,25 @@ class InsightsNotifier extends Notifier<InsightsState> {
+     }
+   }
+ 
++  /// R8.3.2 (Astra R83-N03): before [insightId]'s own change replaces
++  /// [planId]'s provenance, the Insight that provenance names — when it is
++  /// a snapshot here not yet marked applied, its own change being on disk
++  /// ([_appliedOn]) — is marked applied on that change's date. `false` when
++  /// that mark isn't confirmed: the provenance must then stay.
++  Future<bool> _keepDisplacedApplication(
++    String planId,
++    String insightId,
++    InsightInputs i,
++  ) async {
++    final by = i.plans.plans[planId]?.appliedInsight;
++    if (by == null || by.insightId == insightId) return true;
++    final displaced = state.byId(by.insightId);
++    if (displaced == null || displaced.appliedOn != null) return true;
++    final on = _appliedOn(displaced, i);
++    if (on == null) return true;
++    return await _markApplied(displaced, on) == InsightActionResult.done;
++  }
++
+   /// Records [snapshot] as applied on [on] — its change already on disk.
+   Future<InsightActionResult> _markApplied(
+     InsightSnapshot snapshot,

@@ -282,6 +282,15 @@ void main() {
     test('the Circle starts and closes; the Plan stays paused and earns '
         'nothing, also after a restart', () async {
       final (c, id) = await pausedWhileStartPending();
+      // R8.3.2 (founder decision on N01-C, 2026-11-07): a lifecycle change
+      // while a Start is unresolved cancels that Start; the user taps
+      // Start again. Before it, the pending Start went ahead.
+      expect(
+        c.read(recommendationProvider).status,
+        RecommendationStatus.notStarted,
+      );
+      today(c).start();
+      await R8Harness.settle();
       expect(
         c.read(recommendationProvider).status,
         RecommendationStatus.started,

@@ -1,0 +1,29 @@
+FAIL | Check A — lifecycle ABA while a Start is pending A1 Paused → Start pending → Resume confirmed → Pause confirmed (same cycle) → the prerequisite resolves: the attempt is cancelled
+     -> Expected: 'notStarted'
+        Expected: 'notStarted'
+        Actual: 'started'
+        Which: is different.
+        Expected: notStarted ...
+        Actual: started
+FAIL | Check A — lifecycle ABA while a Start is pending A2 Active → Start pending → Pause confirmed → Resume confirmed (same cycle) → resolves: the attempt is cancelled; a fresh Start is credited once
+     -> Expected: 'notStarted'
+        Expected: 'notStarted'
+        Actual: 'started'
+        Which: is different.
+        Expected: notStarted ...
+        Actual: started
+FAIL | Check A — lifecycle ABA while a Start is pending A3 Active → Start pending → another Plan started (this one paused) → this one carried on again → resolves: cancelled
+     -> Expected: 'notStarted'
+        Expected: 'notStarted'
+        Actual: 'started'
+        Which: is different.
+        Expected: notStarted ...
+        Actual: started
+PASS | Check A — lifecycle ABA while a Start is pending A4 Paused → Start pending → Resume refused → resolves: no confirmed transition — the Start goes ahead, never credited
+PASS | Check A — lifecycle ABA while a Start is pending A5 a same-day rebuild while the Start is pending cancels it; a restart leaves nothing started
+PASS | Check B — receipt integrity Ba the Preferences write throws before storage: uncertain — never replayed, never claimed; the receipt stays
+PASS | Check B — receipt integrity Bb the change confirmed, the mark refused, no reversal: opening Insights records the mark with the original date (no retry tap)
+PASS | Check B — receipt integrity Bc another Insight generated and applied while an I3 attempt is unresolved: the receipt is untouched, the I3 never replayed
+PASS | Check B — receipt integrity Bd an interrupted Delete Circle history (the app stops after its intent): finished at the next start — snapshots and receipts gone, the user's choices and kept Circles stay
+PASS | Check B — receipt integrity Be I1/I2: I2 applied, mark refused; seven days on, I1's reconciliation of I2 lands and the app stops before I1's own change: after a restart I2 is marked with its original date, the Plan untouched; I1 then applies once
+COUNTS {'FAIL': 3, 'PASS': 7} DONE [False]

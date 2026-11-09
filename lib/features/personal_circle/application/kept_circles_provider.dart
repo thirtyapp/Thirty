@@ -278,11 +278,16 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
   /// this day's Circle is already kept or being kept. Fails with
   /// [StorageWriteFailed] when the store doesn't confirm it — then nothing
   /// is kept.
+  ///
+  /// [id] (R8.3.2, founder scope decision B2): the kept Circle's own id, when
+  /// the caller chose it beforehand — Insight 4 records it before keeping,
+  /// so its own Keep can be told from any other Keep of the same day.
   Future<KeptCircle?> keepCircle({
     required CirclePlan plan,
     required Intention need,
     required String circleId,
     String? name,
+    String? id,
   }) async {
     bool refused(KeptCircles current) =>
         !current.countKnown ||
@@ -291,7 +296,9 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
     if (_keeping.contains(circleId) || refused(state)) return null;
     final trimmed = name?.trim();
     final circle = KeptCircle(
-      id: 'kept-${_now.microsecondsSinceEpoch}-${state.count + _keeping.length}',
+      id:
+          id ??
+          'kept-${_now.microsecondsSinceEpoch}-${state.count + _keeping.length}',
       name: trimmed == null || trimmed.isEmpty
           ? keptCircleDefaultName(need)
           : trimmed,

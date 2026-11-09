@@ -1,0 +1,278 @@
+// Independent post-R8.2 adversarial specifications. NOT RUN.
+// Created outside the audited repository. No SDK available in audit environment.
+// Fixture setup reused from the committed decision-C regression test.
+// Relative support imports assume placement in test/features/r82 in a SEPARATE copy.
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/utils/date_key.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/suggestion_preferences.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart';
+import 'package:thirty/features/insights/domain/insight.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+import 'package:thirty/features/plans/domain/plan_stage_provenance.dart';
+
+import '../../support/r8_fault_disk.dart';
+import '../../support/r8_harness.dart';
+
+import 'package:thirty/core/premium/entitlement_status.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+
+void main() {
+  final morning = DateTime(2026, 10, 30, 9);
+  late R8Harness h;
+
+  setUp(() async {
+    h = R8Harness(morning);
+    await h.boot();
+  });
+
+  Future<Map<String, Object?>> json(String key) async {
+    final raw = (await h.disk.stored())[key];
+    return raw is String ? jsonDecode(raw) as Map<String, Object?> : {};
+  }
+
+  CirclePart part(ElementId e) => CirclePart(e, elementOf(e).minutes);
+  final window = [
+    part(ElementId.openWindow),
+    part(ElementId.standingStretch),
+    part(ElementId.sitAMinute),
+  ];
+  final reading = [part(ElementId.phoneFaceDown), part(ElementId.readPages)];
+
+  CircleJournalEntry entry(
+    int ago,
+    Intention need, {
+    List<CirclePart> parts = const [],
+    Set<ElementId> skipped = const {},
+    PlanStageProvenance? stage,
+    PlanStageProvenance? replacedFromStage,
+    String? reason,
+  }) {
+    final date = morning.subtract(Duration(days: ago));
+    return CircleJournalEntry(
+      schemaVersion: circleJournalSchemaVersion,
+      circleId: dateKey(date),
+      localDate: dateKey(date),
+      direction: need,
+      activityId: ActivityId.values.first,
+      catalogVersion: catalogVersion,
+      shownAt: date,
+      startedAt: date,
+      closedAt: date,
+      replacementReason: reason,
+      replacedFromStage: replacedFromStage,
+      session: parts.isEmpty
+          ? null
+          : CircleSessionRecord(
+              title: 'Circle',
+              parts: CirclePlan(parts).toWire(),
+              skipped: [for (final e in skipped) e.name],
+              planStage: stage,
+            ),
+    );
+  }
+
+  String journalOf(List<CircleJournalEntry> entries) => jsonEncode({
+    'schemaVersion': circleJournalSchemaVersion,
+    'entries': [for (final e in entries) e.toJson()],
+  });
+
+  const head = Intention.clearerHead;
+  const energy = Intention.moreEnergy;
+  const stage = PlanStageProvenance(
+    planId: 'getting_going',
+    cycleId: 'getting_going#1',
+    stageNumber: 1,
+    stageId: 'getting_going.1',
+  );
+
+  final i1 = <String, Object>{
+    circleJournalKey: journalOf([
+      for (final ago in [1, 5, 9, 13, 14]) entry(ago, head),
+    ]),
+  };
+  final i2 = <String, Object>{
+    circlePlansKey: jsonEncode(
+      CirclePlansState.empty
+          .start('getting_going', today: '2026-10-01')!
+          .toJson(),
+    ),
+    circleJournalKey: journalOf([
+      for (final (k, ago) in [2, 5, 9, 13, 17].indexed)
+        k.isEven
+            ? entry(ago, energy, replacedFromStage: stage, reason: 'tooMuch')
+            : entry(ago, energy, parts: window, stage: stage),
+    ]),
+  };
+  final i3 = <String, Object>{
+    circleJournalKey: journalOf([
+      for (final ago in [2, 4, 6, 8, 10, 12, 15])
+        entry(ago, head, parts: reading),
+      for (final (k, ago) in [1, 5, 9, 11].indexed)
+        entry(
+          ago,
+          energy,
+          parts: window,
+          skipped: k == 1 ? const {} : {ElementId.openWindow},
+        ),
+    ]),
+  };
+
+  InsightsNotifier insights(ProviderContainer c) =>
+      c.read(insightsProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+
+  Future<Map?> snapshotOnDisk(String id) async {
+    final list = (await json(insightsKey))['snapshots'] as List? ?? [];
+    for (final s in list) {
+      if ((s as Map)['id'] == id) return s;
+    }
+    return null;
+  }
+
+  Future<Map?> planOnDisk(String planId) async =>
+      ((await json(circlePlansKey))['plans'] as Map?)?[planId] as Map?;
+
+  /// [plans] as stored JSON, with [record] as [planId]'s Insight provenance
+  /// — written as raw JSON, as another build or an earlier save left it.
+  Map<String, Object?> withProvenance(
+    CirclePlansState plans,
+    String planId,
+    Map<String, Object?> record,
+  ) {
+    final raw =
+        jsonDecode(jsonEncode(plans.toJson())) as Map<String, Object?>;
+    ((raw['plans'] as Map)[planId] as Map)['appliedInsight'] = record;
+    return raw;
+  }
+
+
+  // Independent proposed reproductions. NOT EXECUTED: no Flutter/Dart SDK.
+  for (final reversal in ['pause', 'leave']) {
+    test('R82-N01 I1 retry repairs only after manual $reversal', () async {
+      await h.boot(i1);
+      final c = h.open();
+      final shown = insights(c).assess().added.single;
+      expect(shown.family, InsightFamily.planForNeed);
+      await R8Harness.settle();
+      h.disk.fail(insightsKey, DiskFault.returnsFalse);
+      expect(await insights(c).apply(shown.id), InsightActionResult.done);
+      await R8Harness.settle();
+      expect((await snapshotOnDisk(shown.id))?['appliedOn'], isNull);
+      h.disk.healAll();
+      expect(reversal == 'pause'
+          ? plans(c).pause('making_room')
+          : plans(c).leave('making_room'), PlanActionResult.done);
+      await R8Harness.settle();
+      final before = jsonEncode(await planOnDisk('making_room'));
+      await h.restart();
+      final again = h.open();
+      expect(await insights(again).apply(shown.id), InsightActionResult.done);
+      await R8Harness.settle();
+      expect(jsonEncode(await planOnDisk('making_room')), before,
+          reason: 'marker repair must not resume or create another cycle');
+      expect((await snapshotOnDisk(shown.id))?['appliedOn'], isNotNull);
+    });
+  }
+
+  test('R82-N01 I2 retry preserves a later manual stopGentler', () async {
+    await h.boot(i2);
+    final c = h.open();
+    final shown = insights(c).assess().added.single;
+    expect(shown.family, InsightFamily.planPacing);
+    await R8Harness.settle();
+    h.disk.fail(insightsKey, DiskFault.returnsFalse);
+    expect(await insights(c).apply(shown.id), InsightActionResult.done);
+    await R8Harness.settle();
+    h.disk.healAll();
+    expect(plans(c).stopGentler('getting_going'), PlanActionResult.done);
+    await R8Harness.settle();
+    final before = jsonEncode(await planOnDisk('getting_going'));
+    await h.restart();
+    final again = h.open();
+    expect(await insights(again).apply(shown.id), InsightActionResult.done);
+    await R8Harness.settle();
+    expect(jsonEncode(await planOnDisk('getting_going')), before);
+    expect((await snapshotOnDisk(shown.id))?['appliedOn'], isNotNull);
+  });
+
+  test('R82-N02 queued manual I3 target is never claimed by Insight', () async {
+    await h.boot(i3);
+    final c = h.open();
+    final shown = insights(c).assess().added.single;
+    expect(shown.family, InsightFamily.skippedPart);
+    await R8Harness.settle();
+    final held = h.disk.hold(suggestionPreferencesKey);
+    final manual = c.read(suggestionPreferencesProvider.notifier)
+        .leaveOut(ElementId.openWindow);
+    await held.reached;
+    final applying = insights(c).apply(shown.id);
+    await R8Harness.settle();
+    held.release();
+    expect(await manual, isTrue);
+    final result = await applying;
+    await R8Harness.settle();
+    final entries = (await json(suggestionPreferencesKey))['elementsLeftOut'] as List;
+    final target = entries.singleWhere(
+        (e) => (e as Map)['elementId'] == 'openWindow') as Map;
+    expect(target['byInsight'], isNull, reason: 'manual action owns target');
+    expect(result, isNot(InsightActionResult.done));
+    expect((await snapshotOnDisk(shown.id))?['appliedOn'], isNull,
+        reason: 'manual action must not be recorded as an Insight application');
+  });
+
+  test('R82-N03 decoded expiry true must serialize a later false', () {
+    final raw = <String, Object?>{
+      'circleId': '2026-10-30',
+      'stage': stage.toJson(),
+      'startedAfterExpiry': true,
+    };
+    final corrected = ServedStageCircle.fromJson(raw)!
+        .copyWith(startedAfterExpiry: false);
+    expect(corrected.startedAfterExpiry, isFalse);
+    final roundTrip = ServedStageCircle.fromJson(corrected.toJson())!;
+    expect(roundTrip.startedAfterExpiry, isFalse,
+        reason: 'serialized confirmed value must equal model value');
+  });
+
+  test('R82-N04 valid AppliedInsight preserves nested extension fields', () {
+    final raw = <String, Object?>{
+      'insightId': 'I1@example',
+      'cycleId': 'making_room#1',
+      'on': '2026-10-30',
+      'futureProvenance': <String, Object?>{'reason': 'retain exactly'},
+    };
+    expect(AppliedInsight.fromJson(raw)!.toJson(), raw);
+  });
+
+  test('R82-N05 delayed Start must revalidate its local day', () async {
+    h.clock.value = DateTime(2026, 10, 30, 23, 59, 59);
+    final held = h.disk.hold(recommendationPendingWriteKey);
+    final c = h.open(status: EntitlementStatus.inactive);
+    c.read(recommendationProvider.notifier).chooseIntention(
+        Intention.moreEnergy, window: TimeWindow.about20);
+    await held.reached;
+    c.read(recommendationProvider.notifier).start();
+    await R8Harness.settle();
+    expect(c.read(recommendationProvider).status,
+        RecommendationStatus.notStarted);
+    h.clock.value = DateTime(2026, 10, 31, 0, 0, 1);
+    held.release();
+    await R8Harness.settle();
+    final state = c.read(recommendationProvider);
+    expect(state.status, isNot(RecommendationStatus.started),
+        reason: 'yesterday offer was still unstarted when midnight passed');
+    final stored = await h.disk.stored();
+    expect(stored[recommendationStatusKey], isNot('started'));
+  });
+}
+
+

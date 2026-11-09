@@ -1,0 +1,23 @@
+== tracked changes outside lib/features (vs HEAD 9c910773), excluding the two pre-existing EOL-only M files
+warning: in the working copy of 'lib/core/world_rendering/quiet_trail_hero_asset_view.dart', LF will be replaced by CRLF the next time Git touches it
+(empty above = unchanged)
+== lib files changed
+warning: in the working copy of 'lib/core/world_rendering/quiet_trail_hero_asset_view.dart', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/features/home/application/recommendation_provider.dart', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/features/insights/application/insights_provider.dart', LF will be replaced by CRLF the next time Git touches it
+lib/features/home/application/recommendation_provider.dart
+lib/features/insights/application/insights_provider.dart
+lib/features/plans/application/circle_plans_provider.dart
+lib/features/plans/domain/circle_plan.dart
+== billing / entitlement sources touched?
+warning: in the working copy of 'lib/core/world_rendering/quiet_trail_hero_asset_view.dart', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/features/home/application/recommendation_provider.dart', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/features/insights/application/insights_provider.dart', LF will be replaced by CRLF the next time Git touches it
+none
+== pubspec.lock sha
+ca151f564f0200a11c994f696a2f77912c94bf6c863e0e6e5ae6408d3a533814 *pubspec.lock
+68669c245d8dc1153b1d4bc531a813c20b100b4a3610a24449a4f1993f77c5d9 *-
+pubspec.lock working, CR stripped: 68669c245d8dc1153b1d4bc531a813c20b100b4a3610a24449a4f1993f77c5d9 *-
+pubspec.lock HEAD blob:          68669c245d8dc1153b1d4bc531a813c20b100b4a3610a24449a4f1993f77c5d9 *-
+pubspec.lock git hash-object (normalized): 6d851aae62a85a72a0c882f903ebd52e440d358f  HEAD: 6d851aae62a85a72a0c882f903ebd52e440d358f
+pubspec.yaml git hash-object: 8733cd27b14c957e1144181a7e5767f0883b0edf  HEAD: 8733cd27b14c957e1144181a7e5767f0883b0edf

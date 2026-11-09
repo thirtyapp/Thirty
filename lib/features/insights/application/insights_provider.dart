@@ -242,8 +242,15 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// R8.2 (Astra R81-A02, Claude NEW-2): never while Delete Circle history
   /// is under way or still to be finished — what it would be generated
   /// from is being deleted.
+  ///
+  /// R8.3.2 (founder scope decisions B1/B2): first, any Insight whose
+  /// action was recorded as being made, and is proven on disk, is marked
+  /// applied — Premium or not ([_withProvenAttempts]).
   InsightAssessment assess() {
-    if (!_premium || _deletionUnderWay) return read();
+    if (_deletionUnderWay) return read();
+    final proven = _withProvenAttempts(state, inputs());
+    if (!identical(proven, state)) _set(proven).ignore();
+    if (!_premium) return read();
     final result = assessInsights(inputs(), state.snapshots, generate: true);
     if (result.added.isNotEmpty ||
         result.snapshots.length != state.snapshots.length) {
@@ -314,10 +321,20 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// left out by hand and still being written is seen as left out; and the
   /// Insight is marked applied only when its own change was the one saved
   /// ([PreferenceChange.changed]).
+  ///
+  /// R8.3.2 (Astra R83-N03): a Plan holds the provenance of one Insight —
+  /// the last whose own change it carries. Before this Insight's change
+  /// replaces it, an earlier Insight it names whose applied mark isn't on
+  /// disk is recorded as applied, from that provenance, on its own date
+  /// ([_keepDisplacedApplication]); if that can't be saved, nothing is
+  /// changed. So no Insight whose change landed is ever taken for one never
+  /// applied, and its retry never makes the change again.
   Future<InsightActionResult> apply(String snapshotId) async {
     await ref.read(circlePlansProvider.notifier).idle();
     await ref.read(journalWritesProvider).idle();
     await ref.read(suggestionPreferencesProvider.notifier).idle();
+    // R8.3.2: the marks as confirmed — one still being written may fail.
+    await idle();
     final snapshot = state.byId(snapshotId);
     final keepsOwnCircle = snapshot?.application is KeepCircleFromHistory;
     if (!_premium && !keepsOwnCircle) return InsightActionResult.needsPremium;
@@ -337,6 +354,13 @@ class InsightsNotifier extends Notifier<InsightsState> {
       case _:
         return InsightActionResult.notAvailable;
     }
+    switch (snapshot.application) {
+      case PlanDirection(:final planId) || KeepGentler(:final planId):
+        if (!await _keepDisplacedApplication(planId, snapshotId, i)) {
+          return InsightActionResult.notSaved;
+        }
+      case _:
+    }
     final result = switch (snapshot.application) {
       PlanDirection(:final planId) => await _direct(planId, snapshotId),
       KeepGentler(:final planId, :final cycleId) => await _gentler(
@@ -344,19 +368,20 @@ class InsightsNotifier extends Notifier<InsightsState> {
         cycleId,
         snapshotId,
       ),
-      LeaveOutPart(:final element) => await _leaveOut(element, i, snapshotId),
-      KeepCircleFromHistory(:final circleId) => await _keep(circleId),
+      LeaveOutPart(:final element) => await _leaveOut(element, i, snapshot),
+      KeepCircleFromHistory(:final circleId) => await _keep(circleId, snapshot),
       OpenPlanReview() ||
       NothingToChange() => InsightActionResult.nothingToApply,
     };
-    final keptAlready =
-        snapshot.application is KeepCircleFromHistory &&
-        result == InsightActionResult.alreadyApplied;
-    if (result == InsightActionResult.done || keptAlready) {
+    // R8.3.2 (founder scope decision B2): a day's Circle already kept by
+    // some other Keep is never recorded as this Insight's application.
+    if (result == InsightActionResult.done) {
       final current = state.byId(snapshotId) ?? snapshot;
       try {
         await _set(
-          state.replacing(current.copyWith(appliedOn: dateKey(_now))),
+          state.replacing(
+            current.copyWith(appliedOn: dateKey(_now), clearAttempt: true),
+          ),
         );
       } on StorageWriteFailed {
         // The change itself is confirmed; only its record here isn't — and
@@ -391,9 +416,86 @@ class InsightsNotifier extends Notifier<InsightsState> {
           }
         }
         return null;
+      // R8.3.2 (founder scope decision B2): the kept Circle with the id its
+      // attempt recorded — never another Keep of the same day.
+      case KeepCircleFromHistory():
+        final keptId = snapshot.attempt?.keptId;
+        if (keptId == null) return null;
+        for (final k in ref.read(keptCirclesProvider).kept) {
+          if (k.id == keptId) return dateKey(k.createdAt);
+        }
+        return null;
       case _:
         return null;
     }
+  }
+
+  /// [from] with every Insight whose action was recorded as being made and
+  /// is proven on disk ([_appliedOn]) marked applied on that action's day.
+  InsightsState _withProvenAttempts(InsightsState from, InsightInputs i) {
+    var next = from;
+    for (final s in from.snapshots) {
+      if (s.attempt == null || s.appliedOn != null) continue;
+      if (_appliedOn(s, i) case final on?) {
+        next = next.replacing(s.copyWith(appliedOn: on, clearAttempt: true));
+      }
+    }
+    return next;
+  }
+
+  /// R8.3.2 (founder scope decisions B1/B2): records, and waits for the
+  /// store to confirm, that [snapshot]'s action is about to be made. `false`
+  /// when it isn't confirmed: the action is then never made.
+  Future<bool> _recordAttempt(InsightSnapshot snapshot, {String? keptId}) async {
+    final target = InsightAttempt.targetOf(snapshot.application)!;
+    try {
+      await _set(
+        state.replacing(
+          snapshot.copyWith(
+            attempt: InsightAttempt(
+              on: dateKey(_now),
+              target: target,
+              keptId: keptId,
+            ),
+          ),
+        ),
+      );
+      return true;
+    } on StorageWriteFailed {
+      return false;
+    }
+  }
+
+  /// [snapshotId]'s action is known not to have been made: its attempt
+  /// record goes, so it can be tried again. If that isn't saved, the record
+  /// stays and the Insight is never offered again — never made twice.
+  Future<void> _clearAttempt(String snapshotId) async {
+    final s = state.byId(snapshotId);
+    if (s?.attempt == null) return;
+    try {
+      await _set(state.replacing(s!.copyWith(clearAttempt: true)));
+    } on StorageWriteFailed {
+      // Kept: the Insight stays unavailable.
+    }
+  }
+
+  /// R8.3.2 (Astra R83-N03): before [insightId]'s own change replaces
+  /// [planId]'s provenance, the Insight that provenance names — when it is
+  /// a snapshot here not yet marked applied, its own change being on disk
+  /// ([_appliedOn]) — is marked applied on that change's date. `false` when
+  /// that mark isn't confirmed: the provenance must then stay.
+  Future<bool> _keepDisplacedApplication(
+    String planId,
+    String insightId,
+    InsightInputs i,
+  ) async {
+    final by = i.plans.plans[planId]?.appliedInsight;
+    if (by == null || by.insightId == insightId) return true;
+    final displaced = state.byId(by.insightId);
+    if (displaced == null || displaced.appliedOn != null) return true;
+    final on = _appliedOn(displaced, i);
+    if (on == null) return true;
+    return await _markApplied(displaced, on) == InsightActionResult.done;
   }
 
   /// Records [snapshot] as applied on [on] — its change already on disk.
@@ -402,7 +504,9 @@ class InsightsNotifier extends Notifier<InsightsState> {
     String on,
   ) async {
     try {
-      await _set(state.replacing(snapshot.copyWith(appliedOn: on)));
+      await _set(
+        state.replacing(snapshot.copyWith(appliedOn: on, clearAttempt: true)),
+      );
       return InsightActionResult.done;
     } on StorageWriteFailed {
       return InsightActionResult.notSaved;
@@ -466,27 +570,47 @@ class InsightsNotifier extends Notifier<InsightsState> {
     PlanActionResult.notSaved => InsightActionResult.notSaved,
   };
 
+  /// R8.3.2 (founder scope decision B1): the user's Put back removes the
+  /// left-out part with this Insight's id on it, so the attempt is recorded
+  /// first ([_recordAttempt]). A change known not to have been made clears
+  /// it; one that may be on disk all the same ([PreferenceChange.uncertain])
+  /// keeps it, and the Insight is never offered again.
   Future<InsightActionResult> _leaveOut(
     String wire,
     InsightInputs i,
-    String insightId,
+    InsightSnapshot snapshot,
   ) async {
     final element = ElementId.values.asNameMap()[wire];
     if (element == null) return InsightActionResult.notAvailable;
     if (i.leftOut.contains(element)) return InsightActionResult.alreadyApplied;
+    if (!await _recordAttempt(snapshot)) return InsightActionResult.notSaved;
     final outcome = await ref
         .read(suggestionPreferencesProvider.notifier)
-        .leaveOutChange(element, byInsight: insightId);
-    return switch (outcome) {
-      PreferenceChange.changed => InsightActionResult.done,
-      // Left out by something else meanwhile: never this Insight's.
-      PreferenceChange.unchanged => InsightActionResult.alreadyApplied,
-      PreferenceChange.refused ||
-      PreferenceChange.notSaved => InsightActionResult.notSaved,
-    };
+        .leaveOutChange(element, byInsight: snapshot.id);
+    switch (outcome) {
+      case PreferenceChange.changed:
+        return InsightActionResult.done;
+      case PreferenceChange.uncertain:
+        return InsightActionResult.notSaved;
+      case PreferenceChange.unchanged ||
+          PreferenceChange.refused ||
+          PreferenceChange.notSaved:
+        await _clearAttempt(snapshot.id);
+        // Left out by something else meanwhile: never this Insight's.
+        return outcome == PreferenceChange.unchanged
+            ? InsightActionResult.alreadyApplied
+            : InsightActionResult.notSaved;
+    }
   }
 
-  Future<InsightActionResult> _keep(String circleId) async {
+  /// R8.3.2 (founder scope decision B2): removing the kept Circle removes
+  /// every trace of this Keep, so the attempt is recorded first, with the id
+  /// the kept Circle is given ([_recordAttempt]). A day's Circle kept some
+  /// other way is never this Insight's: nothing is kept, nothing recorded.
+  Future<InsightActionResult> _keep(
+    String circleId,
+    InsightSnapshot snapshot,
+  ) async {
     InsightActionResult? refused(KeptCircles kept) {
       if (kept.kept.any((k) => k.fromCircleId == circleId)) {
         return InsightActionResult.alreadyApplied;
@@ -504,14 +628,26 @@ class InsightsNotifier extends Notifier<InsightsState> {
     }
     final plan = CirclePlan.fromWire(entry?.session?.parts);
     if (entry == null || plan == null) return InsightActionResult.notAvailable;
+    final keptId = 'kept-${_now.microsecondsSinceEpoch}-insight';
+    if (!await _recordAttempt(snapshot, keptId: keptId)) {
+      return InsightActionResult.notSaved;
+    }
     try {
       final circle = await ref
           .read(keptCirclesProvider.notifier)
-          .keepCircle(plan: plan, need: entry.direction, circleId: circleId);
+          .keepCircle(
+            plan: plan,
+            need: entry.direction,
+            circleId: circleId,
+            id: keptId,
+          );
       if (circle != null) return InsightActionResult.done;
+      // Refused before anything was written.
+      await _clearAttempt(snapshot.id);
       return refused(ref.read(keptCirclesProvider)) ??
           InsightActionResult.notAvailable;
-    } on StorageWriteFailed {
+    } on StorageWriteFailed catch (failure) {
+      if (!failure.uncertain) await _clearAttempt(snapshot.id);
       return InsightActionResult.notSaved;
     }
   }

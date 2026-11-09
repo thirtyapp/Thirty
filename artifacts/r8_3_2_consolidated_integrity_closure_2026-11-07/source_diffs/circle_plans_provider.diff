@@ -1,0 +1,111 @@
+diff --git a/lib/features/plans/application/circle_plans_provider.dart b/lib/features/plans/application/circle_plans_provider.dart
+index 759171b..b07b03f 100644
+--- a/lib/features/plans/application/circle_plans_provider.dart
++++ b/lib/features/plans/application/circle_plans_provider.dart
+@@ -714,23 +714,29 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+   /// write (R8.2, founder decision B): the stage it was served for is on
+   /// disk exactly as shown, and already says what [noteStart] would record.
+   /// Otherwise Today waits for [noteStart] before the Circle is started.
++  ///
++  /// R8.3.2 (Astra R83-N02, Claude AUD-R83-2): and the Plans hold no change
++  /// still being saved, with this Circle's Plan not paused — so the Start's
++  /// eligibility is that of the Plans as confirmed, exactly as when Today
++  /// waits ([prepareStart]). A change still pending — a Resume the store
++  /// may yet refuse, a record of an earlier tap — never makes a Start valid
++  /// at once.
+   bool startNeedsNoWrite(
+     PlanStageProvenance stage, {
+     required String circleId,
+     required EntitlementStatus status,
+   }) {
++    if (hasUnsavedChanges) return false;
+     // R8.3.1: a Start while the Plan is paused records that first
+-    // ([noteStartWhilePaused]) — a write the Start waits for.
+-    if (!identical(
+-      state.noteStartedWhilePaused(stage, circleId: circleId),
+-      state,
+-    )) {
++    // ([prepareStart]) — a write the Start waits for; R8.3.2: so does one
++    // whose Circle has a record left by an attempt that never became valid.
++    final plan = _durable.plans[stage.planId];
++    if (plan?.lifecycle == PlanLifecycle.paused ||
++        plan?.startedWhilePaused?.circleId == circleId) {
+       return false;
+     }
+     final stored = _servedRecord(_durable, stage, circleId);
+-    if (stored == null || _servedRecord(state, stage, circleId) != stored) {
+-      return false;
+-    }
++    if (stored == null) return false;
+     final active = switch (status) {
+       EntitlementStatus.active => true,
+       EntitlementStatus.inactive => false,
+@@ -780,29 +786,57 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+ 
+   /// R8.3.1 (founder decision on R83-F1, Option B): today's stage Circle
+   /// [circleId] is about to become validly started (Today, at the moment
+-  /// it does). When its Plan is paused — as shown, so the user's own order
+-  /// of Pause and Start is what counts — that Start earns no Plan credit,
++  /// it does). When its Plan is paused, that Start earns no Plan credit,
+   /// now or later; this records it on the Plan
+   /// ([CirclePlansState.noteStartedWhilePaused]) and completes once the
+   /// store has confirmed it. Fails with [StorageWriteFailed] otherwise:
+   /// Today then refuses the Start (founder decision B), and the user is
+   /// told there. Nothing to record for an active Plan.
+-  Future<void> noteStartWhilePaused(
++  ///
++  /// R8.3.2 (Astra R83-N01/N02, Claude AUD-R83-2/3), the Start's identity
++  /// and eligibility:
++  /// - Every Plan change still being saved is waited for first — it lands,
++  ///   or is refused and taken back (R8.1 RL-1) — and the Plan is then
++  ///   judged as the store has confirmed it: a Resume or Pause still
++  ///   pending never decides, nor does a refused one, which never happened.
++  /// - The Start gets its instant here, the one it is saved with (returned):
++  ///   a paused Plan's record names it ([PausedStart]), so a record left by
++  ///   a Start that then never became valid — the app stopped, its own save
++  ///   failed, it was cancelled — excludes no later valid Start. Such a
++  ///   record of this Circle is replaced, or for a Plan not paused removed,
++  ///   before this Start is valid: a Circle is validly started once.
++  /// - A Plan change asked for while the record itself is being written
++  ///   comes after this Start, on disk as in the order of the user's taps.
++  Future<DateTime> prepareStart(
+     PlanStageProvenance stage, {
+     required String circleId,
+   }) async {
+-    final next = state.noteStartedWhilePaused(stage, circleId: circleId);
+-    if (!identical(next, state)) return _set(next, report: false);
+-    final planId = stage.planId;
+-    if (state.plans[planId]?.startedWhilePaused == circleId &&
+-        _durable.plans[planId]?.startedWhilePaused != circleId) {
+-      await ensureSaved();
+-      if (_durable.plans[planId]?.startedWhilePaused != circleId) {
++    for (var round = 0; ; round++) {
++      if (round > _maxRounds) {
++        throw const StorageWriteFailed(
++          circlePlansKey,
++          'the Start waits on Plan changes still being saved',
++        );
++      }
++      if (hasUnsavedChanges) {
++        await idle();
++        continue;
++      }
++      final at = ref.read(eventClockProvider)();
++      final next = _durable.noteStartedWhilePaused(
++        stage,
++        circleId: circleId,
++        at: at,
++      );
++      if (identical(next, _durable)) return at;
++      await _set(next, report: false);
++      if (!_durable.samePausedStart(stage.planId, next)) {
+         throw const StorageWriteFailed(
+           circlePlansKey,
+-          'the Start made while the Plan is paused is not on disk',
++          'the record of this Start is not on disk',
+         );
+       }
++      return at;
+     }
+   }
+ 

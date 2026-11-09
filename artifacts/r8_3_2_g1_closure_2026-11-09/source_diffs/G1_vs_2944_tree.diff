@@ -1,0 +1,193 @@
+--- a/lib/features/plans/application/circle_plans_provider.dart (R8.3.2 tree of the 2,944 run)
++++ b/lib/features/plans/application/circle_plans_provider.dart (R832-G1)
+@@ -47,7 +47,18 @@
+ /// R8.3.2 (founder decision on N01-C): the Plan a stage Circle's Start was
+ /// asked for on — its lifecycle and current cycle as the user saw them at the
+ /// tap ([CirclePlansNotifier.startConditions]).
+-typedef PlanStartConditions = ({PlanLifecycle lifecycle, String? cycleId});
++///
++/// R832-G1 (founder authorization 2026-11-09): with the Plan's [generation]
++/// — how many lifecycle or cycle changes the store will have confirmed for
++/// it once what the user saw has landed — and the notifier [epoch] that
++/// counted them, so a change that returns the Plan to where it was is never
++/// mistaken for no change.
++typedef PlanStartConditions = ({
++  PlanLifecycle lifecycle,
++  String? cycleId,
++  int generation,
++  Object epoch,
++});
+ 
+ /// R8.3.2 (founder decision on N01-C): the Plan's lifecycle or cycle changed
+ /// while a Start was still unresolved, so that Start is cancelled — nothing
+@@ -90,6 +101,17 @@
+   /// How many Delete Circle histories have begun ([forgetStageEvidence]).
+   int _deletions = 0;
+ 
++  /// R832-G1 (founder authorization 2026-11-09): per Plan, how many changes
++  /// of its lifecycle or current cycle the store has confirmed — or may
++  /// have taken ([_set], uncertain) — since [_epoch] began. In memory only:
++  /// a pending Start never outlives the process. Never counted for a write
++  /// refused, a no-op or a change only shown.
++  final Map<String, int> _generations = {};
++
++  /// Which count [_generations] is: a new one at every [build], so
++  /// conditions captured before a rebuild never match after it.
++  Object _epoch = Object();
++
+   /// The most rounds a decision waits for pending Plan changes to settle
+   /// before it refuses (R8.2): each round waits for real writes, so only
+   /// a user changing the Plans again and again reaches it.
+@@ -116,9 +138,32 @@
+     _durable = read;
+     _queued = null;
+     _queuedWrite = null;
++    _epoch = Object();
++    _generations.clear();
+     return read;
+   }
+ 
++  /// R832-G1: [next] is now what the store holds. Every Plan whose
++  /// lifecycle or current cycle differs from what it held before counts one
++  /// confirmed change.
++  void _confirm(CirclePlansState next) {
++    _countChanges(_durable, next);
++    _durable = next;
++  }
++
++  void _countChanges(CirclePlansState from, CirclePlansState to) {
++    for (final planId in {...from.plans.keys, ...to.plans.keys}) {
++      if (!_samePlace(from.plans[planId], to.plans[planId])) {
++        _generations[planId] = (_generations[planId] ?? 0) + 1;
++      }
++    }
++  }
++
++  static bool _samePlace(PlanProgress? a, PlanProgress? b) =>
++      (a?.lifecycle ?? PlanLifecycle.neverStarted) ==
++          (b?.lifecycle ?? PlanLifecycle.neverStarted) &&
++      a?.current.id == b?.current.id;
++
+   CirclePlansState _read(SharedPreferences prefs) {
+     // R8.2 (Astra R81-A09): read as whatever native type is stored — a
+     // value that isn't text is a record THIRTY can't read, never a crash.
+@@ -214,7 +259,7 @@
+       // R8.2 (Astra R81-A02): a save queued before Delete Circle history
+       // began lands before the deletion's own write — but its stage
+       // evidence is never again what the Plans fall back to or decide on.
+-      _durable = generation == _deletions ? next : next.forgetStageEvidence();
++      _confirm(generation == _deletions ? next : next.forgetStageEvidence());
+     });
+     _queued = next;
+     _queuedWrite = write;
+@@ -227,9 +272,16 @@
+               .saved(UserStore.circlePlans);
+         }
+       },
+-      onError: (Object _) {
++      onError: (Object error) {
+         final latest = identical(_queued, next);
+         if (latest) _queued = _queuedWrite = null;
++        // R832-G1: a write whose outcome is unknown — the platform call
++        // threw, so it may have landed — is counted as a change for every
++        // Plan it would have moved: no Start is authorized on a lifecycle
++        // that can't be verified. One the store refused is not.
++        if (error is! StorageWriteFailed || error.uncertain) {
++          _countChanges(_durable, next);
++        }
+         if (!ref.mounted) return;
+         ref
+             .read(storeSaveFailuresProvider.notifier)
+@@ -828,6 +880,15 @@
+   /// recorded as started, and the user taps Start again. So is a Start whose
+   /// Plan changes while its record is being written; that record names an
+   /// instant no session has, and the next Start replaces it.
++  ///
++  /// R832-G1 (founder authorization 2026-11-09): judged on the Plan's
++  /// confirmed changes, not only where it ends up. Any lifecycle or cycle
++  /// change confirmed since the tap beyond the one the user saw pending —
++  /// Paused → Active → Paused, Active → Paused → Active, another Plan
++  /// started and this one carried on — cancels the Start, as does one whose
++  /// save may have landed unconfirmed, or a rebuild of the Plans since the
++  /// tap ([startConditions]). A refused change never happened and cancels
++  /// nothing.
+   Future<DateTime> prepareStart(
+     PlanStageProvenance stage, {
+     required String circleId,
+@@ -840,11 +901,14 @@
+           'the Start waits on Plan changes still being saved',
+         );
+       }
++      if (!ref.mounted || !identical(accepted.epoch, _epoch)) {
++        throw const PlanStartCancelled();
++      }
+       if (hasUnsavedChanges) {
+         await idle();
+         continue;
+       }
+-      if (!_startConditionsHold(_durable, stage, accepted)) {
++      if (!_startStillValid(stage, accepted)) {
+         throw const PlanStartCancelled();
+       }
+       final at = ref.read(eventClockProvider)();
+@@ -861,11 +925,11 @@
+           'the record of this Start is not on disk',
+         );
+       }
+-      if (!_startConditionsHold(state, stage, accepted)) {
+-        await idle();
+-        if (!_startConditionsHold(_durable, stage, accepted)) {
+-          throw const PlanStartCancelled();
+-        }
++      // A Plan change asked for while the record was being written: its
++      // outcome decides (R832-G1 — however many, landed or refused).
++      if (hasUnsavedChanges) await idle();
++      if (!_startStillValid(stage, accepted)) {
++        throw const PlanStartCancelled();
+       }
+       return at;
+     }
+@@ -873,14 +937,34 @@
+ 
+   /// The Plan of [stage] as shown now — what a Start tapped now is asked
+   /// for on ([prepareStart]).
++  ///
++  /// R832-G1: with its confirmed changes so far, plus the one still being
++  /// saved when the Plan shown is not where the store holds it — the Start
++  /// was asked for on that change, so it landing cancels nothing. Any
++  /// further confirmed change does.
+   PlanStartConditions startConditions(PlanStageProvenance stage) {
+     final plan = state.plans[stage.planId];
++    final pending = _samePlace(_durable.plans[stage.planId], plan) ? 0 : 1;
+     return (
+       lifecycle: plan?.lifecycle ?? PlanLifecycle.neverStarted,
+       cycleId: plan?.current.id,
++      generation: (_generations[stage.planId] ?? 0) + pending,
++      epoch: _epoch,
+     );
+   }
+ 
++  /// R832-G1: the Start [accepted] still stands on the Plans as confirmed —
++  /// this notifier's count, no other change confirmed, and the Plan where
++  /// the user saw it.
++  bool _startStillValid(
++    PlanStageProvenance stage,
++    PlanStartConditions accepted,
++  ) =>
++      ref.mounted &&
++      identical(accepted.epoch, _epoch) &&
++      (_generations[stage.planId] ?? 0) == accepted.generation &&
++      _startConditionsHold(_durable, stage, accepted);
++
+   static bool _startConditionsHold(
+     CirclePlansState plans,
+     PlanStageProvenance stage,
+@@ -1051,7 +1135,7 @@
+         restoreOnFailure: false,
+       );
+       await setAside;
+-      _durable = kept;
++      _confirm(kept);
+       if (ref.mounted && identical(state, shown)) state = kept;
+     });
+     _queued = shown;

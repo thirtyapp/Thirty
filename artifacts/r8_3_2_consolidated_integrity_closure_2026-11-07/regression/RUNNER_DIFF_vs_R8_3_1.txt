@@ -1,0 +1,15 @@
+1c1,2
+< """(R8.3.1, 2026-11-07: copied unchanged from artifacts/r8_3_bounded_integrity_hardening_2026-11-07/regression/run_batches.py except OUT.)
+---
+> """(R8.3.2, 2026-11-07: copied unchanged from artifacts/r8_3_1_founder_lifecycle_correction_2026-11-07/regression/run_batches.py except OUT.)
+> (R8.3.1, 2026-11-07: copied unchanged from artifacts/r8_3_bounded_integrity_hardening_2026-11-07/regression/run_batches.py except OUT.)
+62c63
+< OUT = os.path.join('artifacts', 'r8_3_1_founder_lifecycle_correction_2026-11-07', 'regression')
+---
+> OUT = os.path.join('artifacts', 'r8_3_2_consolidated_integrity_closure_2026-11-07', 'regression')
+1a2
+> # R8.3.2 (2026-11-07): copied unchanged from the R8.3.1 driver except OUT.
+16c17
+< OUT=artifacts/r8_3_1_founder_lifecycle_correction_2026-11-07/regression
+---
+> OUT=artifacts/r8_3_2_consolidated_integrity_closure_2026-11-07/regression

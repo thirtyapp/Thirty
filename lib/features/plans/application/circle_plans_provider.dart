@@ -44,6 +44,29 @@ enum PlanActionResult {
   notSaved,
 }
 
+/// R8.3.2 (founder decision on N01-C): the Plan a stage Circle's Start was
+/// asked for on — its lifecycle and current cycle as the user saw them at the
+/// tap ([CirclePlansNotifier.startConditions]).
+///
+/// R832-G1 (founder authorization 2026-11-09): with the Plan's [generation]
+/// — how many lifecycle or cycle changes the store will have confirmed for
+/// it once what the user saw has landed — and the notifier [epoch] that
+/// counted them, so a change that returns the Plan to where it was is never
+/// mistaken for no change.
+typedef PlanStartConditions = ({
+  PlanLifecycle lifecycle,
+  String? cycleId,
+  int generation,
+  Object epoch,
+});
+
+/// R8.3.2 (founder decision on N01-C): the Plan's lifecycle or cycle changed
+/// while a Start was still unresolved, so that Start is cancelled — nothing
+/// is started; the user taps Start again ([CirclePlansNotifier.prepareStart]).
+class PlanStartCancelled implements Exception {
+  const PlanStartCancelled();
+}
+
 /// The user's explicit usefulness answers in [journal], by Circle id.
 StageAnswers stageAnswersFrom(Iterable<CircleJournalEntry> journal) => {
   for (final entry in journal)
@@ -78,6 +101,17 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   /// How many Delete Circle histories have begun ([forgetStageEvidence]).
   int _deletions = 0;
 
+  /// R832-G1 (founder authorization 2026-11-09): per Plan, how many changes
+  /// of its lifecycle or current cycle the store has confirmed — or may
+  /// have taken ([_set], uncertain) — since [_epoch] began. In memory only:
+  /// a pending Start never outlives the process. Never counted for a write
+  /// refused, a no-op or a change only shown.
+  final Map<String, int> _generations = {};
+
+  /// Which count [_generations] is: a new one at every [build], so
+  /// conditions captured before a rebuild never match after it.
+  Object _epoch = Object();
+
   /// The most rounds a decision waits for pending Plan changes to settle
   /// before it refuses (R8.2): each round waits for real writes, so only
   /// a user changing the Plans again and again reaches it.
@@ -104,8 +138,31 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
     _durable = read;
     _queued = null;
     _queuedWrite = null;
+    _epoch = Object();
+    _generations.clear();
     return read;
   }
+
+  /// R832-G1: [next] is now what the store holds. Every Plan whose
+  /// lifecycle or current cycle differs from what it held before counts one
+  /// confirmed change.
+  void _confirm(CirclePlansState next) {
+    _countChanges(_durable, next);
+    _durable = next;
+  }
+
+  void _countChanges(CirclePlansState from, CirclePlansState to) {
+    for (final planId in {...from.plans.keys, ...to.plans.keys}) {
+      if (!_samePlace(from.plans[planId], to.plans[planId])) {
+        _generations[planId] = (_generations[planId] ?? 0) + 1;
+      }
+    }
+  }
+
+  static bool _samePlace(PlanProgress? a, PlanProgress? b) =>
+      (a?.lifecycle ?? PlanLifecycle.neverStarted) ==
+          (b?.lifecycle ?? PlanLifecycle.neverStarted) &&
+      a?.current.id == b?.current.id;
 
   CirclePlansState _read(SharedPreferences prefs) {
     // R8.2 (Astra R81-A09): read as whatever native type is stored — a
@@ -202,7 +259,7 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
       // R8.2 (Astra R81-A02): a save queued before Delete Circle history
       // began lands before the deletion's own write — but its stage
       // evidence is never again what the Plans fall back to or decide on.
-      _durable = generation == _deletions ? next : next.forgetStageEvidence();
+      _confirm(generation == _deletions ? next : next.forgetStageEvidence());
     });
     _queued = next;
     _queuedWrite = write;
@@ -215,9 +272,16 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
               .saved(UserStore.circlePlans);
         }
       },
-      onError: (Object _) {
+      onError: (Object error) {
         final latest = identical(_queued, next);
         if (latest) _queued = _queuedWrite = null;
+        // R832-G1: a write whose outcome is unknown — the platform call
+        // threw, so it may have landed — is counted as a change for every
+        // Plan it would have moved: no Start is authorized on a lifecycle
+        // that can't be verified. One the store refused is not.
+        if (error is! StorageWriteFailed || error.uncertain) {
+          _countChanges(_durable, next);
+        }
         if (!ref.mounted) return;
         ref
             .read(storeSaveFailuresProvider.notifier)
@@ -714,23 +778,29 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   /// write (R8.2, founder decision B): the stage it was served for is on
   /// disk exactly as shown, and already says what [noteStart] would record.
   /// Otherwise Today waits for [noteStart] before the Circle is started.
+  ///
+  /// R8.3.2 (Astra R83-N02, Claude AUD-R83-2): and the Plans hold no change
+  /// still being saved, with this Circle's Plan not paused — so the Start's
+  /// eligibility is that of the Plans as confirmed, exactly as when Today
+  /// waits ([prepareStart]). A change still pending — a Resume the store
+  /// may yet refuse, a record of an earlier tap — never makes a Start valid
+  /// at once.
   bool startNeedsNoWrite(
     PlanStageProvenance stage, {
     required String circleId,
     required EntitlementStatus status,
   }) {
+    if (hasUnsavedChanges) return false;
     // R8.3.1: a Start while the Plan is paused records that first
-    // ([noteStartWhilePaused]) — a write the Start waits for.
-    if (!identical(
-      state.noteStartedWhilePaused(stage, circleId: circleId),
-      state,
-    )) {
+    // ([prepareStart]) — a write the Start waits for; R8.3.2: so does one
+    // whose Circle has a record left by an attempt that never became valid.
+    final plan = _durable.plans[stage.planId];
+    if (plan?.lifecycle == PlanLifecycle.paused ||
+        plan?.startedWhilePaused?.circleId == circleId) {
       return false;
     }
     final stored = _servedRecord(_durable, stage, circleId);
-    if (stored == null || _servedRecord(state, stage, circleId) != stored) {
-      return false;
-    }
+    if (stored == null) return false;
     final active = switch (status) {
       EntitlementStatus.active => true,
       EntitlementStatus.inactive => false,
@@ -780,30 +850,130 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
 
   /// R8.3.1 (founder decision on R83-F1, Option B): today's stage Circle
   /// [circleId] is about to become validly started (Today, at the moment
-  /// it does). When its Plan is paused — as shown, so the user's own order
-  /// of Pause and Start is what counts — that Start earns no Plan credit,
+  /// it does). When its Plan is paused, that Start earns no Plan credit,
   /// now or later; this records it on the Plan
   /// ([CirclePlansState.noteStartedWhilePaused]) and completes once the
   /// store has confirmed it. Fails with [StorageWriteFailed] otherwise:
   /// Today then refuses the Start (founder decision B), and the user is
   /// told there. Nothing to record for an active Plan.
-  Future<void> noteStartWhilePaused(
+  ///
+  /// R8.3.2 (Astra R83-N01/N02, Claude AUD-R83-2/3), the Start's identity
+  /// and eligibility:
+  /// - Every Plan change still being saved is waited for first — it lands,
+  ///   or is refused and taken back (R8.1 RL-1) — and the Plan is then
+  ///   judged as the store has confirmed it: a Resume or Pause still
+  ///   pending never decides, nor does a refused one, which never happened.
+  /// - The Start gets its instant here, the one it is saved with (returned):
+  ///   a paused Plan's record names it ([PausedStart]), so a record left by
+  ///   a Start that then never became valid — the app stopped, its own save
+  ///   failed, it was cancelled — excludes no later valid Start. Such a
+  ///   record of this Circle is replaced, or for a Plan not paused removed,
+  ///   before this Start is valid: a Circle is validly started once.
+  /// - A Plan change asked for while the record itself is being written
+  ///   comes after this Start, on disk as in the order of the user's taps.
+  ///
+  /// R8.3.2 (founder decision on N01-C): the Start was asked for on the Plan
+  /// as [accepted] ([startConditions]). When, once its changes have settled,
+  /// the confirmed Plan's lifecycle or cycle is not that — a Resume or Pause
+  /// confirmed meanwhile, or one refused that the tap was made on — the
+  /// Start is cancelled ([PlanStartCancelled]): nothing is started or
+  /// recorded as started, and the user taps Start again. So is a Start whose
+  /// Plan changes while its record is being written; that record names an
+  /// instant no session has, and the next Start replaces it.
+  ///
+  /// R832-G1 (founder authorization 2026-11-09): judged on the Plan's
+  /// confirmed changes, not only where it ends up. Any lifecycle or cycle
+  /// change confirmed since the tap beyond the one the user saw pending —
+  /// Paused → Active → Paused, Active → Paused → Active, another Plan
+  /// started and this one carried on — cancels the Start, as does one whose
+  /// save may have landed unconfirmed, or a rebuild of the Plans since the
+  /// tap ([startConditions]). A refused change never happened and cancels
+  /// nothing.
+  Future<DateTime> prepareStart(
     PlanStageProvenance stage, {
     required String circleId,
+    required PlanStartConditions accepted,
   }) async {
-    final next = state.noteStartedWhilePaused(stage, circleId: circleId);
-    if (!identical(next, state)) return _set(next, report: false);
-    final planId = stage.planId;
-    if (state.plans[planId]?.startedWhilePaused == circleId &&
-        _durable.plans[planId]?.startedWhilePaused != circleId) {
-      await ensureSaved();
-      if (_durable.plans[planId]?.startedWhilePaused != circleId) {
+    for (var round = 0; ; round++) {
+      if (round > _maxRounds) {
         throw const StorageWriteFailed(
           circlePlansKey,
-          'the Start made while the Plan is paused is not on disk',
+          'the Start waits on Plan changes still being saved',
         );
       }
+      if (!ref.mounted || !identical(accepted.epoch, _epoch)) {
+        throw const PlanStartCancelled();
+      }
+      if (hasUnsavedChanges) {
+        await idle();
+        continue;
+      }
+      if (!_startStillValid(stage, accepted)) {
+        throw const PlanStartCancelled();
+      }
+      final at = ref.read(eventClockProvider)();
+      final next = _durable.noteStartedWhilePaused(
+        stage,
+        circleId: circleId,
+        at: at,
+      );
+      if (identical(next, _durable)) return at;
+      await _set(next, report: false);
+      if (!_durable.samePausedStart(stage.planId, next)) {
+        throw const StorageWriteFailed(
+          circlePlansKey,
+          'the record of this Start is not on disk',
+        );
+      }
+      // A Plan change asked for while the record was being written: its
+      // outcome decides (R832-G1 — however many, landed or refused).
+      if (hasUnsavedChanges) await idle();
+      if (!_startStillValid(stage, accepted)) {
+        throw const PlanStartCancelled();
+      }
+      return at;
     }
+  }
+
+  /// The Plan of [stage] as shown now — what a Start tapped now is asked
+  /// for on ([prepareStart]).
+  ///
+  /// R832-G1: with its confirmed changes so far, plus the one still being
+  /// saved when the Plan shown is not where the store holds it — the Start
+  /// was asked for on that change, so it landing cancels nothing. Any
+  /// further confirmed change does.
+  PlanStartConditions startConditions(PlanStageProvenance stage) {
+    final plan = state.plans[stage.planId];
+    final pending = _samePlace(_durable.plans[stage.planId], plan) ? 0 : 1;
+    return (
+      lifecycle: plan?.lifecycle ?? PlanLifecycle.neverStarted,
+      cycleId: plan?.current.id,
+      generation: (_generations[stage.planId] ?? 0) + pending,
+      epoch: _epoch,
+    );
+  }
+
+  /// R832-G1: the Start [accepted] still stands on the Plans as confirmed —
+  /// this notifier's count, no other change confirmed, and the Plan where
+  /// the user saw it.
+  bool _startStillValid(
+    PlanStageProvenance stage,
+    PlanStartConditions accepted,
+  ) =>
+      ref.mounted &&
+      identical(accepted.epoch, _epoch) &&
+      (_generations[stage.planId] ?? 0) == accepted.generation &&
+      _startConditionsHold(_durable, stage, accepted);
+
+  static bool _startConditionsHold(
+    CirclePlansState plans,
+    PlanStageProvenance stage,
+    PlanStartConditions accepted,
+  ) {
+    final plan = plans.plans[stage.planId];
+    return (plan?.lifecycle ?? PlanLifecycle.neverStarted) ==
+            accepted.lifecycle &&
+        plan?.current.id == accepted.cycleId;
   }
 
   /// [circleId]'s served record in [plans], as stored text, or `null`.
@@ -965,7 +1135,7 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
         restoreOnFailure: false,
       );
       await setAside;
-      _durable = kept;
+      _confirm(kept);
       if (ref.mounted && identical(state, shown)) state = kept;
     });
     _queued = shown;

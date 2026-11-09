@@ -1,0 +1,257 @@
+{
+ "files": {
+  "test/features/home/home_page_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/pre_release_retirement_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/circle_history_page_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/circle_record_detail_page_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/phase_c_memory_ui_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/phase_c_talkback_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/activity_guide_sheet_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/circle_hero_test.dart": {
+   "passed": 56,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/circle_ready_prompt_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/circle_reflection_card_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/daily_intention_prompt_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/home/presentation/widgets/phase_b_ui_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 154,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/features/home/home_page_test.dart": [
+   "shows the Circle-first Ready state, not the direction chooser, when today has no recommendation yet",
+   "renders the Circle Hero experience once today's recommendation exists",
+   "the Circle occupies the exact same position and size in the Ready state and in the Circle Hero's first settled frame once today's recommendation exists \u2014 the Golden Home continuity correction's core visual requirement: no jump in horizontal/vertical position, diameter, or top spacing across the daily flow",
+   "shows no AppBar action icons in any state \u2014 founder IA correction: Plans, Insights (history's new home) and You are all persistent bottom-nav destinations, so a duplicate AppBar shortcut here would be redundant",
+   "ActionReportPrompt is not shown before today's Circle is closed",
+   "ActionReportPrompt appears once today's Circle is closed",
+   "the Plans icon is absent regardless of entitlement \u2014 Plans is now a bottom-nav destination reachable from the shell, not an AppBar shortcut on Today (founder IA correction)",
+   "a new local day returns to the Circle-first Ready state even though yesterday's Circle was closed \u2014 no \"missed day\" state, just a fresh day (Playbook Ch.1 \u00a77-\u00a78)"
+  ],
+  "test/features/home/pre_release_retirement_test.dart": [
+   "V1 Premium retirement removes V1 Plans and Insights, keeps the journal and every Free preference, and runs once",
+   "V1 Premium retirement an interrupted retirement (no marker yet) simply runs again",
+   "Phase D retirement (B1) drops Paths, routines and maintenance; every kept Circle stays exactly as kept, under the same key",
+   "Phase D retirement (B1) drops the routine \"Don't suggest\" items and nothing else from suggestion preferences",
+   "Phase D retirement (B1) touches no journal entry: a routine day stays a routine day",
+   "Phase D retirement (B1) runs once, leaves an unreadable record untouched, and changes nothing when there is nothing to retire",
+   "Phase D retirement (B1) nothing in it makes a Plan, a routine or a kept Circle",
+   "the kept-Circle store an unreadable record stays exactly where it is, and nothing kept is guessed at (audit remediation R4.1)",
+   "the kept-Circle store a legacy record still reads its kept Circles before the migration has run",
+   "the kept-Circle store the next write keeps only the kept Circles",
+   "export carries the kept Circles \u2014 and no routine, Path or derived score as a current object",
+   "a historical routine or joined Path Circle stays composite: never evidence about one activity"
+  ],
+  "test/features/home/presentation/circle_history_page_test.dart": [
+   "shows an empty-state message when nothing is recorded yet",
+   "lists a recorded entry with a clear shown/started/closed/attempt/usefulness distinction",
+   "an old V1 Plan entry keeps a truthful line \u2014 what it came from, never a V2 Path (V2 Phase D)",
+   "a historical Path step and routine (Phase D, retired by ADR-024) still read as what they were that day \u2014 no live routine or Path needed",
+   "a Free-selector entry (no Plan fields) shows no Plan context line",
+   "Delete all clears the journal only after explicit confirmation",
+   "Delete permanently uses the AA errorText role, matching the Close Circle destructive action (A5)",
+   "Delete all keeps kept Circles \u2014 they have their own controls",
+   "Copy as text copies the exported journal to the clipboard"
+  ],
+  "test/features/home/presentation/circle_record_detail_page_test.dart": [
+   "shows the recorded entry's truthful shown/started/closed detail for an existing local date",
+   "shows a safe, truthful message for a local date with no retained record \u2014 a stale or deleted link never crashes or fabricates a record",
+   "accessibility: at 360pt width and 200% text the record never overflows and every line stays reachable by scrolling"
+  ],
+  "test/features/home/presentation/phase_c_memory_ui_test.dart": [
+   "What THIRTY remembers per need, in the user's own words: useful before, resting for now \u2014 and nothing for an unanswered Circle",
+   "What THIRTY remembers with nothing to reset, there is no reset control at all",
+   "What THIRTY remembers \"Suggest again\" on a rest lifts it \u2014 the answer stays",
+   "What THIRTY remembers \"Don't suggest\" is the user's own choice, shown as such; \"Suggest again\" reverses it \u2014 and nothing else",
+   "What THIRTY remembers an answer can be removed from its detail; memory follows",
+   "What THIRTY remembers Reset suggestion preferences: its own control, its own truthful confirmation; history stays",
+   "What THIRTY remembers at 130% and 200% text nothing overflows or is cut off",
+   "History: \"Remove this answer\" removes one answer \u2014 or the attempt and its usefulness \u2014 and keeps the Circle's record",
+   "the way in, and Delete's truthful confirmation /memory opens on its need",
+   "the way in, and Delete's truthful confirmation /memory?need=moreEnergy opens on its need",
+   "the way in, and Delete's truthful confirmation You \u2192 \"What THIRTY remembers\"",
+   "the way in, and Delete's truthful confirmation Delete Circle history says the suggestion preferences are kept \u2014 and keeps them"
+  ],
+  "test/features/home/presentation/phase_c_talkback_test.dart": [
+   "Open: one stop per moment the first action is read as \"First. \u2026\", never a bare eyebrow",
+   "Guided: Pause keeps TalkBack where it was Pause, then Resume, each leave focus on the toggle \u2014 now named for what it does next",
+   "the reflection takes focus only when an answer brings it on \"Yes\" moves focus to \"Was it useful?\"; an answer there moves it to the acknowledgement",
+   "the reflection takes focus only when an answer brings it on arriving on \"Was it useful?\" (a return later in the day) leaves focus alone",
+   "backdrops are named for what they do Close Circle's confirmation: the backdrop keeps the Circle open",
+   "backdrops are named for what they do the \"How to do it\" sheet: its backdrop closes it",
+   "backdrops are named for what they do the \"Not this one today\" sheet: its backdrop closes it",
+   "backdrops are named for what they do every dialog and sheet the app opens names its backdrop",
+   "a confirmation is announced by its question, not \"Alert\""
+  ],
+  "test/features/home/presentation/widgets/activity_guide_sheet_test.dart": [
+   "before Start: the card shows the activity's natural length and why it might fit \u2014 never a fixed half hour",
+   "once started: the first action replaces the reason, so what to do now is front and centre",
+   "A quick standing stretch: started, it runs one step at a time (V2 Phase C), and the ring runs to 5 minutes",
+   "tapping the activity opens its full how-to",
+   "a Guided activity lists every named step with its cue, its lighter version and how to finish",
+   "an Open activity shows its first action and its \"while you're there\" ideas",
+   "content awaiting the safety review is marked as an internal draft whenever it is shown",
+   "at full scroll, the last line clears the system navigation bar (S25 device finding)"
+  ],
+  "test/features/home/presentation/widgets/circle_hero_test.dart": [
+   "CircleHero starts with the Circle fully closed when The First Breath plays",
+   "CircleHero opens the Circle and reveals content once settled",
+   "CircleHero announces a calm, non-numeric meaning for the Circle instead of a percentage",
+   "CircleHero tapping Start Circle marks the recommendation started",
+   "CircleHero the destructive action in the Close Circle confirmation uses the AA errorText role, not the brand error fill color",
+   "CircleHero centers the Circle, illustration, greeting and Today card on the same horizontal axis as the screen",
+   "CircleHero renders the resolved World Hero \u2014 Quiet Trail for a walk \u2014 inset inside the ring",
+   "CircleHero shows the fully-settled state instantly when already played today",
+   "CircleHero First Breath v2 \u2014 wordmark and Circle-opening sequencing shows the wordmark fully visible during its hold phase, before the Circle opens",
+   "CircleHero First Breath v2 \u2014 wordmark and Circle-opening sequencing keeps the Circle fully closed throughout the wordmark fade-in, hold and fade-out",
+   "CircleHero First Breath v2 \u2014 wordmark and Circle-opening sequencing starts opening the Circle only once wordmark opacity has reached 0",
+   "CircleHero First Breath v2 \u2014 wordmark and Circle-opening sequencing never renders a frame where the wordmark is visible while the Circle has already started opening",
+   "CircleHero First Breath v2 \u2014 wordmark and Circle-opening sequencing keeps the World illustration hidden until the Circle has fully opened",
+   "CircleHero First Breath v2 \u2014 wordmark and Circle-opening sequencing reveals heading before intent, and intent before activity/why, preserving the existing content order",
+   "CircleHero First Breath v2 \u2014 wordmark and Circle-opening sequencing skips the wordmark ritual entirely when First Breath already played today",
+   "CircleHero First Breath v2 \u2014 wordmark and Circle-opening sequencing plays no ritual animation when reduced motion is requested, and lands directly on the settled end state",
+   "CircleHero First Breath v2 \u2014 wordmark and Circle-opening sequencing marks First Breath as played today even under reduced motion, on the first visit of the day",
+   "CircleHero Start Circle interaction gate ignores taps while the button is still fully hidden during The First Breath",
+   "CircleHero Start Circle interaction gate ignores taps while the button is only partially faded in",
+   "CircleHero Start Circle interaction gate accepts the tap once the button has fully finished revealing",
+   "CircleHero Start Circle interaction gate is immediately interactive on repeat opening the same local day",
+   "CircleHero Start Circle interaction gate wraps the button in an IgnorePointer tied to its own reveal animation",
+   "CircleHero Start Circle haptic fires exactly one lightImpact haptic on a valid Start Circle tap",
+   "CircleHero Start Circle haptic V2 Phase C: Circle Closed spends its one soft haptic only on a confirmed close \u2014 never on the Close tap itself or a cancelled confirmation",
+   "CircleHero Start Circle haptic does not fire a haptic for a tap blocked by First Breath gating, before the button has fully revealed",
+   "CircleHero Same-Home Circle lifecycle (Premium Pass 02B Revised Experiment 1) closing preserves startedAt and records closedAt",
+   "CircleHero Same-Home Circle lifecycle (Premium Pass 02B Revised Experiment 1) once closed there is no CTA at all \u2014 only the explanatory closed message, and no ThirtyButton survives to accidentally reopen it",
+   "CircleHero Same-Home Circle lifecycle (Premium Pass 02B Revised Experiment 1) a same-day restored started state shows Close Circle",
+   "CircleHero Same-Home Circle lifecycle (Premium Pass 02B Revised Experiment 1) a same-day restored closed state shows the explanatory closed message, with no CTA",
+   "CircleHero Circle lifecycle semantics (Premium Pass 02B.1 / 02C Precheck) notStarted announces \"Ready to begin.\"",
+   "CircleHero Circle lifecycle semantics (Premium Pass 02B.1 / 02C Precheck) started announces \"Circle in progress.\" with the minutes run",
+   "CircleHero Circle lifecycle semantics (Premium Pass 02B.1 / 02C Precheck) closed announces \"Circle closed.\"",
+   "CircleHero Circle lifecycle semantics (Premium Pass 02B.1 / 02C Precheck) a same-day restored started->closed transition updates the existing semantics node rather than creating a new one",
+   "CircleHero Phase D1 ring \u2014 soft track, sage dot, activity-length timer every assigned state paints the soft track, a sage arc and the sage dot",
+   "CircleHero Phase D1 ring \u2014 soft track, sage dot, activity-length timer not started: empty arc, dot at the top",
+   "CircleHero Phase D1 ring \u2014 soft track, sage dot, activity-length timer First Breath still opens the Circle from closed to empty",
+   "CircleHero Phase D1 ring \u2014 soft track, sage dot, activity-length timer started: the arc is the time since Start Circle out of the activity's own length, never a fixed 30 minutes",
+   "CircleHero Phase D1 ring \u2014 soft track, sage dot, activity-length timer representative ~10 and ~20 minute activities each run the ring to their own length",
+   "CircleHero Phase D1 ring \u2014 soft track, sage dot, activity-length timer started: the arc advances as time passes and is full from the activity's length on",
+   "CircleHero Phase D1 ring \u2014 soft track, sage dot, activity-length timer closed: the arc keeps the time the Circle actually ran",
+   "CircleHero Phase D1 ring \u2014 soft track, sage dot, activity-length timer Start Circle starts the timer at 0; its ticker never blocks pumpAndSettle",
+   "CircleHero Batch 1 \u2014 Close Circle confirmation (Phase B) tapping Close Circle shows the confirmation dialog before changing any state",
+   "CircleHero Batch 1 \u2014 Close Circle confirmation (Phase B) \"Keep Circle open\" leaves the active Circle completely unchanged",
+   "CircleHero Batch 1 \u2014 Close Circle confirmation (Phase B) dismissing the dialog by tapping outside it resolves the same as an explicit cancel \u2014 the Circle stays open. showDialog resolves a dismiss (tap-outside or the system back button) the same way: anything other than an explicit confirm leaves the Circle untouched, so this also stands in for the back-button case.",
+   "World art snapshot walk: thirtyMinuteWalk shows the Hero and Card of one resolved snapshot",
+   "World art snapshot breathe: energisingBreathReset shows the Hero and Card of one resolved snapshot",
+   "World art snapshot move: moveToMusic shows the Hero and Card of one resolved snapshot",
+   "World art snapshot stretch: energisingStretchFlow shows the Hero and Card of one resolved snapshot",
+   "World art snapshot read: quietReading shows the Hero and Card of one resolved snapshot",
+   "World art snapshot write: writeItDown shows the Hero and Card of one resolved snapshot",
+   "World art snapshot listen: quietMusicBreak shows the Hero and Card of one resolved snapshot",
+   "World art snapshot tend: activeHouseholdTask shows the Hero and Card of one resolved snapshot",
+   "World art snapshot comfort: smallComfortRitual shows the Hero and Card of one resolved snapshot",
+   "World art snapshot holds its Daypart through First Breath, then settles on the re-resolved one",
+   "World art snapshot a re-resolution once settled switches Hero and Card together",
+   "World art snapshot World art never reaches the semantics tree"
+  ],
+  "test/features/home/presentation/widgets/circle_ready_prompt_test.dart": [
+   "CircleReadyPrompt shows the closed Circle and Begin today's Circle CTA, not the direction chooser",
+   "CircleReadyPrompt tapping Begin today's Circle reveals only the compact question and three choices \u2014 no explanatory paragraph (emulator polish)",
+   "CircleReadyPrompt tapping Begin today's Circle does not mutate recommendation state",
+   "CircleReadyPrompt reduced motion swaps directly to the direction chooser with no animated transition",
+   "CircleReadyPrompt the Circle stays mounted and geometrically stable while Begin today's Circle reveals the direction choices beneath it \u2014 the exact continuity correction this batch makes: physical verification of 1.7.0+13 found the whole Circle composition disappearing behind full-screen direction cards instead",
+   "CircleReadyPrompt choosing a direction after Begin today's Circle still assigns exactly one recommendation via the existing mechanism",
+   "Golden Home QA floor (320x568 / 200% text) 320x568 renders with no overflow and Begin today's Circle stays reachable",
+   "Golden Home QA floor (320x568 / 200% text) 200% text scale renders with no overflow and keeps Begin today's Circle reachable",
+   "Golden Home QA floor (320x568 / 200% text) 320x568 combined with 200% text renders with no overflow and keeps every action reachable",
+   "Golden Home QA floor (320x568 / 200% text) Dark mode renders the Ready state with no overflow"
+  ],
+  "test/features/home/presentation/widgets/circle_reflection_card_test.dart": [
+   "shows the attempt question once closed, with all three answers",
+   "tapping Yes records the attempt and reveals the usefulness question",
+   "tapping Not today records the attempt, asks nothing more, and says it won\u2019t count against the activity",
+   "answering usefulness records it once and acknowledges what it changes",
+   "the answers are full 48pt targets with their own labels",
+   "at 200% text the answers stack at full width, never truncated",
+   "reflectionPendingProvider (Step 5 prompt-priority reconciliation) false before today's Circle is closed",
+   "reflectionPendingProvider (Step 5 prompt-priority reconciliation) true once closed with the attempt question unanswered",
+   "reflectionPendingProvider (Step 5 prompt-priority reconciliation) true after an affirmative attempt with usefulness unanswered",
+   "reflectionPendingProvider (Step 5 prompt-priority reconciliation) false once \"Not today\" is reported \u2014 no follow-up question",
+   "reflectionPendingProvider (Step 5 prompt-priority reconciliation) false once both questions are answered"
+  ],
+  "test/features/home/presentation/widgets/daily_intention_prompt_test.dart": [
+   "every need meaning is the founder-approved wording",
+   "shows the Daily Context Question and exactly three options",
+   "tapping an option chooses that intention",
+   "each option is exposed as a semantic button with its label and meaning",
+   "a real assistive-technology tap action (SemanticsAction.tap), not just the button/label flags, actually chooses the intention (ADR-013 \u00a79)",
+   "shows only the question and the three choices \u2014 no explanatory paragraph \u2014 matching the restrained question/choice rhythm of the post-Circle feedback UI (emulator polish)"
+  ],
+  "test/features/home/presentation/widgets/phase_b_ui_test.dart": [
+   "Time you have with the real font at S25 width, three quiet segments at normal and 130% text",
+   "Time you have already set to \u2248 20, announced by its meaning, and the need stays the only required tap",
+   "Time you have choosing \u2248 10 first gives an offer that fits it",
+   "the Today card a personal reason takes the line; the activity's own reason stays in its how-to",
+   "the Today card the card and the ring use today's length",
+   "Not this one today from the how-to, three reasons for an outdoor activity, one replacement, and then it is gone",
+   "Not this one today TalkBack hears the same: the activity, then what the row opens",
+   "Not this one today \"Can't go outside\" only when today's activity is outdoors",
+   "Not this one today never once the Circle has started",
+   "the feedback acknowledgement says what each answer changes \u2014 and nothing before one"
+  ]
+ },
+ "batch": 8,
+ "exit": 0,
+ "seconds": 23,
+ "command": "flutter test --concurrency=1 --reporter json test/features/home/home_page_test.dart test/features/home/pre_release_retirement_test.dart test/features/home/presentation/circle_history_page_test.dart test/features/home/presentation/circle_record_detail_page_test.dart test/features/home/presentation/phase_c_memory_ui_test.dart test/features/home/presentation/phase_c_talkback_test.dart test/features/home/presentation/widgets/activity_guide_sheet_test.dart test/features/home/presentation/widgets/circle_hero_test.dart test/features/home/presentation/widgets/circle_ready_prompt_test.dart test/features/home/presentation/widgets/circle_reflection_card_test.dart test/features/home/presentation/widgets/daily_intention_prompt_test.dart test/features/home/presentation/widgets/phase_b_ui_test.dart",
+ "rawSha256": "7b13bedaceb95f14acbb2498522dcef35f57e245601726336c4e410a42721159"
+}

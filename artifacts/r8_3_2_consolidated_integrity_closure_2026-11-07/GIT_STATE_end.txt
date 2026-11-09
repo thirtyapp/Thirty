@@ -1,0 +1,18 @@
+HEAD 9c910773d7bfd3961be75fe3c9a44db41a1b7b27
+HEAD~1 e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8
+origin-tracking 9c910773d7bfd3961be75fe3c9a44db41a1b7b27
+9c910773d7bfd3961be75fe3c9a44db41a1b7b27	refs/heads/step5-billing-integration
+branch step5-billing-integration
+staged: 0
+== tracked modifications
+ M lib/core/world_rendering/quiet_trail_hero_asset_view.dart
+ M lib/features/home/application/recommendation_provider.dart
+ M lib/features/insights/application/insights_provider.dart
+ M lib/features/plans/application/circle_plans_provider.dart
+ M lib/features/plans/domain/circle_plan.dart
+ M test/features/personal_circle/r6_kept_voice_whole_circle_test.dart
+== new untracked in R8.3.2 scope
+?? artifacts/r8_3_2_consolidated_integrity_closure_2026-11-07/
+?? docs/audits/THIRTY_INDEPENDENT_POST_R8_3_DELTA_AUDIT.md
+?? test/features/r832/
+untracked total: 391

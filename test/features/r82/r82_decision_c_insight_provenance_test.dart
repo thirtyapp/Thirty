@@ -278,11 +278,49 @@ void main() {
   });
 
   group('the Insight\'s own change is recognized, never repeated', () {
+    // R8.3.2 (founder scope decision B1): I3 records its attempt first, and
+    // "a failed receipt write must not permit an unprotected target
+    // mutation" — so with every Insights write refused its change is never
+    // made. That case is below; I1 and I2 are unchanged.
     final cases = <String, (Map<String, Object>, InsightFamily)>{
       'I1': (i1, InsightFamily.planForNeed),
       'I2': (i2, InsightFamily.planPacing),
-      'I3': (i3, InsightFamily.skippedPart),
     };
+    for (final fault in DiskFault.values) {
+      test('I3 — the Insights store refuses every write (${fault.name}): '
+          'its attempt can\'t be recorded, so nothing is left out; once the '
+          'store takes it, the retry applies it once', () async {
+        await h.boot(i3);
+        final c = h.open();
+        final shown = insights(c).assess().added.single;
+        expect(shown.family, InsightFamily.skippedPart);
+        await R8Harness.settle();
+        h.disk.fail(insightsKey, fault);
+        expect(
+          await insights(c).apply(shown.id),
+          InsightActionResult.notSaved,
+        );
+        await R8Harness.settle();
+        expect(
+          jsonEncode(await json(suggestionPreferencesKey)),
+          isNot(contains(shown.id)),
+          reason: 'the part was left out without its attempt record',
+        );
+        h.disk.healAll();
+        await h.restart();
+        final again = h.open();
+        expect(
+          await insights(again).apply(shown.id),
+          InsightActionResult.done,
+        );
+        await R8Harness.settle();
+        expect((await snapshotOnDisk(shown.id))?['appliedOn'], isNotNull);
+        expect(
+          jsonEncode(await json(suggestionPreferencesKey)),
+          contains(shown.id),
+        );
+      });
+    }
     for (final MapEntry(key: name, value: (seed, family)) in cases.entries) {
       for (final fault in DiskFault.values) {
         test('$name — residual: the Insights store refuses every write '

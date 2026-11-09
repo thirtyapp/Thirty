@@ -221,6 +221,7 @@ class InsightSnapshot {
     this.appliedOn,
     this.notNowOn,
     this.declinedOn,
+    this.attempt,
     this.source,
   });
 
@@ -273,6 +274,14 @@ class InsightSnapshot {
   /// evidence set is hidden.
   final String? declinedOn;
 
+  /// R8.3.2 (founder scope decisions B1/B2): the record, confirmed before
+  /// the action, that this Insight's action is being made ([InsightAttempt])
+  /// — for the actions the user can later reverse in a way that removes
+  /// every trace of them (I3's Put back, I4's kept Circle removed). Cleared
+  /// when the Insight is marked applied, or when its action is known not to
+  /// have been made.
+  final InsightAttempt? attempt;
+
   String? get planId => switch (application) {
     PlanDirection(:final planId) ||
     KeepGentler(:final planId) ||
@@ -289,6 +298,8 @@ class InsightSnapshot {
     String? appliedOn,
     String? notNowOn,
     String? declinedOn,
+    InsightAttempt? attempt,
+    bool clearAttempt = false,
   }) => InsightSnapshot(
     id: id,
     family: family,
@@ -302,15 +313,18 @@ class InsightSnapshot {
     appliedOn: appliedOn ?? this.appliedOn,
     notNowOn: notNowOn ?? this.notNowOn,
     declinedOn: declinedOn ?? this.declinedOn,
+    attempt: clearAttempt ? null : attempt ?? this.attempt,
     source: source,
   );
 
   Map<String, Object?> toJson() => switch (source) {
     final stored? => {
-      ...stored,
+      for (final MapEntry(:key, :value) in stored.entries)
+        if (key != 'attempt') key: value,
       'appliedOn': ?appliedOn,
       'notNowOn': ?notNowOn,
       'declinedOn': ?declinedOn,
+      'attempt': ?attempt?.toJson(),
     },
     null => _built(),
   };
@@ -328,6 +342,7 @@ class InsightSnapshot {
     'appliedOn': ?appliedOn,
     'notNowOn': ?notNowOn,
     'declinedOn': ?declinedOn,
+    'attempt': ?attempt?.toJson(),
   };
 
   /// `null` for anything that isn't a whole snapshot.
@@ -367,6 +382,11 @@ class InsightSnapshot {
             (endedOn is! String || !isCanonicalDateKey(endedOn))) {
       return null;
     }
+    // R8.3.2: an attempt record that is there but isn't a whole record for
+    // this snapshot's own action makes the snapshot unreadable — kept as
+    // stored, never read as no attempt.
+    final attempt = InsightAttempt.fromJson(raw['attempt'], application);
+    if (raw['attempt'] != null && attempt == null) return null;
     String? date(String k) => raw[k] is String ? raw[k] as String : null;
     return InsightSnapshot(
       id: id,
@@ -389,7 +409,76 @@ class InsightSnapshot {
       appliedOn: date('appliedOn'),
       notNowOn: date('notNowOn'),
       declinedOn: date('declinedOn'),
+      attempt: attempt,
       source: raw,
+    );
+  }
+}
+
+/// R8.3.2 (founder scope decisions B1/B2): an Insight's action recorded as
+/// being made, before it is ([InsightSnapshot.attempt]).
+///
+/// It names the action's target ([target]: the part left out, the day's
+/// Circle kept) and, for I4, the id the kept Circle is given ([keptId]) —
+/// so that Insight's own Keep is told from any other. An attempt is not an
+/// application: the Insight is marked applied only from proof that its own
+/// action is on disk.
+class InsightAttempt {
+  const InsightAttempt({
+    required this.on,
+    required this.target,
+    this.keptId,
+    this.extra = const {},
+  });
+
+  /// The local date of the attempt (`YYYY-MM-DD`).
+  final String on;
+
+  /// [targetOf] the Insight's application.
+  final String target;
+  final String? keptId;
+
+  /// Fields of a stored record this build doesn't know, written back.
+  final Map<String, Object?> extra;
+
+  /// The target an attempt of [application] names — `null` for an action
+  /// that needs no attempt record.
+  static String? targetOf(InsightApplication application) =>
+      switch (application) {
+        LeaveOutPart(:final element) => 'leaveOut:$element',
+        KeepCircleFromHistory(:final circleId) => 'keep:$circleId',
+        _ => null,
+      };
+
+  Map<String, Object?> toJson() => {
+    ...extra,
+    'on': on,
+    'target': target,
+    'keptId': ?keptId,
+  };
+
+  /// `null` for anything that isn't a whole record of an attempt of
+  /// [application]: a day that isn't one, another target, an I4 attempt
+  /// without its kept Circle's id.
+  static InsightAttempt? fromJson(Object? raw, InsightApplication application) {
+    if (raw is! Map<String, Object?>) return null;
+    final on = raw['on'];
+    final target = raw['target'];
+    final keptId = raw['keptId'];
+    if (on is! String || !isCanonicalDateKey(on)) return null;
+    if (target is! String || target != targetOf(application)) return null;
+    final keeps = application is KeepCircleFromHistory;
+    if (keeps ? (keptId is! String || keptId.isEmpty) : keptId != null) {
+      return null;
+    }
+    return InsightAttempt(
+      on: on,
+      target: target,
+      keptId: keptId as String?,
+      extra: {
+        for (final MapEntry(:key, :value) in raw.entries)
+          if (key != 'on' && key != 'target' && key != 'keptId') key: value,
+      },
     );
   }
 }

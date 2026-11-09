@@ -1,0 +1,5 @@
+ .../home/application/recommendation_provider.dart  |  13 +-
+ .../insights/application/insights_provider.dart    |  36 ++++++
+ .../plans/application/circle_plans_provider.dart   |  72 ++++++++---
+ lib/features/plans/domain/circle_plan.dart         | 142 ++++++++++++++++++---
+ 4 files changed, 223 insertions(+), 40 deletions(-)

@@ -1,0 +1,177 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 99.0.0 (111.0.0 available)
+  analyzer 12.1.0 (14.7.0 available)
+  app_links 7.2.1 (7.2.2 available)
+  app_links_linux 1.0.3 (1.0.4 available)
+  app_links_web 1.0.4 (1.0.5 available)
+  clock 1.1.2 (1.1.3 available)
+  coverage 1.15.1 (1.16.0 available)
+  crypto 3.0.7 (3.0.8 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  equatable 2.1.0 (3.0.0 available)
+  flutter_local_notifications 22.3.0 (23.0.0 available)
+  flutter_local_notifications_linux 8.0.1 (9.0.0 available)
+  flutter_local_notifications_platform_interface 12.2.0 (13.0.0 available)
+  flutter_local_notifications_web 1.0.0 (2.0.0 available)
+  flutter_local_notifications_windows 3.1.1 (4.0.0 available)
+  flutter_riverpod 3.4.2 (3.5.0 available)
+  flutter_svg 2.3.0 (2.3.2 available)
+  flutter_timezone 5.1.0 (5.1.1 available)
+  frontend_server_client 4.0.0 (4.2.0 available)
+  functions_client 2.6.4 (2.7.1 available)
+  glob 2.1.3 (2.2.0 available)
+  go_router 17.3.0 (18.1.3 available)
+  gotrue 2.26.0 (2.27.3 available)
+  http_multi_server 3.2.2 (3.2.3 available)
+  io 1.0.5 (1.1.0 available)
+  listen 1.0.0-beta.4 (1.0.1 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.0 (1.19.0 available)
+  mime 2.0.0 (2.1.0 available)
+  package_config 2.2.0 (3.0.0 available)
+  passkeys_platform_interface 2.9.0 (2.11.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pool 1.5.2 (1.5.3 available)
+  postgrest 2.8.0 (2.9.1 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  purchases_flutter 10.11.0 (11.0.1 available)
+  realtime_client 2.11.0 (2.13.2 available)
+  riverpod 3.4.2 (3.5.0 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.5.4 available)
+  shared_preferences_foundation 2.5.6 (2.6.1 available)
+  shelf 1.4.2 (1.4.3 available)
+  shelf_static 1.1.3 (1.2.0 available)
+  source_maps 0.10.13 (0.10.14 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  storage_client 2.6.0 (2.8.1 available)
+  supabase 2.14.0 (2.16.5 available)
+  supabase_flutter 2.16.0 (2.18.3 available)
+  test 1.31.0 (1.33.0 available)
+  test_api 0.7.11 (0.7.15 available)
+  test_core 0.6.17 (0.6.21 available)
+  timezone 0.11.1 (0.11.2 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_graphics 1.2.3 (1.2.6 available)
+  vector_graphics_compiler 1.3.0 (1.3.4 available)
+  vector_math 2.2.0 (2.4.4 available)
+  vm_service 15.2.0 (15.4.0 available)
+  web 1.1.1 (1.1.2 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+68 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+{"protocolVersion":"0.1.1","runnerVersion":"1.31.0","pid":43640,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/appb/astra_appendix_b_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/appb/astra_appendix_b_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"suite":{"id":2,"platform":"vm","path":"C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"suite","time":2}
+{"test":{"id":3,"name":"loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart","suiteID":2,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":2}
+{"suite":{"id":4,"platform":"vm","path":"C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_order_test.dart"},"type":"suite","time":3}
+{"test":{"id":5,"name":"loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_order_test.dart","suiteID":4,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":3}
+{"suite":{"id":6,"platform":"vm","path":"C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"suite","time":3}
+{"test":{"id":7,"name":"loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart","suiteID":6,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":3}
+{"count":4,"time":3,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":1433}
+{"group":{"id":8,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":7,"line":null,"column":null,"url":null},"type":"group","time":1434}
+{"test":{"id":9,"name":"R82-N01 I1 retry repairs only after manual pause","suiteID":0,"groupIDs":[8],"metadata":{"skip":false,"skipReason":null},"line":160,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/appb/astra_appendix_b_test.dart"},"type":"testStart","time":1434}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1539}
+{"test":{"id":10,"name":"R82-N01 I1 retry repairs only after manual leave","suiteID":0,"groupIDs":[8],"metadata":{"skip":false,"skipReason":null},"line":160,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/appb/astra_appendix_b_test.dart"},"type":"testStart","time":1540}
+{"testID":10,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1564}
+{"test":{"id":11,"name":"R82-N01 I2 retry preserves a later manual stopGentler","suiteID":0,"groupIDs":[8],"metadata":{"skip":false,"skipReason":null},"line":186,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/appb/astra_appendix_b_test.dart"},"type":"testStart","time":1564}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1584}
+{"test":{"id":12,"name":"R82-N02 queued manual I3 target is never claimed by Insight","suiteID":0,"groupIDs":[8],"metadata":{"skip":false,"skipReason":null},"line":207,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/appb/astra_appendix_b_test.dart"},"type":"testStart","time":1585}
+{"testID":3,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":1605}
+{"group":{"id":13,"suiteID":2,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":8,"line":null,"column":null,"url":null},"type":"group","time":1605}
+{"group":{"id":14,"suiteID":2,"parentID":13,"name":"AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source","metadata":{"skip":false,"skipReason":null},"testCount":3,"line":63,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"group","time":1605}
+{"test":{"id":15,"name":"AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source domain: a served record read from disk with startedAfterExpiry true, re-noted as started under verified Premium, still writes true","suiteID":2,"groupIDs":[13,14],"metadata":{"skip":false,"skipReason":null},"line":64,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"testStart","time":1606}
+{"testID":12,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1607}
+{"test":{"id":16,"name":"R82-N03 decoded expiry true must serialize a later false","suiteID":0,"groupIDs":[8],"metadata":{"skip":false,"skipReason":null},"line":232,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/appb/astra_appendix_b_test.dart"},"type":"testStart","time":1607}
+{"testID":16,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1609}
+{"test":{"id":17,"name":"R82-N04 valid AppliedInsight preserves nested extension fields","suiteID":0,"groupIDs":[8],"metadata":{"skip":false,"skipReason":null},"line":246,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/appb/astra_appendix_b_test.dart"},"type":"testStart","time":1610}
+{"testID":17,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1612}
+{"test":{"id":18,"name":"R82-N05 delayed Start must revalidate its local day","suiteID":0,"groupIDs":[8],"metadata":{"skip":false,"skipReason":null},"line":256,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/appb/astra_appendix_b_test.dart"},"type":"testStart","time":1612}
+{"testID":15,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1627}
+{"test":{"id":19,"name":"AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source end to end: Start after verified expiry, process stops after the Plans note lands; resubscribe, Start under Premium; Premium lapses and the app restarts before Close → credit expected (founder rule: served and started under Premium)","suiteID":2,"groupIDs":[13,14],"metadata":{"skip":false,"skipReason":null},"line":102,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"testStart","time":1628}
+{"testID":18,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1641}
+{"testID":19,"messageType":"print","message":"AUD-N1 memory creditsServed=true disk lastServed={circleId: 2026-10-12, stage: {planId: getting_going, cycleId: getting_going#1, stageNumber: 1, stageId: getting_going.1}}","type":"print","time":1764}
+{"testID":5,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":1769}
+{"group":{"id":20,"suiteID":4,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":1,"line":null,"column":null,"url":null},"type":"group","time":1770}
+{"test":{"id":21,"name":"AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?","suiteID":4,"groupIDs":[20],"metadata":{"skip":false,"skipReason":null},"line":14,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_order_test.dart"},"type":"testStart","time":1770}
+{"testID":19,"messageType":"print","message":"AUD-N1 credits on disk after Close: 1","type":"print","time":1772}
+{"testID":19,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1772}
+{"test":{"id":22,"name":"AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source control: same sequence without the final restart is credited","suiteID":2,"groupIDs":[13,14],"metadata":{"skip":false,"skipReason":null},"line":157,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"testStart","time":1772}
+{"testID":22,"messageType":"print","message":"AUD-N1 control credits: 1","type":"print","time":1809}
+{"testID":22,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1809}
+{"group":{"id":23,"suiteID":2,"parentID":13,"name":"AUD-N2 lifecycle-order instants survive Delete","metadata":{"skip":false,"skipReason":null},"testCount":1,"line":182,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"group","time":1809}
+{"test":{"id":24,"name":"AUD-N2 lifecycle-order instants survive Delete Start, Delete history, same-day stage Circle re-served, Plan paused before its Start: the deleted session's Start instant is written to the Plans","suiteID":2,"groupIDs":[13,23],"metadata":{"skip":false,"skipReason":null},"line":183,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"testStart","time":1809}
+{"testID":24,"messageType":"print","message":"AUD-N2 re-served id=2026-10-12 stage=getting_going.1","type":"print","time":1846}
+{"testID":24,"messageType":"print","message":"AUD-N2 lastServed after Pause: {circleId: 2026-10-12, stage: {planId: getting_going, cycleId: getting_going#1, stageNumber: 1, stageId: getting_going.1}} ; deleted start 2026-10-12T07:00:00.000Z","type":"print","time":1848}
+{"testID":24,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1848}
+{"test":{"id":25,"name":"AUD-A2-indep (throws): one transient served-stage failure at choice → offer taken back and user told; next choice runs, closes, reaches History and is credited, also after restarts","suiteID":2,"groupIDs":[13],"metadata":{"skip":false,"skipReason":null},"line":226,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"testStart","time":1849}
+{"testID":25,"messageType":"print","message":"AUD-A2 after fault: rec=null told={2026-10-12: false} storeFailures=1 disk day=null","type":"print","time":1871}
+{"testID":25,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1888}
+{"test":{"id":26,"name":"AUD-A2-indep (returnsFalse): one transient served-stage failure at choice → offer taken back and user told; next choice runs, closes, reaches History and is credited, also after restarts","suiteID":2,"groupIDs":[13],"metadata":{"skip":false,"skipReason":null},"line":226,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"testStart","time":1888}
+{"testID":26,"messageType":"print","message":"AUD-A2 after fault: rec=null told={2026-10-12: false} storeFailures=1 disk day=null","type":"print","time":1906}
+{"testID":21,"error":"Expected: RecommendationStatus:<RecommendationStatus.started>\n  Actual: RecommendationStatus:<RecommendationStatus.notStarted>\n","stackTrace":"package:matcher                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18  expect\ntest\\zz_audit\\audit_r82_order_test.dart 32:5        main.<fn>\n","isFailure":true,"type":"error","time":1910}
+{"testID":21,"result":"failure","skipped":false,"hidden":false,"type":"testDone","time":1911}
+{"testID":26,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1920}
+{"group":{"id":27,"suiteID":2,"parentID":13,"name":"AUD-N4 waiting Start across a Today rebuild (app resume)","metadata":{"skip":false,"skipReason":null},"testCount":1,"line":270,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"group","time":1921}
+{"test":{"id":28,"name":"AUD-N4 waiting Start across a Today rebuild (app resume) Start waits for its Plans record; the app is resumed meanwhile (nowProvider invalidated); the record lands: is the Start carried out, or refused with a notice?","suiteID":2,"groupIDs":[13,27],"metadata":{"skip":false,"skipReason":null},"line":271,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"testStart","time":1921}
+{"testID":28,"messageType":"print","message":"AUD-N4 status=RecommendationStatus.started disk status=started notices=0 lastServed={circleId: 2026-10-12, stage: {planId: getting_going, cycleId: getting_going#1, stageNumber: 1, stageId: getting_going.1}, startedAfterExpiry: true}","type":"print","time":1940}
+{"testID":28,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1941}
+{"group":{"id":29,"suiteID":2,"parentID":13,"name":"AUD-N3 Delete begun while a failing Plan change is in flight","metadata":{"skip":false,"skipReason":null},"testCount":1,"line":302,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"group","time":1941}
+{"test":{"id":30,"name":"AUD-N3 Delete begun while a failing Plan change is in flight the failure is reported, yet Delete writes the change to disk","suiteID":2,"groupIDs":[13,29],"metadata":{"skip":false,"skipReason":null},"line":303,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r82_adversarial_test.dart"},"type":"testStart","time":1941}
+{"testID":30,"messageType":"print","message":"AUD-N3 failures count=1 last=UserStore.circlePlans unsaved={} disk lifecycle=active shown=PlanLifecycle.active","type":"print","time":1952}
+{"testID":30,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1953}
+{"testID":7,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":2028}
+{"group":{"id":31,"suiteID":6,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":11,"line":null,"column":null,"url":null},"type":"group","time":2028}
+{"group":{"id":32,"suiteID":6,"parentID":31,"name":"AUD-R83-1: the paused-Start fact is lost by a new cycle","metadata":{"skip":false,"skipReason":null},"testCount":5,"line":108,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"group","time":2028}
+{"test":{"id":33,"name":"AUD-R83-1: the paused-Start fact is lost by a new cycle Pause → Start → Close → Resume → Leave → Again → restart: never credited","suiteID":6,"groupIDs":[31,32],"metadata":{"skip":false,"skipReason":null},"line":114,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"testStart","time":2028}
+{"testID":33,"messageType":"print","message":"DIAG in-session credits=0 startedWhilePaused={circleId: 2026-10-12, startedAt: 2026-10-12T07:00:00.000Z} lastServed={\"circleId\":\"2026-10-12\",\"stage\":{\"planId\":\"getting_going\",\"cycleId\":\"getting_going#1\",\"stageNumber\":1,\"stageId\":\"getting_going.1\"},\"closedBeforeLeave\":\"2026-10-12T07:25:00.000Z\"} lifecycle=active","type":"print","time":2167}
+{"testID":33,"messageType":"print","message":"DIAG after restarts credits=0 cycles=[{\"id\":\"getting_going#1\",\"number\":1,\"startedOn\":\"2026-10-12\",\"cursor\":1,\"records\":[],\"endedOn\":\"2026-10-12\",\"end\":\"left\"},{\"id\":\"getting_going#2\",\"number\":2,\"startedOn\":\"2026-10-12\",\"cursor\":1,\"records\":[]}]","type":"print","time":2179}
+{"testID":33,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2180}
+{"test":{"id":34,"name":"AUD-R83-1: the paused-Start fact is lost by a new cycle Pause → Start → Resume → Close → Leave → Again → restart: never credited","suiteID":6,"groupIDs":[31,32],"metadata":{"skip":false,"skipReason":null},"line":114,"column":7,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"testStart","time":2180}
+{"testID":34,"messageType":"print","message":"DIAG in-session credits=0 startedWhilePaused={circleId: 2026-10-12, startedAt: 2026-10-12T07:00:00.000Z} lastServed={\"circleId\":\"2026-10-12\",\"stage\":{\"planId\":\"getting_going\",\"cycleId\":\"getting_going#1\",\"stageNumber\":1,\"stageId\":\"getting_going.1\"},\"closedBeforeLeave\":\"2026-10-12T07:25:00.000Z\"} lifecycle=active","type":"print","time":2215}
+{"testID":34,"messageType":"print","message":"DIAG after restarts credits=0 cycles=[{\"id\":\"getting_going#1\",\"number\":1,\"startedOn\":\"2026-10-12\",\"cursor\":1,\"records\":[],\"endedOn\":\"2026-10-12\",\"end\":\"left\"},{\"id\":\"getting_going#2\",\"number\":2,\"startedOn\":\"2026-10-12\",\"cursor\":1,\"records\":[]}]","type":"print","time":2221}
+{"testID":34,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2221}
+{"test":{"id":35,"name":"AUD-R83-1: the paused-Start fact is lost by a new cycle next day instead of a restart (overwrite catch-up): never credited","suiteID":6,"groupIDs":[31,32],"metadata":{"skip":false,"skipReason":null},"line":137,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"testStart","time":2221}
+{"testID":35,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2263}
+{"test":{"id":36,"name":"AUD-R83-1: the paused-Start fact is lost by a new cycle control — same without Again: the slot holds, never credited","suiteID":6,"groupIDs":[31,32],"metadata":{"skip":false,"skipReason":null},"line":154,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"testStart","time":2263}
+{"testID":36,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2288}
+{"test":{"id":37,"name":"AUD-R83-1: the paused-Start fact is lost by a new cycle control — Start → Close → Leave → Again (valid): credit once","suiteID":6,"groupIDs":[31,32],"metadata":{"skip":false,"skipReason":null},"line":164,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"testStart","time":2288}
+{"testID":37,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2310}
+{"group":{"id":38,"suiteID":6,"parentID":31,"name":"AUD-R83-2: eligibility judged from an optimistic Resume that the store refuses","metadata":{"skip":false,"skipReason":null},"testCount":1,"line":175,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"group","time":2311}
+{"test":{"id":39,"name":"AUD-R83-2: eligibility judged from an optimistic Resume that the store refuses Pause (saved); Resume refused by the store while Start is tapped; Close; Resume (saved); restarts: never credited","suiteID":6,"groupIDs":[31,38],"metadata":{"skip":false,"skipReason":null},"line":177,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"testStart","time":2311}
+{"testID":39,"messageType":"print","message":"DIAG status during hold=RecommendationStatus.notStarted after refusal: plan shown=PlanLifecycle.paused disk=paused swp=null status=RecommendationStatus.notStarted failures=Instance of 'StoreSaveState'","type":"print","time":2327}
+{"testID":39,"messageType":"print","message":"DIAG credits after Resume+restarts=0","type":"print","time":2335}
+{"testID":39,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2335}
+{"group":{"id":40,"suiteID":6,"parentID":31,"name":"AUD-R83-3: a recorded paused Start that never became the Start","metadata":{"skip":false,"skipReason":null},"testCount":2,"line":209,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"group","time":2335}
+{"test":{"id":41,"name":"AUD-R83-3: a recorded paused Start that never became the Start Pause; Start whose paused-Start record lands but its answer is lost (refused); restart; Resume; Start; Close: credited once","suiteID":6,"groupIDs":[31,40],"metadata":{"skip":false,"skipReason":null},"line":210,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"testStart","time":2335}
+{"testID":41,"messageType":"print","message":"DIAG status=RecommendationStatus.notStarted swp on disk=null","type":"print","time":2349}
+{"testID":41,"messageType":"print","message":"DIAG credits=1 swp=null","type":"print","time":2363}
+{"testID":41,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2364}
+{"test":{"id":42,"name":"AUD-R83-3: a recorded paused Start that never became the Start Pause; Start whose own day-keys save fails after the paused-Start record landed; restart; Resume; Start; Close: credited once","suiteID":6,"groupIDs":[31,40],"metadata":{"skip":false,"skipReason":null},"line":236,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"testStart","time":2364}
+{"testID":42,"messageType":"print","message":"DIAG status=RecommendationStatus.started disk status=notStarted swp on disk={circleId: 2026-10-12, startedAt: 2026-10-12T07:00:00.000Z}","type":"print","time":2382}
+{"testID":42,"messageType":"print","message":"DIAG restored=RecommendationStatus.notStarted","type":"print","time":2384}
+{"testID":42,"messageType":"print","message":"DIAG credits=1","type":"print","time":2402}
+{"testID":42,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2402}
+{"group":{"id":43,"suiteID":6,"parentID":31,"name":"Delete × paused Start","metadata":{"skip":false,"skipReason":null},"testCount":2,"line":267,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"group","time":2403}
+{"test":{"id":44,"name":"Delete × paused Start Pause, Start, Close, Delete, Resume, same-day stage re-served, Start, Close: credited once (slot removed by Delete)","suiteID":6,"groupIDs":[31,43],"metadata":{"skip":false,"skipReason":null},"line":268,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"testStart","time":2403}
+{"testID":44,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2451}
+{"test":{"id":45,"name":"Delete × paused Start Delete while the paused-Start record is being written: the Start and the Delete both resolve; no paused-Start fact survives","suiteID":6,"groupIDs":[31,43],"metadata":{"skip":false,"skipReason":null},"line":293,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"testStart","time":2452}
+{"testID":45,"messageType":"print","message":"DIAG delete err=null status=RecommendationStatus.notStarted swp=null journal=null","type":"print","time":2467}
+{"testID":45,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2469}
+{"group":{"id":46,"suiteID":6,"parentID":31,"name":"Premium × paused Start","metadata":{"skip":false,"skipReason":null},"testCount":1,"line":322,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"group","time":2469}
+{"test":{"id":47,"name":"Premium × paused Start lapse verified, Pause, Start, Close; resubscribe; Resume; Leave; Again; restart: never credited","suiteID":6,"groupIDs":[31,46],"metadata":{"skip":false,"skipReason":null},"line":323,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/1954a2c9-213c-480d-840a-a106d3b93e66/scratchpad/after/test/zz_audit/audit_r83_delta_test.dart"},"type":"testStart","time":2469}
+{"testID":47,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":2495}
+{"success":false,"type":"done","time":2518}

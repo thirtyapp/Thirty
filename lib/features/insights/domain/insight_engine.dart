@@ -615,6 +615,10 @@ InsightStatus statusOf(InsightSnapshot snapshot, InsightInputs i) {
   if (snapshot.appliedOn != null) return InsightStatus.applied;
   if (snapshot.notNowOn != null) return InsightStatus.notNow;
   if (snapshot.declinedOn != null) return InsightStatus.declined;
+  // R8.3.2 (founder scope decisions B1/B2): its action was recorded as
+  // being made and isn't proven either way — never offered again, and never
+  // shown as applied ([InsightSnapshot.attempt]).
+  if (snapshot.attempt != null) return InsightStatus.stale;
   return _stillTrue(snapshot, i) ? InsightStatus.current : InsightStatus.stale;
 }
 

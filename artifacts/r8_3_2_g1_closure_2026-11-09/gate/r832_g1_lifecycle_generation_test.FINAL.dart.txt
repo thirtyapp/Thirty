@@ -1,0 +1,600 @@
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/providers/clock_provider.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/plan_stage_provenance.dart';
+
+import '../../support/r8_fault_disk.dart';
+import '../../support/r8_harness.dart';
+
+/// R832-G1 — lifecycle ABA during a pending Start (founder authorization,
+/// 2026-11-09). A Plan lifecycle or cycle change durably confirmed while a
+/// stage Circle's Start is unresolved cancels that Start, even when the Plan
+/// is back where it was (Paused → Active → Paused, Active → Paused → Active,
+/// another Plan started and this one carried on again). A change the store
+/// refused never happened and cancels nothing; one whose confirmation is
+/// uncertain cancels (fail safe). A rebuild, Delete Circle history, a stale
+/// continuation or a restart never lets a Start through on an unverified
+/// lifecycle.
+///
+/// A1–A5 are the final gate's Check A
+/// (artifacts/r8_3_2_final_gate_2026-11-08/), unchanged in substance.
+///
+/// Each test prints one `R832G1-EVIDENCE` line with what reached the disk and
+/// what memory holds. A step a tree can't construct fails with `PRECONDITION`.
+void main() {
+  void evidence(String id, Map<String, Object?> facts) {
+    // ignore: avoid_print
+    print('R832G1-EVIDENCE ${jsonEncode({'test': id, ...facts})}');
+  }
+
+  void pre(bool holds, String what) {
+    if (!holds) fail('PRECONDITION not constructible on this tree: $what');
+  }
+
+  final day1 = DateTime(2026, 10, 12, 9);
+  late R8Harness h;
+
+  setUp(() async {
+    h = R8Harness(day1);
+    await h.boot();
+  });
+
+  RecommendationNotifier today(ProviderContainer c) =>
+      c.read(recommendationProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+  RecommendationStatus status(ProviderContainer c) =>
+      c.read(recommendationProvider).status;
+
+  Future<Map<String, Object?>> planOnDisk([String id = 'getting_going']) async {
+    final raw = (await h.disk.stored())[circlePlansKey];
+    if (raw is! String) return {};
+    return (((jsonDecode(raw) as Map)['plans'] as Map)[id] as Map?)
+            ?.cast<String, Object?>() ??
+        {};
+  }
+
+  Future<int> credits(String circleId) async {
+    var n = 0;
+    for (final c in (await planOnDisk())['cycles'] as List? ?? []) {
+      for (final r in (c as Map)['records'] as List) {
+        if ((r as Map)['circleId'] == circleId) n++;
+      }
+    }
+    return n;
+  }
+
+  /// History entries of [circleId] that record a Start, in memory.
+  int startedInHistory(ProviderContainer c, String circleId) => c
+      .read(circleJournalRepositoryProvider)
+      .readAll()
+      .where((e) => e.circleId == circleId && e.startedAt != null)
+      .length;
+
+  Future<ProviderContainer> restart({int times = 1}) async {
+    late ProviderContainer c;
+    for (var i = 0; i < times; i++) {
+      await h.restart();
+      c = h.open();
+      c.read(circlePlansProvider);
+      c.read(recommendationProvider);
+      await R8Harness.settle();
+    }
+    return c;
+  }
+
+  Future<void> close(ProviderContainer c) async {
+    h.clock.value = h.clock.value.add(const Duration(minutes: 25));
+    today(c).close();
+    await R8Harness.settle();
+  }
+
+  /// The Plan [paused] or active; today's stage Circle chosen, its offer
+  /// save held; Start tapped — pending.
+  Future<(ProviderContainer, String, HeldWrite)> pendingStart({
+    required bool paused,
+  }) async {
+    final c = h.open();
+    expect(plans(c).start('getting_going'), PlanActionResult.done);
+    await R8Harness.settle();
+    final held = h.disk.hold(recommendationPendingWriteKey);
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    await held.reached;
+    final id = c.read(recommendationProvider).recommendation!.circleId;
+    if (paused) {
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      pre((await planOnDisk())['lifecycle'] == 'paused', 'paused on disk');
+    }
+    today(c).start();
+    await R8Harness.settle();
+    expect(status(c), RecommendationStatus.notStarted);
+    return (c, id, held);
+  }
+
+  /// Durable and in-memory facts about [id] and its Plan.
+  Future<Map<String, Object?>> facts(ProviderContainer c, String id) async {
+    final plan = c.read(circlePlansProvider).plans['getting_going'];
+    return {
+      'status': status(c).name,
+      'credits': await credits(id),
+      'lifecycle': (await planOnDisk())['lifecycle'],
+      'startedWhilePaused': (await planOnDisk())['startedWhilePaused'],
+      'dayStatus': (await h.disk.stored())[recommendationStatusKey],
+      'memLifecycle': plan?.lifecycle.name,
+      'memStartedWhilePaused': plan?.startedWhilePaused?.circleId,
+      'historyStarts': startedInHistory(c, id),
+    };
+  }
+
+  /// Nothing of a cancelled Start anywhere: not started, no paused-Start
+  /// record, no credit, no History Start — on disk and in memory.
+  Future<void> nothingStarted(ProviderContainer c, String id) async {
+    final f = await facts(c, id);
+    expect(f['status'], RecommendationStatus.notStarted.name);
+    expect(f['startedWhilePaused'], isNull);
+    expect(f['memStartedWhilePaused'], isNull);
+    expect(f['credits'], 0);
+    expect(f['historyStarts'], 0);
+    expect(f['dayStatus'], isNot(RecommendationStatus.started.name));
+  }
+
+  // -----------------------------------------------------------------------
+  group('R832-G1 Check A — lifecycle ABA while a Start is pending', () {
+    test('A1 Paused → Start pending → Resume confirmed → Pause confirmed '
+        '(same cycle) → resolves: cancelled; nothing recorded, also after a '
+        'restart; a fresh Start on the paused Plan is never credited', () async {
+      final (c, id, held) = await pendingStart(paused: true);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      held.release();
+      await R8Harness.settle();
+      final cancelled = await facts(c, id);
+      await nothingStarted(c, id);
+      final c2 = await restart();
+      final restored = await facts(c2, id);
+      await nothingStarted(c2, id);
+      today(c2).start();
+      await R8Harness.settle();
+      final fresh = status(c2);
+      await close(c2);
+      expect(plans(c2).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final c3 = await restart(times: 2);
+      evidence('A1 P-A-P', {
+        'afterPrerequisite': cancelled,
+        'afterRestart': restored,
+        'freshStart': fresh.name,
+        ...await facts(c3, id),
+      });
+      expect(fresh, RecommendationStatus.started);
+      expect(await credits(id), 0);
+      expect(startedInHistory(c3, id), 1);
+    });
+
+    test('A2 Active → Start pending → Pause confirmed → Resume confirmed '
+        '(same cycle) → resolves: cancelled; a fresh Start is credited once', () async {
+      final (c, id, held) = await pendingStart(paused: false);
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      held.release();
+      await R8Harness.settle();
+      final cancelled = await facts(c, id);
+      await nothingStarted(c, id);
+      today(c).start();
+      await R8Harness.settle();
+      final fresh = status(c);
+      await close(c);
+      final c2 = await restart(times: 2);
+      evidence('A2 A-P-A', {
+        'afterPrerequisite': cancelled,
+        'freshStart': fresh.name,
+        ...await facts(c2, id),
+      });
+      expect(fresh, RecommendationStatus.started);
+      expect(await credits(id), 1);
+      expect(startedInHistory(c2, id), 1);
+    });
+
+    test('A3 Active → Start pending → another Plan started (this one paused) '
+        '→ this one carried on again → resolves: cancelled', () async {
+      final (c, id, held) = await pendingStart(paused: false);
+      expect(plans(c).start('making_room'), PlanActionResult.done);
+      await R8Harness.settle();
+      pre(
+        (await planOnDisk())['lifecycle'] == 'paused',
+        'starting another Plan paused this one on disk',
+      );
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      pre((await planOnDisk())['lifecycle'] == 'active', 'active again');
+      held.release();
+      await R8Harness.settle();
+      final cancelled = await facts(c, id);
+      evidence('A3 other Plan', cancelled);
+      await nothingStarted(c, id);
+    });
+
+    test('A4 Paused → Start pending → Resume refused → resolves: no '
+        'confirmed transition — the Start goes ahead, never credited', () async {
+      final (c, id, held) = await pendingStart(paused: true);
+      h.disk.fail(circlePlansKey, DiskFault.returnsFalse, times: 1);
+      expect(
+        await plans(c).confirmed((p) => p.resume('getting_going')),
+        PlanActionResult.notSaved,
+      );
+      held.release();
+      await R8Harness.settle();
+      final started = status(c);
+      await close(c);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final c2 = await restart(times: 2);
+      evidence('A4 refused', {'started': started.name, ...await facts(c2, id)});
+      expect(started, RecommendationStatus.started);
+      expect(await credits(id), 0);
+    });
+
+    test('A5 a same-day rebuild while the Start is pending cancels it; a '
+        'restart leaves nothing started', () async {
+      final (c, id, held) = await pendingStart(paused: true);
+      h.clock.value = h.clock.value.add(const Duration(minutes: 1));
+      c.invalidate(nowProvider);
+      await R8Harness.settle();
+      held.release();
+      await R8Harness.settle();
+      final rebuilt = status(c);
+      final c2 = await restart();
+      evidence('A5 rebuild', {'rebuilt': rebuilt.name, ...await facts(c2, id)});
+      expect(rebuilt, RecommendationStatus.notStarted);
+      await nothingStarted(c2, id);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  group('R832-G1 — more transitions, failures and uncertainty', () {
+    test('G1 four confirmed transitions (P→A→P→A→P) before one pending Start '
+        'resolves: cancelled', () async {
+      final (c, id, held) = await pendingStart(paused: true);
+      for (var i = 0; i < 2; i++) {
+        expect(plans(c).resume('getting_going'), PlanActionResult.done);
+        await R8Harness.settle();
+        expect(plans(c).pause('getting_going'), PlanActionResult.done);
+        await R8Harness.settle();
+      }
+      held.release();
+      await R8Harness.settle();
+      evidence('G1 four transitions', await facts(c, id));
+      await nothingStarted(c, id);
+    });
+
+    test('G2 queued, not yet confirmed when the Start is tapped… then a '
+        'Pause and Resume confirmed together after the tap: cancelled', () async {
+      final (c, id, held) = await pendingStart(paused: false);
+      final planWrite = h.disk.hold(circlePlansKey);
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await planWrite.reached;
+      planWrite.release();
+      await R8Harness.settle();
+      held.release();
+      await R8Harness.settle();
+      evidence('G2 both queued', await facts(c, id));
+      await nothingStarted(c, id);
+    });
+
+    test('G3 two refused Pauses (returns false) while the Start is pending: '
+        'nothing happened — it goes ahead and is credited once', () async {
+      final (c, id, held) = await pendingStart(paused: false);
+      for (var i = 0; i < 2; i++) {
+        h.disk.fail(circlePlansKey, DiskFault.returnsFalse, times: 1);
+        expect(
+          await plans(c).confirmed((p) => p.pause('getting_going')),
+          PlanActionResult.notSaved,
+        );
+      }
+      held.release();
+      await R8Harness.settle();
+      final started = status(c);
+      await close(c);
+      final c2 = await restart(times: 2);
+      evidence('G3 refused twice', {
+        'started': started.name,
+        ...await facts(c2, id),
+      });
+      expect(started, RecommendationStatus.started);
+      expect(await credits(id), 1);
+    });
+
+    test('G4 a Pause whose save throws (uncertain: it may have landed) while '
+        'the Start is pending: cancelled — never started on an unverified '
+        'lifecycle; a fresh Start then works', () async {
+      final (c, id, held) = await pendingStart(paused: false);
+      h.disk.fail(circlePlansKey, DiskFault.throws, times: 1);
+      expect(
+        await plans(c).confirmed((p) => p.pause('getting_going')),
+        PlanActionResult.notSaved,
+      );
+      held.release();
+      await R8Harness.settle();
+      final cancelled = await facts(c, id);
+      await nothingStarted(c, id);
+      today(c).start();
+      await R8Harness.settle();
+      final fresh = status(c);
+      await close(c);
+      final c2 = await restart(times: 2);
+      evidence('G4 uncertain', {
+        'afterPrerequisite': cancelled,
+        'freshStart': fresh.name,
+        ...await facts(c2, id),
+      });
+      expect(fresh, RecommendationStatus.started);
+      expect(await credits(id), 1);
+    });
+
+    test('G5 a Pause that lands but whose answer is lost (uncertain) while '
+        'the Start is pending: cancelled; nothing recorded', () async {
+      final (c, id, held) = await pendingStart(paused: false);
+      h.disk.ackLost(circlePlansKey);
+      await plans(c).confirmed((p) => p.pause('getting_going'));
+      await R8Harness.settle();
+      held.release();
+      await R8Harness.settle();
+      final cancelled = await facts(c, id);
+      final c2 = await restart();
+      evidence('G5 ack lost', {
+        'afterPrerequisite': cancelled,
+        ...await facts(c2, id),
+      });
+      await nothingStarted(c, id);
+      await nothingStarted(c2, id);
+    });
+
+    test('G6 control: Start tapped while a Resume is still being saved; the '
+        'Resume lands — the Start was asked for on it and goes ahead, '
+        'credited once', () async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final planWrite = h.disk.hold(circlePlansKey);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await planWrite.reached;
+      today(c).start();
+      await R8Harness.settle();
+      pre(status(c) == RecommendationStatus.notStarted, 'Start pending');
+      planWrite.release();
+      await R8Harness.settle();
+      final started = status(c);
+      await close(c);
+      final c2 = await restart(times: 2);
+      evidence('G6 tap on pending Resume', {
+        'started': started.name,
+        ...await facts(c2, id),
+      });
+      expect(started, RecommendationStatus.started);
+      expect(await credits(id), 1);
+    });
+
+    test('G7 control: Start tapped while a Resume is still being saved; the '
+        'Resume is refused — the Plan the Start was asked for on never '
+        'existed: cancelled', () async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final planWrite = h.disk.hold(circlePlansKey);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await planWrite.reached;
+      today(c).start();
+      await R8Harness.settle();
+      pre(status(c) == RecommendationStatus.notStarted, 'Start pending');
+      planWrite.release(DiskFault.returnsFalse);
+      await R8Harness.settle();
+      evidence('G7 tap on refused Resume', await facts(c, id));
+      await nothingStarted(c, id);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  group('R832-G1 — rebuild, Delete, stale continuation, restart', () {
+    /// Today's stage Circle chosen and saved on an active Plan, nothing
+    /// pending: its stage.
+    Future<(ProviderContainer, PlanStageProvenance, String)> served() async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final r = c.read(recommendationProvider).recommendation!;
+      final stage = r.composed?.stage;
+      pre(stage != null, 'a stage Circle served');
+      return (c, stage!, r.circleId);
+    }
+
+    Future<String> outcome(
+      CirclePlansNotifier notifier,
+      PlanStageProvenance stage,
+      String circleId,
+      PlanStartConditions accepted,
+    ) async {
+      try {
+        await notifier.prepareStart(
+          stage,
+          circleId: circleId,
+          accepted: accepted,
+        );
+        return 'allowed';
+      } on PlanStartCancelled {
+        return 'cancelled';
+      }
+    }
+
+    test('R1 a Plans rebuild while a Start is pending: cancelled (the '
+        'confirmed history before it can\'t be verified)', () async {
+      final (c, id, held) = await pendingStart(paused: false);
+      c.invalidate(circlePlansProvider);
+      c.read(circlePlansProvider);
+      await R8Harness.settle();
+      held.release();
+      await R8Harness.settle();
+      evidence('R1 Plans rebuild', await facts(c, id));
+      await nothingStarted(c, id);
+    });
+
+    test('R2 a Plans rebuild after a confirmed A→P→A: the rebuilt notifier '
+        'never authorizes the earlier Start', () async {
+      final (c, stage, id) = await served();
+      final accepted = plans(c).startConditions(stage);
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      c.invalidate(circlePlansProvider);
+      c.read(circlePlansProvider);
+      await R8Harness.settle();
+      final result = await outcome(plans(c), stage, id, accepted);
+      evidence('R2 rebuild after ABA', {'outcome': result});
+      expect(result, 'cancelled');
+    });
+
+    test('R3 Delete Circle history after a confirmed A→P→A: the pending '
+        'Start is still cancelled', () async {
+      final (c, stage, id) = await served();
+      final accepted = plans(c).startConditions(stage);
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      await plans(c).forgetStageEvidence();
+      await R8Harness.settle();
+      final result = await outcome(plans(c), stage, id, accepted);
+      evidence('R3 Delete after ABA', {'outcome': result});
+      expect(result, 'cancelled');
+    });
+
+    test('R4 control: Delete Circle history alone (no lifecycle change) '
+        'cancels nothing', () async {
+      final (c, stage, id) = await served();
+      final accepted = plans(c).startConditions(stage);
+      await plans(c).forgetStageEvidence();
+      await R8Harness.settle();
+      final result = await outcome(plans(c), stage, id, accepted);
+      evidence('R4 Delete only', {'outcome': result});
+      expect(result, 'allowed');
+    });
+
+    test('R5 a stale continuation — conditions captured before a restart, '
+        'resolved on the new process\'s Plans: cancelled', () async {
+      final (c, stage, id) = await served();
+      final accepted = plans(c).startConditions(stage);
+      final c2 = await restart();
+      final result = await outcome(plans(c2), stage, id, accepted);
+      evidence('R5 stale continuation', {'outcome': result});
+      expect(result, 'cancelled');
+    });
+
+    test('R6 control: no change at all — the Start is allowed', () async {
+      final (c, stage, id) = await served();
+      final accepted = plans(c).startConditions(stage);
+      final result = await outcome(plans(c), stage, id, accepted);
+      evidence('R6 no change', {'outcome': result});
+      expect(result, 'allowed');
+    });
+
+    test('R7 a restart while the Start is pending after a confirmed A→P→A: '
+        'nothing started, no record, no credit — on disk and in memory', () async {
+      final (c, id, _) = await pendingStart(paused: false);
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      // The process dies with the Start pending: its held write never
+      // completes (releasing it would let the dead process write to the new
+      // disk through the shared platform store — not a real restart).
+      final c2 = await restart();
+      final restored = await facts(c2, id);
+      final c3 = await restart();
+      evidence('R7 restart', {
+        'afterRestart': restored,
+        'afterSecond': await facts(c3, id),
+      });
+      await nothingStarted(c2, id);
+      await nothingStarted(c3, id);
+    });
+
+    test('R8 a restart with the Start pending: the restored day is not '
+        'started, no record, no credit — on disk and in memory', () async {
+      final (c, id, _) = await pendingStart(paused: true);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final c2 = await restart(times: 2);
+      evidence('R8 restart', await facts(c2, id));
+      await nothingStarted(c2, id);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  group('R832-G1 — credit policy controls', () {
+    test('C1 valid Start → Pause → Close: credited once, also after '
+        'restarts', () async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      today(c).start();
+      await R8Harness.settle();
+      expect(status(c), RecommendationStatus.started);
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      await close(c);
+      final c2 = await restart(times: 2);
+      evidence('C1 Start-Pause-Close', await facts(c2, id));
+      expect(await credits(id), 1);
+      expect(startedInHistory(c2, id), 1);
+    });
+
+    test('C2 Pause → valid Start → Close: never credited, also after a '
+        'Resume and restarts', () async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      today(c).start();
+      await R8Harness.settle();
+      expect(status(c), RecommendationStatus.started);
+      await close(c);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final c2 = await restart(times: 2);
+      final f = await facts(c2, id);
+      evidence('C2 Pause-Start-Close', f);
+      expect(await credits(id), 0);
+      expect(f['startedWhilePaused'], isNotNull);
+      expect(startedInHistory(c2, id), 1);
+    });
+  });
+}

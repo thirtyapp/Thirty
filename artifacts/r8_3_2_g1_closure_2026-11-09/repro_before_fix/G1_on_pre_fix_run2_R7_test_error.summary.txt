@@ -1,0 +1,23 @@
+FAIL | R832-G1 Check A — lifecycle ABA while a Start is pending A1 Paused → Start pending → Resume confirmed → Pause confirmed (same cycle) → resolves: cancelled; nothing recorded, also after a restart; a fresh Start on the paused Plan is never credited
+FAIL | R832-G1 Check A — lifecycle ABA while a Start is pending A2 Active → Start pending → Pause confirmed → Resume confirmed (same cycle) → resolves: cancelled; a fresh Start is credited once
+FAIL | R832-G1 Check A — lifecycle ABA while a Start is pending A3 Active → Start pending → another Plan started (this one paused) → this one carried on again → resolves: cancelled
+PASS | R832-G1 Check A — lifecycle ABA while a Start is pending A4 Paused → Start pending → Resume refused → resolves: no confirmed transition — the Start goes ahead, never credited
+PASS | R832-G1 Check A — lifecycle ABA while a Start is pending A5 a same-day rebuild while the Start is pending cancels it; a restart leaves nothing started
+FAIL | R832-G1 — more transitions, failures and uncertainty G1 four confirmed transitions (P→A→P→A→P) before one pending Start resolves: cancelled
+FAIL | R832-G1 — more transitions, failures and uncertainty G2 queued, not yet confirmed when the Start is tapped… then a Pause and Resume confirmed together after the tap: cancelled
+PASS | R832-G1 — more transitions, failures and uncertainty G3 two refused Pauses (returns false) while the Start is pending: nothing happened — it goes ahead and is credited once
+FAIL | R832-G1 — more transitions, failures and uncertainty G4 a Pause whose save throws (uncertain: it may have landed) while the Start is pending: cancelled — never started on an unverified lifecycle; a fresh Start then works
+FAIL | R832-G1 — more transitions, failures and uncertainty G5 a Pause that lands but whose answer is lost (uncertain) while the Start is pending: cancelled; nothing recorded
+PASS | R832-G1 — more transitions, failures and uncertainty G6 control: Start tapped while a Resume is still being saved; the Resume lands — the Start was asked for on it and goes ahead, credited once
+PASS | R832-G1 — more transitions, failures and uncertainty G7 control: Start tapped while a Resume is still being saved; the Resume is refused — the Plan the Start was asked for on never existed: cancelled
+FAIL | R832-G1 — rebuild, Delete, stale continuation, restart R1 a Plans rebuild while a Start is pending: cancelled (the confirmed history before it can't be verified)
+FAIL | R832-G1 — rebuild, Delete, stale continuation, restart R2 a Plans rebuild after a confirmed A→P→A: the rebuilt notifier never authorizes the earlier Start
+FAIL | R832-G1 — rebuild, Delete, stale continuation, restart R3 Delete Circle history after a confirmed A→P→A: the pending Start is still cancelled
+PASS | R832-G1 — rebuild, Delete, stale continuation, restart R4 control: Delete Circle history alone (no lifecycle change) cancels nothing
+FAIL | R832-G1 — rebuild, Delete, stale continuation, restart R5 a stale continuation — conditions captured before a restart, resolved on the new process's Plans: cancelled
+PASS | R832-G1 — rebuild, Delete, stale continuation, restart R6 control: no change at all — the Start is allowed
+FAIL | R832-G1 — rebuild, Delete, stale continuation, restart R7 a restart while the Start is pending after a confirmed A→P→A: nothing started, no record, no credit — on disk and in memory
+PASS | R832-G1 — rebuild, Delete, stale continuation, restart R8 a restart with the Start pending: the restored day is not started, no record, no credit — on disk and in memory
+PASS | R832-G1 — credit policy controls C1 valid Start → Pause → Close: credited once, also after restarts
+PASS | R832-G1 — credit policy controls C2 Pause → valid Start → Close: never credited, also after a Resume and restarts
+COUNTS {'FAIL': 12, 'PASS': 10} DONE False

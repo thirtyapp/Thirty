@@ -1,0 +1,1062 @@
+diff --git a/lib/core/storage/confirmed_write.dart b/lib/core/storage/confirmed_write.dart
+index 6f68d11..92cdcee 100644
+--- a/lib/core/storage/confirmed_write.dart
++++ b/lib/core/storage/confirmed_write.dart
+@@ -3,12 +3,22 @@ import 'package:shared_preferences/shared_preferences.dart';
+ /// A write the local store did not confirm (audit remediation R8): the
+ /// platform call threw, or returned `false`. Nothing is claimed for it.
+ class StorageWriteFailed implements Exception {
+-  const StorageWriteFailed(this.key, [this.reason = 'not confirmed']);
++  const StorageWriteFailed(
++    this.key, [
++    this.reason = 'not confirmed',
++    this.uncertain = false,
++  ]);
+ 
+   /// The key that was being written or removed.
+   final String key;
+   final String reason;
+ 
++  /// R8.3.2 (founder scope decisions B1/B2): whether the value may have
++  /// reached the disk all the same — the platform call threw, as when its
++  /// answer is lost after the write landed. `false`: the store answered
++  /// that it didn't write it, or nothing was written.
++  final bool uncertain;
++
+   @override
+   String toString() => 'StorageWriteFailed($key): $reason';
+ }
+@@ -36,20 +46,24 @@ Future<void> writeConfirmed(
+ }) async {
+   final previous = _copy(prefs.get(key));
+   bool confirmed;
++  var threw = false;
+   try {
+     confirmed = await _write(prefs, key, value);
+   } catch (_) {
+     confirmed = false;
++    threw = true;
+   }
+   if (confirmed) return;
+-  if (!restoreOnFailure) throw StorageWriteFailed(key);
++  if (!restoreOnFailure) {
++    throw StorageWriteFailed(key, 'not confirmed', threw);
++  }
+   try {
+     await _write(prefs, key, previous);
+   } catch (_) {
+     // Memory is put back before the disk call, which is all that matters
+     // here: the disk never confirmed the value.
+   }
+-  throw StorageWriteFailed(key);
++  throw StorageWriteFailed(key, 'not confirmed', threw);
+ }
+ 
+ Object? _copy(Object? value) =>
+diff --git a/lib/features/home/application/recommendation_provider.dart b/lib/features/home/application/recommendation_provider.dart
+index 95ddadb..3b14b1d 100644
+--- a/lib/features/home/application/recommendation_provider.dart
++++ b/lib/features/home/application/recommendation_provider.dart
+@@ -1817,7 +1817,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
+   /// Whether [recommendation] can start at once (R8.2, founder decision B):
+   /// its offer is on disk in the day keys ([_offersOnDisk]) and, for a
+   /// stage Circle, its Plan's served record is on disk and already says
+-  /// what this Start records ([CirclePlansNotifier.startNeedsNoWrite]).
++  /// what this Start records, with no Plan change pending and the Plan not
++  /// paused ([CirclePlansNotifier.startNeedsNoWrite], R8.3.2).
+   bool _readyToStart(Recommendation recommendation, EntitlementStatus verdict) {
+     if (_offersOnDisk[recommendation.circleId] !=
+         _offerIdentity(recommendation)) {
+@@ -1852,6 +1853,11 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
+     final stage = recommendation.composed?.stage;
+     _startWaiting = recommendation;
+     final toldBefore = ref.read(journalSaveStatusProvider)[circleId] == false;
++    // R8.3.2 (founder decision on N01-C): the Plan this Start is asked for
++    // on, as the user sees it now.
++    final accepted = stage == null
++        ? null
++        : ref.read(circlePlansProvider.notifier).startConditions(stage);
+     final noted = switch (stage) {
+       final stage? => () {
+         _startVerdicts[circleId] = verdict;
+@@ -1910,12 +1916,21 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
+       // or after the Plan is carried on — and that is saved before the
+       // Circle starts (founder decision B); refused, the Start is refused.
+       // The conditions are checked again after the wait.
++      // R8.3.2 (Astra R83-N01/N02, Claude AUD-R83-2/3): decided on the
++      // Plans as confirmed, and the Start is saved with the instant that
++      // record names ([CirclePlansNotifier.prepareStart]).
++      DateTime? startedAt;
+       if (stage != null) {
+         try {
+-          await ref
++          startedAt = await ref
+               .read(circlePlansProvider.notifier)
+-              .noteStartWhilePaused(stage, circleId: circleId);
++              .prepareStart(stage, circleId: circleId, accepted: accepted!);
+           _ensureCurrent(epoch);
++        } on PlanStartCancelled {
++          // R8.3.2 (founder decision on N01-C): the Plan changed while this
++          // Start was unresolved — nothing starts; Start can be tapped again.
++          if (identical(_startWaiting, recommendation)) _startWaiting = null;
++          return;
+         } catch (error) {
+           if (identical(_startWaiting, recommendation)) _startWaiting = null;
+           if (error is! _StaleWrite) _refuseStart(circleId, toldBefore);
+@@ -1930,7 +1945,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
+       state = RecommendationState(
+         recommendation: recommendation,
+         status: RecommendationStatus.started,
+-        startedAt: ref.read(eventClockProvider)(),
++        startedAt: startedAt ?? ref.read(eventClockProvider)(),
+       );
+       _notePlanActions(state);
+       final snapshot = state;
+diff --git a/lib/features/home/application/suggestion_preferences.dart b/lib/features/home/application/suggestion_preferences.dart
+index f3b17dc..8c1977b 100644
+--- a/lib/features/home/application/suggestion_preferences.dart
++++ b/lib/features/home/application/suggestion_preferences.dart
+@@ -348,6 +348,12 @@ enum PreferenceChange {
+ 
+   /// Not written: the store didn't confirm it.
+   notSaved,
++
++  /// R8.3.2 (founder scope decision B1): not confirmed, and the store's
++  /// call threw — the change may be on disk all the same
++  /// ([StorageWriteFailed.uncertain]). Treated as not saved, except by an
++  /// Insight, which then never makes its change again.
++  uncertain,
+ }
+ 
+ /// The start-up form of [SuggestionPreferencesNotifier
+@@ -442,13 +448,15 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
+           suggestionPreferencesKey,
+           next.isEmpty ? null : jsonEncode(next.toJson()),
+         );
+-      } on StorageWriteFailed {
++      } on StorageWriteFailed catch (failure) {
+         if (ref.mounted) {
+           ref
+               .read(storeSaveFailuresProvider.notifier)
+               .record(UserStore.suggestionPreferences, notify: notify);
+         }
+-        return PreferenceChange.notSaved;
++        return failure.uncertain
++            ? PreferenceChange.uncertain
++            : PreferenceChange.notSaved;
+       }
+       _storedUnreadable = false;
+       if (ref.mounted) {
+@@ -470,7 +478,9 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
+     bool erase = false,
+   }) async => switch (await _change(change, erase: erase)) {
+     PreferenceChange.changed || PreferenceChange.unchanged => true,
+-    PreferenceChange.refused || PreferenceChange.notSaved => false,
++    PreferenceChange.refused ||
++    PreferenceChange.notSaved ||
++    PreferenceChange.uncertain => false,
+   };
+ 
+   /// "Don't suggest" [activity] for [need] — until the user says otherwise.
+@@ -522,7 +532,9 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
+   Future<bool> leaveOut(ElementId element, {String? byInsight}) async =>
+       switch (await leaveOutChange(element, byInsight: byInsight)) {
+         PreferenceChange.changed || PreferenceChange.unchanged => true,
+-        PreferenceChange.refused || PreferenceChange.notSaved => false,
++        PreferenceChange.refused ||
++        PreferenceChange.notSaved ||
++        PreferenceChange.uncertain => false,
+       };
+ 
+   /// [leaveOut], answering what happened (R8.3, Astra R82-N02): an I3
+@@ -569,6 +581,7 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
+       notify: false,
+     );
+     if (outcome == PreferenceChange.notSaved ||
++        outcome == PreferenceChange.uncertain ||
+         outcome == PreferenceChange.refused) {
+       throw const StorageWriteFailed(
+         suggestionPreferencesKey,
+diff --git a/lib/features/insights/application/insights_provider.dart b/lib/features/insights/application/insights_provider.dart
+index 5e92732..e410d43 100644
+--- a/lib/features/insights/application/insights_provider.dart
++++ b/lib/features/insights/application/insights_provider.dart
+@@ -242,8 +242,15 @@ class InsightsNotifier extends Notifier<InsightsState> {
+   /// R8.2 (Astra R81-A02, Claude NEW-2): never while Delete Circle history
+   /// is under way or still to be finished — what it would be generated
+   /// from is being deleted.
++  ///
++  /// R8.3.2 (founder scope decisions B1/B2): first, any Insight whose
++  /// action was recorded as being made, and is proven on disk, is marked
++  /// applied — Premium or not ([_withProvenAttempts]).
+   InsightAssessment assess() {
+-    if (!_premium || _deletionUnderWay) return read();
++    if (_deletionUnderWay) return read();
++    final proven = _withProvenAttempts(state, inputs());
++    if (!identical(proven, state)) _set(proven).ignore();
++    if (!_premium) return read();
+     final result = assessInsights(inputs(), state.snapshots, generate: true);
+     if (result.added.isNotEmpty ||
+         result.snapshots.length != state.snapshots.length) {
+@@ -314,10 +321,20 @@ class InsightsNotifier extends Notifier<InsightsState> {
+   /// left out by hand and still being written is seen as left out; and the
+   /// Insight is marked applied only when its own change was the one saved
+   /// ([PreferenceChange.changed]).
++  ///
++  /// R8.3.2 (Astra R83-N03): a Plan holds the provenance of one Insight —
++  /// the last whose own change it carries. Before this Insight's change
++  /// replaces it, an earlier Insight it names whose applied mark isn't on
++  /// disk is recorded as applied, from that provenance, on its own date
++  /// ([_keepDisplacedApplication]); if that can't be saved, nothing is
++  /// changed. So no Insight whose change landed is ever taken for one never
++  /// applied, and its retry never makes the change again.
+   Future<InsightActionResult> apply(String snapshotId) async {
+     await ref.read(circlePlansProvider.notifier).idle();
+     await ref.read(journalWritesProvider).idle();
+     await ref.read(suggestionPreferencesProvider.notifier).idle();
++    // R8.3.2: the marks as confirmed — one still being written may fail.
++    await idle();
+     final snapshot = state.byId(snapshotId);
+     final keepsOwnCircle = snapshot?.application is KeepCircleFromHistory;
+     if (!_premium && !keepsOwnCircle) return InsightActionResult.needsPremium;
+@@ -337,6 +354,13 @@ class InsightsNotifier extends Notifier<InsightsState> {
+       case _:
+         return InsightActionResult.notAvailable;
+     }
++    switch (snapshot.application) {
++      case PlanDirection(:final planId) || KeepGentler(:final planId):
++        if (!await _keepDisplacedApplication(planId, snapshotId, i)) {
++          return InsightActionResult.notSaved;
++        }
++      case _:
++    }
+     final result = switch (snapshot.application) {
+       PlanDirection(:final planId) => await _direct(planId, snapshotId),
+       KeepGentler(:final planId, :final cycleId) => await _gentler(
+@@ -344,19 +368,20 @@ class InsightsNotifier extends Notifier<InsightsState> {
+         cycleId,
+         snapshotId,
+       ),
+-      LeaveOutPart(:final element) => await _leaveOut(element, i, snapshotId),
+-      KeepCircleFromHistory(:final circleId) => await _keep(circleId),
++      LeaveOutPart(:final element) => await _leaveOut(element, i, snapshot),
++      KeepCircleFromHistory(:final circleId) => await _keep(circleId, snapshot),
+       OpenPlanReview() ||
+       NothingToChange() => InsightActionResult.nothingToApply,
+     };
+-    final keptAlready =
+-        snapshot.application is KeepCircleFromHistory &&
+-        result == InsightActionResult.alreadyApplied;
+-    if (result == InsightActionResult.done || keptAlready) {
++    // R8.3.2 (founder scope decision B2): a day's Circle already kept by
++    // some other Keep is never recorded as this Insight's application.
++    if (result == InsightActionResult.done) {
+       final current = state.byId(snapshotId) ?? snapshot;
+       try {
+         await _set(
+-          state.replacing(current.copyWith(appliedOn: dateKey(_now))),
++          state.replacing(
++            current.copyWith(appliedOn: dateKey(_now), clearAttempt: true),
++          ),
+         );
+       } on StorageWriteFailed {
+         // The change itself is confirmed; only its record here isn't — and
+@@ -391,18 +416,97 @@ class InsightsNotifier extends Notifier<InsightsState> {
+           }
+         }
+         return null;
++      // R8.3.2 (founder scope decision B2): the kept Circle with the id its
++      // attempt recorded — never another Keep of the same day.
++      case KeepCircleFromHistory():
++        final keptId = snapshot.attempt?.keptId;
++        if (keptId == null) return null;
++        for (final k in ref.read(keptCirclesProvider).kept) {
++          if (k.id == keptId) return dateKey(k.createdAt);
++        }
++        return null;
+       case _:
+         return null;
+     }
+   }
+ 
++  /// [from] with every Insight whose action was recorded as being made and
++  /// is proven on disk ([_appliedOn]) marked applied on that action's day.
++  InsightsState _withProvenAttempts(InsightsState from, InsightInputs i) {
++    var next = from;
++    for (final s in from.snapshots) {
++      if (s.attempt == null || s.appliedOn != null) continue;
++      if (_appliedOn(s, i) case final on?) {
++        next = next.replacing(s.copyWith(appliedOn: on, clearAttempt: true));
++      }
++    }
++    return next;
++  }
++
++  /// R8.3.2 (founder scope decisions B1/B2): records, and waits for the
++  /// store to confirm, that [snapshot]'s action is about to be made. `false`
++  /// when it isn't confirmed: the action is then never made.
++  Future<bool> _recordAttempt(InsightSnapshot snapshot, {String? keptId}) async {
++    final target = InsightAttempt.targetOf(snapshot.application)!;
++    try {
++      await _set(
++        state.replacing(
++          snapshot.copyWith(
++            attempt: InsightAttempt(
++              on: dateKey(_now),
++              target: target,
++              keptId: keptId,
++            ),
++          ),
++        ),
++      );
++      return true;
++    } on StorageWriteFailed {
++      return false;
++    }
++  }
++
++  /// [snapshotId]'s action is known not to have been made: its attempt
++  /// record goes, so it can be tried again. If that isn't saved, the record
++  /// stays and the Insight is never offered again — never made twice.
++  Future<void> _clearAttempt(String snapshotId) async {
++    final s = state.byId(snapshotId);
++    if (s?.attempt == null) return;
++    try {
++      await _set(state.replacing(s!.copyWith(clearAttempt: true)));
++    } on StorageWriteFailed {
++      // Kept: the Insight stays unavailable.
++    }
++  }
++
++  /// R8.3.2 (Astra R83-N03): before [insightId]'s own change replaces
++  /// [planId]'s provenance, the Insight that provenance names — when it is
++  /// a snapshot here not yet marked applied, its own change being on disk
++  /// ([_appliedOn]) — is marked applied on that change's date. `false` when
++  /// that mark isn't confirmed: the provenance must then stay.
++  Future<bool> _keepDisplacedApplication(
++    String planId,
++    String insightId,
++    InsightInputs i,
++  ) async {
++    final by = i.plans.plans[planId]?.appliedInsight;
++    if (by == null || by.insightId == insightId) return true;
++    final displaced = state.byId(by.insightId);
++    if (displaced == null || displaced.appliedOn != null) return true;
++    final on = _appliedOn(displaced, i);
++    if (on == null) return true;
++    return await _markApplied(displaced, on) == InsightActionResult.done;
++  }
++
+   /// Records [snapshot] as applied on [on] — its change already on disk.
+   Future<InsightActionResult> _markApplied(
+     InsightSnapshot snapshot,
+     String on,
+   ) async {
+     try {
+-      await _set(state.replacing(snapshot.copyWith(appliedOn: on)));
++      await _set(
++        state.replacing(snapshot.copyWith(appliedOn: on, clearAttempt: true)),
++      );
+       return InsightActionResult.done;
+     } on StorageWriteFailed {
+       return InsightActionResult.notSaved;
+@@ -466,27 +570,47 @@ class InsightsNotifier extends Notifier<InsightsState> {
+     PlanActionResult.notSaved => InsightActionResult.notSaved,
+   };
+ 
++  /// R8.3.2 (founder scope decision B1): the user's Put back removes the
++  /// left-out part with this Insight's id on it, so the attempt is recorded
++  /// first ([_recordAttempt]). A change known not to have been made clears
++  /// it; one that may be on disk all the same ([PreferenceChange.uncertain])
++  /// keeps it, and the Insight is never offered again.
+   Future<InsightActionResult> _leaveOut(
+     String wire,
+     InsightInputs i,
+-    String insightId,
++    InsightSnapshot snapshot,
+   ) async {
+     final element = ElementId.values.asNameMap()[wire];
+     if (element == null) return InsightActionResult.notAvailable;
+     if (i.leftOut.contains(element)) return InsightActionResult.alreadyApplied;
++    if (!await _recordAttempt(snapshot)) return InsightActionResult.notSaved;
+     final outcome = await ref
+         .read(suggestionPreferencesProvider.notifier)
+-        .leaveOutChange(element, byInsight: insightId);
+-    return switch (outcome) {
+-      PreferenceChange.changed => InsightActionResult.done,
+-      // Left out by something else meanwhile: never this Insight's.
+-      PreferenceChange.unchanged => InsightActionResult.alreadyApplied,
+-      PreferenceChange.refused ||
+-      PreferenceChange.notSaved => InsightActionResult.notSaved,
+-    };
++        .leaveOutChange(element, byInsight: snapshot.id);
++    switch (outcome) {
++      case PreferenceChange.changed:
++        return InsightActionResult.done;
++      case PreferenceChange.uncertain:
++        return InsightActionResult.notSaved;
++      case PreferenceChange.unchanged ||
++          PreferenceChange.refused ||
++          PreferenceChange.notSaved:
++        await _clearAttempt(snapshot.id);
++        // Left out by something else meanwhile: never this Insight's.
++        return outcome == PreferenceChange.unchanged
++            ? InsightActionResult.alreadyApplied
++            : InsightActionResult.notSaved;
++    }
+   }
+ 
+-  Future<InsightActionResult> _keep(String circleId) async {
++  /// R8.3.2 (founder scope decision B2): removing the kept Circle removes
++  /// every trace of this Keep, so the attempt is recorded first, with the id
++  /// the kept Circle is given ([_recordAttempt]). A day's Circle kept some
++  /// other way is never this Insight's: nothing is kept, nothing recorded.
++  Future<InsightActionResult> _keep(
++    String circleId,
++    InsightSnapshot snapshot,
++  ) async {
+     InsightActionResult? refused(KeptCircles kept) {
+       if (kept.kept.any((k) => k.fromCircleId == circleId)) {
+         return InsightActionResult.alreadyApplied;
+@@ -504,14 +628,26 @@ class InsightsNotifier extends Notifier<InsightsState> {
+     }
+     final plan = CirclePlan.fromWire(entry?.session?.parts);
+     if (entry == null || plan == null) return InsightActionResult.notAvailable;
++    final keptId = 'kept-${_now.microsecondsSinceEpoch}-insight';
++    if (!await _recordAttempt(snapshot, keptId: keptId)) {
++      return InsightActionResult.notSaved;
++    }
+     try {
+       final circle = await ref
+           .read(keptCirclesProvider.notifier)
+-          .keepCircle(plan: plan, need: entry.direction, circleId: circleId);
++          .keepCircle(
++            plan: plan,
++            need: entry.direction,
++            circleId: circleId,
++            id: keptId,
++          );
+       if (circle != null) return InsightActionResult.done;
++      // Refused before anything was written.
++      await _clearAttempt(snapshot.id);
+       return refused(ref.read(keptCirclesProvider)) ??
+           InsightActionResult.notAvailable;
+-    } on StorageWriteFailed {
++    } on StorageWriteFailed catch (failure) {
++      if (!failure.uncertain) await _clearAttempt(snapshot.id);
+       return InsightActionResult.notSaved;
+     }
+   }
+diff --git a/lib/features/insights/domain/insight.dart b/lib/features/insights/domain/insight.dart
+index 6c2ebe1..1aa08be 100644
+--- a/lib/features/insights/domain/insight.dart
++++ b/lib/features/insights/domain/insight.dart
+@@ -221,6 +221,7 @@ class InsightSnapshot {
+     this.appliedOn,
+     this.notNowOn,
+     this.declinedOn,
++    this.attempt,
+     this.source,
+   });
+ 
+@@ -273,6 +274,14 @@ class InsightSnapshot {
+   /// evidence set is hidden.
+   final String? declinedOn;
+ 
++  /// R8.3.2 (founder scope decisions B1/B2): the record, confirmed before
++  /// the action, that this Insight's action is being made ([InsightAttempt])
++  /// — for the actions the user can later reverse in a way that removes
++  /// every trace of them (I3's Put back, I4's kept Circle removed). Cleared
++  /// when the Insight is marked applied, or when its action is known not to
++  /// have been made.
++  final InsightAttempt? attempt;
++
+   String? get planId => switch (application) {
+     PlanDirection(:final planId) ||
+     KeepGentler(:final planId) ||
+@@ -289,6 +298,8 @@ class InsightSnapshot {
+     String? appliedOn,
+     String? notNowOn,
+     String? declinedOn,
++    InsightAttempt? attempt,
++    bool clearAttempt = false,
+   }) => InsightSnapshot(
+     id: id,
+     family: family,
+@@ -302,15 +313,18 @@ class InsightSnapshot {
+     appliedOn: appliedOn ?? this.appliedOn,
+     notNowOn: notNowOn ?? this.notNowOn,
+     declinedOn: declinedOn ?? this.declinedOn,
++    attempt: clearAttempt ? null : attempt ?? this.attempt,
+     source: source,
+   );
+ 
+   Map<String, Object?> toJson() => switch (source) {
+     final stored? => {
+-      ...stored,
++      for (final MapEntry(:key, :value) in stored.entries)
++        if (key != 'attempt') key: value,
+       'appliedOn': ?appliedOn,
+       'notNowOn': ?notNowOn,
+       'declinedOn': ?declinedOn,
++      'attempt': ?attempt?.toJson(),
+     },
+     null => _built(),
+   };
+@@ -328,6 +342,7 @@ class InsightSnapshot {
+     'appliedOn': ?appliedOn,
+     'notNowOn': ?notNowOn,
+     'declinedOn': ?declinedOn,
++    'attempt': ?attempt?.toJson(),
+   };
+ 
+   /// `null` for anything that isn't a whole snapshot.
+@@ -367,6 +382,11 @@ class InsightSnapshot {
+             (endedOn is! String || !isCanonicalDateKey(endedOn))) {
+       return null;
+     }
++    // R8.3.2: an attempt record that is there but isn't a whole record for
++    // this snapshot's own action makes the snapshot unreadable — kept as
++    // stored, never read as no attempt.
++    final attempt = InsightAttempt.fromJson(raw['attempt'], application);
++    if (raw['attempt'] != null && attempt == null) return null;
+     String? date(String k) => raw[k] is String ? raw[k] as String : null;
+     return InsightSnapshot(
+       id: id,
+@@ -389,11 +409,80 @@ class InsightSnapshot {
+       appliedOn: date('appliedOn'),
+       notNowOn: date('notNowOn'),
+       declinedOn: date('declinedOn'),
++      attempt: attempt,
+       source: raw,
+     );
+   }
+ }
+ 
++/// R8.3.2 (founder scope decisions B1/B2): an Insight's action recorded as
++/// being made, before it is ([InsightSnapshot.attempt]).
++///
++/// It names the action's target ([target]: the part left out, the day's
++/// Circle kept) and, for I4, the id the kept Circle is given ([keptId]) —
++/// so that Insight's own Keep is told from any other. An attempt is not an
++/// application: the Insight is marked applied only from proof that its own
++/// action is on disk.
++class InsightAttempt {
++  const InsightAttempt({
++    required this.on,
++    required this.target,
++    this.keptId,
++    this.extra = const {},
++  });
++
++  /// The local date of the attempt (`YYYY-MM-DD`).
++  final String on;
++
++  /// [targetOf] the Insight's application.
++  final String target;
++  final String? keptId;
++
++  /// Fields of a stored record this build doesn't know, written back.
++  final Map<String, Object?> extra;
++
++  /// The target an attempt of [application] names — `null` for an action
++  /// that needs no attempt record.
++  static String? targetOf(InsightApplication application) =>
++      switch (application) {
++        LeaveOutPart(:final element) => 'leaveOut:$element',
++        KeepCircleFromHistory(:final circleId) => 'keep:$circleId',
++        _ => null,
++      };
++
++  Map<String, Object?> toJson() => {
++    ...extra,
++    'on': on,
++    'target': target,
++    'keptId': ?keptId,
++  };
++
++  /// `null` for anything that isn't a whole record of an attempt of
++  /// [application]: a day that isn't one, another target, an I4 attempt
++  /// without its kept Circle's id.
++  static InsightAttempt? fromJson(Object? raw, InsightApplication application) {
++    if (raw is! Map<String, Object?>) return null;
++    final on = raw['on'];
++    final target = raw['target'];
++    final keptId = raw['keptId'];
++    if (on is! String || !isCanonicalDateKey(on)) return null;
++    if (target is! String || target != targetOf(application)) return null;
++    final keeps = application is KeepCircleFromHistory;
++    if (keeps ? (keptId is! String || keptId.isEmpty) : keptId != null) {
++      return null;
++    }
++    return InsightAttempt(
++      on: on,
++      target: target,
++      keptId: keptId as String?,
++      extra: {
++        for (final MapEntry(:key, :value) in raw.entries)
++          if (key != 'on' && key != 'target' && key != 'keptId') key: value,
++      },
++    );
++  }
++}
++
+ /// Every snapshot kept, oldest first.
+ class InsightsState {
+   const InsightsState([
+diff --git a/lib/features/insights/domain/insight_engine.dart b/lib/features/insights/domain/insight_engine.dart
+index c417dda..691c967 100644
+--- a/lib/features/insights/domain/insight_engine.dart
++++ b/lib/features/insights/domain/insight_engine.dart
+@@ -615,6 +615,10 @@ InsightStatus statusOf(InsightSnapshot snapshot, InsightInputs i) {
+   if (snapshot.appliedOn != null) return InsightStatus.applied;
+   if (snapshot.notNowOn != null) return InsightStatus.notNow;
+   if (snapshot.declinedOn != null) return InsightStatus.declined;
++  // R8.3.2 (founder scope decisions B1/B2): its action was recorded as
++  // being made and isn't proven either way — never offered again, and never
++  // shown as applied ([InsightSnapshot.attempt]).
++  if (snapshot.attempt != null) return InsightStatus.stale;
+   return _stillTrue(snapshot, i) ? InsightStatus.current : InsightStatus.stale;
+ }
+ 
+diff --git a/lib/features/personal_circle/application/kept_circles_provider.dart b/lib/features/personal_circle/application/kept_circles_provider.dart
+index fb409f0..60b772b 100644
+--- a/lib/features/personal_circle/application/kept_circles_provider.dart
++++ b/lib/features/personal_circle/application/kept_circles_provider.dart
+@@ -278,11 +278,16 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+   /// this day's Circle is already kept or being kept. Fails with
+   /// [StorageWriteFailed] when the store doesn't confirm it — then nothing
+   /// is kept.
++  ///
++  /// [id] (R8.3.2, founder scope decision B2): the kept Circle's own id, when
++  /// the caller chose it beforehand — Insight 4 records it before keeping,
++  /// so its own Keep can be told from any other Keep of the same day.
+   Future<KeptCircle?> keepCircle({
+     required CirclePlan plan,
+     required Intention need,
+     required String circleId,
+     String? name,
++    String? id,
+   }) async {
+     bool refused(KeptCircles current) =>
+         !current.countKnown ||
+@@ -291,7 +296,9 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+     if (_keeping.contains(circleId) || refused(state)) return null;
+     final trimmed = name?.trim();
+     final circle = KeptCircle(
+-      id: 'kept-${_now.microsecondsSinceEpoch}-${state.count + _keeping.length}',
++      id:
++          id ??
++          'kept-${_now.microsecondsSinceEpoch}-${state.count + _keeping.length}',
+       name: trimmed == null || trimmed.isEmpty
+           ? keptCircleDefaultName(need)
+           : trimmed,
+diff --git a/lib/features/plans/application/circle_plans_provider.dart b/lib/features/plans/application/circle_plans_provider.dart
+index 759171b..3fecb06 100644
+--- a/lib/features/plans/application/circle_plans_provider.dart
++++ b/lib/features/plans/application/circle_plans_provider.dart
+@@ -44,6 +44,18 @@ enum PlanActionResult {
+   notSaved,
+ }
+ 
++/// R8.3.2 (founder decision on N01-C): the Plan a stage Circle's Start was
++/// asked for on — its lifecycle and current cycle as the user saw them at the
++/// tap ([CirclePlansNotifier.startConditions]).
++typedef PlanStartConditions = ({PlanLifecycle lifecycle, String? cycleId});
++
++/// R8.3.2 (founder decision on N01-C): the Plan's lifecycle or cycle changed
++/// while a Start was still unresolved, so that Start is cancelled — nothing
++/// is started; the user taps Start again ([CirclePlansNotifier.prepareStart]).
++class PlanStartCancelled implements Exception {
++  const PlanStartCancelled();
++}
++
+ /// The user's explicit usefulness answers in [journal], by Circle id.
+ StageAnswers stageAnswersFrom(Iterable<CircleJournalEntry> journal) => {
+   for (final entry in journal)
+@@ -714,23 +726,29 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+   /// write (R8.2, founder decision B): the stage it was served for is on
+   /// disk exactly as shown, and already says what [noteStart] would record.
+   /// Otherwise Today waits for [noteStart] before the Circle is started.
++  ///
++  /// R8.3.2 (Astra R83-N02, Claude AUD-R83-2): and the Plans hold no change
++  /// still being saved, with this Circle's Plan not paused — so the Start's
++  /// eligibility is that of the Plans as confirmed, exactly as when Today
++  /// waits ([prepareStart]). A change still pending — a Resume the store
++  /// may yet refuse, a record of an earlier tap — never makes a Start valid
++  /// at once.
+   bool startNeedsNoWrite(
+     PlanStageProvenance stage, {
+     required String circleId,
+     required EntitlementStatus status,
+   }) {
++    if (hasUnsavedChanges) return false;
+     // R8.3.1: a Start while the Plan is paused records that first
+-    // ([noteStartWhilePaused]) — a write the Start waits for.
+-    if (!identical(
+-      state.noteStartedWhilePaused(stage, circleId: circleId),
+-      state,
+-    )) {
++    // ([prepareStart]) — a write the Start waits for; R8.3.2: so does one
++    // whose Circle has a record left by an attempt that never became valid.
++    final plan = _durable.plans[stage.planId];
++    if (plan?.lifecycle == PlanLifecycle.paused ||
++        plan?.startedWhilePaused?.circleId == circleId) {
+       return false;
+     }
+     final stored = _servedRecord(_durable, stage, circleId);
+-    if (stored == null || _servedRecord(state, stage, circleId) != stored) {
+-      return false;
+-    }
++    if (stored == null) return false;
+     final active = switch (status) {
+       EntitlementStatus.active => true,
+       EntitlementStatus.inactive => false,
+@@ -780,32 +798,100 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+ 
+   /// R8.3.1 (founder decision on R83-F1, Option B): today's stage Circle
+   /// [circleId] is about to become validly started (Today, at the moment
+-  /// it does). When its Plan is paused — as shown, so the user's own order
+-  /// of Pause and Start is what counts — that Start earns no Plan credit,
++  /// it does). When its Plan is paused, that Start earns no Plan credit,
+   /// now or later; this records it on the Plan
+   /// ([CirclePlansState.noteStartedWhilePaused]) and completes once the
+   /// store has confirmed it. Fails with [StorageWriteFailed] otherwise:
+   /// Today then refuses the Start (founder decision B), and the user is
+   /// told there. Nothing to record for an active Plan.
+-  Future<void> noteStartWhilePaused(
++  ///
++  /// R8.3.2 (Astra R83-N01/N02, Claude AUD-R83-2/3), the Start's identity
++  /// and eligibility:
++  /// - Every Plan change still being saved is waited for first — it lands,
++  ///   or is refused and taken back (R8.1 RL-1) — and the Plan is then
++  ///   judged as the store has confirmed it: a Resume or Pause still
++  ///   pending never decides, nor does a refused one, which never happened.
++  /// - The Start gets its instant here, the one it is saved with (returned):
++  ///   a paused Plan's record names it ([PausedStart]), so a record left by
++  ///   a Start that then never became valid — the app stopped, its own save
++  ///   failed, it was cancelled — excludes no later valid Start. Such a
++  ///   record of this Circle is replaced, or for a Plan not paused removed,
++  ///   before this Start is valid: a Circle is validly started once.
++  /// - A Plan change asked for while the record itself is being written
++  ///   comes after this Start, on disk as in the order of the user's taps.
++  ///
++  /// R8.3.2 (founder decision on N01-C): the Start was asked for on the Plan
++  /// as [accepted] ([startConditions]). When, once its changes have settled,
++  /// the confirmed Plan's lifecycle or cycle is not that — a Resume or Pause
++  /// confirmed meanwhile, or one refused that the tap was made on — the
++  /// Start is cancelled ([PlanStartCancelled]): nothing is started or
++  /// recorded as started, and the user taps Start again. So is a Start whose
++  /// Plan changes while its record is being written; that record names an
++  /// instant no session has, and the next Start replaces it.
++  Future<DateTime> prepareStart(
+     PlanStageProvenance stage, {
+     required String circleId,
++    required PlanStartConditions accepted,
+   }) async {
+-    final next = state.noteStartedWhilePaused(stage, circleId: circleId);
+-    if (!identical(next, state)) return _set(next, report: false);
+-    final planId = stage.planId;
+-    if (state.plans[planId]?.startedWhilePaused == circleId &&
+-        _durable.plans[planId]?.startedWhilePaused != circleId) {
+-      await ensureSaved();
+-      if (_durable.plans[planId]?.startedWhilePaused != circleId) {
++    for (var round = 0; ; round++) {
++      if (round > _maxRounds) {
++        throw const StorageWriteFailed(
++          circlePlansKey,
++          'the Start waits on Plan changes still being saved',
++        );
++      }
++      if (hasUnsavedChanges) {
++        await idle();
++        continue;
++      }
++      if (!_startConditionsHold(_durable, stage, accepted)) {
++        throw const PlanStartCancelled();
++      }
++      final at = ref.read(eventClockProvider)();
++      final next = _durable.noteStartedWhilePaused(
++        stage,
++        circleId: circleId,
++        at: at,
++      );
++      if (identical(next, _durable)) return at;
++      await _set(next, report: false);
++      if (!_durable.samePausedStart(stage.planId, next)) {
+         throw const StorageWriteFailed(
+           circlePlansKey,
+-          'the Start made while the Plan is paused is not on disk',
++          'the record of this Start is not on disk',
+         );
+       }
++      if (!_startConditionsHold(state, stage, accepted)) {
++        await idle();
++        if (!_startConditionsHold(_durable, stage, accepted)) {
++          throw const PlanStartCancelled();
++        }
++      }
++      return at;
+     }
+   }
+ 
++  /// The Plan of [stage] as shown now — what a Start tapped now is asked
++  /// for on ([prepareStart]).
++  PlanStartConditions startConditions(PlanStageProvenance stage) {
++    final plan = state.plans[stage.planId];
++    return (
++      lifecycle: plan?.lifecycle ?? PlanLifecycle.neverStarted,
++      cycleId: plan?.current.id,
++    );
++  }
++
++  static bool _startConditionsHold(
++    CirclePlansState plans,
++    PlanStageProvenance stage,
++    PlanStartConditions accepted,
++  ) {
++    final plan = plans.plans[stage.planId];
++    return (plan?.lifecycle ?? PlanLifecycle.neverStarted) ==
++            accepted.lifecycle &&
++        plan?.current.id == accepted.cycleId;
++  }
++
+   /// [circleId]'s served record in [plans], as stored text, or `null`.
+   static String? _servedRecord(
+     CirclePlansState plans,
+diff --git a/lib/features/plans/domain/circle_plan.dart b/lib/features/plans/domain/circle_plan.dart
+index aa2d21f..d9ebeb9 100644
+--- a/lib/features/plans/domain/circle_plan.dart
++++ b/lib/features/plans/domain/circle_plan.dart
+@@ -511,7 +511,11 @@ class PlanProgress {
+   /// on the Plan rather than on [lastServed], which the next serve
+   /// replaces; one is enough, since only one day's Circle is ever still
+   /// to be caught up. Stage evidence: Delete Circle history removes it.
+-  final String? startedWhilePaused;
++  ///
++  /// R8.3.2 (Astra R83-N01, Claude AUD-R83-3): it names that Start by its
++  /// instant, so a record written for a Start that then never happened
++  /// excludes nothing; it is carried into a new cycle (Claude AUD-R83-1).
++  final PausedStart? startedWhilePaused;
+ 
+   /// Fields this build doesn't know, and known fields whose stored value it
+   /// can't read, exactly as stored (R8.1 RL-3): written back until THIRTY
+@@ -546,7 +550,8 @@ class PlanProgress {
+     String? lastAdvancedCircleId,
+     ServedStageCircle? lastServed,
+     AppliedInsight? appliedInsight,
+-    String? startedWhilePaused,
++    PausedStart? startedWhilePaused,
++    bool clearStartedWhilePaused = false,
+   }) => PlanProgress(
+     planId: planId,
+     lifecycle: lifecycle ?? this.lifecycle,
+@@ -554,7 +559,9 @@ class PlanProgress {
+     lastAdvancedCircleId: lastAdvancedCircleId ?? this.lastAdvancedCircleId,
+     lastServed: lastServed ?? this.lastServed,
+     appliedInsight: appliedInsight ?? this.appliedInsight,
+-    startedWhilePaused: startedWhilePaused ?? this.startedWhilePaused,
++    startedWhilePaused: clearStartedWhilePaused
++        ? null
++        : startedWhilePaused ?? this.startedWhilePaused,
+     extra: {
+       for (final MapEntry(:key, :value) in extra.entries)
+         if (!(key == 'lastServed' && lastServed != null) &&
+@@ -580,7 +587,7 @@ class PlanProgress {
+     'lastAdvancedCircleId': ?lastAdvancedCircleId,
+     'lastServed': ?lastServed?.toJson(),
+     'appliedInsight': ?appliedInsight?.toJson(),
+-    'startedWhilePaused': ?startedWhilePaused,
++    'startedWhilePaused': ?startedWhilePaused?.toJson(),
+   };
+ 
+   static PlanProgress? fromJson(String planId, Object? raw) {
+@@ -605,10 +612,11 @@ class PlanProgress {
+     final last = raw['lastAdvancedCircleId'];
+     final served = ServedStageCircle.fromJson(raw['lastServed']);
+     final insight = AppliedInsight.fromJson(raw['appliedInsight']);
+-    // R8.3.1: it decides credit, so present but not text makes the whole
+-    // Plan unreadable — kept as stored, never read as absent.
+-    final pausedStart = raw['startedWhilePaused'];
+-    if (pausedStart != null && pausedStart is! String) return null;
++    // R8.3.1: it decides credit, so present but not readable makes the
++    // whole Plan unreadable — kept as stored, never read as absent.
++    final rawPausedStart = raw['startedWhilePaused'];
++    final pausedStart = PausedStart.fromJson(rawPausedStart);
++    if (rawPausedStart != null && pausedStart == null) return null;
+     const known = {
+       'lifecycle',
+       'cycles',
+@@ -624,7 +632,7 @@ class PlanProgress {
+       lastAdvancedCircleId: last is String ? last : null,
+       lastServed: served,
+       appliedInsight: insight,
+-      startedWhilePaused: pausedStart as String?,
++      startedWhilePaused: pausedStart,
+       extra: {
+         for (final MapEntry(:key, :value) in raw.entries)
+           if (!known.contains(key)) key: value,
+@@ -691,6 +699,67 @@ class AppliedInsight {
+   }
+ }
+ 
++/// R8.3.2 (Astra R83-N01, Claude AUD-R83-3): which Start was made while its
++/// Plan was paused ([PlanProgress.startedWhilePaused]) — the Circle and the
++/// very instant of that Start, the instant its session is then saved with.
++///
++/// Written, and confirmed, before that Start is valid (founder decision B),
++/// so a record can outlive a Start that never happened: the app stopped,
++/// the Start's own save failed, or it was cancelled. Such a record names an
++/// instant no saved session has, and excludes nothing; a later valid Start
++/// of the same Circle has an instant of its own.
++///
++/// A record written by R8.3.1 names the Circle only ([startedAt] `null`):
++/// it still excludes every Start of that Circle, as it did then.
++class PausedStart {
++  const PausedStart({required this.circleId, this.startedAt, this.extra});
++
++  final String circleId;
++
++  /// The Start's instant (UTC, ISO 8601); `null` only for an R8.3.1 record.
++  final String? startedAt;
++
++  /// The fields of a stored record this build doesn't know, written back
++  /// as stored (R8.1 RL-3).
++  final Map<String, Object?>? extra;
++
++  /// Whether this record excludes [circleId]'s Start at [at] from Plan
++  /// credit: the same Circle, and the same Start — or a Start this can't
++  /// tell apart from it (an R8.3.1 record, or no instant to compare).
++  bool excludes(String circleId, DateTime? at) =>
++      circleId == this.circleId &&
++      (startedAt == null ||
++          at == null ||
++          ServedStageCircle.sameInstant(startedAt, at));
++
++  Object toJson() => startedAt == null
++      ? circleId
++      : {...?extra, 'circleId': circleId, 'startedAt': startedAt};
++
++  /// `null` for anything that isn't a whole record: a Circle that isn't a
++  /// day, or an instant that isn't one (Astra's post-R8.3 §7 observation:
++  /// never read as an exclusion that matches nothing). The Plan is then
++  /// kept as stored.
++  static PausedStart? fromJson(Object? raw) {
++    if (raw is String) {
++      return isCanonicalDateKey(raw) ? PausedStart(circleId: raw) : null;
++    }
++    if (raw is! Map<String, Object?>) return null;
++    final circleId = raw['circleId'];
++    final at = raw['startedAt'];
++    if (circleId is! String || !isCanonicalDateKey(circleId)) return null;
++    if (at is! String || DateTime.tryParse(at) == null) return null;
++    return PausedStart(
++      circleId: circleId,
++      startedAt: at,
++      extra: {
++        for (final MapEntry(:key, :value) in raw.entries)
++          if (key != 'circleId' && key != 'startedAt') key: value,
++      },
++    );
++  }
++}
++
+ /// One stage Circle as THIRTY served it: today's Circle id and the stage it
+ /// was composed for ([PlanProgress.lastServed]).
+ class ServedStageCircle {
+@@ -979,6 +1048,10 @@ extension CirclePlanActions on CirclePlansState {
+       lastAdvancedCircleId: plan?.lastAdvancedCircleId,
+       lastServed: carried?.closedBeforeLeave != null ? carried : null,
+       appliedInsight: plan?.appliedInsight,
++      // R8.3.2 (Claude AUD-R83-1): a Start made while the Plan was paused
++      // stays excluded into the new cycle — the carried Close above can
++      // still be credited to the cycle that was left.
++      startedWhilePaused: plan?.startedWhilePaused,
+       extra: plan?.extra ?? const {},
+     );
+   }
+@@ -1145,6 +1218,10 @@ extension CirclePlanActions on CirclePlansState {
+   /// .startedWhilePaused]) is never credited — whatever the Plan's
+   /// lifecycle when this runs: at its Close, in a later lifecycle change's
+   /// fold, or in a restart's or the next day's catch-up.
++  ///
++  /// R8.3.2 (Astra R83-N01, Claude AUD-R83-3): that Start is the one
++  /// recorded — the same instant as [startedAt] ([PausedStart.excludes]); a
++  /// record of a Start that never happened excludes no later valid Start.
+   CirclePlansState recordGuided(
+     PlanStageProvenance stage, {
+     required String circleId,
+@@ -1157,7 +1234,9 @@ extension CirclePlanActions on CirclePlansState {
+     final plan = plans[stage.planId];
+     if (plan == null) return this;
+     if (plan.lastAdvancedCircleId == circleId) return this;
+-    if (plan.startedWhilePaused == circleId) return this;
++    if (plan.startedWhilePaused?.excludes(circleId, startedAt) ?? false) {
++      return this;
++    }
+     final cycle = plan.cycles.where((c) => c.id == stage.cycleId).firstOrNull;
+     if (cycle == null) return this;
+     if (cycle.records.any((r) => r.circleId == circleId)) return this;
+@@ -1291,26 +1370,55 @@ extension CirclePlanActions on CirclePlansState {
+   /// [circleId] is being validly started now. If its Plan is paused, that
+   /// Start is not eligible for Plan credit, and this says so on the Plan
+   /// ([PlanProgress.startedWhilePaused]); `this` otherwise — an active Plan,
+-  /// a Circle that isn't the one served, or one already recorded.
++  /// a Circle that isn't the one served.
++  ///
++  /// R8.3.2 (Astra R83-N01): the record names this Start by its instant
++  /// [at] — the instant its session is saved with — so it never stands for
++  /// another Start of the same Circle ([PausedStart]).
++  ///
++  /// A Circle is validly started once. A record of [circleId] already on
++  /// the Plan when its Start is being made is therefore one of an earlier
++  /// attempt that never became valid (Astra R83-N01, Claude AUD-R83-3): it
++  /// is replaced — or, for a Plan not paused, removed — so it never stands
++  /// for this Start, even at the same instant.
+   CirclePlansState noteStartedWhilePaused(
+     PlanStageProvenance stage, {
+     required String circleId,
++    required DateTime at,
+   }) {
+     final plan = plans[stage.planId];
+     final served = plan?.lastServed;
+-    if (plan == null ||
+-        plan.lifecycle != PlanLifecycle.paused ||
++    if (plan == null) return this;
++    if (plan.lifecycle != PlanLifecycle.paused ||
+         served == null ||
+-        !served.matches(stage, circleId: circleId) ||
+-        plan.startedWhilePaused == circleId) {
+-      return this;
++        !served.matches(stage, circleId: circleId)) {
++      if (plan.startedWhilePaused?.circleId != circleId) return this;
++      return _with(
++        plan.copyWith(clearStartedWhilePaused: true),
++        activePlanId: activePlanId,
++      );
+     }
+     return _with(
+-      plan.copyWith(startedWhilePaused: circleId),
++      plan.copyWith(
++        startedWhilePaused: PausedStart(
++          circleId: circleId,
++          startedAt: ServedStageCircle.instant(at),
++        ),
++      ),
+       activePlanId: activePlanId,
+     );
+   }
+ 
++  /// Whether [planId] holds exactly the record of a Start made while it
++  /// was paused that [other] holds ([noteStartedWhilePaused]) — or, like
++  /// it, none.
++  bool samePausedStart(String planId, CirclePlansState other) {
++    final mine = plans[planId]?.startedWhilePaused;
++    final theirs = other.plans[planId]?.startedWhilePaused;
++    return mine?.circleId == theirs?.circleId &&
++        mine?.startedAt == theirs?.startedAt;
++  }
++
+   /// R8.2 Plan lifecycle policy: [planId]'s served Circle [circleId] with
+   /// the order of the user's own actions recorded on it — started before
+   /// its Plan was paused ([startedBeforePause]), asked to close before the

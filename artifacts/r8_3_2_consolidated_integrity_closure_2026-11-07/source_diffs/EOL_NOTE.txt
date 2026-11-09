@@ -1,0 +1,1 @@
+EOL note: circle_plan.dart and circle_plans_provider.dart are in the CRLF checkout form in this working tree (as before R8.3.2; HEAD blobs are LF; core.autocrlf=true). R8.3.2 edits preserved each file's existing line endings. Diffs here are 'git diff' with the repo's own core.autocrlf=true; with autocrlf forced false every line of those two files differs by CR only.

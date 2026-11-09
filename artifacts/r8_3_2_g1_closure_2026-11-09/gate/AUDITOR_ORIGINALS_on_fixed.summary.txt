@@ -1,0 +1,31 @@
+PASS | R82-N01 I1 retry repairs only after manual pause
+PASS | R82-N01 I1 retry repairs only after manual leave
+PASS | R82-N01 I2 retry preserves a later manual stopGentler
+PASS | R82-N02 queued manual I3 target is never claimed by Insight
+PASS | R82-N03 decoded expiry true must serialize a later false
+PASS | R82-N04 valid AppliedInsight preserves nested extension fields
+PASS | R82-N05 delayed Start must revalidate its local day
+PASS | AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source domain: a served record read from disk with startedAfterExpiry true, re-noted as started under verified Premium, still writes true
+PASS | AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source end to end: Start after verified expiry, process stops after the Plans note lands; resubscribe, Start under Premium; Premium lapses and the app restarts before Close → credit expected (founder rule: served and started under Premium)
+PASS | AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source control: same sequence without the final restart is credited
+PASS | AUD-N2 lifecycle-order instants survive Delete Start, Delete history, same-day stage Circle re-served, Plan paused before its Start: the deleted session's Start instant is written to the Plans
+PASS | AUD-A2-indep (throws): one transient served-stage failure at choice → offer taken back and user told; next choice runs, closes, reaches History and is credited, also after restarts
+FAIL | AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+     -> Expected: RecommendationStatus:<RecommendationStatus.started>
+          Actual: RecommendationStatus:<RecommendationStatus.notStarted>
+        
+PASS | AUD-A2-indep (returnsFalse): one transient served-stage failure at choice → offer taken back and user told; next choice runs, closes, reaches History and is credited, also after restarts
+PASS | AUD-N4 waiting Start across a Today rebuild (app resume) Start waits for its Plans record; the app is resumed meanwhile (nowProvider invalidated); the record lands: is the Start carried out, or refused with a notice?
+PASS | AUD-N3 Delete begun while a failing Plan change is in flight the failure is reported, yet Delete writes the change to disk
+PASS | AUD-R83-1: the paused-Start fact is lost by a new cycle Pause → Start → Close → Resume → Leave → Again → restart: never credited
+PASS | AUD-R83-1: the paused-Start fact is lost by a new cycle Pause → Start → Resume → Close → Leave → Again → restart: never credited
+PASS | AUD-R83-1: the paused-Start fact is lost by a new cycle next day instead of a restart (overwrite catch-up): never credited
+PASS | AUD-R83-1: the paused-Start fact is lost by a new cycle control — same without Again: the slot holds, never credited
+PASS | AUD-R83-1: the paused-Start fact is lost by a new cycle control — Start → Close → Leave → Again (valid): credit once
+PASS | AUD-R83-2: eligibility judged from an optimistic Resume that the store refuses Pause (saved); Resume refused by the store while Start is tapped; Close; Resume (saved); restarts: never credited
+PASS | AUD-R83-3: a recorded paused Start that never became the Start Pause; Start whose paused-Start record lands but its answer is lost (refused); restart; Resume; Start; Close: credited once
+PASS | AUD-R83-3: a recorded paused Start that never became the Start Pause; Start whose own day-keys save fails after the paused-Start record landed; restart; Resume; Start; Close: credited once
+PASS | Delete × paused Start Pause, Start, Close, Delete, Resume, same-day stage re-served, Start, Close: credited once (slot removed by Delete)
+PASS | Delete × paused Start Delete while the paused-Start record is being written: the Start and the Delete both resolve; no paused-Start fact survives
+PASS | Premium × paused Start lapse verified, Pause, Start, Close; resubscribe; Resume; Leave; Again; restart: never credited
+COUNTS {'PASS': 26, 'FAIL': 1} DONE False

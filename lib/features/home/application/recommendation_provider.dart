@@ -1817,7 +1817,8 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
   /// Whether [recommendation] can start at once (R8.2, founder decision B):
   /// its offer is on disk in the day keys ([_offersOnDisk]) and, for a
   /// stage Circle, its Plan's served record is on disk and already says
-  /// what this Start records ([CirclePlansNotifier.startNeedsNoWrite]).
+  /// what this Start records, with no Plan change pending and the Plan not
+  /// paused ([CirclePlansNotifier.startNeedsNoWrite], R8.3.2).
   bool _readyToStart(Recommendation recommendation, EntitlementStatus verdict) {
     if (_offersOnDisk[recommendation.circleId] !=
         _offerIdentity(recommendation)) {
@@ -1852,6 +1853,11 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
     final stage = recommendation.composed?.stage;
     _startWaiting = recommendation;
     final toldBefore = ref.read(journalSaveStatusProvider)[circleId] == false;
+    // R8.3.2 (founder decision on N01-C): the Plan this Start is asked for
+    // on, as the user sees it now.
+    final accepted = stage == null
+        ? null
+        : ref.read(circlePlansProvider.notifier).startConditions(stage);
     final noted = switch (stage) {
       final stage? => () {
         _startVerdicts[circleId] = verdict;
@@ -1910,12 +1916,21 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       // or after the Plan is carried on — and that is saved before the
       // Circle starts (founder decision B); refused, the Start is refused.
       // The conditions are checked again after the wait.
+      // R8.3.2 (Astra R83-N01/N02, Claude AUD-R83-2/3): decided on the
+      // Plans as confirmed, and the Start is saved with the instant that
+      // record names ([CirclePlansNotifier.prepareStart]).
+      DateTime? startedAt;
       if (stage != null) {
         try {
-          await ref
+          startedAt = await ref
               .read(circlePlansProvider.notifier)
-              .noteStartWhilePaused(stage, circleId: circleId);
+              .prepareStart(stage, circleId: circleId, accepted: accepted!);
           _ensureCurrent(epoch);
+        } on PlanStartCancelled {
+          // R8.3.2 (founder decision on N01-C): the Plan changed while this
+          // Start was unresolved — nothing starts; Start can be tapped again.
+          if (identical(_startWaiting, recommendation)) _startWaiting = null;
+          return;
         } catch (error) {
           if (identical(_startWaiting, recommendation)) _startWaiting = null;
           if (error is! _StaleWrite) _refuseStart(circleId, toldBefore);
@@ -1930,7 +1945,7 @@ class RecommendationNotifier extends Notifier<RecommendationState> {
       state = RecommendationState(
         recommendation: recommendation,
         status: RecommendationStatus.started,
-        startedAt: ref.read(eventClockProvider)(),
+        startedAt: startedAt ?? ref.read(eventClockProvider)(),
       );
       _notePlanActions(state);
       final snapshot = state;

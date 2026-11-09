@@ -457,7 +457,15 @@ void main() {
       expect(shown.application, isA<KeepCircleFromHistory>());
       await R8Harness.settle();
       final c = await reopen(status: EntitlementStatus.inactive);
-      h.disk.fail(insightsKey, DiskFault.throws);
+      // R8.3.2 (founder scope decisions B1/B2): an I3 or I4 first records its
+      // attempt, so the fault is put on the write that carries the applied
+      // mark — the same scenario. For I1 and I2 that is still the first
+      // Insights write.
+      h.disk.failWhere(
+        insightsKey,
+        (v) => v.contains('"appliedOn"'),
+        fault: DiskFault.throws,
+      );
       await c.read(insightsProvider.notifier).apply(shown.id);
       await R8Harness.settle();
       expect(c.read(keptCirclesProvider).kept, hasLength(1));

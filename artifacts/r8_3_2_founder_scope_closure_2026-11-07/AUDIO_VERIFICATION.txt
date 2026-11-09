@@ -1,0 +1,8 @@
+2026-11-07T23:13:47+01:00
+production manifest: 172 / 172 match
+framing manifest: 8 / 8 match
+bundled m4a: 180; union of manifests: 180
+bundled set == union of manifests
+git diff --stat HEAD -- assets: []
+AUDIO OK
+exit 0

@@ -246,11 +246,17 @@ void main() {
       String id,
       DiskFault fault,
     ) async {
-      final mark = h.disk.hold(insightsKey);
-      final applying = insights(c).apply(id);
-      await mark.reached;
-      mark.release(fault);
-      return applying;
+    // R8.3.2 (founder scope decisions B1/B2): an I3 or I4 first records its
+    // attempt, so the fault is put on the write that carries the applied
+    // mark — the same scenario. For I1 and I2 that is still the first
+    // Insights write.
+      h.disk.failWhere(
+        insightsKey,
+        (value) => value.contains('"appliedOn"'),
+        fault: fault,
+        times: 1,
+      );
+      return insights(c).apply(id);
     }
 
     final cases = <String, (Map<String, Object>, InsightFamily)>{

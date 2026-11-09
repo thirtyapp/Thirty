@@ -1,0 +1,342 @@
+// Independent post-R8.3 delta audit — adversarial reproductions (scratchpad
+// export only; never committed). Each test asserts the CONTRACT (founder
+// table, R83-F1 Option B, D1–D5); a failure is a demonstrated defect.
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/premium/entitlement_status.dart';
+import 'package:thirty/core/premium/premium_access.dart';
+import 'package:thirty/core/storage/store_save_failures.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+
+import '../support/r83_invariants.dart';
+import '../support/r8_fault_disk.dart';
+import '../support/r8_harness.dart';
+
+void main() {
+  final day1 = DateTime(2026, 10, 12, 9);
+  late R8Harness h;
+
+  setUp(() async {
+    h = R8Harness(day1);
+    await h.boot();
+  });
+
+  RecommendationNotifier today(ProviderContainer c) =>
+      c.read(recommendationProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+
+  Future<Map<String, Object?>> planOnDisk() async {
+    final raw = (await h.disk.stored())[circlePlansKey];
+    if (raw is! String) return {};
+    final stored = (jsonDecode(raw) as Map)['plans'] as Map?;
+    return (stored?['getting_going'] as Map?)?.cast<String, Object?>() ?? {};
+  }
+
+  Future<int> creditsOnDisk(String circleId) async {
+    final raw = (await h.disk.stored())[circlePlansKey];
+    if (raw is! String) return 0;
+    var n = 0;
+    for (final plan in ((jsonDecode(raw) as Map)['plans'] as Map).values) {
+      for (final cycle in ((plan as Map)['cycles'] as List)) {
+        for (final r in (cycle as Map)['records'] as List) {
+          if ((r as Map)['circleId'] == circleId) n++;
+        }
+      }
+    }
+    return n;
+  }
+
+  Future<bool> closedInHistory(String circleId) async {
+    final raw = (await h.disk.stored())[circleJournalKey];
+    if (raw is! String) return false;
+    return ((jsonDecode(raw) as Map)['entries'] as List).any(
+      (e) => (e as Map)['circleId'] == circleId && e['closedAt'] != null,
+    );
+  }
+
+  Future<ProviderContainer> restart({int times = 1}) async {
+    late ProviderContainer c;
+    for (var i = 0; i < times; i++) {
+      await h.restart();
+      c = h.open();
+      c.read(circlePlansProvider);
+      c.read(recommendationProvider);
+      await R8Harness.settle();
+    }
+    return c;
+  }
+
+  Future<(ProviderContainer, String)> offered() async {
+    final c = h.open();
+    expect(plans(c).start('getting_going'), PlanActionResult.done);
+    today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+    await R8Harness.settle();
+    final rec = c.read(recommendationProvider).recommendation!;
+    expect(rec.composed?.stage, isNotNull);
+    return (c, rec.circleId);
+  }
+
+  Future<void> act(ProviderContainer c, String step) async {
+    switch (step) {
+      case 'Start':
+        today(c).start();
+      case 'Pause':
+        expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      case 'Resume':
+        expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      case 'Leave':
+        expect(plans(c).leave('getting_going'), PlanActionResult.done);
+      case 'Again':
+        expect(plans(c).goThroughAgain('getting_going'), PlanActionResult.done);
+      case 'Close':
+        h.clock.value = h.clock.value.add(const Duration(minutes: 25));
+        today(c).close();
+      default:
+        fail('unknown step $step');
+    }
+    await R8Harness.settle();
+  }
+
+  group('AUD-R83-1: the paused-Start fact is lost by a new cycle', () {
+    final rows = <List<String>>[
+      ['Pause', 'Start', 'Close', 'Resume', 'Leave', 'Again'],
+      ['Pause', 'Start', 'Resume', 'Close', 'Leave', 'Again'],
+    ];
+    for (final steps in rows) {
+      test('${steps.join(' → ')} → restart: never credited', () async {
+        final (c, id) = await offered();
+        for (final step in steps) {
+          await act(c, step);
+        }
+        final before = await creditsOnDisk(id);
+        final plan = await planOnDisk();
+        // ignore: avoid_print
+        print('DIAG in-session credits=$before '
+            'startedWhilePaused=${plan['startedWhilePaused']} '
+            'lastServed=${jsonEncode(plan['lastServed'])} '
+            'lifecycle=${plan['lifecycle']}');
+        expect(before, 0, reason: 'in the session');
+        expect(await closedInHistory(id), isTrue);
+        await restart(times: 2);
+        final after = await creditsOnDisk(id);
+        // ignore: avoid_print
+        print('DIAG after restarts credits=$after '
+            'cycles=${jsonEncode((await planOnDisk())['cycles'])}');
+        expect(after, 0, reason: 'retroactive credit after restart');
+      });
+    }
+
+    test('next day instead of a restart (overwrite catch-up): never credited',
+        () async {
+      final (c, id) = await offered();
+      for (final s in ['Pause', 'Start', 'Close', 'Resume', 'Leave', 'Again']) {
+        await act(c, s);
+      }
+      expect(await creditsOnDisk(id), 0);
+      h.clock.value = day1.add(const Duration(days: 1));
+      final c2 = await restart();
+      today(c2).chooseIntention(
+        Intention.moreEnergy,
+        window: TimeWindow.about20,
+      );
+      await R8Harness.settle();
+      expect(await creditsOnDisk(id), 0);
+    });
+
+    test('control — same without Again: the slot holds, never credited',
+        () async {
+      final (c, id) = await offered();
+      for (final s in ['Pause', 'Start', 'Close', 'Resume', 'Leave']) {
+        await act(c, s);
+      }
+      await restart(times: 2);
+      expect(await creditsOnDisk(id), 0);
+    });
+
+    test('control — Start → Close → Leave → Again (valid): credit once',
+        () async {
+      final (c, id) = await offered();
+      for (final s in ['Start', 'Close', 'Leave', 'Again']) {
+        await act(c, s);
+      }
+      await restart(times: 2);
+      expect(await creditsOnDisk(id), 1);
+    });
+  });
+
+  group('AUD-R83-2: eligibility judged from an optimistic Resume that the '
+      'store refuses', () {
+    test('Pause (saved); Resume refused by the store while Start is tapped; '
+        'Close; Resume (saved); restarts: never credited', () async {
+      final (c, id) = await offered();
+      await act(c, 'Pause');
+      final held = h.disk.hold(circlePlansKey);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      today(c).start();
+      await R8Harness.settle();
+      final statusDuring = c.read(recommendationProvider).status;
+      held.release(DiskFault.returnsFalse);
+      await R8Harness.settle();
+      final shownLifecycle =
+          c.read(circlePlansProvider).plans['getting_going']?.lifecycle;
+      // ignore: avoid_print
+      print('DIAG status during hold=$statusDuring '
+          'after refusal: plan shown=$shownLifecycle '
+          'disk=${(await planOnDisk())['lifecycle']} '
+          'swp=${(await planOnDisk())['startedWhilePaused']} '
+          'status=${c.read(recommendationProvider).status} '
+          'failures=${c.read(storeSaveFailuresProvider)}');
+      expect((await planOnDisk())['lifecycle'], 'paused');
+      await act(c, 'Close');
+      expect(await creditsOnDisk(id), 0, reason: 'paused at Close');
+      await act(c, 'Resume');
+      await restart(times: 2);
+      // ignore: avoid_print
+      print('DIAG credits after Resume+restarts=${await creditsOnDisk(id)}');
+      expect(await creditsOnDisk(id), 0,
+          reason: 'the valid Start was made while the Plan was durably paused');
+    });
+  });
+
+  group('AUD-R83-3: a recorded paused Start that never became the Start', () {
+    test('Pause; Start whose paused-Start record lands but its answer is '
+        'lost (refused); restart; Resume; Start; Close: credited once',
+        () async {
+      final (c, id) = await offered();
+      await act(c, 'Pause');
+      h.disk.ackLost(circlePlansKey);
+      await act(c, 'Start');
+      // ignore: avoid_print
+      print('DIAG status=${c.read(recommendationProvider).status} '
+          'swp on disk=${(await planOnDisk())['startedWhilePaused']}');
+      expect(c.read(recommendationProvider).status,
+          RecommendationStatus.notStarted);
+      final c2 = await restart();
+      await act(c2, 'Resume');
+      await act(c2, 'Start');
+      expect(c2.read(recommendationProvider).status,
+          RecommendationStatus.started);
+      await act(c2, 'Close');
+      await restart(times: 2);
+      // ignore: avoid_print
+      print('DIAG credits=${await creditsOnDisk(id)} '
+          'swp=${(await planOnDisk())['startedWhilePaused']}');
+      expect(await creditsOnDisk(id), 1,
+          reason: 'the only Start that happened was on an active Plan');
+    });
+
+    test('Pause; Start whose own day-keys save fails after the paused-Start '
+        'record landed; restart; Resume; Start; Close: credited once',
+        () async {
+      final (c, id) = await offered();
+      await act(c, 'Pause');
+      h.disk.fail(recommendationStatusKey, DiskFault.returnsFalse);
+      h.disk.fail(recommendationPendingWriteKey, DiskFault.returnsFalse);
+      await act(c, 'Start');
+      // ignore: avoid_print
+      print('DIAG status=${c.read(recommendationProvider).status} '
+          'disk status=${(await h.disk.stored())[recommendationStatusKey]} '
+          'swp on disk=${(await planOnDisk())['startedWhilePaused']}');
+      final c2 = await restart();
+      // ignore: avoid_print
+      print('DIAG restored=${c2.read(recommendationProvider).status}');
+      if (c2.read(recommendationProvider).status !=
+          RecommendationStatus.notStarted) {
+        markTestSkipped('the Start was durable after all — not this path');
+        return;
+      }
+      await act(c2, 'Resume');
+      await act(c2, 'Start');
+      await act(c2, 'Close');
+      await restart(times: 2);
+      // ignore: avoid_print
+      print('DIAG credits=${await creditsOnDisk(id)}');
+      expect(await creditsOnDisk(id), 1,
+          reason: 'the Start that was saved was made on an active Plan');
+    });
+  });
+
+  group('Delete × paused Start', () {
+    test('Pause, Start, Close, Delete, Resume, same-day stage re-served, '
+        'Start, Close: credited once (slot removed by Delete)', () async {
+      final (c, id) = await offered();
+      for (final s in ['Pause', 'Start', 'Close']) {
+        await act(c, s);
+      }
+      await c.read(circleHistoryDeletionProvider).delete();
+      await R8Harness.settle();
+      expect((await planOnDisk()).containsKey('startedWhilePaused'), isFalse);
+      await act(c, 'Resume');
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final rec = c.read(recommendationProvider).recommendation;
+      if (rec?.composed?.stage == null) {
+        markTestSkipped('no same-day stage Circle re-served');
+        return;
+      }
+      expect(rec!.circleId, id);
+      await act(c, 'Start');
+      await act(c, 'Close');
+      await restart(times: 2);
+      expect(await creditsOnDisk(id), 1);
+      expect(DurableState(await h.disk.stored()).always(), isEmpty);
+    });
+
+    test('Delete while the paused-Start record is being written: the Start '
+        'and the Delete both resolve; no paused-Start fact survives', () async {
+      final (c, id) = await offered();
+      await act(c, 'Pause');
+      final held = h.disk.hold(circlePlansKey);
+      today(c).start();
+      await held.reached;
+      final del = c.read(circleHistoryDeletionProvider).delete();
+      held.release();
+      await R8Harness.settle();
+      Object? err;
+      try {
+        await del;
+      } catch (e) {
+        err = e;
+      }
+      await R8Harness.settle();
+      final plan = await planOnDisk();
+      // ignore: avoid_print
+      print('DIAG delete err=$err status=${c.read(recommendationProvider).status}'
+          ' swp=${plan['startedWhilePaused']} '
+          'journal=${(await h.disk.stored())[circleJournalKey]}');
+      expect(plan.containsKey('startedWhilePaused'), isFalse);
+      expect(DurableState(await h.disk.stored()).always(), isEmpty);
+      await restart();
+      expect(await creditsOnDisk(id), 0);
+    });
+  });
+
+  group('Premium × paused Start', () {
+    test('lapse verified, Pause, Start, Close; resubscribe; Resume; Leave; '
+        'Again; restart: never credited', () async {
+      final (c, id) = await offered();
+      (c.read(entitlementStatusProvider.notifier) as SettableEntitlement)
+          .set(EntitlementStatus.inactive);
+      await R8Harness.settle();
+      await act(c, 'Pause');
+      await act(c, 'Start');
+      await act(c, 'Close');
+      (c.read(entitlementStatusProvider.notifier) as SettableEntitlement)
+          .set(EntitlementStatus.active);
+      await R8Harness.settle();
+      await act(c, 'Resume');
+      await act(c, 'Leave');
+      await act(c, 'Again');
+      await restart(times: 2);
+      expect(await creditsOnDisk(id), 0);
+    });
+  });
+}

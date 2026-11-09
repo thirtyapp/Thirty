@@ -1,0 +1,95 @@
+FAIL | Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A1 seq1: Pause → Start → Close → Resume → Leave → Again → restart ×2: never credited
+     -> Expected: empty
+        Expected: empty
+        Actual: ['getting_going#1']
+FAIL | Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A2 seq2: Pause → Start → Resume → Close → Leave → Again → restart ×2: never credited
+     -> Expected: empty
+        Expected: empty
+        Actual: ['getting_going#1']
+FAIL | Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A4 left Plan started again: Pause → Start → Close → Resume → Leave → StartPlan → restart ×2: never credited
+     -> Expected: empty
+        Expected: empty
+        Actual: ['getting_going#1']
+FAIL | Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A5 I1-style Go through again: Pause → Start → Close → Resume → Leave → AgainByInsight → restart ×2: never credited
+     -> Expected: empty
+        Expected: empty
+        Actual: ['getting_going#1']
+FAIL | Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A6 later lifecycle changes: Pause → Start → Close → Resume → Leave → Again → Pause → Resume → Leave → Again → restart ×2: never credited
+     -> Expected: empty
+        Expected: empty
+        Actual: ['getting_going#1']
+FAIL | Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A3 seq1 then the next day's catch-up: never credited
+     -> Expected: empty
+        Expected: empty
+        Actual: ['getting_going#1']
+FAIL | Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A7 Premium lapse verified at Start, then resubscribed: never credited
+     -> Expected: empty
+        Expected: empty
+        Actual: ['getting_going#1']
+PASS | Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A-ctl1 control: Start → Close → Leave → Again (valid Start): credited once, on the first cycle
+PASS | Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A-ctl2 control: Start → Close requested → Leave while the Close is saving → Again: credited once, on the left cycle
+PASS | Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A-ctl3 control: Pause → Start → Close → Resume → Leave, no new cycle: never credited
+FAIL | Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B1 (N01-A) the paused-Start prerequisite lands and the process stops before the Start: a later valid active Start is credited once
+     -> Expected: ['getting_going#1']
+        Expected: ['getting_going#1']
+        Actual: []
+        Which: at location [0] is [] which shorter than expected
+FAIL | Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B2 (AUD-R83-3) the prerequisite lands, the Start's own day-keys save fails: after a restart, a later valid active Start is credited once
+     -> Expected: ['getting_going#1']
+        Expected: ['getting_going#1']
+        Actual: []
+        Which: at location [0] is [] which shorter than expected
+PASS | Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B3 control: the prerequisite lands but its answer is lost (the Start is refused): a later valid active Start is credited once
+FAIL | Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B4 (N01-B) a pending paused Start is cancelled by a same-day rebuild; its prerequisite then lands: a later valid active Start is credited once
+     -> Expected: ['getting_going#1']
+        Expected: ['getting_going#1']
+        Actual: []
+        Which: at location [0] is [] which shorter than expected
+PASS | Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B5 (N01-C) Resume tapped while the paused Start's prerequisite is being written, which lands: the Start became valid on the Plan as durably paused — never credited
+PASS | Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B6 control: an abandoned prerequisite, then a genuine paused Start on the still-paused Plan, Close, Resume: never credited
+PASS | Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B-ctl Pause → Start → Close → Resume → restart ×2: never credited
+PASS | Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B-ctl Start → Pause → Close → restart ×2: credited once
+PASS | Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B-ctl Start → Pause → Resume → Close → restart ×2: credited once
+PASS | Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B-ctl Delete while the paused-Start prerequisite is being written: no paused-Start fact survives; nothing credited
+FAIL | Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C1 (N02) Astra — first prerequisite refused
+     -> Expected: not RecommendationStatus:<RecommendationStatus.started>
+        Expected: not RecommendationStatus:<RecommendationStatus.started>
+        Actual: RecommendationStatus:<RecommendationStatus.started>
+FAIL | Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C1b (N02) Astra — first prerequisite lands
+     -> Expected: not RecommendationStatus:<RecommendationStatus.started>
+        Expected: not RecommendationStatus:<RecommendationStatus.started>
+        Actual: RecommendationStatus:<RecommendationStatus.started>
+FAIL | Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C1c (N02) Astra — first prerequisite lands, answer lost
+     -> Expected: not RecommendationStatus:<RecommendationStatus.started>
+        Expected: not RecommendationStatus:<RecommendationStatus.started>
+        Actual: RecommendationStatus:<RecommendationStatus.started>
+FAIL | Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C2 (AUD-R83-2) Resume refused by the store while Start is tapped: Close, Resume, restarts — never credited
+     -> Expected: empty
+        Expected: empty
+        Actual: ['getting_going#1']
+PASS | Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C2b control (AUD-R83-2) the held Resume lands: the Start is on an active Plan — credited once
+FAIL | Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C2c (AUD-R83-2) the held Resume lands but its answer is lost (reported refused): Close, Resume, restarts — never credited
+     -> Expected: empty
+        Expected: empty
+        Actual: ['getting_going#1']
+FAIL | Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C3 a Pause that lands and a Resume the store refuses, both pending at the Start tap: never credited
+     -> Expected: empty
+        Expected: empty
+        Actual: ['getting_going#1']
+PASS | Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C4 control: nothing pending, the Plan active — the Start is valid at once (decision B fast path) and credited once
+FAIL | Group D — Astra R83-N03 and Insight idempotence D1 (R83-N03) I2 applied, mark refused; gentler off by hand and the Plan paused; I1 carries the Plan on seven days later; the original I2 retried: gentler is never turned on again
+     -> Expected: null
+        Expected: null
+        Actual: '2026-11-06'
+PASS | Group D — Astra R83-N03 and Insight idempotence D-ctl1 control: I2 never applied; I1 carries the Plan on later; I2 applied then: gentler turned on, I2 marked that day
+PASS | Group D — Astra R83-N03 and Insight idempotence D-ctl2 control: I2 applied, mark refused, no other Insight: the retry records the mark with the original date and changes nothing
+FAIL | Group D — Astra R83-N03 and Insight idempotence D2 probe (Contract B, manual reversal of I3): I3 applied, mark refused; the user puts the part back; I3 retried: the part is never left out again
+     -> Expected: not contains ElementId:<ElementId.openWindow>
+        Expected: not contains ElementId:<ElementId.openWindow>
+        Actual: Set:[ElementId:ElementId.openWindow]
+PASS | Group D — Astra R83-N03 and Insight idempotence Claude H1 — I3 around Delete's final Preferences pass H1 apply-then-delete: no Insight id survives a Delete reported done
+PASS | Group D — Astra R83-N03 and Insight idempotence Claude H1 — I3 around Delete's final Preferences pass H1 apply-then-delete, Preferences write held: no Insight id survives a Delete reported done
+PASS | Group D — Astra R83-N03 and Insight idempotence Claude H1 — I3 around Delete's final Preferences pass H1 delete-then-apply: no Insight id survives a Delete reported done
+PASS | Group D — Astra R83-N03 and Insight idempotence Claude H1 — I3 around Delete's final Preferences pass H1 delete-then-apply, Preferences write held: no Insight id survives a Delete reported done
+PASS | Related observation — the paused-Start record's stored form O1 an empty or non-date-key record value is read as what?
+COUNTS {'FAIL': 18, 'PASS': 19} DONE [False]

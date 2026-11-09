@@ -350,6 +350,17 @@ void main() {
               .read(insightsProvider.notifier)
               .apply(shown.id);
           await R8Harness.settle();
+          // R8.3.2 (founder scope decision B1): a Preferences write that
+          // threw may be on disk all the same, so an I3 is never made again
+          // after it — and never claimed applied. Returning `false` is a
+          // refusal, and the retry applies it.
+          if (family == InsightFamily.skippedPart &&
+              fault == DiskFault.throws) {
+            expect(retried, isNot(InsightActionResult.done));
+            expect(await targetOnDisk(family), isFalse);
+            expect(await appliedOnDisk(shown.id), isFalse);
+            return;
+          }
           expect(retried, InsightActionResult.done);
           expect(await targetOnDisk(family), isTrue);
           expect(await appliedOnDisk(shown.id), isTrue);
@@ -363,7 +374,11 @@ void main() {
         final c = h.open();
         final shown = c.read(insightsProvider.notifier).assess().added.single;
         await R8Harness.settle();
-        h.disk.fail(insightsKey, DiskFault.returnsFalse);
+        // R8.3.2 (founder scope decisions B1/B2): an I3 or I4 first records its
+        // attempt, so the fault is put on the write that carries the applied
+        // mark — the same scenario. For I1 and I2 that is still the first
+        // Insights write.
+        h.disk.failWhere(insightsKey, (v) => v.contains('"appliedOn"'));
         await c.read(insightsProvider.notifier).apply(shown.id);
         await R8Harness.settle();
         expect(await targetOnDisk(family), isTrue);

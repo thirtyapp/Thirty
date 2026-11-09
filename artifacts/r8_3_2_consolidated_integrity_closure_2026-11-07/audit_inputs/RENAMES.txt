@@ -1,0 +1,4 @@
+./claude_original_scratchpad/zz_audit/appb/astra_appendix_b_test.dart.txt <- originally ./claude_original_scratchpad/zz_audit/appb/astra_appendix_b_test.dart (bytes unchanged; renamed so flutter analyze skips it)
+./claude_original_scratchpad/zz_audit/audit_r82_adversarial_test.dart.txt <- originally ./claude_original_scratchpad/zz_audit/audit_r82_adversarial_test.dart (bytes unchanged; renamed so flutter analyze skips it)
+./claude_original_scratchpad/zz_audit/audit_r82_order_test.dart.txt <- originally ./claude_original_scratchpad/zz_audit/audit_r82_order_test.dart (bytes unchanged; renamed so flutter analyze skips it)
+./claude_original_scratchpad/zz_audit/audit_r83_delta_test.dart.txt <- originally ./claude_original_scratchpad/zz_audit/audit_r83_delta_test.dart (bytes unchanged; renamed so flutter analyze skips it)

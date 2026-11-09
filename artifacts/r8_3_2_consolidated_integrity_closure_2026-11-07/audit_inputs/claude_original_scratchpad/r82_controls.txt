@@ -1,0 +1,317 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 99.0.0 (111.0.0 available)
+  analyzer 12.1.0 (14.7.0 available)
+  app_links 7.2.1 (7.2.2 available)
+  app_links_linux 1.0.3 (1.0.4 available)
+  app_links_web 1.0.4 (1.0.5 available)
+  clock 1.1.2 (1.1.3 available)
+  coverage 1.15.1 (1.16.0 available)
+  crypto 3.0.7 (3.0.8 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  equatable 2.1.0 (3.0.0 available)
+  flutter_local_notifications 22.3.0 (23.0.0 available)
+  flutter_local_notifications_linux 8.0.1 (9.0.0 available)
+  flutter_local_notifications_platform_interface 12.2.0 (13.0.0 available)
+  flutter_local_notifications_web 1.0.0 (2.0.0 available)
+  flutter_local_notifications_windows 3.1.1 (4.0.0 available)
+  flutter_riverpod 3.4.2 (3.5.0 available)
+  flutter_svg 2.3.0 (2.3.2 available)
+  flutter_timezone 5.1.0 (5.1.1 available)
+  frontend_server_client 4.0.0 (4.2.0 available)
+  functions_client 2.6.4 (2.7.1 available)
+  glob 2.1.3 (2.2.0 available)
+  go_router 17.3.0 (18.1.3 available)
+  gotrue 2.26.0 (2.27.3 available)
+  http_multi_server 3.2.2 (3.2.3 available)
+  io 1.0.5 (1.1.0 available)
+  listen 1.0.0-beta.4 (1.0.1 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.0 (1.19.0 available)
+  mime 2.0.0 (2.1.0 available)
+  package_config 2.2.0 (3.0.0 available)
+  passkeys_platform_interface 2.9.0 (2.11.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pool 1.5.2 (1.5.3 available)
+  postgrest 2.8.0 (2.9.1 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  purchases_flutter 10.11.0 (11.0.1 available)
+  realtime_client 2.11.0 (2.13.2 available)
+  riverpod 3.4.2 (3.5.0 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.5.4 available)
+  shared_preferences_foundation 2.5.6 (2.6.1 available)
+  shelf 1.4.2 (1.4.3 available)
+  shelf_static 1.1.3 (1.2.0 available)
+  source_maps 0.10.13 (0.10.14 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  storage_client 2.6.0 (2.8.1 available)
+  supabase 2.14.0 (2.16.5 available)
+  supabase_flutter 2.16.0 (2.18.3 available)
+  test 1.31.0 (1.33.0 available)
+  test_api 0.7.11 (0.7.15 available)
+  test_core 0.6.17 (0.6.21 available)
+  timezone 0.11.1 (0.11.2 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_graphics 1.2.3 (1.2.6 available)
+  vector_graphics_compiler 1.3.0 (1.3.4 available)
+  vector_math 2.2.0 (2.4.4 available)
+  vm_service 15.2.0 (15.4.0 available)
+  web 1.1.1 (1.1.2 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+68 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart
+00:00 +0: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N01 I1 retry repairs only after manual pause
+00:00 +0 -1: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N01 I1 retry repairs only after manual pause [E]
+  Expected: '{"lifecycle":"paused","cycles":[{"id":"making_room#1","number":1,"startedOn":"2026-10-30","cursor":1,"records":[]}],"appliedInsight":{"insightId":"insight.plan_for_need@2026-10-30#insight.plan_for_need:clearerHead","cycleId":"making_room#1","on":"2026-10-30"}}'
+    Actual: '{"lifecycle":"active","cycles":[{"id":"making_room#1","number":1,"startedOn":"2026-10-30","cursor":1,"records":[]}],"appliedInsight":{"insightId":"insight.plan_for_need@2026-10-30#insight.plan_for_need:clearerHead","cycleId":"making_room#1","on":"2026-10-30"}}'
+     Which: is different.
+            Expected: ... fecycle":"paused","c ...
+              Actual: ... fecycle":"active","c ...
+                                    ^
+             Differ at offset 14
+  marker repair must not resume or create another cycle
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test\zz_audit\appb\astra_appendix_b_test.dart 180:7  main.<fn>
+  
+00:00 +0 -1: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N01 I1 retry repairs only after manual leave
+00:00 +0 -2: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N01 I1 retry repairs only after manual leave [E]
+  Expected: '{"lifecycle":"left","cycles":[{"id":"making_room#1","number":1,"startedOn":"2026-10-30","cursor":1,"records":[],"endedOn":"2026-10-30","end":"left"}],"appliedInsight":{"insightId":"insight.plan_for_need@2026-10-30#insight.plan_for_need:clearerHead","cycleId":"making_room#1","on":"2026-10-30"}}'
+    Actual: '{"lifecycle":"active","cycles":[{"id":"making_room#1","number":1,"startedOn":"2026-10-30","cursor":1,"records":[],"endedOn":"2026-10-30","end":"left"},{"id":"making_room#2","number":2,"startedOn":"2026-10-30","cursor":1,"records":[]}],"appliedInsight":{"insightId":"insight.plan_for_need@2026-10-30#insight.plan_for_need:clearerHead","cycleId":"making_room#2","on":"2026-10-30"}}'
+     Which: is different.
+            Expected: ... fecycle":"left","cyc ...
+              Actual: ... fecycle":"active","c ...
+                                    ^
+             Differ at offset 14
+  marker repair must not resume or create another cycle
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test\zz_audit\appb\astra_appendix_b_test.dart 180:7  main.<fn>
+  
+00:00 +0 -2: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N01 I2 retry preserves a later manual stopGentler
+00:00 +0 -3: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N01 I2 retry preserves a later manual stopGentler [E]
+  Expected: '{"lifecycle":"active","cycles":[{"id":"getting_going#1","number":1,"startedOn":"2026-10-01","cursor":1,"records":[]}],"appliedInsight":{"insightId":"insight.plan_pacing@2026-10-30#insight.plan_pacing:getting_going","cycleId":"getting_going#1","on":"2026-10-30"}}'
+    Actual: '{"lifecycle":"active","cycles":[{"id":"getting_going#1","number":1,"startedOn":"2026-10-01","cursor":1,"records":[],"gentlerSince":"2026-10-30"}],"appliedInsight":{"insightId":"insight.plan_pacing@2026-10-30#insight.plan_pacing:getting_going","cycleId":"getting_going#1","on":"2026-10-30"}}'
+     Which: is different.
+            Expected: ... ecords":[]}],"applie ...
+              Actual: ... ecords":[],"gentlerS ...
+                                    ^
+             Differ at offset 115
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test\zz_audit\appb\astra_appendix_b_test.dart 203:5  main.<fn>
+  
+00:00 +0 -3: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N02 queued manual I3 target is never claimed by Insight
+00:00 +0 -4: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N02 queued manual I3 target is never claimed by Insight [E]
+  Expected: not InsightActionResult:<InsightActionResult.done>
+    Actual: InsightActionResult:<InsightActionResult.done>
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test\zz_audit\appb\astra_appendix_b_test.dart 227:5  main.<fn>
+  
+00:00 +0 -4: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N03 decoded expiry true must serialize a later false
+00:00 +0 -5: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N03 decoded expiry true must serialize a later false [E]
+  Expected: false
+    Actual: <true>
+  serialized confirmed value must equal model value
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test\zz_audit\appb\astra_appendix_b_test.dart 242:5  main.<fn>
+  
+00:00 +0 -5: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N04 valid AppliedInsight preserves nested extension fields
+00:00 +0 -6: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N04 valid AppliedInsight preserves nested extension fields [E]
+  Expected: {
+              'insightId': 'I1@example',
+              'cycleId': 'making_room#1',
+              'on': '2026-10-30',
+              'futureProvenance': {'reason': 'retain exactly'}
+            }
+    Actual: {'insightId': 'I1@example', 'cycleId': 'making_room#1', 'on': '2026-10-30'}
+     Which: has different length and is missing map key 'futureProvenance'
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test\zz_audit\appb\astra_appendix_b_test.dart 253:5  main.<fn>
+  
+00:00 +0 -6: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N05 delayed Start must revalidate its local day
+00:00 +0 -7: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_adversarial_test.dart: AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source domain: a served record read from disk with startedAfterExpiry true, re-noted as started under verified Premium, still writes true
+00:00 +0 -7: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N05 delayed Start must revalidate its local day [E]
+  Expected: not RecommendationStatus:<RecommendationStatus.started>
+    Actual: RecommendationStatus:<RecommendationStatus.started>
+  yesterday offer was still unstarted when midnight passed
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test\zz_audit\appb\astra_appendix_b_test.dart 271:5  main.<fn>
+  
+00:00 +0 -8: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_adversarial_test.dart: AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source domain: a served record read from disk with startedAfterExpiry true, re-noted as started under verified Premium, still writes true [E]
+  Expected: true
+    Actual: <false>
+  on disk the record must say the same as in memory
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\zz_audit\audit_r82_adversarial_test.dart 95:7  main.<fn>.<fn>
+  
+00:00 +0 -8: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_adversarial_test.dart: AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source end to end: Start after verified expiry, process stops after the Plans note lands; resubscribe, Start under Premium; Premium lapses and the app restarts before Close → credit expected (founder rule: served and started under Premium)
+AUD-N1 memory creditsServed=true disk lastServed={circleId: 2026-10-12, stage: {planId: getting_going, cycleId: getting_going#1, stageNumber: 1, stageId: getting_going.1}, startedAfterExpiry: true}
+AUD-N1 credits on disk after Close: 0
+00:00 +0 -9: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_adversarial_test.dart: AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source end to end: Start after verified expiry, process stops after the Plans note lands; resubscribe, Start under Premium; Premium lapses and the app restarts before Close → credit expected (founder rule: served and started under Premium) [E]
+  Expected: <1>
+    Actual: <0>
+  started under verified Premium, lapsed before Close
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test\zz_audit\audit_r82_adversarial_test.dart 150:7  main.<fn>.<fn>
+  
+00:00 +0 -9: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_adversarial_test.dart: AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source control: same sequence without the final restart is credited
+AUD-N1 control credits: 1
+00:00 +1 -9: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_adversarial_test.dart: AUD-N2 lifecycle-order instants survive Delete Start, Delete history, same-day stage Circle re-served, Plan paused before its Start: the deleted session's Start instant is written to the Plans
+AUD-N2 re-served id=2026-10-12 stage=getting_going.1
+AUD-N2 lastServed after Pause: {circleId: 2026-10-12, stage: {planId: getting_going, cycleId: getting_going#1, stageNumber: 1, stageId: getting_going.1}, startedBeforePause: 2026-10-12T07:00:00.000Z} ; deleted start 2026-10-12T07:00:00.000Z
+00:00 +1 -10: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_order_test.dart: AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+00:00 +1 -10: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_adversarial_test.dart: AUD-N2 lifecycle-order instants survive Delete Start, Delete history, same-day stage Circle re-served, Plan paused before its Start: the deleted session's Start instant is written to the Plans [E]
+  Expected: null
+    Actual: '2026-10-12T07:00:00.000Z'
+  a Start instant of a deleted session written after Delete
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test\zz_audit\audit_r82_adversarial_test.dart 217:7  main.<fn>.<fn>
+  
+00:00 +1 -10: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_adversarial_test.dart: AUD-A2-indep (throws): one transient served-stage failure at choice → offer taken back and user told; next choice runs, closes, reaches History and is credited, also after restarts
+AUD-A2 after fault: rec=null told={2026-10-12: false} storeFailures=1 disk day=null
+00:00 +2 -10: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_order_test.dart: AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+00:00 +2 -10: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_adversarial_test.dart: AUD-A2-indep (returnsFalse): one transient served-stage failure at choice → offer taken back and user told; next choice runs, closes, reaches History and is credited, also after restarts
+AUD-A2 after fault: rec=null told={2026-10-12: false} storeFailures=1 disk day=null
+00:00 +3 -10: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_order_test.dart: AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+00:00 +3 -10: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_adversarial_test.dart: AUD-N4 waiting Start across a Today rebuild (app resume) Start waits for its Plans record; the app is resumed meanwhile (nowProvider invalidated); the record lands: is the Start carried out, or refused with a notice?
+AUD-N4 status=RecommendationStatus.started disk status=started notices=0 lastServed={circleId: 2026-10-12, stage: {planId: getting_going, cycleId: getting_going#1, stageNumber: 1, stageId: getting_going.1}, startedAfterExpiry: true}
+00:00 +4 -10: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_order_test.dart: AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+00:00 +4 -10: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_adversarial_test.dart: AUD-N3 Delete begun while a failing Plan change is in flight the failure is reported, yet Delete writes the change to disk
+AUD-N3 failures count=1 last=UserStore.circlePlans unsaved={UserStore.circlePlans} disk lifecycle=paused shown=PlanLifecycle.paused
+00:00 +4 -11: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_order_test.dart: AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+00:00 +4 -11: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_adversarial_test.dart: AUD-N3 Delete begun while a failing Plan change is in flight the failure is reported, yet Delete writes the change to disk [E]
+  Expected: 'active'
+    Actual: 'paused'
+     Which: is different.
+            Expected: active
+              Actual: paused
+                      ^
+             Differ at offset 0
+  a change reported as not saved must not be on disk
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 473:18   expect
+  test\zz_audit\audit_r82_adversarial_test.dart 322:7  main.<fn>.<fn>
+  
+00:00 +4 -11: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r82_order_test.dart: AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+AUD-O3 lifecycle=paused records=0 lastServed={circleId: 2026-10-12, stage: {planId: getting_going, cycleId: getting_going#1, stageNumber: 1, stageId: getting_going.1}} history closed=closed id=2026-10-12
+00:00 +5 -11: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-1: the paused-Start fact is lost by a new cycle Pause → Start → Close → Resume → Leave → Again → restart: never credited
+DIAG in-session credits=1 startedWhilePaused=null lastServed=null lifecycle=active
+00:00 +5 -12: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-1: the paused-Start fact is lost by a new cycle Pause → Start → Close → Resume → Leave → Again → restart: never credited [E]
+  Expected: <0>
+    Actual: <1>
+  in the session
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\zz_audit\audit_r83_delta_test.dart 126:9       main.<fn>.<fn>
+  
+00:00 +5 -12: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-1: the paused-Start fact is lost by a new cycle Pause → Start → Resume → Close → Leave → Again → restart: never credited
+DIAG in-session credits=1 startedWhilePaused=null lastServed=null lifecycle=active
+00:00 +5 -13: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-1: the paused-Start fact is lost by a new cycle Pause → Start → Resume → Close → Leave → Again → restart: never credited [E]
+  Expected: <0>
+    Actual: <1>
+  in the session
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\zz_audit\audit_r83_delta_test.dart 126:9       main.<fn>.<fn>
+  
+00:00 +5 -13: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-1: the paused-Start fact is lost by a new cycle next day instead of a restart (overwrite catch-up): never credited
+00:00 +5 -14: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-1: the paused-Start fact is lost by a new cycle next day instead of a restart (overwrite catch-up): never credited [E]
+  Expected: <0>
+    Actual: <1>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\zz_audit\audit_r83_delta_test.dart 143:7       main.<fn>.<fn>
+  
+00:00 +5 -14: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-1: the paused-Start fact is lost by a new cycle control — same without Again: the slot holds, never credited
+00:00 +5 -15: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-1: the paused-Start fact is lost by a new cycle control — same without Again: the slot holds, never credited [E]
+  Expected: <0>
+    Actual: <1>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\zz_audit\audit_r83_delta_test.dart 161:7       main.<fn>.<fn>
+  
+00:00 +5 -15: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-1: the paused-Start fact is lost by a new cycle control — Start → Close → Leave → Again (valid): credit once
+00:00 +6 -15: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-2: eligibility judged from an optimistic Resume that the store refuses Pause (saved); Resume refused by the store while Start is tapped; Close; Resume (saved); restarts: never credited
+DIAG status during hold=RecommendationStatus.started after refusal: plan shown=PlanLifecycle.paused disk=paused swp=null status=RecommendationStatus.started failures=Instance of 'StoreSaveState'
+DIAG credits after Resume+restarts=1
+00:00 +6 -16: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-2: eligibility judged from an optimistic Resume that the store refuses Pause (saved); Resume refused by the store while Start is tapped; Close; Resume (saved); restarts: never credited [E]
+  Expected: <0>
+    Actual: <1>
+  the valid Start was made while the Plan was durably paused
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\zz_audit\audit_r83_delta_test.dart 204:7       main.<fn>.<fn>
+  
+00:00 +6 -16: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-3: a recorded paused Start that never became the Start Pause; Start whose paused-Start record lands but its answer is lost (refused); restart; Resume; Start; Close: credited once
+DIAG status=RecommendationStatus.started swp on disk=null
+00:00 +6 -17: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-3: a recorded paused Start that never became the Start Pause; Start whose paused-Start record lands but its answer is lost (refused); restart; Resume; Start; Close: credited once [E]
+  Expected: RecommendationStatus:<RecommendationStatus.notStarted>
+    Actual: RecommendationStatus:<RecommendationStatus.started>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\zz_audit\audit_r83_delta_test.dart 220:7       main.<fn>.<fn>
+  
+00:00 +6 -17: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: AUD-R83-3: a recorded paused Start that never became the Start Pause; Start whose own day-keys save fails after the paused-Start record landed; restart; Resume; Start; Close: credited once
+DIAG status=RecommendationStatus.started disk status=notStarted swp on disk=null
+DIAG restored=RecommendationStatus.notStarted
+DIAG credits=1
+00:01 +7 -17: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: Delete × paused Start Pause, Start, Close, Delete, Resume, same-day stage re-served, Start, Close: credited once (slot removed by Delete)
+00:01 +8 -17: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: Delete × paused Start Delete while the paused-Start record is being written: the Start and the Delete both resolve; no paused-Start fact survives
+00:31 +8 -18: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: Delete × paused Start Delete while the paused-Start record is being written: the Start and the Delete both resolve; no paused-Start fact survives [E]
+  TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts
+  dart:isolate  _RawReceivePort._handleMessage
+  
+00:31 +8 -18: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: Premium × paused Start lapse verified, Pause, Start, Close; resubscribe; Resume; Leave; Again; restart: never credited
+00:31 +8 -19: C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/audit_r83_delta_test.dart: Premium × paused Start lapse verified, Pause, Start, Close; resubscribe; Resume; Leave; Again; restart: never credited [E]
+  Expected: <0>
+    Actual: <1>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\zz_audit\audit_r83_delta_test.dart 339:7       main.<fn>.<fn>
+  
+00:31 +8 -19: Some tests failed.
+
+Failing tests:
+  C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N01 I1 retry repairs only after manual leave
+  C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N01 I1 retry repairs only after manual pause
+  C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N01 I2 retry preserves a later manual stopGentler
+  C:/Users/thoma/AppData/Local/Temp/claude/b7fd4c17e92f619e/5091d12d-6348-4a59-9cab-fdc532a1c782/scratchpad/r82/test/zz_audit/appb/astra_appendix_b_test.dart: R82-N02 queued manual I3 target is never claimed by Insight
+  ... and 15 more

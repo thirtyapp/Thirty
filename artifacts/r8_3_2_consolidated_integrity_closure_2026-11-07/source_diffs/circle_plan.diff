@@ -1,0 +1,236 @@
+diff --git a/lib/features/plans/domain/circle_plan.dart b/lib/features/plans/domain/circle_plan.dart
+index aa2d21f..d9ebeb9 100644
+--- a/lib/features/plans/domain/circle_plan.dart
++++ b/lib/features/plans/domain/circle_plan.dart
+@@ -511,7 +511,11 @@ class PlanProgress {
+   /// on the Plan rather than on [lastServed], which the next serve
+   /// replaces; one is enough, since only one day's Circle is ever still
+   /// to be caught up. Stage evidence: Delete Circle history removes it.
+-  final String? startedWhilePaused;
++  ///
++  /// R8.3.2 (Astra R83-N01, Claude AUD-R83-3): it names that Start by its
++  /// instant, so a record written for a Start that then never happened
++  /// excludes nothing; it is carried into a new cycle (Claude AUD-R83-1).
++  final PausedStart? startedWhilePaused;
+ 
+   /// Fields this build doesn't know, and known fields whose stored value it
+   /// can't read, exactly as stored (R8.1 RL-3): written back until THIRTY
+@@ -546,7 +550,8 @@ class PlanProgress {
+     String? lastAdvancedCircleId,
+     ServedStageCircle? lastServed,
+     AppliedInsight? appliedInsight,
+-    String? startedWhilePaused,
++    PausedStart? startedWhilePaused,
++    bool clearStartedWhilePaused = false,
+   }) => PlanProgress(
+     planId: planId,
+     lifecycle: lifecycle ?? this.lifecycle,
+@@ -554,7 +559,9 @@ class PlanProgress {
+     lastAdvancedCircleId: lastAdvancedCircleId ?? this.lastAdvancedCircleId,
+     lastServed: lastServed ?? this.lastServed,
+     appliedInsight: appliedInsight ?? this.appliedInsight,
+-    startedWhilePaused: startedWhilePaused ?? this.startedWhilePaused,
++    startedWhilePaused: clearStartedWhilePaused
++        ? null
++        : startedWhilePaused ?? this.startedWhilePaused,
+     extra: {
+       for (final MapEntry(:key, :value) in extra.entries)
+         if (!(key == 'lastServed' && lastServed != null) &&
+@@ -580,7 +587,7 @@ class PlanProgress {
+     'lastAdvancedCircleId': ?lastAdvancedCircleId,
+     'lastServed': ?lastServed?.toJson(),
+     'appliedInsight': ?appliedInsight?.toJson(),
+-    'startedWhilePaused': ?startedWhilePaused,
++    'startedWhilePaused': ?startedWhilePaused?.toJson(),
+   };
+ 
+   static PlanProgress? fromJson(String planId, Object? raw) {
+@@ -605,10 +612,11 @@ class PlanProgress {
+     final last = raw['lastAdvancedCircleId'];
+     final served = ServedStageCircle.fromJson(raw['lastServed']);
+     final insight = AppliedInsight.fromJson(raw['appliedInsight']);
+-    // R8.3.1: it decides credit, so present but not text makes the whole
+-    // Plan unreadable — kept as stored, never read as absent.
+-    final pausedStart = raw['startedWhilePaused'];
+-    if (pausedStart != null && pausedStart is! String) return null;
++    // R8.3.1: it decides credit, so present but not readable makes the
++    // whole Plan unreadable — kept as stored, never read as absent.
++    final rawPausedStart = raw['startedWhilePaused'];
++    final pausedStart = PausedStart.fromJson(rawPausedStart);
++    if (rawPausedStart != null && pausedStart == null) return null;
+     const known = {
+       'lifecycle',
+       'cycles',
+@@ -624,7 +632,7 @@ class PlanProgress {
+       lastAdvancedCircleId: last is String ? last : null,
+       lastServed: served,
+       appliedInsight: insight,
+-      startedWhilePaused: pausedStart as String?,
++      startedWhilePaused: pausedStart,
+       extra: {
+         for (final MapEntry(:key, :value) in raw.entries)
+           if (!known.contains(key)) key: value,
+@@ -691,6 +699,67 @@ class AppliedInsight {
+   }
+ }
+ 
++/// R8.3.2 (Astra R83-N01, Claude AUD-R83-3): which Start was made while its
++/// Plan was paused ([PlanProgress.startedWhilePaused]) — the Circle and the
++/// very instant of that Start, the instant its session is then saved with.
++///
++/// Written, and confirmed, before that Start is valid (founder decision B),
++/// so a record can outlive a Start that never happened: the app stopped,
++/// the Start's own save failed, or it was cancelled. Such a record names an
++/// instant no saved session has, and excludes nothing; a later valid Start
++/// of the same Circle has an instant of its own.
++///
++/// A record written by R8.3.1 names the Circle only ([startedAt] `null`):
++/// it still excludes every Start of that Circle, as it did then.
++class PausedStart {
++  const PausedStart({required this.circleId, this.startedAt, this.extra});
++
++  final String circleId;
++
++  /// The Start's instant (UTC, ISO 8601); `null` only for an R8.3.1 record.
++  final String? startedAt;
++
++  /// The fields of a stored record this build doesn't know, written back
++  /// as stored (R8.1 RL-3).
++  final Map<String, Object?>? extra;
++
++  /// Whether this record excludes [circleId]'s Start at [at] from Plan
++  /// credit: the same Circle, and the same Start — or a Start this can't
++  /// tell apart from it (an R8.3.1 record, or no instant to compare).
++  bool excludes(String circleId, DateTime? at) =>
++      circleId == this.circleId &&
++      (startedAt == null ||
++          at == null ||
++          ServedStageCircle.sameInstant(startedAt, at));
++
++  Object toJson() => startedAt == null
++      ? circleId
++      : {...?extra, 'circleId': circleId, 'startedAt': startedAt};
++
++  /// `null` for anything that isn't a whole record: a Circle that isn't a
++  /// day, or an instant that isn't one (Astra's post-R8.3 §7 observation:
++  /// never read as an exclusion that matches nothing). The Plan is then
++  /// kept as stored.
++  static PausedStart? fromJson(Object? raw) {
++    if (raw is String) {
++      return isCanonicalDateKey(raw) ? PausedStart(circleId: raw) : null;
++    }
++    if (raw is! Map<String, Object?>) return null;
++    final circleId = raw['circleId'];
++    final at = raw['startedAt'];
++    if (circleId is! String || !isCanonicalDateKey(circleId)) return null;
++    if (at is! String || DateTime.tryParse(at) == null) return null;
++    return PausedStart(
++      circleId: circleId,
++      startedAt: at,
++      extra: {
++        for (final MapEntry(:key, :value) in raw.entries)
++          if (key != 'circleId' && key != 'startedAt') key: value,
++      },
++    );
++  }
++}
++
+ /// One stage Circle as THIRTY served it: today's Circle id and the stage it
+ /// was composed for ([PlanProgress.lastServed]).
+ class ServedStageCircle {
+@@ -979,6 +1048,10 @@ extension CirclePlanActions on CirclePlansState {
+       lastAdvancedCircleId: plan?.lastAdvancedCircleId,
+       lastServed: carried?.closedBeforeLeave != null ? carried : null,
+       appliedInsight: plan?.appliedInsight,
++      // R8.3.2 (Claude AUD-R83-1): a Start made while the Plan was paused
++      // stays excluded into the new cycle — the carried Close above can
++      // still be credited to the cycle that was left.
++      startedWhilePaused: plan?.startedWhilePaused,
+       extra: plan?.extra ?? const {},
+     );
+   }
+@@ -1145,6 +1218,10 @@ extension CirclePlanActions on CirclePlansState {
+   /// .startedWhilePaused]) is never credited — whatever the Plan's
+   /// lifecycle when this runs: at its Close, in a later lifecycle change's
+   /// fold, or in a restart's or the next day's catch-up.
++  ///
++  /// R8.3.2 (Astra R83-N01, Claude AUD-R83-3): that Start is the one
++  /// recorded — the same instant as [startedAt] ([PausedStart.excludes]); a
++  /// record of a Start that never happened excludes no later valid Start.
+   CirclePlansState recordGuided(
+     PlanStageProvenance stage, {
+     required String circleId,
+@@ -1157,7 +1234,9 @@ extension CirclePlanActions on CirclePlansState {
+     final plan = plans[stage.planId];
+     if (plan == null) return this;
+     if (plan.lastAdvancedCircleId == circleId) return this;
+-    if (plan.startedWhilePaused == circleId) return this;
++    if (plan.startedWhilePaused?.excludes(circleId, startedAt) ?? false) {
++      return this;
++    }
+     final cycle = plan.cycles.where((c) => c.id == stage.cycleId).firstOrNull;
+     if (cycle == null) return this;
+     if (cycle.records.any((r) => r.circleId == circleId)) return this;
+@@ -1291,26 +1370,55 @@ extension CirclePlanActions on CirclePlansState {
+   /// [circleId] is being validly started now. If its Plan is paused, that
+   /// Start is not eligible for Plan credit, and this says so on the Plan
+   /// ([PlanProgress.startedWhilePaused]); `this` otherwise — an active Plan,
+-  /// a Circle that isn't the one served, or one already recorded.
++  /// a Circle that isn't the one served.
++  ///
++  /// R8.3.2 (Astra R83-N01): the record names this Start by its instant
++  /// [at] — the instant its session is saved with — so it never stands for
++  /// another Start of the same Circle ([PausedStart]).
++  ///
++  /// A Circle is validly started once. A record of [circleId] already on
++  /// the Plan when its Start is being made is therefore one of an earlier
++  /// attempt that never became valid (Astra R83-N01, Claude AUD-R83-3): it
++  /// is replaced — or, for a Plan not paused, removed — so it never stands
++  /// for this Start, even at the same instant.
+   CirclePlansState noteStartedWhilePaused(
+     PlanStageProvenance stage, {
+     required String circleId,
++    required DateTime at,
+   }) {
+     final plan = plans[stage.planId];
+     final served = plan?.lastServed;
+-    if (plan == null ||
+-        plan.lifecycle != PlanLifecycle.paused ||
++    if (plan == null) return this;
++    if (plan.lifecycle != PlanLifecycle.paused ||
+         served == null ||
+-        !served.matches(stage, circleId: circleId) ||
+-        plan.startedWhilePaused == circleId) {
+-      return this;
++        !served.matches(stage, circleId: circleId)) {
++      if (plan.startedWhilePaused?.circleId != circleId) return this;
++      return _with(
++        plan.copyWith(clearStartedWhilePaused: true),
++        activePlanId: activePlanId,
++      );
+     }
+     return _with(
+-      plan.copyWith(startedWhilePaused: circleId),
++      plan.copyWith(
++        startedWhilePaused: PausedStart(
++          circleId: circleId,
++          startedAt: ServedStageCircle.instant(at),
++        ),
++      ),
+       activePlanId: activePlanId,
+     );
+   }
+ 
++  /// Whether [planId] holds exactly the record of a Start made while it
++  /// was paused that [other] holds ([noteStartedWhilePaused]) — or, like
++  /// it, none.
++  bool samePausedStart(String planId, CirclePlansState other) {
++    final mine = plans[planId]?.startedWhilePaused;
++    final theirs = other.plans[planId]?.startedWhilePaused;
++    return mine?.circleId == theirs?.circleId &&
++        mine?.startedAt == theirs?.startedAt;
++  }
++
+   /// R8.2 Plan lifecycle policy: [planId]'s served Circle [circleId] with
+   /// the order of the user's own actions recorded on it — started before
+   /// its Plan was paused ([startedBeforePause]), asked to close before the

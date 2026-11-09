@@ -205,6 +205,14 @@ void main() {
       await act(c, 'Pause');
       held.release();
       await R8Harness.settle();
+      // R8.3.2 (founder decision on N01-C, 2026-11-07): a lifecycle change
+      // while a Start is unresolved cancels that Start; the user taps
+      // Start again. Before it, the pending Start went ahead.
+      expect(
+        c.read(recommendationProvider).status,
+        RecommendationStatus.notStarted,
+      );
+      await act(c, 'Start');
       expect(
         c.read(recommendationProvider).status,
         RecommendationStatus.started,

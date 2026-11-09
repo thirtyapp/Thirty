@@ -1,0 +1,13 @@
+1c1,2
+< """(R8.3.2, 2026-11-07: copied unchanged from artifacts/r8_3_1_founder_lifecycle_correction_2026-11-07/regression/run_batches.py except OUT.)
+---
+> """(R8.3.2 final founder scope, 2026-11-07: copied unchanged from artifacts/r8_3_2_consolidated_integrity_closure_2026-11-07/regression/run_batches.py except OUT.)
+> (R8.3.2, 2026-11-07: copied unchanged from artifacts/r8_3_1_founder_lifecycle_correction_2026-11-07/regression/run_batches.py except OUT.)
+63c64
+< OUT = os.path.join('artifacts', 'r8_3_2_consolidated_integrity_closure_2026-11-07', 'regression')
+---
+> OUT = os.path.join('artifacts', 'r8_3_2_founder_scope_closure_2026-11-07', 'regression')
+17c17
+< OUT=artifacts/r8_3_2_consolidated_integrity_closure_2026-11-07/regression
+---
+> OUT=artifacts/r8_3_2_founder_scope_closure_2026-11-07/regression

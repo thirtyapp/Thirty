@@ -348,6 +348,12 @@ enum PreferenceChange {
 
   /// Not written: the store didn't confirm it.
   notSaved,
+
+  /// R8.3.2 (founder scope decision B1): not confirmed, and the store's
+  /// call threw — the change may be on disk all the same
+  /// ([StorageWriteFailed.uncertain]). Treated as not saved, except by an
+  /// Insight, which then never makes its change again.
+  uncertain,
 }
 
 /// The start-up form of [SuggestionPreferencesNotifier
@@ -442,13 +448,15 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
           suggestionPreferencesKey,
           next.isEmpty ? null : jsonEncode(next.toJson()),
         );
-      } on StorageWriteFailed {
+      } on StorageWriteFailed catch (failure) {
         if (ref.mounted) {
           ref
               .read(storeSaveFailuresProvider.notifier)
               .record(UserStore.suggestionPreferences, notify: notify);
         }
-        return PreferenceChange.notSaved;
+        return failure.uncertain
+            ? PreferenceChange.uncertain
+            : PreferenceChange.notSaved;
       }
       _storedUnreadable = false;
       if (ref.mounted) {
@@ -470,7 +478,9 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
     bool erase = false,
   }) async => switch (await _change(change, erase: erase)) {
     PreferenceChange.changed || PreferenceChange.unchanged => true,
-    PreferenceChange.refused || PreferenceChange.notSaved => false,
+    PreferenceChange.refused ||
+    PreferenceChange.notSaved ||
+    PreferenceChange.uncertain => false,
   };
 
   /// "Don't suggest" [activity] for [need] — until the user says otherwise.
@@ -522,7 +532,9 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
   Future<bool> leaveOut(ElementId element, {String? byInsight}) async =>
       switch (await leaveOutChange(element, byInsight: byInsight)) {
         PreferenceChange.changed || PreferenceChange.unchanged => true,
-        PreferenceChange.refused || PreferenceChange.notSaved => false,
+        PreferenceChange.refused ||
+        PreferenceChange.notSaved ||
+        PreferenceChange.uncertain => false,
       };
 
   /// [leaveOut], answering what happened (R8.3, Astra R82-N02): an I3
@@ -569,6 +581,7 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
       notify: false,
     );
     if (outcome == PreferenceChange.notSaved ||
+        outcome == PreferenceChange.uncertain ||
         outcome == PreferenceChange.refused) {
       throw const StorageWriteFailed(
         suggestionPreferencesKey,

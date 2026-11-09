@@ -1,0 +1,152 @@
+THIRTY — INDEPENDENT POST-R8.3 DELTA AUDIT (Claude, 2026-11-07)
+
+Verdict: CONDITIONAL PASS. R8.3 + R8.3.1 at 9c910773 is not accepted as the technical engineering baseline as-is. It can be accepted once AUD-R83-1 is fixed, AUD-R83-2 and AUD-R83-3 are fixed or explicitly accepted by the founder, and a delta audit confirms the fix. L-1 stays OPEN as a commercial pre-release blocker. Phase E: HOLD.
+
+1. SHA AND PARENT
+- Target 9c910773d7bfd3961be75fe3c9a44db41a1b7b27, parent e744f505d5fe2cf5ec4e56d79b2a61dbe09684c8. Verified with git log, the local branch, origin/step5-billing-integration and ls-remote; all four agree.
+- Audited from `git -c core.autocrlf=false archive 9c910773`, not from any working tree.
+- 241 changed paths: 15 lib/ files, 10 test files (8 new r83 tests plus 2 support files, no existing test file changed), 2 audit inputs, and the rest artifacts.
+- Assets, pubspec.yaml, pubspec.lock, android/ and ios/ are unchanged. 180 audio files. pubspec.lock is unchanged after `pub get --offline`.
+- The three input files (Astra and Claude post-R8.2 audits, architecture review) match the SHA-256 values in the handoff.
+
+2. METHOD AND CONFIDENCE
+- Flutter 3.44.8 / Dart 3.12.2, run locally on the export. Everything I report as executed was executed.
+- My test files live only in the scratchpad export (test/zz_audit). Nothing in the repository was edited, staged or committed.
+- I ran the same files against an export of R8.2 (e744f505) to classify each failure as pre-existing or a regression.
+- Confidence: HIGH for the source and test-level results. NONE for device behaviour: every restart is R8Harness.restart(), and every fault is simulated.
+
+3. PRIOR FINDING CLOSURE
+| Finding | Status | Evidence |
+|---|---|---|
+| R82-N01 I1/I2 repeated after manual reversal | FIXED | insights_provider.dart apply(): provenance (_appliedOn) is checked first for current and stale, and _markApplied keeps the original date. Astra App. B N01 ×3: FAIL on R8.2, PASS on R8.3 (executed). |
+| R82-N02 queued manual I3 falsely attributed | FIXED | preferences idle() is awaited; leaveOutChange returns PreferenceChange, and unchanged becomes alreadyApplied. App. B: FAIL→PASS. |
+| R82-N03 = AUD-N1 expiry flag persistence | FIXED | ServedStageCircle.toJson filters _known keys from source. My AUD-N1 domain and end-to-end tests: FAIL→PASS. |
+| R82-N04 AppliedInsight extension fields | FIXED | AppliedInsight.extra is preserved. App. B: FAIL→PASS. |
+| R82-N05 pending Start after midnight | FIXED | stillStartable() re-checks the day key after each await. App. B: FAIL→PASS. |
+| AUD-N2 instants reused after Delete | FIXED | forgetStageEvidence clears _startedAt and _closeRequestedAt. My test: FAIL→PASS. |
+| AUD-N3 optimistic Plans saved by Delete | FIXED | The Delete write is computed from _durable at its queue turn, and the state is reconciled on success or error. My test: FAIL→PASS. |
+| R83-F1 credit after a Circle started while paused | PARTIAL | The stated paths are closed, but AUD-R83-1 and AUD-R83-2 below still produce retroactive credit. |
+| D1–D5 | See §6 | |
+| E-1 raw reporter validation | FIXED (tooling) | Their before/after shows 10/10 damages accepted, then 10/10 rejected. I did not rerun check_raw_evidence.py; I parsed every raw log with my own parser (§9). |
+
+4. SIX INVARIANTS
+I Durable confirmation: HOLDS for the reviewed paths. PreferenceChange gives four distinct outcomes. noteStartWhilePaused completes only when _durable holds the fact.
+II Exact attribution: HOLDS. I3 is attributed only when the Insight's own write changed something. Plans attribution uses _byInsight in the same save. One remaining risk is a hypothesis (§7 H1).
+III Idempotence and restart: HOLDS for credit at most once. VIOLATED for "never credited": the restart and next-day catch-ups re-run recordGuided after a fact they depend on has been dropped (AUD-R83-1).
+IV Revalidation after an await: HOLDS for the day and the offer. VIOLATED in one respect: Start eligibility is judged from the Plan as shown, so a refused Resume leaves an ineligible Start counted as eligible (AUD-R83-2).
+V Codec: HOLDS. Known keys are no longer inherited. A startedWhilePaused value that isn't text makes the Plan unreadable, and it is kept as stored. Unknown fields round-trip. There is one fidelity gap: PlanCycles._newCycle silently drops startedWhilePaused (the root cause of AUD-R83-1).
+VI Delete: HOLDS for Plans, Insights, Preferences attribution and interrupted completion. The exception is L-1 (§10).
+
+5. R83-F1 — HISTORICAL CREDIT
+The single slot holds as far as day keys go. A new Circle can be served and started only after _recordBeforeOverwrite has resolved the previous day's session, and _withEarnedCredits only reads lastServed. So overwriting the slot never re-exposes an earlier Circle; I found no failing scenario for slot capacity.
+
+It fails in three other places:
+
+AUD-R83-1 — MEDIUM — DEMONSTRATED, no fault injection. This is pre-existing (it fails on R8.2 too), so the R8.3.1 fix is incomplete.
+- Sequences: Pause → Start → Close → Resume → Leave → Go through it again → restart (or next day); also Pause → Start → Resume → Close → Leave → Again.
+- Result: 0 credits in the session, 1 after the restart. The left cycle #1 gets a stage-1 guided record and its cursor moves to 2. It also reproduces after a verified lapse and resubscription.
+- Mechanism:
+  1. Leave from an active Plan stamps closedBeforeLeave (_withActionOrder, circle_plans_provider.dart ~342–380), because the uncredited Circle is not skipped.
+  2. _newCycle (circle_plan.dart ~962–983) carries lastServed when closedBeforeLeave != null, but builds PlanProgress without startedWhilePaused.
+  3. On the restart or next day, _mirrorInJournal or _recordBeforeOverwrite calls recordGuided. With the slot gone, the left-cycle branch needs only closedFirst (circle_plan.dart ~1176–1186), so the Circle is credited.
+- Contrary to: founder rows "Pause → Start → Close → Resume" and "Pause → Start → Resume → Close" (no credit), and "a later lifecycle change never makes an ineligible Start eligible".
+- No R8.3 test covers Leave + Go through again for a paused Start.
+- By static reading only (not executed), start() on a left Plan and the I1 goThroughAgain share the same path.
+
+AUD-R83-2 — LOW — DEMONSTRATED with a refused Plans write. Pre-existing class.
+- Sequence: Plan durably paused. Resume, with its write still pending, and Start tapped meanwhile. The Start takes the fast path: noteStartedWhilePaused sees the Plan as active, so no slot is written.
+- The store then refuses the Resume. The Plan goes back to paused, the user is told, and the Circle keeps running.
+- Close: 0 credits. A later successful Resume and a restart: 1 credit.
+- The valid Start happened while the Plan was durably paused, and per RL-1 a refused change never happened.
+
+AUD-R83-3 — LOW — DEMONSTRATED. A REGRESSION introduced by R8.3.1: the same test passes on R8.2.
+- Sequence: Pause, then Start. The slot write lands, then the Start's own day-keys save fails. After a restart the Circle is not started, but startedWhilePaused stays on disk.
+- Then Resume → Start on the active Plan → Close: 0 credits. Expected 1: the only durable Start was made on an active Plan.
+- The cause: the slot is written before the Start is durable, and nothing removes it when the Start never becomes durable.
+
+Controls that pass (executed): all founder-table rows; Start → Pause → Close credited once; Delete removes the slot; same-day re-serve after Delete is credited once; Delete during the slot write leaves no residue.
+
+The ack-lost variant on the slot write did not reproduce a stale slot.
+
+6. D1–D5
+- D1: MET for readable records. The attribution is removed in both passes and at start-up completion, and a refused removal fails the Delete. NOT MET for wholly unreadable records (L-1).
+- D2: MET at Close. The later-credit paths are AUD-R83-1 and AUD-R83-2.
+- D3: MET. The original date is kept, the action is never repeated, and a later manual change wins.
+- D4: MET (AUD-N3 test FAIL→PASS).
+- D5: MET for the 9 start-up sites, and 4 cold starts pass. One observation, pre-existing and analytics-only: an unrecognised String cohort is still overwritten (tester_identity_provider.dart:86).
+
+7. NEW DEFECTS AND HYPOTHESES
+Demonstrated: AUD-R83-1 (MEDIUM), AUD-R83-2 (LOW), AUD-R83-3 (LOW, regression).
+
+Hypotheses, not executed:
+- H1: an I3 leaveOutChange enqueued after the Delete's preferences.idle() but before its second pass could land with byInsight after the Delete. The window is very narrow, and I found no failing interleaving.
+- H2: if a future build reads a downgraded L-1 record, its byInsight ids come back.
+
+Coupling: recordGuided's active branch does not require the Circle to be the one served. Correctness depends on its callers (creditsServed or premium, plus the day-key lifetime).
+
+Documentation: ISSUE_REGISTER.json still lists R83-F1 as "OPEN – founder decision required", while the R8.3.1 README and LIMITATIONS L-4 say FIXED.
+
+8. EXECUTED REPRODUCTIONS
+- R8.3 tree:
+  - test/features/r83: 98/98 pass.
+  - Astra App. B: 7/7 pass.
+  - My R8.2 adversarial and order tests: 8/8 pass.
+  - My R8.3 delta file: 5 pass and 6 fail. The 6 failures are AUD-R83-1 ×3, the Premium variant of AUD-R83-1, AUD-R83-2 and AUD-R83-3.
+- R8.2 tree: App. B 7/7 fail. AUD-N1 ×2, N2 and N3 fail. AUD-R83-1 and -2 fail too (pre-existing). AUD-R83-3 passes (so it is a regression).
+
+9. REGRESSION EVIDENCE
+- My full run of the committed suite on the export: exit 0, one done(success), 2,872 passed, 0 failed, 0 skipped, 201 files.
+- Per-file pass counts are identical to their 23 raw logs.
+- My parse of their raw logs: 2,872/0/0, every batch with exactly one done(true). Their file set is identical to the 201 committed test files.
+- SOURCE_MANIFEST_git_blobs_end.txt (380 entries) equals my `git ls-tree` of lib, test and the 3 configuration files; their start and end manifests are identical.
+- flutter analyze: No issues found. Audio: 180 files, unchanged by the diff.
+- Year profiles and B8 ran within the full suite. Counts match their batches 18 and 19a–e.
+
+10. L-1 — OPEN — PRE-RELEASE BLOCKER (not fixed, not waived)
+- Confirmed by source reading: Delete reports success while a wholly unreadable Preferences record keeps byInsight, and Export omits that record.
+- It does not affect any decision in this build: the record reads as empty and is never applied.
+- The privacy consequence is real but narrow: History-derived evidence (which Insight caused a choice) survives a Delete that the user was told succeeded, and the user cannot see or export it.
+- No existing build produces such a record. It arises only from a downgrade, a restore or outside damage.
+- The documented scope and severity are accurate.
+- It does not block the engineering baseline, but it does block commercial release.
+- Safe remediation: L1_ASSESSMENT options 1+2. Delete finishes everything else and then tells the user truthfully that the preferences couldn't be checked and Reset clears them; Export carries the record exactly as stored. Never mutate or delete the unknown record automatically. Any future schema change must define downgrade behaviour.
+- Fresh Delete races checked:
+  - pending Plans writes (landed, refused);
+  - pending Preferences writes;
+  - a refused attribution removal;
+  - stopping after the intent;
+  - same-day re-serve;
+  - the slot write in flight.
+  None regresses; one hypothesis remains (H1).
+
+11. OTHER ACCEPTED LIMITATIONS
+- Reasonable at the engineering level:
+  - L-2 (one provenance record per Plan);
+  - L-3 (the QA and dev getters);
+  - L-6 (the overlap guard is not enforced globally);
+  - the conservative Resume-during-write behaviour;
+  - RL-4 (offset-free timestamps, a pre-commercial decision; it can only withhold credit).
+- L-5 / device-level recovery: there is no evidence for real Android process kill, power loss or storage faults, and no S25 or TalkBack run was done. These remain commercial gates.
+
+12. SCORECARD (dimensions re-scored by Astra post-R8.2 only; NR elsewhere)
+Trust 7/MEDIUM (Astra post-R8.2: 6); Robustness 6/MEDIUM (6); Routine ownership 9/MEDIUM (9); Pre-release readiness 5/MEDIUM (4); Overall product quality 7/MEDIUM (6).
+Reason: seven integrity defects are closed and verified. The newly frozen credit rule still has a fault-free violation, and L-1 is open.
+
+13. BLOCKERS
+Engineering baseline:
+- AUD-R83-1, with a regression test.
+- AUD-R83-2 and AUD-R83-3, fixed or explicitly accepted by the founder.
+- A delta re-audit.
+
+Commercial:
+- L-1;
+- device process-kill and storage testing, S25 and TalkBack;
+- the RL-4 decision;
+- analytics, privacy and retention;
+- backup, migration and real Premium restore;
+- billing and release-APK security review;
+- localization and audio QA;
+- the final commercial audit.
+
+14. FINAL VERDICT: CONDITIONAL PASS
+R8.3 can't yet be accepted as the technical engineering baseline. The R8.2 findings are genuinely closed. The R83-F1 historical-credit rule, the high-priority item of this delta, can still be violated by ordinary user actions. This authorizes no commercial release. Phase E remains HOLD.
