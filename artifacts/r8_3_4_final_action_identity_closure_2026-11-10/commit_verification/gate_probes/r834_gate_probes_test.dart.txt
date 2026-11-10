@@ -1,0 +1,453 @@
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/utils/date_key.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/suggestion_preferences.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart';
+import 'package:thirty/features/insights/domain/insight.dart';
+import 'package:thirty/features/insights/domain/insight_engine.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/personal_circle/domain/kept_circle.dart';
+
+import '../../support/r8_fault_disk.dart';
+import '../../support/r8_harness.dart';
+
+class _StuckRandom implements Random {
+  @override
+  int nextInt(int max) => 7 % max;
+  @override
+  double nextDouble() => 0.5;
+  @override
+  bool nextBool() => false;
+}
+
+/// R8.3.4 commit-authorization gate probes (founder, 2026-11-10, §3).
+/// Characterisation: each prints one GATE line; `pre` marks a setup step a
+/// tree can't construct. Run in disposable checkouts only; not committed to
+/// test/ (preserved as evidence).
+void main() {
+  void evidence(String id, Map<String, Object?> facts) {
+    // ignore: avoid_print
+    print('GATE ${jsonEncode({'test': id, ...facts})}');
+  }
+
+  void pre(bool holds, String what) {
+    if (!holds) fail('PRECONDITION not constructible on this tree: $what');
+  }
+
+  final morning = DateTime(2026, 10, 30, 9);
+  late R8Harness h;
+
+  CirclePart part(ElementId e) => CirclePart(e, elementOf(e).minutes);
+  final window = [
+    part(ElementId.openWindow),
+    part(ElementId.standingStretch),
+    part(ElementId.sitAMinute),
+  ];
+  final reading = [part(ElementId.phoneFaceDown), part(ElementId.readPages)];
+  final writing = [
+    part(ElementId.closeWhatsOpen),
+    part(ElementId.getItOut),
+    part(ElementId.chooseOne),
+    part(ElementId.firstStep),
+  ];
+  const head = Intention.clearerHead;
+  const energy = Intention.moreEnergy;
+
+  CircleJournalEntry entry(
+    int ago,
+    Intention need, {
+    List<CirclePart> parts = const [],
+    Set<ElementId> skipped = const {},
+    bool useful = false,
+  }) {
+    final date = morning.subtract(Duration(days: ago));
+    return CircleJournalEntry(
+      schemaVersion: circleJournalSchemaVersion,
+      circleId: dateKey(date),
+      localDate: dateKey(date),
+      direction: need,
+      activityId: ActivityId.values.first,
+      catalogVersion: catalogVersion,
+      shownAt: date,
+      startedAt: date,
+      closedAt: date,
+      attemptResponse: useful ? CircleAttemptResponse.yes : null,
+      usefulnessResponse: useful
+          ? (ago.isEven
+                ? CircleUsefulnessResponse.veryUseful
+                : CircleUsefulnessResponse.somewhatUseful)
+          : null,
+      session: parts.isEmpty
+          ? null
+          : CircleSessionRecord(
+              title: 'Circle',
+              parts: CirclePlan(parts).toWire(),
+              skipped: [for (final e in skipped) e.name],
+            ),
+    );
+  }
+
+  String journalOf(List<CircleJournalEntry> entries) => jsonEncode({
+    'schemaVersion': circleJournalSchemaVersion,
+    'entries': [for (final e in entries) e.toJson()],
+  });
+
+  final i3Journal = [
+    for (final ago in [2, 4, 6, 8, 10, 12, 15]) entry(ago, head, parts: reading),
+    for (final (k, ago) in [1, 5, 9, 11].indexed)
+      entry(
+        ago,
+        energy,
+        parts: window,
+        skipped: k == 1 ? const {} : {ElementId.openWindow},
+      ),
+  ];
+  final i4Journal = [
+    for (final ago in [1, 7, 13, 20])
+      entry(ago, head, parts: writing, useful: true),
+    for (final ago in [3, 9, 16]) entry(ago, head, parts: reading),
+  ];
+  final i4Later = [
+    ...i4Journal,
+    for (final ago in [-21, -28])
+      entry(ago, head, parts: writing, useful: true),
+  ];
+
+  InsightsNotifier insights(ProviderContainer c) =>
+      c.read(insightsProvider.notifier);
+  KeptCirclesNotifier keptN(ProviderContainer c) =>
+      c.read(keptCirclesProvider.notifier);
+
+  Future<Map<String, Object?>> json(String key) async {
+    final raw = (await h.disk.stored())[key];
+    return raw is String ? jsonDecode(raw) as Map<String, Object?> : {};
+  }
+
+  Future<Map?> snapshotOnDisk(String id) async {
+    for (final s in (await json(insightsKey))['snapshots'] as List? ?? []) {
+      if ((s as Map)['id'] == id) return s;
+    }
+    return null;
+  }
+
+  Future<List<Map>> keptOnDisk() async => [
+    for (final k in (await json(keptCirclesKey))['kept'] as List? ?? [])
+      k as Map,
+  ];
+
+  Future<Object?> outcome(Future<void> f) =>
+      f.then<Object?>((_) => null, onError: (Object e) => e);
+
+  final stuck = keptIdRandomProvider.overrideWithValue(_StuckRandom());
+
+  setUp(() async {
+    h = R8Harness(morning);
+    await h.boot();
+  });
+
+  test('GATE-A1 two current I4s of different sources applied concurrently '
+      'under a forced collision, the first one\'s attempt write held while '
+      'the second allocates: distinct ids, each Applied by its own Keep '
+      'only', () async {
+    await h.boot({circleJournalKey: journalOf(i4Journal)});
+    final c0 = h.open();
+    final older = insights(c0).assess().added.single;
+    await R8Harness.settle();
+    final stored = await h.disk.stored();
+    h.clock.value = morning.add(const Duration(days: 30));
+    await h.boot({...stored, circleJournalKey: journalOf(i4Later)});
+    final c = h.open(overrides: [stuck]);
+    final newer = insights(c).assess().added
+        .where((s) => s.family == InsightFamily.usefulInCommon)
+        .firstOrNull;
+    await R8Harness.settle();
+    pre(newer != null, 'a second I4 generated while the first is current');
+    final a = insights(c).state.byId(older.id)!;
+    pre(
+      insights(c).status(a) == InsightStatus.current &&
+          insights(c).status(newer!) == InsightStatus.current,
+      'both I4s current at once',
+    );
+    final sourceA = (older.application as KeepCircleFromHistory).circleId;
+    final sourceB = (newer!.application as KeepCircleFromHistory).circleId;
+    pre(sourceA != sourceB, 'different sources');
+    final heldReceipt = h.disk.hold(insightsKey);
+    final applyingA = insights(c).apply(older.id);
+    await heldReceipt.reached;
+    final inMemoryA =
+        (insights(c).state.byId(older.id)?.attempt)?.keptId;
+    final applyingB = insights(c).apply(newer.id);
+    await R8Harness.settle();
+    final inMemoryB = (insights(c).state.byId(newer.id)?.attempt)?.keptId;
+    heldReceipt.release();
+    final ra = await applyingA;
+    final rb = await applyingB;
+    await R8Harness.settle();
+    await h.restart();
+    final c2 = h.open();
+    insights(c2).assess();
+    await R8Harness.settle();
+    final kept = await keptOnDisk();
+    final sa = await snapshotOnDisk(older.id);
+    final sb = await snapshotOnDisk(newer.id);
+    evidence('GATE-A1', {
+      'attemptIdA': inMemoryA,
+      'attemptIdB': inMemoryB,
+      'applyA': ra.name,
+      'applyB': rb.name,
+      'kept': [
+        for (final k in kept) [k['id'], k['fromCircleId']],
+      ],
+      'a': {'appliedOn': sa?['appliedOn'], 'attempt': sa?['attempt']},
+      'b': {'appliedOn': sb?['appliedOn'], 'attempt': sb?['attempt']},
+    });
+    expect(inMemoryA, isNotNull);
+    expect(inMemoryB, isNot(inMemoryA), reason: 'B was given A\'s pending id');
+    expect(ra, InsightActionResult.done);
+    expect(rb, InsightActionResult.done);
+    expect(kept, hasLength(2));
+    final byId = {for (final k in kept) k['id']: k['fromCircleId']};
+    expect(byId[inMemoryA], sourceA);
+    expect(byId[inMemoryB], sourceB);
+  });
+
+  test('GATE-A1b (stored state: production never shows two current I4s at '
+      'once) two current I4s of different sources applied concurrently '
+      'under a forced collision, A\'s attempt write held while B allocates: '
+      'distinct ids, each Applied by its own Keep only', () async {
+    await h.boot({circleJournalKey: journalOf(i4Journal)});
+    final c0 = h.open();
+    final older = insights(c0).assess().added.single;
+    await R8Harness.settle();
+    h.clock.value = morning.add(const Duration(days: 30));
+    await h.boot({
+      ...await h.disk.stored(),
+      circleJournalKey: journalOf(i4Later),
+    });
+    final c1 = h.open(overrides: [stuck]);
+    pre(
+      await insights(c1).apply(older.id) == InsightActionResult.done,
+      'the older I4 applied',
+    );
+    await R8Harness.settle();
+    final newer = insights(c1).assess().added
+        .where((s) => s.family == InsightFamily.usefulInCommon)
+        .firstOrNull;
+    await R8Harness.settle();
+    pre(newer != null, 'a newer I4 generated');
+    // Stored state: the older I4 not yet applied, nothing kept.
+    final stored = await h.disk.stored();
+    final record = jsonDecode(stored[insightsKey]! as String) as Map;
+    record['snapshots'] = [
+      for (final s in record['snapshots'] as List)
+        if ((s as Map)['id'] == older.id)
+          {
+            for (final e in s.entries)
+              if (e.key != 'appliedOn' && e.key != 'attempt') e.key: e.value,
+          }
+        else
+          s,
+    ];
+    await h.boot({
+      for (final e in stored.entries)
+        if (e.key != keptCirclesKey) e.key: e.value,
+      insightsKey: jsonEncode(record),
+    });
+    final c = h.open(overrides: [stuck]);
+    final a = insights(c).state.byId(older.id);
+    final b = insights(c).state.byId(newer!.id);
+    pre(
+      a != null &&
+          b != null &&
+          insights(c).status(a) == InsightStatus.current &&
+          insights(c).status(b) == InsightStatus.current,
+      'both I4s current at once',
+    );
+    final sourceA = (older.application as KeepCircleFromHistory).circleId;
+    final sourceB = (newer.application as KeepCircleFromHistory).circleId;
+    pre(sourceA != sourceB, 'different sources');
+    final heldReceipt = h.disk.hold(insightsKey);
+    final applyingA = insights(c).apply(older.id);
+    await heldReceipt.reached;
+    final idA = insights(c).state.byId(older.id)?.attempt?.keptId;
+    final applyingB = insights(c).apply(newer.id);
+    await R8Harness.settle();
+    final idB = insights(c).state.byId(newer.id)?.attempt?.keptId;
+    heldReceipt.release();
+    final ra = await applyingA;
+    final rb = await applyingB;
+    await R8Harness.settle();
+    await h.restart();
+    final c2 = h.open();
+    insights(c2).assess();
+    await R8Harness.settle();
+    final kept = await keptOnDisk();
+    final sa = await snapshotOnDisk(older.id);
+    final sb = await snapshotOnDisk(newer.id);
+    evidence('GATE-A1b', {
+      'attemptIdA': idA,
+      'attemptIdB': idB,
+      'applyA': ra.name,
+      'applyB': rb.name,
+      'kept': [
+        for (final k in kept) [k['id'], k['fromCircleId']],
+      ],
+      'a': {'appliedOn': sa?['appliedOn'], 'attempt': sa?['attempt']},
+      'b': {'appliedOn': sb?['appliedOn'], 'attempt': sb?['attempt']},
+    });
+    // `idB` is null while A's attempt write is held: apply() waits for the
+    // Insights writes first ([InsightsNotifier.idle]), so B allocates only
+    // once A's attempt is on disk and A's Keep is under way.
+    expect(idA, isNotNull);
+    expect(idB, isNull, reason: 'B allocated while A\'s attempt was pending');
+    expect(ra, InsightActionResult.done);
+    expect(rb, InsightActionResult.done);
+    expect(kept, hasLength(2));
+    final byId = {for (final k in kept) k['id']: k['fromCircleId']};
+    expect(byId, hasLength(2), reason: 'two Keeps, one id');
+    expect(byId[idA], sourceA);
+    expect(byId.values.toSet(), {sourceA, sourceB});
+    expect(sa?['appliedOn'], isNotNull);
+    expect(sb?['appliedOn'], isNotNull);
+  });
+
+  test('GATE-B1 an I3 waits on a refused intent; a second Delete, '
+      'serialized behind it, is then confirmed: whatever the I3 queued '
+      'before that boundary loses its attribution, and nothing deleted '
+      'survives', () async {
+    await h.boot({circleJournalKey: journalOf(i3Journal)});
+    final c = h.open();
+    final shown = insights(c).assess().added.single;
+    await R8Harness.settle();
+    final receipt = h.disk.hold(insightsKey);
+    final applying = insights(c).apply(shown.id);
+    await receipt.reached;
+    final intent = h.disk.hold(historyDeletionPendingKey);
+    final deletion = c.read(circleHistoryDeletionProvider);
+    final first = outcome(deletion.delete());
+    await intent.reached;
+    final second = outcome(deletion.delete());
+    receipt.release();
+    await R8Harness.settle();
+    h.disk.fail(historyDeletionPendingKey, DiskFault.returnsFalse, times: 2);
+    intent.release(DiskFault.returnsFalse);
+    final e1 = await first;
+    final e2 = await second;
+    final result = await applying;
+    await R8Harness.settle();
+    final stored = await h.disk.stored();
+    final naming = [
+      for (final MapEntry(:key, :value) in stored.entries)
+        if (jsonEncode(value).contains(shown.id)) key,
+    ];
+    evidence('GATE-B1', {
+      'firstDelete': e1?.toString(),
+      'secondDelete': e2?.toString(),
+      'apply': result.name,
+      'keysNamingTheInsight': naming,
+      'journal': stored.containsKey(circleJournalKey),
+      'pending': stored[historyDeletionPendingKey],
+      'prefs': stored[suggestionPreferencesKey],
+    });
+    expect(e1, isA<HistoryDeletionNotStarted>());
+    expect(e2, isNull);
+    expect(naming, isEmpty);
+    expect(stored.containsKey(circleJournalKey), isFalse);
+    expect(stored[historyDeletionPendingKey], isNull);
+    expect(stored[insightsKey], isNull);
+  });
+
+  test('GATE-C1 at 6 kept, a second valid Keep while the first write is '
+      'held is never rejected: both land, distinct ids, 8 kept', () async {
+    final c = h.open(overrides: [stuck]);
+    for (var d = 1; d <= maxKeptCircles - 2; d++) {
+      await keptN(c).keepCircle(
+        plan: CirclePlan(reading),
+        need: head,
+        circleId: '2026-09-${'$d'.padLeft(2, '0')}',
+      );
+    }
+    await R8Harness.settle();
+    final held = h.disk.hold(keptCirclesKey);
+    final first = keptN(c).keepCircle(
+      plan: CirclePlan(writing),
+      need: head,
+      circleId: '2026-10-29',
+    );
+    await held.reached;
+    final second = keptN(c).keepCircle(
+      plan: CirclePlan(window),
+      need: energy,
+      circleId: '2026-10-27',
+    );
+    held.release();
+    final a = await first;
+    final b = await second;
+    await R8Harness.settle();
+    final kept = await keptOnDisk();
+    evidence('GATE-C1', {
+      'a': a?.id,
+      'b': b?.id,
+      'count': kept.length,
+    });
+    expect(a, isNotNull);
+    expect(b, isNotNull);
+    expect(a!.id, isNot(b!.id));
+    expect(kept, hasLength(maxKeptCircles));
+  });
+
+  test('GATE-C2 characterisation: at 7 kept, the 8th Keep\'s write held and '
+      'then refused; a 9th requested meanwhile', () async {
+    final c = h.open(overrides: [stuck]);
+    for (var d = 1; d <= maxKeptCircles - 1; d++) {
+      await keptN(c).keepCircle(
+        plan: CirclePlan(reading),
+        need: head,
+        circleId: '2026-09-${'$d'.padLeft(2, '0')}',
+      );
+    }
+    await R8Harness.settle();
+    final held = h.disk.hold(keptCirclesKey);
+    final eighth = outcome(
+      keptN(c).keepCircle(
+        plan: CirclePlan(writing),
+        need: head,
+        circleId: '2026-10-29',
+      ),
+    );
+    await held.reached;
+    final ninth = keptN(c).keepCircle(
+      plan: CirclePlan(window),
+      need: energy,
+      circleId: '2026-10-27',
+    );
+    held.release(DiskFault.returnsFalse);
+    final e8 = await eighth;
+    final k9 = await ninth;
+    await R8Harness.settle();
+    final retried = await keptN(c).keepCircle(
+      plan: CirclePlan(window),
+      need: energy,
+      circleId: '2026-10-27',
+    );
+    await R8Harness.settle();
+    final kept = await keptOnDisk();
+    evidence('GATE-C2', {
+      'eighth': e8?.toString(),
+      'ninthDuringHold': k9?.id,
+      'ninthRetriedAfter': retried?.id,
+      'count': kept.length,
+      'ids': {for (final k in kept) k['id']}.length,
+    });
+    expect(e8, isA<Object>());
+    expect(kept.length, lessThanOrEqualTo(maxKeptCircles));
+    expect({for (final k in kept) k['id']}, hasLength(kept.length));
+  });
+}

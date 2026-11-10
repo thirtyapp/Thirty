@@ -31,6 +31,22 @@ class HistoryDeletionNotStarted implements Exception {
   String toString() => 'HistoryDeletionNotStarted';
 }
 
+/// R8.3.4 (Astra R833-A01, Claude AUD-R833-1): how recording a Delete
+/// Circle history's intent ended.
+enum DeletionIntentOutcome {
+  /// Confirmed on disk: the deletion has begun ([HistoryWriteGate.epoch]
+  /// has moved).
+  confirmed,
+
+  /// The store answered, every time, that it didn't write it: the Delete
+  /// never began.
+  refused,
+
+  /// A write of it threw, so it may be on disk all the same — the next
+  /// start then finishes the deletion. Nothing may rely on either answer.
+  uncertain,
+}
+
 /// The barrier between Delete Circle history and the writes that were
 /// already on their way when it began (audit remediation R3, J4).
 ///
@@ -101,6 +117,14 @@ class CircleHistoryDeletion {
   /// The deletion under way or last run, if any — never failing.
   Future<void>? _running;
 
+  Future<DeletionIntentOutcome>? _intent;
+
+  /// R8.3.4 (Astra R833-A01, Claude AUD-R833-1): while a Delete's intent is
+  /// being recorded — already in the store's memory, so [isPending] reads
+  /// it, but not yet confirmed — how that ends; `null` otherwise. A
+  /// confirmed outcome completes only once the deletion has begun.
+  Future<DeletionIntentOutcome>? get intentBeingRecorded => _intent;
+
   /// Whether a Delete Circle history that didn't finish — it failed, or the
   /// app stopped before the next start could finish it — is still waiting
   /// to be finished. Not one under way now: a Circle begun while a deletion
@@ -165,16 +189,39 @@ class CircleHistoryDeletion {
     // cleared from memory and nothing is removed until it is (founder
     // decision D3, 2026-11-04). A Delete that never began leaves every write
     // on its way to land.
+    //
+    // R8.3.4 (Astra R833-A01): how it ends is told ([intentBeingRecorded]).
+    final intent = Completer<DeletionIntentOutcome>();
+    _intent = intent.future;
+    void told(DeletionIntentOutcome outcome) {
+      if (identical(_intent, intent.future)) _intent = null;
+      if (!intent.isCompleted) intent.complete(outcome);
+    }
+
     try {
-      await writeConfirmed(prefs, historyDeletionPendingKey, true);
-    } on StorageWriteFailed {
+      var threw = false;
       try {
         await writeConfirmed(prefs, historyDeletionPendingKey, true);
-      } on StorageWriteFailed {
-        throw const HistoryDeletionNotStarted();
+      } on StorageWriteFailed catch (first) {
+        threw = first.uncertain;
+        try {
+          await writeConfirmed(prefs, historyDeletionPendingKey, true);
+        } on StorageWriteFailed catch (second) {
+          told(
+            threw || second.uncertain
+                ? DeletionIntentOutcome.uncertain
+                : DeletionIntentOutcome.refused,
+          );
+          throw const HistoryDeletionNotStarted();
+        }
       }
+    } catch (_) {
+      // Anything else: whether it is on disk isn't known.
+      told(DeletionIntentOutcome.uncertain);
+      rethrow;
     }
     final stale = gate._begin();
+    told(DeletionIntentOutcome.confirmed);
     try {
       // R8.2 (Astra R81-A07): no History write begun before counts as
       // confirmed History any more.

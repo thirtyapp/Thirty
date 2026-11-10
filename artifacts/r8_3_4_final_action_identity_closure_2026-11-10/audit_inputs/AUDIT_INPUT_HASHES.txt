@@ -1,0 +1,22 @@
+# R8.3.4 audit input hashes (SHA-256), 2026-11-10T19:02:14+01:00
+## Astra post-R8.3.3 (untracked in docs/audits)
+7ca4387ddb0f85b7f570a76b9172a786d22781f55384986fd4df3f490eb22e2e *docs/audits/THIRTY_INDEPENDENT_POST_R8_3_3_TARGETED_DELTA_AUDIT.md
+30a107beeece60ed7cd04c36748c6b495edc26e55ea2f7d035722b102ec73635 *docs/audits/THIRTY_R833_INDEPENDENT_AUDIT_EVIDENCE.zip
+## Astra ZIP: SHA256SUMS.txt verified: 21 OK, 0 not OK; report inside ZIP byte-identical to docs/audits copy: yes
+## Astra six-probe file (original bytes, from ZIP)
+7a0b7ae81d23f18aeb5e4fa4a99a7980f1e23497a355c348c23c0fc8e5e9c683 *audit/independent/r833_independent_adversarial_test.dart
+## Copies in this folder
+5f69ef877bf2c80b1523514132623b4675fa011c4f3a01038fb8d0740b4d4857 *artifacts/r8_3_4_final_action_identity_closure_2026-11-10/astra_probe_correction/r833_independent_adversarial_test_CORRECTED.dart.txt
+7a0b7ae81d23f18aeb5e4fa4a99a7980f1e23497a355c348c23c0fc8e5e9c683 *artifacts/r8_3_4_final_action_identity_closure_2026-11-10/astra_probe_correction/r833_independent_adversarial_test_ORIGINAL.dart.txt
+## Claude post-R8.3.3 (session fb8ede49, final assistant message 2026-11-10T11:55:09Z)
+5d35a67e00ba7c99f34c05d162971fbd83ecb2d50bc61074232dda4c3854ae88 *~/.claude/projects/c--Users-thoma-Desktop-THIRTY-App/fb8ede49-7c3e-4112-b879-89d56ac06d0e.jsonl
+(transcript hash at time of extraction; the session file may grow if reopened)
+a55f6d6e261ecdca4a49b283600209834a87dd0bc4975dde6c18102119617507 *artifacts/r8_3_4_final_action_identity_closure_2026-11-10/audit_inputs/THIRTY_CLAUDE_INDEPENDENT_POST_R8_3_3_AUDIT_extracted.md
+## Claude probe file (original scratchpad bytes, and copy)
+f727ef8d9dfdccf25bcafedeea769849c50081b296b9dafe69b4829afb3080b5 *<claude fb8ede49 scratchpad>/probe/test/zz_audit/audit_r833_delta_test.dart
+f727ef8d9dfdccf25bcafedeea769849c50081b296b9dafe69b4829afb3080b5 *artifacts/r8_3_4_final_action_identity_closure_2026-11-10/audit_inputs/claude_probe/audit_r833_delta_test.dart.txt
+ae875584f792e1ec948a56b2becf9319efe2619f5d7b5e51f6a6a51396ad3257 *artifacts/r8_3_4_final_action_identity_closure_2026-11-10/audit_inputs/claude_probe/probe_r833.txt
+74bc97ede0859093472a783a063cb62cd9f50ed7c91a45c7a811ab4841914c19 *artifacts/r8_3_4_final_action_identity_closure_2026-11-10/audit_inputs/claude_probe/probe_r833_on_old.txt
+## Earlier reports unchanged
+381f3cfddf600cd6e79b532a81b3e78fbd507ac0717fec15937937aa6533cd32 *docs/audits/THIRTY_INDEPENDENT_POST_R8_3_2_DELTA_AUDIT.md
+89a61f9f09ec38388a098fd436c1387da1aa98ebafd335a6abcf9719da647f9a *docs/audits/THIRTY_INDEPENDENT_POST_R8_3_DELTA_AUDIT.md

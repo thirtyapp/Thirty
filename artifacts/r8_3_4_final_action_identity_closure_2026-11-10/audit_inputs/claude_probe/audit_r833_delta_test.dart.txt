@@ -1,0 +1,742 @@
+// Independent post-R8.3.3 targeted delta audit probes (disposable copy only).
+// Characterisation probes: each prints one AUD833 line with what reached the
+// disk; `expect`s mark the audited contract, so a failing probe is a finding.
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/utils/date_key.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/application/suggestion_preferences.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart';
+import 'package:thirty/features/insights/domain/insight.dart';
+import 'package:thirty/features/insights/domain/insight_engine.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+import 'package:thirty/features/plans/domain/plan_stage_provenance.dart';
+
+import '../support/r8_fault_disk.dart';
+import '../support/r8_harness.dart';
+
+class _StuckRandom implements Random {
+  @override
+  int nextInt(int max) => 11 % max;
+  @override
+  double nextDouble() => 0.25;
+  @override
+  bool nextBool() => true;
+}
+
+void main() {
+  void evidence(String id, Map<String, Object?> facts) {
+    // ignore: avoid_print
+    print('AUD833 ${jsonEncode({'test': id, ...facts})}');
+  }
+
+  final morning = DateTime(2026, 10, 30, 9);
+  late R8Harness h;
+
+  CirclePart part(ElementId e) => CirclePart(e, elementOf(e).minutes);
+  final window = [
+    part(ElementId.openWindow),
+    part(ElementId.standingStretch),
+    part(ElementId.sitAMinute),
+  ];
+  final reading = [part(ElementId.phoneFaceDown), part(ElementId.readPages)];
+  final writing = [
+    part(ElementId.closeWhatsOpen),
+    part(ElementId.getItOut),
+    part(ElementId.chooseOne),
+    part(ElementId.firstStep),
+  ];
+  const head = Intention.clearerHead;
+  const energy = Intention.moreEnergy;
+
+  CircleJournalEntry entry(
+    int ago,
+    Intention need, {
+    List<CirclePart> parts = const [],
+    Set<ElementId> skipped = const {},
+    bool useful = false,
+    PlanStageProvenance? stage,
+    PlanStageProvenance? replacedFromStage,
+    String? reason,
+  }) {
+    final date = morning.subtract(Duration(days: ago));
+    return CircleJournalEntry(
+      schemaVersion: circleJournalSchemaVersion,
+      circleId: dateKey(date),
+      localDate: dateKey(date),
+      direction: need,
+      activityId: ActivityId.values.first,
+      catalogVersion: catalogVersion,
+      shownAt: date,
+      startedAt: date,
+      closedAt: date,
+      attemptResponse: useful ? CircleAttemptResponse.yes : null,
+      usefulnessResponse: useful
+          ? (ago.isEven
+                ? CircleUsefulnessResponse.veryUseful
+                : CircleUsefulnessResponse.somewhatUseful)
+          : null,
+      replacementReason: reason,
+      replacedFromStage: replacedFromStage,
+      session: parts.isEmpty
+          ? null
+          : CircleSessionRecord(
+              title: 'Circle',
+              parts: CirclePlan(parts).toWire(),
+              skipped: [for (final e in skipped) e.name],
+              planStage: stage,
+            ),
+    );
+  }
+
+  String journalOf(List<CircleJournalEntry> entries) => jsonEncode({
+    'schemaVersion': circleJournalSchemaVersion,
+    'entries': [for (final e in entries) e.toJson()],
+  });
+
+  const stage = PlanStageProvenance(
+    planId: 'getting_going',
+    cycleId: 'getting_going#1',
+    stageNumber: 1,
+    stageId: 'getting_going.1',
+  );
+  final i2 = <String, Object>{
+    circlePlansKey: jsonEncode(
+      CirclePlansState.empty.start('getting_going', today: '2026-10-01')!.toJson(),
+    ),
+    circleJournalKey: journalOf([
+      for (final (k, ago) in [2, 5, 9, 13, 17].indexed)
+        k.isEven
+            ? entry(ago, energy, replacedFromStage: stage, reason: 'tooMuch')
+            : entry(ago, energy, parts: window, stage: stage),
+    ]),
+  };
+  final i3Journal = [
+    for (final ago in [2, 4, 6, 8, 10, 12, 15]) entry(ago, head, parts: reading),
+    for (final (k, ago) in [1, 5, 9, 11].indexed)
+      entry(
+        ago,
+        energy,
+        parts: window,
+        skipped: k == 1 ? const {} : {ElementId.openWindow},
+      ),
+  ];
+  final i4Journal = [
+    for (final ago in [1, 7, 13, 20])
+      entry(ago, head, parts: writing, useful: true),
+    for (final ago in [3, 9, 16]) entry(ago, head, parts: reading),
+  ];
+
+  InsightsNotifier insights(ProviderContainer c) =>
+      c.read(insightsProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+  KeptCirclesNotifier keptN(ProviderContainer c) =>
+      c.read(keptCirclesProvider.notifier);
+
+  Future<Map<String, Object?>> json(String key) async {
+    final raw = (await h.disk.stored())[key];
+    return raw is String ? jsonDecode(raw) as Map<String, Object?> : {};
+  }
+
+  Future<Map<String, Object?>> planOnDisk() async =>
+      (((await json(circlePlansKey))['plans'] as Map?)?['getting_going']
+              as Map?)
+          ?.cast<String, Object?>() ??
+      {};
+
+  Future<Map?> snapshotOnDisk(String id) async {
+    for (final s in (await json(insightsKey))['snapshots'] as List? ?? []) {
+      if ((s as Map)['id'] == id) return s;
+    }
+    return null;
+  }
+
+  Future<List<Map>> keptOnDisk() async => [
+    for (final k in (await json(keptCirclesKey))['kept'] as List? ?? [])
+      k as Map,
+  ];
+
+  Future<Map<String, Object?>> namingIds(List<String> ids) async => {
+    for (final MapEntry(:key, :value) in (await h.disk.stored()).entries)
+      if (ids.any(jsonEncode(value).contains)) key: value,
+  };
+
+  Future<Object?> outcome(Future<void> f) async {
+    try {
+      await f;
+      return null;
+    } catch (e) {
+      return e;
+    }
+  }
+
+  Future<(ProviderContainer, InsightSnapshot)> plainI1() async {
+    await h.boot(i2);
+    final c = h.open();
+    insights(c).assess();
+    await R8Harness.settle();
+    expect(plans(c).pause('getting_going'), PlanActionResult.done);
+    await R8Harness.settle();
+    h.clock.value = morning.add(const Duration(days: 7));
+    await h.restart();
+    final c2 = h.open();
+    final shownI1 = insights(c2)
+        .assess()
+        .added
+        .where((s) => s.family == InsightFamily.planForNeed)
+        .first;
+    await R8Harness.settle();
+    return (c2, shownI1);
+  }
+
+  // =======================================================================
+  group('A01 adversarial — Delete isolation', () {
+    setUp(() async {
+      h = R8Harness(morning);
+      await h.boot();
+    });
+
+    test('P1 I3 receipt lands while the Delete intent write is pending; the '
+        'intent is then refused (Delete never starts)', () async {
+      await h.boot({circleJournalKey: journalOf(i3Journal)});
+      final c = h.open();
+      final shown = insights(c).assess().added.single;
+      await R8Harness.settle();
+      final receipt = h.disk.hold(insightsKey);
+      final applying = insights(c).apply(shown.id);
+      await receipt.reached;
+      final intent = h.disk.hold(historyDeletionPendingKey);
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await intent.reached;
+      receipt.release();
+      await R8Harness.settle();
+      h.disk.fail(historyDeletionPendingKey, DiskFault.returnsFalse);
+      intent.release(DiskFault.returnsFalse);
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      h.disk.heal(historyDeletionPendingKey);
+      final retry = await insights(c).apply(shown.id);
+      await R8Harness.settle();
+      final snap = await snapshotOnDisk(shown.id);
+      final status = insights(c).status(insights(c).state.byId(shown.id)!);
+      await h.restart();
+      final c2 = h.open();
+      insights(c2).assess();
+      await R8Harness.settle();
+      final after = insights(c2).state.byId(shown.id);
+      evidence('P1', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        'retry': retry.name,
+        'attemptOnDisk': snap?['attempt'],
+        'appliedOn': snap?['appliedOn'],
+        'statusBeforeRestart': status.name,
+        'statusAfterRestart': after == null
+            ? null
+            : insights(c2).status(after).name,
+        'prefs': (await h.disk.stored())[suggestionPreferencesKey],
+        'journalKept': (await h.disk.stored()).containsKey(circleJournalKey),
+      });
+      expect(deleteError, isA<HistoryDeletionNotStarted>());
+      // Integrity: nothing left out, no false Applied.
+      expect(snap?['appliedOn'], isNull);
+    });
+
+    test('P2 apply() begun while Delete is under way (epoch captured after '
+        'the boundary) and resumed after it completes', () async {
+      final (c, shownI1) = await plainI1();
+      final firstPass = h.disk.hold(circlePlansKey);
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await firstPass.reached;
+      final applying = insights(c).apply(shownI1.id);
+      await R8Harness.settle();
+      firstPass.release();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      final plan = await planOnDisk();
+      evidence('P2', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        'lifecycle': plan['lifecycle'],
+        'appliedInsight': plan['appliedInsight'],
+        'naming': (await namingIds([shownI1.id])).keys.toList(),
+      });
+      expect(deleteError, isNull);
+      expect(result, isNot(InsightActionResult.done));
+      expect(plan['lifecycle'], 'paused');
+      expect((await namingIds([shownI1.id])).keys, isEmpty);
+    });
+
+    test('P3 I4: its kept-Circle write is queued before Delete and held '
+        'across it (founder B4: kept Circle stays, no Insight id)', () async {
+      await h.boot({circleJournalKey: journalOf(i4Journal)});
+      final c = h.open();
+      final shown = insights(c).assess().added.single;
+      await R8Harness.settle();
+      final keep = h.disk.hold(keptCirclesKey);
+      final applying = insights(c).apply(shown.id);
+      await keep.reached;
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await R8Harness.settle();
+      keep.release();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      final stored = await h.disk.stored();
+      evidence('P3', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        'kept': [
+          for (final k in await keptOnDisk()) [k['id'], k['fromCircleId']],
+        ],
+        'insights': stored[insightsKey],
+        'pending': stored[historyDeletionPendingKey],
+        'naming': (await namingIds([shown.id])).keys.toList(),
+      });
+      expect(deleteError, isNull);
+      expect((await namingIds([shown.id])).keys, isEmpty);
+      expect(stored[insightsKey], isNull);
+    });
+
+    test('P4 I3: its left-out write is queued before Delete and held across '
+        'it: part stays left out, attribution removed', () async {
+      await h.boot({circleJournalKey: journalOf(i3Journal)});
+      final c = h.open();
+      final shown = insights(c).assess().added.single;
+      await R8Harness.settle();
+      final pref = h.disk.hold(suggestionPreferencesKey);
+      final applying = insights(c).apply(shown.id);
+      await pref.reached;
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await R8Harness.settle();
+      pref.release();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      await h.restart();
+      final c2 = h.open();
+      final left = c2.read(suggestionPreferencesProvider).elementsLeftOut;
+      evidence('P4', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        'leftOut': [
+          for (final e in left) [e.element.name, e.byInsight],
+        ],
+        'naming': (await namingIds([shown.id])).keys.toList(),
+      });
+      expect(deleteError, isNull);
+      expect((await namingIds([shown.id])).keys, isEmpty);
+      expect([for (final e in left) e.byInsight], everyElement(isNull));
+    });
+
+    test('P5 I1 target write lands but its answer is lost (uncertain) '
+        'across Delete', () async {
+      final (c, shownI1) = await plainI1();
+      final target = h.disk.hold(circlePlansKey);
+      final applying = insights(c).apply(shownI1.id);
+      await target.reached;
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await R8Harness.settle();
+      target.releaseAckLost();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      final plan = await planOnDisk();
+      evidence('P5', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        'lifecycle': plan['lifecycle'],
+        'appliedInsight': plan['appliedInsight'],
+        'confirmedLifecycle': plans(c)
+            .confirmedState
+            .plans['getting_going']
+            ?.lifecycle
+            .name,
+        'naming': (await namingIds([shownI1.id])).keys.toList(),
+      });
+      expect(deleteError, isNull);
+      expect((await namingIds([shownI1.id])).keys, isEmpty);
+    });
+
+    test('P6 user Pause queued between Delete passes keeps its lifecycle '
+        '(final Plans pass is place-preserving)', () async {
+      final (c, shownI1) = await plainI1();
+      expect(await insights(c).apply(shownI1.id), InsightActionResult.done);
+      await R8Harness.settle();
+      final first = h.disk.hold(circlePlansKey);
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await first.reached;
+      final paused = plans(c).pause('getting_going');
+      first.release();
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      await h.restart();
+      final plan = await planOnDisk();
+      evidence('P6', {
+        'pause': paused.name,
+        'deleteError': deleteError?.toString(),
+        'lifecycle': plan['lifecycle'],
+        'appliedInsight': plan['appliedInsight'],
+      });
+      expect(deleteError, isNull);
+      expect(plan['appliedInsight'], isNull);
+      expect(plan['lifecycle'], 'paused');
+    });
+  });
+
+  // =======================================================================
+  group('A02 adversarial — kept identity', () {
+    setUp(() async {
+      h = R8Harness(morning);
+      await h.boot();
+    });
+
+    test('P7 legacy duplicate id: Remove and Rename complete normally but '
+        'change nothing (silent no-op)', () async {
+      // Built through the domain serializer from a real kept Circle.
+      final c0 = h.open();
+      final a = await keptN(c0).keepCircle(
+        plan: CirclePlan(writing),
+        need: head,
+        circleId: '2026-10-29',
+      );
+      final b = await keptN(c0).keepCircle(
+        plan: CirclePlan(reading),
+        need: head,
+        circleId: '2026-10-27',
+      );
+      await R8Harness.settle();
+      final record = await json(keptCirclesKey);
+      final list = [
+        for (final k in record['kept']! as List)
+          {...(k as Map), 'id': 'kept-legacy-dup'},
+      ];
+      await h.boot({
+        keptCirclesKey: jsonEncode({...record, 'kept': list}),
+      });
+      final c = h.open();
+      Object? renameError;
+      Object? removeError;
+      try {
+        await keptN(c).renameKept('kept-legacy-dup', 'X');
+      } catch (e) {
+        renameError = e;
+      }
+      try {
+        await keptN(c).deleteKept('kept-legacy-dup');
+      } catch (e) {
+        removeError = e;
+      }
+      await R8Harness.settle();
+      final after = await keptOnDisk();
+      final newId = keptN(c).newKeptId();
+      evidence('P7', {
+        'built': [a?.id, b?.id],
+        'renameError': renameError?.toString(),
+        'removeError': removeError?.toString(),
+        'after': [
+          for (final k in after) [k['id'], k['fromCircleId'], k['name']],
+        ],
+        'addressedBy': c.read(keptCirclesProvider).addressedBy('kept-legacy-dup'),
+        'count': c.read(keptCirclesProvider).count,
+        'newIdIsFresh': newId != 'kept-legacy-dup',
+      });
+      expect(after, hasLength(2));
+      expect(renameError, isNull);
+      expect(removeError, isNull);
+    });
+
+    test('P8 forced collision in the window after a Keep\'s commit closure '
+        'ran but before its write landed', () async {
+      final c = h.open(
+        overrides: [keptIdRandomProvider.overrideWithValue(_StuckRandom())],
+      );
+      final held = h.disk.hold(keptCirclesKey);
+      final first = keptN(c).keepCircle(
+        plan: CirclePlan(writing),
+        need: head,
+        circleId: '2026-10-29',
+      );
+      await held.reached;
+      final duringWindow = keptN(c).newKeptId();
+      final second = keptN(c).keepCircle(
+        plan: CirclePlan(reading),
+        need: head,
+        circleId: '2026-10-27',
+        id: duringWindow,
+      );
+      final third = keptN(c).keepCircle(
+        plan: CirclePlan(window),
+        need: energy,
+        circleId: '2026-10-26',
+      );
+      held.release();
+      final a = await first;
+      final b = await second;
+      final d = await third;
+      await R8Harness.settle();
+      final kept = await keptOnDisk();
+      final ids = [for (final k in kept) k['id']];
+      evidence('P8', {
+        'first': a?.id,
+        'idAllocatedInWindow': duringWindow,
+        'second': b?.id,
+        'third': d?.id,
+        'onDisk': ids,
+      });
+      expect(ids.toSet().length, ids.length, reason: 'duplicate id stored');
+    });
+
+    test('P9 I4-A uncertain (not landed); I4-A re-applied after restart '
+        'is never repeated; a manual Keep of the same day is not its proof',
+        () async {
+      await h.boot({circleJournalKey: journalOf(i4Journal)});
+      final c = h.open();
+      final shown = insights(c).assess().added.single;
+      await R8Harness.settle();
+      h.disk.fail(keptCirclesKey, DiskFault.throws, times: 1);
+      final r1 = await insights(c).apply(shown.id);
+      await R8Harness.settle();
+      final circleId = (shown.application as KeepCircleFromHistory).circleId;
+      final manual = await keptN(c).keepCircle(
+        plan: CirclePlan(writing),
+        need: head,
+        circleId: circleId,
+      );
+      await R8Harness.settle();
+      await h.restart();
+      final c2 = h.open();
+      insights(c2).assess();
+      await R8Harness.settle();
+      final r2 = await insights(c2).apply(shown.id);
+      await R8Harness.settle();
+      final snap = await snapshotOnDisk(shown.id);
+      evidence('P9', {
+        'first': r1.name,
+        'manual': manual?.id,
+        'retry': r2.name,
+        'appliedOn': snap?['appliedOn'],
+        'attempt': snap?['attempt'],
+        'kept': [
+          for (final k in await keptOnDisk()) [k['id'], k['fromCircleId']],
+        ],
+      });
+      expect(snap?['appliedOn'], isNull,
+          reason: 'a manual Keep was taken as I4 proof');
+      expect(await keptOnDisk(), hasLength(1));
+    });
+
+    test('P10 stored legacy kept record with an id ending -insight equal to '
+        'I4\'s next allocation (forced) is refused, not overwritten', () async {
+      await h.boot({circleJournalKey: journalOf(i4Journal)});
+      final c = h.open(
+        overrides: [keptIdRandomProvider.overrideWithValue(_StuckRandom())],
+      );
+      final id = keptN(c).newKeptId(tag: 'insight');
+      final legacy = await keptN(c).keepCircle(
+        plan: CirclePlan(reading),
+        need: head,
+        circleId: '2026-10-01',
+        id: id,
+        name: 'Legacy',
+      );
+      await R8Harness.settle();
+      final legacyRead = legacy == null ? 0 : 1;
+      final shown = insights(c).assess().added.single;
+      await R8Harness.settle();
+      final r = await insights(c).apply(shown.id);
+      await R8Harness.settle();
+      final snap = await snapshotOnDisk(shown.id);
+      evidence('P10', {
+        'forcedId': id,
+        'legacyRead': legacyRead,
+        'apply': r.name,
+        'attempt': snap?['attempt'],
+        'appliedOn': snap?['appliedOn'],
+        'kept': [
+          for (final k in await keptOnDisk()) [k['id'], k['fromCircleId'], k['name']],
+        ],
+      });
+      final kept = await keptOnDisk();
+      expect(kept.where((k) => k['name'] == 'Legacy'), hasLength(1));
+      expect({for (final k in kept) k['id']}.length, kept.length);
+    });
+  });
+
+  // =======================================================================
+  group('AUD-R832-1 adversarial — exact Start write', () {
+    final day1 = DateTime(2026, 10, 12, 9);
+    setUp(() async {
+      h = R8Harness(day1);
+      await h.boot();
+    });
+
+    RecommendationNotifier today(ProviderContainer c) =>
+        c.read(recommendationProvider.notifier);
+    RecommendationStatus status(ProviderContainer c) =>
+        c.read(recommendationProvider).status;
+
+    Future<int> credits(String circleId) async {
+      var n = 0;
+      for (final c in (await planOnDisk())['cycles'] as List? ?? []) {
+        for (final r in (c as Map)['records'] as List) {
+          if ((r as Map)['circleId'] == circleId) n++;
+        }
+      }
+      return n;
+    }
+
+    int startedInHistory(ProviderContainer c, String circleId) => c
+        .read(circleJournalRepositoryProvider)
+        .readAll()
+        .where((e) => e.circleId == circleId && e.startedAt != null)
+        .length;
+
+    Future<void> close(ProviderContainer c) async {
+      h.clock.value = h.clock.value.add(const Duration(minutes: 25));
+      today(c).close();
+      await R8Harness.settle();
+    }
+
+    Future<ProviderContainer> restart() async {
+      await h.restart();
+      final c = h.open();
+      c.read(circlePlansProvider);
+      c.read(recommendationProvider);
+      await R8Harness.settle();
+      return c;
+    }
+
+    /// Plan paused on disk; offer held; Resume (s1) held; [extra] queues
+    /// further lifecycle saves behind it; Start tapped.
+    Future<(ProviderContainer, String, HeldWrite, HeldWrite)> setup(
+      void Function(ProviderContainer c) extra,
+    ) async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final offer = h.disk.hold(recommendationPendingWriteKey);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await offer.reached;
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final s1 = h.disk.hold(circlePlansKey);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await s1.reached;
+      extra(c);
+      today(c).start();
+      await R8Harness.settle();
+      expect(status(c), RecommendationStatus.notStarted);
+      return (c, id, offer, s1);
+    }
+
+    Future<Map<String, Object?>> finish(
+      ProviderContainer c,
+      String id,
+      HeldWrite offer,
+    ) async {
+      offer.release();
+      await R8Harness.settle();
+      final outcome = status(c);
+      final record = (await planOnDisk())['startedWhilePaused'];
+      final starts = startedInHistory(c, id);
+      if (outcome == RecommendationStatus.started) await close(c);
+      await restart();
+      await restart();
+      return {
+        'outcome': outcome.name,
+        'startedWhilePaused': record,
+        'historyStarts': starts,
+        'credits': await credits(id),
+        'lifecycle': (await planOnDisk())['lifecycle'],
+      };
+    }
+
+    test('P11 s1 Resume REFUSED, s2 Pause and s3 Resume (queued before the '
+        'tap) land: the Start was tapped on s3 — the exact save — and may '
+        'go ahead', () async {
+      final (c, id, offer, s1) = await setup((c) {
+        expect(plans(c).pause('getting_going'), PlanActionResult.done);
+        expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      });
+      s1.release(DiskFault.returnsFalse);
+      await R8Harness.settle();
+      final f = await finish(c, id, offer);
+      evidence('P11', f);
+      // Either is contract-compliant; started must credit exactly once.
+      if (f['outcome'] == 'started') expect(f['credits'], 1);
+      if (f['outcome'] == 'notStarted') expect(f['credits'], 0);
+    });
+
+    test('P12 s1 Resume refused, no other save: the confirmed Plan is paused '
+        '— cancelled, no record, no credit', () async {
+      final (c, id, offer, s1) = await setup((_) {});
+      s1.release(DiskFault.returnsFalse);
+      await R8Harness.settle();
+      final f = await finish(c, id, offer);
+      evidence('P12', f);
+      expect(f['outcome'], 'notStarted');
+      expect(f['startedWhilePaused'], isNull);
+      expect(f['historyStarts'], 0);
+      expect(f['credits'], 0);
+    });
+
+    test('P13 s1 Resume lands but its answer is lost (uncertain): cancelled, '
+        'no record, no credit', () async {
+      final (c, id, offer, s1) = await setup((_) {});
+      s1.releaseAckLost();
+      await R8Harness.settle();
+      final f = await finish(c, id, offer);
+      evidence('P13', f);
+      expect(f['outcome'], 'notStarted');
+      expect(f['historyStarts'], 0);
+      expect(f['credits'], 0);
+    });
+
+    test('P14 Delete Circle history while the Start is pending', () async {
+      final (c, id, offer, s1) = await setup((_) {});
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await R8Harness.settle();
+      s1.release();
+      await R8Harness.settle();
+      final f = await finish(c, id, offer);
+      final err = await outcome(deleting);
+      evidence('P14', {...f, 'deleteError': err?.toString()});
+      expect(err, isNull);
+      expect(f['startedWhilePaused'], isNull);
+      if (f['outcome'] == 'notStarted') expect(f['credits'], 0);
+    });
+
+    test('P15 s1 Resume lands (exact save) with a refused unrelated later '
+        'save: the Start goes ahead and is credited once', () async {
+      final (c, id, offer, s1) = await setup((_) {});
+      s1.release();
+      await R8Harness.settle();
+      final f = await finish(c, id, offer);
+      evidence('P15', f);
+      expect(f['outcome'], 'started');
+      expect(f['credits'], 1);
+    });
+  });
+}

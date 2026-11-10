@@ -1,0 +1,15 @@
+237c237,244
+<     expect(kept.single['id'], oldReceipt['keptId'], reason: 'forced collision precondition');
+---
+>     // R8.3.4 CORRECTION (implementer, disclosed): the original asserted the
+>     // forced id collision itself as a precondition. That collision is exactly
+>     // what R833-A02's fix makes unconstructible, so it is recorded instead
+>     // (`collided`) and the decisive assertions below are unchanged. On R8.3.3
+>     // collided=true and the decisive assertion fails; after the fix
+>     // collided=false and the decisive assertions are evaluated as written.
+>     final collided = kept.single['id'] == oldReceipt['keptId'];
+>     expect(kept, hasLength(1), reason: 'exactly one kept Circle');
+246c253
+<       'oldReceipt': oldReceipt, 'kept': kept, 'olderAfterAssess': after,
+---
+>       'oldReceipt': oldReceipt, 'kept': kept, 'collided': collided, 'olderAfterAssess': after,

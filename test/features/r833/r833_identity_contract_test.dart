@@ -140,8 +140,11 @@ void main() {
     expect((await keptOnDisk()).map((k) => k['id']).toSet(), hasLength(3));
   });
 
+  // R8.3.4 (Astra R833-A02): the id A's attempt recorded is now never given
+  // to another Keep, so the forced collision this test once required is
+  // unconstructible; it asserts that instead. A is still never proven.
   test('ID-2 forced collision: I4-A\'s Keep throws before landing; I4-B is '
-      'given the very id A recorded; A is never proven by B\'s Circle',
+      'never given the id A recorded; A is never proven by B\'s Circle',
       () async {
     await h.boot({circleJournalKey: journalOf(i4Journal)});
     final c = h.open();
@@ -176,7 +179,11 @@ void main() {
       ],
       'a': await snapshotOnDisk(first.id),
     });
-    expect(kept.single['id'], recorded, reason: 'collision not forced');
+    expect(
+      kept.single['id'],
+      isNot(recorded),
+      reason: 'an id an unresolved attempt recorded was given again',
+    );
     expect((await snapshotOnDisk(first.id))?['appliedOn'], isNull);
     expect(
       insights(c3).status(insights(c3).state.byId(first.id)!),

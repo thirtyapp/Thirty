@@ -100,6 +100,27 @@ class InsightsNotifier extends Notifier<InsightsState> {
       ref.read(historyWriteGateProvider).isCurrent(epoch) &&
       !_deletionUnderWay;
 
+  /// R8.3.4 (Astra R833-A01, Claude AUD-R833-1): while a Delete's intent is
+  /// being recorded ([CircleHistoryDeletion.intentBeingRecorded]) the store
+  /// already reads it as pending, though it may yet be refused. Once an I3
+  /// or I4 attempt is on disk, its next step waits for that answer instead
+  /// of stopping on it: confirmed, the deletion has begun and
+  /// [_stillCurrent] stops it; refused, the Delete never began and it goes
+  /// on. `null` when no intent is being recorded — nothing to wait for, so
+  /// nothing is awaited. `false` when the answer is uncertain: the deletion
+  /// may be on disk, so it stops, its attempt kept — never made, never made
+  /// twice.
+  ///
+  /// Each caller asks again after every answer, and only then checks
+  /// [_stillCurrent] — in the same step as the change it guards.
+  Future<bool>? _intentAnswer() {
+    if (!ref.mounted) return null;
+    return ref
+        .read(circleHistoryDeletionProvider)
+        .intentBeingRecorded
+        ?.then((outcome) => outcome != DeletionIntentOutcome.uncertain);
+  }
+
   @override
   InsightsState build() {
     final read = _read(ref.watch(sharedPreferencesProvider));
@@ -349,6 +370,13 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// [InsightActionResult.notAvailable] — its Insight is deleted. A change
   /// already queued before the deletion lands before it, and the deletion
   /// removes its attribution as for any earlier write.
+  ///
+  /// R8.3.4 (Astra R833-A01, Claude AUD-R833-1): a Delete whose intent is
+  /// still being recorded hasn't begun. An I3 or I4 whose attempt is on
+  /// disk waits for its answer ([_intentAnswer]): it stops only once the
+  /// deletion has begun — or may have, the answer being uncertain — and
+  /// otherwise goes on, so a Delete the store refused never leaves its
+  /// attempt behind, unmade.
   Future<InsightActionResult> apply(String snapshotId) async {
     final epoch = ref.read(historyWriteGateProvider).epoch;
     await ref.read(circlePlansProvider.notifier).idle();
@@ -456,11 +484,17 @@ class InsightsNotifier extends Notifier<InsightsState> {
       // R8.3.3 (Astra R832-A02): and kept from this very Circle, the one the
       // attempt names — an id alone is never proof, so a kept Circle of
       // another action that came to share it never counts.
+      // R8.3.4 (Astra R833-A02): and the id is this attempt's alone. No
+      // Keep is given an id an attempt here has recorded ([_keep]), so the
+      // kept Circle with it is this attempt's own Keep; an id two attempts
+      // name — only in a record written before R8.3.4 — proves neither.
       case KeepCircleFromHistory(:final circleId):
         final attempt = snapshot.attempt;
         final keptId = attempt?.keptId;
         if (keptId == null ||
-            attempt!.target != InsightAttempt.targetOf(snapshot.application)) {
+            attempt!.target != InsightAttempt.targetOf(snapshot.application) ||
+            state.snapshots.where((s) => s.attempt?.keptId == keptId).length !=
+                1) {
           return null;
         }
         for (final k in ref.read(keptCirclesProvider).kept) {
@@ -473,6 +507,12 @@ class InsightsNotifier extends Notifier<InsightsState> {
         return null;
     }
   }
+
+  /// R8.3.4 (Astra R833-A02): the kept Circle ids the attempts here have
+  /// recorded — proven or not, landed or not.
+  Set<String> _attemptKeptIds() => {
+    for (final s in state.snapshots) ?s.attempt?.keptId,
+  };
 
   /// [from] with every Insight whose action was recorded as being made and
   /// is proven on disk ([_appliedOn]) marked applied on that action's day.
@@ -520,7 +560,17 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// [snapshotId]'s action is known not to have been made: its attempt
   /// record goes, so it can be tried again. If that isn't saved, the record
   /// stays and the Insight is never offered again — never made twice.
+  ///
+  /// R8.3.4 (Astra R833-A01): after the answer to a Delete intent being
+  /// recorded ([_intentAnswer]).
   Future<void> _clearAttempt(String snapshotId, int epoch) async {
+    for (
+      var answer = _intentAnswer();
+      answer != null;
+      answer = _intentAnswer()
+    ) {
+      if (!await answer) return;
+    }
     final s = state.byId(snapshotId);
     if (s?.attempt == null || !_stillCurrent(epoch)) return;
     try {
@@ -655,7 +705,15 @@ class InsightsNotifier extends Notifier<InsightsState> {
           : InsightActionResult.notAvailable;
     }
     // R8.3.3 (Astra R832-A01): the part is left out only if no Delete
-    // began while its attempt was being recorded.
+    // began while its attempt was being recorded. R8.3.4 (Astra R833-A01):
+    // one whose intent is still being recorded is waited for first.
+    for (
+      var answer = _intentAnswer();
+      answer != null;
+      answer = _intentAnswer()
+    ) {
+      if (!await answer) return InsightActionResult.notAvailable;
+    }
     if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
     final outcome = await ref
         .read(suggestionPreferencesProvider.notifier)
@@ -706,16 +764,29 @@ class InsightsNotifier extends Notifier<InsightsState> {
     }
     final plan = CirclePlan.fromWire(entry?.session?.parts);
     if (entry == null || plan == null) return InsightActionResult.notAvailable;
+    // R8.3.4 (Astra R833-A02): never an id another attempt recorded — its
+    // own Keep may not have landed, and the id stays that attempt's, so
+    // another action's kept Circle can never be its proof ([_appliedOn]).
+    // Recorded in the same step ([_recordAttempt]), so no allocation falls
+    // between the two.
     final keptId = ref
         .read(keptCirclesProvider.notifier)
-        .newKeptId(tag: 'insight');
+        .newKeptId(tag: 'insight', avoiding: _attemptKeptIds());
     if (!await _recordAttempt(snapshot, epoch, keptId: keptId)) {
       return _stillCurrent(epoch)
           ? InsightActionResult.notSaved
           : InsightActionResult.notAvailable;
     }
     // R8.3.3 (Astra R832-A01): nothing is kept from History a Delete began
-    // removing while the attempt was being recorded.
+    // removing while the attempt was being recorded. R8.3.4 (Astra
+    // R833-A01): one whose intent is still being recorded is waited for.
+    for (
+      var answer = _intentAnswer();
+      answer != null;
+      answer = _intentAnswer()
+    ) {
+      if (!await answer) return InsightActionResult.notAvailable;
+    }
     if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
     try {
       final circle = await ref

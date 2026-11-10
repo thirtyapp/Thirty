@@ -1,0 +1,15 @@
+# R8.3.4 starting Git state, 2026-11-10T18:43:04+01:00
+branch: step5-billing-integration
+HEAD: 285b5c701243e26efb543c68a2981d5e3471edbe
+HEAD^: d4cf8c44f8f9fd03652f79b10b55c1dd6588edd2
+tree: 7964a4a83d84fe0bb1bacf12f248b023c9ede671
+upstream @{u}: 285b5c701243e26efb543c68a2981d5e3471edbe
+origin/step5 (after fetch): 285b5c701243e26efb543c68a2981d5e3471edbe
+live ls-remote:
+a8b4088b4a00ddd1dde1cd982680409f7b9babac	refs/heads/main
+285b5c701243e26efb543c68a2981d5e3471edbe	refs/heads/step5-billing-integration
+
+## git status --short (tracked changes)
+ M lib/core/world_rendering/quiet_trail_hero_asset_view.dart
+ M test/features/personal_circle/r6_kept_voice_whole_circle_test.dart
+## untracked count: 395

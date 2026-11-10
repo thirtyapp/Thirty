@@ -1,0 +1,10 @@
+== gate probes on fixed
+features/r834_gate/r834_gate_probes_test.dart {'failure': 1, 'success': 4}
+TOTAL {'failure': 1, 'success': 4}
+NOT-PASS features/r834_gate/r834_gate_probes_test.dart :: GATE-A1 two current I4s of different sources applied concurrently under a forced collision, the first one's attempt write held while the second allocates: distinct ids, each Applied by its own Keep only
+== gate probes on red
+features/r834_gate/r834_gate_probes_test.dart {'failure': 3, 'success': 2}
+TOTAL {'failure': 3, 'success': 2}
+NOT-PASS features/r834_gate/r834_gate_probes_test.dart :: GATE-A1 two current I4s of different sources applied concurrently under a forced collision, the first one's attempt write held while the second allocates: distinct ids, each Applied by its own Keep only
+NOT-PASS features/r834_gate/r834_gate_probes_test.dart :: GATE-A1b (stored state: production never shows two current I4s at once) two current I4s of different sources applied concurrently under a forced collision, A's attempt write held while B allocates: distinct ids, each Applied by its own Keep only
+NOT-PASS features/r834_gate/r834_gate_probes_test.dart :: GATE-C1 at 6 kept, a second valid Keep while the first write is held is never rejected: both land, distinct ids, 8 kept

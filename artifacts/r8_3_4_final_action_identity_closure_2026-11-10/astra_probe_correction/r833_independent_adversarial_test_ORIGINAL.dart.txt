@@ -1,0 +1,278 @@
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/utils/date_key.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/suggestion_preferences.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart';
+import 'package:thirty/features/insights/domain/insight.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+import 'package:thirty/features/plans/domain/plan_stage_provenance.dart';
+
+import '../../support/r8_fault_disk.dart';
+import '../../support/r8_harness.dart';
+
+/// Independent R8.3.3 boundary probes. Prepared, NOT RUN by this auditor.
+/// Place at test/features/r833_independent/r833_independent_adversarial_test.dart
+/// in a disposable exact-target checkout, then run flutter test on that file.
+/// Uses the committed FaultDisk/R8Harness and data fixtures; all scenarios below
+/// are independent of the implementer tests. Assertions express the contracts.
+class _StuckRandom implements Random {
+  @override int nextInt(int max) => 7 % max;
+  @override double nextDouble() => 0.5;
+  @override bool nextBool() => false;
+}
+void main() {
+  final morning = DateTime(2026, 10, 30, 9);
+  late R8Harness h;
+
+  CirclePart part(ElementId e) => CirclePart(e, elementOf(e).minutes);
+  final window = [
+    part(ElementId.openWindow),
+    part(ElementId.standingStretch),
+    part(ElementId.sitAMinute),
+  ];
+  final reading = [part(ElementId.phoneFaceDown), part(ElementId.readPages)];
+  final writing = [
+    part(ElementId.closeWhatsOpen),
+    part(ElementId.getItOut),
+    part(ElementId.chooseOne),
+    part(ElementId.firstStep),
+  ];
+  const head = Intention.clearerHead;
+  const energy = Intention.moreEnergy;
+
+  CircleJournalEntry entry(
+    int ago,
+    Intention need, {
+    List<CirclePart> parts = const [],
+    Set<ElementId> skipped = const {},
+    bool useful = false,
+    PlanStageProvenance? stage,
+    PlanStageProvenance? replacedFromStage,
+    String? reason,
+  }) {
+    final date = morning.subtract(Duration(days: ago));
+    return CircleJournalEntry(
+      schemaVersion: circleJournalSchemaVersion,
+      circleId: dateKey(date),
+      localDate: dateKey(date),
+      direction: need,
+      activityId: ActivityId.values.first,
+      catalogVersion: catalogVersion,
+      shownAt: date,
+      startedAt: date,
+      closedAt: date,
+      attemptResponse: useful ? CircleAttemptResponse.yes : null,
+      usefulnessResponse: useful
+          ? (ago.isEven
+                ? CircleUsefulnessResponse.veryUseful
+                : CircleUsefulnessResponse.somewhatUseful)
+          : null,
+      replacementReason: reason,
+      replacedFromStage: replacedFromStage,
+      session: parts.isEmpty
+          ? null
+          : CircleSessionRecord(
+              title: 'Circle',
+              parts: CirclePlan(parts).toWire(),
+              skipped: [for (final e in skipped) e.name],
+              planStage: stage,
+            ),
+    );
+  }
+
+  String journalOf(List<CircleJournalEntry> entries) => jsonEncode({
+    'schemaVersion': circleJournalSchemaVersion,
+    'entries': [for (final e in entries) e.toJson()],
+  });
+
+  // I3: "Open a window" skipped in 3 of its last 4 Circles.
+  final i3Journal = [
+    for (final ago in [2, 4, 6, 8, 10, 12, 15]) entry(ago, head, parts: reading),
+    for (final (k, ago) in [1, 5, 9, 11].indexed)
+      entry(
+        ago,
+        energy,
+        parts: window,
+        skipped: k == 1 ? const {} : {ElementId.openWindow},
+      ),
+  ];
+  // I4: Writing in all 4 useful Clearer Head Circles; keeps 2026-10-29.
+  final i4Journal = [
+    for (final ago in [1, 7, 13, 20])
+      entry(ago, head, parts: writing, useful: true),
+    for (final ago in [3, 9, 16]) entry(ago, head, parts: reading),
+  ];
+  InsightsNotifier insights(ProviderContainer c) =>
+      c.read(insightsProvider.notifier);
+  KeptCirclesNotifier keptN(ProviderContainer c) =>
+      c.read(keptCirclesProvider.notifier);
+
+  Future<Map<String, Object?>> json(String key) async {
+    final raw = (await h.disk.stored())[key];
+    return raw is String ? jsonDecode(raw) as Map<String, Object?> : {};
+  }
+
+  Future<Map?> snapshotOnDisk(String id) async {
+    for (final s in (await json(insightsKey))['snapshots'] as List? ?? []) {
+      if ((s as Map)['id'] == id) return s;
+    }
+    return null;
+  }
+
+  Future<List<Map>> keptOnDisk() async => [
+    for (final k in (await json(keptCirclesKey))['kept'] as List? ?? [])
+      k as Map,
+  ];
+
+
+  setUp(() async { h = R8Harness(morning); await h.boot(); });
+
+  // Each family has both a refusal counterexample and a durable-intent control.
+  for (final family in ['I3', 'I4']) {
+    for (final acceptedDelete in [false, true]) {
+      test('INDEPENDENT intent receipt boundary $family accepted=$acceptedDelete', () async {
+        await h.boot({circleJournalKey: journalOf(family == 'I3' ? i3Journal : i4Journal)});
+        final c = h.open();
+        final shown = insights(c).assess().added.single;
+        expect(shown.family, family == 'I3' ? InsightFamily.skippedPart : InsightFamily.usefulInCommon);
+        await insights(c).idle();
+        final epoch = c.read(historyWriteGateProvider).epoch;
+        final receipt = h.disk.hold(insightsKey);
+        final applying = insights(c).apply(shown.id);
+        await receipt.reached;
+        final intent = h.disk.hold(historyDeletionPendingKey);
+        final deleting = c.read(circleHistoryDeletionProvider).delete()
+          .then<Object?>((_) => null, onError: (Object e) => e);
+        await intent.reached;
+        expect(h.prefs.get(historyDeletionPendingKey), true);
+        expect((await h.disk.stored())[historyDeletionPendingKey], isNull);
+        expect(c.read(historyWriteGateProvider).epoch, epoch);
+        receipt.release();
+        // Let the receipt complete and the apply continuation observe the cached,
+        // unconfirmed intent. The intent's platform call remains held throughout.
+        await R8Harness.settle();
+        if (acceptedDelete) {
+          intent.release();
+        } else {
+          h.disk.fail(historyDeletionPendingKey, DiskFault.returnsFalse);
+          intent.release(DiskFault.returnsFalse);
+        }
+        final deleteError = await deleting;
+        h.disk.heal(historyDeletionPendingKey);
+        final applyResult = await applying;
+        await R8Harness.settle();
+        final beforeRestart = await h.disk.stored();
+        final snapshot = await snapshotOnDisk(shown.id);
+        final provider = insights(c).state.byId(shown.id);
+        final finalEpoch = c.read(historyWriteGateProvider).epoch;
+        await h.restart();
+        final c2 = h.open();
+        final restored = insights(c2).state.byId(shown.id);
+        final retry = await insights(c2).apply(shown.id);
+        // ignore: avoid_print
+        print('INDEPENDENT-EVIDENCE ${jsonEncode({
+          'case': 'intent-$family-$acceptedDelete', 'apply': applyResult.name,
+          'deleteError': deleteError?.toString(), 'epochBefore': epoch,
+          'epochAfter': finalEpoch, 'snapshot': snapshot,
+          'providerHasAttempt': provider?.attempt != null,
+          'restoredStatus': restored == null ? null : insights(c2).status(restored).name,
+          'retry': retry.name, 'disk': beforeRestart,
+        })}');
+        if (acceptedDelete) {
+          expect(deleteError, isNull);
+          expect(snapshot, isNull);
+          expect(beforeRestart[historyDeletionPendingKey], isNull);
+          expect(beforeRestart[suggestionPreferencesKey], isNull);
+          expect(beforeRestart[keptCirclesKey], isNull);
+        } else {
+          expect(deleteError, isA<HistoryDeletionNotStarted>());
+          expect(finalEpoch, epoch);
+          expect(beforeRestart[circleJournalKey], isNotNull);
+          // Contract R833 section 1.8: refused Delete does not stop this action.
+          expect(applyResult, InsightActionResult.done,
+            reason: 'No durable deletion boundary occurred; the receipt must not strand an unperformed action.');
+          expect(snapshot?['attempt'], isNull);
+          expect(snapshot?['appliedOn'], isNotNull);
+          expect(retry, InsightActionResult.alreadyApplied);
+        }
+      });
+    }
+  }
+
+  test('INDEPENDENT exact I4 proof: a new snapshot of the SAME source cannot prove an earlier failed action', () async {
+    await h.boot({circleJournalKey: journalOf(i4Journal)});
+    final c = h.open();
+    final older = insights(c).assess().added.single;
+    expect(older.family, InsightFamily.usefulInCommon);
+    await insights(c).idle();
+    // Let the repeat window expire. No newer useful Circle is added, so the
+    // engine's latest useful target stays exactly the same source Circle.
+    final stored = await h.disk.stored();
+    h.clock.value = morning.add(const Duration(days: 30));
+    await h.boot(stored);
+    final c2 = h.open(overrides: [keptIdRandomProvider.overrideWithValue(_StuckRandom())]);
+    h.disk.fail(keptCirclesKey, DiskFault.throws, times: 1);
+    expect(await insights(c2).apply(older.id), InsightActionResult.notSaved);
+    await insights(c2).idle();
+    final oldReceipt = (await snapshotOnDisk(older.id))?['attempt'] as Map;
+    expect(await keptOnDisk(), isEmpty);
+    final newer = insights(c2).assess().added
+      .where((s) => s.family == InsightFamily.usefulInCommon).single;
+    await insights(c2).idle();
+    expect(newer.id, isNot(older.id));
+    expect((newer.application as KeepCircleFromHistory).circleId,
+      (older.application as KeepCircleFromHistory).circleId);
+    expect(await insights(c2).apply(newer.id), InsightActionResult.done);
+    await insights(c2).idle();
+    final kept = await keptOnDisk();
+    expect(kept.single['id'], oldReceipt['keptId'], reason: 'forced collision precondition');
+    insights(c2).assess();
+    await insights(c2).idle();
+    final after = await snapshotOnDisk(older.id);
+    await h.restart();
+    final c3 = h.open();
+    // ignore: avoid_print
+    print('INDEPENDENT-EVIDENCE ${jsonEncode({
+      'case': 'same-source-false-proof', 'olderId': older.id, 'newerId': newer.id,
+      'oldReceipt': oldReceipt, 'kept': kept, 'olderAfterAssess': after,
+      'olderAfterRestart': insights(c3).state.byId(older.id)?.toJson(),
+    })}');
+    expect(after?['appliedOn'], isNull,
+      reason: 'Only the NEWER Insight executed; matching kept id plus source is not exact action identity.');
+    expect(after?['attempt'], isNotNull);
+  });
+
+  test('INDEPENDENT allocation while a Keep write is held: two distinct keeps get distinct ids', () async {
+    final c = h.open(overrides: [keptIdRandomProvider.overrideWithValue(_StuckRandom())]);
+    final held = h.disk.hold(keptCirclesKey);
+    final first = keptN(c).keepCircle(plan: CirclePlan(writing), need: head, circleId: '2026-10-29');
+    await held.reached;
+    // keepCircle has removed _keepingIds in its commit callback, but state has
+    // not yet been advanced. Same clock/random can now allocate the same id.
+    final cached = jsonDecode(h.prefs.getString(keptCirclesKey)!) as Map;
+    final firstId = (cached['kept'] as List).single['id'];
+    final allocatedWhileHeld = keptN(c).newKeptId();
+    final second = keptN(c).keepCircle(plan: CirclePlan(reading), need: head, circleId: '2026-10-27');
+    held.release();
+    final a = await first; final b = await second;
+    final disk = await keptOnDisk();
+    // ignore: avoid_print
+    print('INDEPENDENT-EVIDENCE ${jsonEncode({
+      'case': 'inflight-allocation', 'firstId': firstId,
+      'allocatedWhileHeld': allocatedWhileHeld, 'resultA': a?.id,
+      'resultB': b?.id, 'disk': disk,
+    })}');
+    expect(b, isNotNull, reason: 'A spare-capacity Keep of another source must get its own id under a forced collision.');
+    expect(a!.id, isNot(b!.id));
+    expect(disk, hasLength(2));
+  });
+}

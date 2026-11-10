@@ -1,0 +1,20 @@
+== controls on red
+features/r832_gate/r832_final_gate_checks_test.dart {'success': 10}
+zz_audit/appb/astra_appendix_b_test.dart {'success': 7}
+zz_audit/audit_r82_adversarial_test.dart {'success': 8}
+zz_audit/audit_r82_order_test.dart {'failure': 1}
+zz_audit/audit_r832_delta_test.dart {'success': 6, 'failure': 1}
+zz_audit/audit_r83_delta_test.dart {'success': 11}
+TOTAL {'success': 42, 'failure': 2}
+NOT-PASS zz_audit/audit_r82_order_test.dart :: AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+NOT-PASS zz_audit/audit_r832_delta_test.dart :: I1/I2 provenance under concurrent application X4 I1 and I2 applied concurrently on one Plan, both marks refused; user pauses by hand; I1 retried
+== controls on fixed
+features/r832_gate/r832_final_gate_checks_test.dart {'success': 10}
+zz_audit/appb/astra_appendix_b_test.dart {'success': 7}
+zz_audit/audit_r82_adversarial_test.dart {'success': 8}
+zz_audit/audit_r82_order_test.dart {'failure': 1}
+zz_audit/audit_r832_delta_test.dart {'success': 6, 'failure': 1}
+zz_audit/audit_r83_delta_test.dart {'success': 11}
+TOTAL {'success': 42, 'failure': 2}
+NOT-PASS zz_audit/audit_r82_order_test.dart :: AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+NOT-PASS zz_audit/audit_r832_delta_test.dart :: I1/I2 provenance under concurrent application X4 I1 and I2 applied concurrently on one Plan, both marks refused; user pauses by hand; I1 retried

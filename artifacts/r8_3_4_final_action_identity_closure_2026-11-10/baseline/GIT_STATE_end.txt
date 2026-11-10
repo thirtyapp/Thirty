@@ -1,0 +1,9 @@
+# R8.3.4 end Git state, 2026-11-10T19:31:38+01:00
+branch: step5-billing-integration
+HEAD: 285b5c701243e26efb543c68a2981d5e3471edbe
+upstream @{u}: 285b5c701243e26efb543c68a2981d5e3471edbe
+live ls-remote:
+a8b4088b4a00ddd1dde1cd982680409f7b9babac	refs/heads/main
+285b5c701243e26efb543c68a2981d5e3471edbe	refs/heads/step5-billing-integration
+staged (git diff --cached --stat): 0 lines
+stash list entries: 0

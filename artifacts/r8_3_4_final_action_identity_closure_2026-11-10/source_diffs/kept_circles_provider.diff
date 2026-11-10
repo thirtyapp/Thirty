@@ -1,0 +1,117 @@
+diff --git a/lib/features/personal_circle/application/kept_circles_provider.dart b/lib/features/personal_circle/application/kept_circles_provider.dart
+index 4d631c2..bb3a53c 100644
+--- a/lib/features/personal_circle/application/kept_circles_provider.dart
++++ b/lib/features/personal_circle/application/kept_circles_provider.dart
+@@ -250,13 +250,14 @@ final keptIdRandomProvider = Provider<Random>((ref) {
+ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+   Future<void> _writes = Future<void>.value();
+ 
+-  /// Days whose Circle is being kept now — counted, so two Keeps at once
+-  /// never keep it twice or pass [maxKeptCircles].
+-  final _keeping = <String>{};
+-
+-  /// R8.3.3 (Astra R832-A02): the ids of the Keeps under way, so two at
+-  /// once never share one.
+-  final _keepingIds = <String>{};
++  /// The Keeps under way: each one's id and the day whose Circle it keeps —
++  /// counted, so two Keeps at once never keep a day twice, pass
++  /// [maxKeptCircles] or share an id (R8.3.3, Astra R832-A02).
++  ///
++  /// R8.3.4 (Astra R833-A03): each is held until its Keep has settled —
++  /// confirmed, refused or failed — never only until its write begins, so
++  /// no id is given again while the write that holds it is still pending.
++  final _keeping = <String, String>{};
+ 
+   @override
+   KeptCircles build() => ref.watch(keptCirclesRepositoryProvider).read();
+@@ -300,7 +301,12 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+   /// ([keptIdRandomProvider]), with a count added only if even that is
+   /// taken. [tag] says who chose it (`insight`), so an id Insight 4 recorded
+   /// is never one a Keep of the user's own is given.
+-  String newKeptId({String? tag}) {
++  ///
++  /// R8.3.4 (Astra R833-A03): a Keep under way holds its id until it has
++  /// settled. R8.3.4 (Astra R833-A02): nor is it any id in [avoiding] — the
++  /// ids Insight attempts have recorded, whose own Keep may never have
++  /// landed ([InsightsNotifier]).
++  String newKeptId({String? tag, Set<String> avoiding = const {}}) {
+     final random = ref.read(keptIdRandomProvider);
+     final bits = (random.nextInt(1 << 24) << 24) | random.nextInt(1 << 24);
+     final base = [
+@@ -310,14 +316,30 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+       ?tag,
+     ].join('-');
+     var id = base;
+-    for (var n = 1; _idTaken(state, id); n++) {
++    for (var n = 1; _idTaken(state, id) || avoiding.contains(id); n++) {
+       id = '$base-$n';
+     }
+     return id;
+   }
+ 
+   bool _idTaken(KeptCircles current, String id) =>
+-      _keepingIds.contains(id) || current.addressedBy(id) > 0;
++      _keeping.containsKey(id) || current.addressedBy(id) > 0;
++
++  /// Whether a Keep of the day [circleId] as [keptId] can't be made on
++  /// [current]: the count isn't known, the kept Circles — with the other
++  /// Keeps under way that [current] doesn't hold yet — are at
++  /// [maxKeptCircles], that day is kept or being kept, or [keptId] is taken.
++  bool _keepRefused(KeptCircles current, String circleId, String keptId) {
++    final others = [
++      for (final MapEntry(key: id, value: day) in _keeping.entries)
++        if (id != keptId && current.addressedBy(id) == 0) day,
++    ];
++    return !current.countKnown ||
++        current.count + others.length >= maxKeptCircles ||
++        current.kept.any((k) => k.fromCircleId == circleId) ||
++        others.contains(circleId) ||
++        current.addressedBy(keptId) > 0;
++  }
+ 
+   /// Keeps today's composed Circle as one of the user's own — named [name],
+   /// or by its need — with the words each part has now. Completes with the
+@@ -344,14 +366,7 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+     String? id,
+   }) async {
+     final keptId = id ?? newKeptId();
+-    bool refused(KeptCircles current) =>
+-        !current.countKnown ||
+-        current.count + _keeping.length >= maxKeptCircles ||
+-        current.kept.any((k) => k.fromCircleId == circleId) ||
+-        current.addressedBy(keptId) > 0;
+-    if (_keeping.contains(circleId) ||
+-        _keepingIds.contains(keptId) ||
+-        refused(state)) {
++    if (_keeping.containsKey(keptId) || _keepRefused(state, circleId, keptId)) {
+       return null;
+     }
+     final trimmed = name?.trim();
+@@ -366,19 +381,17 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+       fromCircleId: circleId,
+       wording: [for (final p in plan.parts) PartWording.of(p.definition)],
+     );
+-    _keeping.add(circleId);
+-    _keepingIds.add(keptId);
++    _keeping[keptId] = circleId;
+     try {
+-      final next = await _commit((current) {
+-        _keeping.remove(circleId);
+-        _keepingIds.remove(keptId);
+-        if (refused(current)) return null;
+-        return current._with(kept: [...current.kept, circle]);
+-      });
++      final next = await _commit(
++        (current) => _keepRefused(current, circleId, keptId)
++            ? null
++            : current._with(kept: [...current.kept, circle]),
++      );
+       return next == null ? null : circle;
+     } finally {
+-      _keeping.remove(circleId);
+-      _keepingIds.remove(keptId);
++      // R8.3.4 (Astra R833-A03): only now, the Keep settled.
++      _keeping.remove(keptId);
+     }
+   }
+ 

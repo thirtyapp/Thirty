@@ -1,0 +1,30 @@
+# R8.3.4 staged-index verification, 2026-11-10T20:18:23+01:00 (before the 2 post-staging records were staged)
+## verify_staged.py
+OK       staged paths == COMMIT_PATHS.txt (minus the 2 post-staging records) — staged 136, expected 136; extra [], missing []
+OK       exactly the 4 approved modifications — ['lib/features/home/application/circle_history_deletion.dart', 'lib/features/insights/application/insights_provider.dart', 'lib/features/personal_circle/application/kept_circles_provider.dart', 'test/features/r833/r833_identity_contract_test.dart']
+OK       no deletion, rename or mode change
+OK       index lib/test/config blobs == tested manifest (386 entries) — differ: []
+OK       staged evidence == working bytes (131 files) — differ: []
+OK       audit-input copies: staged SHA-256 == recorded (6 files)
+OK       docs/audits/THIRTY_INDEPENDENT_POST_R8_3_3_TARGETED_DELTA_AUDIT.md: unchanged, not staged
+OK       docs/audits/THIRTY_R833_INDEPENDENT_AUDIT_EVIDENCE.zip: unchanged, not staged
+OK       original auditor bytes staged: r833_independent_adversarial_test_ORIGINAL.dart.txt 7a0b7ae8
+OK       original auditor bytes staged: audit_r833_delta_test.dart.txt f727ef8d
+OK       original auditor bytes staged: THIRTY_CLAUDE_INDEPENDENT_POST_R8_3_3_AUDIT_extracted.md a55f6d6e
+OK       EVIDENCE_SHA256SUMS.txt from staged blobs: 117/117
+OK       regression rawSha256 == staged raw logs (24 summaries) — differ: []
+STAGED OK
+exit 0
+## verify_staged_eol.py (source/test)
+lib/features/home/application/circle_history_deletion.dart: staged CR=0 worktree CR=373 worktree(CRLF->LF)==staged: True
+lib/features/insights/application/insights_provider.dart: staged CR=0 worktree CR=903 worktree(CRLF->LF)==staged: True
+lib/features/personal_circle/application/kept_circles_provider.dart: staged CR=0 worktree CR=511 worktree(CRLF->LF)==staged: True
+test/features/r833/r833_identity_contract_test.dart: staged CR=0 worktree CR=221 worktree(CRLF->LF)==staged: True
+test/features/r834/r834_reproduction_test.dart: staged CR=0 worktree CR=0 worktree(CRLF->LF)==staged: True
+EOL OK
+## verify_raw_logs.py on the definitive run
+logs 24
+files 207
+results {'success': 3023}
+problems none
+RAW OK
