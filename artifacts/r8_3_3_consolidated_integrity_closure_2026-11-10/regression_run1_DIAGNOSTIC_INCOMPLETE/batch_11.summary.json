@@ -1,0 +1,290 @@
+{
+ "files": {
+  "test/features/insights/presentation/widgets/circle_history_calendar_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/r5_i4_keep_after_lapse_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/r6b_insight_dates_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/insights/r8_f4_insight_dates_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/circle_composer_test.dart": {
+   "passed": 26,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/circle_elements_test.dart": {
+   "passed": 21,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/composed_ui_test.dart": {
+   "passed": 33,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/composer_baseline_equivalence_test.dart": {
+   "passed": 1,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/d2_review_pack_test.dart": {
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/f02_f03_framing_lines_test.dart": {
+   "passed": 40,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/guidance_entitlement_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/personal_circle/guidance_session_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 187,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/features/insights/presentation/widgets/circle_history_calendar_test.dart": [
+   "renders correctly with zero records \u2014 no crash, no marked date, month header shows the current month",
+   "marks exactly the dates backed by an actual retained record, and leaves every other date in the month unmarked",
+   "renders correctly with many records across the month",
+   "tapping a recorded date opens its record detail; tapping an unrecorded date does nothing",
+   "month navigation moves forward and back without altering any daily Circle state \u2014 purely local display state",
+   "survives restart \u2014 a fresh container/widget instance restores the same recorded-date marks from persisted storage",
+   "works with a large accessibility text scale, no overflow",
+   "works on a small-screen viewport, no overflow",
+   "the shell branches map confirms /history/:date exists for the calendar to push into",
+   "live refresh after a Circle is closed an already-mounted calendar shows today's date as soon as the Circle it was watching gets closed \u2014 no manual refresh, no app restart, and the same widget instance (no route/app rebuild)",
+   "live refresh after a Circle is closed no duplicate journal record is created by the refresh path \u2014 exactly one entry remains for today after close()",
+   "live refresh after a Circle is closed closing today's Circle after the visible month was navigated away does not reset the displayed month back to the current one"
+  ],
+  "test/features/insights/r5_i4_keep_after_lapse_test.dart": [
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) Premium active: the I4 Keep keeps the Circle (unchanged)",
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) inactive: the shown I4 still keeps its Circle, once \u2014 and is recorded as applied",
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) unavailable: the shown I4 still keeps its Circle, once \u2014 and is recorded as applied",
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) initializing: the shown I4 still keeps its Circle, once \u2014 and is recorded as applied",
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) lapsed: nothing new is generated, and every other application and \"Not now\" stay Premium \u2014 even called directly",
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) lapsed: I3 \"Leave it out\" \u2014 whose own domain has no Premium check \u2014 is still refused, and nothing is left out",
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) lapsed: an I4 no longer true (stale) keeps nothing",
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) lapsed: an I4 set aside with \"Not now\" keeps nothing",
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) lapsed: an id THIRTY never showed is still refused as Premium \u2014 no new path into the service",
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) lapsed with eight kept: the truthful limit, nothing replaced, nothing recorded",
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) lapsed after Delete Circle history: the Insight is gone, nothing to keep",
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) late entitlement: a lapse mid-session keeps the Keep; generation follows the entitlement as it changes",
+   "R5 \u2014 a shown I4 keeps its Keep after a lapse (A2-05) restart while lapsed: the kept Circle and the applied record survive; a repeat keeps nothing twice"
+  ],
+  "test/features/insights/r6b_insight_dates_test.dart": [
+   "A2-08 \u2014 I1's dates cover its denominator the audit's fixture: 5 of 10, and the range spans all 10 \u2014 not only the chosen need's 5",
+   "A2-08 \u2014 I1's dates cover its denominator when the chosen need spans the window, nothing changes",
+   "A2-09 \u2014 a local date that isn't a real calendar date \"bad\": that record alone is set aside; the rest of the journal and Insights read on",
+   "A2-09 \u2014 a local date that isn't a real calendar date \"2026-02-30\": that record alone is set aside; the rest of the journal and Insights read on",
+   "A2-09 \u2014 a local date that isn't a real calendar date \"2026-13-01\": that record alone is set aside; the rest of the journal and Insights read on",
+   "A2-09 \u2014 a local date that isn't a real calendar date \"2026-1-05\": that record alone is set aside; the rest of the journal and Insights read on",
+   "A2-09 \u2014 a local date that isn't a real calendar date \"2026-10-5\": that record alone is set aside; the rest of the journal and Insights read on",
+   "A2-09 \u2014 a local date that isn't a real calendar date \" 2026-10-05\": that record alone is set aside; the rest of the journal and Insights read on",
+   "A2-09 \u2014 a local date that isn't a real calendar date \"2026-10-05T00:00\": that record alone is set aside; the rest of the journal and Insights read on",
+   "A2-09 \u2014 a local date that isn't a real calendar date a real date is never rewritten: 2024-02-29 (a leap day) reads as stored"
+  ],
+  "test/features/insights/r8_f4_insight_dates_test.dart": [
+   "generatedOn \"garbage\", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "generatedOn \"garbage\", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "generatedOn \"2026-02-30\", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "generatedOn \"2026-02-30\", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "appliedOn \"not a date\", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "appliedOn \"not a date\", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "notNowOn \"30/10/2026\", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "notNowOn \"30/10/2026\", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "declinedOn \"2026-1-5\", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "declinedOn \"2026-1-5\", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "facts.endedOn \"soon\", active: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied",
+   "facts.endedOn \"soon\", inactive: Insights opens and reads without throwing; the snapshot is kept on disk as stored; nothing is applied"
+  ],
+  "test/features/personal_circle/circle_composer_test.dart": [
+   "quality gate deterministic: same inputs, same Circle",
+   "quality gate never over time, never filler, always coherent",
+   "quality gate roles keep their order: arrive, main, second, settle",
+   "quality gate mixing outside with inside-only is never composed",
+   "quality gate a part that needs another never comes without it",
+   "quality gate falls back (null) when nothing honest can be composed",
+   "evidence sparse evidence is neutral: nothing personal is claimed",
+   "evidence a \"Very useful\" activity becomes a main piece, and says so",
+   "evidence relevant before varied: strong evidence keeps its place",
+   "evidence a \"Somewhat useful\" answer alone claims nothing",
+   "evidence evidence for one need never carries into another",
+   "evidence a fragment never borrows its activity\u2019s evidence",
+   "evidence a composed Circle\u2019s answer counts for its unskipped substance only",
+   "evidence a skip is never a \"Not useful\": a skipped part keeps its standing",
+   "evidence a composed answer is never evidence about an activity",
+   "Memory never shows a composed Circle\u2019s answer as the user\u2019s word about one activity (S25 finding, D2)",
+   "user control Don\u2019t suggest for an activity removes its elements, per need",
+   "user control Leave this out removes an element from every Circle",
+   "user control a rest after \"Not useful\" keeps its elements out, then ends",
+   "user control Suggest again lifts the rest at once",
+   "recency and variety yesterday\u2019s main piece is never composed again today",
+   "recency and variety yesterday\u2019s Free activity is not today\u2019s main piece",
+   "recency and variety three weeks of one need and time are not one session on repeat",
+   "Not this one today can\u2019t go outside: nothing outside",
+   "Not this one today too much: gentler and shorter",
+   "Not this one today not feeling it: another main piece of another kind"
+  ],
+  "test/features/personal_circle/circle_elements_test.dart": [
+   "safety no element comes from safety-pending or retired content",
+   "safety every release element is live and offerable",
+   "safety no element breathes, paces or asks for exertion",
+   "safety an element of an activity follows that activity\u2019s status",
+   "identity every id has exactly one element, keyed by its own id",
+   "identity stored ids are stable (journal and kept Circles store them)",
+   "identity a part round-trips; a made-up length never restores",
+   "authored-length truth lengths are authored, short forms truly shorter",
+   "authored-length truth instructions never state a length (one text, every length)",
+   "authored-length truth arrive and settle stay short; main pieces carry the time",
+   "authored-length truth a part that needs another names one that can come before it",
+   "semantic dependencies (correction pass, 2026-10-11) an element that refers back always names what it builds on",
+   "semantic dependencies (correction pass, 2026-10-11) words that only hold at the start or the end take only that place",
+   "semantic dependencies (correction pass, 2026-10-11) in every Circle the composer can make, a part that builds on another comes directly after it \u2014 never without it",
+   "semantic dependencies (correction pass, 2026-10-11) without what it builds on, a dependent part never composes",
+   "semantic dependencies (correction pass, 2026-10-11) skipping a part takes the parts that build on it along",
+   "content guards names are short enough for the Today card line",
+   "content guards no medical claim, outcome promise, pressure or achievement",
+   "content guards every need has main pieces for every time window",
+   "content guards the Today card names a composed Circle by its substance, always short enough for two lines (S25 finding)",
+   "content guards the longest composed line fits two lines of the Today card"
+  ],
+  "test/features/personal_circle/composed_ui_test.dart": [
+   "before Start one Circle: \"Your Circle\", its parts in order, and only what is true about it",
+   "before Start a sparse start claims nothing personal",
+   "running the part on show by name, where it sits, what comes next \u2014 its instruction and time in the card, read out as one",
+   "running THIRTY holds the structure: when a part\u2019s time is up, the next one takes over by itself",
+   "running Skip asks what is meant: skip it today \u2014 the next part begins, and nothing is recorded against it",
+   "running \u2026or leave it out next time \u2014 an explicit preference",
+   "running the Skip sheet never overflows at 200 % text on a narrow phone (S25 finding at 130 %)",
+   "running Keep going changes nothing",
+   "running past the last part: the ending, and Close leads",
+   "running nothing overflows at 130% text",
+   "running nothing overflows at 200% text on a narrow phone",
+   "running spoken guidance: when a part begins, the voice says its cue \u2014 never on a first look into a Circle already under way",
+   "running through the real providers: with the recordings bundled, the platform player gets the part\u2019s clips (S25 finding: the voice never became available)",
+   "running spoken guidance stops at Pause, and says nothing while paused",
+   "running in front, the voice defers to a screen reader (decided by the platform from the screen reader itself, not Flutter\u2019s accessibleNavigation \u2014 S25 finding) \u2014 never two voices at once",
+   "running this build bundles the four production voices, each complete: exactly the 42 manifest clips and its own preview per voice, plus the opening and closing lines (F02/F03, founder approval 2026-10-26), nothing stale, nothing else",
+   "running a voice is all or nothing: one missing clip, or one recorded for an older script, silences that voice and no other",
+   "running voice identities are stable and neutral \u2014 never gender",
+   "running without a bundled voice the voice is silent",
+   "running with every recording bundled the voice plays them \u2014 unless the user turned it off",
+   "running skipping a part skips the parts that build on it, and the sheet says so",
+   "running reduced motion: the same parts, no movement needed",
+   "out of sight \u2014 the background session (ADR-023 \u00a76) Start speaks \"First.\" and opens the session, which keeps the device awake for the rest of the Circle",
+   "out of sight \u2014 the background session (ADR-023 \u00a76) out of sight, the next part is spoken on time and once \u2014 by the voice, not a screen reader, since nothing is on screen \u2014 and the return shows the right part without saying it again",
+   "out of sight \u2014 the background session (ADR-023 \u00a76) the notification\u2019s Pause holds the Circle\u2019s time and lets the device sleep; Resume carries on where it was; Next moves exactly once",
+   "out of sight \u2014 the background session (ADR-023 \u00a76) after the last part the ending is spoken, once, and the session ends once it has been said",
+   "out of sight \u2014 the background session (ADR-023 \u00a76) a first look into a Circle already past its last part says nothing \u2014 not even the ending",
+   "out of sight \u2014 the background session (ADR-023 \u00a76) Close ends the session at once, and so does turning the voice off",
+   "out of sight \u2014 the background session (ADR-023 \u00a76) without the voice there is no session at all",
+   "owned after Close, a composed Circle can be kept \u2014 once",
+   "owned never before Close",
+   "owned a kept Circle\u2019s page: its parts, Use it today, and the user\u2019s own controls",
+   "owned Memory shows what was left out, and puts it back"
+  ],
+  "test/features/personal_circle/composer_baseline_equivalence_test.dart": [
+   "no StageBrief: the composer is unchanged from B1"
+  ],
+  "test/features/personal_circle/d2_review_pack_test.dart": [
+   "coverage: every need and time has honest, structurally varied sessions",
+   "content guards: no medical claim, guarantee, invented personalisation, guilt, pressure, achievement or unsafe wording",
+   "the Premium offer claims nothing a first-day subscriber hasn\u2019t given THIRTY",
+   "export the coverage report and the content pack"
+  ],
+  "test/features/personal_circle/f02_f03_framing_lines_test.dart": [
+   "the lines and their recordings each line says exactly the words on the screen: the opening is the closed Circle\u2019s heading, the closing line its own detail",
+   "the lines and their recordings the 42-cue manifest is unchanged: its identifiers and scripts are not touched, and the lines are no part of it",
+   "the lines and their recordings this build bundles both lines in each of the four voices",
+   "the lines and their recordings a voice is complete without them: a missing line never silences a voice\u2019s guidance",
+   "F02 \u2014 the opening 1 \u00b7 said once when the user starts the Circle \u2014 before \"First.\" \u2014 with its words on show while it is said, then the part",
+   "F02 \u2014 the opening 2 \u00b7 never on opening Today: before Start, and on a first look into a Circle already under way or just begun",
+   "F02 \u2014 the opening 3 \u00b7 Pause and Resume never repeat it; a Pause while it is said stops it and its words",
+   "F02 \u2014 its words on show for exactly its recording each voice\u2019s time on show is its own opening recording\u2019s length (read from the bundled file)",
+   "F02 \u2014 its words on show for exactly its recording Locke: on show until its line ends, then the part",
+   "F02 \u2014 its words on show for exactly its recording Heather: on show until its line ends, then the part",
+   "F02 \u2014 its words on show for exactly its recording Milo: on show until its line ends, then the part",
+   "F02 \u2014 its words on show for exactly its recording Brittney: on show until its line ends, then the part",
+   "F03 \u2014 the closing line 4 \u00b7 said once after the user closes the Circle, with its line on the closed screen",
+   "F03 \u2014 the closing line 5 \u00b7 never duplicated: after the ending it follows \u2014 never cutting it off, never said twice \u2014 and later changes say nothing",
+   "F03 \u2014 the closing line 6 \u00b7 a repeated Close stays one Close: one closing line, the first Close\u2019s time kept",
+   "F03 \u2014 the closing line Close is never held by the voice: with a player that never answers, the Close is saved at once",
+   "7 \u00b7 restart and lifecycle reopening a closed Circle never repeats the closing line",
+   "7 \u00b7 restart and lifecycle THIRTY out of sight and back: neither line again, and the closing line is not stopped by leaving",
+   "8 \u00b7 the calendar day a Circle kept open past midnight, closed on the next day: no \"tomorrow\" \u2014 that day\u2019s Circle is already there",
+   "8 \u00b7 the calendar day closed a moment before midnight, on its own day: the line is true, and said",
+   "8 \u00b7 the calendar day a closed Circle left on show across midnight: \"tomorrow\" goes at midnight, with nothing else to trigger it, and nothing is said",
+   "8 \u00b7 the calendar day the device\u2019s date or time zone changed while it is on show: seen within a minute",
+   "8 \u00b7 the calendar day a restart on the next day: the day resets as before \u2014 the next Circle, never yesterday\u2019s \"tomorrow\"",
+   "8b \u00b7 the Close confirmation and the calendar day on the Circle\u2019s own day: \"until tomorrow\", as approved \u2014 and keeping it open changes nothing",
+   "8b \u00b7 the Close confirmation and the calendar day kept open past midnight: no \"tomorrow\" \u2014 and Close still closes at once, durably, with no closing line",
+   "8b \u00b7 the Close confirmation and the calendar day left open across midnight: \"tomorrow\" goes at midnight itself, with nothing else to trigger it",
+   "8b \u00b7 the Close confirmation and the calendar day the device\u2019s date or time zone changed while it is open: seen within a minute",
+   "8b \u00b7 the Close confirmation and the calendar day a restart on the next day: yesterday\u2019s Circle is never offered to close again \u2014 the day resets, as before",
+   "Premium only 9 \u00b7 a lapse during the Circle stops the voice; its Close says nothing",
+   "Premium only 10 \u00b7 Free: Start and Close say nothing, and the screen shows no opening",
+   "11 \u00b7 each of the four voices Locke: its own opening and closing line",
+   "11 \u00b7 each of the four voices Heather: its own opening and closing line",
+   "11 \u00b7 each of the four voices Milo: its own opening and closing line",
+   "11 \u00b7 each of the four voices Brittney: its own opening and closing line",
+   "12 \u00b7 missing or broken audio a clip the platform can\u2019t play is skipped, never an error \u2014 and the player is told to follow, not cut",
+   "12 \u00b7 missing or broken audio no platform player at all: silent",
+   "13 \u00b7 TalkBack in front, both lines defer to a screen reader (the platform stays silent while it is on); the opening\u2019s words are no live region, and nothing new is announced",
+   "14 \u00b7 interruption and disposal a Close while the opening is said replaces it with the closing line",
+   "14 \u00b7 interruption and disposal THIRTY going away stops the voice and leaves nothing pending",
+   "14 \u00b7 interruption and disposal the voice turned off mid-closing-line stops it"
+  ],
+  "test/features/personal_circle/guidance_entitlement_test.dart": [
+   "Premium: THIRTY\u2019s voice Premium with the voice on: Start speaks in the chosen voice and opens the background session",
+   "Premium: THIRTY\u2019s voice the voice the user chose speaks; a choice the build doesn\u2019t bundle falls back to the one it does",
+   "Free \u2014 a kept Circle stays whole, without THIRTY\u2019s voice no voice and no background service: at Start, at each timed part, out of sight, and at the end",
+   "Free \u2014 a kept Circle stays whole, without THIRTY\u2019s voice the visual runtime is complete: parts move on with time, and Pause, Next and Skip work",
+   "Free \u2014 a kept Circle stays whole, without THIRTY\u2019s voice a screen reader gets exactly what it gets on Premium: the same labels and live regions, and the same announcements",
+   "Free \u2014 a kept Circle stays whole, without THIRTY\u2019s voice reopening the app into a running kept Circle on Free \u2014 or before the entitlement has resolved \u2014 starts no voice and no service",
+   "lapse and return \u2014 a service boundary, not an ownership one a lapse during a voiced Circle: the voice and the service stop at once, the Circle runs on; a resubscription brings the voice back from the next part, never repeating one",
+   "lapse and return \u2014 a service boundary, not an ownership one the user\u2019s voice and on/off choices survive a lapse, untouched, and apply again on return",
+   "You Premium: spoken guidance on or off, and the choice of THIRTY\u2019s four voices",
+   "You the four voices are offered by name, and the preview plays the chosen voice introducing itself \u2014 its own recording, never one of a Circle\u2019s activities",
+   "You with spoken guidance off there is no voice to choose or hear",
+   "You a stored choice no voice answers to (a pre-release placeholder) speaks in the first voice, and is replaced only when the user chooses",
+   "You Free: nothing to set \u2014 and nothing is erased"
+  ],
+  "test/features/personal_circle/guidance_session_test.dart": [
+   "the notification\u2019s controls reach the session listening now \u2014 an older session going away never silences it (S25 finding: Pause reached nothing after the app\u2019s state was rebuilt)",
+   "without a platform session, showing and ending are silent no-ops"
+  ]
+ },
+ "batch": 11,
+ "exit": 0,
+ "seconds": 28,
+ "command": "flutter test --concurrency=1 --reporter json test/features/insights/presentation/widgets/circle_history_calendar_test.dart test/features/insights/r5_i4_keep_after_lapse_test.dart test/features/insights/r6b_insight_dates_test.dart test/features/insights/r8_f4_insight_dates_test.dart test/features/personal_circle/circle_composer_test.dart test/features/personal_circle/circle_elements_test.dart test/features/personal_circle/composed_ui_test.dart test/features/personal_circle/composer_baseline_equivalence_test.dart test/features/personal_circle/d2_review_pack_test.dart test/features/personal_circle/f02_f03_framing_lines_test.dart test/features/personal_circle/guidance_entitlement_test.dart test/features/personal_circle/guidance_session_test.dart",
+ "rawSha256": "669841a33dfafef948f936a9292407bb2e9fff1a72420f25ec4b89bd9e8005d3"
+}

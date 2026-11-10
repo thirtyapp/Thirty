@@ -1,0 +1,202 @@
+{
+ "files": {
+  "test/core/premium/premium_access_test.dart": {
+   "passed": 19,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/premium/r8_restore_wording_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/premium/revenue_cat_entitlement_gateway_test.dart": {
+   "passed": 23,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/providers/clock_provider_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/providers/shared_preferences_provider_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/providers/theme_mode_provider_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_entitlement_gateway_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_free_v2_scenarios_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_isolation_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_phase_c_scenarios_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_premium_gate_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/qa/qa_premium_harness_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 99,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/core/premium/premium_access_test.dart": [
+   "premiumEntitlementProvider (production billing seam) defaults to unentitled \u2014 no production build ever falsely grants Premium access, even before any override",
+   "premiumEntitlementProvider (production billing seam) can still be overridden directly for tests/dev via dependency injection, exactly as Batch 2A documented",
+   "premiumEntitlementProvider (production billing seam) is true only while entitlementStatusProvider is active",
+   "premiumEntitlementProvider (production billing seam) never becomes true for initializing, inactive or unavailable status",
+   "entitlementStatusProvider (EntitlementNotifier) starts as initializing without ever touching the gateway \u2014 a bare read must never synchronously reach the billing SDK",
+   "entitlementStatusProvider (EntitlementNotifier) production default (no override) resolves to unavailable on initialize \u2014 missing billing configuration fails closed for Premium without throwing",
+   "entitlementStatusProvider (EntitlementNotifier) initialize() adopts the gateway's resolved status",
+   "entitlementStatusProvider (EntitlementNotifier) is idempotent \u2014 calling initialize() again re-resolves cleanly (app restart / foreground-resume lifecycle refresh)",
+   "entitlementStatusProvider (EntitlementNotifier) reflects a background status change pushed after initialize \u2014 renewal, grace/hold transition, or a restore triggered elsewhere",
+   "entitlementStatusProvider (EntitlementNotifier) cancellation with paid time remaining stays active \u2014 Google Play reports isActive=true for both a normal period and a cancelled one before its expiryTime, and the gateway maps both to active (frozen architecture \u00a76: cancellation is not immediate loss)",
+   "entitlementStatusProvider (EntitlementNotifier) grace period stays active \u2014 Play reports IN_GRACE_PERIOD as isActive=true while the payment retry window is open",
+   "entitlementStatusProvider (EntitlementNotifier) account hold, expiry, revocation and refund all resolve to inactive, never crash, never fabricate Premium",
+   "entitlementStatusProvider (EntitlementNotifier) purchaseMonthly() re-syncs authoritative state from the gateway, not from the call merely returning",
+   "entitlementStatusProvider (EntitlementNotifier) a completed purchase whose entitlement is not (yet) active is confirming, never claimed as purchased",
+   "entitlementStatusProvider (EntitlementNotifier) a pending payment is reported as pending, leaves entitlement untouched, and unlocks later through the status stream",
+   "entitlementStatusProvider (EntitlementNotifier) a provider error stays an error and never changes entitlement",
+   "entitlementStatusProvider (EntitlementNotifier) user-cancelled purchase is an ordinary outcome, not an error, and never changes entitlement state",
+   "entitlementStatusProvider (EntitlementNotifier) restore() is idempotent \u2014 repeating it with nothing to restore always yields notFound, never an error",
+   "entitlementStatusProvider (EntitlementNotifier) successful restore re-syncs authoritative active state"
+  ],
+  "test/core/premium/r8_restore_wording_test.dart": [
+   "restore reported, billing then active: restored, and Premium is exactly what billing says",
+   "restore reported, billing then inactive: unavailable, and Premium is exactly what billing says",
+   "restore reported, billing then unavailable: unavailable, and Premium is exactly what billing says"
+  ],
+  "test/core/premium/revenue_cat_entitlement_gateway_test.dart": [
+   "RevenueCatEntitlementGateway status mapping (A2-01) a never-purchased customer \u2014 no entitlement listed at all \u2014 is inactive, not unavailable, and never Premium",
+   "RevenueCatEntitlementGateway status mapping (A2-01) a previously expired subscription is inactive",
+   "RevenueCatEntitlementGateway status mapping (A2-01) a currently active subscription is active",
+   "RevenueCatEntitlementGateway status mapping (A2-01) a failed customer lookup stays unavailable \u2014 fails closed, never inactive and never Premium",
+   "RevenueCatEntitlementGateway status mapping (A2-01) a failed SDK setup stays unavailable",
+   "RevenueCatEntitlementGateway status mapping (A2-01) a valid offering never implies ownership: the configured entitlement absent \u2014 even beside another, active one \u2014 is inactive while the offer itself is available",
+   "RevenueCatEntitlementGateway status mapping (A2-01) no current monthly package: no offer, and a purchase attempt is unavailable, not an error",
+   "RevenueCatEntitlementGateway status mapping (A2-01) a failed offerings lookup is no offer",
+   "RevenueCatEntitlementGateway purchase and restore (A2-01) a never-purchased customer buys: the active entitlement RevenueCat returns makes it purchased, and Premium follows",
+   "RevenueCatEntitlementGateway purchase and restore (A2-01) a completed purchase whose result lists no active entitlement is confirming, never purchased",
+   "RevenueCatEntitlementGateway purchase and restore (A2-01) a closed purchase sheet, a pending payment and a store error map to their outcomes",
+   "RevenueCatEntitlementGateway purchase and restore (A2-01) restore: nothing owned is notFound, an owned entitlement is restored, a provider error is an error",
+   "PremiumOfferPage through the real adapter (A2-01) a never-purchased customer sees the store price and the one purchase button",
+   "PremiumOfferPage through the real adapter (A2-01) a never-purchased customer with no current offering sees pricing unavailable and no purchase button \u2014 never a broken one",
+   "PremiumOfferPage through the real adapter (A2-01) an expired subscriber sees the purchase button",
+   "PremiumOfferPage through the real adapter (A2-01) an active subscriber sees their status, never a price or a purchase button",
+   "PremiumOfferPage through the real adapter (A2-01) a failed customer lookup shows the truthful unavailable note and no purchase button",
+   "PremiumOfferPage through the real adapter (A2-01) a never-purchased customer can buy from the offer: RevenueCat confirms, the page says so and shows Premium active",
+   "overlapping entitlement refreshes (J18) a resume refresh still in flight when a purchase is confirmed never overwrites the confirmed Premium with its older answer",
+   "overlapping entitlement refreshes (J18) an older lookup failing late never downgrades a newer verified answer to unavailable",
+   "overlapping entitlement refreshes (J18) the newest lookup still wins when it is also the last to answer \u2014 a genuine expiry is never held back",
+   "overlapping entitlement refreshes (J18) a newer failed lookup still reports unavailable \u2014 failure after a verified answer is never hidden",
+   "overlapping entitlement refreshes (J18) a lookup started before RevenueCat pushes a change never overwrites that newer push"
+  ],
+  "test/core/providers/clock_provider_test.dart": [
+   "nowProvider returns the current moment by default",
+   "nowProvider can be overridden for deterministic date-dependent logic"
+  ],
+  "test/core/providers/shared_preferences_provider_test.dart": [
+   "sharedPreferencesProvider throws until it has been overridden",
+   "sharedPreferencesProvider returns the overridden instance"
+  ],
+  "test/core/providers/theme_mode_provider_test.dart": [
+   "themeModeProvider no stored value \u2192 System",
+   "themeModeProvider selecting system updates state and stores it",
+   "themeModeProvider stored system rehydrates as system on a cold start",
+   "themeModeProvider selecting light updates state and stores it",
+   "themeModeProvider stored light rehydrates as light on a cold start",
+   "themeModeProvider selecting dark updates state and stores it",
+   "themeModeProvider stored dark rehydrates as dark on a cold start",
+   "themeModeProvider a choice survives a new container over the same storage \u2014 the cold-start path",
+   "themeModeProvider malformed stored value \"\" falls back to System",
+   "themeModeProvider malformed stored value \"Dark\" falls back to System",
+   "themeModeProvider malformed stored value \"sepia\" falls back to System",
+   "themeModeProvider malformed stored value \"ThemeMode.dark\" falls back to System",
+   "themeModeProvider a stored value of the wrong type falls back to System"
+  ],
+  "test/core/qa/qa_entitlement_gateway_test.dart": [
+   "active resolves to EntitlementStatus.active; Premium is on",
+   "inactive resolves to EntitlementStatus.inactive; Premium is off",
+   "unavailable resolves to EntitlementStatus.unavailable; Premium is off",
+   "only the three existing statuses are simulated \u2014 no new EntitlementStatus exists for a lapsed subscriber",
+   "the QA gateway sells nothing: no offer, purchase and restore unavailable, no management link, entitlement unchanged"
+  ],
+  "test/core/qa/qa_free_v2_scenarios_test.dart": [
+   "A \u00b7 new user: the curated start, nothing personal, \u2248 20",
+   "B \u00b7 one Not useful: on day 5 that activity is resting",
+   "C \u00b7 useful before: it comes back, and says so",
+   "I \u00b7 exploration: a settled need is offered something new",
+   "H \u00b7 a secondary fit promoted by its evidence, at \u2248 10",
+   "J \u00b7 V1 history: compatible counts, LEARNING_RESET does not"
+  ],
+  "test/core/qa/qa_isolation_test.dart": [
+   "building any scenario never writes to the genuine store",
+   "synthetic scenarios never contain genuine history \u2014 only the carried appearance and name preferences",
+   "a whole Circle walked inside a QA session lands in the QA store only",
+   "the sandboxed real-data session starts from a copy of the genuine history, and its writes stay in the copy",
+   "reset returns the genuine state exactly as it was"
+  ],
+  "test/core/qa/qa_phase_c_scenarios_test.dart": [
+   "A\u2013C \u00b7 Open: fresh, its time reached, and four minutes in",
+   "D\u2013G \u00b7 Guided: step 1, the middle, paused, its time reached",
+   "H \u00b7 Paced opens on the internal bench, never on Today; B6's scenarios open on the Insights tab; every other scenario on Today",
+   "I\u2013K \u00b7 closed: no answer, \"Very useful\", \"Not useful\"",
+   "L\u2013O \u00b7 memory: mixed, resting, \"Don't suggest\", a lifted rest",
+   "P \u00b7 nothing fits More Energy at \u2248 10, and the time is preset to it",
+   "Q\u2013R \u00b7 history with preferences, to delete or to reset"
+  ],
+  "test/core/qa/qa_premium_gate_test.dart": [
+   "qaPremiumHarnessAllowed a release or profile build (kDebugMode false) can never enable the harness, with or without the flag",
+   "qaPremiumHarnessAllowed a debug build without the flag stays on the normal path",
+   "qaPremiumHarnessAllowed only a debug build with the flag enables the harness",
+   "qaPremiumHarnessAllowed the compile-time gate is off when THIRTY_QA_PREMIUM is not defined, as in this test run",
+   "qaContainerOverrides with no QA session the container is production's: the genuine store, the unchanged gateway selection, real analytics",
+   "qaContainerOverrides with a QA session every substitution happens together: isolated store, QA gateway, silent analytics, inert reminders",
+   "outside lib/core/qa, only main.dart references the QA harness \u2014 no QA branches spread through production feature code"
+  ],
+  "test/core/qa/qa_premium_harness_test.dart": [
+   "marker lines tell real, sandboxed and synthetic states apart",
+   "starts on the genuine state, applies a scenario only when asked, and resets back",
+   "applying another scenario is a fresh app start: no pushed route, page state or message from the previous session",
+   "Reset to real is a fresh app start on the genuine data, with nothing left from the QA session but the OFF marker",
+   "\"Keep this QA data\" reopens the same QA session under another entitlement, never the genuine store (audit remediation R2)",
+   "production keeps one shared router; only the harness builds fresh ones",
+   "ThirtyApp without a router uses the shared appRouter"
+  ]
+ },
+ "batch": 2,
+ "exit": 0,
+ "seconds": 32,
+ "command": "flutter test --concurrency=1 --reporter json test/core/premium/premium_access_test.dart test/core/premium/r8_restore_wording_test.dart test/core/premium/revenue_cat_entitlement_gateway_test.dart test/core/providers/clock_provider_test.dart test/core/providers/shared_preferences_provider_test.dart test/core/providers/theme_mode_provider_test.dart test/core/qa/qa_entitlement_gateway_test.dart test/core/qa/qa_free_v2_scenarios_test.dart test/core/qa/qa_isolation_test.dart test/core/qa/qa_phase_c_scenarios_test.dart test/core/qa/qa_premium_gate_test.dart test/core/qa/qa_premium_harness_test.dart",
+ "rawSha256": "e87768ed72d56436661a7f75f44404e210eb0f8af7b5c5ee8ec973e2217f1568"
+}

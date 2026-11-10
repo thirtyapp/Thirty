@@ -1,0 +1,5 @@
+DONE success= True
+pass 3 fail 0
+PASS ID-1 one clock instant, one random value: every Keep still gets its own id, and a user's Keep never an Insight
+PASS ID-2 forced collision: I4-A's Keep throws before landing; I4-B is given the very id A recorded; A is never pro
+PASS ID-3 a caller id taken by a kept Circle THIRTY can't read is refused

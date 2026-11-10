@@ -1,0 +1,32 @@
+DONE success= True
+pass 30 fail 0
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01 (Astra) I1 waits on the reconciliation of I2;
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v2 I2 waits on the reconciliation of I1 acros
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v3 the reconciliation write is returnsFalse a
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v3 the reconciliation write is throws across 
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v4 Delete begins while the Insight still wait
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v5 Delete while the Insight's own Plans write
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v6 Delete after the Insight's Plans write lan
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v7 control: the Delete is refused before its 
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v8 the Delete is interrupted (its intent stay
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v9 repeated Delete while the Insight waits: b
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v10 a fresh Insight after the completed Delet
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v11 the user's own Plan choices, Kept Circle 
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-x1 I3: its attempt record is held when Delete
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-x2 I4: its attempt record is held when Delete
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-A (Astra) two I4s applied in one cached-clock ep
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-B (Astra) I4-A's Keep throws before landing; a d
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-B2 a stored kept Circle with the very id I4-A re
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-C the Kept Circles domain refuses a caller id al
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-D two concurrent Keeps with one caller id: one l
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-E existing duplicate ids on disk are never remov
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-F control: without Premium, I4's Keep of the use
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-G control: the app stops right after the Keep la
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-H control: the Keep is refused (returns false): 
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-I control: Delete Circle history keeps both kept
+PASS AUD-R832-1 — a pending Start is authorized only by its own Plan write X1 (Claude) the Resume pending at the ta
+PASS AUD-R832-1 — a pending Start is authorized only by its own Plan write X2 (Claude) the Resume pending at the ta
+PASS AUD-R832-1 — a pending Start is authorized only by its own Plan write X2-ctl (Claude) the Resume pending at th
+PASS AUD-R832-1 — a pending Start is authorized only by its own Plan write X-ctl accepted case: the Resume pending 
+PASS AUD-R832-1 — a pending Start is authorized only by its own Plan write X3 the Resume pending at the tap throws 
+PASS AUD-R832-1 — a pending Start is authorized only by its own Plan write X4 the refused Resume, then a Resume and

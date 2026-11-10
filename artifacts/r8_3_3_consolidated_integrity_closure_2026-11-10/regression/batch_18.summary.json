@@ -1,0 +1,32 @@
+{
+ "files": {
+  "test/features/b8/b8_product_simulation_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 6,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/features/b8/b8_product_simulation_test.dart": [
+   "B8 \u2014 the whole product over twelve months (structure only) A \u2014 a user who never answers still gets the whole service, and nothing claims what they never said",
+   "B8 \u2014 the whole product over twelve months (structure only) B \u2014 a mixed answerer: answers move what is composed, Stage 5 uses only what this cycle allows, reviews say what was said",
+   "B8 \u2014 the whole product over twelve months (structure only) C \u2014 More Energy every day at \u224810: no stall, the safety gate holds, repetition measured honestly",
+   "B8 \u2014 the whole product over twelve months (structure only) D \u2014 lapse is fair: everything owned stays, new Premium work stops, resubscribing resumes where it was",
+   "B8 \u2014 the whole product over twelve months (structure only) voice follows the entitlement: a lapse silences it, the choice is kept",
+   "B8 \u2014 the whole product over twelve months (structure only) E \u2014 the twelve-month record of all four, and the report"
+  ]
+ },
+ "batch": 18,
+ "exit": 0,
+ "seconds": 261,
+ "command": "flutter test --concurrency=1 --reporter json test/features/b8/b8_product_simulation_test.dart",
+ "rawSha256": "e845bf39f50c7d6bb20a6f772d692edb6ab51cef9c9ea7f9829ab72241bc4c02"
+}

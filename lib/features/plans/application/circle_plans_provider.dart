@@ -53,11 +53,17 @@ enum PlanActionResult {
 /// it once what the user saw has landed — and the notifier [epoch] that
 /// counted them, so a change that returns the Plan to where it was is never
 /// mistaken for no change.
+///
+/// R8.3.3 (Claude AUD-R832-1): with the [pendingSave] — the one save of this
+/// Plan still being written that moved it to where the user saw it — when
+/// there was one. Only that save, confirmed, is the change the Start was
+/// asked for on; another change confirmed in its place never is.
 typedef PlanStartConditions = ({
   PlanLifecycle lifecycle,
   String? cycleId,
   int generation,
   Object epoch,
+  int? pendingSave,
 });
 
 /// R8.3.2 (founder decision on N01-C): the Plan's lifecycle or cycle changed
@@ -112,6 +118,15 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   /// conditions captured before a rebuild never match after it.
   Object _epoch = Object();
 
+  /// R8.3.3 (Claude AUD-R832-1): every save's number, in the order they
+  /// were asked for ([_set]) — from 1. Per Plan: the save that last moved
+  /// where the Plan is shown ([_shownMovedBy]), and the save whose change of
+  /// its place was last counted in [_generations] ([_countedFrom]). In
+  /// memory only, as the count is.
+  int _saves = 0;
+  final Map<String, int> _shownMovedBy = {};
+  final Map<String, int> _countedFrom = {};
+
   /// The most rounds a decision waits for pending Plan changes to settle
   /// before it refuses (R8.2): each round waits for real writes, so only
   /// a user changing the Plans again and again reaches it.
@@ -140,24 +155,34 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
     _queuedWrite = null;
     _epoch = Object();
     _generations.clear();
+    _shownMovedBy.clear();
+    _countedFrom.clear();
     return read;
   }
 
   /// R832-G1: [next] is now what the store holds. Every Plan whose
   /// lifecycle or current cycle differs from what it held before counts one
   /// confirmed change.
-  void _confirm(CirclePlansState next) {
-    _countChanges(_durable, next);
+  ///
+  /// R8.3.3: [by] is the save that wrote it ([_countedFrom]).
+  void _confirm(CirclePlansState next, {int? by}) {
+    _countChanges(_durable, next, by: by);
     _durable = next;
   }
 
-  void _countChanges(CirclePlansState from, CirclePlansState to) {
-    for (final planId in {...from.plans.keys, ...to.plans.keys}) {
-      if (!_samePlace(from.plans[planId], to.plans[planId])) {
-        _generations[planId] = (_generations[planId] ?? 0) + 1;
-      }
+  void _countChanges(CirclePlansState from, CirclePlansState to, {int? by}) {
+    for (final planId in _moved(from, to)) {
+      _generations[planId] = (_generations[planId] ?? 0) + 1;
+      _countedFrom[planId] = by ?? 0;
     }
   }
+
+  /// The Plans whose lifecycle or current cycle differs between [from] and
+  /// [to].
+  static Iterable<String> _moved(CirclePlansState from, CirclePlansState to) =>
+      {...from.plans.keys, ...to.plans.keys}.where(
+        (planId) => !_samePlace(from.plans[planId], to.plans[planId]),
+      );
 
   static bool _samePlace(PlanProgress? a, PlanProgress? b) =>
       (a?.lifecycle ?? PlanLifecycle.neverStarted) ==
@@ -248,6 +273,12 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   /// still being written is pending: shown, but nothing that must be
   /// durable is decided on it ([confirmedState], [confirmServed]).
   Future<void> _set(CirclePlansState next, {bool report = true}) {
+    // R8.3.3 (Claude AUD-R832-1): this save's own number, and the Plans it
+    // moves on screen.
+    final save = ++_saves;
+    for (final planId in _moved(state, next)) {
+      _shownMovedBy[planId] = save;
+    }
     state = next;
     final json = jsonEncode(next.toJson());
     final prefs = _prefs;
@@ -259,7 +290,10 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
       // R8.2 (Astra R81-A02): a save queued before Delete Circle history
       // began lands before the deletion's own write — but its stage
       // evidence is never again what the Plans fall back to or decide on.
-      _confirm(generation == _deletions ? next : next.forgetStageEvidence());
+      _confirm(
+        generation == _deletions ? next : next.forgetStageEvidence(),
+        by: save,
+      );
     });
     _queued = next;
     _queuedWrite = write;
@@ -280,7 +314,7 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
         // Plan it would have moved: no Start is authorized on a lifecycle
         // that can't be verified. One the store refused is not.
         if (error is! StorageWriteFailed || error.uncertain) {
-          _countChanges(_durable, next);
+          _countChanges(_durable, next, by: save);
         }
         if (!ref.mounted) return;
         ref
@@ -942,20 +976,30 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
   /// saved when the Plan shown is not where the store holds it — the Start
   /// was asked for on that change, so it landing cancels nothing. Any
   /// further confirmed change does.
+  ///
+  /// R8.3.3 (Claude AUD-R832-1): that change is the save that moved the Plan
+  /// to where it is shown ([PlanStartConditions.pendingSave]) — only it.
+  /// Refused, it never happened, and a later change that lands in its place
+  /// is a different one: the Start is cancelled ([prepareStart]).
   PlanStartConditions startConditions(PlanStageProvenance stage) {
     final plan = state.plans[stage.planId];
-    final pending = _samePlace(_durable.plans[stage.planId], plan) ? 0 : 1;
+    final moved = !_samePlace(_durable.plans[stage.planId], plan);
     return (
       lifecycle: plan?.lifecycle ?? PlanLifecycle.neverStarted,
       cycleId: plan?.current.id,
-      generation: (_generations[stage.planId] ?? 0) + pending,
+      generation: (_generations[stage.planId] ?? 0) + (moved ? 1 : 0),
       epoch: _epoch,
+      // 0 is no save's number: a Plan shown moved by no save cancels.
+      pendingSave: moved ? _shownMovedBy[stage.planId] ?? 0 : null,
     );
   }
 
   /// R832-G1: the Start [accepted] still stands on the Plans as confirmed —
   /// this notifier's count, no other change confirmed, and the Plan where
   /// the user saw it.
+  ///
+  /// R8.3.3 (Claude AUD-R832-1): when it was asked for on a save still being
+  /// written, the one change counted since is that very save's.
   bool _startStillValid(
     PlanStageProvenance stage,
     PlanStartConditions accepted,
@@ -963,6 +1007,8 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
       ref.mounted &&
       identical(accepted.epoch, _epoch) &&
       (_generations[stage.planId] ?? 0) == accepted.generation &&
+      (accepted.pendingSave == null ||
+          _countedFrom[stage.planId] == accepted.pendingSave) &&
       _startConditionsHold(_durable, stage, accepted);
 
   static bool _startConditionsHold(

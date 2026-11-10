@@ -1,0 +1,48 @@
+DONE success= False
+pass 42 fail 2
+PASS R82-N01 I1 retry repairs only after manual pause
+PASS R82-N01 I1 retry repairs only after manual leave
+PASS R82-N01 I2 retry preserves a later manual stopGentler
+PASS R82-N02 queued manual I3 target is never claimed by Insight
+PASS AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source domain: a served record read from disk with s
+PASS R82-N03 decoded expiry true must serialize a later false
+PASS R82-N04 valid AppliedInsight preserves nested extension fields
+PASS R82-N05 delayed Start must revalidate its local day
+PASS AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source end to end: Start after verified expiry, proc
+PASS AUD-N1 stale startedAfterExpiry kept by ServedStageCircle.source control: same sequence without the final rest
+PASS AUD-N2 lifecycle-order instants survive Delete Start, Delete history, same-day stage Circle re-served, Plan pa
+PASS AUD-A2-indep (throws): one transient served-stage failure at choice → offer taken back and user told; next cho
+PASS AUD-A2-indep (returnsFalse): one transient served-stage failure at choice → offer taken back and user told; ne
+PASS AUD-N4 waiting Start across a Today rebuild (app resume) Start waits for its Plans record; the app is resumed 
+PASS AUD-N3 Delete begun while a failing Plan change is in flight the failure is reported, yet Delete writes the ch
+FAIL AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+     -> Expected: RecommendationStatus:<RecommendationStatus.started>   Actual: RecommendationStatus:<RecommendationStatus.notStarted> 
+PASS G1 residual — the +1 pending allowance is satisfied by another change than the one the Start was asked on X1 R
+PASS G1 residual — the +1 pending allowance is satisfied by another change than the one the Start was asked on X2 R
+PASS G1 residual — the +1 pending allowance is satisfied by another change than the one the Start was asked on X2-c
+PASS Uncertain Pause (ack lost) then a fresh Start X3 Pause lands, answer lost; memory rolls back to active; fresh 
+PASS Uncertain Pause (ack lost) then a fresh Start X3-ctl same, no process death: Close in the same process
+PASS AUD-O3 adjudication AUD-O3' Start tapped while its offer save is pending, then Pause confirmed, offer lands: c
+FAIL I1/I2 provenance under concurrent application X4 I1 and I2 applied concurrently on one Plan, both marks refuse
+     -> Expected: InsightStatus:<InsightStatus.current>   Actual: InsightStatus:<InsightStatus.stale> PRECONDITION I2 current 
+PASS AUD-R83-1: the paused-Start fact is lost by a new cycle Pause → Start → Close → Resume → Leave → Again → resta
+PASS AUD-R83-1: the paused-Start fact is lost by a new cycle Pause → Start → Resume → Close → Leave → Again → resta
+PASS AUD-R83-1: the paused-Start fact is lost by a new cycle next day instead of a restart (overwrite catch-up): ne
+PASS AUD-R83-1: the paused-Start fact is lost by a new cycle control — same without Again: the slot holds, never cr
+PASS AUD-R83-1: the paused-Start fact is lost by a new cycle control — Start → Close → Leave → Again (valid): credi
+PASS AUD-R83-2: eligibility judged from an optimistic Resume that the store refuses Pause (saved); Resume refused b
+PASS Check A — lifecycle ABA while a Start is pending A1 Paused → Start pending → Resume confirmed → Pause confirme
+PASS Check A — lifecycle ABA while a Start is pending A2 Active → Start pending → Pause confirmed → Resume confirme
+PASS AUD-R83-3: a recorded paused Start that never became the Start Pause; Start whose paused-Start record lands bu
+PASS Check A — lifecycle ABA while a Start is pending A3 Active → Start pending → another Plan started (this one pa
+PASS AUD-R83-3: a recorded paused Start that never became the Start Pause; Start whose own day-keys save fails afte
+PASS Check A — lifecycle ABA while a Start is pending A4 Paused → Start pending → Resume refused → resolves: no con
+PASS Delete × paused Start Pause, Start, Close, Delete, Resume, same-day stage re-served, Start, Close: credited on
+PASS Check A — lifecycle ABA while a Start is pending A5 a same-day rebuild while the Start is pending cancels it; 
+PASS Delete × paused Start Delete while the paused-Start record is being written: the Start and the Delete both res
+PASS Check B — receipt integrity Ba the Preferences write throws before storage: uncertain — never replayed, never 
+PASS Premium × paused Start lapse verified, Pause, Start, Close; resubscribe; Resume; Leave; Again; restart: never 
+PASS Check B — receipt integrity Bb the change confirmed, the mark refused, no reversal: opening Insights records t
+PASS Check B — receipt integrity Bc another Insight generated and applied while an I3 attempt is unresolved: the re
+PASS Check B — receipt integrity Bd an interrupted Delete Circle history (the app stops after its intent): finished
+PASS Check B — receipt integrity Be I1/I2: I2 applied, mark refused; seven days on, I1's reconciliation of I2 lands

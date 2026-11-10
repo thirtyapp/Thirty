@@ -1,0 +1,4 @@
+DONE success= False
+pass 0 fail 1
+FAIL loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/85a53bc7-bc99-4e35-87a5-dbe747883b7f/scratch
+     -> Failed to load "C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/85a53bc7-bc99-4e35-87a5-dbe747883b7f/scratchpad/r832_export/test/features/r833/r833_identity_contract_test.dart": Compilation failed for testPath=C:/Users/thoma/AppData/Local/Temp/claude

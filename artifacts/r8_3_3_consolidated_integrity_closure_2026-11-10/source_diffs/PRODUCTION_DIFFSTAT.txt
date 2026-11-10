@@ -1,0 +1,6 @@
+ lib/core/qa/qa_scenario.dart                       |   4 +
+ .../home/application/circle_history_deletion.dart  |  14 ++-
+ .../insights/application/insights_provider.dart    | 131 +++++++++++++++++----
+ .../application/kept_circles_provider.dart         |  80 ++++++++++++-
+ .../plans/application/circle_plans_provider.dart   |  68 +++++++++--
+ 5 files changed, 252 insertions(+), 45 deletions(-)

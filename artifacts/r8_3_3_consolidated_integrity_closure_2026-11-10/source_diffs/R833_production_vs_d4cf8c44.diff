@@ -1,0 +1,669 @@
+diff --git a/lib/core/qa/qa_scenario.dart b/lib/core/qa/qa_scenario.dart
+index e130d6a..59f7c9c 100644
+--- a/lib/core/qa/qa_scenario.dart
++++ b/lib/core/qa/qa_scenario.dart
+@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
+ import 'package:shared_preferences/shared_preferences.dart';
+ 
+ import 'dart:convert';
++import 'dart:math';
+ 
+ import '../../features/home/application/activity_catalog.dart';
+ import '../../features/home/application/circle_journal.dart';
+@@ -1351,6 +1352,9 @@ Future<void> simulateQaDay(
+       analyticsServiceProvider.overrideWithValue(
+         const QaSilentAnalyticsService(),
+       ),
++      // R8.3.3: a kept Circle's id has a random part (Astra R832-A02);
++      // seeded here, so the same inputs still build the same store.
++      keptIdRandomProvider.overrideWithValue(Random(0)),
+     ],
+   );
+   try {
+diff --git a/lib/features/home/application/circle_history_deletion.dart b/lib/features/home/application/circle_history_deletion.dart
+index 85640eb..b2a369c 100644
+--- a/lib/features/home/application/circle_history_deletion.dart
++++ b/lib/features/home/application/circle_history_deletion.dart
+@@ -205,17 +205,19 @@ class CircleHistoryDeletion {
+       // none is still able to write after a deletion reported done — and
+       // the last pass removes the Insights again, with anything such a
+       // save put back. R8.3: the preferences too.
++      //
++      // R8.3.3 (Astra R832-A01): and the Plans' stage evidence once more —
++      // a defence only. An Insight applied before the deletion stops at
++      // its next step instead of changing a Plan ([InsightsNotifier.apply]);
++      // any save that still reached the Plans after the first pass loses
++      // its evidence here, and each Plan keeps its place. That pass removes
++      // the copy of an unreadable Plans record again too.
+       await _all([plans.idle(), insights.idle(), preferences.idle()]);
+       await _all([
+         _clearRecordedCircles(prefs),
++        plans.forgetStageEvidence(),
+         insights.forgetAll(),
+         preferences.forgetInsightProvenance()..ignore(),
+-        writeConfirmed(
+-          prefs,
+-          circlePlansUnreadableKey,
+-          null,
+-          restoreOnFailure: false,
+-        ),
+       ]);
+       await writeConfirmed(prefs, historyDeletionPendingKey, null);
+     } catch (_) {
+diff --git a/lib/features/insights/application/insights_provider.dart b/lib/features/insights/application/insights_provider.dart
+index e410d43..0607397 100644
+--- a/lib/features/insights/application/insights_provider.dart
++++ b/lib/features/insights/application/insights_provider.dart
+@@ -88,6 +88,18 @@ class InsightsNotifier extends Notifier<InsightsState> {
+       ref.read(historyWriteGateProvider).isDeleting ||
+       ref.read(circleHistoryDeletionProvider).isPending;
+ 
++  /// R8.3.3 (Astra R832-A01): whether an [apply] begun under the deletion
++  /// generation [epoch] ([HistoryWriteGate.epoch]) may still change
++  /// anything. Once Delete Circle history has begun since, it may not: its
++  /// Insight and the evidence it rests on are being deleted, and none of its
++  /// changes — the Plan, a left-out part, a kept Circle, a record here — may
++  /// be queued after the deletion's own, where nothing would remove them.
++  /// Checked after every wait and just before each change is queued.
++  bool _stillCurrent(int epoch) =>
++      ref.mounted &&
++      ref.read(historyWriteGateProvider).isCurrent(epoch) &&
++      !_deletionUnderWay;
++
+   @override
+   InsightsState build() {
+     final read = _read(ref.watch(sharedPreferencesProvider));
+@@ -329,12 +341,22 @@ class InsightsNotifier extends Notifier<InsightsState> {
+   /// ([_keepDisplacedApplication]); if that can't be saved, nothing is
+   /// changed. So no Insight whose change landed is ever taken for one never
+   /// applied, and its retry never makes the change again.
++  ///
++  /// R8.3.3 (Astra R832-A01): an application is one operation, begun under
++  /// the deletion generation of the moment ([_stillCurrent]). When Delete
++  /// Circle history begins while it waits, it stops at its next step:
++  /// nothing more is changed or recorded, and it is
++  /// [InsightActionResult.notAvailable] — its Insight is deleted. A change
++  /// already queued before the deletion lands before it, and the deletion
++  /// removes its attribution as for any earlier write.
+   Future<InsightActionResult> apply(String snapshotId) async {
++    final epoch = ref.read(historyWriteGateProvider).epoch;
+     await ref.read(circlePlansProvider.notifier).idle();
+     await ref.read(journalWritesProvider).idle();
+     await ref.read(suggestionPreferencesProvider.notifier).idle();
+     // R8.3.2: the marks as confirmed — one still being written may fail.
+     await idle();
++    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
+     final snapshot = state.byId(snapshotId);
+     final keepsOwnCircle = snapshot?.application is KeepCircleFromHistory;
+     if (!_premium && !keepsOwnCircle) return InsightActionResult.needsPremium;
+@@ -346,7 +368,7 @@ class InsightsNotifier extends Notifier<InsightsState> {
+         return InsightActionResult.alreadyApplied;
+       case InsightStatus.current || InsightStatus.stale:
+         if (_appliedOn(snapshot, i) case final on?) {
+-          return _markApplied(snapshot, on);
++          return _markApplied(snapshot, on, epoch);
+         }
+         if (status == InsightStatus.stale) {
+           return InsightActionResult.notAvailable;
+@@ -356,26 +378,39 @@ class InsightsNotifier extends Notifier<InsightsState> {
+     }
+     switch (snapshot.application) {
+       case PlanDirection(:final planId) || KeepGentler(:final planId):
+-        if (!await _keepDisplacedApplication(planId, snapshotId, i)) {
+-          return InsightActionResult.notSaved;
++        if (!await _keepDisplacedApplication(planId, snapshotId, i, epoch)) {
++          return _stillCurrent(epoch)
++              ? InsightActionResult.notSaved
++              : InsightActionResult.notAvailable;
+         }
+       case _:
+     }
+     final result = switch (snapshot.application) {
+-      PlanDirection(:final planId) => await _direct(planId, snapshotId),
++      PlanDirection(:final planId) => await _direct(planId, snapshotId, epoch),
+       KeepGentler(:final planId, :final cycleId) => await _gentler(
+         planId,
+         cycleId,
+         snapshotId,
++        epoch,
++      ),
++      LeaveOutPart(:final element) => await _leaveOut(
++        element,
++        i,
++        snapshot,
++        epoch,
++      ),
++      KeepCircleFromHistory(:final circleId) => await _keep(
++        circleId,
++        snapshot,
++        epoch,
+       ),
+-      LeaveOutPart(:final element) => await _leaveOut(element, i, snapshot),
+-      KeepCircleFromHistory(:final circleId) => await _keep(circleId, snapshot),
+       OpenPlanReview() ||
+       NothingToChange() => InsightActionResult.nothingToApply,
+     };
+     // R8.3.2 (founder scope decision B2): a day's Circle already kept by
+     // some other Keep is never recorded as this Insight's application.
+-    if (result == InsightActionResult.done) {
++    // R8.3.3 (Astra R832-A01): nor is an Insight Delete has since removed.
++    if (result == InsightActionResult.done && _stillCurrent(epoch)) {
+       final current = state.byId(snapshotId) ?? snapshot;
+       try {
+         await _set(
+@@ -418,11 +453,20 @@ class InsightsNotifier extends Notifier<InsightsState> {
+         return null;
+       // R8.3.2 (founder scope decision B2): the kept Circle with the id its
+       // attempt recorded — never another Keep of the same day.
+-      case KeepCircleFromHistory():
+-        final keptId = snapshot.attempt?.keptId;
+-        if (keptId == null) return null;
++      // R8.3.3 (Astra R832-A02): and kept from this very Circle, the one the
++      // attempt names — an id alone is never proof, so a kept Circle of
++      // another action that came to share it never counts.
++      case KeepCircleFromHistory(:final circleId):
++        final attempt = snapshot.attempt;
++        final keptId = attempt?.keptId;
++        if (keptId == null ||
++            attempt!.target != InsightAttempt.targetOf(snapshot.application)) {
++          return null;
++        }
+         for (final k in ref.read(keptCirclesProvider).kept) {
+-          if (k.id == keptId) return dateKey(k.createdAt);
++          if (k.id == keptId && k.fromCircleId == circleId) {
++            return dateKey(k.createdAt);
++          }
+         }
+         return null;
+       case _:
+@@ -446,8 +490,15 @@ class InsightsNotifier extends Notifier<InsightsState> {
+   /// R8.3.2 (founder scope decisions B1/B2): records, and waits for the
+   /// store to confirm, that [snapshot]'s action is about to be made. `false`
+   /// when it isn't confirmed: the action is then never made.
+-  Future<bool> _recordAttempt(InsightSnapshot snapshot, {String? keptId}) async {
++  ///
++  /// R8.3.3: never once Delete Circle history has begun ([_stillCurrent]).
++  Future<bool> _recordAttempt(
++    InsightSnapshot snapshot,
++    int epoch, {
++    String? keptId,
++  }) async {
+     final target = InsightAttempt.targetOf(snapshot.application)!;
++    if (!_stillCurrent(epoch)) return false;
+     try {
+       await _set(
+         state.replacing(
+@@ -469,9 +520,9 @@ class InsightsNotifier extends Notifier<InsightsState> {
+   /// [snapshotId]'s action is known not to have been made: its attempt
+   /// record goes, so it can be tried again. If that isn't saved, the record
+   /// stays and the Insight is never offered again — never made twice.
+-  Future<void> _clearAttempt(String snapshotId) async {
++  Future<void> _clearAttempt(String snapshotId, int epoch) async {
+     final s = state.byId(snapshotId);
+-    if (s?.attempt == null) return;
++    if (s?.attempt == null || !_stillCurrent(epoch)) return;
+     try {
+       await _set(state.replacing(s!.copyWith(clearAttempt: true)));
+     } on StorageWriteFailed {
+@@ -488,6 +539,7 @@ class InsightsNotifier extends Notifier<InsightsState> {
+     String planId,
+     String insightId,
+     InsightInputs i,
++    int epoch,
+   ) async {
+     final by = i.plans.plans[planId]?.appliedInsight;
+     if (by == null || by.insightId == insightId) return true;
+@@ -495,14 +547,18 @@ class InsightsNotifier extends Notifier<InsightsState> {
+     if (displaced == null || displaced.appliedOn != null) return true;
+     final on = _appliedOn(displaced, i);
+     if (on == null) return true;
+-    return await _markApplied(displaced, on) == InsightActionResult.done;
++    return await _markApplied(displaced, on, epoch) ==
++        InsightActionResult.done;
+   }
+ 
+   /// Records [snapshot] as applied on [on] — its change already on disk.
++  /// R8.3.3: never once Delete Circle history has begun ([_stillCurrent]).
+   Future<InsightActionResult> _markApplied(
+     InsightSnapshot snapshot,
+     String on,
++    int epoch,
+   ) async {
++    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
+     try {
+       await _set(
+         state.replacing(snapshot.copyWith(appliedOn: on, clearAttempt: true)),
+@@ -513,7 +569,14 @@ class InsightsNotifier extends Notifier<InsightsState> {
+     }
+   }
+ 
+-  Future<InsightActionResult> _direct(String planId, String insightId) async {
++  Future<InsightActionResult> _direct(
++    String planId,
++    String insightId,
++    int epoch,
++  ) async {
++    // R8.3.3 (Astra R832-A01): checked in the same step that queues the
++    // Plan change — no wait between them.
++    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
+     final lifecycle = ref
+         .read(circlePlansProvider.notifier)
+         .confirmedState
+@@ -541,7 +604,9 @@ class InsightsNotifier extends Notifier<InsightsState> {
+     String planId,
+     String cycleId,
+     String insightId,
++    int epoch,
+   ) async {
++    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
+     final plan = ref
+         .read(circlePlansProvider.notifier)
+         .confirmedState
+@@ -579,11 +644,19 @@ class InsightsNotifier extends Notifier<InsightsState> {
+     String wire,
+     InsightInputs i,
+     InsightSnapshot snapshot,
++    int epoch,
+   ) async {
+     final element = ElementId.values.asNameMap()[wire];
+     if (element == null) return InsightActionResult.notAvailable;
+     if (i.leftOut.contains(element)) return InsightActionResult.alreadyApplied;
+-    if (!await _recordAttempt(snapshot)) return InsightActionResult.notSaved;
++    if (!await _recordAttempt(snapshot, epoch)) {
++      return _stillCurrent(epoch)
++          ? InsightActionResult.notSaved
++          : InsightActionResult.notAvailable;
++    }
++    // R8.3.3 (Astra R832-A01): the part is left out only if no Delete
++    // began while its attempt was being recorded.
++    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
+     final outcome = await ref
+         .read(suggestionPreferencesProvider.notifier)
+         .leaveOutChange(element, byInsight: snapshot.id);
+@@ -595,7 +668,7 @@ class InsightsNotifier extends Notifier<InsightsState> {
+       case PreferenceChange.unchanged ||
+           PreferenceChange.refused ||
+           PreferenceChange.notSaved:
+-        await _clearAttempt(snapshot.id);
++        await _clearAttempt(snapshot.id, epoch);
+         // Left out by something else meanwhile: never this Insight's.
+         return outcome == PreferenceChange.unchanged
+             ? InsightActionResult.alreadyApplied
+@@ -607,9 +680,14 @@ class InsightsNotifier extends Notifier<InsightsState> {
+   /// every trace of this Keep, so the attempt is recorded first, with the id
+   /// the kept Circle is given ([_recordAttempt]). A day's Circle kept some
+   /// other way is never this Insight's: nothing is kept, nothing recorded.
++  ///
++  /// R8.3.3 (Astra R832-A02): that id is the kept Circles' own allocation
++  /// ([KeptCirclesNotifier.newKeptId]) — unique, and never from the cached
++  /// calendar day ([nowProvider]), which every I4 applied that day shares.
+   Future<InsightActionResult> _keep(
+     String circleId,
+     InsightSnapshot snapshot,
++    int epoch,
+   ) async {
+     InsightActionResult? refused(KeptCircles kept) {
+       if (kept.kept.any((k) => k.fromCircleId == circleId)) {
+@@ -628,10 +706,17 @@ class InsightsNotifier extends Notifier<InsightsState> {
+     }
+     final plan = CirclePlan.fromWire(entry?.session?.parts);
+     if (entry == null || plan == null) return InsightActionResult.notAvailable;
+-    final keptId = 'kept-${_now.microsecondsSinceEpoch}-insight';
+-    if (!await _recordAttempt(snapshot, keptId: keptId)) {
+-      return InsightActionResult.notSaved;
++    final keptId = ref
++        .read(keptCirclesProvider.notifier)
++        .newKeptId(tag: 'insight');
++    if (!await _recordAttempt(snapshot, epoch, keptId: keptId)) {
++      return _stillCurrent(epoch)
++          ? InsightActionResult.notSaved
++          : InsightActionResult.notAvailable;
+     }
++    // R8.3.3 (Astra R832-A01): nothing is kept from History a Delete began
++    // removing while the attempt was being recorded.
++    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
+     try {
+       final circle = await ref
+           .read(keptCirclesProvider.notifier)
+@@ -643,11 +728,11 @@ class InsightsNotifier extends Notifier<InsightsState> {
+           );
+       if (circle != null) return InsightActionResult.done;
+       // Refused before anything was written.
+-      await _clearAttempt(snapshot.id);
++      await _clearAttempt(snapshot.id, epoch);
+       return refused(ref.read(keptCirclesProvider)) ??
+           InsightActionResult.notAvailable;
+     } on StorageWriteFailed catch (failure) {
+-      if (!failure.uncertain) await _clearAttempt(snapshot.id);
++      if (!failure.uncertain) await _clearAttempt(snapshot.id, epoch);
+       return InsightActionResult.notSaved;
+     }
+   }
+diff --git a/lib/features/personal_circle/application/kept_circles_provider.dart b/lib/features/personal_circle/application/kept_circles_provider.dart
+index 60b772b..4d631c2 100644
+--- a/lib/features/personal_circle/application/kept_circles_provider.dart
++++ b/lib/features/personal_circle/application/kept_circles_provider.dart
+@@ -1,5 +1,6 @@
+ import 'dart:async';
+ import 'dart:convert';
++import 'dart:math';
+ 
+ import 'package:flutter_riverpod/flutter_riverpod.dart';
+ import 'package:shared_preferences/shared_preferences.dart';
+@@ -200,6 +201,13 @@ class KeptCircles {
+     return null;
+   }
+ 
++  /// R8.3.3 (Astra R832-A02): how many kept Circles — read or not — [id]
++  /// addresses. More than one only in a record written before R8.3.3, when
++  /// two I4 Keeps of one day could be given the same id.
++  int addressedBy(String id) =>
++      kept.where((k) => k.id == id).length +
++      retained.where((r) => r.key == id).length;
++
+   /// The kept Circle THIRTY can't read that [key] addresses.
+   RetainedKept? retainedByKey(String key) {
+     for (final record in retained) {
+@@ -219,6 +227,17 @@ final partOfferableProvider = Provider<bool Function(CirclePart)>(
+       (part) => isPartOffered(part.definition, part.minutes),
+ );
+ 
++/// R8.3.3 (Astra R832-A02): where a new kept Circle's id gets its random
++/// part ([KeptCirclesNotifier.newKeptId]). Overridable only so tests can
++/// force two ids to collide.
++final keptIdRandomProvider = Provider<Random>((ref) {
++  try {
++    return Random.secure();
++  } on UnsupportedError {
++    return Random();
++  }
++});
++
+ /// The user's kept Circles: keep, rename, remove. Never gated — what was
+ /// made for the user is theirs, whatever Premium's state.
+ ///
+@@ -235,6 +254,10 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+   /// never keep it twice or pass [maxKeptCircles].
+   final _keeping = <String>{};
+ 
++  /// R8.3.3 (Astra R832-A02): the ids of the Keeps under way, so two at
++  /// once never share one.
++  final _keepingIds = <String>{};
++
+   @override
+   KeptCircles build() => ref.watch(keptCirclesRepositoryProvider).read();
+ 
+@@ -271,6 +294,31 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+ 
+   DateTime get _now => ref.read(eventClockProvider)();
+ 
++  /// R8.3.3 (Astra R832-A02): a new kept Circle's own id — no other kept
++  /// Circle, read or not, and no Keep under way has it. Never from a
++  /// cached calendar clock: the event clock's instant and 48 random bits
++  /// ([keptIdRandomProvider]), with a count added only if even that is
++  /// taken. [tag] says who chose it (`insight`), so an id Insight 4 recorded
++  /// is never one a Keep of the user's own is given.
++  String newKeptId({String? tag}) {
++    final random = ref.read(keptIdRandomProvider);
++    final bits = (random.nextInt(1 << 24) << 24) | random.nextInt(1 << 24);
++    final base = [
++      'kept',
++      '${_now.microsecondsSinceEpoch}',
++      bits.toRadixString(16).padLeft(12, '0'),
++      ?tag,
++    ].join('-');
++    var id = base;
++    for (var n = 1; _idTaken(state, id); n++) {
++      id = '$base-$n';
++    }
++    return id;
++  }
++
++  bool _idTaken(KeptCircles current, String id) =>
++      _keepingIds.contains(id) || current.addressedBy(id) > 0;
++
+   /// Keeps today's composed Circle as one of the user's own — named [name],
+   /// or by its need — with the words each part has now. Completes with the
+   /// kept Circle once it is on disk; with `null` when [maxKeptCircles] are
+@@ -282,6 +330,12 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+   /// [id] (R8.3.2, founder scope decision B2): the kept Circle's own id, when
+   /// the caller chose it beforehand — Insight 4 records it before keeping,
+   /// so its own Keep can be told from any other Keep of the same day.
++  ///
++  /// R8.3.3 (Astra R832-A02): every kept Circle's id is its own. Without
++  /// [id] one is allocated ([newKeptId]); an [id] that a kept Circle — read
++  /// or not — or another Keep under way already has is refused like any
++  /// other Keep that can't be made: `null`, nothing written, nothing
++  /// replaced.
+   Future<KeptCircle?> keepCircle({
+     required CirclePlan plan,
+     required Intention need,
+@@ -289,16 +343,20 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+     String? name,
+     String? id,
+   }) async {
++    final keptId = id ?? newKeptId();
+     bool refused(KeptCircles current) =>
+         !current.countKnown ||
+         current.count + _keeping.length >= maxKeptCircles ||
+-        current.kept.any((k) => k.fromCircleId == circleId);
+-    if (_keeping.contains(circleId) || refused(state)) return null;
++        current.kept.any((k) => k.fromCircleId == circleId) ||
++        current.addressedBy(keptId) > 0;
++    if (_keeping.contains(circleId) ||
++        _keepingIds.contains(keptId) ||
++        refused(state)) {
++      return null;
++    }
+     final trimmed = name?.trim();
+     final circle = KeptCircle(
+-      id:
+-          id ??
+-          'kept-${_now.microsecondsSinceEpoch}-${state.count + _keeping.length}',
++      id: keptId,
+       name: trimmed == null || trimmed.isEmpty
+           ? keptCircleDefaultName(need)
+           : trimmed,
+@@ -309,24 +367,32 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+       wording: [for (final p in plan.parts) PartWording.of(p.definition)],
+     );
+     _keeping.add(circleId);
++    _keepingIds.add(keptId);
+     try {
+       final next = await _commit((current) {
+         _keeping.remove(circleId);
++        _keepingIds.remove(keptId);
+         if (refused(current)) return null;
+         return current._with(kept: [...current.kept, circle]);
+       });
+       return next == null ? null : circle;
+     } finally {
+       _keeping.remove(circleId);
++      _keepingIds.remove(keptId);
+     }
+   }
+ 
+   /// Renames the kept Circle [id] addresses — one THIRTY can't read too,
+   /// changing nothing else in it. Completes once on disk.
++  ///
++  /// R8.3.3 (Astra R832-A02): an [id] that addresses more than one kept
++  /// Circle ([KeptCircles.addressedBy]) renames none of them — one action
++  /// never changes two Circles the user owns separately.
+   Future<void> renameKept(String id, String name) async {
+     final trimmed = name.trim();
+     if (trimmed.isEmpty) return;
+     await _commit((current) {
++      if (current.addressedBy(id) > 1) return null;
+       if (current.keptById(id) != null) {
+         return current._with(
+           kept: [
+@@ -349,8 +415,12 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
+   /// Removes a kept Circle — one THIRTY can't read too, only ever on the
+   /// user's own request. History keeps the days it was used, under the name
+   /// it had then. Completes once on disk.
++  ///
++  /// R8.3.3 (Astra R832-A02): an [id] that addresses more than one kept
++  /// Circle removes none of them, as for [renameKept].
+   Future<void> deleteKept(String id) async {
+     await _commit((current) {
++      if (current.addressedBy(id) > 1) return null;
+       if (current.keptById(id) != null) {
+         return current._with(
+           kept: [
+diff --git a/lib/features/plans/application/circle_plans_provider.dart b/lib/features/plans/application/circle_plans_provider.dart
+index 24cb186..2e632c0 100644
+--- a/lib/features/plans/application/circle_plans_provider.dart
++++ b/lib/features/plans/application/circle_plans_provider.dart
+@@ -53,11 +53,17 @@ enum PlanActionResult {
+ /// it once what the user saw has landed — and the notifier [epoch] that
+ /// counted them, so a change that returns the Plan to where it was is never
+ /// mistaken for no change.
++///
++/// R8.3.3 (Claude AUD-R832-1): with the [pendingSave] — the one save of this
++/// Plan still being written that moved it to where the user saw it — when
++/// there was one. Only that save, confirmed, is the change the Start was
++/// asked for on; another change confirmed in its place never is.
+ typedef PlanStartConditions = ({
+   PlanLifecycle lifecycle,
+   String? cycleId,
+   int generation,
+   Object epoch,
++  int? pendingSave,
+ });
+ 
+ /// R8.3.2 (founder decision on N01-C): the Plan's lifecycle or cycle changed
+@@ -112,6 +118,15 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+   /// conditions captured before a rebuild never match after it.
+   Object _epoch = Object();
+ 
++  /// R8.3.3 (Claude AUD-R832-1): every save's number, in the order they
++  /// were asked for ([_set]) — from 1. Per Plan: the save that last moved
++  /// where the Plan is shown ([_shownMovedBy]), and the save whose change of
++  /// its place was last counted in [_generations] ([_countedFrom]). In
++  /// memory only, as the count is.
++  int _saves = 0;
++  final Map<String, int> _shownMovedBy = {};
++  final Map<String, int> _countedFrom = {};
++
+   /// The most rounds a decision waits for pending Plan changes to settle
+   /// before it refuses (R8.2): each round waits for real writes, so only
+   /// a user changing the Plans again and again reaches it.
+@@ -140,25 +155,35 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+     _queuedWrite = null;
+     _epoch = Object();
+     _generations.clear();
++    _shownMovedBy.clear();
++    _countedFrom.clear();
+     return read;
+   }
+ 
+   /// R832-G1: [next] is now what the store holds. Every Plan whose
+   /// lifecycle or current cycle differs from what it held before counts one
+   /// confirmed change.
+-  void _confirm(CirclePlansState next) {
+-    _countChanges(_durable, next);
++  ///
++  /// R8.3.3: [by] is the save that wrote it ([_countedFrom]).
++  void _confirm(CirclePlansState next, {int? by}) {
++    _countChanges(_durable, next, by: by);
+     _durable = next;
+   }
+ 
+-  void _countChanges(CirclePlansState from, CirclePlansState to) {
+-    for (final planId in {...from.plans.keys, ...to.plans.keys}) {
+-      if (!_samePlace(from.plans[planId], to.plans[planId])) {
+-        _generations[planId] = (_generations[planId] ?? 0) + 1;
+-      }
++  void _countChanges(CirclePlansState from, CirclePlansState to, {int? by}) {
++    for (final planId in _moved(from, to)) {
++      _generations[planId] = (_generations[planId] ?? 0) + 1;
++      _countedFrom[planId] = by ?? 0;
+     }
+   }
+ 
++  /// The Plans whose lifecycle or current cycle differs between [from] and
++  /// [to].
++  static Iterable<String> _moved(CirclePlansState from, CirclePlansState to) =>
++      {...from.plans.keys, ...to.plans.keys}.where(
++        (planId) => !_samePlace(from.plans[planId], to.plans[planId]),
++      );
++
+   static bool _samePlace(PlanProgress? a, PlanProgress? b) =>
+       (a?.lifecycle ?? PlanLifecycle.neverStarted) ==
+           (b?.lifecycle ?? PlanLifecycle.neverStarted) &&
+@@ -248,6 +273,12 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+   /// still being written is pending: shown, but nothing that must be
+   /// durable is decided on it ([confirmedState], [confirmServed]).
+   Future<void> _set(CirclePlansState next, {bool report = true}) {
++    // R8.3.3 (Claude AUD-R832-1): this save's own number, and the Plans it
++    // moves on screen.
++    final save = ++_saves;
++    for (final planId in _moved(state, next)) {
++      _shownMovedBy[planId] = save;
++    }
+     state = next;
+     final json = jsonEncode(next.toJson());
+     final prefs = _prefs;
+@@ -259,7 +290,10 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+       // R8.2 (Astra R81-A02): a save queued before Delete Circle history
+       // began lands before the deletion's own write — but its stage
+       // evidence is never again what the Plans fall back to or decide on.
+-      _confirm(generation == _deletions ? next : next.forgetStageEvidence());
++      _confirm(
++        generation == _deletions ? next : next.forgetStageEvidence(),
++        by: save,
++      );
+     });
+     _queued = next;
+     _queuedWrite = write;
+@@ -280,7 +314,7 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+         // Plan it would have moved: no Start is authorized on a lifecycle
+         // that can't be verified. One the store refused is not.
+         if (error is! StorageWriteFailed || error.uncertain) {
+-          _countChanges(_durable, next);
++          _countChanges(_durable, next, by: save);
+         }
+         if (!ref.mounted) return;
+         ref
+@@ -942,20 +976,30 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+   /// saved when the Plan shown is not where the store holds it — the Start
+   /// was asked for on that change, so it landing cancels nothing. Any
+   /// further confirmed change does.
++  ///
++  /// R8.3.3 (Claude AUD-R832-1): that change is the save that moved the Plan
++  /// to where it is shown ([PlanStartConditions.pendingSave]) — only it.
++  /// Refused, it never happened, and a later change that lands in its place
++  /// is a different one: the Start is cancelled ([prepareStart]).
+   PlanStartConditions startConditions(PlanStageProvenance stage) {
+     final plan = state.plans[stage.planId];
+-    final pending = _samePlace(_durable.plans[stage.planId], plan) ? 0 : 1;
++    final moved = !_samePlace(_durable.plans[stage.planId], plan);
+     return (
+       lifecycle: plan?.lifecycle ?? PlanLifecycle.neverStarted,
+       cycleId: plan?.current.id,
+-      generation: (_generations[stage.planId] ?? 0) + pending,
++      generation: (_generations[stage.planId] ?? 0) + (moved ? 1 : 0),
+       epoch: _epoch,
++      // 0 is no save's number: a Plan shown moved by no save cancels.
++      pendingSave: moved ? _shownMovedBy[stage.planId] ?? 0 : null,
+     );
+   }
+ 
+   /// R832-G1: the Start [accepted] still stands on the Plans as confirmed —
+   /// this notifier's count, no other change confirmed, and the Plan where
+   /// the user saw it.
++  ///
++  /// R8.3.3 (Claude AUD-R832-1): when it was asked for on a save still being
++  /// written, the one change counted since is that very save's.
+   bool _startStillValid(
+     PlanStageProvenance stage,
+     PlanStartConditions accepted,
+@@ -963,6 +1007,8 @@ class CirclePlansNotifier extends Notifier<CirclePlansState> {
+       ref.mounted &&
+       identical(accepted.epoch, _epoch) &&
+       (_generations[stage.planId] ?? 0) == accepted.generation &&
++      (accepted.pendingSave == null ||
++          _countedFrom[stage.planId] == accepted.pendingSave) &&
+       _startConditionsHold(_durable, stage, accepted);
+ 
+   static bool _startConditionsHold(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dart:convert';
+import 'dart:math';
 
 import '../../features/home/application/activity_catalog.dart';
 import '../../features/home/application/circle_journal.dart';
@@ -1351,6 +1352,9 @@ Future<void> simulateQaDay(
       analyticsServiceProvider.overrideWithValue(
         const QaSilentAnalyticsService(),
       ),
+      // R8.3.3: a kept Circle's id has a random part (Astra R832-A02);
+      // seeded here, so the same inputs still build the same store.
+      keptIdRandomProvider.overrideWithValue(Random(0)),
     ],
   );
   try {

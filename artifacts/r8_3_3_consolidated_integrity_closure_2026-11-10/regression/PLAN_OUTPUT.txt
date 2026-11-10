@@ -1,0 +1,1 @@
+206 test files in 19 batches -> artifacts\r8_3_3_consolidated_integrity_closure_2026-11-10\regression\batch_plan.json; parts: {'19': [['a', 'p0[1-3]_'], ['b', 'p0[4-6]_'], ['c', 'p0[7-9]_'], ['d', 'p1[01]_'], ['e', 'p1[34]_']]}

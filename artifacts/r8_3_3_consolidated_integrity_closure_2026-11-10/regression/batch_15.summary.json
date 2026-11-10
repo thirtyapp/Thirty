@@ -1,0 +1,256 @@
+{
+ "files": {
+  "test/features/r82/r82_a07_confirmed_history_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_a09_native_types_test.dart": {
+   "passed": 14,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_claude_audit_new1_triggers_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_cross_store_adversarial_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_decision_a_historical_credit_test.dart": {
+   "passed": 18,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_decision_b_start_persistence_test.dart": {
+   "passed": 15,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_decision_c_insight_provenance_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r82/r82_lifecycle_policy_test.dart": {
+   "passed": 21,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r83/r831_start_eligibility_test.dart": {
+   "passed": 24,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r83/r83_codec_law_test.dart": {
+   "passed": 14,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r83/r83_cross_store_test.dart": {
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r83/r83_delete_boundary_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 153,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/features/r82/r82_a07_confirmed_history_test.dart": [
+   "I4 \u2014 the 4/7 \u2192 4/6 threshold control \u2014 with History as it is (4/7), no I4 qualifies",
+   "I4 \u2014 the 4/7 \u2192 4/6 threshold A07 as reported (throws) \u2014 a useful answer removed, its History write still pending; Insights opened: no I4 is generated from it, and none survives the refusal or two restarts",
+   "I4 \u2014 the 4/7 \u2192 4/6 threshold A07 as reported (returnsFalse) \u2014 a useful answer removed, its History write still pending; Insights opened: no I4 is generated from it, and none survives the refusal or two restarts",
+   "I4 \u2014 the 4/7 \u2192 4/6 threshold control \u2014 the removal lands first: then I4 is generated from the confirmed 4/6",
+   "I4 \u2014 the 4/7 \u2192 4/6 threshold the removal lands while Insights is open: the next opening sees it",
+   "Plan stage 5 \u2014 the answers it is composed from an answer removal still pending (throws, then refused) when today's Circle is chosen: the Plan decides exactly as the confirmed History says",
+   "Plan stage 5 \u2014 the answers it is composed from an answer removal still pending (returnsFalse, then refused) when today's Circle is chosen: the Plan decides exactly as the confirmed History says"
+  ],
+  "test/features/r82/r82_a09_native_types_test.dart": [
+   "an integer stored where text is expected \u2014 Plans: opens unreadable, the value is kept aside exactly before anything is written over it; restarts open the same",
+   "an integer stored where text is expected \u2014 Insights: opens unreadable, kept aside exactly; assessing and restarts never fail",
+   "an integer stored where text is expected \u2014 Suggestion Preferences: opens as a record THIRTY can't read \u2014 changes are refused and the value stays, until Reset",
+   "an integer stored where text is expected \u2014 History: opens as a journal THIRTY can't read; today's Circle still opens and is saved, the stored value kept first",
+   "a Boolean stored where text is expected \u2014 Plans: opens unreadable, the value is kept aside exactly before anything is written over it; restarts open the same",
+   "a Boolean stored where text is expected \u2014 Insights: opens unreadable, kept aside exactly; assessing and restarts never fail",
+   "a Boolean stored where text is expected \u2014 Suggestion Preferences: opens as a record THIRTY can't read \u2014 changes are refused and the value stays, until Reset",
+   "a Boolean stored where text is expected \u2014 History: opens as a journal THIRTY can't read; today's Circle still opens and is saved, the stored value kept first",
+   "a list of text stored where text is expected \u2014 Plans: opens unreadable, the value is kept aside exactly before anything is written over it; restarts open the same",
+   "a list of text stored where text is expected \u2014 Insights: opens unreadable, kept aside exactly; assessing and restarts never fail",
+   "a list of text stored where text is expected \u2014 Suggestion Preferences: opens as a record THIRTY can't read \u2014 changes are refused and the value stays, until Reset",
+   "a list of text stored where text is expected \u2014 History: opens as a journal THIRTY can't read; today's Circle still opens and is saved, the stored value kept first",
+   "start-up: a deletion marker of the wrong type, and a Plans record of the wrong type, never stop the app from starting",
+   "start-up: a pending deletion with a Plans record of the wrong type finishes"
+  ],
+  "test/features/r82/r82_claude_audit_new1_triggers_test.dart": [
+   "Trigger A \u2014 no storage fault stage 5 closed, the Plan ended; \"Go through it again\" on the review page; that Circle's reflection is saved, also after a restart",
+   "Trigger A \u2014 no storage fault stage 5 closed, the Plan ended; the I1 application (its confirmed \"Go through it again\"); that Circle's reflection is saved, also after a restart",
+   "Trigger A \u2014 no storage fault a stage Circle started; Leave, then Start the same Plan again mid-Circle; its Close and reflection are saved, also after a restart",
+   "Trigger B (throws) \u2014 one transient failure of the served-stage write at choice time: the Circle is taken back before it can start and the user is told; the next choice is saved, runs, and reaches History",
+   "Trigger B (returnsFalse) \u2014 one transient failure of the served-stage write at choice time: the Circle is taken back before it can start and the user is told; the next choice is saved, runs, and reaches History"
+  ],
+  "test/features/r82/r82_cross_store_adversarial_test.dart": [
+   "a Plan action while Today's Close is still being written: the Pause is refused (throws); the Close lands and is credited once, and a restart agrees",
+   "a Plan action while Today's Close is still being written: the Pause is refused (returnsFalse); the Close lands and is credited once, and a restart agrees",
+   "three queued Plan changes, the first two refused, the last landing: the last carries the first, and confirmed() of the first says done; a change no save carried says not saved",
+   "an answer removal still being written when Delete begins: the answer never comes back, History is empty, restarts agree",
+   "an Insight applied while Delete is under way: nothing it derived is left after the deletion, and Delete still succeeds",
+   "a Circle closed after midnight while its Plan is being left, then its reflection finished and an answer removed: the Close and the finished reflection stay; the new day opens"
+  ],
+  "test/features/r82/r82_decision_a_historical_credit_test.dart": [
+   "throws: paused \u2014 the Close was durable before the Pause: the credit lands with the Pause, on the original cycle and Circle, and the Plan stays paused",
+   "throws: left \u2014 the credit lands with the Leave on the cycle that was left; no new cycle, nothing reactivated",
+   "throws: left, then gone through again: the credit stays on the original cycle and the new cycle starts at stage 1 with nothing recorded",
+   "throws: restarted \u2014 the app restarts with the credit still refused, then the Plan is paused: the credit lands with the Pause",
+   "throws: lapsed \u2014 Premium ended after the Close: the Circle served and started under Premium keeps its credit through the Pause",
+   "throws: repeated restarts after the Pause: exactly one credit, the Plan never reactivated, the next cycle never advanced",
+   "returnsFalse: paused \u2014 the Close was durable before the Pause: the credit lands with the Pause, on the original cycle and Circle, and the Plan stays paused",
+   "returnsFalse: left \u2014 the credit lands with the Leave on the cycle that was left; no new cycle, nothing reactivated",
+   "returnsFalse: left, then gone through again: the credit stays on the original cycle and the new cycle starts at stage 1 with nothing recorded",
+   "returnsFalse: restarted \u2014 the app restarts with the credit still refused, then the Plan is paused: the credit lands with the Pause",
+   "returnsFalse: lapsed \u2014 Premium ended after the Close: the Circle served and started under Premium keeps its credit through the Pause",
+   "returnsFalse: repeated restarts after the Pause: exactly one credit, the Plan never reactivated, the next cycle never advanced",
+   "starting another Plan pauses this one: the earned credit lands with it",
+   "the Pause that folds the credit in is refused too: both are taken back; the next start credits the still-active Plan, once",
+   "no duplicate \u2014 the credit already durable: the Pause adds nothing",
+   "Premium rules kept \u2014 a Circle started only after a verified expiry earns no credit through a later Pause either",
+   "Pause before the Close (decided: R8.2 lifecycle policy) Pause BEFORE the Close: the Circle started before the Pause is credited once its Close is durable; the Plan stays paused",
+   "Pause before the Close (decided: R8.2 lifecycle policy) Pause while the Close is still being written to History: not folded into the Pause (the Close was not durable yet), but credited once the Close lands \u2014 the Start came before the Pause"
+  ],
+  "test/features/r82/r82_decision_b_start_persistence_test.dart": [
+   "pending writes Start tapped while the offer is still being saved: not started until the store confirms it, then started and saved",
+   "pending writes a stage Circle tapped while its Plan save is pending: started only once the served stage is on disk",
+   "pending writes fast repeated taps while pending start the Circle once",
+   "throws: the offer was never saved: Start is refused with the user told, nothing is recorded; tapped again once the store heals, it starts and saves",
+   "throws: the pending offer write fails while Start waits: the Start is refused, never started",
+   "throws: a stage Circle whose Start record the Plans store refuses (a verified expiry since it was served): refused, then started on the retry with its record saved first",
+   "throws: restart after a refused Start: nothing was started, and the offer on disk starts normally",
+   "throws: a Plan action after a confirmed Start fails: the started Circle stays, closes and is saved; its credit catches up later",
+   "returnsFalse: the offer was never saved: Start is refused with the user told, nothing is recorded; tapped again once the store heals, it starts and saves",
+   "returnsFalse: the pending offer write fails while Start waits: the Start is refused, never started",
+   "returnsFalse: a stage Circle whose Start record the Plans store refuses (a verified expiry since it was served): refused, then started on the retry with its record saved first",
+   "returnsFalse: restart after a refused Start: nothing was started, and the offer on disk starts normally",
+   "returnsFalse: a Plan action after a confirmed Start fails: the started Circle stays, closes and is saved; its credit catches up later",
+   "after Delete Circle history, the same offer chosen again but not saved is never taken as saved: its Start is refused",
+   "a Free Circle whose offer is already saved starts at once"
+  ],
+  "test/features/r82/r82_decision_c_insight_provenance_test.dart": [
+   "a change made some other way is never claimed I1 \u2014 the app stopped while the Insight's Plan change was being written; the user then started the Plan themselves: the retry reports it not available and records nothing",
+   "a change made some other way is never claimed I3 \u2014 the app stopped while the Insight's left-out part was being written; the user then left the part out from a skip: never claimed",
+   "a change made some other way is never claimed I1 \u2014 provenance naming another Insight attributes nothing",
+   "a change made some other way is never claimed I2 \u2014 provenance for another cycle attributes nothing",
+   "the Insight's own change is recognized, never repeated I3 \u2014 the Insights store refuses every write (throws): its attempt can't be recorded, so nothing is left out; once the store takes it, the retry applies it once",
+   "the Insight's own change is recognized, never repeated I3 \u2014 the Insights store refuses every write (returnsFalse): its attempt can't be recorded, so nothing is left out; once the store takes it, the retry applies it once",
+   "the Insight's own change is recognized, never repeated I1 \u2014 residual: the Insights store refuses every write (throws); the change lands with its provenance; after a restart the retry records the mark and changes nothing",
+   "the Insight's own change is recognized, never repeated I1 \u2014 residual: the Insights store refuses every write (returnsFalse); the change lands with its provenance; after a restart the retry records the mark and changes nothing",
+   "the Insight's own change is recognized, never repeated I2 \u2014 residual: the Insights store refuses every write (throws); the change lands with its provenance; after a restart the retry records the mark and changes nothing",
+   "the Insight's own change is recognized, never repeated I2 \u2014 residual: the Insights store refuses every write (returnsFalse); the change lands with its provenance; after a restart the retry records the mark and changes nothing",
+   "the Insight's own change is recognized, never repeated I1 \u2014 provenance survives a later Pause and Go through again of the same Plan: the earlier application is still recorded",
+   "the provenance record a damaged record attributes nothing, and a later save writes it back exactly as stored",
+   "the provenance record a manual Plan action carries none"
+  ],
+  "test/features/r82/r82_lifecycle_policy_test.dart": [
+   "Pause before Close Start \u2192 Pause \u2192 Close: credited to the original Plan, cycle, stage and Circle once the Close is durable; the Plan stays paused; served and Start provenance kept; the same after repeated restarts",
+   "Pause before Close Start \u2192 another Plan started (which pauses this one) \u2192 Close: credited to the original Plan only; the other Plan stays active and does not move on",
+   "Pause before Close Start \u2192 Pause \u2192 Carry on \u2192 Close: credited once, Plan active at stage 2",
+   "Pause before Close Premium lapses after the Start, before the Close: the existing entitlement rule \u2014 served and started under Premium \u2014 still credits it",
+   "Pause before Close a Start after a verified expiry earns nothing, Pause or not (entitlement rule unchanged)",
+   "Pause before Close failed Close (throws: its History write refused), then recovery after a restart: credited once, Plan still paused",
+   "Pause before Close failed Close (throws) that never becomes durable: no credit, also after restarts",
+   "Pause before Close failed Close (returnsFalse: its History write refused), then recovery after a restart: credited once, Plan still paused",
+   "Pause before Close failed Close (returnsFalse) that never becomes durable: no credit, also after restarts",
+   "Leave before Close Start \u2192 Leave \u2192 Close: the Close is recorded in History; the abandoned cycle never moves on; the same after repeated restarts",
+   "Leave before Close Start \u2192 Pause \u2192 Leave \u2192 Close: no credit; History keeps the Close",
+   "Close requested before Leave Start \u2192 Close \u2192 Leave while the Close's day keys write is held: credited once the Close lands, to the cycle that was left; nothing reactivated; the same after restarts",
+   "Close requested before Leave the same, the held day keys write then refused (throws) and never durable: no credit, also after restarts",
+   "Close requested before Leave the same, the held day keys write then refused (returnsFalse) and never durable: no credit, also after restarts",
+   "Close requested before Leave Start \u2192 Close \u2192 Leave while the Close's History write is held: credited once the Close lands, to the cycle that was left; nothing reactivated; the same after restarts",
+   "Close requested before Leave the same, the held History write then refused (throws) and never durable: no credit, also after restarts",
+   "Close requested before Leave the same, the held History write then refused (returnsFalse) and never durable: no credit, also after restarts",
+   "Close requested before Leave Close \u2192 Leave + Go through it again while the Close is held: the credit goes to the cycle that was left; the new cycle never moves on",
+   "Close requested before Leave Close failed while its History write was refused, Leave, then recovery after a restart: it is the same Close, so it is credited to the left cycle once",
+   "Close requested before Leave a Close refused outright, Leave, and the Circle closed again after a restart: that Close came after the Leave \u2014 no credit",
+   "not covered by the policy (existing rule kept, flagged) Pause BEFORE the Start: a stage Circle started only after its Plan was paused earns no credit"
+  ],
+  "test/features/r83/r831_start_eligibility_test.dart": [
+   "the founder's table Start \u2192 Close: credited once, also after two restarts",
+   "the founder's table Start \u2192 Pause \u2192 Close: credited once, also after two restarts",
+   "the founder's table Start \u2192 Pause \u2192 Resume \u2192 Close: credited once, also after two restarts",
+   "the founder's table Pause \u2192 Start \u2192 Close: no Plan credit, also after two restarts",
+   "the founder's table Pause \u2192 Start \u2192 Resume \u2192 Close: no Plan credit, also after two restarts",
+   "the founder's table Pause \u2192 Start \u2192 Close \u2192 Resume: no Plan credit, also after two restarts",
+   "the founder's table Pause \u2192 Start \u2192 Close \u2192 Resume \u2192 Pause: no Plan credit, also after two restarts",
+   "the founder's table Start \u2192 Leave \u2192 Close: no Plan credit, also after two restarts",
+   "the founder's table Start: no Plan credit, also after two restarts",
+   "the founder's table Start \u2192 Close requested \u2192 Leave while it is being saved: the original cycle credited once, after the Close is durable",
+   "the founder's table Close never durable: no credit, also after a restart and Resume",
+   "a Start while paused stays without credit Start tapped while its offer is being saved, Plan paused, the Start becomes valid, Close, Resume, restarts: never credited",
+   "a Start while paused stays without credit the next day: Resume and a new choice catch up yesterday's Circle \u2014 it stays without credit, and today's Circle earns its stage",
+   "a Start while paused stays without credit the Start's record that it was made while paused is refused by the store: the Start is refused and the user told; tapped again, it starts \u2014 and is never credited",
+   "a Start while paused stays without credit Premium lapsed while paused, Start, Close; resubscribed, Resume, restarts: never credited",
+   "a Start while paused stays without credit control \u2014 Start under Premium, lapse, Close: credited once (the served exception)",
+   "a Start while paused stays without credit a second Plan started before this Circle's Start pauses this Plan: no credit, also once this Plan is carried on again",
+   "a Start while paused stays without credit control \u2014 a second Plan started after this Circle's Start: this Plan is credited once, the other stays active",
+   "a Start while paused stays without credit at most once: Start, Pause, Close, Resume, three restarts \u2014 one credit",
+   "stage 5 Pause, stage 5 started and closed: the Plan stays paused, its cycle not ended \u2014 and carrying on never ends it",
+   "the record of a Start made while paused stored, it is honoured: an active Plan does not credit that Circle; a save writes it back with the unknown fields",
+   "the record of a Start made while paused control \u2014 another Circle is credited as before",
+   "the record of a Start made while paused damaged, it is never read as absent: the Plan is kept as stored and runs nothing",
+   "the record of a Start made while paused Delete Circle history removes it with the other stage evidence"
+  ],
+  "test/features/r83/r83_codec_law_test.dart": [
+   "ServedStageCircle \u2014 known fields are what the model says R82-N03 / AUD-N1: a stored expiry note of true, cleared by a later Start under verified Premium, is written as cleared",
+   "ServedStageCircle \u2014 known fields are what the model says R82-N03 / AUD-N1 through the Plans: noteStart under verified Premium on a record read from disk credits after a restart",
+   "ServedStageCircle \u2014 known fields are what the model says control: true is written and read back as true",
+   "ServedStageCircle \u2014 known fields are what the model says control: the lifecycle stamps are written as set, and unknown fields of the record are kept",
+   "ServedStageCircle \u2014 known fields are what the model says control: the stored stage is written back as stored (R8.2 A05), its unknown fields too",
+   "ServedStageCircle \u2014 known fields are what the model says control: a damaged flag still makes the record unreadable",
+   "AppliedInsight \u2014 a whole record keeps what it does not know R82-N04: a valid record with an extension field writes it back",
+   "AppliedInsight \u2014 a whole record keeps what it does not know R82-N04 through the Plans: an unrelated Plan change keeps the extension",
+   "AppliedInsight \u2014 a whole record keeps what it does not know control: a new record is exactly its three fields",
+   "AppliedInsight \u2014 a whole record keeps what it does not know control: a damaged record attributes nothing and is kept as stored by its Plan",
+   "controls \u2014 every other persisted record round-trips CirclePlansState, PlanProgress, PlanCycle and StageRecord: decode \u2218 encode is the identity on THIRTY's own bytes",
+   "controls \u2014 every other persisted record round-trips CirclePlansState, PlanProgress, PlanCycle and StageRecord keep unknown fields through a change",
+   "controls \u2014 every other persisted record round-trips InsightSnapshot and InsightsState: decode \u2218 encode is the identity, unknown fields kept",
+   "controls \u2014 every other persisted record round-trips Suggestion Preferences and their items: decode \u2218 encode is the identity, unknown fields kept"
+  ],
+  "test/features/r83/r83_cross_store_test.dart": [
+   "a Plans credit that lands but whose answer is lost the answer is lost: the credit is resolved on what the disk holds, and after a restart it is there exactly once",
+   "a Plans credit that lands but whose answer is lost the app stops right after the credit lands: after a restart it is there once, never twice",
+   "stage 5 lifecycle boundaries stage 5 started, Plan paused, Close durable: credited once; the cycle reaches its end and the Plan ends \u2014 never active again",
+   "stage 5 lifecycle boundaries stage 5 Close asked for, the Plan left while that Close is still being saved: credited to the left cycle once; it stays left"
+  ],
+  "test/features/r83/r83_delete_boundary_test.dart": [
+   "Claude AUD-N2 \u2014 no deleted action instant comes back Start, Delete, the same stage Circle served again the same day, Plan paused before its Start: no Start instant is stamped",
+   "Claude AUD-N2 \u2014 no deleted action instant comes back Close requested, Delete, re-served the same day, Plan left: no Close instant is stamped",
+   "Claude AUD-N2 \u2014 no deleted action instant comes back control \u2014 without a Delete, a Start before the Pause is stamped",
+   "Claude AUD-N3 \u2014 a change reported not saved is never saved by the Delete a Pause being written when Delete begins, then refused: the user is told, and disk and screen both keep the Plan active",
+   "Claude AUD-N3 \u2014 a change reported not saved is never saved by the Delete control \u2014 a Pause being written when Delete begins, then landing: paused on disk, nothing reported failed",
+   "Claude AUD-N3 \u2014 a change reported not saved is never saved by the Delete control \u2014 the Delete intent refused while a Pause is pending: nothing is deleted, the Pause lands",
+   "founder decision D1 \u2014 an Insight's attribution goes with History after a Delete that succeeds, the left-out part no longer names the Insight; the part, its date and every other preference stay",
+   "founder decision D1 \u2014 an Insight's attribution goes with History the Insight's own \"Leave this out\" still being written when the Delete begins: it lands, and the Delete removes its attribution",
+   "founder decision D1 \u2014 an Insight's attribution goes with History the attribution's removal refused: the Delete reports failure and stays pending; the next start finishes it",
+   "founder decision D1 \u2014 an Insight's attribution goes with History the app stops right after the Delete intent lands: the next start removes the attribution and keeps the part",
+   "founder decision D1 \u2014 an Insight's attribution goes with History control \u2014 the Delete intent refused: the preferences are not touched, the attribution included",
+   "founder decision D1 \u2014 an Insight's attribution goes with History control \u2014 a preferences record THIRTY can't read is left exactly as stored by the Delete"
+  ]
+ },
+ "batch": 15,
+ "exit": 0,
+ "seconds": 13,
+ "command": "flutter test --concurrency=1 --reporter json test/features/r82/r82_a07_confirmed_history_test.dart test/features/r82/r82_a09_native_types_test.dart test/features/r82/r82_claude_audit_new1_triggers_test.dart test/features/r82/r82_cross_store_adversarial_test.dart test/features/r82/r82_decision_a_historical_credit_test.dart test/features/r82/r82_decision_b_start_persistence_test.dart test/features/r82/r82_decision_c_insight_provenance_test.dart test/features/r82/r82_lifecycle_policy_test.dart test/features/r83/r831_start_eligibility_test.dart test/features/r83/r83_codec_law_test.dart test/features/r83/r83_cross_store_test.dart test/features/r83/r83_delete_boundary_test.dart",
+ "rawSha256": "d896c44e776016d46684223b4fd5805aaef19b0c5dbc5233d33052809815e05f"
+}

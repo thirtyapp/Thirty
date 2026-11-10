@@ -1,0 +1,5 @@
+# Audio asset integrity, 2026-11-10T10:47:00+01:00
+tracked audio files at HEAD d4cf8c44: 180
+working-tree audio files: 180
+modified/deleted/untracked under assets/audio: 0
+blob-checked: 180, differing: 0

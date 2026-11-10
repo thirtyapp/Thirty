@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -200,6 +201,13 @@ class KeptCircles {
     return null;
   }
 
+  /// R8.3.3 (Astra R832-A02): how many kept Circles — read or not — [id]
+  /// addresses. More than one only in a record written before R8.3.3, when
+  /// two I4 Keeps of one day could be given the same id.
+  int addressedBy(String id) =>
+      kept.where((k) => k.id == id).length +
+      retained.where((r) => r.key == id).length;
+
   /// The kept Circle THIRTY can't read that [key] addresses.
   RetainedKept? retainedByKey(String key) {
     for (final record in retained) {
@@ -219,6 +227,17 @@ final partOfferableProvider = Provider<bool Function(CirclePart)>(
       (part) => isPartOffered(part.definition, part.minutes),
 );
 
+/// R8.3.3 (Astra R832-A02): where a new kept Circle's id gets its random
+/// part ([KeptCirclesNotifier.newKeptId]). Overridable only so tests can
+/// force two ids to collide.
+final keptIdRandomProvider = Provider<Random>((ref) {
+  try {
+    return Random.secure();
+  } on UnsupportedError {
+    return Random();
+  }
+});
+
 /// The user's kept Circles: keep, rename, remove. Never gated — what was
 /// made for the user is theirs, whatever Premium's state.
 ///
@@ -234,6 +253,10 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
   /// Days whose Circle is being kept now — counted, so two Keeps at once
   /// never keep it twice or pass [maxKeptCircles].
   final _keeping = <String>{};
+
+  /// R8.3.3 (Astra R832-A02): the ids of the Keeps under way, so two at
+  /// once never share one.
+  final _keepingIds = <String>{};
 
   @override
   KeptCircles build() => ref.watch(keptCirclesRepositoryProvider).read();
@@ -271,6 +294,31 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
 
   DateTime get _now => ref.read(eventClockProvider)();
 
+  /// R8.3.3 (Astra R832-A02): a new kept Circle's own id — no other kept
+  /// Circle, read or not, and no Keep under way has it. Never from a
+  /// cached calendar clock: the event clock's instant and 48 random bits
+  /// ([keptIdRandomProvider]), with a count added only if even that is
+  /// taken. [tag] says who chose it (`insight`), so an id Insight 4 recorded
+  /// is never one a Keep of the user's own is given.
+  String newKeptId({String? tag}) {
+    final random = ref.read(keptIdRandomProvider);
+    final bits = (random.nextInt(1 << 24) << 24) | random.nextInt(1 << 24);
+    final base = [
+      'kept',
+      '${_now.microsecondsSinceEpoch}',
+      bits.toRadixString(16).padLeft(12, '0'),
+      ?tag,
+    ].join('-');
+    var id = base;
+    for (var n = 1; _idTaken(state, id); n++) {
+      id = '$base-$n';
+    }
+    return id;
+  }
+
+  bool _idTaken(KeptCircles current, String id) =>
+      _keepingIds.contains(id) || current.addressedBy(id) > 0;
+
   /// Keeps today's composed Circle as one of the user's own — named [name],
   /// or by its need — with the words each part has now. Completes with the
   /// kept Circle once it is on disk; with `null` when [maxKeptCircles] are
@@ -282,6 +330,12 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
   /// [id] (R8.3.2, founder scope decision B2): the kept Circle's own id, when
   /// the caller chose it beforehand — Insight 4 records it before keeping,
   /// so its own Keep can be told from any other Keep of the same day.
+  ///
+  /// R8.3.3 (Astra R832-A02): every kept Circle's id is its own. Without
+  /// [id] one is allocated ([newKeptId]); an [id] that a kept Circle — read
+  /// or not — or another Keep under way already has is refused like any
+  /// other Keep that can't be made: `null`, nothing written, nothing
+  /// replaced.
   Future<KeptCircle?> keepCircle({
     required CirclePlan plan,
     required Intention need,
@@ -289,16 +343,20 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
     String? name,
     String? id,
   }) async {
+    final keptId = id ?? newKeptId();
     bool refused(KeptCircles current) =>
         !current.countKnown ||
         current.count + _keeping.length >= maxKeptCircles ||
-        current.kept.any((k) => k.fromCircleId == circleId);
-    if (_keeping.contains(circleId) || refused(state)) return null;
+        current.kept.any((k) => k.fromCircleId == circleId) ||
+        current.addressedBy(keptId) > 0;
+    if (_keeping.contains(circleId) ||
+        _keepingIds.contains(keptId) ||
+        refused(state)) {
+      return null;
+    }
     final trimmed = name?.trim();
     final circle = KeptCircle(
-      id:
-          id ??
-          'kept-${_now.microsecondsSinceEpoch}-${state.count + _keeping.length}',
+      id: keptId,
       name: trimmed == null || trimmed.isEmpty
           ? keptCircleDefaultName(need)
           : trimmed,
@@ -309,24 +367,32 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
       wording: [for (final p in plan.parts) PartWording.of(p.definition)],
     );
     _keeping.add(circleId);
+    _keepingIds.add(keptId);
     try {
       final next = await _commit((current) {
         _keeping.remove(circleId);
+        _keepingIds.remove(keptId);
         if (refused(current)) return null;
         return current._with(kept: [...current.kept, circle]);
       });
       return next == null ? null : circle;
     } finally {
       _keeping.remove(circleId);
+      _keepingIds.remove(keptId);
     }
   }
 
   /// Renames the kept Circle [id] addresses — one THIRTY can't read too,
   /// changing nothing else in it. Completes once on disk.
+  ///
+  /// R8.3.3 (Astra R832-A02): an [id] that addresses more than one kept
+  /// Circle ([KeptCircles.addressedBy]) renames none of them — one action
+  /// never changes two Circles the user owns separately.
   Future<void> renameKept(String id, String name) async {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return;
     await _commit((current) {
+      if (current.addressedBy(id) > 1) return null;
       if (current.keptById(id) != null) {
         return current._with(
           kept: [
@@ -349,8 +415,12 @@ class KeptCirclesNotifier extends Notifier<KeptCircles> {
   /// Removes a kept Circle — one THIRTY can't read too, only ever on the
   /// user's own request. History keeps the days it was used, under the name
   /// it had then. Completes once on disk.
+  ///
+  /// R8.3.3 (Astra R832-A02): an [id] that addresses more than one kept
+  /// Circle removes none of them, as for [renameKept].
   Future<void> deleteKept(String id) async {
     await _commit((current) {
+      if (current.addressedBy(id) > 1) return null;
       if (current.keptById(id) != null) {
         return current._with(
           kept: [

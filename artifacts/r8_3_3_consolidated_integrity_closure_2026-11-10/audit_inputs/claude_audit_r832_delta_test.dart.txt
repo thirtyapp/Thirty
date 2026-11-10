@@ -1,0 +1,429 @@
+// Independent post-R8.3.2 delta audit probes (disposable copy only).
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/utils/date_key.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart';
+import 'package:thirty/features/insights/domain/insight.dart';
+import 'package:thirty/features/insights/domain/insight_engine.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+import 'package:thirty/features/plans/domain/plan_stage_provenance.dart';
+
+import '../support/r8_fault_disk.dart';
+import '../support/r8_harness.dart';
+
+void main() {
+  void evidence(String id, Map<String, Object?> facts) {
+    // ignore: avoid_print
+    print('AUD832 ${jsonEncode({'test': id, ...facts})}');
+  }
+
+  final day1 = DateTime(2026, 10, 12, 9);
+  late R8Harness h;
+
+  RecommendationNotifier today(ProviderContainer c) =>
+      c.read(recommendationProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+  RecommendationStatus status(ProviderContainer c) =>
+      c.read(recommendationProvider).status;
+
+  Future<Map<String, Object?>> planOnDisk([String id = 'getting_going']) async {
+    final raw = (await h.disk.stored())[circlePlansKey];
+    if (raw is! String) return {};
+    return (((jsonDecode(raw) as Map)['plans'] as Map)[id] as Map?)
+            ?.cast<String, Object?>() ??
+        {};
+  }
+
+  Future<int> credits(String circleId) async {
+    var n = 0;
+    for (final c in (await planOnDisk())['cycles'] as List? ?? []) {
+      for (final r in (c as Map)['records'] as List) {
+        if ((r as Map)['circleId'] == circleId) n++;
+      }
+    }
+    return n;
+  }
+
+  Future<ProviderContainer> restart({int times = 1}) async {
+    late ProviderContainer c;
+    for (var i = 0; i < times; i++) {
+      await h.restart();
+      c = h.open();
+      c.read(circlePlansProvider);
+      c.read(recommendationProvider);
+      await R8Harness.settle();
+    }
+    return c;
+  }
+
+  Future<void> close(ProviderContainer c) async {
+    h.clock.value = h.clock.value.add(const Duration(minutes: 25));
+    today(c).close();
+    await R8Harness.settle();
+  }
+
+  group('G1 residual — the +1 pending allowance is satisfied by another '
+      'change than the one the Start was asked on', () {
+    setUp(() async {
+      h = R8Harness(day1);
+      await h.boot();
+    });
+
+    /// Plan paused on disk; offer save held; Plans write held; Resume
+    /// pending; Start tapped on the shown (active) Plan.
+    Future<(ProviderContainer, String, HeldWrite, HeldWrite)> setup() async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final offer = h.disk.hold(recommendationPendingWriteKey);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await offer.reached;
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      expect((await planOnDisk())['lifecycle'], 'paused');
+      final planWrite = h.disk.hold(circlePlansKey);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await planWrite.reached;
+      today(c).start();
+      await R8Harness.settle();
+      expect(status(c), RecommendationStatus.notStarted);
+      return (c, id, offer, planWrite);
+    }
+
+    test('X1 Resume pending at the tap is REFUSED (rolled back), the user '
+        'resumes again (confirmed), then the Start resolves', () async {
+      final (c, id, offer, planWrite) = await setup();
+      final writesBefore = h.disk.attempts.length;
+      planWrite.release(DiskFault.returnsFalse);
+      await R8Harness.settle();
+      final afterRefusal = {
+        'mem': c.read(circlePlansProvider).plans['getting_going']?.lifecycle.name,
+        'disk': (await planOnDisk())['lifecycle'],
+      };
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      offer.release();
+      await R8Harness.settle();
+      final outcome = status(c);
+      if (outcome == RecommendationStatus.started) await close(c);
+      final c2 = await restart(times: 2);
+      evidence('X1', {
+        'afterRefusal': afterRefusal,
+        'plansWritesAfterTap': h.disk.attempts.length - writesBefore,
+        'outcome': outcome.name,
+        'credits': await credits(id),
+        'lifecycle': (await planOnDisk())['lifecycle'],
+        'mem': c2.read(circlePlansProvider).plans['getting_going']?.lifecycle.name,
+      });
+    });
+
+    test('X2 Resume pending at the tap is REFUSED (not the latest write); '
+        'the user then Pauses and Resumes (both confirmed) — A2 shape',
+        () async {
+      final (c, id, offer, planWrite) = await setup();
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      planWrite.release(DiskFault.returnsFalse);
+      await R8Harness.settle();
+      offer.release();
+      await R8Harness.settle();
+      final outcome = status(c);
+      if (outcome == RecommendationStatus.started) await close(c);
+      final c2 = await restart(times: 2);
+      evidence('X2', {
+        'outcome': outcome.name,
+        'credits': await credits(id),
+        'lifecycle': (await planOnDisk())['lifecycle'],
+        'startedWhilePaused': (await planOnDisk())['startedWhilePaused'],
+        'mem': c2.read(circlePlansProvider).plans['getting_going']?.lifecycle.name,
+      });
+    });
+
+    test('X2-ctl Resume pending at the tap LANDS; then Pause and Resume '
+        'confirmed (A2 shape): expected cancelled', () async {
+      final (c, id, offer, planWrite) = await setup();
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      planWrite.release();
+      await R8Harness.settle();
+      offer.release();
+      await R8Harness.settle();
+      final outcome = status(c);
+      evidence('X2-ctl', {'outcome': outcome.name, 'credits': await credits(id)});
+      expect(outcome, RecommendationStatus.notStarted);
+    });
+  });
+
+  group('Uncertain Pause (ack lost) then a fresh Start', () {
+    setUp(() async {
+      h = R8Harness(day1);
+      await h.boot();
+    });
+
+    test('X3 Pause lands, answer lost; memory rolls back to active; fresh '
+        'Start; app dies before Close; restart; Close; Resume', () async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      h.disk.ackLost(circlePlansKey);
+      final paused = await plans(c).confirmed((p) => p.pause('getting_going'));
+      await R8Harness.settle();
+      final split = {
+        'pauseResult': paused.name,
+        'mem': c.read(circlePlansProvider).plans['getting_going']?.lifecycle.name,
+        'disk': (await planOnDisk())['lifecycle'],
+      };
+      today(c).start();
+      await R8Harness.settle();
+      final started = status(c);
+      final atStart = {
+        'disk': (await planOnDisk())['lifecycle'],
+        'startedWhilePaused': (await planOnDisk())['startedWhilePaused'],
+      };
+      final c2 = await restart();
+      final restored = {
+        'status': status(c2).name,
+        'disk': (await planOnDisk())['lifecycle'],
+      };
+      await close(c2);
+      final afterClose = await credits(id);
+      plans(c2).resume('getting_going');
+      await R8Harness.settle();
+      final c3 = await restart(times: 2);
+      evidence('X3', {
+        'split': split,
+        'started': started.name,
+        'atStart': atStart,
+        'restored': restored,
+        'creditsAfterClose': afterClose,
+        'creditsFinal': await credits(id),
+        'lifecycle': (await planOnDisk())['lifecycle'],
+        'mem': c3.read(circlePlansProvider).plans['getting_going']?.lifecycle.name,
+      });
+    });
+
+    test('X3-ctl same, no process death: Close in the same process', () async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await R8Harness.settle();
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      h.disk.ackLost(circlePlansKey);
+      await plans(c).confirmed((p) => p.pause('getting_going'));
+      await R8Harness.settle();
+      today(c).start();
+      await R8Harness.settle();
+      final started = status(c);
+      await close(c);
+      final c2 = await restart(times: 2);
+      evidence('X3-ctl', {
+        'started': started.name,
+        'credits': await credits(id),
+        'lifecycle': (await planOnDisk())['lifecycle'],
+        'mem': c2.read(circlePlansProvider).plans['getting_going']?.lifecycle.name,
+      });
+    });
+  });
+
+  group('AUD-O3 adjudication', () {
+    setUp(() async {
+      h = R8Harness(day1);
+      await h.boot();
+    });
+
+    test('AUD-O3\' Start tapped while its offer save is pending, then Pause '
+        'confirmed, offer lands: cancelled; fresh Start on paused Plan; '
+        'Close; Resume; restarts — never credited', () async {
+      final c = h.open();
+      plans(c).start('getting_going');
+      await R8Harness.settle();
+      final held = h.disk.hold(recommendationDayKey);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await held.reached;
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      today(c).start();
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      held.release();
+      await R8Harness.settle();
+      final first = status(c);
+      final rec1 = (await planOnDisk())['startedWhilePaused'];
+      today(c).start();
+      await R8Harness.settle();
+      final fresh = status(c);
+      await close(c);
+      plans(c).resume('getting_going');
+      await R8Harness.settle();
+      final c2 = await restart(times: 2);
+      evidence('AUD-O3prime', {
+        'first': first.name,
+        'recordAfterCancel': rec1,
+        'fresh': fresh.name,
+        'credits': await credits(id),
+        'lifecycle': (await planOnDisk())['lifecycle'],
+        'historyStarts': c2
+            .read(circleJournalRepositoryProvider)
+            .readAll()
+            .where((e) => e.circleId == id && e.startedAt != null)
+            .length,
+      });
+      expect(first, RecommendationStatus.notStarted);
+      expect(fresh, RecommendationStatus.started);
+      expect(await credits(id), 0);
+    });
+  });
+
+  group('I1/I2 provenance under concurrent application', () {
+    final morning = DateTime(2026, 10, 30, 9);
+    setUp(() async {
+      h = R8Harness(morning);
+      await h.boot();
+    });
+
+    Future<Map<String, Object?>> json(String key) async {
+      final raw = (await h.disk.stored())[key];
+      return raw is String ? jsonDecode(raw) as Map<String, Object?> : {};
+    }
+
+    CirclePart part(ElementId e) => CirclePart(e, elementOf(e).minutes);
+    final window = [
+      part(ElementId.openWindow),
+      part(ElementId.standingStretch),
+      part(ElementId.sitAMinute),
+    ];
+    CircleJournalEntry entry(
+      int ago,
+      Intention need, {
+      List<CirclePart> parts = const [],
+      PlanStageProvenance? stage,
+      PlanStageProvenance? replacedFromStage,
+      String? reason,
+    }) {
+      final date = morning.subtract(Duration(days: ago));
+      return CircleJournalEntry(
+        schemaVersion: circleJournalSchemaVersion,
+        circleId: dateKey(date),
+        localDate: dateKey(date),
+        direction: need,
+        activityId: ActivityId.values.first,
+        catalogVersion: catalogVersion,
+        shownAt: date,
+        startedAt: date,
+        closedAt: date,
+        replacementReason: reason,
+        replacedFromStage: replacedFromStage,
+        session: parts.isEmpty
+            ? null
+            : CircleSessionRecord(
+                title: 'Circle',
+                parts: CirclePlan(parts).toWire(),
+                skipped: const [],
+                planStage: stage,
+              ),
+      );
+    }
+
+    String journalOf(List<CircleJournalEntry> entries) => jsonEncode({
+      'schemaVersion': circleJournalSchemaVersion,
+      'entries': [for (final e in entries) e.toJson()],
+    });
+    const stage = PlanStageProvenance(
+      planId: 'getting_going',
+      cycleId: 'getting_going#1',
+      stageNumber: 1,
+      stageId: 'getting_going.1',
+    );
+    final i2 = <String, Object>{
+      circlePlansKey: jsonEncode(
+        CirclePlansState.empty
+            .start('getting_going', today: '2026-10-01')!
+            .toJson(),
+      ),
+      circleJournalKey: journalOf([
+        for (final (k, ago) in [2, 5, 9, 13, 17].indexed)
+          k.isEven
+              ? entry(ago, Intention.moreEnergy,
+                  replacedFromStage: stage, reason: 'tooMuch')
+              : entry(ago, Intention.moreEnergy, parts: window, stage: stage),
+      ]),
+    };
+    InsightsNotifier insights(ProviderContainer c) =>
+        c.read(insightsProvider.notifier);
+    Future<Map?> snapshotOnDisk(String id) async {
+      final list = (await json(insightsKey))['snapshots'] as List? ?? [];
+      for (final s in list) {
+        if ((s as Map)['id'] == id) return s;
+      }
+      return null;
+    }
+
+    test('X4 I1 and I2 applied concurrently on one Plan, both marks refused; '
+        'user pauses by hand; I1 retried', () async {
+      await h.boot(i2);
+      final c = h.open();
+      final shownI2 = insights(c).assess().added.single;
+      await R8Harness.settle();
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      h.clock.value = morning.add(const Duration(days: 7));
+      await h.restart();
+      final c2 = h.open();
+      final i1 = insights(c2)
+          .assess()
+          .added
+          .where((s) => s.family == InsightFamily.planForNeed)
+          .firstOrNull;
+      await R8Harness.settle();
+      expect(i1, isNotNull, reason: 'PRECONDITION I1 generated');
+      expect(
+        insights(c2).status(insights(c2).state.byId(shownI2.id)!),
+        InsightStatus.current,
+        reason: 'PRECONDITION I2 current',
+      );
+      h.disk.fail(insightsKey, DiskFault.returnsFalse);
+      final f1 = insights(c2).apply(i1!.id);
+      final f2 = insights(c2).apply(shownI2.id);
+      final r1 = await f1;
+      final r2 = await f2;
+      await R8Harness.settle();
+      h.disk.healAll();
+      final afterConcurrent = {
+        'r1': r1.name,
+        'r2': r2.name,
+        'plan': await json(circlePlansKey),
+        'i1Status': insights(c2).status(insights(c2).state.byId(i1.id)!).name,
+      };
+      // The user pauses the Plan by hand, then restarts.
+      expect(plans(c2).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      await h.restart();
+      final c3 = h.open();
+      insights(c3).assess();
+      await R8Harness.settle();
+      final i1Status =
+          insights(c3).status(insights(c3).state.byId(i1.id)!).name;
+      final retry = await insights(c3).apply(i1.id);
+      await R8Harness.settle();
+      evidence('X4', {
+        ...afterConcurrent,
+        'i1StatusAfterManualPause': i1Status,
+        'i1Retry': retry.name,
+        'lifecycleAfterRetry': (await planOnDisk())['lifecycle'],
+        'appliedInsightAfterRetry': (await planOnDisk())['appliedInsight'],
+        'i1Snapshot': await snapshotOnDisk(i1.id),
+        'i2Snapshot': await snapshotOnDisk(shownI2.id),
+      });
+    });
+  });
+}

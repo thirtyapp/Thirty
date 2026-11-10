@@ -88,6 +88,18 @@ class InsightsNotifier extends Notifier<InsightsState> {
       ref.read(historyWriteGateProvider).isDeleting ||
       ref.read(circleHistoryDeletionProvider).isPending;
 
+  /// R8.3.3 (Astra R832-A01): whether an [apply] begun under the deletion
+  /// generation [epoch] ([HistoryWriteGate.epoch]) may still change
+  /// anything. Once Delete Circle history has begun since, it may not: its
+  /// Insight and the evidence it rests on are being deleted, and none of its
+  /// changes — the Plan, a left-out part, a kept Circle, a record here — may
+  /// be queued after the deletion's own, where nothing would remove them.
+  /// Checked after every wait and just before each change is queued.
+  bool _stillCurrent(int epoch) =>
+      ref.mounted &&
+      ref.read(historyWriteGateProvider).isCurrent(epoch) &&
+      !_deletionUnderWay;
+
   @override
   InsightsState build() {
     final read = _read(ref.watch(sharedPreferencesProvider));
@@ -329,12 +341,22 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// ([_keepDisplacedApplication]); if that can't be saved, nothing is
   /// changed. So no Insight whose change landed is ever taken for one never
   /// applied, and its retry never makes the change again.
+  ///
+  /// R8.3.3 (Astra R832-A01): an application is one operation, begun under
+  /// the deletion generation of the moment ([_stillCurrent]). When Delete
+  /// Circle history begins while it waits, it stops at its next step:
+  /// nothing more is changed or recorded, and it is
+  /// [InsightActionResult.notAvailable] — its Insight is deleted. A change
+  /// already queued before the deletion lands before it, and the deletion
+  /// removes its attribution as for any earlier write.
   Future<InsightActionResult> apply(String snapshotId) async {
+    final epoch = ref.read(historyWriteGateProvider).epoch;
     await ref.read(circlePlansProvider.notifier).idle();
     await ref.read(journalWritesProvider).idle();
     await ref.read(suggestionPreferencesProvider.notifier).idle();
     // R8.3.2: the marks as confirmed — one still being written may fail.
     await idle();
+    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
     final snapshot = state.byId(snapshotId);
     final keepsOwnCircle = snapshot?.application is KeepCircleFromHistory;
     if (!_premium && !keepsOwnCircle) return InsightActionResult.needsPremium;
@@ -346,7 +368,7 @@ class InsightsNotifier extends Notifier<InsightsState> {
         return InsightActionResult.alreadyApplied;
       case InsightStatus.current || InsightStatus.stale:
         if (_appliedOn(snapshot, i) case final on?) {
-          return _markApplied(snapshot, on);
+          return _markApplied(snapshot, on, epoch);
         }
         if (status == InsightStatus.stale) {
           return InsightActionResult.notAvailable;
@@ -356,26 +378,39 @@ class InsightsNotifier extends Notifier<InsightsState> {
     }
     switch (snapshot.application) {
       case PlanDirection(:final planId) || KeepGentler(:final planId):
-        if (!await _keepDisplacedApplication(planId, snapshotId, i)) {
-          return InsightActionResult.notSaved;
+        if (!await _keepDisplacedApplication(planId, snapshotId, i, epoch)) {
+          return _stillCurrent(epoch)
+              ? InsightActionResult.notSaved
+              : InsightActionResult.notAvailable;
         }
       case _:
     }
     final result = switch (snapshot.application) {
-      PlanDirection(:final planId) => await _direct(planId, snapshotId),
+      PlanDirection(:final planId) => await _direct(planId, snapshotId, epoch),
       KeepGentler(:final planId, :final cycleId) => await _gentler(
         planId,
         cycleId,
         snapshotId,
+        epoch,
       ),
-      LeaveOutPart(:final element) => await _leaveOut(element, i, snapshot),
-      KeepCircleFromHistory(:final circleId) => await _keep(circleId, snapshot),
+      LeaveOutPart(:final element) => await _leaveOut(
+        element,
+        i,
+        snapshot,
+        epoch,
+      ),
+      KeepCircleFromHistory(:final circleId) => await _keep(
+        circleId,
+        snapshot,
+        epoch,
+      ),
       OpenPlanReview() ||
       NothingToChange() => InsightActionResult.nothingToApply,
     };
     // R8.3.2 (founder scope decision B2): a day's Circle already kept by
     // some other Keep is never recorded as this Insight's application.
-    if (result == InsightActionResult.done) {
+    // R8.3.3 (Astra R832-A01): nor is an Insight Delete has since removed.
+    if (result == InsightActionResult.done && _stillCurrent(epoch)) {
       final current = state.byId(snapshotId) ?? snapshot;
       try {
         await _set(
@@ -418,11 +453,20 @@ class InsightsNotifier extends Notifier<InsightsState> {
         return null;
       // R8.3.2 (founder scope decision B2): the kept Circle with the id its
       // attempt recorded — never another Keep of the same day.
-      case KeepCircleFromHistory():
-        final keptId = snapshot.attempt?.keptId;
-        if (keptId == null) return null;
+      // R8.3.3 (Astra R832-A02): and kept from this very Circle, the one the
+      // attempt names — an id alone is never proof, so a kept Circle of
+      // another action that came to share it never counts.
+      case KeepCircleFromHistory(:final circleId):
+        final attempt = snapshot.attempt;
+        final keptId = attempt?.keptId;
+        if (keptId == null ||
+            attempt!.target != InsightAttempt.targetOf(snapshot.application)) {
+          return null;
+        }
         for (final k in ref.read(keptCirclesProvider).kept) {
-          if (k.id == keptId) return dateKey(k.createdAt);
+          if (k.id == keptId && k.fromCircleId == circleId) {
+            return dateKey(k.createdAt);
+          }
         }
         return null;
       case _:
@@ -446,8 +490,15 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// R8.3.2 (founder scope decisions B1/B2): records, and waits for the
   /// store to confirm, that [snapshot]'s action is about to be made. `false`
   /// when it isn't confirmed: the action is then never made.
-  Future<bool> _recordAttempt(InsightSnapshot snapshot, {String? keptId}) async {
+  ///
+  /// R8.3.3: never once Delete Circle history has begun ([_stillCurrent]).
+  Future<bool> _recordAttempt(
+    InsightSnapshot snapshot,
+    int epoch, {
+    String? keptId,
+  }) async {
     final target = InsightAttempt.targetOf(snapshot.application)!;
+    if (!_stillCurrent(epoch)) return false;
     try {
       await _set(
         state.replacing(
@@ -469,9 +520,9 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// [snapshotId]'s action is known not to have been made: its attempt
   /// record goes, so it can be tried again. If that isn't saved, the record
   /// stays and the Insight is never offered again — never made twice.
-  Future<void> _clearAttempt(String snapshotId) async {
+  Future<void> _clearAttempt(String snapshotId, int epoch) async {
     final s = state.byId(snapshotId);
-    if (s?.attempt == null) return;
+    if (s?.attempt == null || !_stillCurrent(epoch)) return;
     try {
       await _set(state.replacing(s!.copyWith(clearAttempt: true)));
     } on StorageWriteFailed {
@@ -488,6 +539,7 @@ class InsightsNotifier extends Notifier<InsightsState> {
     String planId,
     String insightId,
     InsightInputs i,
+    int epoch,
   ) async {
     final by = i.plans.plans[planId]?.appliedInsight;
     if (by == null || by.insightId == insightId) return true;
@@ -495,14 +547,18 @@ class InsightsNotifier extends Notifier<InsightsState> {
     if (displaced == null || displaced.appliedOn != null) return true;
     final on = _appliedOn(displaced, i);
     if (on == null) return true;
-    return await _markApplied(displaced, on) == InsightActionResult.done;
+    return await _markApplied(displaced, on, epoch) ==
+        InsightActionResult.done;
   }
 
   /// Records [snapshot] as applied on [on] — its change already on disk.
+  /// R8.3.3: never once Delete Circle history has begun ([_stillCurrent]).
   Future<InsightActionResult> _markApplied(
     InsightSnapshot snapshot,
     String on,
+    int epoch,
   ) async {
+    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
     try {
       await _set(
         state.replacing(snapshot.copyWith(appliedOn: on, clearAttempt: true)),
@@ -513,7 +569,14 @@ class InsightsNotifier extends Notifier<InsightsState> {
     }
   }
 
-  Future<InsightActionResult> _direct(String planId, String insightId) async {
+  Future<InsightActionResult> _direct(
+    String planId,
+    String insightId,
+    int epoch,
+  ) async {
+    // R8.3.3 (Astra R832-A01): checked in the same step that queues the
+    // Plan change — no wait between them.
+    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
     final lifecycle = ref
         .read(circlePlansProvider.notifier)
         .confirmedState
@@ -541,7 +604,9 @@ class InsightsNotifier extends Notifier<InsightsState> {
     String planId,
     String cycleId,
     String insightId,
+    int epoch,
   ) async {
+    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
     final plan = ref
         .read(circlePlansProvider.notifier)
         .confirmedState
@@ -579,11 +644,19 @@ class InsightsNotifier extends Notifier<InsightsState> {
     String wire,
     InsightInputs i,
     InsightSnapshot snapshot,
+    int epoch,
   ) async {
     final element = ElementId.values.asNameMap()[wire];
     if (element == null) return InsightActionResult.notAvailable;
     if (i.leftOut.contains(element)) return InsightActionResult.alreadyApplied;
-    if (!await _recordAttempt(snapshot)) return InsightActionResult.notSaved;
+    if (!await _recordAttempt(snapshot, epoch)) {
+      return _stillCurrent(epoch)
+          ? InsightActionResult.notSaved
+          : InsightActionResult.notAvailable;
+    }
+    // R8.3.3 (Astra R832-A01): the part is left out only if no Delete
+    // began while its attempt was being recorded.
+    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
     final outcome = await ref
         .read(suggestionPreferencesProvider.notifier)
         .leaveOutChange(element, byInsight: snapshot.id);
@@ -595,7 +668,7 @@ class InsightsNotifier extends Notifier<InsightsState> {
       case PreferenceChange.unchanged ||
           PreferenceChange.refused ||
           PreferenceChange.notSaved:
-        await _clearAttempt(snapshot.id);
+        await _clearAttempt(snapshot.id, epoch);
         // Left out by something else meanwhile: never this Insight's.
         return outcome == PreferenceChange.unchanged
             ? InsightActionResult.alreadyApplied
@@ -607,9 +680,14 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// every trace of this Keep, so the attempt is recorded first, with the id
   /// the kept Circle is given ([_recordAttempt]). A day's Circle kept some
   /// other way is never this Insight's: nothing is kept, nothing recorded.
+  ///
+  /// R8.3.3 (Astra R832-A02): that id is the kept Circles' own allocation
+  /// ([KeptCirclesNotifier.newKeptId]) — unique, and never from the cached
+  /// calendar day ([nowProvider]), which every I4 applied that day shares.
   Future<InsightActionResult> _keep(
     String circleId,
     InsightSnapshot snapshot,
+    int epoch,
   ) async {
     InsightActionResult? refused(KeptCircles kept) {
       if (kept.kept.any((k) => k.fromCircleId == circleId)) {
@@ -628,10 +706,17 @@ class InsightsNotifier extends Notifier<InsightsState> {
     }
     final plan = CirclePlan.fromWire(entry?.session?.parts);
     if (entry == null || plan == null) return InsightActionResult.notAvailable;
-    final keptId = 'kept-${_now.microsecondsSinceEpoch}-insight';
-    if (!await _recordAttempt(snapshot, keptId: keptId)) {
-      return InsightActionResult.notSaved;
+    final keptId = ref
+        .read(keptCirclesProvider.notifier)
+        .newKeptId(tag: 'insight');
+    if (!await _recordAttempt(snapshot, epoch, keptId: keptId)) {
+      return _stillCurrent(epoch)
+          ? InsightActionResult.notSaved
+          : InsightActionResult.notAvailable;
     }
+    // R8.3.3 (Astra R832-A01): nothing is kept from History a Delete began
+    // removing while the attempt was being recorded.
+    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
     try {
       final circle = await ref
           .read(keptCirclesProvider.notifier)
@@ -643,11 +728,11 @@ class InsightsNotifier extends Notifier<InsightsState> {
           );
       if (circle != null) return InsightActionResult.done;
       // Refused before anything was written.
-      await _clearAttempt(snapshot.id);
+      await _clearAttempt(snapshot.id, epoch);
       return refused(ref.read(keptCirclesProvider)) ??
           InsightActionResult.notAvailable;
     } on StorageWriteFailed catch (failure) {
-      if (!failure.uncertain) await _clearAttempt(snapshot.id);
+      if (!failure.uncertain) await _clearAttempt(snapshot.id, epoch);
       return InsightActionResult.notSaved;
     }
   }

@@ -205,17 +205,19 @@ class CircleHistoryDeletion {
       // none is still able to write after a deletion reported done — and
       // the last pass removes the Insights again, with anything such a
       // save put back. R8.3: the preferences too.
+      //
+      // R8.3.3 (Astra R832-A01): and the Plans' stage evidence once more —
+      // a defence only. An Insight applied before the deletion stops at
+      // its next step instead of changing a Plan ([InsightsNotifier.apply]);
+      // any save that still reached the Plans after the first pass loses
+      // its evidence here, and each Plan keeps its place. That pass removes
+      // the copy of an unreadable Plans record again too.
       await _all([plans.idle(), insights.idle(), preferences.idle()]);
       await _all([
         _clearRecordedCircles(prefs),
+        plans.forgetStageEvidence(),
         insights.forgetAll(),
         preferences.forgetInsightProvenance()..ignore(),
-        writeConfirmed(
-          prefs,
-          circlePlansUnreadableKey,
-          null,
-          restoreOnFailure: false,
-        ),
       ]);
       await writeConfirmed(prefs, historyDeletionPendingKey, null);
     } catch (_) {

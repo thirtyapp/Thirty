@@ -1,0 +1,8 @@
+lib/core/qa/qa_scenario.dart: staged CR=0 worktree CR=1691 worktree(CRLF->LF)==staged: True
+lib/features/home/application/circle_history_deletion.dart: staged CR=0 worktree CR=326 worktree(CRLF->LF)==staged: True
+lib/features/insights/application/insights_provider.dart: staged CR=0 worktree CR=832 worktree(CRLF->LF)==staged: True
+lib/features/personal_circle/application/kept_circles_provider.dart: staged CR=0 worktree CR=498 worktree(CRLF->LF)==staged: True
+lib/features/plans/application/circle_plans_provider.dart: staged CR=0 worktree CR=1212 worktree(CRLF->LF)==staged: True
+test/features/r833/r833_identity_contract_test.dart: staged CR=0 worktree CR=0 worktree(CRLF->LF)==staged: True
+test/features/r833/r833_reproduction_test.dart: staged CR=0 worktree CR=0 worktree(CRLF->LF)==staged: True
+EOL OK

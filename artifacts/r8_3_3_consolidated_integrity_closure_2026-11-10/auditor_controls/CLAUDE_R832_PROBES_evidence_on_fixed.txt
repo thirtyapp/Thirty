@@ -1,0 +1,6 @@
+AUD832 {"test":"X1","afterRefusal":{"mem":"paused","disk":"paused"},"plansWritesAfterTap":-5,"outcome":"notStarted","credits":0,"lifecycle":"active","mem":"active"}
+AUD832 {"test":"X2","outcome":"notStarted","credits":0,"lifecycle":"active","startedWhilePaused":null,"mem":"active"}
+AUD832 {"test":"X2-ctl","outcome":"notStarted","credits":0}
+AUD832 {"test":"X3","split":{"pauseResult":"notSaved","mem":"active","disk":"active"},"started":"started","atStart":{"disk":"active","startedWhilePaused":null},"restored":{"status":"started","disk":"active"},"creditsAfterClose":1,"creditsFinal":1,"lifecycle":"active","mem":"active"}
+AUD832 {"test":"X3-ctl","started":"started","credits":1,"lifecycle":"active","mem":"active"}
+AUD832 {"test":"AUD-O3prime","first":"notStarted","recordAfterCancel":null,"fresh":"started","credits":0,"lifecycle":"active","historyStarts":1}

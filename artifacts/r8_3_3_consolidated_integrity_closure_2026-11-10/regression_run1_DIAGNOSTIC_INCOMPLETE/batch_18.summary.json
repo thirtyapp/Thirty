@@ -1,0 +1,28 @@
+{
+ "files": {
+  "test/features/b8/b8_product_simulation_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": false,
+ "doneSuccess": null,
+ "testNames": {
+  "test/features/b8/b8_product_simulation_test.dart": [
+   "B8 \u2014 the whole product over twelve months (structure only) A \u2014 a user who never answers still gets the whole service, and nothing claims what they never said",
+   "B8 \u2014 the whole product over twelve months (structure only) B \u2014 a mixed answerer: answers move what is composed, Stage 5 uses only what this cycle allows, reviews say what was said"
+  ]
+ },
+ "batch": 18,
+ "exit": 1,
+ "seconds": 121,
+ "command": "flutter test --concurrency=1 --reporter json test/features/b8/b8_product_simulation_test.dart",
+ "rawSha256": "6d486058c129ff927d62db3a5baef98579b7126a31463c7690d7d50c7b24334b"
+}

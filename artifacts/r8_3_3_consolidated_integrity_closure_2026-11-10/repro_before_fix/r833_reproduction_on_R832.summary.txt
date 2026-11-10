@@ -1,0 +1,49 @@
+DONE success= False
+pass 13 fail 17
+FAIL R832-A01 — Delete Circle history versus an in-flight Insight A01 (Astra) I1 waits on the reconciliation of I2;
+     -> Expected: empty   Actual: ['circle_plans_v2'] a deleted Insight id survived a Delete reported done 
+FAIL R832-A01 — Delete Circle history versus an in-flight Insight A01-v2 I2 waits on the reconciliation of I1 acros
+     -> Expected: empty   Actual: ['circle_plans_v2'] 
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v3 the reconciliation write is returnsFalse a
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v3 the reconciliation write is throws across 
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v4 Delete begins while the Insight still wait
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v5 Delete while the Insight's own Plans write
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v6 Delete after the Insight's Plans write lan
+PASS R832-A01 — Delete Circle history versus an in-flight Insight A01-v7 control: the Delete is refused before its 
+FAIL R832-A01 — Delete Circle history versus an in-flight Insight A01-v8 the Delete is interrupted (its intent stay
+     -> Expected: 'paused'   Actual: 'active'    Which: is different.           Expected: paused             Actual: active                     ^            Differ at offset 0 the stale continuation carried the Plan on 
+FAIL R832-A01 — Delete Circle history versus an in-flight Insight A01-v9 repeated Delete while the Insight waits: b
+     -> Expected: 'paused'   Actual: 'active'    Which: is different.           Expected: paused             Actual: active                     ^            Differ at offset 0 
+FAIL R832-A01 — Delete Circle history versus an in-flight Insight A01-v10 a fresh Insight after the completed Delet
+     -> PRECONDITION not constructible on this tree: the Plan is paused after the Delete
+FAIL R832-A01 — Delete Circle history versus an in-flight Insight A01-v11 the user's own Plan choices, Kept Circle 
+     -> Expected: 'paused'   Actual: 'active'    Which: is different.           Expected: paused             Actual: active                     ^            Differ at offset 0 
+FAIL R832-A01 — Delete Circle history versus an in-flight Insight A01-x1 I3: its attempt record is held when Delete
+     -> Expected: false   Actual: <true> the pre-Delete I3 continuation left the part out after Delete 
+FAIL R832-A01 — Delete Circle history versus an in-flight Insight A01-x2 I4: its attempt record is held when Delete
+     -> Expected: empty   Actual: [             {               'id': 'kept-1793347200000000-insight',               'name': 'My clear-head Circle',               'need': 'clearerHead',               'parts': ['closeWhatsOpen:3', 'getItOut:6', 'chooseOne:1', 'firstSte
+FAIL R832-A02 — unique I4 kept identity and exact action proof A02-A (Astra) two I4s applied in one cached-clock ep
+     -> Expected: an object with length of <2>   Actual: Set:['kept-1795939200000000-insight']    Which: has length of <1> two Circles share one id 
+FAIL R832-A02 — unique I4 kept identity and exact action proof A02-B (Astra) I4-A's Keep throws before landing; a d
+     -> Expected: null   Actual: '2026-11-29' I4-A marked Applied by I4-B's kept Circle 
+FAIL R832-A02 — unique I4 kept identity and exact action proof A02-B2 a stored kept Circle with the very id I4-A re
+     -> Expected: null   Actual: '2026-11-29' 
+FAIL R832-A02 — unique I4 kept identity and exact action proof A02-C the Kept Circles domain refuses a caller id al
+     -> Expected: null   Actual: <Instance of 'KeptCircle'> 
+FAIL R832-A02 — unique I4 kept identity and exact action proof A02-D two concurrent Keeps with one caller id: one l
+     -> Expected: an object with length of <2>   Actual: Set:['kept-same']    Which: has length of <1> 
+FAIL R832-A02 — unique I4 kept identity and exact action proof A02-E existing duplicate ids on disk are never remov
+     -> Expected: a value less than <2>   Actual: <2>    Which: is not a value less than <2> one rename renamed two independently owned Circles 
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-F control: without Premium, I4's Keep of the use
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-G control: the app stops right after the Keep la
+PASS R832-A02 — unique I4 kept identity and exact action proof A02-H control: the Keep is refused (returns false): 
+FAIL R832-A02 — unique I4 kept identity and exact action proof A02-I control: Delete Circle history keeps both kept
+     -> Expected: an object with length of <2>   Actual: Set:['kept-1795939200000000-insight']    Which: has length of <1> 
+FAIL AUD-R832-1 — a pending Start is authorized only by its own Plan write X1 (Claude) the Resume pending at the ta
+     -> Expected: 'notStarted'   Actual: 'started'    Which: is different.           Expected: notStarted ...             Actual: started                     ^            Differ at offset 0 the Start was authorized by a different Plan write 
+FAIL AUD-R832-1 — a pending Start is authorized only by its own Plan write X2 (Claude) the Resume pending at the ta
+     -> Expected: 'notStarted'   Actual: 'started'    Which: is different.           Expected: notStarted ...             Actual: started                     ^            Differ at offset 0 the Start was authorized by a different Plan write 
+PASS AUD-R832-1 — a pending Start is authorized only by its own Plan write X2-ctl (Claude) the Resume pending at th
+PASS AUD-R832-1 — a pending Start is authorized only by its own Plan write X-ctl accepted case: the Resume pending 
+PASS AUD-R832-1 — a pending Start is authorized only by its own Plan write X3 the Resume pending at the tap throws 
+PASS AUD-R832-1 — a pending Start is authorized only by its own Plan write X4 the refused Resume, then a Resume and
