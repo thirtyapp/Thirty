@@ -9,7 +9,9 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
 | **PRODUCT V2 CONTRACT** | FROZEN (2026-10-08); Amendment 1 (2026-10-11); **Amendment 2 — architecture and content freeze APPROVED (2026-10-17)** |
 | **TARGET IA** | Today \| Plans \| Insights \| You — built as the final four-tab shell since B7 (2026-10-20) |
 | **PUBLIC LAUNCH** | PAUSED |
-| **CURRENT IMPLEMENTATION PHASE** | PHASE D2 — PASS — COMPLETE (2026-10-21; batches B0–B9 closed in the single D2 closure commit `8bfd42c`). The two independent post-D2 audits of that commit **returned on 2026-10-21** (see POST-D2 AUDITS). The joint audit remediation follows batch by batch on founder approval: R1–R4.1 implemented and verified, R5 and R6 accepted at implementation and test level (2026-11-03; not audit closure), R7 final regression PASS on the exact commit tree (2026-11-04); all of this since `8bfd42c` is in one R7 remediation commit on `step5-billing-integration`, whose SHA is recorded outside the commit (see JOINT AUDIT REMEDIATION). F02/F03 framing lines accepted 2026-11-01. Phase E on hold. |
+| **CURRENT ACCEPTED BASELINE (2026-11-11)** | `c83543d5f40294c76532a4710b748d893320d245` on `step5-billing-integration` (L-1 Option B; parent `d9369795`). **R8 engineering baseline FROZEN at `d9369795a92aa24505c475fa1417d03132300c4a`** (founder). **L-1: ENGINEERING ACCEPTED**, with a documented independent-runtime limitation (founder, 2026-11-11). Phase E HOLD; commercial release NOT AUTHORIZED; deployment NONE. Rounds R8.1 → L-1: log 2026-11-11 |
+| **PRE-RELEASE PRODUCT GAP REGISTER** | APPROVED by the founder (2026-11-11) as planning authority only: [THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md](THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md). It lists the remaining product and release gaps: onboarding, six languages, multilingual voice, content depth, Free/Premium viability, UX, and release gates. Planning only: it amends no contract and authorizes no development, and its founder decisions stay OPEN until decided. Status stays here |
+| **CURRENT IMPLEMENTATION PHASE** | PHASE D2 — PASS — COMPLETE (2026-10-21; batches B0–B9 closed in the single D2 closure commit `8bfd42c`). The two independent post-D2 audits of that commit **returned on 2026-10-21** (see POST-D2 AUDITS). The joint audit remediation follows batch by batch on founder approval: R1–R4.1 implemented and verified, R5 and R6 accepted at implementation and test level (2026-11-03; not audit closure), R7 final regression PASS on the exact commit tree (2026-11-04); all of this since `8bfd42c` is in one R7 remediation commit on `step5-billing-integration`, whose SHA is recorded outside the commit (see JOINT AUDIT REMEDIATION). F02/F03 framing lines accepted 2026-11-01. Phase E on hold. *Update 2026-11-11: R8 and R8.1 → R8.3.4.1 and L-1 followed on the same branch; the current baseline is the CURRENT ACCEPTED BASELINE row (log 2026-11-11).* |
 | **D2** | PASS — COMPLETE (2026-10-21; closure commit `8bfd42c`; ADR-023 Accepted, ADR-024 Accepted). The post-D2 audits of that commit returned on 2026-10-21: Audit #1 CONDITIONAL, Audit #2 FAIL (see POST-D2 AUDITS). |
 | **PRODUCTION AUDIO** | PASS — FROZEN: 4 voices (Locke, Heather, Milo, Brittney) × 43 files = 172. One file corrected 2026-10-18 after B4 QA (Locke `part_songOn`); the other 171 are byte-identical. Three Heather files corrected 2026-11-02 (seed 32, FOUNDER LISTENING PASS: `close`, `part_closeWhatsOpen`, `part_activeJob`); the other 169 are byte-identical to the 2026-10-18 state (`heather_seed32_integration_2026-11-02/`). Six more Heather files corrected 2026-11-02 in the final quality round (FOUNDER LISTENING PASS: `part_shakeOut` s34, `part_noteOneThing` s31 with the 2026-10-17 −1.8 dB static trim, `part_briskWalk`, `part_lookAround`, `part_roundTheBlock`, `part_sitOutside` s32); the other 166 are byte-identical; S25 PASS at real levels (`heather_final_integration_2026-11-02/`). Heather audio-quality correction round **CLOSED** |
 | **FRAMING AUDIO (F02/F03)** | ACCEPTED (founder, 2026-11-01; core functionality): 8 files (2 lines × 4 voices) beside the frozen 172, not part of it; 180 bundled. S25 PASS (2026-11-01). Not device-validated: midnight, a full process restart, the exact visual F02 → "First." handover, direct audio-focus measurement and a real RevenueCat lapse (automated or QA coverage only). Committed in the R7 remediation commit (2026-11-04) |
@@ -993,3 +995,39 @@ Public launch requires **all** of the following:
   - **Commit identity:** a commit cannot hold its own SHA. Its parent is `8ece26f6dbd41f573e854b8fc82f44a6942282e3`; the full SHA is in the local push record `artifacts/r8_post_audit_remediation_2026-11-04/R8_PUSH_RECORD.md` and the founder report.
   - **Re-audit handoff:** `artifacts/r8_post_audit_remediation_2026-11-04/AUDIT_HANDOFF.md`. Both auditors must inspect the exact new commit. Re-audit NOT STARTED.
   - **Still OPEN:** A2-06, A2-07, commercial subscription and APK security checks, six-language localization (zero unapproved hardcoded user-facing text, complete multilingual audio, native-language QA), the final commercial release audit. The KEYBRACE Founder Dashboard is a separate project; KEYBRACE OS is discontinued.
+- **2026-11-11** — **Tracker reconciliation: R8.1 → R8.3.4.1 and L-1 (recorded after the fact; no historical entry changed), and the pre-release product gap register (approved by the founder 2026-11-11 as planning authority only).** Phase E HOLD; commercial release NOT AUTHORIZED; deployment NONE.
+  - **Rounds since the R8 commit `58b179c9`**, each one commit on `step5-billing-integration` with the previous round as its sole parent. Test totals as reported in each round's evidence folder:
+
+    | Round | Commit | Date | Tests | Evidence |
+    |---|---|---|---|---|
+    | R8.1 | `e935112c` | 2026-11-05 | 2,599/0 | `artifacts/r8_1_consolidated_remediation_2026-11-05/` (includes RL-4) |
+    | R8.2 | `e744f505` | 2026-11-06 | 2,774/0 | `artifacts/r8_2_consolidated_remediation_2026-11-05/` |
+    | R8.3 + R8.3.1 | `9c910773` | 2026-11-07 | 2,872/0 | `artifacts/r8_3_bounded_integrity_hardening_2026-11-07/`, `artifacts/r8_3_1_founder_lifecycle_correction_2026-11-07/` |
+    | R8.3.2 + G1 | `d4cf8c44` | 2026-11-09 | 2,966/0/0 | `artifacts/r8_3_2_*` |
+    | R8.3.3 | `285b5c70` | 2026-11-10 | 2,999/0/0 | `artifacts/r8_3_3_consolidated_integrity_closure_2026-11-10/` |
+    | R8.3.4 | `dd9000cd` | 2026-11-10 | 3,023/0/0 | `artifacts/r8_3_4_final_action_identity_closure_2026-11-10/` |
+    | R8.3.4.1 | `d9369795` | 2026-11-11 | 3,055/0/0 | `artifacts/r8_3_4_1_delete_outcome_continuity_2026-11-11/` |
+    | **L-1 Option B** | `c83543d5` | 2026-11-11 | 3,143/0/0 | `artifacts/l1_option_b_2026-11-11/` |
+
+  - **Independent audit reports** of these rounds are in `docs/audits/` (post-R8, post-R8.1, post-R8.2, R8.3 and R8.3.2 deltas) and in each round's audit inputs.
+  - **Founder status (2026-11-11):**
+    - **R8 engineering baseline FROZEN at `d9369795`.**
+    - **L-1 ENGINEERING ACCEPTED** at `c83543d5`, with its documented limitation: independent Flutter runtime verification, simulated storage only (`artifacts/l1_option_b_2026-11-11/LIMITATIONS_L1.md`).
+    - Engineering closure waives no platform, device, accessibility, backup or privacy gate.
+  - **Corrections to earlier entries:**
+    - **Analytics events.** The app sends **six** consent-gated analytics event types (R6b correction, 2026-11-03), not three.
+    - **A2-06 in-app copy.** The in-app disclosure ("Share usage data") was applied in R6 final. A2-06 stays open only for the server side: the retention schedule, server-side deletion, the privacy policy and Supabase data handling.
+  - **Still OPEN (unchanged):** A2-06 (server side), A2-07, the Premium security & local device migration review, the RL-4 pre-commercial decision, live billing, the safety review, MEASUREMENT-1, privacy/support/Data Safety, store readiness, the final release audit.
+  - **Approved (2026-11-11), as planning authority only: [THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md](THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md).**
+    - **Content:** the canonical planning register for the remaining product gaps:
+      - G-01 onboarding;
+      - G-02 six launch languages (founder direction; the 2026-11-03 amendment draft is still unapplied);
+      - G-03 multilingual Premium voice;
+      - G-04 Free/Premium viability;
+      - G-05 UX;
+      - G-06 release gates;
+      - CD-1 content-depth acceptance;
+      - G-07 safety proportionality;
+      - G-08 long-term ecosystem (strategy only; canonical home `docs/strategy/THIRTY_PRODUCT_FAMILY_STRATEGY.md`).
+    - **Testing sequence:** the founder's full-product-first order. Google Play pre-release testing happens only on the complete six-language product; earlier signed builds are bounded pilots, never a pre-release.
+    - **Authority:** it is the canonical planning register only. It changes no contract (contract changes need separate, explicit approval), it authorizes no product development, and its implementation and commercial founder decisions remain OPEN.

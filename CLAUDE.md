@@ -18,6 +18,7 @@ Regels voor toekomstige sessies:
 - De positionering **"AI Health Companion" stuurt V2-werk niet**: V2 gebruikt geen runtime-AI, ML of cloudpersonalisatie.
 - Bevroren productbesluiten in het V2-contract worden **niet heropend** tenzij de founder dat expliciet vraagt. Afstembare parameters (gemarkeerd als TUNABLE) en commerciële hypotheses mogen op basis van bewijs worden bijgesteld.
 - Werk alleen aan de fase die de delivery tracker als actief aanwijst.
+- Raadpleeg vóór pre-release- of launchplanning het **[pre-release product gap register](docs/product/THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md)**: daar staan de resterende productgaten, de testvolgorde (eerst het complete product) en de open founderbesluiten. Het is een planningsdocument: het wijzigt het contract niet, en de status blijft in de tracker. Langetermijnplannen voor een productfamilie (G-08) staan in [docs/strategy/THIRTY_PRODUCT_FAMILY_STRATEGY.md](docs/strategy/THIRTY_PRODUCT_FAMILY_STRATEGY.md) en vallen buiten de huidige scope.
 
 ## 1. Product in het kort
 
@@ -105,6 +106,7 @@ Deze beperkingen worden losgelaten naarmate het project vordert, in overleg en s
 
 - [docs/product/PRODUCT_V2_CONTRACT.md](docs/product/PRODUCT_V2_CONTRACT.md) — **de leidende V2-productspecificatie** (zie §0).
 - [docs/product/THIRTY_V2_DELIVERY_TRACKER.md](docs/product/THIRTY_V2_DELIVERY_TRACKER.md) — **de enige V2-implementatiestatus** (zie §0).
+- [docs/product/THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md](docs/product/THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md) — het canonieke planningsregister van de resterende pre-release- en launchgaten, met de bijbehorende founderbesluiten (zie §0).
 - [README.md](README.md) — introductie voor iedereen die het project voor het eerst opent.
 - [docs/VISION.md](docs/VISION.md) — waarom THIRTY bestaat en voor wie.
 - [docs/BRAND_BOOK.md](docs/BRAND_BOOK.md) — hoe THIRTY voelt, klinkt en eruitziet.
