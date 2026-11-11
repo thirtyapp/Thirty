@@ -1,0 +1,10 @@
+77c77
+< 305836ef106a054e8fe14c33ee5dcabd179c8d49 lib/features/home/application/circle_history_deletion.dart
+---
+> 4c0834e77f7bb53b65eb548c355433da39b3a90d lib/features/home/application/circle_history_deletion.dart
+117c117
+< 4fb05b544b3e2e645906e5db8512be12da399a6e lib/features/insights/application/insights_provider.dart
+---
+> cfc790e616ba4bc375b5e7f05ac47b3759228809 lib/features/insights/application/insights_provider.dart
+367a368
+> af458f0353d82a60bb318f1f55a77401b08b58a9 test/features/r834/r8341_delete_outcome_continuity_test.dart

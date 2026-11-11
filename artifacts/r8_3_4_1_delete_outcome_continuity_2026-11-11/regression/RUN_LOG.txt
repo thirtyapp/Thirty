@@ -1,0 +1,30 @@
+start 2026-11-11T10:19:56+01:00 driver pid 215
+batch 1: exit 0, 76 passed, 0 failed, 0 skipped, 12/12 files, 14 s, done=True
+batch 2: exit 0, 99 passed, 0 failed, 0 skipped, 12/12 files, 28 s, done=True
+batch 3: exit 0, 121 passed, 0 failed, 0 skipped, 12/12 files, 44 s, done=True
+batch 4: exit 0, 157 passed, 0 failed, 0 skipped, 12/12 files, 19 s, done=True
+batch 5: exit 0, 88 passed, 0 failed, 0 skipped, 12/12 files, 11 s, done=True
+batch 6: exit 0, 226 passed, 0 failed, 0 skipped, 12/12 files, 34 s, done=True
+batch 7: exit 0, 241 passed, 0 failed, 0 skipped, 12/12 files, 30 s, done=True
+batch 8: exit 0, 154 passed, 0 failed, 0 skipped, 12/12 files, 23 s, done=True
+batch 9: exit 0, 164 passed, 0 failed, 0 skipped, 12/12 files, 24 s, done=True
+batch 10: exit 0, 267 passed, 0 failed, 0 skipped, 12/12 files, 18 s, done=True
+batch 11: exit 0, 187 passed, 0 failed, 0 skipped, 12/12 files, 28 s, done=True
+batch 12: exit 0, 282 passed, 0 failed, 0 skipped, 12/12 files, 31 s, done=True
+batch 13: exit 0, 159 passed, 0 failed, 0 skipped, 12/12 files, 15 s, done=True
+batch 14: exit 0, 142 passed, 0 failed, 0 skipped, 12/12 files, 13 s, done=True
+batch 15: exit 0, 153 passed, 0 failed, 0 skipped, 12/12 files, 12 s, done=True
+batch 16: exit 0, 244 passed, 0 failed, 0 skipped, 12/12 files, 15 s, done=True
+batch 17: exit 0, 272 passed, 0 failed, 0 skipped, 12/12 files, 27 s, done=True
+batch 18: exit 0, 4 passed, 0 failed, 0 skipped, 2/2 files, 5 s, done=True
+batch 19: exit 0, 6 passed, 0 failed, 0 skipped, 1/1 files, 248 s, done=True
+batch 20a: exit 0, 3 passed, 0 failed, 0 skipped, 1/1 files, 206 s, done=True
+batch 20b: exit 0, 3 passed, 0 failed, 0 skipped, 1/1 files, 249 s, done=True
+batch 20c: exit 0, 3 passed, 0 failed, 0 skipped, 1/1 files, 234 s, done=True
+batch 20d: exit 0, 2 passed, 0 failed, 0 skipped, 1/1 files, 165 s, done=True
+batch 20e: exit 0, 2 passed, 0 failed, 0 skipped, 1/1 files, 161 s, done=True
+report exit 0
+cases exit 0
+fingerprints identical
+blob manifests identical
+end 2026-11-11T10:48:31+01:00

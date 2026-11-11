@@ -1,0 +1,27 @@
+I3-refused-intent-first | apply done | gate 0 0 | intentDisk None | appliedOn 2026-10-30 attempt None | made True | retry alreadyApplied
+   before keys ['circle_journal_v1', 'insights_v2', 'suggestion_preferences_v1']
+   after  keys ['circle_journal_v1', 'insights_v2', 'suggestion_preferences_v1']
+   pendingBefore None pendingAfter None
+I3-uncertain_no_land-intent-first | apply notAvailable | gate 0 0 | intentDisk None | appliedOn None attempt {'on': '2026-10-30', 'target': 'leaveOut:openWindow'} | made False | retry notAvailable
+   before keys ['circle_journal_v1', 'insights_v2']
+   after  keys ['circle_journal_v1', 'insights_v2']
+   pendingBefore None pendingAfter None
+I3-uncertain_landed-intent-first | apply notAvailable | gate 0 0 | intentDisk True | appliedOn None attempt {'on': '2026-10-30', 'target': 'leaveOut:openWindow'} | made False | retry notAvailable
+   before keys ['circle_history_deletion_pending', 'circle_journal_v1', 'insights_v2']
+   after  keys []
+   pendingBefore True pendingAfter None
+I4-refused-intent-first | apply done | gate 0 0 | intentDisk None | appliedOn 2026-10-30 attempt None | made True | retry alreadyApplied
+   before keys ['circle_journal_v1', 'insights_v2', 'toolkit_v1']
+   after  keys ['circle_journal_v1', 'insights_v2', 'toolkit_v1']
+   pendingBefore None pendingAfter None
+I4-uncertain_no_land-intent-first | apply notAvailable | gate 0 0 | intentDisk None | appliedOn None attempt {'on': '2026-10-30', 'target': 'keep:2026-10-29', 'keptId': 'kept-1793347200000000-928ca644ca88-insight'} | made False | retry notAvailable
+   before keys ['circle_journal_v1', 'insights_v2']
+   after  keys ['circle_journal_v1', 'insights_v2']
+   pendingBefore None pendingAfter None
+I4-uncertain_landed-intent-first | apply notAvailable | gate 0 0 | intentDisk True | appliedOn None attempt {'on': '2026-10-30', 'target': 'keep:2026-10-29', 'keptId': 'kept-1793347200000000-41cf9edb0867-insight'} | made False | retry notAvailable
+   before keys ['circle_history_deletion_pending', 'circle_journal_v1', 'insights_v2']
+   after  keys []
+   pendingBefore True pendingAfter None
+GATE-C1-explicit kept-1793347200000000-000007000007-6 kept-1793347200000000-000007000007-7 None 8
+GATE-C2-explicit StorageWriteFailed(toolkit_v1): not confirmed None kept-1793347200000000-000007000007-7 8
+GATE-C3-explicit kept-1793347200000000-000007000007-7 None None 8

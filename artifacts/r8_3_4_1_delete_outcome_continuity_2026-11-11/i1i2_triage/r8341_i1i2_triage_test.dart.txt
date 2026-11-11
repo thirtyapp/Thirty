@@ -1,0 +1,1584 @@
+import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/premium/entitlement_status.dart';
+import 'package:thirty/core/providers/clock_provider.dart';
+import 'package:thirty/core/utils/date_key.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/application/suggestion_preferences.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart';
+import 'package:thirty/features/insights/domain/insight.dart';
+import 'package:thirty/features/insights/domain/insight_engine.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+import 'package:thirty/features/plans/domain/plan_stage_provenance.dart';
+
+import '../../support/r8_fault_disk.dart';
+import '../../support/r8_harness.dart';
+
+/// R8.3.3 — final consolidated integrity remediation: the reproduction gate
+/// (founder authorization, 2026-11-10).
+///
+/// - R832-A01 (Astra, HIGH): a pre-Delete Insight continuation restores
+///   Plan attribution after Delete Circle history.
+/// - R832-A02 (Astra, MEDIUM): nonunique I4 kept-Circle identities and a
+///   false Applied proof.
+/// - AUD-R832-1 (Claude, LOW): a pending Start's +1 allowance is satisfied
+///   by a different Plan change than the one the user acted on.
+///
+/// Only APIs present at R8.3.2 (d4cf8c44) are used, so the same file runs
+/// on that tree and on the corrected one. Each test prints one
+/// `R833-EVIDENCE` line with what reached the disk. A step a tree can't
+/// construct fails with `PRECONDITION` (not applicable there).
+void main() {
+  void evidence(String id, Map<String, Object?> facts) {
+    // ignore: avoid_print
+    print('R833-EVIDENCE ${jsonEncode({'test': id, ...facts})}');
+  }
+
+  void pre(bool holds, String what) {
+    if (!holds) fail('PRECONDITION not constructible on this tree: $what');
+  }
+
+  bool marksApplied(String value) => value.contains('"appliedOn"');
+
+  // -----------------------------------------------------------------------
+  // Insights fixtures (those of r832_reproduction / r832_founder_scope).
+
+  final morning = DateTime(2026, 10, 30, 9);
+  late R8Harness h;
+
+  CirclePart part(ElementId e) => CirclePart(e, elementOf(e).minutes);
+  final window = [
+    part(ElementId.openWindow),
+    part(ElementId.standingStretch),
+    part(ElementId.sitAMinute),
+  ];
+  final reading = [part(ElementId.phoneFaceDown), part(ElementId.readPages)];
+  final writing = [
+    part(ElementId.closeWhatsOpen),
+    part(ElementId.getItOut),
+    part(ElementId.chooseOne),
+    part(ElementId.firstStep),
+  ];
+  const head = Intention.clearerHead;
+  const energy = Intention.moreEnergy;
+
+  CircleJournalEntry entry(
+    int ago,
+    Intention need, {
+    List<CirclePart> parts = const [],
+    Set<ElementId> skipped = const {},
+    bool useful = false,
+    PlanStageProvenance? stage,
+    PlanStageProvenance? replacedFromStage,
+    String? reason,
+  }) {
+    final date = morning.subtract(Duration(days: ago));
+    return CircleJournalEntry(
+      schemaVersion: circleJournalSchemaVersion,
+      circleId: dateKey(date),
+      localDate: dateKey(date),
+      direction: need,
+      activityId: ActivityId.values.first,
+      catalogVersion: catalogVersion,
+      shownAt: date,
+      startedAt: date,
+      closedAt: date,
+      attemptResponse: useful ? CircleAttemptResponse.yes : null,
+      usefulnessResponse: useful
+          ? (ago.isEven
+                ? CircleUsefulnessResponse.veryUseful
+                : CircleUsefulnessResponse.somewhatUseful)
+          : null,
+      replacementReason: reason,
+      replacedFromStage: replacedFromStage,
+      session: parts.isEmpty
+          ? null
+          : CircleSessionRecord(
+              title: 'Circle',
+              parts: CirclePlan(parts).toWire(),
+              skipped: [for (final e in skipped) e.name],
+              planStage: stage,
+            ),
+    );
+  }
+
+  String journalOf(List<CircleJournalEntry> entries) => jsonEncode({
+    'schemaVersion': circleJournalSchemaVersion,
+    'entries': [for (final e in entries) e.toJson()],
+  });
+
+  const stage = PlanStageProvenance(
+    planId: 'getting_going',
+    cycleId: 'getting_going#1',
+    stageNumber: 1,
+    stageId: 'getting_going.1',
+  );
+  // I2 qualifies (r83_insight_attribution fixture).
+  final i2 = <String, Object>{
+    circlePlansKey: jsonEncode(
+      CirclePlansState.empty.start('getting_going', today: '2026-10-01')!.toJson(),
+    ),
+    circleJournalKey: journalOf([
+      for (final (k, ago) in [2, 5, 9, 13, 17].indexed)
+        k.isEven
+            ? entry(ago, energy, replacedFromStage: stage, reason: 'tooMuch')
+            : entry(ago, energy, parts: window, stage: stage),
+    ]),
+  };
+  // I3: "Open a window" skipped in 3 of its last 4 Circles.
+  final i3Journal = [
+    for (final ago in [2, 4, 6, 8, 10, 12, 15]) entry(ago, head, parts: reading),
+    for (final (k, ago) in [1, 5, 9, 11].indexed)
+      entry(
+        ago,
+        energy,
+        parts: window,
+        skipped: k == 1 ? const {} : {ElementId.openWindow},
+      ),
+  ];
+  // I4: Writing in all 4 useful Clearer Head Circles; keeps 2026-10-29.
+  final i4Journal = [
+    for (final ago in [1, 7, 13, 20])
+      entry(ago, head, parts: writing, useful: true),
+    for (final ago in [3, 9, 16]) entry(ago, head, parts: reading),
+  ];
+  // Thirty days on: two more useful Writing Circles — 2026-11-20 and
+  // 2026-11-27 — so a second I4 keeps a different, newer Circle.
+  final i4Later = [
+    ...i4Journal,
+    for (final ago in [-21, -28])
+      entry(ago, head, parts: writing, useful: true),
+  ];
+
+  InsightsNotifier insights(ProviderContainer c) =>
+      c.read(insightsProvider.notifier);
+  CirclePlansNotifier plans(ProviderContainer c) =>
+      c.read(circlePlansProvider.notifier);
+  KeptCirclesNotifier keptN(ProviderContainer c) =>
+      c.read(keptCirclesProvider.notifier);
+
+  Future<Map<String, Object?>> json(String key) async {
+    final raw = (await h.disk.stored())[key];
+    return raw is String ? jsonDecode(raw) as Map<String, Object?> : {};
+  }
+
+  Future<Map<String, Object?>> planOnDisk() async =>
+      (((await json(circlePlansKey))['plans'] as Map?)?['getting_going']
+              as Map?)
+          ?.cast<String, Object?>() ??
+      {};
+
+  Future<Map?> snapshotOnDisk(String id) async {
+    for (final s in (await json(insightsKey))['snapshots'] as List? ?? []) {
+      if ((s as Map)['id'] == id) return s;
+    }
+    return null;
+  }
+
+  Future<List<Map>> keptOnDisk() async => [
+    for (final k in (await json(keptCirclesKey))['kept'] as List? ?? [])
+      k as Map,
+  ];
+
+  // =======================================================================
+  // R832-A01 — Delete versus an in-flight Insight.
+
+  group('R832-A01 — Delete Circle history versus an in-flight Insight', () {
+    setUp(() async {
+      h = R8Harness(morning);
+      await h.boot();
+    });
+
+    Future<ProviderContainer> restart() async {
+      await h.restart();
+      final c = h.open();
+      c.read(circlePlansProvider);
+      insights(c).state;
+      await R8Harness.settle();
+      return c;
+    }
+
+    /// Every stored value that names any of [ids], by key.
+    Future<Map<String, Object?>> namingIds(List<String> ids) async => {
+      for (final MapEntry(:key, :value) in (await h.disk.stored()).entries)
+        if (ids.any(jsonEncode(value).contains)) key: value,
+    };
+
+    Future<Map<String, Object?>> deleteFacts(
+      ProviderContainer c,
+      List<String> ids,
+    ) async {
+      final stored = await h.disk.stored();
+      final plan = await planOnDisk();
+      return {
+        'pending': stored[historyDeletionPendingKey],
+        'insightsStored': stored[insightsKey],
+        'lifecycle': plan['lifecycle'],
+        'appliedInsightOnDisk': plan['appliedInsight'],
+        'confirmedAppliedInsight': plans(
+          c,
+        ).confirmedState.plans['getting_going']?.appliedInsight?.insightId,
+        'shownAppliedInsight': c
+            .read(circlePlansProvider)
+            .plans['getting_going']
+            ?.appliedInsight
+            ?.insightId,
+        'keysNamingDeletedIds': (await namingIds(ids)).keys.toList(),
+      };
+    }
+
+    /// I2 applied, its applied mark refused; gentler turned off and the Plan
+    /// paused by hand; seven days on, I1 generated to carry the Plan on —
+    /// Astra's A01 preconditions (the R83-N03 fixture).
+    Future<(ProviderContainer, InsightSnapshot, InsightSnapshot)>
+    i1OverUnmarkedI2() async {
+      await h.boot(i2);
+      final c = h.open();
+      final shownI2 = insights(c).assess().added.single;
+      expect(shownI2.family, InsightFamily.planPacing);
+      await R8Harness.settle();
+      h.disk.failWhere(insightsKey, marksApplied);
+      expect(await insights(c).apply(shownI2.id), InsightActionResult.done);
+      await R8Harness.settle();
+      h.disk.healAll();
+      pre(
+        ((await planOnDisk())['appliedInsight'] as Map?)?['insightId'] ==
+            shownI2.id,
+        'I2\'s provenance on the Plan, its mark refused',
+      );
+      expect(plans(c).stopGentler('getting_going'), PlanActionResult.done);
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      h.clock.value = morning.add(const Duration(days: 7));
+      await h.restart();
+      final c2 = h.open();
+      final shownI1 = insights(c2)
+          .assess()
+          .added
+          .where((s) => s.family == InsightFamily.planForNeed)
+          .firstOrNull;
+      await R8Harness.settle();
+      pre(shownI1 != null, 'I1 generated seven days on');
+      return (c2, shownI2, shownI1!);
+    }
+
+    /// I2 shown, never applied; the Plan paused; seven days on, I1 applied
+    /// with its applied mark refused (the Plan carried on, I1's provenance
+    /// on it); I2 still current — the D-ctl1 fixture, I1 unmarked.
+    Future<(ProviderContainer, InsightSnapshot, InsightSnapshot)>
+    i2OverUnmarkedI1() async {
+      await h.boot(i2);
+      final c = h.open();
+      final shownI2 = insights(c).assess().added.single;
+      await R8Harness.settle();
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      h.clock.value = morning.add(const Duration(days: 7));
+      await h.restart();
+      final c2 = h.open();
+      final shownI1 = insights(c2)
+          .assess()
+          .added
+          .where((s) => s.family == InsightFamily.planForNeed)
+          .firstOrNull;
+      await R8Harness.settle();
+      pre(shownI1 != null, 'I1 generated seven days on');
+      h.disk.failWhere(insightsKey, marksApplied);
+      expect(await insights(c2).apply(shownI1!.id), InsightActionResult.done);
+      await R8Harness.settle();
+      h.disk.healAll();
+      pre(
+        ((await planOnDisk())['appliedInsight'] as Map?)?['insightId'] ==
+            shownI1.id,
+        'I1\'s provenance on the Plan, its mark refused',
+      );
+      pre(
+        insights(c2).status(insights(c2).state.byId(shownI2.id)!) ==
+            InsightStatus.current,
+        'I2 still current',
+      );
+      return (c2, shownI1, shownI2);
+    }
+
+    /// [applying]'s reconciliation write is [held]; a Delete begins and its
+    /// first Plans pass lands while it waits.
+    Future<({Future<void> run})> deleteWhileHeld(
+      ProviderContainer c,
+      HeldWrite held,
+    ) async {
+      await held.reached;
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await R8Harness.settle();
+      pre(
+        (await h.disk.stored())[historyDeletionPendingKey] == true,
+        'the deletion intent is on disk',
+      );
+      pre(
+        (await planOnDisk())['appliedInsight'] == null,
+        'Delete\'s first Plans pass landed while the Insight waits',
+      );
+      return (run: deleting);
+    }
+
+    Future<Object?> outcome(Future<void> deleting) async {
+      try {
+        await deleting;
+        return null;
+      } catch (e) {
+        return e;
+      }
+    }
+
+    test('A01 (Astra) I1 waits on the reconciliation of I2; Delete\'s first '
+        'Plans pass lands; the reconciliation lands; I1 continues: no '
+        'deleted Insight id survives, and the Plan the user paused is never '
+        'carried on after the deletion boundary', () async {
+      final (c, shownI2, shownI1) = await i1OverUnmarkedI2();
+      final userPlan = await planOnDisk();
+      final held = h.disk.hold(insightsKey);
+      final applying = insights(c).apply(shownI1.id);
+      final deleting = (await deleteWhileHeld(c, held)).run;
+      held.release();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      final facts = await deleteFacts(c, [shownI1.id, shownI2.id]);
+      await restart();
+      final afterRestart = await planOnDisk();
+      evidence('A01 Astra', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        ...facts,
+        'planBefore': userPlan,
+        'planAfterRestart': afterRestart,
+      });
+      expect(deleteError, isNull);
+      expect(facts['pending'], isNull);
+      expect(
+        facts['keysNamingDeletedIds'],
+        isEmpty,
+        reason: 'a deleted Insight id survived a Delete reported done',
+      );
+      expect(facts['confirmedAppliedInsight'], isNull);
+      expect(afterRestart['appliedInsight'], isNull);
+      expect(
+        afterRestart['lifecycle'],
+        'paused',
+        reason:
+            'the pre-Delete I1 continuation carried the Plan on after '
+            'the deletion boundary',
+      );
+      expect(result, isNot(InsightActionResult.done));
+    });
+
+    test('A01-v2 I2 waits on the reconciliation of I1 across Delete: gentler '
+        'is never turned on, no deleted id survives', () async {
+      final (c, shownI1, shownI2) = await i2OverUnmarkedI1();
+      final held = h.disk.hold(insightsKey);
+      final applying = insights(c).apply(shownI2.id);
+      final deleting = (await deleteWhileHeld(c, held)).run;
+      held.release();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      final facts = await deleteFacts(c, [shownI1.id, shownI2.id]);
+      await restart();
+      final cycle = ((await planOnDisk())['cycles'] as List).last as Map;
+      evidence('A01-v2 I2 over I1', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        ...facts,
+        'gentlerSince': cycle['gentlerSince'],
+      });
+      expect(deleteError, isNull);
+      expect(facts['keysNamingDeletedIds'], isEmpty);
+      expect(
+        cycle['gentlerSince'],
+        isNull,
+        reason: 'the pre-Delete I2 continuation turned gentler on after Delete',
+      );
+      expect(result, isNot(InsightActionResult.done));
+    });
+
+    for (final fault in [DiskFault.returnsFalse, DiskFault.throws]) {
+      test('A01-v3 the reconciliation write is ${fault.name} across Delete: '
+          'nothing is changed, Delete completes clean', () async {
+        final (c, shownI2, shownI1) = await i1OverUnmarkedI2();
+        final held = h.disk.hold(insightsKey);
+        final applying = insights(c).apply(shownI1.id);
+        final deleting = (await deleteWhileHeld(c, held)).run;
+        held.release(fault);
+        final result = await applying;
+        final deleteError = await outcome(deleting);
+        await R8Harness.settle();
+        final facts = await deleteFacts(c, [shownI1.id, shownI2.id]);
+        evidence('A01-v3 reconciliation ${fault.name}', {
+          'apply': result.name,
+          'deleteError': deleteError?.toString(),
+          ...facts,
+        });
+        expect(deleteError, isNull);
+        // notSaved (R8.3.2) or notAvailable (R8.3.3: its Insight is being
+        // deleted) — never done.
+        expect(
+          result,
+          anyOf(InsightActionResult.notSaved, InsightActionResult.notAvailable),
+        );
+        expect(facts['keysNamingDeletedIds'], isEmpty);
+        expect(facts['lifecycle'], 'paused');
+      });
+    }
+
+    test('A01-v4 Delete begins while the Insight still waits on a pending '
+        'preference change (before any of its own writes): nothing is '
+        'applied', () async {
+      final (c, shownI2, shownI1) = await i1OverUnmarkedI2();
+      final held = h.disk.hold(suggestionPreferencesKey);
+      c
+          .read(suggestionPreferencesProvider.notifier)
+          .leaveOutChange(ElementId.readPages)
+          .ignore();
+      await held.reached;
+      final applying = insights(c).apply(shownI1.id);
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await R8Harness.settle();
+      held.release();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      final facts = await deleteFacts(c, [shownI1.id, shownI2.id]);
+      final prefs = (await h.disk.stored())[suggestionPreferencesKey];
+      evidence('A01-v4 before own writes', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        ...facts,
+        'prefs': prefs,
+      });
+      expect(deleteError, isNull);
+      expect(result, isNot(InsightActionResult.done));
+      expect(facts['keysNamingDeletedIds'], isEmpty);
+      expect(facts['lifecycle'], 'paused');
+      expect(
+        prefs is String && prefs.contains('readPages'),
+        isTrue,
+        reason: 'the user\'s own left-out part was lost',
+      );
+    });
+
+    /// I1 (no displaced Insight) applied on the D-ctl1 fixture.
+    Future<(ProviderContainer, InsightSnapshot)> plainI1() async {
+      await h.boot(i2);
+      final c = h.open();
+      insights(c).assess();
+      await R8Harness.settle();
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      h.clock.value = morning.add(const Duration(days: 7));
+      await h.restart();
+      final c2 = h.open();
+      final shownI1 = insights(c2)
+          .assess()
+          .added
+          .where((s) => s.family == InsightFamily.planForNeed)
+          .firstOrNull;
+      await R8Harness.settle();
+      pre(shownI1 != null, 'I1 generated seven days on');
+      return (c2, shownI1!);
+    }
+
+    test('A01-v5 Delete while the Insight\'s own Plans write is held (queued '
+        'before the boundary): it lands, Delete removes its attribution; the '
+        'Plan\'s place stays the user\'s', () async {
+      final (c, shownI1) = await plainI1();
+      final held = h.disk.hold(circlePlansKey);
+      final applying = insights(c).apply(shownI1.id);
+      await held.reached;
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await R8Harness.settle();
+      held.release();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      final facts = await deleteFacts(c, [shownI1.id]);
+      await restart();
+      evidence('A01-v5 target write held', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        ...facts,
+        'planAfterRestart': await planOnDisk(),
+      });
+      expect(deleteError, isNull);
+      expect(facts['keysNamingDeletedIds'], isEmpty);
+      expect((await planOnDisk())['appliedInsight'], isNull);
+      expect((await planOnDisk())['lifecycle'], 'active');
+    });
+
+    test('A01-v6 Delete after the Insight\'s Plans write landed, its Applied '
+        'mark held: no deleted id survives', () async {
+      final (c, shownI1) = await plainI1();
+      final held = h.disk.hold(insightsKey);
+      final applying = insights(c).apply(shownI1.id);
+      await held.reached;
+      pre(
+        ((await planOnDisk())['appliedInsight'] as Map?)?['insightId'] ==
+            shownI1.id,
+        'the Plans write landed before the mark',
+      );
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await R8Harness.settle();
+      held.release();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      final facts = await deleteFacts(c, [shownI1.id]);
+      evidence('A01-v6 mark held', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        ...facts,
+      });
+      expect(deleteError, isNull);
+      expect(facts['keysNamingDeletedIds'], isEmpty);
+      expect(facts['insightsStored'], isNull);
+    });
+
+    test('A01-v7 control: the Delete is refused before its intent is durable '
+        '— nothing is deleted and the Insight completes normally', () async {
+      final (c, shownI2, shownI1) = await i1OverUnmarkedI2();
+      final held = h.disk.hold(insightsKey);
+      final applying = insights(c).apply(shownI1.id);
+      await held.reached;
+      // Refused every time (writeConfirmed's own restore write takes a
+      // turn too), until the Delete has given up.
+      h.disk.fail(historyDeletionPendingKey, DiskFault.returnsFalse);
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await R8Harness.settle();
+      h.disk.heal(historyDeletionPendingKey);
+      held.release();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      final plan = await planOnDisk();
+      evidence('A01-v7 Delete not started', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        'plan': plan,
+        'i2': await snapshotOnDisk(shownI2.id),
+        'i1': await snapshotOnDisk(shownI1.id),
+      });
+      expect(deleteError, isA<HistoryDeletionNotStarted>());
+      expect(result, InsightActionResult.done);
+      expect(plan['lifecycle'], 'active');
+      expect((plan['appliedInsight'] as Map?)?['insightId'], shownI1.id);
+      expect((await snapshotOnDisk(shownI1.id))?['appliedOn'], isNotNull);
+      expect((await snapshotOnDisk(shownI2.id))?['appliedOn'], isNotNull);
+    });
+
+    test('A01-v8 the Delete is interrupted (its intent stays) and finished at '
+        'the next start: the stale continuation changed nothing', () async {
+      final (c, shownI2, shownI1) = await i1OverUnmarkedI2();
+      final held = h.disk.hold(insightsKey);
+      final applying = insights(c).apply(shownI1.id);
+      final deleting = (await deleteWhileHeld(c, held)).run;
+      // The intent's removal — the Delete's last step — is refused.
+      h.disk.fail(historyDeletionPendingKey, DiskFault.returnsFalse);
+      held.release();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      final beforeRestart = await deleteFacts(c, [shownI1.id, shownI2.id]);
+      await restart();
+      final facts = await deleteFacts(h.open(), [shownI1.id, shownI2.id]);
+      evidence('A01-v8 interrupted', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        'beforeRestart': beforeRestart,
+        ...facts,
+      });
+      pre(deleteError != null, 'the Delete was interrupted');
+      expect(facts['pending'], isNull);
+      expect(facts['keysNamingDeletedIds'], isEmpty);
+      expect(
+        facts['lifecycle'],
+        'paused',
+        reason: 'the stale continuation carried the Plan on',
+      );
+    });
+
+    test('A01-v9 repeated Delete while the Insight waits: both complete, '
+        'nothing restored', () async {
+      final (c, shownI2, shownI1) = await i1OverUnmarkedI2();
+      final held = h.disk.hold(insightsKey);
+      final applying = insights(c).apply(shownI1.id);
+      final first = (await deleteWhileHeld(c, held)).run;
+      final second = c.read(circleHistoryDeletionProvider).delete();
+      second.ignore();
+      await R8Harness.settle();
+      held.release();
+      final result = await applying;
+      final errors = [await outcome(first), await outcome(second)];
+      await R8Harness.settle();
+      final facts = await deleteFacts(c, [shownI1.id, shownI2.id]);
+      evidence('A01-v9 repeated Delete', {
+        'apply': result.name,
+        'deleteErrors': errors.map((e) => e?.toString()).toList(),
+        ...facts,
+      });
+      expect(errors, [null, null]);
+      expect(facts['keysNamingDeletedIds'], isEmpty);
+      expect(facts['lifecycle'], 'paused');
+    });
+
+    test('A01-v10 a fresh Insight after the completed Delete applies '
+        'normally, with its own attribution', () async {
+      final (c, shownI2, shownI1) = await i1OverUnmarkedI2();
+      final held = h.disk.hold(insightsKey);
+      final applying = insights(c).apply(shownI1.id);
+      final deleting = (await deleteWhileHeld(c, held)).run;
+      held.release();
+      await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      pre(deleteError == null, 'the Delete completed');
+      pre(
+        (await planOnDisk())['lifecycle'] == 'paused',
+        'the Plan is paused after the Delete',
+      );
+      // New History after the Delete — five Circles over sixteen days —
+      // in the same process, three weeks on.
+      await h.prefs.setString(
+        circleJournalKey,
+        journalOf([
+          for (final ago in [-8, -11, -15, -19, -23]) entry(ago, energy),
+        ]),
+      );
+      c.invalidate(circleJournalRepositoryProvider);
+      h.clock.value = morning.add(const Duration(days: 27));
+      c.invalidate(nowProvider);
+      final fresh = insights(c)
+          .assess()
+          .added
+          .where((s) => s.family == InsightFamily.planForNeed)
+          .firstOrNull;
+      await R8Harness.settle();
+      pre(fresh != null, 'a fresh I1 from the new History');
+      final result = await insights(c).apply(fresh!.id);
+      await R8Harness.settle();
+      final plan = await planOnDisk();
+      evidence('A01-v10 fresh after Delete', {
+        'apply': result.name,
+        'plan': plan,
+        'fresh': await snapshotOnDisk(fresh.id),
+      });
+      expect(result, InsightActionResult.done);
+      expect(plan['lifecycle'], 'active');
+      expect((plan['appliedInsight'] as Map?)?['insightId'], fresh.id);
+      expect((await snapshotOnDisk(fresh.id))?['appliedOn'], isNotNull);
+    });
+
+    test('A01-v11 the user\'s own Plan choices, Kept Circle and left-out part '
+        'stay through the race', () async {
+      final (c, shownI2, shownI1) = await i1OverUnmarkedI2();
+      final kept = await keptN(c).keepCircle(
+        plan: CirclePlan(window),
+        need: energy,
+        circleId: dateKey(morning.subtract(const Duration(days: 5))),
+      );
+      pre(kept != null, 'a Circle kept by the user');
+      await c
+          .read(suggestionPreferencesProvider.notifier)
+          .leaveOutChange(ElementId.readPages);
+      await R8Harness.settle();
+      final held = h.disk.hold(insightsKey);
+      final applying = insights(c).apply(shownI1.id);
+      final deleting = (await deleteWhileHeld(c, held)).run;
+      held.release();
+      await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      await restart();
+      final c2 = h.open();
+      final cycle = ((await planOnDisk())['cycles'] as List).last as Map;
+      final keptAfter = c2.read(keptCirclesProvider).kept;
+      final leftOut = c2.read(suggestionPreferencesProvider).elementsLeftOut;
+      evidence('A01-v11 user-owned', {
+        'deleteError': deleteError?.toString(),
+        'lifecycle': (await planOnDisk())['lifecycle'],
+        'gentlerSince': cycle['gentlerSince'],
+        'kept': [for (final k in keptAfter) k.id],
+        'leftOut': [for (final e in leftOut) e.element.name],
+      });
+      expect(deleteError, isNull);
+      expect((await planOnDisk())['lifecycle'], 'paused');
+      expect(cycle['gentlerSince'], isNull);
+      expect([for (final k in keptAfter) k.id], [kept!.id]);
+      expect([for (final e in leftOut) e.element], [ElementId.readPages]);
+      expect([for (final e in leftOut) e.byInsight], [null]);
+    });
+
+    // --- Operation lifetime beyond Plans: I3 and I4 across Delete. -------
+
+    test('A01-x1 I3: its attempt record is held when Delete begins; the '
+        'stale continuation leaves nothing out and names nothing', () async {
+      await h.boot({circleJournalKey: journalOf(i3Journal)});
+      final c = h.open();
+      final shown = insights(c).assess().added.single;
+      expect(shown.family, InsightFamily.skippedPart);
+      await R8Harness.settle();
+      final held = h.disk.hold(insightsKey);
+      final applying = insights(c).apply(shown.id);
+      await held.reached;
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await R8Harness.settle();
+      held.release();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      final prefs = (await h.disk.stored())[suggestionPreferencesKey];
+      evidence('A01-x1 I3 across Delete', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        'prefs': prefs,
+        'keysNamingDeletedIds': (await namingIds([shown.id])).keys.toList(),
+      });
+      expect(deleteError, isNull);
+      expect((await namingIds([shown.id])).keys, isEmpty);
+      expect(
+        prefs is String && prefs.contains('openWindow'),
+        isFalse,
+        reason: 'the pre-Delete I3 continuation left the part out after Delete',
+      );
+    });
+
+    test('A01-x2 I4: its attempt record is held when Delete begins; the '
+        'stale continuation keeps no Circle from the deleted History', () async {
+      await h.boot({circleJournalKey: journalOf(i4Journal)});
+      final c = h.open();
+      final shown = insights(c).assess().added.single;
+      expect(shown.family, InsightFamily.usefulInCommon);
+      await R8Harness.settle();
+      final held = h.disk.hold(insightsKey);
+      final applying = insights(c).apply(shown.id);
+      await held.reached;
+      final deleting = c.read(circleHistoryDeletionProvider).delete();
+      deleting.ignore();
+      await R8Harness.settle();
+      held.release();
+      final result = await applying;
+      final deleteError = await outcome(deleting);
+      await R8Harness.settle();
+      evidence('A01-x2 I4 across Delete', {
+        'apply': result.name,
+        'deleteError': deleteError?.toString(),
+        'kept': await keptOnDisk(),
+        'keysNamingDeletedIds': (await namingIds([shown.id])).keys.toList(),
+      });
+      expect(deleteError, isNull);
+      expect((await namingIds([shown.id])).keys, isEmpty);
+      expect(
+        await keptOnDisk(),
+        isEmpty,
+        reason: 'the pre-Delete I4 continuation kept a deleted History day',
+      );
+    });
+
+    // =====================================================================
+    // R8.3.4.1 founder gate §3 — bounded I1/I2 triage (DISPOSABLE; inserted
+    // into a copy of r833_reproduction_test.dart, never the repository's).
+    // An earlier I1/I2 is applied durably, its Applied mark refused. A later
+    // I1/I2 begins; its reconciliation of that earlier Insight (the
+    // displaced mark, an Insights write) is held. A Delete intent begins and
+    // is answered [how] BEFORE the reconciliation resumes. Everything is
+    // inspected in memory, in confirmed bytes, and after a restart.
+    for (final over in ['I1-over-I2', 'I2-over-I1']) {
+      for (final how in [
+        'refused',
+        'uncertain_no_land',
+        'uncertain_landed',
+        'confirmed',
+      ]) {
+        test('TRIAGE $over: Delete intent answered $how while the '
+            'reconciliation is held, then it resumes', () async {
+          final (c, earlier, later) = over == 'I1-over-I2'
+              ? await i1OverUnmarkedI2()
+              : await i2OverUnmarkedI1();
+          final ids = [earlier.id, later.id];
+          final planBefore = await planOnDisk();
+          final epoch = c.read(historyWriteGateProvider).epoch;
+          final held = h.disk.hold(insightsKey);
+          final applying = insights(c).apply(later.id);
+          await held.reached;
+          pre(
+            (await snapshotOnDisk(earlier.id))?['appliedOn'] == null,
+            'the earlier Insight is unmarked on disk while held',
+          );
+          final intent = h.disk.hold(historyDeletionPendingKey);
+          final deletion = c.read(circleHistoryDeletionProvider);
+          final deleting = outcome(deletion.delete());
+          await intent.reached;
+          final announced = deletion.intentBeingRecorded!;
+          if (how != 'confirmed') {
+            h.disk.fail(historyDeletionPendingKey, DiskFault.returnsFalse);
+          }
+          switch (how) {
+            case 'refused':
+              intent.release(DiskFault.returnsFalse);
+            case 'uncertain_no_land':
+              intent.release(DiskFault.throws);
+            case 'uncertain_landed':
+              intent.releaseAckLost();
+            case 'confirmed':
+              intent.release();
+          }
+          final answer = await announced;
+          Object? deleteError;
+          if (how != 'confirmed') {
+            deleteError = await deleting;
+            h.disk.heal(historyDeletionPendingKey);
+            pre(deletion.intentBeingRecorded == null, 'outcome told');
+            pre(
+              h.prefs.get(historyDeletionPendingKey) == null,
+              'cache reads no marker',
+            );
+            pre(
+              (await h.disk.stored())[historyDeletionPendingKey] ==
+                  (how == 'uncertain_landed' ? true : null),
+              'marker on disk as constructed',
+            );
+          }
+          held.release();
+          final result = await applying;
+          if (how == 'confirmed') deleteError = await deleting;
+          await R8Harness.settle();
+          final stored = await h.disk.stored();
+          final planNow = await planOnDisk();
+          final earlierDisk = await snapshotOnDisk(earlier.id);
+          final laterDisk = await snapshotOnDisk(later.id);
+          final memEarlier = insights(c).state.byId(earlier.id);
+          final memLater = insights(c).state.byId(later.id);
+          final memPlan = plans(c).confirmedState.plans['getting_going'];
+          final finalEpoch = c.read(historyWriteGateProvider).epoch;
+          final c2 = await restart();
+          final planAfter = await planOnDisk();
+          final after = await h.disk.stored();
+          final namingAfter = (await namingIds(ids)).keys.toList()..sort();
+          final laterAfter = insights(c2).state.byId(later.id);
+          final earlierAfter = insights(c2).state.byId(earlier.id);
+          final retry = await insights(c2).apply(later.id);
+          await R8Harness.settle();
+          final planAfterRetry = await planOnDisk();
+          evidence('TRIAGE $over $how', {
+            'answer': answer.name,
+            'deleteError': deleteError?.toString(),
+            'apply': result.name,
+            'epoch': [epoch, finalEpoch],
+            'planBefore': {
+              'lifecycle': planBefore['lifecycle'],
+              'appliedInsight': planBefore['appliedInsight'],
+              'gentlerSince':
+                  ((planBefore['cycles'] as List?)?.last as Map?)?['gentlerSince'],
+            },
+            'planBeforeRestart': {
+              'lifecycle': planNow['lifecycle'],
+              'appliedInsight': planNow['appliedInsight'],
+              'gentlerSince':
+                  ((planNow['cycles'] as List?)?.last as Map?)?['gentlerSince'],
+            },
+            'memPlanAppliedInsight': memPlan?.appliedInsight?.insightId,
+            'earlierDisk': earlierDisk == null
+                ? null
+                : {'appliedOn': earlierDisk['appliedOn']},
+            'laterDisk': laterDisk == null
+                ? null
+                : {'appliedOn': laterDisk['appliedOn']},
+            'memEarlierAppliedOn': memEarlier?.appliedOn,
+            'memLaterAppliedOn': memLater?.appliedOn,
+            'pendingBeforeRestart': stored[historyDeletionPendingKey],
+            'journalBeforeRestart': stored.containsKey(circleJournalKey),
+            'planAfterRestart': {
+              'lifecycle': planAfter['lifecycle'],
+              'appliedInsight': planAfter['appliedInsight'],
+              'gentlerSince':
+                  ((planAfter['cycles'] as List?)?.last as Map?)?['gentlerSince'],
+            },
+            'keysAfterRestart': after.keys.toList()..sort(),
+            'keysNamingIdsAfterRestart': namingAfter,
+            'laterAfterRestart': laterAfter == null
+                ? null
+                : {
+                    'appliedOn': laterAfter.appliedOn,
+                    'status': insights(c2).status(laterAfter).name,
+                  },
+            'earlierAfterRestart': earlierAfter == null
+                ? null
+                : {
+                    'appliedOn': earlierAfter.appliedOn,
+                    'status': insights(c2).status(earlierAfter).name,
+                  },
+            'retryAfterRestart': retry.name,
+            'planAfterRetry': {
+              'lifecycle': planAfterRetry['lifecycle'],
+              'appliedInsight': planAfterRetry['appliedInsight'],
+            },
+          });
+          // Invariants checked for every outcome (no expectation about which
+          // way an uncertain Delete "should" go — that is the triage):
+          // 1. An Applied mark on disk is only ever for a change that is on
+          //    disk carrying that Insight's own provenance (or was, before
+          //    a deletion removed attribution).
+          if (laterDisk?['appliedOn'] != null) {
+            expect(
+              (planNow['appliedInsight'] as Map?)?['insightId'],
+              later.id,
+              reason: 'later Insight marked Applied without its change',
+            );
+          }
+          // 2. After a confirmed Delete, or a landed one finished at the
+          //    next start, no key names either Insight and no Plan carries
+          //    attribution.
+          if (how == 'confirmed' || how == 'uncertain_landed') {
+            expect(namingAfter, isEmpty);
+            expect(planAfter['appliedInsight'], isNull);
+            expect(after.containsKey(historyDeletionPendingKey), isFalse);
+          }
+          // 3. A confirmed Delete: the pre-Delete continuation changes
+          //    nothing (R832-A01 contract).
+          if (how == 'confirmed') {
+            expect(result, isNot(InsightActionResult.done));
+            expect(planAfter['lifecycle'], planBefore['lifecycle']);
+          }
+          // 4. No replay: a retry after restart never changes the Plan a
+          //    second time.
+          if (retry == InsightActionResult.done) {
+            expect(laterAfter?.appliedOn, isNull);
+          }
+        });
+      }
+    }
+
+  });
+
+  // =======================================================================
+  // R832-A02 — I4 kept-Circle identity.
+
+  group('R832-A02 — unique I4 kept identity and exact action proof', () {
+    setUp(() async {
+      h = R8Harness(morning);
+      await h.boot();
+    });
+
+    /// I4 generated by production assess() on 2026-10-30 (keeping
+    /// 2026-10-29), its snapshot retained; thirty days on, with two newer
+    /// useful Writing Circles, one container — one cached nowProvider value
+    /// — for everything that follows.
+    Future<(ProviderContainer, InsightSnapshot)> olderI4ThirtyDaysOn({
+      EntitlementStatus status = EntitlementStatus.active,
+    }) async {
+      await h.boot({circleJournalKey: journalOf(i4Journal)});
+      final c = h.open();
+      final first = insights(c).assess().added.single;
+      expect(first.family, InsightFamily.usefulInCommon);
+      await R8Harness.settle();
+      final stored = await h.disk.stored();
+      h.clock.value = morning.add(const Duration(days: 30));
+      await h.boot({...stored, circleJournalKey: journalOf(i4Later)});
+      final c2 = h.open(status: status);
+      final read = insights(c2).state.byId(first.id);
+      pre(read != null, 'the older I4 retained');
+      pre(
+        insights(c2).status(read!) == InsightStatus.current,
+        'the older I4 still current thirty days on',
+      );
+      return (c2, read);
+    }
+
+    /// Reassessed in the same container: a newer I4 for a different Circle.
+    Future<InsightSnapshot> newerI4(
+      ProviderContainer c,
+      InsightSnapshot older,
+    ) async {
+      final added = insights(c).assess().added;
+      await R8Harness.settle();
+      final newer = added
+          .where((s) => s.family == InsightFamily.usefulInCommon)
+          .firstOrNull;
+      pre(
+        newer != null,
+        'a newer I4 generated (added: ${[for (final s in added) s.family.name]})',
+      );
+      final a = older.application as KeepCircleFromHistory;
+      final b = newer!.application;
+      pre(
+        b is KeepCircleFromHistory && b.circleId != a.circleId,
+        'the newer I4 keeps a different Circle',
+      );
+      return newer;
+    }
+
+    test('A02-A (Astra) two I4s applied in one cached-clock epoch: two '
+        'Circles, two identities; removing or renaming one leaves the '
+        'other', () async {
+      final (c, older) = await olderI4ThirtyDaysOn();
+      expect(await insights(c).apply(older.id), InsightActionResult.done);
+      await R8Harness.settle();
+      final newer = await newerI4(c, older);
+      expect(await insights(c).apply(newer.id), InsightActionResult.done);
+      await R8Harness.settle();
+      final kept = await keptOnDisk();
+      final ids = [for (final k in kept) k['id']];
+      final from = [for (final k in kept) k['fromCircleId']];
+      final first = c.read(keptCirclesProvider).kept.first;
+      await keptN(c).renameKept(first.id, 'Renamed');
+      await R8Harness.settle();
+      final names = [for (final k in await keptOnDisk()) k['name']];
+      await keptN(c).deleteKept(first.id);
+      await R8Harness.settle();
+      final remaining = await keptOnDisk();
+      evidence('A02-A colliding Keeps', {
+        'ids': ids,
+        'fromCircleIds': from,
+        'namesAfterRenamingOne': names,
+        'remainingAfterRemovingOne': [
+          for (final k in remaining) [k['id'], k['fromCircleId']],
+        ],
+      });
+      expect(kept, hasLength(2));
+      expect(from.toSet(), hasLength(2));
+      expect(ids.toSet(), hasLength(2), reason: 'two Circles share one id');
+      expect(names.where((n) => n == 'Renamed'), hasLength(1));
+      expect(remaining, hasLength(1), reason: 'one removal removed both');
+    });
+
+    test('A02-B (Astra) I4-A\'s Keep throws before landing; a different I4-B '
+        'keeps another Circle; I4-A is never marked Applied by it', () async {
+      final (c, older) = await olderI4ThirtyDaysOn();
+      h.disk.fail(keptCirclesKey, DiskFault.throws, times: 1);
+      expect(await insights(c).apply(older.id), InsightActionResult.notSaved);
+      await R8Harness.settle();
+      final receipt = (await snapshotOnDisk(older.id))?['attempt'] as Map?;
+      pre(receipt != null, 'I4-A\'s attempt record retained (uncertain)');
+      pre((await keptOnDisk()).isEmpty, 'nothing landed for I4-A');
+      final newer = await newerI4(c, older);
+      expect(await insights(c).apply(newer.id), InsightActionResult.done);
+      await R8Harness.settle();
+      insights(c).assess();
+      await R8Harness.settle();
+      await h.restart();
+      final c2 = h.open();
+      insights(c2).assess();
+      await R8Harness.settle();
+      final a = await snapshotOnDisk(older.id);
+      final kept = await keptOnDisk();
+      evidence('A02-B false proof', {
+        'receiptA': receipt,
+        'kept': [
+          for (final k in kept) [k['id'], k['fromCircleId']],
+        ],
+        'olderAfter': a,
+        'olderStatus': insights(c2).status(insights(c2).state.byId(older.id)!).name,
+      });
+      expect(
+        a?['appliedOn'],
+        isNull,
+        reason: 'I4-A marked Applied by I4-B\'s kept Circle',
+      );
+      expect(
+        kept.where(
+          (k) =>
+              k['fromCircleId'] ==
+              (older.application as KeepCircleFromHistory).circleId,
+        ),
+        isEmpty,
+      );
+    });
+
+    test('A02-B2 a stored kept Circle with the very id I4-A recorded but from '
+        'another Circle (a legacy collision) is never I4-A\'s proof', () async {
+      final (c, older) = await olderI4ThirtyDaysOn();
+      h.disk.fail(keptCirclesKey, DiskFault.throws, times: 1);
+      expect(await insights(c).apply(older.id), InsightActionResult.notSaved);
+      await R8Harness.settle();
+      final receipt = (await snapshotOnDisk(older.id))?['attempt'] as Map?;
+      pre(receipt?['keptId'] is String, 'I4-A\'s attempt names its kept id');
+      final kept = await keptN(c).keepCircle(
+        plan: CirclePlan(writing),
+        need: head,
+        circleId: '2026-11-27',
+      );
+      pre(kept != null, 'the user keeps another Circle by hand');
+      await R8Harness.settle();
+      // As a build that allocated colliding ids would have stored it.
+      final record = await json(keptCirclesKey);
+      final list = [
+        for (final k in record['kept']! as List)
+          {...(k as Map), 'id': receipt!['keptId']},
+      ];
+      final stored = await h.disk.stored();
+      await h.boot({
+        ...stored,
+        keptCirclesKey: jsonEncode({...record, 'kept': list}),
+      });
+      final c2 = h.open();
+      insights(c2).assess();
+      await R8Harness.settle();
+      final a = await snapshotOnDisk(older.id);
+      evidence('A02-B2 legacy collision', {
+        'receiptA': receipt,
+        'kept': await keptOnDisk(),
+        'olderAfter': a,
+      });
+      expect(a?['appliedOn'], isNull);
+    });
+
+    test('A02-C the Kept Circles domain refuses a caller id already in use; '
+        'the existing Circle is untouched', () async {
+      await h.boot({circleJournalKey: journalOf(i4Journal)});
+      final c = h.open();
+      final a = await keptN(c).keepCircle(
+        plan: CirclePlan(writing),
+        need: head,
+        circleId: '2026-10-29',
+        id: 'kept-same',
+        name: 'Mine',
+      );
+      Object? error;
+      Object? b;
+      try {
+        b = await keptN(c).keepCircle(
+          plan: CirclePlan(reading),
+          need: head,
+          circleId: '2026-10-27',
+          id: 'kept-same',
+        );
+      } catch (e) {
+        error = e;
+      }
+      await R8Harness.settle();
+      final kept = await keptOnDisk();
+      evidence('A02-C duplicate caller id', {
+        'first': a?.id,
+        'second': b == null ? null : 'kept',
+        'error': error?.toString(),
+        'kept': [
+          for (final k in kept) [k['id'], k['fromCircleId'], k['name']],
+        ],
+      });
+      pre(a != null, 'the first Keep landed');
+      expect(b, isNull);
+      expect(kept, hasLength(1));
+      expect(kept.single['fromCircleId'], '2026-10-29');
+      expect(kept.single['name'], 'Mine');
+    });
+
+    test('A02-D two concurrent Keeps with one caller id: one lands', () async {
+      await h.boot({circleJournalKey: journalOf(i4Journal)});
+      final c = h.open();
+      final both = await Future.wait([
+        keptN(c)
+            .keepCircle(
+              plan: CirclePlan(writing),
+              need: head,
+              circleId: '2026-10-29',
+              id: 'kept-same',
+            )
+            .then<Object?>((k) => k, onError: (Object e) => e),
+        keptN(c)
+            .keepCircle(
+              plan: CirclePlan(reading),
+              need: head,
+              circleId: '2026-10-27',
+              id: 'kept-same',
+            )
+            .then<Object?>((k) => k, onError: (Object e) => e),
+      ]);
+      await R8Harness.settle();
+      final kept = await keptOnDisk();
+      evidence('A02-D concurrent duplicate id', {
+        'results': [for (final r in both) r?.runtimeType.toString()],
+        'kept': [
+          for (final k in kept) [k['id'], k['fromCircleId']],
+        ],
+      });
+      expect(kept.map((k) => k['id']).toSet(), hasLength(kept.length));
+      expect(kept, hasLength(1));
+    });
+
+    test('A02-E existing duplicate ids on disk are never removed or renamed '
+        'together, and stay through restart and Delete', () async {
+      await h.boot({circleJournalKey: journalOf(i4Journal)});
+      final c = h.open();
+      await keptN(c).keepCircle(
+        plan: CirclePlan(writing),
+        need: head,
+        circleId: '2026-10-29',
+        id: 'kept-dup',
+        name: 'First',
+      );
+      await keptN(c).keepCircle(
+        plan: CirclePlan(reading),
+        need: head,
+        circleId: '2026-10-27',
+        id: 'kept-other',
+        name: 'Second',
+      );
+      await R8Harness.settle();
+      final record = await json(keptCirclesKey);
+      final list = [
+        for (final k in record['kept']! as List)
+          {...(k as Map), 'id': 'kept-dup'},
+      ];
+      final stored = await h.disk.stored();
+      await h.boot({
+        ...stored,
+        keptCirclesKey: jsonEncode({...record, 'kept': list}),
+      });
+      final c2 = h.open();
+      pre(c2.read(keptCirclesProvider).kept.length == 2, 'two legacy records');
+      await keptN(c2).renameKept('kept-dup', 'Renamed').catchError((_) {});
+      await R8Harness.settle();
+      final names = [for (final k in await keptOnDisk()) k['name']];
+      await keptN(c2).deleteKept('kept-dup').catchError((_) {});
+      await R8Harness.settle();
+      final afterRemove = await keptOnDisk();
+      await c2.read(circleHistoryDeletionProvider).delete();
+      await h.restart();
+      final c3 = h.open();
+      evidence('A02-E legacy duplicates', {
+        'namesAfterRename': names,
+        'afterRemove': [
+          for (final k in afterRemove) [k['id'], k['fromCircleId'], k['name']],
+        ],
+        'afterDeleteAndRestart': [
+          for (final k in c3.read(keptCirclesProvider).kept)
+            [k.id, k.fromCircleId, k.name],
+        ],
+      });
+      expect(
+        names.where((n) => n == 'Renamed').length,
+        lessThan(2),
+        reason: 'one rename renamed two independently owned Circles',
+      );
+      expect(
+        afterRemove.length,
+        greaterThan(0),
+        reason: 'one removal removed two independently owned Circles',
+      );
+      expect(c3.read(keptCirclesProvider).kept.length, afterRemove.length);
+    });
+
+    test('A02-F control: without Premium, I4\'s Keep of the user\'s own '
+        'Circle works, once', () async {
+      final (c, older) = await olderI4ThirtyDaysOn(
+        status: EntitlementStatus.inactive,
+      );
+      final result = await insights(c).apply(older.id);
+      await R8Harness.settle();
+      final kept = await keptOnDisk();
+      evidence('A02-F Free', {
+        'apply': result.name,
+        'kept': [
+          for (final k in kept) [k['id'], k['fromCircleId']],
+        ],
+        'older': await snapshotOnDisk(older.id),
+      });
+      expect(result, InsightActionResult.done);
+      expect(kept, hasLength(1));
+      expect((await snapshotOnDisk(older.id))?['appliedOn'], isNotNull);
+    });
+
+    test('A02-G control: the app stops right after the Keep lands, before '
+        'the mark; reassessed after a restart, I4 is marked Applied from its '
+        'own kept Circle on its own date', () async {
+      final (c, older) = await olderI4ThirtyDaysOn();
+      h.disk.ackLost(keptCirclesKey, thenStop: true);
+      insights(c).apply(older.id).ignore();
+      await R8Harness.settle();
+      await h.restart();
+      final c2 = h.open();
+      insights(c2).assess();
+      await R8Harness.settle();
+      final kept = await keptOnDisk();
+      final a = await snapshotOnDisk(older.id);
+      evidence('A02-G ack lost', {
+        'kept': [
+          for (final k in kept) [k['id'], k['fromCircleId'], k['createdAt']],
+        ],
+        'older': a,
+      });
+      expect(kept, hasLength(1));
+      expect(a?['appliedOn'], dateKey(h.clock.value));
+      expect(a?['attempt'], isNull);
+    });
+
+    test('A02-H control: the Keep is refused (returns false): the attempt '
+        'clears; the retry keeps once', () async {
+      final (c, older) = await olderI4ThirtyDaysOn();
+      h.disk.fail(keptCirclesKey, DiskFault.returnsFalse, times: 1);
+      expect(await insights(c).apply(older.id), InsightActionResult.notSaved);
+      await R8Harness.settle();
+      final attempt = (await snapshotOnDisk(older.id))?['attempt'];
+      final retried = await insights(c).apply(older.id);
+      await R8Harness.settle();
+      final kept = await keptOnDisk();
+      evidence('A02-H refused then retried', {
+        'attemptAfterRefusal': attempt,
+        'retry': retried.name,
+        'kept': [
+          for (final k in kept) [k['id'], k['fromCircleId']],
+        ],
+      });
+      expect(attempt, isNull);
+      expect(retried, InsightActionResult.done);
+      expect(kept, hasLength(1));
+    });
+
+    test('A02-I control: Delete Circle history keeps both kept Circles, '
+        'distinct', () async {
+      final (c, older) = await olderI4ThirtyDaysOn();
+      expect(await insights(c).apply(older.id), InsightActionResult.done);
+      await R8Harness.settle();
+      final newer = await newerI4(c, older);
+      expect(await insights(c).apply(newer.id), InsightActionResult.done);
+      await R8Harness.settle();
+      await c.read(circleHistoryDeletionProvider).delete();
+      await h.restart();
+      final kept = h.open().read(keptCirclesProvider).kept;
+      evidence('A02-I Delete', {
+        'kept': [for (final k in kept) [k.id, k.fromCircleId]],
+        'insights': (await h.disk.stored())[insightsKey],
+      });
+      expect(kept, hasLength(2));
+      expect(kept.map((k) => k.id).toSet(), hasLength(2));
+    });
+  });
+
+  // =======================================================================
+  // AUD-R832-1 — the pending Start and the exact Plan write it was asked on.
+
+  group('AUD-R832-1 — a pending Start is authorized only by its own Plan '
+      'write', () {
+    final day1 = DateTime(2026, 10, 12, 9);
+
+    setUp(() async {
+      h = R8Harness(day1);
+      await h.boot();
+    });
+
+    RecommendationNotifier today(ProviderContainer c) =>
+        c.read(recommendationProvider.notifier);
+    RecommendationStatus status(ProviderContainer c) =>
+        c.read(recommendationProvider).status;
+
+    Future<int> credits(String circleId) async {
+      var n = 0;
+      for (final c in (await planOnDisk())['cycles'] as List? ?? []) {
+        for (final r in (c as Map)['records'] as List) {
+          if ((r as Map)['circleId'] == circleId) n++;
+        }
+      }
+      return n;
+    }
+
+    int startedInHistory(ProviderContainer c, String circleId) => c
+        .read(circleJournalRepositoryProvider)
+        .readAll()
+        .where((e) => e.circleId == circleId && e.startedAt != null)
+        .length;
+
+    Future<ProviderContainer> restart({int times = 1}) async {
+      late ProviderContainer c;
+      for (var i = 0; i < times; i++) {
+        await h.restart();
+        c = h.open();
+        c.read(circlePlansProvider);
+        c.read(recommendationProvider);
+        await R8Harness.settle();
+      }
+      return c;
+    }
+
+    Future<void> close(ProviderContainer c) async {
+      h.clock.value = h.clock.value.add(const Duration(minutes: 25));
+      today(c).close();
+      await R8Harness.settle();
+    }
+
+    /// Claude's setup: the Plan paused on disk; a Resume being saved (held,
+    /// W1); the offer save held; Start tapped on the Plan shown active.
+    Future<(ProviderContainer, String, HeldWrite, HeldWrite)> setup() async {
+      final c = h.open();
+      expect(plans(c).start('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final offer = h.disk.hold(recommendationPendingWriteKey);
+      today(c).chooseIntention(Intention.moreEnergy, window: TimeWindow.about20);
+      await offer.reached;
+      final id = c.read(recommendationProvider).recommendation!.circleId;
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      pre((await planOnDisk())['lifecycle'] == 'paused', 'paused on disk');
+      final planWrite = h.disk.hold(circlePlansKey);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await planWrite.reached;
+      today(c).start();
+      await R8Harness.settle();
+      pre(status(c) == RecommendationStatus.notStarted, 'Start pending');
+      return (c, id, offer, planWrite);
+    }
+
+    /// The original Start cancelled with nothing left of it; then a fresh
+    /// explicit Start under the confirmed (active) Plan works and is
+    /// credited once.
+    Future<Map<String, Object?>> cancelledThenFresh(
+      ProviderContainer c,
+      String id,
+    ) async {
+      final cancelled = status(c);
+      final record = (await planOnDisk())['startedWhilePaused'];
+      final historyStarts = startedInHistory(c, id);
+      final creditsAfterCancel = await credits(id);
+      today(c).start();
+      await R8Harness.settle();
+      final fresh = status(c);
+      if (fresh == RecommendationStatus.started) await close(c);
+      await restart(times: 2);
+      return {
+        'original': cancelled.name,
+        'recordAfterCancel': record,
+        'historyStartsAfterCancel': historyStarts,
+        'creditsAfterCancel': creditsAfterCancel,
+        'fresh': fresh.name,
+        'creditsFinal': await credits(id),
+        'lifecycle': (await planOnDisk())['lifecycle'],
+      };
+    }
+
+    void expectCancelledThenFresh(Map<String, Object?> f) {
+      expect(f['original'], RecommendationStatus.notStarted.name,
+          reason: 'the Start was authorized by a different Plan write');
+      expect(f['recordAfterCancel'], isNull);
+      expect(f['historyStartsAfterCancel'], 0);
+      expect(f['creditsAfterCancel'], 0);
+      expect(f['fresh'], RecommendationStatus.started.name);
+      expect(f['creditsFinal'], 1);
+    }
+
+    test('X1 (Claude) the Resume pending at the tap is refused and rolled '
+        'back; the user resumes again (confirmed); the Start resolves: '
+        'cancelled', () async {
+      final (c, id, offer, planWrite) = await setup();
+      planWrite.release(DiskFault.returnsFalse);
+      await R8Harness.settle();
+      pre(
+        c.read(circlePlansProvider).plans['getting_going']?.lifecycle ==
+            PlanLifecycle.paused,
+        'the refused Resume rolled back',
+      );
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      offer.release();
+      await R8Harness.settle();
+      final f = await cancelledThenFresh(c, id);
+      evidence('AUD-R832-1 X1', f);
+      expectCancelledThenFresh(f);
+    });
+
+    test('X2 (Claude) the Resume pending at the tap is refused (not the '
+        'latest write); Pause and Resume confirmed after it: cancelled',
+        () async {
+      final (c, id, offer, planWrite) = await setup();
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      planWrite.release(DiskFault.returnsFalse);
+      await R8Harness.settle();
+      offer.release();
+      await R8Harness.settle();
+      final f = await cancelledThenFresh(c, id);
+      evidence('AUD-R832-1 X2', f);
+      expectCancelledThenFresh(f);
+    });
+
+    test('X2-ctl (Claude) the Resume pending at the tap lands; Pause and '
+        'Resume confirmed after it: cancelled (A2)', () async {
+      final (c, id, offer, planWrite) = await setup();
+      expect(plans(c).pause('getting_going'), PlanActionResult.done);
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      planWrite.release();
+      await R8Harness.settle();
+      offer.release();
+      await R8Harness.settle();
+      final f = await cancelledThenFresh(c, id);
+      evidence('AUD-R832-1 X2-ctl', f);
+      expectCancelledThenFresh(f);
+    });
+
+    test('X-ctl accepted case: the Resume pending at the tap is the one '
+        'confirmed — the Start goes ahead, credited once', () async {
+      final (c, id, offer, planWrite) = await setup();
+      planWrite.release();
+      await R8Harness.settle();
+      offer.release();
+      await R8Harness.settle();
+      final started = status(c);
+      await close(c);
+      await restart(times: 2);
+      evidence('AUD-R832-1 X-ctl', {
+        'started': started.name,
+        'credits': await credits(id),
+      });
+      expect(started, RecommendationStatus.started);
+      expect(await credits(id), 1);
+    });
+
+    test('X3 the Resume pending at the tap throws (uncertain); a later Resume '
+        'is confirmed: cancelled', () async {
+      final (c, id, offer, planWrite) = await setup();
+      planWrite.release(DiskFault.throws);
+      await R8Harness.settle();
+      expect(
+        await plans(c).confirmed((p) => p.resume('getting_going')),
+        anyOf(PlanActionResult.done, PlanActionResult.notAvailable),
+      );
+      await R8Harness.settle();
+      offer.release();
+      await R8Harness.settle();
+      final f = await cancelledThenFresh(c, id);
+      evidence('AUD-R832-1 X3 uncertain', f);
+      expectCancelledThenFresh(f);
+    });
+
+    test('X4 the refused Resume, then a Resume and a restart before the offer '
+        'resolves: nothing was started, nothing is owed', () async {
+      final (c, id, offer, planWrite) = await setup();
+      planWrite.release(DiskFault.returnsFalse);
+      await R8Harness.settle();
+      expect(plans(c).resume('getting_going'), PlanActionResult.done);
+      await R8Harness.settle();
+      final c2 = await restart();
+      final f = {
+        'status': status(c2).name,
+        'credits': await credits(id),
+        'record': (await planOnDisk())['startedWhilePaused'],
+        'historyStarts': startedInHistory(c2, id),
+      };
+      evidence('AUD-R832-1 X4 restart', f);
+      expect(f['status'], isNot(RecommendationStatus.started.name));
+      expect(f['credits'], 0);
+      expect(f['record'], isNull);
+      expect(f['historyStarts'], 0);
+    });
+  });
+}

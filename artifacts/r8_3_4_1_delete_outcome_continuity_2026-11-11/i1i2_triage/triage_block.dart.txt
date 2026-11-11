@@ -1,0 +1,174 @@
+
+    // =====================================================================
+    // R8.3.4.1 founder gate §3 — bounded I1/I2 triage (DISPOSABLE; inserted
+    // into a copy of r833_reproduction_test.dart, never the repository's).
+    // An earlier I1/I2 is applied durably, its Applied mark refused. A later
+    // I1/I2 begins; its reconciliation of that earlier Insight (the
+    // displaced mark, an Insights write) is held. A Delete intent begins and
+    // is answered [how] BEFORE the reconciliation resumes. Everything is
+    // inspected in memory, in confirmed bytes, and after a restart.
+    for (final over in ['I1-over-I2', 'I2-over-I1']) {
+      for (final how in [
+        'refused',
+        'uncertain_no_land',
+        'uncertain_landed',
+        'confirmed',
+      ]) {
+        test('TRIAGE $over: Delete intent answered $how while the '
+            'reconciliation is held, then it resumes', () async {
+          final (c, earlier, later) = over == 'I1-over-I2'
+              ? await i1OverUnmarkedI2()
+              : await i2OverUnmarkedI1();
+          final ids = [earlier.id, later.id];
+          final planBefore = await planOnDisk();
+          final epoch = c.read(historyWriteGateProvider).epoch;
+          final held = h.disk.hold(insightsKey);
+          final applying = insights(c).apply(later.id);
+          await held.reached;
+          pre(
+            (await snapshotOnDisk(earlier.id))?['appliedOn'] == null,
+            'the earlier Insight is unmarked on disk while held',
+          );
+          final intent = h.disk.hold(historyDeletionPendingKey);
+          final deletion = c.read(circleHistoryDeletionProvider);
+          final deleting = outcome(deletion.delete());
+          await intent.reached;
+          final announced = deletion.intentBeingRecorded!;
+          if (how != 'confirmed') {
+            h.disk.fail(historyDeletionPendingKey, DiskFault.returnsFalse);
+          }
+          switch (how) {
+            case 'refused':
+              intent.release(DiskFault.returnsFalse);
+            case 'uncertain_no_land':
+              intent.release(DiskFault.throws);
+            case 'uncertain_landed':
+              intent.releaseAckLost();
+            case 'confirmed':
+              intent.release();
+          }
+          final answer = await announced;
+          Object? deleteError;
+          if (how != 'confirmed') {
+            deleteError = await deleting;
+            h.disk.heal(historyDeletionPendingKey);
+            pre(deletion.intentBeingRecorded == null, 'outcome told');
+            pre(
+              h.prefs.get(historyDeletionPendingKey) == null,
+              'cache reads no marker',
+            );
+            pre(
+              (await h.disk.stored())[historyDeletionPendingKey] ==
+                  (how == 'uncertain_landed' ? true : null),
+              'marker on disk as constructed',
+            );
+          }
+          held.release();
+          final result = await applying;
+          if (how == 'confirmed') deleteError = await deleting;
+          await R8Harness.settle();
+          final stored = await h.disk.stored();
+          final planNow = await planOnDisk();
+          final earlierDisk = await snapshotOnDisk(earlier.id);
+          final laterDisk = await snapshotOnDisk(later.id);
+          final memEarlier = insights(c).state.byId(earlier.id);
+          final memLater = insights(c).state.byId(later.id);
+          final memPlan = plans(c).confirmedState.plans['getting_going'];
+          final finalEpoch = c.read(historyWriteGateProvider).epoch;
+          final c2 = await restart();
+          final planAfter = await planOnDisk();
+          final after = await h.disk.stored();
+          final namingAfter = (await namingIds(ids)).keys.toList()..sort();
+          final laterAfter = insights(c2).state.byId(later.id);
+          final earlierAfter = insights(c2).state.byId(earlier.id);
+          final retry = await insights(c2).apply(later.id);
+          await R8Harness.settle();
+          final planAfterRetry = await planOnDisk();
+          evidence('TRIAGE $over $how', {
+            'answer': answer.name,
+            'deleteError': deleteError?.toString(),
+            'apply': result.name,
+            'epoch': [epoch, finalEpoch],
+            'planBefore': {
+              'lifecycle': planBefore['lifecycle'],
+              'appliedInsight': planBefore['appliedInsight'],
+              'gentlerSince':
+                  ((planBefore['cycles'] as List?)?.last as Map?)?['gentlerSince'],
+            },
+            'planBeforeRestart': {
+              'lifecycle': planNow['lifecycle'],
+              'appliedInsight': planNow['appliedInsight'],
+              'gentlerSince':
+                  ((planNow['cycles'] as List?)?.last as Map?)?['gentlerSince'],
+            },
+            'memPlanAppliedInsight': memPlan?.appliedInsight?.insightId,
+            'earlierDisk': earlierDisk == null
+                ? null
+                : {'appliedOn': earlierDisk['appliedOn']},
+            'laterDisk': laterDisk == null
+                ? null
+                : {'appliedOn': laterDisk['appliedOn']},
+            'memEarlierAppliedOn': memEarlier?.appliedOn,
+            'memLaterAppliedOn': memLater?.appliedOn,
+            'pendingBeforeRestart': stored[historyDeletionPendingKey],
+            'journalBeforeRestart': stored.containsKey(circleJournalKey),
+            'planAfterRestart': {
+              'lifecycle': planAfter['lifecycle'],
+              'appliedInsight': planAfter['appliedInsight'],
+              'gentlerSince':
+                  ((planAfter['cycles'] as List?)?.last as Map?)?['gentlerSince'],
+            },
+            'keysAfterRestart': after.keys.toList()..sort(),
+            'keysNamingIdsAfterRestart': namingAfter,
+            'laterAfterRestart': laterAfter == null
+                ? null
+                : {
+                    'appliedOn': laterAfter.appliedOn,
+                    'status': insights(c2).status(laterAfter).name,
+                  },
+            'earlierAfterRestart': earlierAfter == null
+                ? null
+                : {
+                    'appliedOn': earlierAfter.appliedOn,
+                    'status': insights(c2).status(earlierAfter).name,
+                  },
+            'retryAfterRestart': retry.name,
+            'planAfterRetry': {
+              'lifecycle': planAfterRetry['lifecycle'],
+              'appliedInsight': planAfterRetry['appliedInsight'],
+            },
+          });
+          // Invariants checked for every outcome (no expectation about which
+          // way an uncertain Delete "should" go — that is the triage):
+          // 1. An Applied mark on disk is only ever for a change that is on
+          //    disk carrying that Insight's own provenance (or was, before
+          //    a deletion removed attribution).
+          if (laterDisk?['appliedOn'] != null) {
+            expect(
+              (planNow['appliedInsight'] as Map?)?['insightId'],
+              later.id,
+              reason: 'later Insight marked Applied without its change',
+            );
+          }
+          // 2. After a confirmed Delete, or a landed one finished at the
+          //    next start, no key names either Insight and no Plan carries
+          //    attribution.
+          if (how == 'confirmed' || how == 'uncertain_landed') {
+            expect(namingAfter, isEmpty);
+            expect(planAfter['appliedInsight'], isNull);
+            expect(after.containsKey(historyDeletionPendingKey), isFalse);
+          }
+          // 3. A confirmed Delete: the pre-Delete continuation changes
+          //    nothing (R832-A01 contract).
+          if (how == 'confirmed') {
+            expect(result, isNot(InsightActionResult.done));
+            expect(planAfter['lifecycle'], planBefore['lifecycle']);
+          }
+          // 4. No replay: a retry after restart never changes the Plan a
+          //    second time.
+          if (retry == InsightActionResult.done) {
+            expect(laterAfter?.appliedOn, isNull);
+          }
+        });
+      }
+    }

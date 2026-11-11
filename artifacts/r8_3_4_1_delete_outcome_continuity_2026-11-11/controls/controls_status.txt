@@ -1,0 +1,6 @@
+controls red exit 1
+probes834 red exit 1
+controls fixed exit 1
+probes834 fixed exit 1
+focused fixed exit 0
+DONE

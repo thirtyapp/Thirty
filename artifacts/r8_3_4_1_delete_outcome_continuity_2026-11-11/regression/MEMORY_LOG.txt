@@ -1,0 +1,27 @@
+10:19:57 waiting before 1: 2.64 GB
+10:20:07 waiting before 1: 2.48 GB
+10:20:18 waiting before 1: 2.51 GB
+10:20:28 free before 1: 4.14 GB; test processes alive: 0
+10:20:44 free before 2: 4.4 GB; test processes alive: 0
+10:21:13 free before 3: 4.37 GB; test processes alive: 0
+10:21:58 free before 4: 5.17 GB; test processes alive: 0
+10:22:18 free before 5: 5.15 GB; test processes alive: 0
+10:22:30 free before 6: 5.13 GB; test processes alive: 0
+10:23:05 free before 7: 5.67 GB; test processes alive: 0
+10:23:37 free before 8: 5.8 GB; test processes alive: 0
+10:24:01 free before 9: 5.77 GB; test processes alive: 0
+10:24:26 free before 10: 5.59 GB; test processes alive: 0
+10:24:46 free before 11: 5.56 GB; test processes alive: 0
+10:25:15 free before 12: 6.08 GB; test processes alive: 0
+10:25:47 free before 13: 5.89 GB; test processes alive: 0
+10:26:03 free before 14: 6.01 GB; test processes alive: 0
+10:26:17 free before 15: 6.29 GB; test processes alive: 0
+10:26:31 free before 16: 5.74 GB; test processes alive: 0
+10:26:47 free before 17: 6.22 GB; test processes alive: 0
+10:27:15 free before 18: 6.25 GB; test processes alive: 0
+10:27:21 free before 19: 6.08 GB; test processes alive: 0
+10:31:30 free before 20a: 7.68 GB; test processes alive: 0
+10:34:57 free before 20b: 7.82 GB; test processes alive: 0
+10:39:07 free before 20c: 8.7 GB; test processes alive: 0
+10:43:02 free before 20d: 9.24 GB; test processes alive: 0
+10:45:48 free before 20e: 9.67 GB; test processes alive: 0

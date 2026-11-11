@@ -1,0 +1,262 @@
+{
+ "files": {
+  "test/features/plans/r6_stage5_end_line_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/application/premium_offer_provider_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/b7_entitlement_matrix_test.dart": {
+   "passed": 40,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/presentation/premium_offer_c2_real_font_test.dart": {
+   "passed": 24,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/presentation/premium_offer_c2_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/presentation/premium_offer_copy_guard_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/presentation/premium_offer_page_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/premium/r6_purchase_busy_label_test.dart": {
+   "passed": 1,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81_n01_durable_plan_credit_test.dart": {
+   "passed": 8,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81_n02_preservation_writes_test.dart": {
+   "passed": 10,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81_n03_removed_answers_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart": {
+   "passed": 18,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 159,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/features/plans/r6_stage5_end_line_test.dart": [
+   "every stage answered Not useful: the existing line",
+   "some Not useful, the others set aside: the mixed line \u2014 never \"none of these stages was useful\"",
+   "a stage set aside and later guided counts as guided, not set aside",
+   "every stage set aside: its own line, unchanged",
+   "the all-set-aside line names all three reasons, exactly",
+   "the mixed line, exactly"
+  ],
+  "test/features/premium/application/premium_offer_provider_test.dart": [
+   "showPremiumOfferInvitationProvider false with zero closed Circles",
+   "showPremiumOfferInvitationProvider false with only one closed Circle on one distinct date",
+   "showPremiumOfferInvitationProvider true once a second closed Circle lands on a distinct date",
+   "showPremiumOfferInvitationProvider never true while already entitled",
+   "showPremiumOfferInvitationProvider never true once already marked shown, even if still eligible",
+   "showPremiumOfferInvitationProvider never true while a reflection question is pending \u2014 prompt-priority rule (parent \u00a728): reflection first, Premium invitation waits until neither is being presented",
+   "showPremiumOfferInvitationProvider becomes true once the pending reflection is answered, still on the same visit",
+   "showPremiumOfferInvitationProvider never true while the reminder invitation is currently eligible \u2014 prompt-priority rule (parent \u00a728): reminder invitation before Premium invitation"
+  ],
+  "test/features/premium/b7_entitlement_matrix_test.dart": [
+   "initializing \u2192 initializing Personal Guided Circle: composed only while paid",
+   "initializing \u2192 initializing THIRTY's voice: offered and speaking only while paid",
+   "initializing \u2192 initializing Plans: start, carry on, repeat, revisit and gentler need Premium; pause, leave and gentler off never do",
+   "initializing \u2192 initializing Insights: a new assessment and its application only while paid",
+   "initializing \u2192 initializing Keep is never gated",
+   "initializing \u2192 initializing Leave it out: a composer control \u2014 recorded only while paid, even when a kept Circle runs on a Free day",
+   "unavailable \u2192 unavailable Personal Guided Circle: composed only while paid",
+   "unavailable \u2192 unavailable THIRTY's voice: offered and speaking only while paid",
+   "unavailable \u2192 unavailable Plans: start, carry on, repeat, revisit and gentler need Premium; pause, leave and gentler off never do",
+   "unavailable \u2192 unavailable Insights: a new assessment and its application only while paid",
+   "unavailable \u2192 unavailable Keep is never gated",
+   "unavailable \u2192 unavailable Leave it out: a composer control \u2014 recorded only while paid, even when a kept Circle runs on a Free day",
+   "inactive (never subscribed) \u2192 inactive Personal Guided Circle: composed only while paid",
+   "inactive (never subscribed) \u2192 inactive THIRTY's voice: offered and speaking only while paid",
+   "inactive (never subscribed) \u2192 inactive Plans: start, carry on, repeat, revisit and gentler need Premium; pause, leave and gentler off never do",
+   "inactive (never subscribed) \u2192 inactive Insights: a new assessment and its application only while paid",
+   "inactive (never subscribed) \u2192 inactive Keep is never gated",
+   "inactive (never subscribed) \u2192 inactive Leave it out: a composer control \u2014 recorded only while paid, even when a kept Circle runs on a Free day",
+   "active \u2192 active Personal Guided Circle: composed only while paid",
+   "active \u2192 active THIRTY's voice: offered and speaking only while paid",
+   "active \u2192 active Plans: start, carry on, repeat, revisit and gentler need Premium; pause, leave and gentler off never do",
+   "active \u2192 active Insights: a new assessment and its application only while paid",
+   "active \u2192 active Keep is never gated",
+   "active \u2192 active Leave it out: a composer control \u2014 recorded only while paid, even when a kept Circle runs on a Free day",
+   "grace period \u2192 active Personal Guided Circle: composed only while paid",
+   "grace period \u2192 active THIRTY's voice: offered and speaking only while paid",
+   "grace period \u2192 active Plans: start, carry on, repeat, revisit and gentler need Premium; pause, leave and gentler off never do",
+   "grace period \u2192 active Insights: a new assessment and its application only while paid",
+   "grace period \u2192 active Keep is never gated",
+   "grace period \u2192 active Leave it out: a composer control \u2014 recorded only while paid, even when a kept Circle runs on a Free day",
+   "cancelled but paid through the period \u2192 active Personal Guided Circle: composed only while paid",
+   "cancelled but paid through the period \u2192 active THIRTY's voice: offered and speaking only while paid",
+   "cancelled but paid through the period \u2192 active Plans: start, carry on, repeat, revisit and gentler need Premium; pause, leave and gentler off never do",
+   "cancelled but paid through the period \u2192 active Insights: a new assessment and its application only while paid",
+   "cancelled but paid through the period \u2192 active Keep is never gated",
+   "cancelled but paid through the period \u2192 active Leave it out: a composer control \u2014 recorded only while paid, even when a kept Circle runs on a Free day",
+   "expired (true expiry after a subscription) \u2192 inactive new Premium work stops, even called directly; everything the subscriber had stays readable and theirs",
+   "expired (true expiry after a subscription) \u2192 inactive resubscribing restores the paid services where they were",
+   "the skip sheet offers Leave it out only with Premium (offered: true)",
+   "the skip sheet offers Leave it out only with Premium (offered: false)"
+  ],
+  "test/features/premium/presentation/premium_offer_c2_real_font_test.dart": [
+   "320pt, 200%, free, light: nothing truncated or overflowing",
+   "320pt, 200%, free, dark: nothing truncated or overflowing",
+   "320pt, 200%, price loading, light: nothing truncated or overflowing",
+   "320pt, 200%, price loading, dark: nothing truncated or overflowing",
+   "320pt, 200%, no offer, light: nothing truncated or overflowing",
+   "320pt, 200%, no offer, dark: nothing truncated or overflowing",
+   "320pt, 200%, active, light: nothing truncated or overflowing",
+   "320pt, 200%, active, dark: nothing truncated or overflowing",
+   "320pt, 200%, unavailable, light: nothing truncated or overflowing",
+   "320pt, 200%, unavailable, dark: nothing truncated or overflowing",
+   "320pt, 200%, checking, light: nothing truncated or overflowing",
+   "320pt, 200%, checking, dark: nothing truncated or overflowing",
+   "360pt, 200%, free, light: nothing truncated or overflowing",
+   "360pt, 200%, free, dark: nothing truncated or overflowing",
+   "360pt, 200%, price loading, light: nothing truncated or overflowing",
+   "360pt, 200%, price loading, dark: nothing truncated or overflowing",
+   "360pt, 200%, no offer, light: nothing truncated or overflowing",
+   "360pt, 200%, no offer, dark: nothing truncated or overflowing",
+   "360pt, 200%, active, light: nothing truncated or overflowing",
+   "360pt, 200%, active, dark: nothing truncated or overflowing",
+   "360pt, 200%, unavailable, light: nothing truncated or overflowing",
+   "360pt, 200%, unavailable, dark: nothing truncated or overflowing",
+   "360pt, 200%, checking, light: nothing truncated or overflowing",
+   "360pt, 200%, checking, dark: nothing truncated or overflowing"
+  ],
+  "test/features/premium/presentation/premium_offer_c2_test.dart": [
+   "Hierarchy value \u2192 what stays Free \u2192 price \u2192 disclosure \u2192 CTA \u2192 Not now \u2192 ownership \u2192 restore footer \u2192 cancel line",
+   "Hierarchy Become Premium is the full-width 56pt hero CTA",
+   "Hierarchy each value point is one sentence for assistive tech; the mark is decorative",
+   "Exits Not now goes back without purchasing",
+   "Exits active: Premium is active, Manage, Done \u2014 no price, no CTA",
+   "Billing-state matrix checking: no purchase, no restore",
+   "Billing-state matrix unavailable: truthful status, no purchase, restore shown",
+   "Billing-state matrix price loading: \"Checking the current price\u2026\", CTA disabled, no price text",
+   "Billing-state matrix no offer: no price, no CTA, the exit stays",
+   "Billing-state matrix the price is the store's own string, never a hardcoded one",
+   "Billing-state matrix purchasing: CTA loading; Not now and Restore disabled",
+   "Billing-state matrix confirmed purchase: switches to the active state and says so once",
+   "Billing-state matrix pending: explained, still free \u2014 then unlocks when Google Play completes it"
+  ],
+  "test/features/premium/presentation/premium_offer_copy_guard_test.dart": [
+   "no offer line promises an outcome \u2014 it may say what THIRTY does, never that it will work",
+   "no offer line sells a retired Phase D product",
+   "B7: the offer describes the live product the three jobs: a guided Circle, Plans and Insights",
+   "B7: the offer describes the live product Free stays available, whole and not a trial",
+   "B7: the offer describes the live product cancelling is told truthfully: active to the end of the period, then new Premium work stops and nothing the user has is lost",
+   "B7: the offer describes the live product owning is never sold as Premium: no \"Yours to keep\" point",
+   "B7: the offer describes the live product no unsupported claim"
+  ],
+  "test/features/premium/presentation/premium_offer_page_test.dart": [
+   "describes the recurring paid job \u2014 a guided Circle made each day, owned things kept \u2014 and nothing else: no retired pillar, no upkeep pitch, no Atmosphere, AI, trial, annual or scarcity language (V2 Phase D2)",
+   "shows the real localized store price and period, never a hardcoded figure",
+   "shows a quiet unavailable state and no purchase button when no monthly package is configured",
+   "already-entitled users see their active status, not a purchase button (Phase C2 copy)",
+   "a successful purchase reports confirmation and updates entitlement state authoritatively",
+   "a user-cancelled purchase is treated as an ordinary outcome \u2014 no error message, no crash",
+   "a pending Google Play payment is explained, never shown as success or as an error",
+   "a purchase whose entitlement is not yet active is shown as confirming, never as success",
+   "a provider error is reported without implying success",
+   "says what Free still gives and that history stays on this device (Phase C2 copy)",
+   "Phase A2 \u2014 the Premium offer card uses featuredCard padding"
+  ],
+  "test/features/premium/r6_purchase_busy_label_test.dart": [
+   "the purchase button while the store works: \"Become Premium, in progress\", disabled; afterwards its own label again"
+  ],
+  "test/features/r81/r81_n01_durable_plan_credit_test.dart": [
+   "throws: AUD-1 as reported \u2014 Plans store failing across a restart; the next day's choice never overwrites the closed stage Circle whose credit is only in memory; after healing the credit is recovered exactly once",
+   "throws: Astra N01 as reported \u2014 only the credit write fails at Close; Premium lapses; same session, next day, a Free choice: the credit is retried and durable before the day keys move on",
+   "throws: Plans store failing persistently in the same session: the next day's Free choice is not saved over yesterday; once the store heals, the next write credits yesterday and then moves on",
+   "throws: the served-stage Start evidence already noted in memory but not on disk is written again \u2014 never treated as saved because memory holds it",
+   "returnsFalse: AUD-1 as reported \u2014 Plans store failing across a restart; the next day's choice never overwrites the closed stage Circle whose credit is only in memory; after healing the credit is recovered exactly once",
+   "returnsFalse: Astra N01 as reported \u2014 only the credit write fails at Close; Premium lapses; same session, next day, a Free choice: the credit is retried and durable before the day keys move on",
+   "returnsFalse: Plans store failing persistently in the same session: the next day's Free choice is not saved over yesterday; once the store heals, the next write credits yesterday and then moves on",
+   "returnsFalse: the served-stage Start evidence already noted in memory but not on disk is written again \u2014 never treated as saved because memory holds it"
+  ],
+  "test/features/r81/r81_n02_preservation_writes_test.dart": [
+   "Plans \u2014 reproduction A: the build's copy is pending when a save follows; the copy then throws: the original is never written over unkept \u2014 on disk, after a restart",
+   "Plans \u2014 reproduction A: the build's copy is pending when a save follows; the copy then returnsFalse: the original is never written over unkept \u2014 on disk, after a restart",
+   "Plans \u2014 the copy failing every time: the original stays exactly as stored, and nothing is written over it",
+   "Plans \u2014 retries are idempotent: a copy that lands, then a restart and another save, leaves one copy, byte for byte",
+   "Insights \u2014 reproduction A: the build's copy is pending when a save follows; the copy then throws: the original is never written over unkept \u2014 on disk, after a restart",
+   "Insights \u2014 reproduction A: the build's copy is pending when a save follows; the copy then returnsFalse: the original is never written over unkept \u2014 on disk, after a restart",
+   "Insights \u2014 the copy failing every time: the original stays exactly as stored, and nothing is written over it",
+   "Insights \u2014 retries are idempotent: a copy that lands, then a restart and another save, leaves one copy, byte for byte",
+   "reproduction B \u2014 both copies pending when Delete Circle history runs: Delete completes only after them, and no raw retained evidence is on disk afterwards",
+   "reproduction B, the copy failing as Delete runs: Delete still completes and nothing is left behind"
+  ],
+  "test/features/r81/r81_n03_removed_answers_test.dart": [
+   "next day, before a new Circle is chosen: the usefulness answer removed, then a restart \u2014 never written back",
+   "next day, before a new Circle is chosen: the usefulness answer removed, then the day's choice (before-overwrite recording) \u2014 never written back",
+   "next day in the same session (no restart): the usefulness answer removed, then a choice and a restart \u2014 never written back",
+   "same day: the usefulness answer removed, then a restart \u2014 never written back",
+   "next day, before a new Circle is chosen: both answers removed, then a restart \u2014 never written back",
+   "next day, before a new Circle is chosen: both answers removed, then the day's choice (before-overwrite recording) \u2014 never written back",
+   "next day in the same session (no restart): both answers removed, then a choice and a restart \u2014 never written back",
+   "same day: both answers removed, then a restart \u2014 never written back",
+   "next day, the removal cut short \u2014 the day keys' write throws: History keeps the answer (nothing half-removed), the user is told, and a retry removes it for good",
+   "next day, History's removal throws after the day keys were cleared: the answer stays in History and is reported; a restart neither loses nor duplicates it; a retry removes it",
+   "next day, the removal cut short \u2014 the day keys' write returnsFalse: History keeps the answer (nothing half-removed), the user is told, and a retry removes it for good",
+   "next day, History's removal returnsFalse after the day keys were cleared: the answer stays in History and is reported; a restart neither loses nor duplicates it; a retry removes it",
+   "an answer never given is never invented by a removal, and other Circles' answers are untouched"
+  ],
+  "test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart": [
+   "N04 \u2014 expiry at Start as reported (throws, Plans refusing): Start after a verified expiry, then Close with daily and History writes allowed \u2014 the Start is refused and told, and a restart never credits the Plan",
+   "N04 \u2014 expiry at Start the evidence write throws once at Start: that Start is refused; tapped again, the evidence is written first, then the Circle starts and closes \u2014 no credit, now or after a restart",
+   "N04 \u2014 expiry at Start the evidence write throws at Start, then a pause: the pause never saves a started Circle without it",
+   "N04 \u2014 expiry at Start as reported (returnsFalse, Plans refusing): Start after a verified expiry, then Close with daily and History writes allowed \u2014 the Start is refused and told, and a restart never credits the Plan",
+   "N04 \u2014 expiry at Start the evidence write returnsFalse once at Start: that Start is refused; tapped again, the evidence is written first, then the Circle starts and closes \u2014 no credit, now or after a restart",
+   "N04 \u2014 expiry at Start the evidence write returnsFalse at Start, then a pause: the pause never saves a started Circle without it",
+   "N04 \u2014 expiry at Start regression \u2014 served and started under Premium, lapsed before Close: the legitimate credit still lands once",
+   "N05 \u2014 Insight application is recorded only once it is durable I1 (Plan direction) \u2014 its own store throws: not saved, not recorded as applied (memory and disk), the user is told; after a restart it applies, durably",
+   "N05 \u2014 Insight application is recorded only once it is durable I1 (Plan direction) \u2014 its own store returnsFalse: not saved, not recorded as applied (memory and disk), the user is told; after a restart it applies, durably",
+   "N05 \u2014 Insight application is recorded only once it is durable I1 (Plan direction) \u2014 its change saved, the applied mark refused: the change is durable and the failure told; nothing claims the mark is saved",
+   "N05 \u2014 Insight application is recorded only once it is durable I2 (gentler Plan) \u2014 its own store throws: not saved, not recorded as applied (memory and disk), the user is told; after a restart it applies, durably",
+   "N05 \u2014 Insight application is recorded only once it is durable I2 (gentler Plan) \u2014 its own store returnsFalse: not saved, not recorded as applied (memory and disk), the user is told; after a restart it applies, durably",
+   "N05 \u2014 Insight application is recorded only once it is durable I2 (gentler Plan) \u2014 its change saved, the applied mark refused: the change is durable and the failure told; nothing claims the mark is saved",
+   "N05 \u2014 Insight application is recorded only once it is durable I3 (leave a part out) \u2014 its own store throws: not saved, not recorded as applied (memory and disk), the user is told; after a restart it applies, durably",
+   "N05 \u2014 Insight application is recorded only once it is durable I3 (leave a part out) \u2014 its own store returnsFalse: not saved, not recorded as applied (memory and disk), the user is told; after a restart it applies, durably",
+   "N05 \u2014 Insight application is recorded only once it is durable I3 (leave a part out) \u2014 its change saved, the applied mark refused: the change is durable and the failure told; nothing claims the mark is saved",
+   "N05 \u2014 Insight application is recorded only once it is durable I1 retried in the same session once the store heals: the Plan already on screen is saved first, then the Insight is marked",
+   "N05 \u2014 Insight application is recorded only once it is durable a suggestion preference the store refuses is not shown as saved (returnsFalse is a failure, not success)"
+  ]
+ },
+ "batch": 13,
+ "exit": 0,
+ "seconds": 15,
+ "command": "flutter test --concurrency=1 --reporter json test/features/plans/r6_stage5_end_line_test.dart test/features/premium/application/premium_offer_provider_test.dart test/features/premium/b7_entitlement_matrix_test.dart test/features/premium/presentation/premium_offer_c2_real_font_test.dart test/features/premium/presentation/premium_offer_c2_test.dart test/features/premium/presentation/premium_offer_copy_guard_test.dart test/features/premium/presentation/premium_offer_page_test.dart test/features/premium/r6_purchase_busy_label_test.dart test/features/r81/r81_n01_durable_plan_credit_test.dart test/features/r81/r81_n02_preservation_writes_test.dart test/features/r81/r81_n03_removed_answers_test.dart test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart",
+ "rawSha256": "4631f0cb83df68d6ea929d172ce9ae0a476814b341d2a5338be4acb57428c80a"
+}

@@ -1,0 +1,48 @@
+diff --git a/lib/features/home/application/circle_history_deletion.dart b/lib/features/home/application/circle_history_deletion.dart
+index 305836e..4c0834e 100644
+--- a/lib/features/home/application/circle_history_deletion.dart
++++ b/lib/features/home/application/circle_history_deletion.dart
+@@ -119,12 +119,28 @@ class CircleHistoryDeletion {
+ 
+   Future<DeletionIntentOutcome>? _intent;
+ 
++  /// R8.3.4.1 (Astra R834-N01): how many Delete intents have begun being
++  /// recorded, and the latest of them whose outcome was uncertain (0: none).
++  int _intents = 0;
++  int _lastUncertain = 0;
++
+   /// R8.3.4 (Astra R833-A01, Claude AUD-R833-1): while a Delete's intent is
+   /// being recorded — already in the store's memory, so [isPending] reads
+   /// it, but not yet confirmed — how that ends; `null` otherwise. A
+   /// confirmed outcome completes only once the deletion has begun.
+   Future<DeletionIntentOutcome>? get intentBeingRecorded => _intent;
+ 
++  /// R8.3.4.1 (Astra R834-N01): how many Delete intents have been answered
++  /// by now. An operation takes this when it begins; [uncertainSince] then
++  /// tells it whether an intent that overlapped it ended uncertain — even
++  /// once [intentBeingRecorded] no longer says so.
++  int get intentsAnswered => _intent == null ? _intents : _intents - 1;
++
++  /// Whether a Delete intent not yet answered at [answered]
++  /// ([intentsAnswered]) has since ended uncertain. A later intent's other
++  /// outcome never hides it.
++  bool uncertainSince(int answered) => _lastUncertain > answered;
++
+   /// Whether a Delete Circle history that didn't finish — it failed, or the
+   /// app stopped before the next start could finish it — is still waiting
+   /// to be finished. Not one under way now: a Circle begun while a deletion
+@@ -193,9 +209,13 @@ class CircleHistoryDeletion {
+     // R8.3.4 (Astra R833-A01): how it ends is told ([intentBeingRecorded]).
+     final intent = Completer<DeletionIntentOutcome>();
+     _intent = intent.future;
++    final serial = ++_intents;
+     void told(DeletionIntentOutcome outcome) {
+       if (identical(_intent, intent.future)) _intent = null;
+-      if (!intent.isCompleted) intent.complete(outcome);
++      if (intent.isCompleted) return;
++      // R8.3.4.1 (Astra R834-N01): kept after the intent is answered.
++      if (outcome == DeletionIntentOutcome.uncertain) _lastUncertain = serial;
++      intent.complete(outcome);
+     }
+ 
+     try {

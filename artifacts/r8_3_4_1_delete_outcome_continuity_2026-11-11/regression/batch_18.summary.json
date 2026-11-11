@@ -1,0 +1,37 @@
+{
+ "files": {
+  "test/main_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/widget_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 4,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/main_test.dart": [
+   "initializeSupabaseIfConfigured resolves to false instead of throwing when Supabase is unconfigured \u2014 this is the exact startup path that must survive a release build with no config/supabase.local.json dart-defines",
+   "initializeSupabaseIfConfigured resolves to false instead of throwing when configured but Supabase.initialize itself fails (e.g. no platform channel/network in this test environment) \u2014 a reachability failure must be just as non-fatal as missing configuration"
+  ],
+  "test/widget_test.dart": [
+   "ThirtyApp starts within a ProviderScope and shows the product entry screen on the root route",
+   "switching ThemeMode via the showcase updates the provider"
+  ]
+ },
+ "batch": 18,
+ "exit": 0,
+ "seconds": 5,
+ "command": "flutter test --concurrency=1 --reporter json test/main_test.dart test/widget_test.dart",
+ "rawSha256": "fcf5292e1184900b40a823d8976f33331a36c172a1b3c8ec86051193d13974d3"
+}

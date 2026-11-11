@@ -1,0 +1,275 @@
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/utils/date_key.dart';
+import 'package:thirty/core/storage/confirmed_write.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/suggestion_preferences.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart';
+import 'package:thirty/features/insights/domain/insight.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/personal_circle/domain/kept_circle.dart';
+
+import '../../support/r8_fault_disk.dart';
+import '../../support/r8_harness.dart';
+
+/// Every call answers the same: two ids allocated at one event-clock instant
+/// collide unless the Kept Circles domain itself keeps them apart.
+class _StuckRandom implements Random {
+  @override
+  int nextInt(int max) => 7 % max;
+  @override
+  double nextDouble() => 0.5;
+  @override
+  bool nextBool() => false;
+}
+
+/// Independent bounded R834 acceptance probes, prepared 11 November 2026.
+/// NOT RUN or compilation-validated by this auditor (Flutter unavailable).
+/// Place at test/features/r834_independent/r834_acceptance_boundary_test.dart.
+/// Fixtures and FaultDisk/R8Harness are the committed ones. These scenarios
+/// change the ordering: the Delete intent settles BEFORE the receipt resumes.
+void main() {
+  void evidence(String id, Map<String, Object?> facts) {
+    // ignore: avoid_print
+    print('INDEPENDENT-R834-EVIDENCE ${jsonEncode({'test': id, ...facts})}');
+  }
+
+  void pre(bool holds, String what) {
+    if (!holds) fail('PRECONDITION not constructible on this tree: $what');
+  }
+
+  final morning = DateTime(2026, 10, 30, 9);
+  late R8Harness h;
+
+  CirclePart part(ElementId e) => CirclePart(e, elementOf(e).minutes);
+  final window = [
+    part(ElementId.openWindow),
+    part(ElementId.standingStretch),
+    part(ElementId.sitAMinute),
+  ];
+  final reading = [part(ElementId.phoneFaceDown), part(ElementId.readPages)];
+  final writing = [
+    part(ElementId.closeWhatsOpen),
+    part(ElementId.getItOut),
+    part(ElementId.chooseOne),
+    part(ElementId.firstStep),
+  ];
+  const head = Intention.clearerHead;
+  const energy = Intention.moreEnergy;
+
+  CircleJournalEntry entry(
+    int ago,
+    Intention need, {
+    List<CirclePart> parts = const [],
+    Set<ElementId> skipped = const {},
+    bool useful = false,
+  }) {
+    final date = morning.subtract(Duration(days: ago));
+    return CircleJournalEntry(
+      schemaVersion: circleJournalSchemaVersion,
+      circleId: dateKey(date),
+      localDate: dateKey(date),
+      direction: need,
+      activityId: ActivityId.values.first,
+      catalogVersion: catalogVersion,
+      shownAt: date,
+      startedAt: date,
+      closedAt: date,
+      attemptResponse: useful ? CircleAttemptResponse.yes : null,
+      usefulnessResponse: useful
+          ? (ago.isEven
+                ? CircleUsefulnessResponse.veryUseful
+                : CircleUsefulnessResponse.somewhatUseful)
+          : null,
+      session: parts.isEmpty
+          ? null
+          : CircleSessionRecord(
+              title: 'Circle',
+              parts: CirclePlan(parts).toWire(),
+              skipped: [for (final e in skipped) e.name],
+            ),
+    );
+  }
+
+  String journalOf(List<CircleJournalEntry> entries) => jsonEncode({
+    'schemaVersion': circleJournalSchemaVersion,
+    'entries': [for (final e in entries) e.toJson()],
+  });
+
+  // I3: "Open a window" skipped in 3 of its last 4 Circles.
+  final i3Journal = [
+    for (final ago in [2, 4, 6, 8, 10, 12, 15])
+      entry(ago, head, parts: reading),
+    for (final (k, ago) in [1, 5, 9, 11].indexed)
+      entry(
+        ago,
+        energy,
+        parts: window,
+        skipped: k == 1 ? const {} : {ElementId.openWindow},
+      ),
+  ];
+  // I4: Writing in all 4 useful Clearer Head Circles; keeps 2026-10-29.
+  final i4Journal = [
+    for (final ago in [1, 7, 13, 20])
+      entry(ago, head, parts: writing, useful: true),
+    for (final ago in [3, 9, 16]) entry(ago, head, parts: reading),
+  ];
+  const source = '2026-10-29';
+
+  InsightsNotifier insights(ProviderContainer c) =>
+      c.read(insightsProvider.notifier);
+  KeptCirclesNotifier keptN(ProviderContainer c) =>
+      c.read(keptCirclesProvider.notifier);
+
+  Future<Map<String, Object?>> json(String key) async {
+    final raw = (await h.disk.stored())[key];
+    return raw is String ? jsonDecode(raw) as Map<String, Object?> : {};
+  }
+
+  Future<Map?> snapshotOnDisk(String id) async {
+    for (final s in (await json(insightsKey))['snapshots'] as List? ?? []) {
+      if ((s as Map)['id'] == id) return s;
+    }
+    return null;
+  }
+
+  Future<List<Map>> keptOnDisk() async => [
+    for (final k in (await json(keptCirclesKey))['kept'] as List? ?? [])
+      k as Map,
+  ];
+
+  Future<Object?> outcome(Future<void> deleting) =>
+      deleting.then<Object?>((_) => null, onError: (Object e) => e);
+
+  final stuck = keptIdRandomProvider.overrideWithValue(_StuckRandom());
+
+  for (final family in ['I3', 'I4']) {
+    for (final how in ['refused', 'uncertain_no_land', 'uncertain_landed']) {
+      test('INDEPENDENT $family: $how intent finishes before held receipt resumes', () async {
+        h = R8Harness(morning);
+        await h.boot({circleJournalKey: journalOf(family == 'I3' ? i3Journal : i4Journal)});
+        final c = h.open();
+        final shown = insights(c).assess().added.single;
+        pre(shown.family == (family == 'I3' ? InsightFamily.skippedPart : InsightFamily.usefulInCommon), 'qualifying Insight');
+        await insights(c).idle();
+        final epoch = c.read(historyWriteGateProvider).epoch;
+        final receipt = h.disk.hold(insightsKey);
+        final applying = insights(c).apply(shown.id);
+        await receipt.reached;
+        final intent = h.disk.hold(historyDeletionPendingKey);
+        final deletion = c.read(circleHistoryDeletionProvider);
+        final deleting = outcome(deletion.delete());
+        await intent.reached;
+        final announced = deletion.intentBeingRecorded!;
+        // First intent attempt determines the outcome; both restores and the
+        // retry return false. In landed mode the true marker remains on disk,
+        // although writeConfirmed has restored the SharedPreferences cache.
+        h.disk.fail(historyDeletionPendingKey, DiskFault.returnsFalse);
+        if (how == 'refused') {
+          intent.release(DiskFault.returnsFalse);
+        } else if (how == 'uncertain_no_land') {
+          intent.release(DiskFault.throws);
+        } else {
+          intent.releaseAckLost();
+        }
+        final deleteError = await deleting;
+        final answer = await announced;
+        h.disk.heal(historyDeletionPendingKey);
+        pre(deleteError is HistoryDeletionNotStarted, 'intent phase ended with error');
+        pre(answer == (how == 'refused' ? DeletionIntentOutcome.refused : DeletionIntentOutcome.uncertain), 'exact intent outcome');
+        pre(deletion.intentBeingRecorded == null, 'completed outcome no longer published');
+        pre(c.read(historyWriteGateProvider).epoch == epoch, 'no confirmed boundary');
+        pre(h.prefs.get(historyDeletionPendingKey) == null, 'cache restored');
+        final intentOnDisk = (await h.disk.stored())[historyDeletionPendingKey];
+        pre(intentOnDisk == (how == 'uncertain_landed' ? true : null), 'expected durable marker');
+
+        // The only ordering change from the committed UNCERTAIN test:
+        // release this receipt AFTER the intent outcome has been published.
+        receipt.release();
+        final result = await applying;
+        await insights(c).idle();
+        final before = await h.disk.stored();
+        final snapshot = await snapshotOnDisk(shown.id);
+        final made = family == 'I4'
+            ? (await keptOnDisk()).any((k) => k['fromCircleId'] == source)
+            : '${before[suggestionPreferencesKey]}'.contains(shown.id);
+        await h.restart();
+        final c2 = h.open();
+        final retry = await insights(c2).apply(shown.id);
+        final after = await h.disk.stored();
+        evidence('$family-$how-intent-first', {
+          'announced': answer.name, 'deleteError': deleteError.toString(),
+          'gateBefore': epoch, 'gateAfter': c.read(historyWriteGateProvider).epoch,
+          'intentBeforeReceipt': intentOnDisk, 'apply': result.name,
+          'snapshotBeforeRestart': snapshot, 'targetMade': made,
+          'diskBeforeRestart': before, 'retryAfterRestart': retry.name,
+          'diskAfterRestart': after,
+        });
+        if (how == 'refused') {
+          expect(result, InsightActionResult.done);
+          expect(snapshot?['attempt'], isNull);
+          expect(snapshot?['appliedOn'], dateKey(morning));
+          expect(made, isTrue);
+          expect(retry, InsightActionResult.alreadyApplied);
+        } else {
+          expect(result, InsightActionResult.notAvailable,
+            reason: 'An application already waiting on its receipt must not miss a completed uncertain Delete outcome.');
+          expect(snapshot?['attempt'], isNotNull);
+          expect(snapshot?['appliedOn'], isNull);
+          expect(made, isFalse);
+        }
+      });
+    }
+  }
+
+  for (final gate in ['C1', 'C2', 'C3']) {
+    test('INDEPENDENT GATE-$gate approved capacity behavior', () async {
+      h = R8Harness(morning);
+      await h.boot();
+      final c = h.open(overrides: [stuck]);
+      final count = gate == 'C1' ? 6 : 7;
+      for (var d = 1; d <= count; d++) {
+        expect(await keptN(c).keepCircle(plan: CirclePlan(reading), need: head,
+          circleId: '2026-09-${'$d'.padLeft(2, '0')}'), isNotNull);
+      }
+      final held = h.disk.hold(keptCirclesKey);
+      final first = keptN(c).keepCircle(plan: CirclePlan(writing), need: head,
+        circleId: source).then<Object?>((value) => value, onError: (Object e) => e);
+      await held.reached;
+      final second = keptN(c).keepCircle(plan: CirclePlan(window), need: energy,
+        circleId: '2026-10-27');
+      held.release(gate == 'C2' ? DiskFault.returnsFalse : null);
+      final a = await first;
+      final b = await second;
+      final fresh = gate == 'C1' ? null : await keptN(c).keepCircle(
+        plan: CirclePlan(window), need: energy, circleId: '2026-10-27');
+      final disk = await keptOnDisk();
+      evidence('GATE-$gate-explicit', {
+        'first': a is KeptCircle ? a.id : a.toString(), 'second': b?.id,
+        'fresh': fresh?.id, 'kept': disk,
+      });
+      expect(disk, hasLength(8));
+      expect({for (final k in disk) k['id']}, hasLength(8));
+      if (gate == 'C1') {
+        expect(a, isA<KeptCircle>());
+        expect(b, isNotNull);
+        expect((a as KeptCircle).id, isNot(b!.id));
+      } else if (gate == 'C2') {
+        expect(a, isA<StorageWriteFailed>());
+        expect(b, isNull);
+        expect(fresh, isNotNull);
+      } else {
+        expect(a, isA<KeptCircle>());
+        expect(b, isNull);
+        expect(fresh, isNull);
+      }
+    });
+  }
+}
+

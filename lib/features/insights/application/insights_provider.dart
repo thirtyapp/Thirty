@@ -121,6 +121,15 @@ class InsightsNotifier extends Notifier<InsightsState> {
         ?.then((outcome) => outcome != DeletionIntentOutcome.uncertain);
   }
 
+  /// R8.3.4.1 (Astra R834-N01): whether a Delete intent not yet answered
+  /// when this [apply] began ([CircleHistoryDeletion.intentsAnswered]) has
+  /// since ended uncertain — told before or after this I3 or I4 resumed,
+  /// so it is never missed. It then stops like one [_intentAnswer] waited
+  /// for. An intent answered before [apply] began never stops it.
+  bool _uncertainIntentSince(int answered) =>
+      ref.mounted &&
+      ref.read(circleHistoryDeletionProvider).uncertainSince(answered);
+
   @override
   InsightsState build() {
     final read = _read(ref.watch(sharedPreferencesProvider));
@@ -377,8 +386,13 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// deletion has begun — or may have, the answer being uncertain — and
   /// otherwise goes on, so a Delete the store refused never leaves its
   /// attempt behind, unmade.
+  ///
+  /// R8.3.4.1 (Astra R834-N01): and so does an I3 or I4 that resumes only
+  /// once such an intent has been answered uncertain
+  /// ([_uncertainIntentSince]).
   Future<InsightActionResult> apply(String snapshotId) async {
     final epoch = ref.read(historyWriteGateProvider).epoch;
+    final answered = ref.read(circleHistoryDeletionProvider).intentsAnswered;
     await ref.read(circlePlansProvider.notifier).idle();
     await ref.read(journalWritesProvider).idle();
     await ref.read(suggestionPreferencesProvider.notifier).idle();
@@ -426,11 +440,13 @@ class InsightsNotifier extends Notifier<InsightsState> {
         i,
         snapshot,
         epoch,
+        answered,
       ),
       KeepCircleFromHistory(:final circleId) => await _keep(
         circleId,
         snapshot,
         epoch,
+        answered,
       ),
       OpenPlanReview() ||
       NothingToChange() => InsightActionResult.nothingToApply,
@@ -562,8 +578,9 @@ class InsightsNotifier extends Notifier<InsightsState> {
   /// stays and the Insight is never offered again — never made twice.
   ///
   /// R8.3.4 (Astra R833-A01): after the answer to a Delete intent being
-  /// recorded ([_intentAnswer]).
-  Future<void> _clearAttempt(String snapshotId, int epoch) async {
+  /// recorded ([_intentAnswer]). R8.3.4.1 (Astra R834-N01): kept when one
+  /// that overlapped the application ended uncertain, even before this.
+  Future<void> _clearAttempt(String snapshotId, int epoch, int answered) async {
     for (
       var answer = _intentAnswer();
       answer != null;
@@ -572,7 +589,11 @@ class InsightsNotifier extends Notifier<InsightsState> {
       if (!await answer) return;
     }
     final s = state.byId(snapshotId);
-    if (s?.attempt == null || !_stillCurrent(epoch)) return;
+    if (s?.attempt == null ||
+        !_stillCurrent(epoch) ||
+        _uncertainIntentSince(answered)) {
+      return;
+    }
     try {
       await _set(state.replacing(s!.copyWith(clearAttempt: true)));
     } on StorageWriteFailed {
@@ -695,10 +716,16 @@ class InsightsNotifier extends Notifier<InsightsState> {
     InsightInputs i,
     InsightSnapshot snapshot,
     int epoch,
+    int answered,
   ) async {
     final element = ElementId.values.asNameMap()[wire];
     if (element == null) return InsightActionResult.notAvailable;
     if (i.leftOut.contains(element)) return InsightActionResult.alreadyApplied;
+    // R8.3.4.1 (Astra R834-N01): no attempt is recorded once one is known
+    // to stop — the Insight stays current.
+    if (_uncertainIntentSince(answered)) {
+      return InsightActionResult.notAvailable;
+    }
     if (!await _recordAttempt(snapshot, epoch)) {
       return _stillCurrent(epoch)
           ? InsightActionResult.notSaved
@@ -714,7 +741,11 @@ class InsightsNotifier extends Notifier<InsightsState> {
     ) {
       if (!await answer) return InsightActionResult.notAvailable;
     }
-    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
+    // R8.3.4.1 (Astra R834-N01): nor if one was answered uncertain before
+    // the attempt was confirmed — its attempt kept.
+    if (!_stillCurrent(epoch) || _uncertainIntentSince(answered)) {
+      return InsightActionResult.notAvailable;
+    }
     final outcome = await ref
         .read(suggestionPreferencesProvider.notifier)
         .leaveOutChange(element, byInsight: snapshot.id);
@@ -726,7 +757,7 @@ class InsightsNotifier extends Notifier<InsightsState> {
       case PreferenceChange.unchanged ||
           PreferenceChange.refused ||
           PreferenceChange.notSaved:
-        await _clearAttempt(snapshot.id, epoch);
+        await _clearAttempt(snapshot.id, epoch, answered);
         // Left out by something else meanwhile: never this Insight's.
         return outcome == PreferenceChange.unchanged
             ? InsightActionResult.alreadyApplied
@@ -746,6 +777,7 @@ class InsightsNotifier extends Notifier<InsightsState> {
     String circleId,
     InsightSnapshot snapshot,
     int epoch,
+    int answered,
   ) async {
     InsightActionResult? refused(KeptCircles kept) {
       if (kept.kept.any((k) => k.fromCircleId == circleId)) {
@@ -764,6 +796,11 @@ class InsightsNotifier extends Notifier<InsightsState> {
     }
     final plan = CirclePlan.fromWire(entry?.session?.parts);
     if (entry == null || plan == null) return InsightActionResult.notAvailable;
+    // R8.3.4.1 (Astra R834-N01): no attempt is recorded once one is known
+    // to stop — the Insight stays current.
+    if (_uncertainIntentSince(answered)) {
+      return InsightActionResult.notAvailable;
+    }
     // R8.3.4 (Astra R833-A02): never an id another attempt recorded — its
     // own Keep may not have landed, and the id stays that attempt's, so
     // another action's kept Circle can never be its proof ([_appliedOn]).
@@ -787,7 +824,11 @@ class InsightsNotifier extends Notifier<InsightsState> {
     ) {
       if (!await answer) return InsightActionResult.notAvailable;
     }
-    if (!_stillCurrent(epoch)) return InsightActionResult.notAvailable;
+    // R8.3.4.1 (Astra R834-N01): nor if one was answered uncertain before
+    // the attempt was confirmed — its attempt kept.
+    if (!_stillCurrent(epoch) || _uncertainIntentSince(answered)) {
+      return InsightActionResult.notAvailable;
+    }
     try {
       final circle = await ref
           .read(keptCirclesProvider.notifier)
@@ -799,11 +840,13 @@ class InsightsNotifier extends Notifier<InsightsState> {
           );
       if (circle != null) return InsightActionResult.done;
       // Refused before anything was written.
-      await _clearAttempt(snapshot.id, epoch);
+      await _clearAttempt(snapshot.id, epoch, answered);
       return refused(ref.read(keptCirclesProvider)) ??
           InsightActionResult.notAvailable;
     } on StorageWriteFailed catch (failure) {
-      if (!failure.uncertain) await _clearAttempt(snapshot.id, epoch);
+      if (!failure.uncertain) {
+        await _clearAttempt(snapshot.id, epoch, answered);
+      }
       return InsightActionResult.notSaved;
     }
   }

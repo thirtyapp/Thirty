@@ -1,0 +1,27 @@
+{
+ "test/features/personal_circle/personal_circle_simulation_test.dart": {
+  "declared": 13,
+  "ran": 13,
+  "eachExactlyOnce": true,
+  "notRun": [],
+  "repeated": [],
+  "undeclared": [],
+  "parts": [
+   "batch_20a.summary.json",
+   "batch_20b.summary.json",
+   "batch_20c.summary.json",
+   "batch_20d.summary.json",
+   "batch_20e.summary.json"
+  ],
+  "declaredParts": [
+   "20a",
+   "20b",
+   "20c",
+   "20d",
+   "20e"
+  ],
+  "rawAgrees": true,
+  "rawProblems": []
+ }
+}
+CASES OK

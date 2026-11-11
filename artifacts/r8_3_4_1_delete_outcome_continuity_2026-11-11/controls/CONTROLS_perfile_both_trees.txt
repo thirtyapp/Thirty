@@ -1,0 +1,87 @@
+== controls_on_red.jsonl done.success= False
+  features/r832_gate/r832_final_gate_checks_test.dart {'success': 10}
+  zz_audit/appb/astra_appendix_b_test.dart {'success': 7}
+  zz_audit/audit_r82_adversarial_test.dart {'success': 8}
+  zz_audit/audit_r82_order_test.dart {'failure': 1}
+  zz_audit/audit_r832_delta_test.dart {'success': 6, 'failure': 1}
+  zz_audit/audit_r83_delta_test.dart {'success': 11}
+  TOTAL {'success': 42, 'failure': 2}
+  NOT-PASS zz_audit/audit_r82_order_test.dart :: AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+  NOT-PASS zz_audit/audit_r832_delta_test.dart :: I1/I2 provenance under concurrent application X4 I1 and I2 applied concurrently on one Plan, both marks refused; user pauses by hand; I1 retried
+== controls_on_fixed.jsonl done.success= False
+  features/r832_gate/r832_final_gate_checks_test.dart {'success': 10}
+  zz_audit/appb/astra_appendix_b_test.dart {'success': 7}
+  zz_audit/audit_r82_adversarial_test.dart {'success': 8}
+  zz_audit/audit_r82_order_test.dart {'failure': 1}
+  zz_audit/audit_r832_delta_test.dart {'success': 6, 'failure': 1}
+  zz_audit/audit_r83_delta_test.dart {'success': 11}
+  TOTAL {'success': 42, 'failure': 2}
+  NOT-PASS zz_audit/audit_r82_order_test.dart :: AUD-O3: Start tapped while its offer save is pending, then Plan Pause, then Close under Premium: credited?
+  NOT-PASS zz_audit/audit_r832_delta_test.dart :: I1/I2 provenance under concurrent application X4 I1 and I2 applied concurrently on one Plan, both marks refused; user pauses by hand; I1 retried
+== probes834_on_red.jsonl done.success= False
+  features/r833_independent/r833_independent_adversarial_test.dart {'success': 5, 'failure': 1}
+  features/r833_independent/zz_corrected_test.dart {'success': 6}
+  features/r834_gate/r834_gate_probes_test.dart {'failure': 1, 'success': 4}
+  features/r834_independent/r834_acceptance_boundary_test.dart {'success': 5, 'failure': 4}
+  zz_audit/audit_r833_delta_test.dart {'failure': 1, 'success': 14}
+  zz_audit/audit_r834_final_test.dart {'success': 17}
+  TOTAL {'success': 51, 'failure': 7}
+  NOT-PASS features/r833_independent/r833_independent_adversarial_test.dart :: INDEPENDENT exact I4 proof: a new snapshot of the SAME source cannot prove an earlier failed action
+  NOT-PASS zz_audit/audit_r833_delta_test.dart :: A01 adversarial — Delete isolation P1 I3 receipt lands while the Delete intent write is pending; the intent is then refused (Delete never starts)
+  NOT-PASS features/r834_gate/r834_gate_probes_test.dart :: GATE-A1 two current I4s of different sources applied concurrently under a forced collision, the first one's attempt write held while the second allocates: distinct ids, each Applied by its own Keep only
+  NOT-PASS features/r834_independent/r834_acceptance_boundary_test.dart :: INDEPENDENT I3: uncertain_no_land intent finishes before held receipt resumes
+  NOT-PASS features/r834_independent/r834_acceptance_boundary_test.dart :: INDEPENDENT I3: uncertain_landed intent finishes before held receipt resumes
+  NOT-PASS features/r834_independent/r834_acceptance_boundary_test.dart :: INDEPENDENT I4: uncertain_no_land intent finishes before held receipt resumes
+  NOT-PASS features/r834_independent/r834_acceptance_boundary_test.dart :: INDEPENDENT I4: uncertain_landed intent finishes before held receipt resumes
+== probes834_on_fixed.jsonl done.success= False
+  features/r833_independent/r833_independent_adversarial_test.dart {'success': 5, 'failure': 1}
+  features/r833_independent/zz_corrected_test.dart {'success': 6}
+  features/r834_gate/r834_gate_probes_test.dart {'failure': 1, 'success': 4}
+  features/r834_independent/r834_acceptance_boundary_test.dart {'success': 9}
+  zz_audit/audit_r833_delta_test.dart {'failure': 1, 'success': 14}
+  zz_audit/audit_r834_final_test.dart {'success': 17}
+  TOTAL {'success': 55, 'failure': 3}
+  NOT-PASS features/r833_independent/r833_independent_adversarial_test.dart :: INDEPENDENT exact I4 proof: a new snapshot of the SAME source cannot prove an earlier failed action
+  NOT-PASS zz_audit/audit_r833_delta_test.dart :: A01 adversarial — Delete isolation P1 I3 receipt lands while the Delete intent write is pending; the intent is then refused (Delete never starts)
+  NOT-PASS features/r834_gate/r834_gate_probes_test.dart :: GATE-A1 two current I4s of different sources applied concurrently under a forced collision, the first one's attempt write held while the second allocates: distinct ids, each Applied by its own Keep only
+== focused_on_fixed.jsonl done.success= True
+  features/r81/r81_n01_durable_plan_credit_test.dart {'success': 8}
+  features/r81/r81_n02_preservation_writes_test.dart {'success': 10}
+  features/r81/r81_n03_removed_answers_test.dart {'success': 13}
+  features/r81/r81_n04_n05_expiry_and_insight_application_test.dart {'success': 18}
+  features/r81/r81_n06_n07_damaged_records_test.dart {'success': 21}
+  features/r81/r81_n08_n09_aud2_time_test.dart {'success': 8}
+  features/r81/r81_n10_failure_notices_test.dart {'success': 5}
+  features/r81/r81b_rl1_pending_state_test.dart {'success': 17}
+  features/r81/r81b_rl2_unverified_words_copy_test.dart {'success': 3}
+  features/r81/r81b_rl3_field_preservation_test.dart {'success': 12}
+  features/r82/r82_a01_pending_lifecycle_credit_test.dart {'success': 10}
+  features/r82/r82_a02_new2_delete_isolation_test.dart {'success': 10}
+  features/r82/r82_a03_new1_stage_publication_test.dart {'success': 15}
+  features/r82/r82_a04_a08_new3_insight_actions_test.dart {'success': 25}
+  features/r82/r82_a05_nested_fields_test.dart {'success': 8}
+  features/r82/r82_a06_reflection_completion_test.dart {'success': 8}
+  features/r82/r82_a07_confirmed_history_test.dart {'success': 7}
+  features/r82/r82_a09_native_types_test.dart {'success': 14}
+  features/r82/r82_claude_audit_new1_triggers_test.dart {'success': 5}
+  features/r82/r82_cross_store_adversarial_test.dart {'success': 6}
+  features/r82/r82_decision_a_historical_credit_test.dart {'success': 18}
+  features/r82/r82_decision_b_start_persistence_test.dart {'success': 15}
+  features/r82/r82_decision_c_insight_provenance_test.dart {'success': 13}
+  features/r82/r82_lifecycle_policy_test.dart {'success': 21}
+  features/r83/r831_start_eligibility_test.dart {'success': 24}
+  features/r83/r83_codec_law_test.dart {'success': 14}
+  features/r83/r83_cross_store_test.dart {'success': 4}
+  features/r83/r83_delete_boundary_test.dart {'success': 12}
+  features/r83/r83_harness_selftest_test.dart {'success': 10}
+  features/r83/r83_insight_attribution_test.dart {'success': 10}
+  features/r83/r83_start_boundary_test.dart {'success': 9}
+  features/r83/r83_startup_types_test.dart {'success': 15}
+  features/r832/r832_founder_scope_test.dart {'success': 30}
+  features/r832/r832_g1_lifecycle_generation_test.dart {'success': 22}
+  features/r832/r832_reproduction_test.dart {'success': 42}
+  features/r833/r833_identity_contract_test.dart {'success': 3}
+  features/r833/r833_reproduction_test.dart {'success': 30}
+  features/r834/r8341_delete_outcome_continuity_test.dart {'success': 32}
+  features/r834/r834_reproduction_test.dart {'success': 24}
+  TOTAL {'success': 571}

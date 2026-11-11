@@ -1,0 +1,109 @@
+
+    // ===================================================================
+    // R8.3.4.1 founder gate §4 — DISPOSABLE gate probes (inserted into a
+    // copy of the permanent file, never the repository's).
+    group('GATE-R8341 $family', () {
+      test('GATE-1 $family uncertain then confirmed Delete before the '
+          'attempt resumes: stops; the confirmed deletion removes it', () async {
+        final (c, shown) = await shownInsight();
+        final epoch = c.read(historyWriteGateProvider).epoch;
+        final receipt = h.disk.hold(insightsKey);
+        final applying = insights(c).apply(shown.id);
+        await receipt.reached;
+        final (a1, e1, _) = await deleteAnswered(c, 'uncertain_no_land');
+        pre(e1 is HistoryDeletionNotStarted, 'first Delete not begun');
+        final (a2, _, deleting) = await deleteAnswered(c, 'confirmed');
+        receipt.release();
+        final result = await applying;
+        final deleted = await deleting;
+        await R8Harness.settle();
+        final stored = await h.disk.stored();
+        final made = await targetOnDisk(shown.id);
+        await h.restart();
+        final after = await h.disk.stored();
+        evidence('GATE-1 $family', {
+          'answers': [a1.name, a2.name],
+          'apply': result.name,
+          'deleted': deleted?.toString(),
+          'epoch': [epoch, c.read(historyWriteGateProvider).epoch],
+          'memory': insights(c).state.byId(shown.id)?.attempt?.target,
+          'targetMade': made,
+          'keys': stored.keys.toList()..sort(),
+          'keysAfterRestart': after.keys.toList()..sort(),
+        });
+        expect(result, InsightActionResult.notAvailable);
+        expect(deleted, isNull);
+        expect(c.read(historyWriteGateProvider).epoch, epoch + 1);
+        expect(insights(c).state.byId(shown.id), isNull);
+        expect(made, isFalse);
+        expect(targetInMemory(c, shown.id), isFalse);
+        expect(jsonEncode(stored).contains(shown.id), isFalse);
+        expect(jsonEncode(after).contains(shown.id), isFalse);
+      });
+
+      test('GATE-2 $family the Insights provider is rebuilt while the '
+          'receipt is held; an uncertain Delete is answered: nothing is '
+          'made, never replayed after restart', () async {
+        final (c, shown) = await shownInsight();
+        final receipt = h.disk.hold(insightsKey);
+        final applying = insights(c).apply(shown.id);
+        await receipt.reached;
+        c.invalidate(insightsProvider);
+        insights(c).state;
+        await deleteAnswered(c, 'uncertain_no_land');
+        receipt.release();
+        final result = await applying;
+        await R8Harness.settle();
+        final s = await snapshotOnDisk(shown.id);
+        final made = await targetOnDisk(shown.id);
+        await h.restart();
+        final c2 = h.open();
+        final restored = insights(c2).state.byId(shown.id);
+        final status = restored == null
+            ? null
+            : insights(c2).status(restored).name;
+        final retry = await insights(c2).apply(shown.id);
+        await R8Harness.settle();
+        final madeAfter = await targetOnDisk(shown.id);
+        evidence('GATE-2 $family', {
+          'apply': result.name,
+          'diskAttempt': s?['attempt'],
+          'appliedOn': s?['appliedOn'],
+          'targetMade': made,
+          'statusAfterRestart': status,
+          'retry': retry.name,
+          'targetMadeAfterRetry': madeAfter,
+        });
+        expect(result, InsightActionResult.notAvailable);
+        expect(s?['appliedOn'], isNull);
+        expect(made, isFalse);
+        expect(madeAfter, isFalse);
+        expect(retry, isNot(InsightActionResult.done));
+      });
+
+      test('GATE-3 $family the deletion provider is rebuilt (never done in '
+          'lib/) after two refused Deletes; an uncertain Delete on the new '
+          'instance overlaps the held receipt: characterization', () async {
+        final (c, shown) = await shownInsight();
+        await deleteAnswered(c, 'refused');
+        await deleteAnswered(c, 'refused');
+        await R8Harness.settle();
+        final receipt = h.disk.hold(insightsKey);
+        final applying = insights(c).apply(shown.id);
+        await receipt.reached;
+        c.invalidate(circleHistoryDeletionProvider);
+        await deleteAnswered(c, 'uncertain_no_land');
+        receipt.release();
+        final result = await applying;
+        await R8Harness.settle();
+        final s = await snapshotOnDisk(shown.id);
+        final made = await targetOnDisk(shown.id);
+        evidence('GATE-3 $family', {
+          'apply': result.name,
+          'diskAttempt': s?['attempt'],
+          'appliedOn': s?['appliedOn'],
+          'targetMade': made,
+        });
+        // Characterization only: no expectation on the outcome.
+      });
+    });

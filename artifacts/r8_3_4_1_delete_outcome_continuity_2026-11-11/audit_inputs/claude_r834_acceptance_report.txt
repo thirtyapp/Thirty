@@ -1,0 +1,175 @@
+# THIRTY — FINAL R8.3.4 INDEPENDENT ACCEPTANCE VERIFICATION
+
+**Verdict: PASS.** All three findings are closed and the commit can be frozen as the R8 technical development baseline, with L-1 explicitly excluded from closure.
+
+## 1. Commit, parent and tree (executed)
+
+| Item | Verified value |
+|---|---|
+| Commit | `dd9000cdd461c41d52a727f323b8e5c1003fefa0` |
+| Sole parent | `285b5c701243e26efb543c68a2981d5e3471edbe` |
+| Tree | `3821edd4a20a52fe0585a80d2d3b72fa1cd6135e` |
+| Live `refs/heads/step5-billing-integration` | `dd9000cd…` (checked with `git ls-remote`) |
+
+I audited a `git -c core.autocrlf=false archive` export only.
+
+## 2. Source and evidence integrity (executed)
+
+**Changed paths: 138.** `COMMIT_PATHS.txt` equals `git diff --name-only`.
+- 3 production files:
+  - `circle_history_deletion.dart`
+  - `insights_provider.dart`
+  - `kept_circles_provider.dart`
+- 1 adapted test: `r833_identity_contract_test.dart`, ID-2, +9/−2. The forced collision that test required can no longer be built, so it now asserts that the collision is prevented. Its decisive assertion — A is never proven — is unchanged.
+- 1 new test: `r834_reproduction_test.dart`.
+- 133 evidence files.
+
+**Untouched:**
+- No `pubspec`, platform, asset, l10n, billing or entitlement path changed.
+- All 180 audio files are unchanged.
+- The R8.3.3 evidence folder and `docs/audits/` are unchanged.
+
+**Manifest:** all 386 entries equal the committed blobs (386/386). The start and end manifests and fingerprints are identical, so the tested bytes are the committed bytes.
+
+**Hashes:**
+- `EVIDENCE_SHA256SUMS.txt`: all 117 entries OK.
+- `COMMIT_VERIFICATION_SHA256SUMS.txt`: all 14 entries OK.
+
+**Auditor inputs:**
+- My post-R8.3.3 probe file: the copy in the evidence has `f727ef8d…`, the same bytes as my scratchpad original.
+- Astra's original probe (`7a0b7ae8…`) and its disclosed corrected copy (`5f69ef87…`) are kept separate.
+
+## 3. Executed versus unexecuted
+
+**Executed on Flutter 3.44.8:**
+- `flutter analyze`: clean.
+- The full suite on the clean export.
+- The r834 and r833 suites, and the implementer's gate probes, on both R8.3.3 and R8.3.4.
+- Astra's original and corrected probes.
+- My earlier probe files, unedited: post-R8.2, post-R8.3, post-R8.3.2 and post-R8.3.3.
+- 17 new probes, listed under §4–6.
+
+**Not executed:** real Android process kill, device storage faults, S25, TalkBack and billing.
+
+**N/A, not counted as passes:**
+
+| Test | Why it is N/A |
+|---|---|
+| GATE-A1 | Production never shows two current I4s at once, on either tree. |
+| Astra's original same-source probe | Its forced-collision precondition can no longer be built. |
+| My X4 | The precondition can't be built (unchanged). |
+
+**Superseded, not passing:**
+- Original AUD-O3: superseded by N01-C.
+- My old P1: kept as historical evidence. On R8.3.4 it fails by design, because the I3 now completes correctly. P1R replaces it.
+
+## 4. R833-A02 — I4 action identity: **PASS**
+
+**How it works in the source:**
+- `_keep` allocates with `avoiding: _attemptKeptIds()`, which covers every receipt.
+- The receipt enters `state` in the same synchronous step as the allocation (`_recordAttempt` → `_set`).
+- Proof additionally requires that exactly one snapshot's receipt names the id.
+
+**Executed evidence:**
+- **Astra's corrected same-source probe:** 6/6. `collided:false`, and the older snapshot stays unproven with its receipt.
+- **My A2-1:** with a stuck clock and random source and an uncertain I4-A:
+  - a user Keep gets the untagged base id;
+  - I4-B gets `…-insight-1`;
+  - A is never proven, and no id is duplicated.
+- **GATE-A1b (concurrent applications):** passes on R8.3.4. On R8.3.3, B is lost.
+- **r834 tests:**
+  - A02-1/2: restart;
+  - A02-3: two receipts naming one id prove neither;
+  - A02-6: a retained record is never proof.
+- **Legacy duplicates:** still preserved without mutation (A02-B2 and A02-E pass).
+
+## 5. R833-A01 / AUD-R833-1 — Delete intent outcome: **PASS**
+
+All results below were executed for both I3 and I4.
+
+| Intent outcome | Result |
+|---|---|
+| **Confirmed** (P1C) | `notAvailable`; nothing made; the snapshot and receipt are deleted; no key names the id. |
+| **Refused** (P1R, the replacement for P1) | Completes `done`; Applied; receipt cleared; retry `alreadyApplied`. History is untouched. |
+| **Uncertain, not landed** (P1U) | `notAvailable`; receipt kept; action not made. The retry is `notAvailable`, and after a restart the Insight is stale (never replayed). |
+| **Uncertain, landed** (P1A) | Stops; the next start finishes the Delete, and nothing names the id. |
+| **Later confirmed Delete** (P1L) | Removes the receipt left by an uncertain run. |
+| **Target lands while the intent is being recorded, then refused** (P1M) | The final mark is skipped, and the next assess proves the action from its own provenance and clears the receipt. Nothing is stranded (CONTRACTS_R834 §2.5). |
+
+Astra's original intent probes (I3 and I4, accepted and refused) pass 4/4 on R8.3.4. On R8.3.3, both refused cases fail.
+
+## 6. R833-A03 — Reservations and capacity: **PASS**, Gate C erratum confirmed
+
+All results below were executed independently.
+
+| Gate | Setup | Result |
+|---|---|---|
+| **GATE-C1** | 6 stored, two concurrent Keeps | Both succeed; 8 distinct ids. |
+| **GATE-C2** | 7 stored; the 8th pending, then refused | The 9th, asked for during the wait, is refused. The 8th fails and releases. A fresh Keep afterwards succeeds; 8 distinct. |
+| **GATE-C3** | 7 stored; the 8th pending, then confirmed | The 9th is refused both during and after; 8 distinct. |
+
+**Other reservation checks:**
+- **C4** (refused or uncertain write): the reservation is held during the write and released after; no duplicate is stored.
+- **C5** (the same caller id while the first Keep is pending): refused, and one record.
+
+**Erratum:** `GATE_VERIFICATION.md` correctly qualifies `CONTRACTS_R834.md` §3.3 for the failed-8th case. This is a documentation erratum only, not a production defect.
+
+## 7. Prior regressions: not reopened
+
+| Area | Evidence | Status |
+|---|---|---|
+| R832-A01 Delete isolation | r833 30/30; my post-R8.3.3 probes P2–P6 | Holds |
+| R832-A02 Kept ownership | r833 identity tests; P7–P10 | Holds |
+| AUD-R832-1 exact pending Plan save | X1/X2 cancelled with 0 credits; P11–P15 | Holds |
+| R832-G1 lifecycle ABA | Full suite | Holds |
+| R832-B1/B2 Insight retry rules | Full suite; P9 | Holds |
+| Historical credit and paused-Start cases | X3 credited once; my R8.2 probes 8/8 and R8.3 probes 11/11 | Holds |
+| Original AUD-O3 | — | **SUPERSEDED** by N01-C |
+
+## 8. Regression-evidence reconciliation
+
+**My own full run on the clean export:** 207 files, **3,023 passed, 0 failed, 0 skipped**, exit 0. Per-file counts are **identical** to the implementer's run.
+
+**Implementer's raw logs (recounted by me):**
+- 24 logs, every one done=success.
+- 207 files, 3,023 passed.
+- The 13 year-long profiles each ran exactly once.
+- B8 is 6/6.
+- RAW and INVENTORY are OK; the only change against R8.3.3 is r834 (+24).
+
+**Failing-before:** on R8.3.3, r834 gives 8 behavioral failures, 16 passes and 0 preconditions, as reported.
+
+## 9. New contract-relevant findings
+
+**None.**
+
+The following are recorded only, not blocking:
+- **AUD-R833-2 (legacy duplicate Rename/Remove is a silent no-op):** still open. It is outside this scope and founder-accepted.
+- **Pre-existing, unchanged by R8.3.4:** when the Delete intent outcome is uncertain but it actually landed, the UI still gets `HistoryDeletionNotStarted`, yet the next start finishes the deletion (P1A). This is established D3 behavior, not a regression.
+
+## 10. Verdict
+
+**PASS.**
+
+## 11. Baseline freeze
+
+**Yes.** `dd9000cdd461c41d52a727f323b8e5c1003fefa0` may be frozen as THIRTY's R8 technical development baseline. **L-1 is explicitly excluded from that closure.**
+
+## 12. Remaining pre-release blockers
+
+- **L-1: OPEN — PRE-RELEASE BLOCKER — NOT FIXED — NOT WAIVED.** Wholly unreadable Preferences survive Delete and are left out of Export.
+- RL-4.
+- Real Android process-kill and storage validation.
+- S25 and TalkBack.
+- Real Premium billing and restore.
+- Privacy, analytics, retention, migration and backup validation.
+- Localization and audio QA.
+- The final release security review.
+- The legacy duplicate-id ownership limits (AUD-R833-2).
+- The accepted conservative handling of uncertain writes (stale Insights).
+
+This PASS is not commercial-release authorization. **Commercial release remains unauthorized, and Phase E remains HOLD.**
+
+---
+
+I worked read-only: nothing was staged, committed or pushed. My probes are in `C:\Users\thoma\AppData\Local\Temp\claude\b7fd4c17e92f619e\fb8ede49-7c3e-4112-b879-89d56ac06d0e\scratchpad\p834\test\zz_audit\audit_r834_final_test.dart`. Raw outputs are in `C:\Users\thoma\AppData\Local\Temp\claude\b7fd4c17e92f619e\fb8ede49-7c3e-4112-b879-89d56ac06d0e\scratchpad\out834\`.

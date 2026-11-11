@@ -1,0 +1,191 @@
+{
+ "files": {
+  "test/core/world_rendering/quiet_trail_hero_asset_view_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/world_rendering/quiet_trail_hero_view_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/catalog/quiet_trail_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/daypart_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/place_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/reference/quiet_trail_hero_scene_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/registered_worlds_test.dart": {
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/world_art_manifest_test.dart": {
+   "passed": 12,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/world_registry_test.dart": {
+   "passed": 15,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/world_scene_policy_test.dart": {
+   "passed": 4,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/worlds/world_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/b8/b8_delete_longitudinal_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 88,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/core/world_rendering/quiet_trail_hero_asset_view_test.dart": [
+   "QuietTrailHeroAssetView renders without exceptions",
+   "QuietTrailHeroAssetView clips the illustration to a circle",
+   "QuietTrailHeroAssetView uses the approved master illustration asset",
+   "QuietTrailHeroAssetView preserves a square aspect ratio at any given size",
+   "QuietTrailHeroAssetView is decorative and carries no semantic content"
+  ],
+  "test/core/world_rendering/quiet_trail_hero_view_test.dart": [
+   "QuietTrailHeroView renders without exceptions at a small size",
+   "QuietTrailHeroView renders without exceptions at a large size",
+   "QuietTrailHeroView remains inside the bounds it is given",
+   "QuietTrailHeroView is decorative and carries no semantic content",
+   "QuietTrailHeroView renders every documented scene variation without throwing",
+   "QuietTrailHeroView does not require a ProviderScope or recommendation state"
+  ],
+  "test/core/worlds/catalog/quiet_trail_test.dart": [
+   "quietTrail matches WORLD_SYSTEM.md's Walking World v1 identity",
+   "quietTrailWorld is identified by its World ID and serves walking",
+   "quietTrailWorld owns quiet_trail.walk, implementing the walk role"
+  ],
+  "test/core/worlds/daypart_test.dart": [
+   "daypartAt 00:00 is evening",
+   "daypartAt 02:00 is evening",
+   "daypartAt 04:59 is evening",
+   "daypartAt 05:00 is morning",
+   "daypartAt 11:59 is morning",
+   "daypartAt 12:00 is afternoon",
+   "daypartAt 17:59 is afternoon",
+   "daypartAt 18:00 is evening",
+   "daypartAt 23:59 is evening"
+  ],
+  "test/core/worlds/place_test.dart": [
+   "Place is equal to a Place with identical DNA",
+   "Place is not equal when only the name differs",
+   "Place is not equal when any other DNA field differs \u2014 the display name is not an identity key"
+  ],
+  "test/core/worlds/reference/quiet_trail_hero_scene_test.dart": [
+   "quietTrailHeroScene contains every approved Quiet Trail Hero layer",
+   "quietTrailHeroScene keeps the bird count within the approved small range",
+   "quietTrailHeroScene is deterministic regardless of unimplemented World modifiers",
+   "quietTrailHeroScene rejects a World for a different Place",
+   "QuietTrailHeroScene invariants rejects fewer than two birds",
+   "QuietTrailHeroScene invariants rejects more than three birds",
+   "QuietTrailHeroScene invariants accepts exactly two or three birds",
+   "QuietTrailHeroScene invariants rejects an out-of-range atmosphereIntensity",
+   "QuietTrailHeroScene invariants rejects an out-of-range vegetationDensity",
+   "QuietTrailHeroScene invariants rejects an out-of-range bird position",
+   "QuietTrailHeroScene invariants rejects a non-positive bird scale",
+   "QuietTrailHeroScene invariants depthLayerCount ignores hidden layers",
+   "quiet_trail_hero_scene.dart has no Flutter dependency"
+  ],
+  "test/core/worlds/registered_worlds_test.dart": [
+   "V1 registered Worlds the registry and policy construct without validation errors",
+   "V1 registered Worlds every V1 role has its approved default Scene",
+   "V1 registered Worlds every default Scene implements its role",
+   "V1 registered Worlds every registered World declares at least one category and Scene"
+  ],
+  "test/core/worlds/world_art_manifest_test.dart": [
+   "V1 World art \u2014 completeness (ADR-018: 9 \u00d7 2 \u00d7 3 = 54) there are exactly 9 registered Scenes and each has artwork",
+   "V1 World art \u2014 completeness (ADR-018: 9 \u00d7 2 \u00d7 3 = 54) exactly 54 distinct asset paths are mapped",
+   "V1 World art \u2014 completeness (ADR-018: 9 \u00d7 2 \u00d7 3 = 54) every Scene has exactly one Hero and one Card per Daypart, named for its own World, Scene, expression and Daypart",
+   "V1 World art \u2014 completeness (ADR-018: 9 \u00d7 2 \u00d7 3 = 54) every mapped asset exists on disk",
+   "V1 World art \u2014 completeness (ADR-018: 9 \u00d7 2 \u00d7 3 = 54) every mapped asset is in the Flutter asset bundle, and no source or exploration artwork is",
+   "V1 World art \u2014 completeness (ADR-018: 9 \u00d7 2 \u00d7 3 = 54) no mapped asset is exploration, source or legacy artwork",
+   "daypartArtworkSuffix afternoon artwork is named \"day\"",
+   "WorldArtManifest \u2014 validation accepts artwork for every registered Scene",
+   "WorldArtManifest \u2014 validation a registered Scene without artwork fails \u2014 no fallback",
+   "WorldArtManifest \u2014 validation artwork for an unregistered Scene fails",
+   "WorldArtManifest \u2014 validation one asset mapped twice fails \u2014 never duplicated to fill a gap",
+   "WorldArtManifest \u2014 validation art() for a Scene without artwork throws"
+  ],
+  "test/core/worlds/world_registry_test.dart": [
+   "WorldRegistry exposes registered Worlds and Scenes by ID",
+   "WorldRegistry throws a StateError for an unknown World or Scene",
+   "WorldRegistry rejects a duplicate World ID",
+   "WorldRegistry rejects a duplicate Scene ID within one World",
+   "WorldRegistry rejects a Scene whose ID names a different World than its owner",
+   "WorldRegistry rejects the same Scene ID claimed by a second World",
+   "WorldRegistry rejects a malformed World ID \"\"",
+   "WorldRegistry rejects a malformed World ID \"Quiet_trail\"",
+   "WorldRegistry rejects a malformed World ID \"1trail\"",
+   "WorldRegistry rejects a malformed World ID \"quiet-trail\"",
+   "WorldRegistry rejects a malformed World ID \"quiet.trail\"",
+   "WorldRegistry rejects a malformed Scene name",
+   "WorldRegistry rejects a World with no categories",
+   "WorldRegistry rejects a World with no Scenes",
+   "WorldRegistry allows a second World for the same category and role \u2014 forest_path.walk beside quiet_trail.walk"
+  ],
+  "test/core/worlds/world_scene_policy_test.dart": [
+   "DefaultWorldScenePolicy returns the default Scene for a role",
+   "DefaultWorldScenePolicy throws a StateError for a role without a default",
+   "DefaultWorldScenePolicy rejects a default that references an unknown Scene",
+   "DefaultWorldScenePolicy rejects a default whose Scene implements a different role"
+  ],
+  "test/core/worlds/world_test.dart": [
+   "PersonalGrowth zero starts at a completedCircleCount of 0",
+   "PersonalGrowth rejects a negative completedCircleCount",
+   "PersonalGrowth two instances with the same count are equal",
+   "PremiumAtmosphere off and on are distinct and equal to their own values",
+   "World two Worlds composed from the same dimensions are equal",
+   "World changing one dimension makes Worlds unequal",
+   "World copyWith replaces only the given dimensions",
+   "World copyWith with no arguments returns an equal World",
+   "World personalGrowth and premiumAtmosphere vary independently of the rest"
+  ],
+  "test/features/b8/b8_delete_longitudinal_test.dart": [
+   "active at stage 3 after weeks of history: the place, the cycle, kept Circles and leave-outs stay; the evidence goes; the next days build only on what is new",
+   "just before stage 5, with every stage answered \"Very useful\": after the delete, stage 5 is case A over unanswered stages \u2014 no \"you found useful\" claim survives",
+   "an ended cycle with its review: the review and its Insight go, and are never rebuilt; the Plan stays ended at its place",
+   "a Plan the user left: the Leave and its date survive; the review built from deleted evidence does not",
+   "the gentler setting \u2014 an applied setting \u2014 survives Delete; its evidence does not"
+  ]
+ },
+ "batch": 5,
+ "exit": 0,
+ "seconds": 11,
+ "command": "flutter test --concurrency=1 --reporter json test/core/world_rendering/quiet_trail_hero_asset_view_test.dart test/core/world_rendering/quiet_trail_hero_view_test.dart test/core/worlds/catalog/quiet_trail_test.dart test/core/worlds/daypart_test.dart test/core/worlds/place_test.dart test/core/worlds/reference/quiet_trail_hero_scene_test.dart test/core/worlds/registered_worlds_test.dart test/core/worlds/world_art_manifest_test.dart test/core/worlds/world_registry_test.dart test/core/worlds/world_scene_policy_test.dart test/core/worlds/world_test.dart test/features/b8/b8_delete_longitudinal_test.dart",
+ "rawSha256": "c95815462c253c1ac5cc2bfc9ab072031baebde941683f7fc1ba5a1f70c13c16"
+}
