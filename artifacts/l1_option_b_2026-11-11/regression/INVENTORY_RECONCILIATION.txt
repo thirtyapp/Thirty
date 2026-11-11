@@ -1,0 +1,10 @@
+OK       inventory == *_test.dart files under test/ — 210 planned, 210 on disk
+OK       every planned file ran (suite in raw logs) — missing: []
+OK       no suite outside the plan — extra: []
+OK       no (file, test) pair ran twice — 0 repeated
+MISMATCH every result is success — {'success': 3141, 'failure': 2}
+TOTAL tests 3143 in 210 files; results {'success': 3141, 'failure': 2}
+vs artifacts/r8_3_4_1_delete_outcome_continuity_2026-11-11/regression: 3055 → 3143 tests
+  count changed: test/features/l1/l1_delete_recovery_test.dart: 0 → 17
+  count changed: test/features/l1/l1_option_b_ui_test.dart: 0 → 71
+INVENTORY MISMATCH

@@ -303,6 +303,16 @@ The confirmation copy must state this truthfully. No residue from deleted journa
 - History THIRTY can't read can still be exported as stored and deleted. This covers History that is damaged, written by a newer THIRTY, kept only as a preserved copy, or holding records this build can't read.
 - A save of the user's own kept Circles, Plans or Insights that the store doesn't confirm is never shown as saved. The user is told: "This change couldn’t be saved." / "Please try again."
 
+*Amendment 2026-11-11 (L-1 Option B; founder decision of 11 November 2026). A narrow exception, for suggestion preferences THIRTY can't read as a whole:*
+- **Scope.** Only a stored Suggestion Preferences record THIRTY can't interpret as a whole: a newer schema, damaged text, a list field that isn't a list, or a stored value that isn't text. Readable preferences, including one with individual items THIRTY can't read, keep the full contract: Delete Circle history removes every Insight attribution from them, or fails and stays pending.
+- **Preserved, never interpreted.** Such a record is kept exactly as stored. Nothing is removed from it, nothing in it is guessed at, and it is never rewritten into the current schema.
+- **Qualified completion.** Delete Circle history deletes every known History store with its full guarantees, as above. It may then complete although the record can't be checked for links to that History. The user is told so: the History was deleted, the record was kept unchanged, and it can be exported or reset. This is never presented as a verified removal of attribution THIRTY couldn't read.
+- **No retry loop.** The start-up completion of an interrupted Delete never waits on, retries or fails over a record that can't be read. Being unreadable never leaves a Delete pending, and never stops a new Circle.
+- **Always visible.** What THIRTY remembers says so for as long as such a record is stored, from the stored record itself, after any restart. It never claims a Delete took place.
+- **Export.** Copy as text carries the record as stored, under `suggestionPreferencesStored`, with its type: text and lists of text as they are, an int in decimal text, a double as its IEEE-754 bits. This holds even when it is the only thing stored. A copy that can't be made is never announced as copied.
+- **Reset.** The user's own Reset suggestion preferences stays a separate, explicit, destructive action. It is offered for such a record, with its own warning, and with Copy as text before it. The record goes only once the store confirms its removal.
+- No other guarantee in this contract is waived, and no other user data is affected.
+
 ---
 
 ## Circle V2 contract

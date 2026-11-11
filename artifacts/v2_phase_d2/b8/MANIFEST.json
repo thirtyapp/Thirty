@@ -2,13 +2,13 @@
   "artifact": "CONTENT_REVIEW_PACK.md",
   "kind": "REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY",
   "canonicalAuthority": false,
-  "generatedAtUtc": "2026-11-05T10:45:02.076160Z",
-  "gitHead": "58b179c99866e234acd63e4e241590af36b9b186",
+  "generatedAtUtc": "2026-11-11T13:11:11.914908Z",
+  "gitHead": "d9369795a92aa24505c475fa1417d03132300c4a",
   "workingTree": "intentionally uncommitted (B0–B8 for founder review); the pack reflects the working tree, not HEAD",
   "generator": "test/features/b8/b8_review_pack_test.dart",
   "extractor": "test/features/b8/support/live_copy.dart",
   "productionFilesScanned": 160,
-  "copyStringsExtracted": 666,
+  "copyStringsExtracted": 675,
   "sourceFilesInPack": [
     "lib/core/routing/app_shell.dart",
     "lib/features/home/domain/recommendation_engine.dart",
@@ -59,6 +59,6 @@
     "lib/features/settings/presentation/widgets/you_preferences_card.dart",
     "lib/features/settings/presentation/widgets/you_premium_card.dart"
   ],
-  "contentHashFnv64": "-67c392dea0882930",
+  "contentHashFnv64": "-287c1dd6a0e47d33",
   "founderFlags": 4
 }

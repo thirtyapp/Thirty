@@ -1,0 +1,127 @@
+{
+ "files": {
+  "test/features/settings/presentation/you_first_name_test.dart": {
+   "passed": 26,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/features/settings/presentation/you_north_star_test.dart": {
+   "passed": 50,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/main_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/widget_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 80,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/features/settings/presentation/you_first_name_test.dart": [
+   "Personal row \"Personal\" sits after the header and before THIRTY Premium",
+   "Personal row no name: \"Your name\" / \"Add your name\"",
+   "Personal row a stored name shows the actual value",
+   "Personal row no avatar, no account icon, at least 48dp tall",
+   "Editor tapping the row opens the editor: title, supporting copy, labelled empty field, Save disabled, no Remove",
+   "Editor prefilled with the existing name, with Remove name",
+   "Editor Save stores the name and updates You immediately",
+   "Editor the keyboard Done action saves too",
+   "Editor Remove name clears it and returns the row to \"Add your name\" \u2014 no confirmation, nothing else touched",
+   "Editor Remove name is quiet, not destructive red",
+   "Editor Cancel changes nothing, even after typing",
+   "Editor whitespace: a blank field cannot be saved; surrounding spaces are trimmed",
+   "Editor over 40 code points: explained, Save disabled, nothing saved or truncated",
+   "Accessibility \"Personal\" is a header; the row is one button announcing its value",
+   "Accessibility with a name: \"Your name, Thomas\"",
+   "Accessibility the field has an explicit label; Save, Cancel and Remove name are buttons",
+   "Responsive Pixel 7 at 200%, light: the row and the editor fit, with the keyboard up",
+   "Responsive Pixel 7 at 200%, dark: the row and the editor fit, with the keyboard up",
+   "Responsive 360\u00d7740, light: the row and the editor fit, with the keyboard up",
+   "Responsive 360\u00d7740, dark: the row and the editor fit, with the keyboard up",
+   "Responsive 360\u00d7740 at 200%, light: the row and the editor fit, with the keyboard up",
+   "Responsive 360\u00d7740 at 200%, dark: the row and the editor fit, with the keyboard up",
+   "Privacy the Circle export (\"Copy as text\") never includes the name",
+   "Privacy no analytics event carries the name \u2014 through app start, opening You and saving a name",
+   "Privacy \"Delete Circle history\" keeps the name",
+   "YouPersonalCard copy"
+  ],
+  "test/features/settings/presentation/you_north_star_test.dart": [
+   "Header THIRTY wordmark, \"You\" and the exact subtitle \u2014 scrolling with the page, no pinned AppBar, no profile button",
+   "Header the title and every section heading are semantic headers",
+   "Header the band sits edge to edge between the subtitle and the Premium card: the art for the daypart, cover-fit (never stretched) at 2.6:1, and decorative only",
+   "You header art resolves each daypart through THIRTY's own daypart boundaries",
+   "You header art every asset is a bundled WebP of the declared size, and its own \u2014 never another page\u2019s band or a World scene",
+   "You header art the composition-aware crop keeps the oak (about 73% across each panorama) inside the visible window",
+   "You header art at 8:00 You shows assets/you/you_header_morning_v1.webp",
+   "You header art at 14:00 You shows assets/you/you_header_day_v1.webp",
+   "You header art at 21:00 You shows assets/you/you_header_evening_v1.webp",
+   "You header art renders nothing without art",
+   "You header art dimmed slightly in dark mode, full strength in light",
+   "Premium card inactive: the founder-approved body line",
+   "Premium card active: the founder-approved body line",
+   "Premium card unavailable: the founder-approved body line",
+   "Premium card initializing also keeps the body line, with no CTA",
+   "Preferences semantics the reminder row is one control: its label with its switch state, announced once",
+   "Preferences semantics the analytics row is one control: title, explanation and switch state together; still opt-in and Free",
+   "Preferences semantics the selected theme is exposed as selected, in a single-choice group, with a check \u2014 never colour alone",
+   "Preferences semantics choosing Appearance on You persists it",
+   "Data & privacy \"Delete Circle history\" deletes the journal only \u2014 the kept Circles, reminder, appearance, analytics consent and other preferences are kept",
+   "About THIRTY and the real ReleaseInfo version, one quiet node, no link or chevron",
+   "Restore purchases a full-height (48dp) action, and its result is announced as a live region and brought on screen",
+   "Responsive Pixel 7, light, inactive: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive Pixel 7, light, active: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive Pixel 7, light, unavailable: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive Pixel 7, dark, inactive: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive Pixel 7, dark, active: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive Pixel 7, dark, unavailable: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive Pixel 7 at 200%, light, inactive: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive Pixel 7 at 200%, light, active: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive Pixel 7 at 200%, light, unavailable: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive Pixel 7 at 200%, dark, inactive: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive Pixel 7 at 200%, dark, active: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive Pixel 7 at 200%, dark, unavailable: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive 360\u00d7740, light, inactive: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive 360\u00d7740, light, active: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive 360\u00d7740, light, unavailable: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive 360\u00d7740, dark, inactive: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive 360\u00d7740, dark, active: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive 360\u00d7740, dark, unavailable: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive 360\u00d7740 at 200%, light, inactive: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive 360\u00d7740 at 200%, light, active: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive 360\u00d7740 at 200%, light, unavailable: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive 360\u00d7740 at 200%, dark, inactive: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive 360\u00d7740 at 200%, dark, active: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive 360\u00d7740 at 200%, dark, unavailable: no overflow, nothing truncated, Restore reachable at the end",
+   "Responsive dark mode: the destructive row keeps the dark AA errorText role",
+   "In the app shell Pixel 7: scrolled to the end, Restore and its explanation sit fully above the floating nav",
+   "In the app shell 360\u00d7740: scrolled to the end, Restore and its explanation sit fully above the floating nav",
+   "In the app shell 360\u00d7740 at 200%: scrolled to the end, Restore and its explanation sit fully above the floating nav"
+  ],
+  "test/main_test.dart": [
+   "initializeSupabaseIfConfigured resolves to false instead of throwing when Supabase is unconfigured \u2014 this is the exact startup path that must survive a release build with no config/supabase.local.json dart-defines",
+   "initializeSupabaseIfConfigured resolves to false instead of throwing when configured but Supabase.initialize itself fails (e.g. no platform channel/network in this test environment) \u2014 a reachability failure must be just as non-fatal as missing configuration"
+  ],
+  "test/widget_test.dart": [
+   "ThirtyApp starts within a ProviderScope and shows the product entry screen on the root route",
+   "switching ThemeMode via the showcase updates the provider"
+  ]
+ },
+ "batch": 18,
+ "exit": 0,
+ "seconds": 12,
+ "command": "flutter test --concurrency=1 --reporter json test/features/settings/presentation/you_first_name_test.dart test/features/settings/presentation/you_north_star_test.dart test/main_test.dart test/widget_test.dart",
+ "rawSha256": "2df545516a8c513659d84d0426549ff6417c916684f313d4647e8b0d0626da6e"
+}

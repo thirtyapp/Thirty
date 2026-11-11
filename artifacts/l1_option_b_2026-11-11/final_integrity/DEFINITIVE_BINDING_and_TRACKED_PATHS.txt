@@ -1,0 +1,10 @@
+# definitive run blob manifest: 390 entries; raw-byte blobs differing: []
+# 2677 paths tracked at d9369795, hashed raw in the tested tree: changed 8
+  M artifacts/v2_phase_d2/b8/CONTENT_REVIEW_PACK.md
+  M artifacts/v2_phase_d2/b8/MANIFEST.json
+  M docs/product/PRODUCT_V2_CONTRACT.md
+  M lib/features/home/application/circle_journal.dart
+  M lib/features/home/application/suggestion_preferences.dart
+  M lib/features/home/presentation/memory_page.dart
+  M lib/features/home/presentation/widgets/journal_data_controls.dart
+  M lib/features/settings/presentation/widgets/you_data_card.dart

@@ -1,0 +1,63 @@
+{
+ "inventoryFiles": 210,
+ "coveredFiles": 210,
+ "notRun": [],
+ "unexpected": [],
+ "declaredParts": {
+  "20": [
+   [
+    "a",
+    "p0[1-3]_"
+   ],
+   [
+    "b",
+    "p0[4-6]_"
+   ],
+   [
+    "c",
+    "p0[7-9]_"
+   ],
+   [
+    "d",
+    "p1[01]_"
+   ],
+   [
+    "e",
+    "p1[34]_"
+   ]
+  ]
+ },
+ "missing": [],
+ "stray": [],
+ "wrongIdentity": [],
+ "wrongCommand": [],
+ "wrongFiles": [],
+ "incomplete": [],
+ "emptyRuns": [],
+ "nonZeroExit": [
+  "batch_06.summary.json"
+ ],
+ "doneNotSuccess": [
+  "batch_06.summary.json"
+ ],
+ "caseCoverage": [],
+ "rawLog": [
+  "batch_06.summary.json: terminal done is not success"
+ ],
+ "caseDetail": {
+  "test/features/personal_circle/personal_circle_simulation_test.dart": {
+   "declared": 13,
+   "ran": 13,
+   "eachExactlyOnce": true,
+   "notRun": [],
+   "repeated": [],
+   "undeclared": []
+  }
+ },
+ "totals": {
+  "passed": 3141,
+  "failed": 2,
+  "skipped": 0
+ }
+}
+EVIDENCE MISMATCH

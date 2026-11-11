@@ -1,0 +1,468 @@
+// L-1 READ-ONLY DISCOVERY PROBE (disposable; never part of the repository).
+// Frozen tree d9369795. Characterises Delete Circle history against wholly
+// unreadable Suggestion Preferences records. Prints one `L1-EVIDENCE` JSON
+// line per observation; asserts only fixture preconditions.
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:thirty/core/storage/store_save_failures.dart';
+import 'package:thirty/core/utils/date_key.dart';
+import 'package:thirty/features/home/application/activity_catalog.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/suggestion_preferences.dart';
+import 'package:thirty/features/home/domain/recommendation_engine.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart';
+import 'package:thirty/features/insights/domain/insight.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/personal_circle/domain/circle_elements.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/plans/domain/circle_plan.dart';
+
+import '../support/r8_fault_disk.dart';
+import '../support/r8_harness.dart';
+
+final fixtureFile = File(
+  Platform.environment['L1_FIXTURE'] ?? 'l1_fixture.json',
+);
+
+void ev(String tag, Map<String, Object?> facts) =>
+    // ignore: avoid_print
+    print('L1-EVIDENCE ${jsonEncode({'case': tag, ...facts})}');
+
+void main() {
+  final morning = DateTime(2026, 10, 30, 9);
+  late R8Harness h;
+
+  CirclePart part(ElementId e) => CirclePart(e, elementOf(e).minutes);
+  final window = [
+    part(ElementId.openWindow),
+    part(ElementId.standingStretch),
+    part(ElementId.sitAMinute),
+  ];
+  final reading = [part(ElementId.phoneFaceDown), part(ElementId.readPages)];
+
+  CircleJournalEntry entry(
+    int ago,
+    Intention need, {
+    List<CirclePart> parts = const [],
+    Set<ElementId> skipped = const {},
+  }) {
+    final date = morning.subtract(Duration(days: ago));
+    return CircleJournalEntry(
+      schemaVersion: circleJournalSchemaVersion,
+      circleId: dateKey(date),
+      localDate: dateKey(date),
+      direction: need,
+      activityId: ActivityId.values.first,
+      catalogVersion: catalogVersion,
+      shownAt: date,
+      startedAt: date,
+      closedAt: date,
+      session: parts.isEmpty
+          ? null
+          : CircleSessionRecord(
+              title: 'Circle',
+              parts: CirclePlan(parts).toWire(),
+              skipped: [for (final e in skipped) e.name],
+            ),
+    );
+  }
+
+  final manualNotSuggested = {
+    'activityId': ActivityId.values.first.name,
+    'need': Intention.moreEnergy.name,
+    'since': '2026-10-01T09:00:00.000',
+  };
+  final manualLeftOut = {
+    'elementId': ElementId.readPages.name,
+    'since': '2026-10-02T09:00:00.000',
+    'futureItemField': 'kept',
+  };
+
+  /// Real History, a real I3 applied through the production path (so the
+  /// Insight id and its `byInsight` are THIRTY's own), a started Plan and a
+  /// kept Circle. Returns the whole durable store and the Insight id.
+  Future<(Map<String, Object>, String)> seed() async {
+    h = R8Harness(morning);
+    await h.boot({
+      circleJournalKey: jsonEncode({
+        'schemaVersion': circleJournalSchemaVersion,
+        'entries': [
+          for (final ago in [2, 4, 6, 8, 10, 12, 15])
+            entry(ago, Intention.clearerHead, parts: reading).toJson(),
+          for (final (k, ago) in [1, 5, 9, 11].indexed)
+            entry(
+              ago,
+              Intention.moreEnergy,
+              parts: window,
+              skipped: k == 1 ? const {} : {ElementId.openWindow},
+            ).toJson(),
+        ],
+      }),
+      suggestionPreferencesKey: jsonEncode({
+        'schemaVersion': suggestionPreferencesSchemaVersion,
+        'notSuggested': [manualNotSuggested],
+        'elementsLeftOut': [manualLeftOut],
+        'futureTopField': 1,
+      }),
+    });
+    final c = h.open();
+    final shown = c.read(insightsProvider.notifier).assess().added.single;
+    expect(shown.family, InsightFamily.skippedPart);
+    await R8Harness.settle();
+    expect(
+      await c.read(insightsProvider.notifier).apply(shown.id),
+      InsightActionResult.done,
+    );
+    await R8Harness.settle();
+    expect(
+      c.read(circlePlansProvider.notifier).start('getting_going'),
+      PlanActionResult.done,
+    );
+    await R8Harness.settle();
+    final kept = await c
+        .read(keptCirclesProvider.notifier)
+        .keepCircle(
+          plan: CirclePlan(window),
+          need: Intention.moreEnergy,
+          circleId: entry(1, Intention.moreEnergy).circleId,
+        );
+    expect(kept, isNotNull);
+    await R8Harness.settle();
+    final stored = await h.disk.stored();
+    c.dispose();
+    return (stored, shown.id);
+  }
+
+  late Map<String, Object> base;
+  late String insightId;
+  late Map<String, Object> variants;
+
+  setUpAll(() async {
+    (base, insightId) = await seed();
+    fixtureFile.writeAsStringSync(
+      const JsonEncoder.withIndent(' ').convert({
+        'insightId': insightId,
+        'store': base,
+      }),
+    );
+    final v1 =
+        jsonDecode(base[suggestionPreferencesKey]! as String)
+            as Map<String, Object?>;
+    final leftOutWithId = (v1['elementsLeftOut']! as List)
+        .cast<Map<String, Object?>>()
+        .firstWhere((e) => e['byInsight'] == insightId);
+    variants = {
+      'A_v1_readable_control': base[suggestionPreferencesKey]!,
+      'B_newer_schema_v2': jsonEncode({
+        ...v1,
+        'schemaVersion': suggestionPreferencesSchemaVersion + 1,
+        'futureV2Field': {'meaning': 'unknown to this build'},
+      }),
+      'C_malformed_json': (base[suggestionPreferencesKey]! as String)
+          .substring(
+            0,
+            (base[suggestionPreferencesKey]! as String).length - 3,
+          ),
+      'D_top_level_list_shape_invalid': jsonEncode({
+        ...v1,
+        'elementsLeftOut': {'0': leftOutWithId, '1': manualLeftOut},
+      }),
+      'E1_non_string_string_list': <String>[
+        jsonEncode(leftOutWithId),
+        jsonEncode(manualNotSuggested),
+      ],
+      'E2_non_string_int': 42,
+      'F_readable_with_unreadable_item_control': jsonEncode({
+        ...v1,
+        'elementsLeftOut': [
+          ...(v1['elementsLeftOut']! as List),
+          {
+            'elementId': 'partFromANewerBuild',
+            'since': '2026-10-03T09:00:00.000',
+            'byInsight': insightId,
+          },
+        ],
+      }),
+    };
+  });
+
+  String? asText(Object? v) => v == null
+      ? null
+      : v is String
+      ? v
+      : jsonEncode(v);
+
+  Future<Map<String, Object?>> durable(ProviderContainer? c) async {
+    final s = await h.disk.stored();
+    final plansRaw = s[circlePlansKey];
+    Map? plan;
+    if (plansRaw is String) {
+      final all = (jsonDecode(plansRaw) as Map)['plans'] as Map?;
+      plan = all == null ? null : all['getting_going'] as Map?;
+    }
+    final kept = s[keptCirclesKey];
+    return {
+      'pendingMarker': s[historyDeletionPendingKey],
+      'journalPresent': s.containsKey(circleJournalKey),
+      'insightsKeyPresent': s.containsKey(insightsKey),
+      'planPresent': plan != null,
+      'planLifecycle': plan?['lifecycle'],
+      'planAppliedInsight': plan?['appliedInsight'],
+      'keptCount': kept is String
+          ? ((jsonDecode(kept) as Map)['kept'] as List?)?.length
+          : null,
+      'prefsRawAfter': asText(s[suggestionPreferencesKey]),
+      'prefsRawType': s[suggestionPreferencesKey]?.runtimeType.toString(),
+      'prefsStillNamesInsight': '${s[suggestionPreferencesKey]}'.contains(
+        insightId,
+      ),
+      'anyOtherKeyNamesInsight': [
+        for (final MapEntry(:key, :value) in s.entries)
+          if (key != suggestionPreferencesKey && '$value'.contains(insightId))
+            key,
+      ],
+      if (c != null) ...{
+        'providerLeftOut': [
+          for (final e in c.read(suggestionPreferencesProvider).leftOut) e.name,
+        ],
+        'providerIsEmpty': c.read(suggestionPreferencesProvider).isEmpty,
+        'insightsStateEmpty': c.read(insightsProvider).isEmpty,
+        'deletionIsPending': c.read(circleHistoryDeletionProvider).isPending,
+        'unsavedStores': [
+          for (final u in c.read(storeSaveFailuresProvider).unsaved) u.name,
+        ],
+        'saveFailureNoticeCount': c.read(storeSaveFailuresProvider).count,
+      },
+    };
+  }
+
+  Future<String> runDelete(ProviderContainer c) async {
+    try {
+      await c.read(circleHistoryDeletionProvider).delete();
+      return 'completed';
+    } on HistoryDeletionNotStarted {
+      return 'threw HistoryDeletionNotStarted';
+    } catch (e) {
+      return 'threw $e';
+    }
+  }
+
+  group('L-1A Delete matrix', () {
+    for (final name in [
+      'A_v1_readable_control',
+      'B_newer_schema_v2',
+      'C_malformed_json',
+      'D_top_level_list_shape_invalid',
+      'E1_non_string_string_list',
+      'E2_non_string_int',
+      'F_readable_with_unreadable_item_control',
+    ]) {
+      test(name, () async {
+        final raw = variants[name]!;
+        h = R8Harness(morning);
+        await h.boot({...base, suggestionPreferencesKey: raw});
+        final c = h.open();
+        final read = SuggestionPreferences.tryRead(
+          h.prefs.get(suggestionPreferencesKey),
+        );
+        final before = await durable(c);
+        expect(before['journalPresent'], isTrue);
+        expect(before['insightsKeyPresent'], isTrue);
+        expect(before['planPresent'], isTrue);
+        expect(before['keptCount'], 1);
+        // Export button condition, before Delete (journal.holdsHistory etc.)
+        final enabledBefore =
+            c.read(circleJournalRepositoryProvider).holdsHistory ||
+            !c.read(suggestionPreferencesProvider).isEmpty;
+        final attemptsBefore = h.disk.attempts.length;
+        final result = await runDelete(c);
+        await R8Harness.settle();
+        final prefsAttempts = [
+          for (final a in h.disk.attempts.skip(attemptsBefore))
+            if (a.endsWith(' $suggestionPreferencesKey')) a,
+        ];
+        final live = await durable(c);
+        await h.restart();
+        final c2 = h.open();
+        final restarted = await durable(c2);
+        ev('DELETE/$name', {
+          'rawBefore': asText(raw),
+          'rawBeforeType': raw.runtimeType.toString(),
+          'readable': read != null,
+          'withoutInsightProvenanceNonNull':
+              read?.withoutInsightProvenance() != null,
+          'rawNamesInsight': '$raw'.contains(insightId),
+          'providerIsEmptyBefore': before['providerIsEmpty'],
+          'providerLeftOutBefore': before['providerLeftOut'],
+          'deleteResult': result,
+          'prefsWritesAttemptedByDelete': prefsAttempts,
+          'prefsBytesUnchanged':
+              asText(live['prefsRawAfter']) == asText(raw) &&
+              live['prefsRawType'] == raw.runtimeType.toString(),
+          'live': live,
+          'afterRestart': restarted,
+          'exportEnabledBeforeHoldsHistoryOrPrefs': enabledBefore,
+        });
+      });
+    }
+  });
+
+  group('L-1A recovery and failure semantics (case B unless named)', () {
+    Future<ProviderContainer> bootCase(String name) async {
+      h = R8Harness(morning);
+      await h.boot({...base, suggestionPreferencesKey: variants[name]!});
+      return h.open();
+    }
+
+    test('R1 interrupted after the pending marker is confirmed', () async {
+      final c = await bootCase('B_newer_schema_v2');
+      h.disk.stopAfter = h.disk.log.length + 1;
+      c.read(circleHistoryDeletionProvider).delete().ignore();
+      await R8Harness.settle();
+      final mid = await durable(null);
+      await h.restart();
+      final c2 = h.open();
+      ev('RECOVERY/R1_interrupted_after_marker', {
+        'atStop': mid,
+        'afterStartupCompletion': await durable(c2),
+      });
+    });
+
+    test('R2 a required step returns false (journal removal), then a '
+        'healed restart', () async {
+      final c = await bootCase('B_newer_schema_v2');
+      h.disk.fail(circleJournalKey, DiskFault.returnsFalse);
+      final result = await runDelete(c);
+      await R8Harness.settle();
+      final live = await durable(c);
+      h.disk.healAll();
+      await h.restart();
+      ev('RECOVERY/R2_step_refused', {
+        'deleteResult': result,
+        'live': live,
+        'afterHealedRestart': await durable(h.open()),
+      });
+    });
+
+    test('R3 a required step throws after landing (ack lost on the journal '
+        'removal)', () async {
+      final c = await bootCase('B_newer_schema_v2');
+      h.disk.ackLost(circleJournalKey);
+      final result = await runDelete(c);
+      await R8Harness.settle();
+      final live = await durable(c);
+      await h.restart();
+      ev('RECOVERY/R3_step_ack_lost', {
+        'deleteResult': result,
+        'live': live,
+        'afterRestart': await durable(h.open()),
+      });
+    });
+
+    test('R4 the preferences key itself refuses every write: Delete never '
+        'attempts it on an unreadable record (B) vs readable (A)', () async {
+      for (final name in ['B_newer_schema_v2', 'A_v1_readable_control']) {
+        final c = await bootCase(name);
+        h.disk.fail(suggestionPreferencesKey, DiskFault.returnsFalse);
+        final n = h.disk.attempts.length;
+        final result = await runDelete(c);
+        await R8Harness.settle();
+        ev('RECOVERY/R4_prefs_key_refuses/$name', {
+          'deleteResult': result,
+          'prefsAttempts': [
+            for (final a in h.disk.attempts.skip(n))
+              if (a.endsWith(' $suggestionPreferencesKey')) a,
+          ],
+          'live': await durable(c),
+        });
+      }
+    });
+
+    test('R5 startup completion directly against each unreadable record '
+        '(marker pre-set, as after a crash)', () async {
+      for (final name in [
+        'B_newer_schema_v2',
+        'C_malformed_json',
+        'D_top_level_list_shape_invalid',
+        'E1_non_string_string_list',
+        'E2_non_string_int',
+      ]) {
+        h = R8Harness(morning);
+        await h.boot({
+          ...base,
+          suggestionPreferencesKey: variants[name]!,
+          historyDeletionPendingKey: true,
+        });
+        Object? error;
+        try {
+          await completeInterruptedHistoryDeletion(h.prefs);
+        } catch (e) {
+          error = e;
+        }
+        final s = await h.disk.stored();
+        ev('RECOVERY/R5_startup_completion/$name', {
+          'error': '$error',
+          'markerAfter': s[historyDeletionPendingKey],
+          'prefsBytesUnchanged':
+              asText(s[suggestionPreferencesKey]) == asText(variants[name]),
+          'journalPresent': s.containsKey(circleJournalKey),
+          'insightsKeyPresent': s.containsKey(insightsKey),
+        });
+      }
+    });
+
+    test('R6 repeated startup with a step that can never be confirmed: '
+        'the marker persists and every start blocks a new Circle '
+        '(characterises what a fail-closed step that never succeeds does)',
+        () async {
+      final c = await bootCase('B_newer_schema_v2');
+      h.disk.fail(circleJournalKey, DiskFault.returnsFalse);
+      await runDelete(c);
+      await R8Harness.settle();
+      final rounds = <Map<String, Object?>>[];
+      for (var i = 0; i < 3; i++) {
+        await h.restart(keepFaults: true);
+        final ci = h.open();
+        final resolved = await ci
+            .read(circleHistoryDeletionProvider)
+            .resolvePending();
+        rounds.add({
+          'round': i + 1,
+          'markerAfterStartup': (await h.disk.stored())[historyDeletionPendingKey],
+          'isPending': ci.read(circleHistoryDeletionProvider).isPending,
+          'resolvePendingBeforeNewCircle': resolved,
+        });
+      }
+      ev('RECOVERY/R6_repeated_startup_never_confirmable', {'rounds': rounds});
+    });
+
+    test('R7 what the user can do afterwards: a preference change and Reset '
+        'against the record (B) after Delete', () async {
+      final c = await bootCase('B_newer_schema_v2');
+      await runDelete(c);
+      await R8Harness.settle();
+      final prefs = c.read(suggestionPreferencesProvider.notifier);
+      final dont = await prefs.dontSuggest(
+        ActivityId.values.last,
+        Intention.gentlerPace,
+      );
+      await R8Harness.settle();
+      final afterDont = await durable(c);
+      final reset = await prefs.reset();
+      await R8Harness.settle();
+      ev('RECOVERY/R7_user_paths_after_delete', {
+        'dontSuggestSaved': dont,
+        'afterDontSuggest': afterDont,
+        'resetResult': reset,
+        'afterReset': await durable(c),
+        'note':
+            'reset() called on the notifier directly; whether the UI shows '
+            'the Reset control is probed in the widget probe',
+      });
+    });
+  });
+}

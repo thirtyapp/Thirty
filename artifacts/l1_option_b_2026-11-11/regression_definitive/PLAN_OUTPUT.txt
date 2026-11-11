@@ -1,0 +1,1 @@
+210 test files in 20 batches -> artifacts\l1_option_b_2026-11-11\regression_definitive\batch_plan.json; parts: {'20': [['a', 'p0[1-3]_'], ['b', 'p0[4-6]_'], ['c', 'p0[7-9]_'], ['d', 'p1[01]_'], ['e', 'p1[34]_']]}

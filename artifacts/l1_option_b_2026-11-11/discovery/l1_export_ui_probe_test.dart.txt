@@ -1,0 +1,271 @@
+// L-1 READ-ONLY DISCOVERY PROBE (disposable; never part of the repository).
+// Frozen tree d9369795. The real Export construction path (tapping "Copy as
+// text" in You > Data & privacy and in Circle history), the real Delete UI
+// outcome, and whether "Reset suggestion preferences" is offered, for each
+// Suggestion Preferences record shape. Prints `L1-EVIDENCE` JSON lines.
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:thirty/core/premium/entitlement_status.dart';
+import 'package:thirty/core/premium/premium_access.dart';
+import 'package:thirty/core/providers/clock_provider.dart';
+import 'package:thirty/core/providers/shared_preferences_provider.dart';
+import 'package:thirty/core/theme/app_theme.dart';
+import 'package:thirty/features/home/application/circle_history_deletion.dart';
+import 'package:thirty/features/home/application/circle_journal.dart';
+import 'package:thirty/features/home/application/recommendation_provider.dart';
+import 'package:thirty/features/home/application/suggestion_preferences.dart';
+import 'package:thirty/features/home/presentation/memory_page.dart';
+import 'package:thirty/features/home/presentation/widgets/journal_data_controls.dart';
+import 'package:thirty/features/personal_circle/application/kept_circles_provider.dart';
+import 'package:thirty/features/plans/application/circle_plans_provider.dart';
+import 'package:thirty/features/insights/application/insights_provider.dart';
+import 'package:thirty/features/settings/presentation/widgets/you_data_card.dart';
+
+import '../support/r8_harness.dart' show SettableEntitlement;
+
+void ev(String tag, Map<String, Object?> facts) =>
+    // ignore: avoid_print
+    print('L1-EVIDENCE ${jsonEncode({'case': tag, ...facts})}');
+
+void main() {
+  final fixture =
+      jsonDecode(
+            File(
+              Platform.environment['L1_FIXTURE'] ?? 'l1_fixture.json',
+            ).readAsStringSync(),
+          )
+          as Map<String, Object?>;
+  final insightId = fixture['insightId']! as String;
+  final base = (fixture['store']! as Map).cast<String, Object>();
+  final v1Raw = base[suggestionPreferencesKey]! as String;
+  final v1 = jsonDecode(v1Raw) as Map<String, Object?>;
+  final leftOut = (v1['elementsLeftOut']! as List).cast<Map<String, Object?>>();
+  final withId = leftOut.firstWhere((e) => e['byInsight'] == insightId);
+  final manual = leftOut.firstWhere((e) => e['byInsight'] == null);
+  final morning = DateTime(2026, 10, 30, 9);
+
+  final variants = <String, Object>{
+    'A_v1_readable_control': v1Raw,
+    'B_newer_schema_v2': jsonEncode({
+      ...v1,
+      'schemaVersion': suggestionPreferencesSchemaVersion + 1,
+      'futureV2Field': {'meaning': 'unknown to this build'},
+    }),
+    'C_malformed_json': v1Raw.substring(0, v1Raw.length - 3),
+    'D_top_level_list_shape_invalid': jsonEncode({
+      ...v1,
+      'elementsLeftOut': {'0': withId, '1': manual},
+    }),
+    'E1_non_string_string_list': <String>[
+      jsonEncode(withId),
+      jsonEncode((v1['notSuggested']! as List).single),
+    ],
+    'E2_non_string_int': 42,
+    'F_readable_with_unreadable_item_control': jsonEncode({
+      ...v1,
+      'elementsLeftOut': [
+        ...leftOut,
+        {
+          'elementId': 'partFromANewerBuild',
+          'since': '2026-10-03T09:00:00.000',
+          'byInsight': insightId,
+        },
+      ],
+    }),
+  };
+
+  late List<String> copied;
+
+  Future<(ProviderContainer, SharedPreferences)> pump(
+    WidgetTester tester,
+    Map<String, Object> stored,
+    Widget home,
+  ) async {
+    copied = [];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied.add((call.arguments as Map)['text'] as String);
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    SharedPreferences.setMockInitialValues(stored);
+    final prefs = await SharedPreferences.getInstance();
+    final c = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        nowProvider.overrideWithValue(morning),
+        eventClockProvider.overrideWithValue(() => morning),
+        entitlementStatusProvider.overrideWith(
+          () => SettableEntitlement(EntitlementStatus.active),
+        ),
+        safetyPendingAllowedProvider.overrideWithValue(false),
+      ],
+    );
+    addTearDown(c.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: c,
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: home is MemoryPage
+              ? home
+              : Scaffold(body: SingleChildScrollView(child: home)),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    return (c, prefs);
+  }
+
+  String text(Object? v) => v is String ? v : jsonEncode(v);
+
+  Map<String, Object?> exportFacts(Object raw) {
+    if (copied.isEmpty) return {'copied': false};
+    final out = jsonDecode(copied.last) as Map<String, Object?>;
+    final sp = out['suggestionPreferences'];
+    final whole = copied.last;
+    return {
+      'copied': true,
+      'topLevelKeys': out.keys.toList(),
+      'hasSuggestionPreferences': out.containsKey('suggestionPreferences'),
+      'exportedPreferences': sp,
+      'exportNamesInsightAnywhere': whole.contains(insightId),
+      'exportCarriesFutureV2Field': whole.contains('futureV2Field'),
+      'exportCarriesRawVerbatimAnywhere': raw is String
+          ? _deepContainsString(out, raw)
+          : '$raw' == '42'
+          ? false
+          : null,
+      'manualNotSuggestedExported': jsonEncode(sp).contains(
+        'thirtyMinuteWalk',
+      ),
+      'manualLeftOutExported': jsonEncode(sp).contains('readPages'),
+    };
+  }
+
+  for (final MapEntry(key: name, value: raw) in variants.entries) {
+    for (final (where, controls, deleteLabel) in [
+      ('You', const YouDataCard(), 'Delete Circle history'),
+      ('History', const JournalDataControls(), 'Delete all'),
+    ]) {
+      testWidgets('EXPORT+DELETE UI/$where/$name', (tester) async {
+        final (c, prefs) = await pump(tester, {
+          ...base,
+          suggestionPreferencesKey: raw,
+        }, controls);
+        final providerEmpty = c.read(suggestionPreferencesProvider).isEmpty;
+        await tester.tap(find.text('Copy as text'));
+        await tester.pumpAndSettle();
+        final before = exportFacts(raw);
+        final snackBefore = find
+            .text('Copied your Circle history as text.')
+            .evaluate()
+            .isNotEmpty;
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text(deleteLabel));
+        await tester.pumpAndSettle();
+        final confirmShown = find
+            .text('Delete your Circle history?')
+            .evaluate()
+            .isNotEmpty;
+        await tester.tap(find.text('Delete permanently'));
+        await tester.pumpAndSettle();
+        final unfinished = find.text(deleteUnfinishedTitle).evaluate().isNotEmpty;
+        final notStarted = find.text(deleteNotStartedTitle).evaluate().isNotEmpty;
+        final anyDialog = find.byType(Dialog).evaluate().isNotEmpty;
+        final prefsAfter = prefs.get(suggestionPreferencesKey);
+
+        copied.clear();
+        await tester.tap(find.text('Copy as text'));
+        await tester.pumpAndSettle();
+        final after = exportFacts(raw);
+        ev('EXPORT_UI/$where/$name', {
+          'providerIsEmpty': providerEmpty,
+          'copyBeforeDelete': before,
+          'copiedSnackBarShown': snackBefore,
+          'deleteConfirmShown': confirmShown,
+          'afterDelete_dialogUnfinished': unfinished,
+          'afterDelete_dialogNotStarted': notStarted,
+          'afterDelete_anyDialog': anyDialog,
+          'afterDelete_marker': prefs.get(historyDeletionPendingKey),
+          'afterDelete_prefsUnchanged': text(prefsAfter) == text(raw),
+          'afterDelete_prefsNamesInsight': '$prefsAfter'.contains(insightId),
+          'afterDelete_journal': prefs.get(circleJournalKey) != null,
+          'copyAfterDelete': after,
+        });
+      });
+    }
+  }
+
+  // A user whose only stored data is the preferences record (no History,
+  // kept Circle, Plan or Insight): is Copy as text even available?
+  for (final name in [
+    'A_v1_readable_control',
+    'B_newer_schema_v2',
+    'C_malformed_json',
+    'E2_non_string_int',
+  ]) {
+    testWidgets('EXPORT_ONLY_PREFS/$name', (tester) async {
+      final raw = variants[name]!;
+      final (c, _) = await pump(tester, {
+        suggestionPreferencesKey: raw,
+      }, const YouDataCard());
+      await tester.tap(find.text('Copy as text'));
+      await tester.pumpAndSettle();
+      ev('EXPORT_ONLY_PREFS/$name', {
+        'journalHoldsHistory': c.read(circleJournalRepositoryProvider).holdsHistory,
+        'keptEmpty': c.read(keptCirclesProvider).isEmpty,
+        'plansEmpty': c.read(circlePlansProvider).plans.isEmpty,
+        'insightsEmpty': c.read(insightsProvider).isEmpty,
+        'providerIsEmpty': c.read(suggestionPreferencesProvider).isEmpty,
+        'copyAvailableAndCopied': copied.isNotEmpty,
+        ...exportFacts(raw),
+      });
+    });
+  }
+
+  for (final MapEntry(key: name, value: raw) in variants.entries) {
+    testWidgets('MEMORY_PAGE/$name', (tester) async {
+      tester.view.physicalSize = const Size(412, 3000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pump(tester, {...base, suggestionPreferencesKey: raw}, const MemoryPage());
+      ev('MEMORY_PAGE/$name', {
+        'resetControlShown': find
+            .text('Reset suggestion preferences')
+            .evaluate()
+            .isNotEmpty,
+        'leftOutSectionShown': find
+            .textContaining(
+              RegExp('left out of your circles', caseSensitive: false),
+            )
+            .evaluate()
+            .isNotEmpty,
+      });
+    });
+  }
+}
+
+bool _deepContainsString(Object? node, String needle) => switch (node) {
+  final String s => s == needle,
+  final Map m => m.values.any((v) => _deepContainsString(v, needle)),
+  final List l => l.any((v) => _deepContainsString(v, needle)),
+  _ => false,
+};

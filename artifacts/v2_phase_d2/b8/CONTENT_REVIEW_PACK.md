@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-05T10:45:02.076160Z from the working tree at HEAD `58b179c99866e234acd63e4e241590af36b9b186` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-11T13:11:11.914908Z from the working tree at HEAD `d9369795a92aa24505c475fa1417d03132300c4a` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -247,7 +247,7 @@
 
 **`features/home/presentation/widgets/activity_guide_sheet.dart`**
 
-- Close *(×6)*
+- Close *(×7)*
 - Not this one today
 - First *(×2)*
 - You’ll need
@@ -375,8 +375,15 @@
 - Copied your Circle history as text.
 - Keep my history *(×2)*
 - Delete your Circle history?
-- This permanently deletes every recorded Circle on this device, and everything THIRTY has learned from them, Insights and Plan reviews included. Your kept Circles, each Plan’s place and your suggestion preferences are kept — you can change those yourself. It cannot be undone, and nothing is stored anywhere else to restore it from. If you shared usage data, what was already sent isn’t deleted.
 - Delete permanently
+- This permanently deletes every recorded Circle on this device, and everything THIRTY has learned from them, Insights and Plan reviews included. Your kept Circles, each Plan’s place and your suggestion preferences are kept — you can change those yourself. It cannot be undone, and nothing is stored anywhere else to restore it from. If you shared usage data, what was already sent isn’t deleted.
+- This permanently deletes every recorded Circle on this device, and everything THIRTY has learned from them, Insights and Plan reviews included. Your kept Circles, each Plan’s place and your suggestion preferences are kept — you can change those yourself. Some saved suggestion preferences can’t be read, so THIRTY can’t check them for links to this history; they’ll be kept unchanged. It cannot be undone, and nothing is stored anywhere else to restore it from. If you shared usage data, what was already sent isn’t deleted.
+- Some saved preferences couldn’t be checked
+- Your Circle history was deleted, but THIRTY couldn’t read some saved suggestion preferences to check whether they contain links to that history.  Your preferences have been kept unchanged. You can export them or remove them using Reset suggestion preferences.
+- Some saved suggestion preferences couldn’t be read. They’re kept unchanged and may include links to earlier history that THIRTY can’t check. You can copy your data before choosing to reset them.
+- Reset unreadable suggestion preferences?
+- THIRTY can’t read all your saved suggestion preferences. Reset will permanently remove that saved record, including choices THIRTY can’t currently show or restore.  You can copy your saved data first from Your data. Your Circle history and answers won’t be deleted by this reset.
+- Couldn’t copy your data. Please try again.
 - Couldn’t finish deleting your history.
 - THIRTY will try to finish when you next open the app.
 - Your history wasn’t deleted.
@@ -826,6 +833,7 @@ Voices: Locke, Heather, Milo, Brittney
 - Not useful
 - Remove the answer from $date
 - Remove *(×6)*
+- Copy as text *(×2)*
 - Reset suggestion preferences
 - Keep them *(×4)*
 - Reset suggestion preferences?
@@ -933,7 +941,6 @@ Voices: Locke, Heather, Milo, Brittney
 
 - Share usage data
 - Off by default. It helps us understand what to improve. When on, THIRTY sends a few facts about your use: when you open the app, which need and activity it suggests, when you start and close a Circle, and your “Did you try it?” and “Was it useful?” answers — each with the date and time, the app version, a test-group label and a random ID made on this phone. Never your name, anything you type, or your History as a whole. Turning this off stops sending; what was already sent isn’t deleted.
-- Copy as text
 - Delete Circle history
 
 **`features/settings/presentation/widgets/you_personal_card.dart`**
@@ -1047,6 +1054,7 @@ Voices: Locke, Heather, Milo, Brittney
 - Don’t suggest it for $label
 - Remove the answer from $date
 - Remove
+- Copy as text
 - Keep them
 - Not this one today
 - First
@@ -1063,7 +1071,6 @@ Voices: Locke, Heather, Milo, Brittney
 - Pacing has ended.
 - Today's Circle
 - Open You
-- Copy as text
 - Delete all
 - Keep my history
 - Later today
@@ -1089,4 +1096,4 @@ Voices: Locke, Heather, Milo, Brittney
 - Thin: moreEnergy at ≈10 has 19 materially distinct sessions and 6 main pieces (ADR-024 §10 known risk).
 - Thin: moreEnergy at ≈30 has 19 materially distinct sessions and 7 main pieces (ADR-024 §10 known risk).
 - “Your routine” is still shown for History records from retired routines (development devices only; ADR-024 §3 keeps such records readable).
-- Apostrophes are mixed: 9 live strings use a straight one (e.g. “Nothing recorded yet. Your Circle history will appear here once you've had a few days with THIRTY.”, “You won't be able to reopen it until tomorrow.”, “You won't be able to reopen it.”, “Begin today's Circle”, “Today's Circle”, “Your Circle is here when you're ready.”) while 92 use ’.
+- Apostrophes are mixed: 9 live strings use a straight one (e.g. “Nothing recorded yet. Your Circle history will appear here once you've had a few days with THIRTY.”, “You won't be able to reopen it until tomorrow.”, “You won't be able to reopen it.”, “Begin today's Circle”, “Today's Circle”, “Your Circle is here when you're ready.”) while 98 use ’.

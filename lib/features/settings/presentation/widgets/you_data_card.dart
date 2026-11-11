@@ -4,11 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/analytics/analytics_consent.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../home/application/circle_journal.dart';
-import '../../../home/application/suggestion_preferences.dart';
 import '../../../home/presentation/widgets/journal_data_controls.dart';
-import '../../../insights/application/insights_provider.dart';
-import '../../../personal_circle/application/kept_circles_provider.dart';
-import '../../../plans/application/circle_plans_provider.dart';
 import 'you_group_card.dart';
 
 /// You's "Data & privacy" group: "Share usage data" (analytics
@@ -51,10 +47,6 @@ class YouDataCard extends ConsumerWidget {
     // Audit remediation R8 (Astra R7-A06): History THIRTY can't read is
     // still the user's to export and delete — never only what it reads.
     final hasEntries = journal.holdsHistory;
-    final preferences = ref.watch(suggestionPreferencesProvider);
-    final kept = ref.watch(keptCirclesProvider);
-    final plans = ref.watch(circlePlansProvider);
-    final insights = ref.watch(insightsProvider);
 
     return YouGroupCard(
       children: [
@@ -65,20 +57,10 @@ class YouDataCard extends ConsumerWidget {
         YouActionRow(
           label: 'Copy as text',
           icon: Icons.content_copy_outlined,
-          onTap:
-              hasEntries ||
-                  !preferences.isEmpty ||
-                  !kept.isEmpty ||
-                  plans.plans.isNotEmpty ||
-                  !insights.isEmpty
-              ? () => JournalDataControls.exportToClipboard(
-                  context,
-                  journal,
-                  preferences: preferences,
-                  kept: kept,
-                  plans: plans,
-                  insights: insights,
-                )
+          // L-1 Option B: the same Copy as History's — a preferences record
+          // THIRTY can't read included, even when it is all there is.
+          onTap: JournalDataControls.canCopyAsText(ref)
+              ? () => JournalDataControls.copyAsText(context, ref)
               : null,
         ),
         YouActionRow(

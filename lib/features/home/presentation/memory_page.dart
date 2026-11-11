@@ -17,6 +17,7 @@ import '../application/suggestion_preferences.dart';
 import '../domain/memory_overview.dart';
 import '../domain/recommendation_engine.dart';
 import 'widgets/circle_journal_entry_card.dart';
+import 'widgets/journal_data_controls.dart';
 import 'widgets/time_window_choice.dart';
 
 /// "What THIRTY remembers" (V2 Phase C, ADR-021) — the Free memory page:
@@ -62,6 +63,9 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
     final colors = Theme.of(context).extension<AppColors>()!;
     final entries = ref.watch(circleJournalRepositoryProvider).readAll();
     final preferences = ref.watch(suggestionPreferencesProvider);
+    // L-1 Option B: a stored record THIRTY can't read as a whole.
+    final unreadable =
+        ref.watch(unreadableSuggestionPreferencesProvider) != null;
     final need = _need ??= _initialNeed(entries);
     final memory = needMemoryOf(
       today: ref.watch(nowProvider),
@@ -110,8 +114,16 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                 ],
               ),
             ],
-            // Its own control, shown only while there is something to reset.
-            if (!preferences.isEmpty) ...[
+            // L-1 Option B (founder decision, 2026-11-11): said for as long
+            // as it is stored — after any restart — with Copy as text before
+            // any Reset.
+            if (unreadable) ...[
+              const SizedBox(height: AppSpacing.section),
+              const _UnreadablePreferences(),
+            ],
+            // Its own control, shown only while there is something to reset
+            // — a record THIRTY can't read included (L-1 Option B).
+            if (!preferences.isEmpty || unreadable) ...[
               const SizedBox(height: AppSpacing.section),
               const _ResetPreferences(),
             ],
@@ -724,8 +736,34 @@ class _AnswerLine extends StatelessWidget {
   }
 }
 
+/// L-1 Option B (founder decision, 2026-11-11): the stored suggestion
+/// preferences are a record THIRTY can't read as a whole. Said from what is
+/// stored, never from what happened: a Delete may or may not have run since
+/// it was written. "Copy as text" is the one shared with History and You.
+class _UnreadablePreferences extends ConsumerWidget {
+  const _UnreadablePreferences();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(
+        UnreadablePreferencesCopy.memoryNotice,
+        style: Theme.of(context).textTheme.bodyMedium,
+      ),
+      const SizedBox(height: AppSpacing.m),
+      ThirtyButton(
+        label: 'Copy as text',
+        variant: ThirtyButtonVariant.secondary,
+        onPressed: () => JournalDataControls.copyAsText(context, ref),
+      ),
+    ],
+  );
+}
+
 /// "Reset suggestion preferences": clears every "Don't suggest", lifted rest
-/// and left-out part. Circle history and its answers stay.
+/// and left-out part. Circle history and its answers stay. L-1 Option B: a
+/// record THIRTY can't read as a whole too, after its own warning.
 class _ResetPreferences extends ConsumerWidget {
   const _ResetPreferences();
 
@@ -735,15 +773,22 @@ class _ResetPreferences extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).extension<AppColors>()!;
     Future<void> reset() async {
+      // L-1 Option B: a record THIRTY can't read has its own warning.
+      final unreadable =
+          ref.read(unreadableSuggestionPreferencesProvider) != null;
       final confirmed = await showDialog<bool>(
         context: context,
         barrierLabel: 'Keep them',
-        builder: (_) => const ThirtyConfirmDialog(
-          title: 'Reset suggestion preferences?',
-          body:
-              'THIRTY will forget which activities you asked it not to '
-              'suggest, any rests you lifted, and any parts you left out of '
-              'your Circles. Your Circle history and your answers stay.',
+        builder: (_) => ThirtyConfirmDialog(
+          title: unreadable
+              ? UnreadablePreferencesCopy.resetTitle
+              : 'Reset suggestion preferences?',
+          body: unreadable
+              ? UnreadablePreferencesCopy.resetBody
+              : 'THIRTY will forget which activities you asked it not to '
+                    'suggest, any rests you lifted, and any parts you left '
+                    'out of your Circles. Your Circle history and your '
+                    'answers stay.',
           cancelLabel: 'Keep them',
           confirmLabel: 'Reset',
           destructive: true,

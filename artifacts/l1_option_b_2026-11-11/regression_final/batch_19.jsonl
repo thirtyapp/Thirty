@@ -1,0 +1,94 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 99.0.0 (111.0.0 available)
+  analyzer 12.1.0 (14.7.0 available)
+  app_links 7.2.1 (7.2.2 available)
+  app_links_linux 1.0.3 (1.0.5 available)
+  app_links_web 1.0.4 (1.0.5 available)
+  clock 1.1.2 (1.1.3 available)
+  coverage 1.15.1 (1.16.0 available)
+  crypto 3.0.7 (3.0.8 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  dbus 0.7.15 (0.8.0 available)
+  equatable 2.1.0 (3.0.0 available)
+  flutter_local_notifications 22.3.0 (23.0.0 available)
+  flutter_local_notifications_linux 8.0.1 (9.0.0 available)
+  flutter_local_notifications_platform_interface 12.2.0 (13.0.0 available)
+  flutter_local_notifications_web 1.0.0 (2.0.0 available)
+  flutter_local_notifications_windows 3.1.1 (4.0.0 available)
+  flutter_riverpod 3.4.2 (3.5.0 available)
+  flutter_svg 2.3.0 (2.3.2 available)
+  flutter_timezone 5.1.0 (5.1.1 available)
+  frontend_server_client 4.0.0 (4.2.0 available)
+  functions_client 2.6.4 (2.7.1 available)
+  glob 2.1.3 (2.2.0 available)
+  go_router 17.3.0 (18.1.4 available)
+  gotrue 2.26.0 (2.27.3 available)
+  http_multi_server 3.2.2 (3.2.3 available)
+  io 1.0.5 (1.1.0 available)
+  listen 1.0.0-beta.4 (1.0.1 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.0 (1.19.0 available)
+  mime 2.0.0 (2.1.0 available)
+  package_config 2.2.0 (3.0.0 available)
+  passkeys_platform_interface 2.9.0 (2.11.0 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pool 1.5.2 (1.5.3 available)
+  postgrest 2.8.0 (2.9.1 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  purchases_flutter 10.11.0 (11.0.1 available)
+  realtime_client 2.11.0 (2.13.2 available)
+  riverpod 3.4.2 (3.5.0 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.5.4 available)
+  shared_preferences_foundation 2.5.6 (2.6.1 available)
+  shelf 1.4.2 (1.4.3 available)
+  shelf_static 1.1.3 (1.2.0 available)
+  source_maps 0.10.13 (0.10.14 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  storage_client 2.6.0 (2.8.1 available)
+  supabase 2.14.0 (2.16.5 available)
+  supabase_flutter 2.16.0 (2.18.3 available)
+  test 1.31.0 (1.33.0 available)
+  test_api 0.7.11 (0.7.15 available)
+  test_core 0.6.17 (0.6.21 available)
+  timezone 0.11.1 (0.11.2 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_graphics 1.2.3 (1.2.6 available)
+  vector_graphics_compiler 1.3.0 (1.3.5 available)
+  vector_math 2.2.0 (2.4.4 available)
+  vm_service 15.2.0 (15.4.0 available)
+  web 1.1.1 (1.1.2 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+68 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+{"protocolVersion":"0.1.1","runnerVersion":"1.31.0","pid":39268,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/392e102b-26d8-4014-8fa5-8ed0e276c2a6/scratchpad/l1b/fixed/test/features/b8/b8_product_simulation_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/392e102b-26d8-4014-8fa5-8ed0e276c2a6/scratchpad/l1b/fixed/test/features/b8/b8_product_simulation_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"count":1,"time":2,"type":"allSuites"}
+{"testID":1,"messageType":"print","message":"Warning: A tag was used that wasn't specified in dart_test.yaml.\n  long was used in:\n    the test \"B8 — the whole product over twelve months (structure only) A — a user who never answers still gets the whole service, and nothing claims what they never said\"\n    the test \"B8 — the whole product over twelve months (structure only) B — a mixed answerer: answers move what is composed, Stage 5 uses only what this cycle allows, reviews say what was said\"\n    the test \"B8 — the whole product over twelve months (structure only) C — More Energy every day at ≈10: no stall, the safety gate holds, repetition measured honestly\"\n    the test \"B8 — the whole product over twelve months (structure only) D — lapse is fair: everything owned stays, new Premium work stops, resubscribing resumes where it was\"\n","type":"print","time":1360}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":1362}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":6,"line":null,"column":null,"url":null},"type":"group","time":1363}
+{"group":{"id":3,"suiteID":0,"parentID":2,"name":"B8 — the whole product over twelve months (structure only)","metadata":{"skip":false,"skipReason":null},"testCount":6,"line":788,"column":3,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/392e102b-26d8-4014-8fa5-8ed0e276c2a6/scratchpad/l1b/fixed/test/features/b8/b8_product_simulation_test.dart"},"type":"group","time":1363}
+{"test":{"id":4,"name":"B8 — the whole product over twelve months (structure only) A — a user who never answers still gets the whole service, and nothing claims what they never said","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":789,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/392e102b-26d8-4014-8fa5-8ed0e276c2a6/scratchpad/l1b/fixed/test/features/b8/b8_product_simulation_test.dart"},"type":"testStart","time":1363}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":36223}
+{"test":{"id":5,"name":"B8 — the whole product over twelve months (structure only) B — a mixed answerer: answers move what is composed, Stage 5 uses only what this cycle allows, reviews say what was said","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":830,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/392e102b-26d8-4014-8fa5-8ed0e276c2a6/scratchpad/l1b/fixed/test/features/b8/b8_product_simulation_test.dart"},"type":"testStart","time":36224}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":89330}
+{"test":{"id":6,"name":"B8 — the whole product over twelve months (structure only) C — More Energy every day at ≈10: no stall, the safety gate holds, repetition measured honestly","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":852,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/392e102b-26d8-4014-8fa5-8ed0e276c2a6/scratchpad/l1b/fixed/test/features/b8/b8_product_simulation_test.dart"},"type":"testStart","time":89330}
+{"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":153324}
+{"test":{"id":7,"name":"B8 — the whole product over twelve months (structure only) D — lapse is fair: everything owned stays, new Premium work stops, resubscribing resumes where it was","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":885,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/392e102b-26d8-4014-8fa5-8ed0e276c2a6/scratchpad/l1b/fixed/test/features/b8/b8_product_simulation_test.dart"},"type":"testStart","time":153324}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":221598}
+{"test":{"id":8,"name":"B8 — the whole product over twelve months (structure only) voice follows the entitlement: a lapse silences it, the choice is kept","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":919,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/392e102b-26d8-4014-8fa5-8ed0e276c2a6/scratchpad/l1b/fixed/test/features/b8/b8_product_simulation_test.dart"},"type":"testStart","time":221599}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":221606}
+{"test":{"id":9,"name":"B8 — the whole product over twelve months (structure only) E — the twelve-month record of all four, and the report","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":944,"column":5,"url":"file:///C:/Users/thoma/AppData/Local/Temp/claude/a9b5f32403779c05/392e102b-26d8-4014-8fa5-8ed0e276c2a6/scratchpad/l1b/fixed/test/features/b8/b8_product_simulation_test.dart"},"type":"testStart","time":221606}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":221609}
+{"success":true,"type":"done","time":221692}

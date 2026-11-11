@@ -1,0 +1,3 @@
+# Audio integrity (definitive tested tree vs HEAD d9369795 blobs), 2026-11-11T15:10:45+01:00
+files under assets/audio: 180
+blob-checked: 180, differing: 0

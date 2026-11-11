@@ -1,0 +1,8 @@
+# every path tracked at HEAD d9369795: 2677, each hashed raw (git hash-object --no-filters, core.longpaths) in the tested tree; hashed 2677
+changed: 6
+  M docs/product/PRODUCT_V2_CONTRACT.md
+  M lib/features/home/application/circle_journal.dart
+  M lib/features/home/application/suggestion_preferences.dart
+  M lib/features/home/presentation/memory_page.dart
+  M lib/features/home/presentation/widgets/journal_data_controls.dart
+  M lib/features/settings/presentation/widgets/you_data_card.dart

@@ -1,0 +1,10 @@
+# Gate 0 baseline, 2026-11-11T13:05:15+01:00
+HEAD d9369795a92aa24505c475fa1417d03132300c4a
+parents dd9000cdd461c41d52a727f323b8e5c1003fefa0
+parent count 1
+tree 11a2b7effaa3d6680bea88cd5cb7f97865a7ab82
+upstream d9369795a92aa24505c475fa1417d03132300c4a (origin/step5-billing-integration)
+live origin: d9369795a92aa24505c475fa1417d03132300c4a	refs/heads/step5-billing-integration
+live main: a8b4088b4a00ddd1dde1cd982680409f7b9babac	refs/heads/main
+branch step5-billing-integration
+staged: 0

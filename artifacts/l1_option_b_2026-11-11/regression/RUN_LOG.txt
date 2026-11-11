@@ -1,0 +1,32 @@
+start 2026-11-11T13:19:44+01:00 driver pid 871
+batch 1: exit 0, 76 passed, 0 failed, 0 skipped, 12/12 files, 13 s, done=True
+batch 2: exit 0, 99 passed, 0 failed, 0 skipped, 12/12 files, 30 s, done=True
+batch 3: exit 0, 121 passed, 0 failed, 0 skipped, 12/12 files, 42 s, done=True
+batch 4: exit 0, 157 passed, 0 failed, 0 skipped, 12/12 files, 18 s, done=True
+batch 5: exit 0, 88 passed, 0 failed, 0 skipped, 12/12 files, 11 s, done=True
+batch 6: exit 1, 224 passed, 2 failed, 0 skipped, 12/12 files, 35 s, done=True
+  FAIL test/features/b8/b8_live_copy_guard_test.dart: unsupported health claim: no live copy, except where the allowlist says why
+  FAIL test/features/b8/b8_review_pack_test.dart: the review pack is generated from production and matches its manifest
+batch 7: exit 0, 241 passed, 0 failed, 0 skipped, 12/12 files, 29 s, done=True
+batch 8: exit 0, 154 passed, 0 failed, 0 skipped, 12/12 files, 22 s, done=True
+batch 9: exit 0, 164 passed, 0 failed, 0 skipped, 12/12 files, 22 s, done=True
+batch 10: exit 0, 267 passed, 0 failed, 0 skipped, 12/12 files, 18 s, done=True
+batch 11: exit 0, 260 passed, 0 failed, 0 skipped, 12/12 files, 28 s, done=True
+batch 12: exit 0, 242 passed, 0 failed, 0 skipped, 12/12 files, 26 s, done=True
+batch 13: exit 0, 183 passed, 0 failed, 0 skipped, 12/12 files, 18 s, done=True
+batch 14: exit 0, 157 passed, 0 failed, 0 skipped, 12/12 files, 14 s, done=True
+batch 15: exit 0, 153 passed, 0 failed, 0 skipped, 12/12 files, 12 s, done=True
+batch 16: exit 0, 219 passed, 0 failed, 0 skipped, 12/12 files, 14 s, done=True
+batch 17: exit 0, 237 passed, 0 failed, 0 skipped, 12/12 files, 20 s, done=True
+batch 18: exit 0, 80 passed, 0 failed, 0 skipped, 4/4 files, 13 s, done=True
+batch 19: exit 0, 6 passed, 0 failed, 0 skipped, 1/1 files, 222 s, done=True
+batch 20a: exit 0, 3 passed, 0 failed, 0 skipped, 1/1 files, 208 s, done=True
+batch 20b: exit 0, 3 passed, 0 failed, 0 skipped, 1/1 files, 251 s, done=True
+batch 20c: exit 0, 3 passed, 0 failed, 0 skipped, 1/1 files, 230 s, done=True
+batch 20d: exit 0, 2 passed, 0 failed, 0 skipped, 1/1 files, 144 s, done=True
+batch 20e: exit 0, 2 passed, 0 failed, 0 skipped, 1/1 files, 142 s, done=True
+report exit 1
+cases exit 0
+fingerprints identical
+blob manifests identical
+end 2026-11-11T13:46:35+01:00

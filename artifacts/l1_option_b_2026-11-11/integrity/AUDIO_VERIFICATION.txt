@@ -1,0 +1,4 @@
+# Audio integrity, fixed tree vs HEAD d9369795 blobs, 2026-11-11T13:20:28+01:00
+tracked audio at HEAD: 180
+files under assets/audio in tested tree: 180
+blob-checked: 180, differing: 0

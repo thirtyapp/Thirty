@@ -1,0 +1,974 @@
+TOTAL 973 {'success': 973}
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: throws: a Plan start still being saved, then today's choice: the stage Circle may show while pending; once the save fails the Plan is off the screen and the Circle is never saved on it — on disk and after a restart
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: throws: a Plan start still being saved, then today's choice; the save lands: Plan, served stage and Circle are all saved
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: throws: a failed Plan save, then a new user action: the failed change is not on screen, so the user's retry is a real change and lands once the store heals
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: throws: a failed pause is undone on screen: the Plan still steers today as the disk says
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: throws: Premium lapses while a Plan start is pending, and its save fails: no stage Circle, nothing served, the Plan is off the screen
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: throws: a new Insight whose save fails is not kept on screen; a later assessment generates and saves it
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: throws: "Not now" whose save fails: the Insight is current again on screen and on disk; a restart agrees; a retry lands
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: throws: a restart while a Plan start is pending reads only the disk
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: returnsFalse: a Plan start still being saved, then today's choice: the stage Circle may show while pending; once the save fails the Plan is off the screen and the Circle is never saved on it — on disk and after a restart
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: returnsFalse: a Plan start still being saved, then today's choice; the save lands: Plan, served stage and Circle are all saved
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: returnsFalse: a failed Plan save, then a new user action: the failed change is not on screen, so the user's retry is a real change and lands once the store heals
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: returnsFalse: a failed pause is undone on screen: the Plan still steers today as the disk says
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: returnsFalse: Premium lapses while a Plan start is pending, and its save fails: no stage Circle, nothing served, the Plan is off the screen
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: returnsFalse: a new Insight whose save fails is not kept on screen; a later assessment generates and saves it
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: returnsFalse: "Not now" whose save fails: the Insight is current again on screen and on disk; a restart agrees; a retry lands
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: returnsFalse: a restart while a Plan start is pending reads only the disk
+SUCCESS  test/features/r81/r81b_rl1_pending_state_test.dart :: Insights decide from the confirmed Plans: a Plan start that fails never withdraws, or is counted by, an Insight
+SUCCESS  test/features/r81/r81b_rl2_unverified_words_copy_test.dart :: the copy is exactly the approved wording
+SUCCESS  test/features/r81/r81b_rl2_unverified_words_copy_test.dart :: shown on every part only when the fallback happens — with or without a voice — and never past the end
+SUCCESS  test/features/r81/r81b_rl2_unverified_words_copy_test.dart :: a running Circle shows the note to a screen reader, keeps running, and THIRTY's voice says nothing
+SUCCESS  test/features/r81/r81b_rl3_field_preservation_test.dart :: Plans — inside a readable cycle a stage record with damaged list items and a future field, and damaged set-aside reasons: kept byte for byte through repeated saves and restarts; what is readable stays usable
+SUCCESS  test/features/r81/r81b_rl3_field_preservation_test.dart :: Plans — inside a readable cycle a stage record with damaged list items and a future field, and damaged set-aside reasons: kept byte for byte through a save that throws; what is readable stays usable
+SUCCESS  test/features/r81/r81b_rl3_field_preservation_test.dart :: Plans — inside a readable cycle a stage record with damaged list items and a future field, and damaged set-aside reasons: kept byte for byte through a save that returnsFalse; what is readable stays usable
+SUCCESS  test/features/r81/r81b_rl3_field_preservation_test.dart :: Plans — inside a readable cycle revisit entries that aren't stage numbers are kept, and the readable ones still count
+SUCCESS  test/features/r81/r81b_rl3_field_preservation_test.dart :: Plans — inside a readable cycle a cycle ended by a reason a newer THIRTY added is kept as stored, never read as not ended
+SUCCESS  test/features/r81/r81b_rl3_field_preservation_test.dart :: Suggestion preferences a damaged item beside valid ones is kept through saves and a restart; the valid ones still apply
+SUCCESS  test/features/r81/r81b_rl3_field_preservation_test.dart :: Suggestion preferences a damaged item beside valid ones is kept through a save that throws; the valid ones still apply
+SUCCESS  test/features/r81/r81b_rl3_field_preservation_test.dart :: Suggestion preferences a damaged item beside valid ones is kept through a save that returnsFalse; the valid ones still apply
+SUCCESS  test/features/r81/r81b_rl3_field_preservation_test.dart :: Suggestion preferences a record THIRTY can't read (a newer version) is never written over by a change; the user is told; Reset — the user's own erasure — still works
+SUCCESS  test/features/r81/r81b_rl3_field_preservation_test.dart :: Suggestion preferences a record THIRTY can't read (not JSON) is never written over by a change; the user is told; Reset — the user's own erasure — still works
+SUCCESS  test/features/r81/r81b_rl3_field_preservation_test.dart :: Suggestion preferences a record THIRTY can't read (a list field that is not a list) is never written over by a change; the user is told; Reset — the user's own erasure — still works
+SUCCESS  test/features/r81/r81b_rl3_field_preservation_test.dart :: Suggestion preferences regression — the retired Phase D routines field is still dropped by the next save (pre-release migration, ADR-024)
+SUCCESS  test/features/r81/r81_n01_durable_plan_credit_test.dart :: throws: AUD-1 as reported — Plans store failing across a restart; the next day's choice never overwrites the closed stage Circle whose credit is only in memory; after healing the credit is recovered exactly once
+SUCCESS  test/features/r81/r81_n01_durable_plan_credit_test.dart :: throws: Astra N01 as reported — only the credit write fails at Close; Premium lapses; same session, next day, a Free choice: the credit is retried and durable before the day keys move on
+SUCCESS  test/features/r81/r81_n01_durable_plan_credit_test.dart :: throws: Plans store failing persistently in the same session: the next day's Free choice is not saved over yesterday; once the store heals, the next write credits yesterday and then moves on
+SUCCESS  test/features/r81/r81_n01_durable_plan_credit_test.dart :: throws: the served-stage Start evidence already noted in memory but not on disk is written again — never treated as saved because memory holds it
+SUCCESS  test/features/r81/r81_n01_durable_plan_credit_test.dart :: returnsFalse: AUD-1 as reported — Plans store failing across a restart; the next day's choice never overwrites the closed stage Circle whose credit is only in memory; after healing the credit is recovered exactly once
+SUCCESS  test/features/r81/r81_n01_durable_plan_credit_test.dart :: returnsFalse: Astra N01 as reported — only the credit write fails at Close; Premium lapses; same session, next day, a Free choice: the credit is retried and durable before the day keys move on
+SUCCESS  test/features/r81/r81_n01_durable_plan_credit_test.dart :: returnsFalse: Plans store failing persistently in the same session: the next day's Free choice is not saved over yesterday; once the store heals, the next write credits yesterday and then moves on
+SUCCESS  test/features/r81/r81_n01_durable_plan_credit_test.dart :: returnsFalse: the served-stage Start evidence already noted in memory but not on disk is written again — never treated as saved because memory holds it
+SUCCESS  test/features/r81/r81_n02_preservation_writes_test.dart :: Plans — reproduction A: the build's copy is pending when a save follows; the copy then throws: the original is never written over unkept — on disk, after a restart
+SUCCESS  test/features/r81/r81_n02_preservation_writes_test.dart :: Plans — reproduction A: the build's copy is pending when a save follows; the copy then returnsFalse: the original is never written over unkept — on disk, after a restart
+SUCCESS  test/features/r81/r81_n02_preservation_writes_test.dart :: Plans — the copy failing every time: the original stays exactly as stored, and nothing is written over it
+SUCCESS  test/features/r81/r81_n02_preservation_writes_test.dart :: Plans — retries are idempotent: a copy that lands, then a restart and another save, leaves one copy, byte for byte
+SUCCESS  test/features/r81/r81_n02_preservation_writes_test.dart :: Insights — reproduction A: the build's copy is pending when a save follows; the copy then throws: the original is never written over unkept — on disk, after a restart
+SUCCESS  test/features/r81/r81_n02_preservation_writes_test.dart :: Insights — reproduction A: the build's copy is pending when a save follows; the copy then returnsFalse: the original is never written over unkept — on disk, after a restart
+SUCCESS  test/features/r81/r81_n02_preservation_writes_test.dart :: Insights — the copy failing every time: the original stays exactly as stored, and nothing is written over it
+SUCCESS  test/features/r81/r81_n02_preservation_writes_test.dart :: Insights — retries are idempotent: a copy that lands, then a restart and another save, leaves one copy, byte for byte
+SUCCESS  test/features/r81/r81_n02_preservation_writes_test.dart :: reproduction B — both copies pending when Delete Circle history runs: Delete completes only after them, and no raw retained evidence is on disk afterwards
+SUCCESS  test/features/r81/r81_n02_preservation_writes_test.dart :: reproduction B, the copy failing as Delete runs: Delete still completes and nothing is left behind
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: next day, before a new Circle is chosen: the usefulness answer removed, then a restart — never written back
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: next day, before a new Circle is chosen: the usefulness answer removed, then the day's choice (before-overwrite recording) — never written back
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: next day in the same session (no restart): the usefulness answer removed, then a choice and a restart — never written back
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: same day: the usefulness answer removed, then a restart — never written back
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: next day, before a new Circle is chosen: both answers removed, then a restart — never written back
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: next day, before a new Circle is chosen: both answers removed, then the day's choice (before-overwrite recording) — never written back
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: next day in the same session (no restart): both answers removed, then a choice and a restart — never written back
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: same day: both answers removed, then a restart — never written back
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: next day, the removal cut short — the day keys' write throws: History keeps the answer (nothing half-removed), the user is told, and a retry removes it for good
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: next day, History's removal throws after the day keys were cleared: the answer stays in History and is reported; a restart neither loses nor duplicates it; a retry removes it
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: next day, the removal cut short — the day keys' write returnsFalse: History keeps the answer (nothing half-removed), the user is told, and a retry removes it for good
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: next day, History's removal returnsFalse after the day keys were cleared: the answer stays in History and is reported; a restart neither loses nor duplicates it; a retry removes it
+SUCCESS  test/features/r81/r81_n03_removed_answers_test.dart :: an answer never given is never invented by a removal, and other Circles' answers are untouched
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N04 — expiry at Start as reported (throws, Plans refusing): Start after a verified expiry, then Close with daily and History writes allowed — the Start is refused and told, and a restart never credits the Plan
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N04 — expiry at Start the evidence write throws once at Start: that Start is refused; tapped again, the evidence is written first, then the Circle starts and closes — no credit, now or after a restart
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N04 — expiry at Start the evidence write throws at Start, then a pause: the pause never saves a started Circle without it
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N04 — expiry at Start as reported (returnsFalse, Plans refusing): Start after a verified expiry, then Close with daily and History writes allowed — the Start is refused and told, and a restart never credits the Plan
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N04 — expiry at Start the evidence write returnsFalse once at Start: that Start is refused; tapped again, the evidence is written first, then the Circle starts and closes — no credit, now or after a restart
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N04 — expiry at Start the evidence write returnsFalse at Start, then a pause: the pause never saves a started Circle without it
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N04 — expiry at Start regression — served and started under Premium, lapsed before Close: the legitimate credit still lands once
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N05 — Insight application is recorded only once it is durable I1 (Plan direction) — its own store throws: not saved, not recorded as applied (memory and disk), the user is told; after a restart it applies, durably
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N05 — Insight application is recorded only once it is durable I1 (Plan direction) — its own store returnsFalse: not saved, not recorded as applied (memory and disk), the user is told; after a restart it applies, durably
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N05 — Insight application is recorded only once it is durable I1 (Plan direction) — its change saved, the applied mark refused: the change is durable and the failure told; nothing claims the mark is saved
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N05 — Insight application is recorded only once it is durable I2 (gentler Plan) — its own store throws: not saved, not recorded as applied (memory and disk), the user is told; after a restart it applies, durably
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N05 — Insight application is recorded only once it is durable I2 (gentler Plan) — its own store returnsFalse: not saved, not recorded as applied (memory and disk), the user is told; after a restart it applies, durably
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N05 — Insight application is recorded only once it is durable I2 (gentler Plan) — its change saved, the applied mark refused: the change is durable and the failure told; nothing claims the mark is saved
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N05 — Insight application is recorded only once it is durable I3 (leave a part out) — its own store throws: not saved, not recorded as applied (memory and disk), the user is told; after a restart it applies, durably
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N05 — Insight application is recorded only once it is durable I3 (leave a part out) — its own store returnsFalse: not saved, not recorded as applied (memory and disk), the user is told; after a restart it applies, durably
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N05 — Insight application is recorded only once it is durable I3 (leave a part out) — its change saved, the applied mark refused: the change is durable and the failure told; nothing claims the mark is saved
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N05 — Insight application is recorded only once it is durable I1 retried in the same session once the store heals: the Plan already on screen is saved first, then the Insight is marked
+SUCCESS  test/features/r81/r81_n04_n05_expiry_and_insight_application_test.dart :: N05 — Insight application is recorded only once it is durable a suggestion preference the store refuses is not shown as saved (returnsFalse is a failure, not success)
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words one item not words, not started, kept Circle intact: restored with its own saved words from the kept Circle — never today's, never voiced as if they were
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words one item not words, not started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words one item not words, started, kept Circle intact: restored with its own saved words from the kept Circle — never today's, never voiced as if they were
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words one item not words, started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words the wrong length, not started, kept Circle intact: restored with its own saved words from the kept Circle — never today's, never voiced as if they were
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words the wrong length, not started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words the wrong length, started, kept Circle intact: restored with its own saved words from the kept Circle — never today's, never voiced as if they were
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words the wrong length, started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words not a list, not started, kept Circle intact: restored with its own saved words from the kept Circle — never today's, never voiced as if they were
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words not a list, not started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words not a list, started, kept Circle intact: restored with its own saved words from the kept Circle — never today's, never voiced as if they were
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words not a list, started, kept Circle gone: never run or voiced with today's words; the stored bytes are left as they were
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N06 — Today's kept Circle with damaged saved words the words field missing from Today's copy while the kept Circle has its words: they come from the kept Circle
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N07 — damaged or unknown data inside a readable record AUD-3 — a Plan this build doesn't know (a newer build's) is kept byte for byte through a Plan save
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N07 — damaged or unknown data inside a readable record a Plan whose cycle is damaged is kept as stored, never rewritten without it
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N07 — damaged or unknown data inside a readable record a damaged stage record inside a readable cycle is kept through a save
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N07 — damaged or unknown data inside a readable record unknown fields of the Plans record itself are written back
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N07 — damaged or unknown data inside a readable record a Plans record of a newer whole-record version stays unreadable and is kept aside, not reinterpreted
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N07 — damaged or unknown data inside a readable record AUD-4 / N07-A — Insights whose snapshots field is present but not a list are kept, never replaced unkept
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N07 — damaged or unknown data inside a readable record unknown fields of the Insights record itself are written back
+SUCCESS  test/features/r81/r81_n06_n07_damaged_records_test.dart :: N07 — damaged or unknown data inside a readable record regression — an Insights record without a snapshots field (none yet) is readable, as before
+SUCCESS  test/features/r81/r81_n08_n09_aud2_time_test.dart :: N08 — a no-touch choice after midnight: the served stage is dated with the Circle's own day, so a lapse before Close keeps the legitimate credit
+SUCCESS  test/features/r81/r81_n08_n09_aud2_time_test.dart :: N09 — closed at the first 02:30 of 25 October 2026, reflection open, restart at 08:00: 6h30 really elapsed, so it is not carried over
+SUCCESS  test/features/r81/r81_n08_n09_aud2_time_test.dart :: N09 — closed at the second 02:30 of 25 October 2026, reflection open, restart at 08:00: 5h30 really elapsed, so it is carried over
+SUCCESS  test/features/r81/r81_n08_n09_aud2_time_test.dart :: N09 — the two 02:30 Closes are stored differently: an instant, not a wall-clock time
+SUCCESS  test/features/r81/r81_n08_n09_aud2_time_test.dart :: N09 — an older offset-free Start still reads as before (local), and the six-hour rule holds for it
+SUCCESS  test/features/r81/r81_n08_n09_aud2_time_test.dart :: AUD-2 — the carried-over Circle finished and its reflection answered after midnight: today's Circle can be chosen without another resume (with a touch)
+SUCCESS  test/features/r81/r81_n08_n09_aud2_time_test.dart :: AUD-2 — the carried-over Circle finished and its reflection answered after midnight: today's Circle can be chosen without another resume (no touch — screen reader or switch)
+SUCCESS  test/features/r81/r81_n08_n09_aud2_time_test.dart :: AUD-2 regression — the carried-over Circle closed but its reflection still open stays on show (contract: until answered)
+SUCCESS  test/features/r81/r81_n10_failure_notices_test.dart :: a store failure while the History notice is open is told after it closes — with no further change
+SUCCESS  test/features/r81/r81_n10_failure_notices_test.dart :: a second Circle's History failure while a store notice is open is told after it closes
+SUCCESS  test/features/r81/r81_n10_failure_notices_test.dart :: several store failures while one notice is open: told once more after it closes, never stacked
+SUCCESS  test/features/r81/r81_n10_failure_notices_test.dart :: a failed Keep (throws) then a successful one: Kept Circles are no longer marked unsaved
+SUCCESS  test/features/r81/r81_n10_failure_notices_test.dart :: a failed Keep (returnsFalse) then a successful one: Kept Circles are no longer marked unsaved
+SUCCESS  test/features/r82/r82_a01_pending_lifecycle_credit_test.dart :: throws: A01 as reported — a pending Pause, the next day's Free choice, then the Pause fails: the earlier day's credit is saved before the day keys move on, and survives two restarts
+SUCCESS  test/features/r82/r82_a01_pending_lifecycle_credit_test.dart :: throws: a pending Leave, the next day's choice, then the Leave fails: the credit is saved first — never lost to a competing Plan action that did not land
+SUCCESS  test/features/r82/r82_a01_pending_lifecycle_credit_test.dart :: throws: the Pause lands: the Close was durable before it, so its credit lands with the Pause — once, on the original cycle — the day keys move on, and the Plan stays paused across two restarts
+SUCCESS  test/features/r82/r82_a01_pending_lifecycle_credit_test.dart :: throws: a restart while the Pause is still pending reads only the disk: the active Plan is credited from the retained day keys
+SUCCESS  test/features/r82/r82_a01_pending_lifecycle_credit_test.dart :: returnsFalse: A01 as reported — a pending Pause, the next day's Free choice, then the Pause fails: the earlier day's credit is saved before the day keys move on, and survives two restarts
+SUCCESS  test/features/r82/r82_a01_pending_lifecycle_credit_test.dart :: returnsFalse: a pending Leave, the next day's choice, then the Leave fails: the credit is saved first — never lost to a competing Plan action that did not land
+SUCCESS  test/features/r82/r82_a01_pending_lifecycle_credit_test.dart :: returnsFalse: the Pause lands: the Close was durable before it, so its credit lands with the Pause — once, on the original cycle — the day keys move on, and the Plan stays paused across two restarts
+SUCCESS  test/features/r82/r82_a01_pending_lifecycle_credit_test.dart :: returnsFalse: a restart while the Pause is still pending reads only the disk: the active Plan is credited from the retained day keys
+SUCCESS  test/features/r82/r82_a01_pending_lifecycle_credit_test.dart :: the credit itself is refused again after the Pause fails: the day keys still never move on; once healed, the next write credits yesterday exactly once, then moves on
+SUCCESS  test/features/r82/r82_a01_pending_lifecycle_credit_test.dart :: domain: a paused or left Plan is never credited — the policy the notifier distinguishes from a pending change
+SUCCESS  test/features/r82/r82_a02_new2_delete_isolation_test.dart :: A02 as reported — Insights opened while Delete waits for the Plan evidence write: no review is recreated, and Delete succeeds with nothing derived left on disk or after restarts
+SUCCESS  test/features/r82/r82_a02_new2_delete_isolation_test.dart :: NEW-2 — an assessment queued during Delete whose payload lands only after the deletion is never written
+SUCCESS  test/features/r82/r82_a02_new2_delete_isolation_test.dart :: a stale Insight payload captured before Delete and still being written lands before the deletion, never after it
+SUCCESS  test/features/r82/r82_a02_new2_delete_isolation_test.dart :: throws: Delete whose Plan evidence write fails, then an unrelated Plan action that also fails: the screen never goes back to the deleted evidence, and no later write republishes it
+SUCCESS  test/features/r82/r82_a02_new2_delete_isolation_test.dart :: throws: Delete whose Insights removal fails, then a failing Insights save: the deleted snapshots are never shown or saved again
+SUCCESS  test/features/r82/r82_a02_new2_delete_isolation_test.dart :: throws: an interrupted Delete (process stopped mid-way) is finished at the next start: nothing derived survives two restarts
+SUCCESS  test/features/r82/r82_a02_new2_delete_isolation_test.dart :: returnsFalse: Delete whose Plan evidence write fails, then an unrelated Plan action that also fails: the screen never goes back to the deleted evidence, and no later write republishes it
+SUCCESS  test/features/r82/r82_a02_new2_delete_isolation_test.dart :: returnsFalse: Delete whose Insights removal fails, then a failing Insights save: the deleted snapshots are never shown or saved again
+SUCCESS  test/features/r82/r82_a02_new2_delete_isolation_test.dart :: returnsFalse: an interrupted Delete (process stopped mid-way) is finished at the next start: nothing derived survives two restarts
+SUCCESS  test/features/r82/r82_a02_new2_delete_isolation_test.dart :: History is gone too, and the journal stays empty across restarts
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: throws: A03 as reported — a stage choice queued behind an earlier write, then a kept Circle used today; the Plan start is refused: the stage Circle is never written to the day keys, and a restart never shows it
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: throws: a stage Circle whose served stage is refused, not yet started: once that is certain it is taken off the screen — today's choice opens again — and the user is told
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: throws: the same, Start tapped while its Plan save was still pending: the Circle does not start before that save lands; it fails, so the Start is refused, the unsaveable offer is taken back, the user is told, and nothing of it is on disk
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: returnsFalse: A03 as reported — a stage choice queued behind an earlier write, then a kept Circle used today; the Plan start is refused: the stage Circle is never written to the day keys, and a restart never shows it
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: returnsFalse: a stage Circle whose served stage is refused, not yet started: once that is certain it is taken off the screen — today's choice opens again — and the user is told
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: returnsFalse: the same, Start tapped while its Plan save was still pending: the Circle does not start before that save lands; it fails, so the Start is refused, the unsaveable offer is taken back, the user is told, and nothing of it is on disk
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: NEW-1 — "Pause" after the stage Circle was published and started: its Close and reflection are still saved, on disk and after a restart
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: NEW-1 — "Leave" after the stage Circle was published and started: its Close and reflection are still saved, on disk and after a restart
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: NEW-1 — "Restart the Plan (Leave, then Go through it again)" after the stage Circle was published and started: its Close and reflection are still saved, on disk and after a restart
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: NEW-1 — "Go through it again after leaving it earlier" after the stage Circle was published and started: its Close and reflection are still saved, on disk and after a restart
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: NEW-1 — "Keep it gentler (I2's application)" after the stage Circle was published and started: its Close and reflection are still saved, on disk and after a restart
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: NEW-1 — "Start another Plan" after the stage Circle was published and started: its Close and reflection are still saved, on disk and after a restart
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: NEW-1 (throws) — "Go through it again" still being saved when the Circle closes, then refused: the Close and reflection are still saved
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: NEW-1 (returnsFalse) — "Go through it again" still being saved when the Circle closes, then refused: the Close and reflection are still saved
+SUCCESS  test/features/r82/r82_a03_new1_stage_publication_test.dart :: NEW-1 — the Circle's own credit completes its stage; the reflection after it is still saved, and credited exactly once
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A04 — I2 changes the cycle it was validated for A04 as reported — a pending Leave, then Go through it again; I2 for cycle A applied: cycle B is never made gentler, and the Insight is not marked applied for a change it did not make
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A04 — I2 changes the cycle it was validated for A04 (throws) — the competing Leave and Go through again are refused and rolled back: I2 then applies to cycle A itself, durably
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A04 — I2 changes the cycle it was validated for A04 (returnsFalse) — the competing Leave and Go through again are refused and rolled back: I2 then applies to cycle A itself, durably
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A04 — I2 changes the cycle it was validated for domain: Keep it gentler names its cycle — another cycle is never changed
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I1 (Plan direction) — change saved, mark refused (throws); retried after a restart: the mark is recorded, the change is not made again
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I1 (Plan direction) — change saved, mark refused (returnsFalse); retried after a restart: the mark is recorded, the change is not made again
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I1 (Plan direction) — the same retry in the same session, without a restart
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I1 (Plan direction) — the repair keeps the entitlement check: after a lapse nothing is recorded
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I2 (gentler Plan) — change saved, mark refused (throws); retried after a restart: the mark is recorded, the change is not made again
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I2 (gentler Plan) — change saved, mark refused (returnsFalse); retried after a restart: the mark is recorded, the change is not made again
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I2 (gentler Plan) — the same retry in the same session, without a restart
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I2 (gentler Plan) — the repair keeps the entitlement check: after a lapse nothing is recorded
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I3 (leave a part out) — change saved, mark refused (throws); retried after a restart: the mark is recorded, the change is not made again
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I3 (leave a part out) — change saved, mark refused (returnsFalse); retried after a restart: the mark is recorded, the change is not made again
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I3 (leave a part out) — the same retry in the same session, without a restart
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I3 (leave a part out) — the repair keeps the entitlement check: after a lapse nothing is recorded
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I2 — the cycle changes after the change landed (Leave, Go through it again): the repair records the original cycle's application, and the new cycle is not made gentler
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I1 — a Plan the user started some other way after the Insight was shown is never claimed as its application
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark residual, closed — the Insights store refuses every write: the change still lands, as before, and the user is told; after a restart the retry finds the Insight's own provenance on the Plan and records the mark, without changing the Plan again
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: A08 — repairing a refused applied mark I3 — a part left out by the user before the Insight was shown is not claimed as the Insight's application
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: NEW-3 — saved means what is on disk I2 (throws) — its own write refused, a later queued Plans write landed with the same change: reported done, and marked
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: NEW-3 — saved means what is on disk I2 (throws) — the later write is refused too: genuinely not saved, never reported as saved
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: NEW-3 — saved means what is on disk I2 (returnsFalse) — its own write refused, a later queued Plans write landed with the same change: reported done, and marked
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: NEW-3 — saved means what is on disk I2 (returnsFalse) — the later write is refused too: genuinely not saved, never reported as saved
+SUCCESS  test/features/r82/r82_a04_a08_new3_insight_actions_test.dart :: NEW-3 — saved means what is on disk Plans.confirmed — an earlier write refused, the later one holding the change confirmed: done
+SUCCESS  test/features/r82/r82_a05_nested_fields_test.dart :: Suggestion Preferences — readable entries keep their own fields A05 as reported — another part left out: the first entry keeps futureRule; so do the other lists, through two more saves and restarts
+SUCCESS  test/features/r82/r82_a05_nested_fields_test.dart :: Suggestion Preferences — readable entries keep their own fields a malformed date is not read as a date: the entry is kept as stored and never applied
+SUCCESS  test/features/r82/r82_a05_nested_fields_test.dart :: Plans — the last served record A05 as reported — unknown fields of a valid last served record survive an unrelated Plan save and restarts
+SUCCESS  test/features/r82/r82_a05_nested_fields_test.dart :: Plans — the last served record a malformed startedAfterExpiry (true) is never read as "started under Premium": no guided credit after a lapse, and it is written back as stored
+SUCCESS  test/features/r82/r82_a05_nested_fields_test.dart :: Plans — the last served record a malformed startedAfterExpiry (1) is never read as "started under Premium": no guided credit after a lapse, and it is written back as stored
+SUCCESS  test/features/r82/r82_a05_nested_fields_test.dart :: Plans — the last served record a malformed startedAfterExpiry (yes) is never read as "started under Premium": no guided credit after a lapse, and it is written back as stored
+SUCCESS  test/features/r82/r82_a05_nested_fields_test.dart :: Plans — the last served record a malformed revisit flag in the served stage is not read as "no revisit"
+SUCCESS  test/features/r82/r82_a05_nested_fields_test.dart :: Insights — accepted snapshots keep nested values A05 as reported — an object-valued fact, a non-text evidence item and unknown fields on a snapshot and its application survive an unrelated dismissal and restarts
+SUCCESS  test/features/r82/r82_a06_reflection_completion_test.dart :: A06 as reported — "Yes and useful", the new day opens, the useful answer removed, restart at 00:20: the reflection stays finished and the next Circle can be chosen
+SUCCESS  test/features/r82/r82_a06_reflection_completion_test.dart :: A06 as reported — "Yes and useful", the new day opens, both answers removed, restart at 00:20: the reflection stays finished and the next Circle can be chosen
+SUCCESS  test/features/r82/r82_a06_reflection_completion_test.dart :: A06 as reported — "Not today", the new day opens, both answers removed, restart at 00:20: the reflection stays finished and the next Circle can be chosen
+SUCCESS  test/features/r82/r82_a06_reflection_completion_test.dart :: the same in one session: recovery at 00:20 (a resume) does not bring the finished Circle back
+SUCCESS  test/features/r82/r82_a06_reflection_completion_test.dart :: control — a reflection genuinely still open after midnight is still carried over (no invented answer, no invented completion)
+SUCCESS  test/features/r82/r82_a06_reflection_completion_test.dart :: control — an answer only half given ("Yes", no usefulness) is not a finished reflection: removing nothing, it is still carried over
+SUCCESS  test/features/r82/r82_a06_reflection_completion_test.dart :: control — six hours after the Close an open reflection is no longer carried over; a finished one, answers removed, is not either
+SUCCESS  test/features/r82/r82_a06_reflection_completion_test.dart :: the completion is the session's own: a new day's choice clears it with the rest of the earlier session
+SUCCESS  test/features/r82/r82_a07_confirmed_history_test.dart :: I4 — the 4/7 → 4/6 threshold control — with History as it is (4/7), no I4 qualifies
+SUCCESS  test/features/r82/r82_a07_confirmed_history_test.dart :: I4 — the 4/7 → 4/6 threshold A07 as reported (throws) — a useful answer removed, its History write still pending; Insights opened: no I4 is generated from it, and none survives the refusal or two restarts
+SUCCESS  test/features/r82/r82_a07_confirmed_history_test.dart :: I4 — the 4/7 → 4/6 threshold A07 as reported (returnsFalse) — a useful answer removed, its History write still pending; Insights opened: no I4 is generated from it, and none survives the refusal or two restarts
+SUCCESS  test/features/r82/r82_a07_confirmed_history_test.dart :: I4 — the 4/7 → 4/6 threshold control — the removal lands first: then I4 is generated from the confirmed 4/6
+SUCCESS  test/features/r82/r82_a07_confirmed_history_test.dart :: I4 — the 4/7 → 4/6 threshold the removal lands while Insights is open: the next opening sees it
+SUCCESS  test/features/r82/r82_a07_confirmed_history_test.dart :: Plan stage 5 — the answers it is composed from an answer removal still pending (throws, then refused) when today's Circle is chosen: the Plan decides exactly as the confirmed History says
+SUCCESS  test/features/r82/r82_a07_confirmed_history_test.dart :: Plan stage 5 — the answers it is composed from an answer removal still pending (returnsFalse, then refused) when today's Circle is chosen: the Plan decides exactly as the confirmed History says
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: an integer stored where text is expected — Plans: opens unreadable, the value is kept aside exactly before anything is written over it; restarts open the same
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: an integer stored where text is expected — Insights: opens unreadable, kept aside exactly; assessing and restarts never fail
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: an integer stored where text is expected — Suggestion Preferences: opens as a record THIRTY can't read — changes are refused and the value stays, until Reset
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: an integer stored where text is expected — History: opens as a journal THIRTY can't read; today's Circle still opens and is saved, the stored value kept first
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: a Boolean stored where text is expected — Plans: opens unreadable, the value is kept aside exactly before anything is written over it; restarts open the same
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: a Boolean stored where text is expected — Insights: opens unreadable, kept aside exactly; assessing and restarts never fail
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: a Boolean stored where text is expected — Suggestion Preferences: opens as a record THIRTY can't read — changes are refused and the value stays, until Reset
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: a Boolean stored where text is expected — History: opens as a journal THIRTY can't read; today's Circle still opens and is saved, the stored value kept first
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: a list of text stored where text is expected — Plans: opens unreadable, the value is kept aside exactly before anything is written over it; restarts open the same
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: a list of text stored where text is expected — Insights: opens unreadable, kept aside exactly; assessing and restarts never fail
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: a list of text stored where text is expected — Suggestion Preferences: opens as a record THIRTY can't read — changes are refused and the value stays, until Reset
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: a list of text stored where text is expected — History: opens as a journal THIRTY can't read; today's Circle still opens and is saved, the stored value kept first
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: start-up: a deletion marker of the wrong type, and a Plans record of the wrong type, never stop the app from starting
+SUCCESS  test/features/r82/r82_a09_native_types_test.dart :: start-up: a pending deletion with a Plans record of the wrong type finishes
+SUCCESS  test/features/r82/r82_claude_audit_new1_triggers_test.dart :: Trigger A — no storage fault stage 5 closed, the Plan ended; "Go through it again" on the review page; that Circle's reflection is saved, also after a restart
+SUCCESS  test/features/r82/r82_claude_audit_new1_triggers_test.dart :: Trigger A — no storage fault stage 5 closed, the Plan ended; the I1 application (its confirmed "Go through it again"); that Circle's reflection is saved, also after a restart
+SUCCESS  test/features/r82/r82_claude_audit_new1_triggers_test.dart :: Trigger A — no storage fault a stage Circle started; Leave, then Start the same Plan again mid-Circle; its Close and reflection are saved, also after a restart
+SUCCESS  test/features/r82/r82_claude_audit_new1_triggers_test.dart :: Trigger B (throws) — one transient failure of the served-stage write at choice time: the Circle is taken back before it can start and the user is told; the next choice is saved, runs, and reaches History
+SUCCESS  test/features/r82/r82_claude_audit_new1_triggers_test.dart :: Trigger B (returnsFalse) — one transient failure of the served-stage write at choice time: the Circle is taken back before it can start and the user is told; the next choice is saved, runs, and reaches History
+SUCCESS  test/features/r82/r82_cross_store_adversarial_test.dart :: a Plan action while Today's Close is still being written: the Pause is refused (throws); the Close lands and is credited once, and a restart agrees
+SUCCESS  test/features/r82/r82_cross_store_adversarial_test.dart :: a Plan action while Today's Close is still being written: the Pause is refused (returnsFalse); the Close lands and is credited once, and a restart agrees
+SUCCESS  test/features/r82/r82_cross_store_adversarial_test.dart :: three queued Plan changes, the first two refused, the last landing: the last carries the first, and confirmed() of the first says done; a change no save carried says not saved
+SUCCESS  test/features/r82/r82_cross_store_adversarial_test.dart :: an answer removal still being written when Delete begins: the answer never comes back, History is empty, restarts agree
+SUCCESS  test/features/r82/r82_cross_store_adversarial_test.dart :: an Insight applied while Delete is under way: nothing it derived is left after the deletion, and Delete still succeeds
+SUCCESS  test/features/r82/r82_cross_store_adversarial_test.dart :: a Circle closed after midnight while its Plan is being left, then its reflection finished and an answer removed: the Close and the finished reflection stay; the new day opens
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: throws: paused — the Close was durable before the Pause: the credit lands with the Pause, on the original cycle and Circle, and the Plan stays paused
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: throws: left — the credit lands with the Leave on the cycle that was left; no new cycle, nothing reactivated
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: throws: left, then gone through again: the credit stays on the original cycle and the new cycle starts at stage 1 with nothing recorded
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: throws: restarted — the app restarts with the credit still refused, then the Plan is paused: the credit lands with the Pause
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: throws: lapsed — Premium ended after the Close: the Circle served and started under Premium keeps its credit through the Pause
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: throws: repeated restarts after the Pause: exactly one credit, the Plan never reactivated, the next cycle never advanced
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: returnsFalse: paused — the Close was durable before the Pause: the credit lands with the Pause, on the original cycle and Circle, and the Plan stays paused
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: returnsFalse: left — the credit lands with the Leave on the cycle that was left; no new cycle, nothing reactivated
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: returnsFalse: left, then gone through again: the credit stays on the original cycle and the new cycle starts at stage 1 with nothing recorded
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: returnsFalse: restarted — the app restarts with the credit still refused, then the Plan is paused: the credit lands with the Pause
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: returnsFalse: lapsed — Premium ended after the Close: the Circle served and started under Premium keeps its credit through the Pause
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: returnsFalse: repeated restarts after the Pause: exactly one credit, the Plan never reactivated, the next cycle never advanced
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: starting another Plan pauses this one: the earned credit lands with it
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: the Pause that folds the credit in is refused too: both are taken back; the next start credits the still-active Plan, once
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: no duplicate — the credit already durable: the Pause adds nothing
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: Premium rules kept — a Circle started only after a verified expiry earns no credit through a later Pause either
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: Pause before the Close (decided: R8.2 lifecycle policy) Pause BEFORE the Close: the Circle started before the Pause is credited once its Close is durable; the Plan stays paused
+SUCCESS  test/features/r82/r82_decision_a_historical_credit_test.dart :: Pause before the Close (decided: R8.2 lifecycle policy) Pause while the Close is still being written to History: not folded into the Pause (the Close was not durable yet), but credited once the Close lands — the Start came before the Pause
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: pending writes Start tapped while the offer is still being saved: not started until the store confirms it, then started and saved
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: pending writes a stage Circle tapped while its Plan save is pending: started only once the served stage is on disk
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: pending writes fast repeated taps while pending start the Circle once
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: throws: the offer was never saved: Start is refused with the user told, nothing is recorded; tapped again once the store heals, it starts and saves
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: throws: the pending offer write fails while Start waits: the Start is refused, never started
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: throws: a stage Circle whose Start record the Plans store refuses (a verified expiry since it was served): refused, then started on the retry with its record saved first
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: throws: restart after a refused Start: nothing was started, and the offer on disk starts normally
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: throws: a Plan action after a confirmed Start fails: the started Circle stays, closes and is saved; its credit catches up later
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: returnsFalse: the offer was never saved: Start is refused with the user told, nothing is recorded; tapped again once the store heals, it starts and saves
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: returnsFalse: the pending offer write fails while Start waits: the Start is refused, never started
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: returnsFalse: a stage Circle whose Start record the Plans store refuses (a verified expiry since it was served): refused, then started on the retry with its record saved first
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: returnsFalse: restart after a refused Start: nothing was started, and the offer on disk starts normally
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: returnsFalse: a Plan action after a confirmed Start fails: the started Circle stays, closes and is saved; its credit catches up later
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: after Delete Circle history, the same offer chosen again but not saved is never taken as saved: its Start is refused
+SUCCESS  test/features/r82/r82_decision_b_start_persistence_test.dart :: a Free Circle whose offer is already saved starts at once
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: a change made some other way is never claimed I1 — the app stopped while the Insight's Plan change was being written; the user then started the Plan themselves: the retry reports it not available and records nothing
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: a change made some other way is never claimed I3 — the app stopped while the Insight's left-out part was being written; the user then left the part out from a skip: never claimed
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: a change made some other way is never claimed I1 — provenance naming another Insight attributes nothing
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: a change made some other way is never claimed I2 — provenance for another cycle attributes nothing
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: the Insight's own change is recognized, never repeated I3 — the Insights store refuses every write (throws): its attempt can't be recorded, so nothing is left out; once the store takes it, the retry applies it once
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: the Insight's own change is recognized, never repeated I3 — the Insights store refuses every write (returnsFalse): its attempt can't be recorded, so nothing is left out; once the store takes it, the retry applies it once
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: the Insight's own change is recognized, never repeated I1 — residual: the Insights store refuses every write (throws); the change lands with its provenance; after a restart the retry records the mark and changes nothing
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: the Insight's own change is recognized, never repeated I1 — residual: the Insights store refuses every write (returnsFalse); the change lands with its provenance; after a restart the retry records the mark and changes nothing
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: the Insight's own change is recognized, never repeated I2 — residual: the Insights store refuses every write (throws); the change lands with its provenance; after a restart the retry records the mark and changes nothing
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: the Insight's own change is recognized, never repeated I2 — residual: the Insights store refuses every write (returnsFalse); the change lands with its provenance; after a restart the retry records the mark and changes nothing
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: the Insight's own change is recognized, never repeated I1 — provenance survives a later Pause and Go through again of the same Plan: the earlier application is still recorded
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: the provenance record a damaged record attributes nothing, and a later save writes it back exactly as stored
+SUCCESS  test/features/r82/r82_decision_c_insight_provenance_test.dart :: the provenance record a manual Plan action carries none
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Pause before Close Start → Pause → Close: credited to the original Plan, cycle, stage and Circle once the Close is durable; the Plan stays paused; served and Start provenance kept; the same after repeated restarts
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Pause before Close Start → another Plan started (which pauses this one) → Close: credited to the original Plan only; the other Plan stays active and does not move on
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Pause before Close Start → Pause → Carry on → Close: credited once, Plan active at stage 2
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Pause before Close Premium lapses after the Start, before the Close: the existing entitlement rule — served and started under Premium — still credits it
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Pause before Close a Start after a verified expiry earns nothing, Pause or not (entitlement rule unchanged)
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Pause before Close failed Close (throws: its History write refused), then recovery after a restart: credited once, Plan still paused
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Pause before Close failed Close (throws) that never becomes durable: no credit, also after restarts
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Pause before Close failed Close (returnsFalse: its History write refused), then recovery after a restart: credited once, Plan still paused
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Pause before Close failed Close (returnsFalse) that never becomes durable: no credit, also after restarts
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Leave before Close Start → Leave → Close: the Close is recorded in History; the abandoned cycle never moves on; the same after repeated restarts
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Leave before Close Start → Pause → Leave → Close: no credit; History keeps the Close
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Close requested before Leave Start → Close → Leave while the Close's day keys write is held: credited once the Close lands, to the cycle that was left; nothing reactivated; the same after restarts
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Close requested before Leave the same, the held day keys write then refused (throws) and never durable: no credit, also after restarts
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Close requested before Leave the same, the held day keys write then refused (returnsFalse) and never durable: no credit, also after restarts
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Close requested before Leave Start → Close → Leave while the Close's History write is held: credited once the Close lands, to the cycle that was left; nothing reactivated; the same after restarts
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Close requested before Leave the same, the held History write then refused (throws) and never durable: no credit, also after restarts
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Close requested before Leave the same, the held History write then refused (returnsFalse) and never durable: no credit, also after restarts
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Close requested before Leave Close → Leave + Go through it again while the Close is held: the credit goes to the cycle that was left; the new cycle never moves on
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Close requested before Leave Close failed while its History write was refused, Leave, then recovery after a restart: it is the same Close, so it is credited to the left cycle once
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: Close requested before Leave a Close refused outright, Leave, and the Circle closed again after a restart: that Close came after the Leave — no credit
+SUCCESS  test/features/r82/r82_lifecycle_policy_test.dart :: not covered by the policy (existing rule kept, flagged) Pause BEFORE the Start: a stage Circle started only after its Plan was paused earns no credit
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the founder's table Start → Close: credited once, also after two restarts
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the founder's table Start → Pause → Close: credited once, also after two restarts
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the founder's table Start → Pause → Resume → Close: credited once, also after two restarts
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the founder's table Pause → Start → Close: no Plan credit, also after two restarts
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the founder's table Pause → Start → Resume → Close: no Plan credit, also after two restarts
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the founder's table Pause → Start → Close → Resume: no Plan credit, also after two restarts
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the founder's table Pause → Start → Close → Resume → Pause: no Plan credit, also after two restarts
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the founder's table Start → Leave → Close: no Plan credit, also after two restarts
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the founder's table Start: no Plan credit, also after two restarts
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the founder's table Start → Close requested → Leave while it is being saved: the original cycle credited once, after the Close is durable
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the founder's table Close never durable: no credit, also after a restart and Resume
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit Start tapped while its offer is being saved, Plan paused, the Start becomes valid, Close, Resume, restarts: never credited
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit the next day: Resume and a new choice catch up yesterday's Circle — it stays without credit, and today's Circle earns its stage
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit the Start's record that it was made while paused is refused by the store: the Start is refused and the user told; tapped again, it starts — and is never credited
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit Premium lapsed while paused, Start, Close; resubscribed, Resume, restarts: never credited
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit control — Start under Premium, lapse, Close: credited once (the served exception)
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit a second Plan started before this Circle's Start pauses this Plan: no credit, also once this Plan is carried on again
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit control — a second Plan started after this Circle's Start: this Plan is credited once, the other stays active
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: a Start while paused stays without credit at most once: Start, Pause, Close, Resume, three restarts — one credit
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: stage 5 Pause, stage 5 started and closed: the Plan stays paused, its cycle not ended — and carrying on never ends it
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the record of a Start made while paused stored, it is honoured: an active Plan does not credit that Circle; a save writes it back with the unknown fields
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the record of a Start made while paused control — another Circle is credited as before
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the record of a Start made while paused damaged, it is never read as absent: the Plan is kept as stored and runs nothing
+SUCCESS  test/features/r83/r831_start_eligibility_test.dart :: the record of a Start made while paused Delete Circle history removes it with the other stage evidence
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: ServedStageCircle — known fields are what the model says R82-N03 / AUD-N1: a stored expiry note of true, cleared by a later Start under verified Premium, is written as cleared
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: ServedStageCircle — known fields are what the model says R82-N03 / AUD-N1 through the Plans: noteStart under verified Premium on a record read from disk credits after a restart
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: ServedStageCircle — known fields are what the model says control: true is written and read back as true
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: ServedStageCircle — known fields are what the model says control: the lifecycle stamps are written as set, and unknown fields of the record are kept
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: ServedStageCircle — known fields are what the model says control: the stored stage is written back as stored (R8.2 A05), its unknown fields too
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: ServedStageCircle — known fields are what the model says control: a damaged flag still makes the record unreadable
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: AppliedInsight — a whole record keeps what it does not know R82-N04: a valid record with an extension field writes it back
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: AppliedInsight — a whole record keeps what it does not know R82-N04 through the Plans: an unrelated Plan change keeps the extension
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: AppliedInsight — a whole record keeps what it does not know control: a new record is exactly its three fields
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: AppliedInsight — a whole record keeps what it does not know control: a damaged record attributes nothing and is kept as stored by its Plan
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: controls — every other persisted record round-trips CirclePlansState, PlanProgress, PlanCycle and StageRecord: decode ∘ encode is the identity on THIRTY's own bytes
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: controls — every other persisted record round-trips CirclePlansState, PlanProgress, PlanCycle and StageRecord keep unknown fields through a change
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: controls — every other persisted record round-trips InsightSnapshot and InsightsState: decode ∘ encode is the identity, unknown fields kept
+SUCCESS  test/features/r83/r83_codec_law_test.dart :: controls — every other persisted record round-trips Suggestion Preferences and their items: decode ∘ encode is the identity, unknown fields kept
+SUCCESS  test/features/r83/r83_cross_store_test.dart :: a Plans credit that lands but whose answer is lost the answer is lost: the credit is resolved on what the disk holds, and after a restart it is there exactly once
+SUCCESS  test/features/r83/r83_cross_store_test.dart :: a Plans credit that lands but whose answer is lost the app stops right after the credit lands: after a restart it is there once, never twice
+SUCCESS  test/features/r83/r83_cross_store_test.dart :: stage 5 lifecycle boundaries stage 5 started, Plan paused, Close durable: credited once; the cycle reaches its end and the Plan ends — never active again
+SUCCESS  test/features/r83/r83_cross_store_test.dart :: stage 5 lifecycle boundaries stage 5 Close asked for, the Plan left while that Close is still being saved: credited to the left cycle once; it stays left
+SUCCESS  test/features/r83/r83_delete_boundary_test.dart :: Claude AUD-N2 — no deleted action instant comes back Start, Delete, the same stage Circle served again the same day, Plan paused before its Start: no Start instant is stamped
+SUCCESS  test/features/r83/r83_delete_boundary_test.dart :: Claude AUD-N2 — no deleted action instant comes back Close requested, Delete, re-served the same day, Plan left: no Close instant is stamped
+SUCCESS  test/features/r83/r83_delete_boundary_test.dart :: Claude AUD-N2 — no deleted action instant comes back control — without a Delete, a Start before the Pause is stamped
+SUCCESS  test/features/r83/r83_delete_boundary_test.dart :: Claude AUD-N3 — a change reported not saved is never saved by the Delete a Pause being written when Delete begins, then refused: the user is told, and disk and screen both keep the Plan active
+SUCCESS  test/features/r83/r83_delete_boundary_test.dart :: Claude AUD-N3 — a change reported not saved is never saved by the Delete control — a Pause being written when Delete begins, then landing: paused on disk, nothing reported failed
+SUCCESS  test/features/r83/r83_delete_boundary_test.dart :: Claude AUD-N3 — a change reported not saved is never saved by the Delete control — the Delete intent refused while a Pause is pending: nothing is deleted, the Pause lands
+SUCCESS  test/features/r83/r83_delete_boundary_test.dart :: founder decision D1 — an Insight's attribution goes with History after a Delete that succeeds, the left-out part no longer names the Insight; the part, its date and every other preference stay
+SUCCESS  test/features/r83/r83_delete_boundary_test.dart :: founder decision D1 — an Insight's attribution goes with History the Insight's own "Leave this out" still being written when the Delete begins: it lands, and the Delete removes its attribution
+SUCCESS  test/features/r83/r83_delete_boundary_test.dart :: founder decision D1 — an Insight's attribution goes with History the attribution's removal refused: the Delete reports failure and stays pending; the next start finishes it
+SUCCESS  test/features/r83/r83_delete_boundary_test.dart :: founder decision D1 — an Insight's attribution goes with History the app stops right after the Delete intent lands: the next start removes the attribution and keeps the part
+SUCCESS  test/features/r83/r83_delete_boundary_test.dart :: founder decision D1 — an Insight's attribution goes with History control — the Delete intent refused: the preferences are not touched, the attribution included
+SUCCESS  test/features/r83/r83_delete_boundary_test.dart :: founder decision D1 — an Insight's attribution goes with History control — a preferences record THIRTY can't read is left exactly as stored by the Delete
+SUCCESS  test/features/r83/r83_harness_selftest_test.dart :: the ack-lost fault the value lands and the call throws; writeConfirmed then puts the previous value back, which lands too
+SUCCESS  test/features/r83/r83_harness_selftest_test.dart :: the ack-lost fault with thenStop the value lands and the process stops: the call never completes, nothing after it lands
+SUCCESS  test/features/r83/r83_harness_selftest_test.dart :: the ack-lost fault distinct from a refused write, which never lands
+SUCCESS  test/features/r83/r83_harness_selftest_test.dart :: the ack-lost fault a held write released as ack-lost lands, then fails
+SUCCESS  test/features/r83/r83_harness_selftest_test.dart :: the single-writer guard two writes of one key in flight at once are recorded
+SUCCESS  test/features/r83/r83_harness_selftest_test.dart :: the single-writer guard one write after another is not
+SUCCESS  test/features/r83/r83_harness_selftest_test.dart :: the durable-state oracle a clean disk shows no violation
+SUCCESS  test/features/r83/r83_harness_selftest_test.dart :: the durable-state oracle V: a record whose re-encoding differs is reported
+SUCCESS  test/features/r83/r83_harness_selftest_test.dart :: the durable-state oracle IV: a Circle started on another day than its own is reported
+SUCCESS  test/features/r83/r83_harness_selftest_test.dart :: the durable-state oracle VI: residue after a Delete is reported
+SUCCESS  test/features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark I1 — the Insight started the Plan, its mark was refused, the user then chose Pause: after a restart the retry records the mark, and the Plan stays as the user left it
+SUCCESS  test/features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark I1 — the Insight started the Plan, its mark was refused, the user then chose Leave: after a restart the retry records the mark, and the Plan stays as the user left it
+SUCCESS  test/features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark I2 — the Insight made the cycle gentler, its mark was refused, the user then turned gentler off: the retry records the mark and never turns it on again
+SUCCESS  test/features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark D3 — the mark carries the day the change was made, not the day of the retry
+SUCCESS  test/features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark control (III) — with no reversal, repeated retries and restarts record the mark once and never change the Plan
+SUCCESS  test/features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark control — the mark's own write lands but its answer is lost: the change stands, the retry records the mark once, the Plan is not changed again
+SUCCESS  test/features/r83/r83_insight_attribution_test.dart :: R82-N01 — a retry after a manual reversal repairs only the mark control — the app stops right after the mark lands: after a restart it is applied, and a retry changes nothing
+SUCCESS  test/features/r83/r83_insight_attribution_test.dart :: R82-N02 — a manual change queued ahead is never the Insight's I3 — "Leave this out" by hand is still being written when the Insight is applied: the part is left out by the user, the Insight is not marked applied, and no attribution is invented
+SUCCESS  test/features/r83/r83_insight_attribution_test.dart :: R82-N02 — a manual change queued ahead is never the Insight's control — the I3 applied alone is done, saved with its provenance, and marked
+SUCCESS  test/features/r83/r83_insight_attribution_test.dart :: R82-N02 — a manual change queued ahead is never the Insight's control — the Plans equivalent: a manual Start still being written when I1 is applied is never claimed
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: main(): the V1 retirement marker stored as String: retirement completes, the V1 records go, the marker is kept as stored
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: main(): the V1 retirement marker stored as int: retirement completes, the V1 records go, the marker is kept as stored
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: main(): the V1 retirement marker control — absent: retirement runs and records the marker
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: main(): the V1 retirement marker control — true: nothing runs
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: main(): the reminder state values of the wrong type read as the defaults, and stay stored
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: main(): the reminder state a time the user sets is saved without writing the default over an enabled flag of the wrong type
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: main(): the reminder state control — values of the right type are read
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations analytics consent of the wrong type means no consent, kept as stored
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations a tester id or cohort of the wrong type is never written over
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations a First Breath date of the wrong type reads as not played today
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations invitation flags of the wrong type never break Today, and are never written over
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations cold start with today's Circle on show and a First Breath date and invitation flags of the wrong type: THIRTY starts and shows Today
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations cold start with analytics consent stored as text: THIRTY starts and shows Today
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations cold start with consent given, tester id and cohort stored as numbers: THIRTY starts and shows Today
+SUCCESS  test/features/r83/r83_startup_types_test.dart :: first frame: analytics, First Breath, invitations cold start with First Breath date and invitation flags of the wrong type: THIRTY starts and shows Today
+SUCCESS  test/features/r83/r83_start_boundary_test.dart :: R82-N05 — a pending Start does not cross local midnight a Free offer tapped at 23:59:59 whose save lands after midnight is not started; the new day opens
+SUCCESS  test/features/r83/r83_start_boundary_test.dart :: R82-N05 — a pending Start does not cross local midnight a stage Circle whose Start record is still being saved at midnight is not started, and earns nothing
+SUCCESS  test/features/r83/r83_start_boundary_test.dart :: R82-N05 — a pending Start does not cross local midnight control — the same save landing before midnight starts the Circle, which carries on past midnight
+SUCCESS  test/features/r83/r83_start_boundary_test.dart :: Claude AUD-N1 — an expiry note cleared by a later Start Start after a verified expiry; the app stops after the Plans note lands; resubscribed, Start under Premium; Premium lapses and the app restarts before Close: credited once
+SUCCESS  test/features/r83/r83_start_boundary_test.dart :: Claude AUD-N1 — an expiry note cleared by a later Start control — the same sequence without the last restart is credited once
+SUCCESS  test/features/r83/r83_start_boundary_test.dart :: Claude AUD-N1 — an expiry note cleared by a later Start control — a Start after a verified expiry, never resubscribed, earns nothing after a restart
+SUCCESS  test/features/r83/r83_start_boundary_test.dart :: founder decision D2 — Pause while a Start is pending the Circle starts and closes; the Plan stays paused and earns nothing, also after a restart
+SUCCESS  test/features/r83/r83_start_boundary_test.dart :: founder decision D2 — Pause while a Start is pending control — the Plan paused after a valid Start is credited at the durable Close (lifecycle policy)
+SUCCESS  test/features/r83/r83_start_boundary_test.dart :: founder decision D2 — Pause while a Start is pending control — a Pause whose save is refused while the Start is pending leaves the Plan active; the Start then credits normally
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B1 — I3 retried after Put back B1-1 founder sequence: applied, Preferences confirmed, mark refused, Put back, retried: the part stays available, no action repeated, no application date
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B1 — I3 retried after Put back B1-2 repeated retries and restarts change nothing
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B1 — I3 retried after Put back B1-3 the Preferences write is refused (returns false): nothing was done, so a later retry applies it once
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B1 — I3 retried after Put back B1-4 the Preferences write lands but its answer is lost: the outcome is uncertain — no replay, no application claimed
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B1 — I3 retried after Put back B1-5 the app stops right after the attempt is recorded, before the change: no replay after the restart
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B1 — I3 retried after Put back B1-6 the app stops after the change lands, before the mark: after a restart the mark is recorded with the original date, the change is not made twice
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B1 — I3 retried after Put back B1-ctl I3 applied normally: left out once, marked that day
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B1 — I3 retried after Put back B1-ctl2 the attempt record itself is refused: no change is made
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B2 — I4 retried after the kept Circle was removed B2-1 founder sequence: kept, Kept Circles confirmed, mark refused, the user removes it, retried: it stays removed, no application date
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B2 — I4 retried after the kept Circle was removed B2-2 repeated retries and restarts recreate nothing
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B2 — I4 retried after the kept Circle was removed B2-3 a Keep the user made independently is never attributed to I4
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B2 — I4 retried after the kept Circle was removed B2-4 at the kept limit nothing is kept and nothing recorded; once a place is free, I4 keeps once
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B2 — I4 retried after the kept Circle was removed B2-5 the Kept Circles write is refused (returns false): nothing was kept, so a later retry keeps it once
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B2 — I4 retried after the kept Circle was removed B2-6 the Kept Circles write lands but its answer is lost: uncertain — never kept again, never claimed
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B2 — I4 retried after the kept Circle was removed B2-7 the app stops after the Keep lands, before the mark: after a restart the mark is recorded with the original date; one kept Circle
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights R832-B2 — I4 retried after the kept Circle was removed B2-ctl I4 applied normally, also without Premium: kept once, marked that day
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights The attempt record R1 it survives reassessment, a rebuild, another snapshot's change and restarts
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights The attempt record R2 a damaged record makes the snapshot unreadable — kept as stored; a field this build doesn't know is kept
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights The attempt record R3 Delete Circle history removes it with the snapshots; the user's choices stay
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights Controls — I1 and I2 unchanged I1 applied: the Plan is started, marked that day
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: Insights Controls — I1 and I2 unchanged I2 applied: the cycle is gentler, marked that day
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: N01-C — founder temporal policy N1 Paused → Start pending → Resume confirmed → the prerequisite resolves: the Start is cancelled; a fresh Start on the active Plan is credited once
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: N01-C — founder temporal policy N2 Active → Start pending → Pause confirmed → the prerequisite resolves: the Start is cancelled; a fresh Start on the paused Plan is never credited
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: N01-C — founder temporal policy N3 the Pause is refused by the store: the Plan stayed active, so the pending Start goes ahead and is credited once
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: N01-C — founder temporal policy N4 the Resume is refused by the store: the Plan stayed paused, so the pending Start goes ahead without credit
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: N01-C — founder temporal policy N5 the paused-Start record is refused: the Start is refused; the next tap starts without credit
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: N01-C — founder temporal policy N6 repeated taps during a pending Start, and after its cancellation, start the Circle once
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: N01-C — founder temporal policy N7 a restart after the cancellation: nothing was started, no paused-Start record; a fresh Start is credited once
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: N01-C — founder temporal policy N8 Resume tapped while the paused Start's own record is being written: the Start is cancelled once the Resume is confirmed; the record left excludes nothing; a fresh Start is credited once
+SUCCESS  test/features/r832/r832_founder_scope_test.dart :: N01-C — founder temporal policy N-ctl Start → Pause → Close (a valid Start before the Pause) is credited once, also after restarts
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 Check A — lifecycle ABA while a Start is pending A1 Paused → Start pending → Resume confirmed → Pause confirmed (same cycle) → resolves: cancelled; nothing recorded, also after a restart; a fresh Start on the paused Plan is never credited
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 Check A — lifecycle ABA while a Start is pending A2 Active → Start pending → Pause confirmed → Resume confirmed (same cycle) → resolves: cancelled; a fresh Start is credited once
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 Check A — lifecycle ABA while a Start is pending A3 Active → Start pending → another Plan started (this one paused) → this one carried on again → resolves: cancelled
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 Check A — lifecycle ABA while a Start is pending A4 Paused → Start pending → Resume refused → resolves: no confirmed transition — the Start goes ahead, never credited
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 Check A — lifecycle ABA while a Start is pending A5 a same-day rebuild while the Start is pending cancels it; a restart leaves nothing started
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — more transitions, failures and uncertainty G1 four confirmed transitions (P→A→P→A→P) before one pending Start resolves: cancelled
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — more transitions, failures and uncertainty G2 queued, not yet confirmed when the Start is tapped… then a Pause and Resume confirmed together after the tap: cancelled
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — more transitions, failures and uncertainty G3 two refused Pauses (returns false) while the Start is pending: nothing happened — it goes ahead and is credited once
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — more transitions, failures and uncertainty G4 a Pause whose save throws (uncertain: it may have landed) while the Start is pending: cancelled — never started on an unverified lifecycle; a fresh Start then works
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — more transitions, failures and uncertainty G5 a Pause that lands but whose answer is lost (uncertain) while the Start is pending: cancelled; nothing recorded
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — more transitions, failures and uncertainty G6 control: Start tapped while a Resume is still being saved; the Resume lands — the Start was asked for on it and goes ahead, credited once
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — more transitions, failures and uncertainty G7 control: Start tapped while a Resume is still being saved; the Resume is refused — the Plan the Start was asked for on never existed: cancelled
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — rebuild, Delete, stale continuation, restart R1 a Plans rebuild while a Start is pending: cancelled (the confirmed history before it can't be verified)
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — rebuild, Delete, stale continuation, restart R2 a Plans rebuild after a confirmed A→P→A: the rebuilt notifier never authorizes the earlier Start
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — rebuild, Delete, stale continuation, restart R3 Delete Circle history after a confirmed A→P→A: the pending Start is still cancelled
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — rebuild, Delete, stale continuation, restart R4 control: Delete Circle history alone (no lifecycle change) cancels nothing
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — rebuild, Delete, stale continuation, restart R5 a stale continuation — conditions captured before a restart, resolved on the new process's Plans: cancelled
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — rebuild, Delete, stale continuation, restart R6 control: no change at all — the Start is allowed
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — rebuild, Delete, stale continuation, restart R7 a restart while the Start is pending after a confirmed A→P→A: nothing started, no record, no credit — on disk and in memory
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — rebuild, Delete, stale continuation, restart R8 a restart with the Start pending: the restored day is not started, no record, no credit — on disk and in memory
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — credit policy controls C1 valid Start → Pause → Close: credited once, also after restarts
+SUCCESS  test/features/r832/r832_g1_lifecycle_generation_test.dart :: R832-G1 — credit policy controls C2 Pause → valid Start → Close: never credited, also after a Resume and restarts
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A1 seq1: Pause → Start → Close → Resume → Leave → Again → restart ×2: never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A2 seq2: Pause → Start → Resume → Close → Leave → Again → restart ×2: never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A4 left Plan started again: Pause → Start → Close → Resume → Leave → StartPlan → restart ×2: never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A5 I1-style Go through again: Pause → Start → Close → Resume → Leave → AgainByInsight → restart ×2: never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A6 later lifecycle changes: Pause → Start → Close → Resume → Leave → Again → Pause → Resume → Leave → Again → restart ×2: never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A3 seq1 then the next day's catch-up: never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A7 Premium lapse verified at Start, then resubscribed: never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A-ctl1 control: Start → Close → Leave → Again (valid Start): credited once, on the first cycle
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A-ctl2 control: Start → Close requested → Leave while the Close is saving → Again: credited once, on the left cycle
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group A — Claude AUD-R83-1 A-ctl3 control: Pause → Start → Close → Resume → Leave, no new cycle: never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B1 (N01-A) the paused-Start prerequisite lands and the process stops before the Start: a later valid active Start is credited once
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B2 (AUD-R83-3) the prerequisite lands, the Start's own day-keys save fails: after a restart, a later valid active Start is credited once
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B3 control: the prerequisite lands but its answer is lost (the Start is refused): a later valid active Start is credited once
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B4 (N01-B) a pending paused Start is cancelled by a same-day rebuild; its prerequisite then lands: a later valid active Start is credited once
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B-tie an abandoned prerequisite, then a later active Start at the very same instant (the harness clock stands still): the abandoned record is superseded first — credited once
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B7 an abandoned prerequisite whose removal the store refuses: that Start is refused, the record stays; the next tap removes it and starts — credited once
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B5 (N01-C) Resume tapped while the paused Start's prerequisite is being written, which lands: that Start is cancelled; a fresh Start on the active Plan is credited once
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B6 control: an abandoned prerequisite, then a genuine paused Start on the still-paused Plan, Close, Resume: never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B-ctl Pause → Start → Close → Resume → restart ×2: never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B-ctl Start → Pause → Close → restart ×2: credited once
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B-ctl Start → Pause → Resume → Close → restart ×2: credited once
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 S1 (Astra single-slot concern) two Circles started while paused on consecutive days, the Plan carried on between, restarts and catch-ups: neither credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group B — Astra R83-N01 / Claude AUD-R83-3 B-ctl Delete while the paused-Start prerequisite is being written: no paused-Start fact survives; nothing credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C1 (N02) Astra — first prerequisite refused
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C1b (N02) Astra — first prerequisite lands
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C1c (N02) Astra — first prerequisite lands, answer lost
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C2 (AUD-R83-2) Resume refused by the store while Start is tapped: Close, Resume, restarts — never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C2b control (AUD-R83-2) the held Resume lands: the Start is on an active Plan — credited once
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C2c (AUD-R83-2) the held Resume lands but its answer is lost (reported refused): Close, Resume, restarts — never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C3 a Pause that lands and a Resume the store refuses, both pending at the Start tap: never credited
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Plans — Start identity and historical eligibility Group C — Astra R83-N02 / Claude AUD-R83-2 C4 control: nothing pending, the Plan active — the Start is valid at once (decision B fast path) and credited once
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Group D — Astra R83-N03 and Insight idempotence D1 (R83-N03) I2 applied, mark refused; gentler off by hand and the Plan paused; I1 carries the Plan on seven days later; the original I2 retried: gentler is never turned on again
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Group D — Astra R83-N03 and Insight idempotence D-ctl1 control: I2 never applied; I1 carries the Plan on later; I2 applied then: gentler turned on, I2 marked that day
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Group D — Astra R83-N03 and Insight idempotence D-ctl2 control: I2 applied, mark refused, no other Insight: the retry records the mark with the original date and changes nothing
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Group D — Astra R83-N03 and Insight idempotence D-ctl3 (R83-N03) the displaced Insight's mark is refused: the later Insight changes nothing, the earlier provenance stays, and both resolve once the store accepts
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Group D — Astra R83-N03 and Insight idempotence Claude H1 — I3 around Delete's final Preferences pass H1 apply-then-delete: no Insight id survives a Delete reported done
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Group D — Astra R83-N03 and Insight idempotence Claude H1 — I3 around Delete's final Preferences pass H1 apply-then-delete, Preferences write held: no Insight id survives a Delete reported done
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Group D — Astra R83-N03 and Insight idempotence Claude H1 — I3 around Delete's final Preferences pass H1 delete-then-apply: no Insight id survives a Delete reported done
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: Group D — Astra R83-N03 and Insight idempotence Claude H1 — I3 around Delete's final Preferences pass H1 delete-then-apply, Preferences write held: no Insight id survives a Delete reported done
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: The paused-Start record's stored form O1 (Astra §7 observation) a value that names no day, or no instant, makes the Plan unreadable — kept as stored, never read as an exclusion that matches nothing
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: The paused-Start record's stored form O2 the record round-trips with its instant and any field this build doesn't know; an R8.3.1 record (the day alone) is read and written back as stored
+SUCCESS  test/features/r832/r832_reproduction_test.dart :: The paused-Start record's stored form O3 an R8.3.1 record still excludes every Start of its Circle; a record with an instant excludes only that Start
+SUCCESS  test/features/r833/r833_identity_contract_test.dart :: ID-1 one clock instant, one random value: every Keep still gets its own id, and a user's Keep never an Insight's
+SUCCESS  test/features/r833/r833_identity_contract_test.dart :: ID-2 forced collision: I4-A's Keep throws before landing; I4-B is never given the id A recorded; A is never proven by B's Circle
+SUCCESS  test/features/r833/r833_identity_contract_test.dart :: ID-3 a caller id taken by a kept Circle THIRTY can't read is refused
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01 (Astra) I1 waits on the reconciliation of I2; Delete's first Plans pass lands; the reconciliation lands; I1 continues: no deleted Insight id survives, and the Plan the user paused is never carried on after the deletion boundary
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-v2 I2 waits on the reconciliation of I1 across Delete: gentler is never turned on, no deleted id survives
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-v3 the reconciliation write is returnsFalse across Delete: nothing is changed, Delete completes clean
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-v3 the reconciliation write is throws across Delete: nothing is changed, Delete completes clean
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-v4 Delete begins while the Insight still waits on a pending preference change (before any of its own writes): nothing is applied
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-v5 Delete while the Insight's own Plans write is held (queued before the boundary): it lands, Delete removes its attribution; the Plan's place stays the user's
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-v6 Delete after the Insight's Plans write landed, its Applied mark held: no deleted id survives
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-v7 control: the Delete is refused before its intent is durable — nothing is deleted and the Insight completes normally
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-v8 the Delete is interrupted (its intent stays) and finished at the next start: the stale continuation changed nothing
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-v9 repeated Delete while the Insight waits: both complete, nothing restored
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-v10 a fresh Insight after the completed Delete applies normally, with its own attribution
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-v11 the user's own Plan choices, Kept Circle and left-out part stay through the race
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-x1 I3: its attempt record is held when Delete begins; the stale continuation leaves nothing out and names nothing
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A01 — Delete Circle history versus an in-flight Insight A01-x2 I4: its attempt record is held when Delete begins; the stale continuation keeps no Circle from the deleted History
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A02 — unique I4 kept identity and exact action proof A02-A (Astra) two I4s applied in one cached-clock epoch: two Circles, two identities; removing or renaming one leaves the other
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A02 — unique I4 kept identity and exact action proof A02-B (Astra) I4-A's Keep throws before landing; a different I4-B keeps another Circle; I4-A is never marked Applied by it
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A02 — unique I4 kept identity and exact action proof A02-B2 a stored kept Circle with the very id I4-A recorded but from another Circle (a legacy collision) is never I4-A's proof
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A02 — unique I4 kept identity and exact action proof A02-C the Kept Circles domain refuses a caller id already in use; the existing Circle is untouched
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A02 — unique I4 kept identity and exact action proof A02-D two concurrent Keeps with one caller id: one lands
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A02 — unique I4 kept identity and exact action proof A02-E existing duplicate ids on disk are never removed or renamed together, and stay through restart and Delete
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A02 — unique I4 kept identity and exact action proof A02-F control: without Premium, I4's Keep of the user's own Circle works, once
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A02 — unique I4 kept identity and exact action proof A02-G control: the app stops right after the Keep lands, before the mark; reassessed after a restart, I4 is marked Applied from its own kept Circle on its own date
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A02 — unique I4 kept identity and exact action proof A02-H control: the Keep is refused (returns false): the attempt clears; the retry keeps once
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: R832-A02 — unique I4 kept identity and exact action proof A02-I control: Delete Circle history keeps both kept Circles, distinct
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: AUD-R832-1 — a pending Start is authorized only by its own Plan write X1 (Claude) the Resume pending at the tap is refused and rolled back; the user resumes again (confirmed); the Start resolves: cancelled
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: AUD-R832-1 — a pending Start is authorized only by its own Plan write X2 (Claude) the Resume pending at the tap is refused (not the latest write); Pause and Resume confirmed after it: cancelled
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: AUD-R832-1 — a pending Start is authorized only by its own Plan write X2-ctl (Claude) the Resume pending at the tap lands; Pause and Resume confirmed after it: cancelled (A2)
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: AUD-R832-1 — a pending Start is authorized only by its own Plan write X-ctl accepted case: the Resume pending at the tap is the one confirmed — the Start goes ahead, credited once
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: AUD-R832-1 — a pending Start is authorized only by its own Plan write X3 the Resume pending at the tap throws (uncertain); a later Resume is confirmed: cancelled
+SUCCESS  test/features/r833/r833_reproduction_test.dart :: AUD-R832-1 — a pending Start is authorized only by its own Plan write X4 the refused Resume, then a Resume and a restart before the offer resolves: nothing was started, nothing is owed
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — the Delete intent is answered before the held attempt resumes I3 intent refused first, then the attempt resumes
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — the Delete intent is answered before the held attempt resumes I3 intent uncertain_no_land first, then the attempt resumes
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — the Delete intent is answered before the held attempt resumes I3 intent uncertain_landed first, then the attempt resumes
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — the Delete intent is answered before the held attempt resumes I3 intent confirmed first, then the attempt resumes
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — receipt clearance after the intent is answered I3 target refused after an intent answered refused: the attempt is cleared, a retry makes it once
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — receipt clearance after the intent is answered I3 target refused after an intent answered uncertain_no_land: the attempt is kept, nothing is made
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — receipt clearance after the intent is answered I3 target refused after an intent answered uncertain_landed: the attempt is kept, nothing is made
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — later actions and later Deletes I3 a confirmed Delete after the stopped application (uncertain_no_land) removes its attempt; nothing is made
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — later actions and later Deletes I3 a confirmed Delete after the stopped application (uncertain_landed) removes its attempt; nothing is made
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — later actions and later Deletes I3 a fresh action after a completed refused Delete is not blocked by it
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — later actions and later Deletes I3 a fresh action after a completed uncertain_no_land Delete is not blocked by it
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — later actions and later Deletes I3 two Deletes answered uncertain_no_land then refused before the attempt resumes: it stops, its attempt kept
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — later actions and later Deletes I3 two Deletes answered uncertain_landed then refused before the attempt resumes: it stops, its attempt kept
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — later actions and later Deletes I3 two Deletes answered refused then uncertain_no_land before the attempt resumes: it stops, its attempt kept
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — later actions and later Deletes I3 two Deletes answered refused then refused before the attempt resumes: it goes on
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I3 — later actions and later Deletes I3 an uncertain Delete answered before the application began never stops it; a refused one overlapping it doesn't either
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — the Delete intent is answered before the held attempt resumes I4 intent refused first, then the attempt resumes
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — the Delete intent is answered before the held attempt resumes I4 intent uncertain_no_land first, then the attempt resumes
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — the Delete intent is answered before the held attempt resumes I4 intent uncertain_landed first, then the attempt resumes
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — the Delete intent is answered before the held attempt resumes I4 intent confirmed first, then the attempt resumes
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — receipt clearance after the intent is answered I4 target refused after an intent answered refused: the attempt is cleared, a retry makes it once
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — receipt clearance after the intent is answered I4 target refused after an intent answered uncertain_no_land: the attempt is kept, nothing is made
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — receipt clearance after the intent is answered I4 target refused after an intent answered uncertain_landed: the attempt is kept, nothing is made
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — later actions and later Deletes I4 a confirmed Delete after the stopped application (uncertain_no_land) removes its attempt; nothing is made
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — later actions and later Deletes I4 a confirmed Delete after the stopped application (uncertain_landed) removes its attempt; nothing is made
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — later actions and later Deletes I4 a fresh action after a completed refused Delete is not blocked by it
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — later actions and later Deletes I4 a fresh action after a completed uncertain_no_land Delete is not blocked by it
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — later actions and later Deletes I4 two Deletes answered uncertain_no_land then refused before the attempt resumes: it stops, its attempt kept
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — later actions and later Deletes I4 two Deletes answered uncertain_landed then refused before the attempt resumes: it stops, its attempt kept
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — later actions and later Deletes I4 two Deletes answered refused then uncertain_no_land before the attempt resumes: it stops, its attempt kept
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — later actions and later Deletes I4 two Deletes answered refused then refused before the attempt resumes: it goes on
+SUCCESS  test/features/r834/r8341_delete_outcome_continuity_test.dart :: R834-N01 I4 — later actions and later Deletes I4 an uncertain Delete answered before the application began never stops it; a refused one overlapping it doesn't either
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A02 — a later I4 of the same source never proves an earlier unresolved attempt A02-1 (Astra R833-A02) I4-B of the same source applied under a forced collision: only B is Applied; A keeps its unresolved attempt through reassessment, retry and restart; one kept Circle
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A02 — a later I4 of the same source never proves an earlier unresolved attempt A02-2 (Astra R833-A02) I4-B of the same source applied under a forced collision, after a restart: only B is Applied; A keeps its unresolved attempt through reassessment, retry and restart; one kept Circle
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A02 — a later I4 of the same source never proves an earlier unresolved attempt A02-3 a stored record in which two attempts name one kept id (only writable before R8.3.4) proves neither of them
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A02 — a later I4 of the same source never proves an earlier unresolved attempt A02-4 control: I4's own Keep lands and the app stops before the mark; reassessed after a restart, it is Applied from its own kept Circle
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A02 — a later I4 of the same source never proves an earlier unresolved attempt A02-5 control: the user's own Keep of the same source under the forced collision is never I4-A's proof
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A02 — a later I4 of the same source never proves an earlier unresolved attempt A02-6 control: a retained (unreadable) kept record with the recorded id and the same source is never proof
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A02 — a later I4 of the same source never proves an earlier unresolved attempt A02-7 control: Delete Circle history after the same-source case removes both snapshots; the one kept Circle stays, as stored, with no Insight id in it
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A01 / AUD-R833-1 — an I3/I4 attempt landing while a Delete intent is being recorded I3-REFUSED the attempt lands while the intent is held; the intent is then refused
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A01 / AUD-R833-1 — an I3/I4 attempt landing while a Delete intent is being recorded I3-ACCEPTED the attempt lands while the intent is held; the intent is then accepted
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A01 / AUD-R833-1 — an I3/I4 attempt landing while a Delete intent is being recorded I3-UNCERTAIN the attempt lands while the intent is held; the intent is then uncertain
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A01 / AUD-R833-1 — an I3/I4 attempt landing while a Delete intent is being recorded I3-RETRIED the attempt lands while the intent is held; the intent is then retried
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A01 / AUD-R833-1 — an I3/I4 attempt landing while a Delete intent is being recorded I3-CLEAR-REFUSED the action's own write is refused while the intent is held; the intent is then refused: the attempt is cleared and a retry makes the action once
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A01 / AUD-R833-1 — an I3/I4 attempt landing while a Delete intent is being recorded I3-CLEAR-ACCEPTED the action's own write is refused while the intent is held; the intent is then accepted: nothing is made
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A01 / AUD-R833-1 — an I3/I4 attempt landing while a Delete intent is being recorded I4-REFUSED the attempt lands while the intent is held; the intent is then refused
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A01 / AUD-R833-1 — an I3/I4 attempt landing while a Delete intent is being recorded I4-ACCEPTED the attempt lands while the intent is held; the intent is then accepted
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A01 / AUD-R833-1 — an I3/I4 attempt landing while a Delete intent is being recorded I4-UNCERTAIN the attempt lands while the intent is held; the intent is then uncertain
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A01 / AUD-R833-1 — an I3/I4 attempt landing while a Delete intent is being recorded I4-RETRIED the attempt lands while the intent is held; the intent is then retried
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A01 / AUD-R833-1 — an I3/I4 attempt landing while a Delete intent is being recorded I4-CLEAR-REFUSED the action's own write is refused while the intent is held; the intent is then refused: the attempt is cleared and a retry makes the action once
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A01 / AUD-R833-1 — an I3/I4 attempt landing while a Delete intent is being recorded I4-CLEAR-ACCEPTED the action's own write is refused while the intent is held; the intent is then accepted: nothing is made
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A03 — Keep id reservations last until the Keep settles A03-1 (Astra R833-A03) a second Keep of another day while the first write is held, under a forced collision: both succeed, with distinct ids
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A03 — Keep id reservations last until the Keep settles A03-2 control: an id a Keep under way holds is refused for another Keep; nothing duplicated
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A03 — Keep id reservations last until the Keep settles A03-3 control: a Keep whose write throws releases its id; the next Keep is given it, and only one record is stored
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A03 — Keep id reservations last until the Keep settles A03-3 control: a Keep whose write returnsFalse releases its id; the next Keep is given it, and only one record is stored
+SUCCESS  test/features/r834/r834_reproduction_test.dart :: R833-A03 — Keep id reservations last until the Keep settles A03-4 control: Keeps under way count toward the limit; a Keep of a day already being kept is refused
+SUCCESS  test/features/home/delete_circle_history_test.dart :: today's closed, reflected Circle is gone everywhere: journal, Today and its answers
+SUCCESS  test/features/home/delete_circle_history_test.dart :: no recorded-Circle key survives: session, reflection, composed Circle, the retired Phase D keys and the selection history drawn from past Circles
+SUCCESS  test/features/home/delete_circle_history_test.dart :: V2: everything learned goes with it — the next Circle is a first-ever use again, and the time choice starts from first use
+SUCCESS  test/features/home/delete_circle_history_test.dart :: preferences survive: name, reminder, appearance, analytics consent and the first-breath flag
+SUCCESS  test/features/home/delete_circle_history_test.dart :: kept Circles stay, the entitlement stays — and nothing learned survives the deleted evidence
+SUCCESS  test/features/home/delete_circle_history_test.dart :: a Plans or Insights record set aside as unreadable goes too; an unreadable kept-Circles record stays
+SUCCESS  test/features/home/delete_circle_history_test.dart :: after a restart the deleted Circle does not come back
+SUCCESS  test/features/home/delete_circle_history_test.dart :: cancelling keeps everything
+SUCCESS  test/features/home/r3_delete_feedback_test.dart :: it worked: no message — the history is simply gone
+SUCCESS  test/features/home/r3_delete_feedback_test.dart :: a write to the journal fails: the founder's message, the intent kept, nothing deleted back on screen — and the next start finishes it
+SUCCESS  test/features/home/r3_delete_feedback_test.dart :: a write to today's Circle fails: the founder's message, the intent kept, nothing deleted back on screen — and the next start finishes it
+SUCCESS  test/features/home/r3_delete_feedback_test.dart :: a write to Plan stage evidence fails: the founder's message, the intent kept, nothing deleted back on screen — and the next start finishes it
+SUCCESS  test/features/home/r3_delete_feedback_test.dart :: a write to Insight snapshots fails: the founder's message, the intent kept, nothing deleted back on screen — and the next start finishes it
+SUCCESS  test/features/home/r3_delete_feedback_test.dart :: a write to the last step fails: the founder's message, the intent kept, nothing deleted back on screen — and the next start finishes it
+SUCCESS  test/features/home/r3_delete_feedback_test.dart :: recording the intent fails once: it is tried again, and the deletion completes — no message, nothing pending
+SUCCESS  test/features/home/r3_delete_feedback_test.dart :: the intent can't be recorded at all: nothing is deleted, and the user is told so — never that it will finish
+SUCCESS  test/features/home/r3_delete_feedback_test.dart :: a Delete still pending, then a need tapped: finished first when it can be; when it can't, the same message and no Circle
+SUCCESS  test/features/home/r3_delete_feedback_test.dart :: at 2× text the message reads in full
+SUCCESS  test/features/home/r8_a06_unreadable_history_controls_test.dart :: History — History damaged: Copy exports it as stored, and Delete deletes it after confirmation
+SUCCESS  test/features/home/r8_a06_unreadable_history_controls_test.dart :: You — History damaged: Copy exports it as stored, and Delete deletes it after confirmation
+SUCCESS  test/features/home/r8_a06_unreadable_history_controls_test.dart :: History — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it after confirmation
+SUCCESS  test/features/home/r8_a06_unreadable_history_controls_test.dart :: You — History written by a newer THIRTY: Copy exports it as stored, and Delete deletes it after confirmation
+SUCCESS  test/features/home/r8_a06_unreadable_history_controls_test.dart :: History — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it after confirmation
+SUCCESS  test/features/home/r8_a06_unreadable_history_controls_test.dart :: You — History only kept as a preserved copy: Copy exports it as stored, and Delete deletes it after confirmation
+SUCCESS  test/features/home/r8_a06_unreadable_history_controls_test.dart :: History — History readable, but its one record isn't: Copy exports it as stored, and Delete deletes it after confirmation
+SUCCESS  test/features/home/r8_a06_unreadable_history_controls_test.dart :: You — History readable, but its one record isn't: Copy exports it as stored, and Delete deletes it after confirmation
+SUCCESS  test/features/home/r8_a06_unreadable_history_controls_test.dart :: History empty, nothing stored: nothing to copy or delete
+SUCCESS  test/features/home/presentation/phase_c_memory_ui_test.dart :: What THIRTY remembers per need, in the user's own words: useful before, resting for now — and nothing for an unanswered Circle
+SUCCESS  test/features/home/presentation/phase_c_memory_ui_test.dart :: What THIRTY remembers with nothing to reset, there is no reset control at all
+SUCCESS  test/features/home/presentation/phase_c_memory_ui_test.dart :: What THIRTY remembers "Suggest again" on a rest lifts it — the answer stays
+SUCCESS  test/features/home/presentation/phase_c_memory_ui_test.dart :: What THIRTY remembers "Don't suggest" is the user's own choice, shown as such; "Suggest again" reverses it — and nothing else
+SUCCESS  test/features/home/presentation/phase_c_memory_ui_test.dart :: What THIRTY remembers an answer can be removed from its detail; memory follows
+SUCCESS  test/features/home/presentation/phase_c_memory_ui_test.dart :: What THIRTY remembers Reset suggestion preferences: its own control, its own truthful confirmation; history stays
+SUCCESS  test/features/home/presentation/phase_c_memory_ui_test.dart :: What THIRTY remembers at 130% and 200% text nothing overflows or is cut off
+SUCCESS  test/features/home/presentation/phase_c_memory_ui_test.dart :: History: "Remove this answer" removes one answer — or the attempt and its usefulness — and keeps the Circle's record
+SUCCESS  test/features/home/presentation/phase_c_memory_ui_test.dart :: the way in, and Delete's truthful confirmation /memory opens on its need
+SUCCESS  test/features/home/presentation/phase_c_memory_ui_test.dart :: the way in, and Delete's truthful confirmation /memory?need=moreEnergy opens on its need
+SUCCESS  test/features/home/presentation/phase_c_memory_ui_test.dart :: the way in, and Delete's truthful confirmation You → "What THIRTY remembers"
+SUCCESS  test/features/home/presentation/phase_c_memory_ui_test.dart :: the way in, and Delete's truthful confirmation Delete Circle history says the suggestion preferences are kept — and keeps them
+SUCCESS  test/features/home/presentation/circle_history_page_test.dart :: shows an empty-state message when nothing is recorded yet
+SUCCESS  test/features/home/presentation/circle_history_page_test.dart :: lists a recorded entry with a clear shown/started/closed/attempt/usefulness distinction
+SUCCESS  test/features/home/presentation/circle_history_page_test.dart :: an old V1 Plan entry keeps a truthful line — what it came from, never a V2 Path (V2 Phase D)
+SUCCESS  test/features/home/presentation/circle_history_page_test.dart :: a historical Path step and routine (Phase D, retired by ADR-024) still read as what they were that day — no live routine or Path needed
+SUCCESS  test/features/home/presentation/circle_history_page_test.dart :: a Free-selector entry (no Plan fields) shows no Plan context line
+SUCCESS  test/features/home/presentation/circle_history_page_test.dart :: Delete all clears the journal only after explicit confirmation
+SUCCESS  test/features/home/presentation/circle_history_page_test.dart :: Delete permanently uses the AA errorText role, matching the Close Circle destructive action (A5)
+SUCCESS  test/features/home/presentation/circle_history_page_test.dart :: Delete all keeps kept Circles — they have their own controls
+SUCCESS  test/features/home/presentation/circle_history_page_test.dart :: Copy as text copies the exported journal to the clipboard
+SUCCESS  test/features/home/pre_release_retirement_test.dart :: V1 Premium retirement removes V1 Plans and Insights, keeps the journal and every Free preference, and runs once
+SUCCESS  test/features/home/pre_release_retirement_test.dart :: V1 Premium retirement an interrupted retirement (no marker yet) simply runs again
+SUCCESS  test/features/home/pre_release_retirement_test.dart :: Phase D retirement (B1) drops Paths, routines and maintenance; every kept Circle stays exactly as kept, under the same key
+SUCCESS  test/features/home/pre_release_retirement_test.dart :: Phase D retirement (B1) drops the routine "Don't suggest" items and nothing else from suggestion preferences
+SUCCESS  test/features/home/pre_release_retirement_test.dart :: Phase D retirement (B1) touches no journal entry: a routine day stays a routine day
+SUCCESS  test/features/home/pre_release_retirement_test.dart :: Phase D retirement (B1) runs once, leaves an unreadable record untouched, and changes nothing when there is nothing to retire
+SUCCESS  test/features/home/pre_release_retirement_test.dart :: Phase D retirement (B1) nothing in it makes a Plan, a routine or a kept Circle
+SUCCESS  test/features/home/pre_release_retirement_test.dart :: the kept-Circle store an unreadable record stays exactly where it is, and nothing kept is guessed at (audit remediation R4.1)
+SUCCESS  test/features/home/pre_release_retirement_test.dart :: the kept-Circle store a legacy record still reads its kept Circles before the migration has run
+SUCCESS  test/features/home/pre_release_retirement_test.dart :: the kept-Circle store the next write keeps only the kept Circles
+SUCCESS  test/features/home/pre_release_retirement_test.dart :: export carries the kept Circles — and no routine, Path or derived score as a current object
+SUCCESS  test/features/home/pre_release_retirement_test.dart :: a historical routine or joined Path Circle stays composite: never evidence about one activity
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — reading no stored value → null
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — reading a stored valid name rehydrates
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — reading an empty stored string → null
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — reading a whitespace-only stored string → null
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — reading a wrong-type stored value (an int) → null, without throwing
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — reading a wrong-type stored value (a bool) → null, without throwing
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — reading a wrong-type stored value (a string list) → null, without throwing
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — reading a stored value over the cap (bad data) → null
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing saving a valid name persists it
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing saving trims leading and trailing whitespace
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing saving a blank name removes the key rather than storing ""
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing clearing removes the key — and only that key
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing a name of exactly 40 code points is accepted
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing over 40 code points is rejected — never truncated — and changes nothing
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing the cap counts code points: 20 emoji (40 UTF-16 units) fit, 41 code points do not
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing Unicode name "Zoë" is stored exactly
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing Unicode name "Søren" is stored exactly
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing Unicode name "Łukasz" is stored exactly
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing Unicode name "Ngọc" is stored exactly
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing Unicode name "José María" is stored exactly
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing Unicode name "さくら" is stored exactly
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing Unicode name "Аня" is stored exactly
+SUCCESS  test/features/settings/application/first_name_provider_test.dart :: firstNameProvider — writing a saved name survives a cold start (new container, same storage)
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: firstUseRedirect (pure) unresolved: everything leads to the question
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: firstUseRedirect (pure) resolved: the question leads to Today; nothing else moves
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: When it is asked no stored flag: the question comes first, with nothing else reachable
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: When it is asked the flag false: the question comes first, with nothing else reachable
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: When it is asked a malformed flag: the question comes first, with nothing else reachable
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: When it is asked an existing user who already has a name but no flag is asked once, prefilled-free (the field starts empty)
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: When it is asked a deep location while unresolved still leads to the question
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: When it is asked Back on the question never slips past it
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Resolving it a valid name + Continue: saved, resolved, on to Today
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Resolving it the keyboard Done action continues too
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Resolving it Skip for now: no name, resolved, on to Today
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Resolving it blank input never becomes a name: Continue stays disabled and Done does nothing
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Resolving it over 40 code points: explained, Continue disabled, nothing saved
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Resolving it Unicode "José María" is saved exactly
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Resolving it Unicode "Zoë" is saved exactly
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Resolving it Unicode "さくら" is saved exactly
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Resolving it Unicode "Ngọc" is saved exactly
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Never asked again after skipping: the next launch opens Today
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Never asked again after saving a name: the next launch opens Today
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Never asked again the question's own location leads to Today once resolved
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Never asked again removing the name later in You keeps it resolved — no question on the next launch
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Never asked again "Delete Circle history" keeps the name and the resolved question
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: THIRTY identity the wordmark with Home's slogan, exactly once, top-left above the world window
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: THIRTY identity read once, as one identity: "THIRTY" then the slogan; the question stays the only header
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: THIRTY identity 360×740 at 200%: the slogan stays, at its logotype size
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: THIRTY identity Pixel 7 dark at 200%: the slogan stays, at its logotype size
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window sits between the wordmark and the question, centred
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window at 5:00 it shows assets/you/you_header_morning_v1.webp
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window at 8:00 it shows assets/you/you_header_morning_v1.webp
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window at 11:00 it shows assets/you/you_header_morning_v1.webp
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window at 12:00 it shows assets/you/you_header_day_v1.webp
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window at 14:00 it shows assets/you/you_header_day_v1.webp
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window at 17:00 it shows assets/you/you_header_day_v1.webp
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window at 18:00 it shows assets/you/you_header_evening_v1.webp
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window at 21:00 it shows assets/you/you_header_evening_v1.webp
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window at 4:00 it shows assets/you/you_header_evening_v1.webp
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window the art is cover-cropped round, never stretched
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window a window, not a Circle: no ring, no progress, no semantics
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window Pixel 7: the window stays present at a fitting size, round
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window 360×740: the window stays present at a fitting size, round
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window Pixel 7 at 200%: the window stays present at a fitting size, round
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window 360×740 at 200%: the window stays present at a fitting size, round
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window Pixel 7 at 200%: the larger window still leaves the question and both actions on the first screen
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window the keyboard opening never resizes the window
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window dark mode: the evening art in a dark-surface frame
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window light: flat — no shadow, halo or glow anywhere in the window
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: World window dark: flat — no shadow, halo or glow anywhere in the window
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Accessibility and layout the question is a header; the field is labelled; Continue and Skip for now are buttons
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Accessibility and layout Pixel 7 at 200%: fits with the keyboard up; both actions reachable
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Accessibility and layout 360×740: fits with the keyboard up; both actions reachable
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Accessibility and layout 360×740 at 200%: fits with the keyboard up; both actions reachable
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Accessibility and layout Pixel 7 dark: fits with the keyboard up; both actions reachable
+SUCCESS  test/features/settings/presentation/first_name_question_test.dart :: Accessibility and layout 360×740 dark at 200%: fits with the keyboard up; both actions reachable
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: shows "Premium is active" and a manage-subscription button when a real managementURL is available
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: falls back to plain Play Store guidance when active but no managementURL is available
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: shows the THIRTY Premium card with a "Become Premium" entry when inactive (Phase C1 copy)
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: shows a truthful "temporarily unavailable" state without implying the user was never subscribed
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: restore purchases: success reports the restored message
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: restore purchases: no purchase found is reported plainly, not as an error
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: restore purchases is idempotent — repeated taps never duplicate or crash
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: exposes inline export/delete data controls under "Data & privacy" — founder IA correction: these live directly on "You" now, not behind a link to the retired primary Journal tab
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: exposes the real System/Light/Dark theme control, reflecting and updating the actual themeModeProvider the app renders with
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: exposes an analytics consent toggle, defaulting to off and updating the real analyticsConsentProvider the app reads before transmitting anything
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: reminder off by default; enabling it opens the time picker and requests permission only at that point
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: shows a truthful message when permission is denied, without a repeated permission-request loop
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: disabling the reminder cancels pending work
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: shows a truthful "Android access needed" message with an "Allow access" action when notification permission is granted but exact-alarm access is not — never silently scheduled inexact
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: shows a truthful message when the device timezone cannot be resolved, without ever claiming the reminder is scheduled
+SUCCESS  test/features/settings/presentation/settings_page_test.dart :: Phase C1 — Premium card and grouped rows share one content inset (the 8pt mismatch A2 recorded is gone)
+SUCCESS  test/features/settings/presentation/you_b7_hierarchy_test.dart :: active: Personal (name, What THIRTY remembers, Yours, History) → Premium → Preferences → Data & privacy → About → Restore; the voice only with Premium; nothing retired
+SUCCESS  test/features/settings/presentation/you_b7_hierarchy_test.dart :: inactive: Personal (name, What THIRTY remembers, Yours, History) → Premium → Preferences → Data & privacy → About → Restore; the voice only with Premium; nothing retired
+SUCCESS  test/features/settings/presentation/you_b7_hierarchy_test.dart :: the move keeps consent exactly as it was: a stored "on" shows on, and the switch still sets it
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 320pt, checking, light: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 320pt, checking, dark: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 320pt, free, light: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 320pt, free, dark: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 320pt, active, light: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 320pt, active, dark: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 320pt, unavailable, light: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 320pt, unavailable, dark: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 360pt, checking, light: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 360pt, checking, dark: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 360pt, free, light: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 360pt, free, dark: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 360pt, active, light: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 360pt, active, dark: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 360pt, unavailable, light: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: 200% text, every billing state 360pt, unavailable, dark: nothing truncated, nothing overflows
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: Theme choice at 100% text 360pt: stacked rows, where the segmented control would split "System" across two lines
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: Theme choice at 100% text 412pt: stacked rows, where the segmented control would split "System" across two lines
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: Theme choice at 100% text a wide screen keeps the segmented control, every label on one line
+SUCCESS  test/features/settings/presentation/you_c1_real_font_test.dart :: Theme choice at 100% text stacked rows keep single-choice semantics and still set the theme
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Spoken guidance (V2 Phase D2) no setting while the build bundles no recordings
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Spoken guidance (V2 Phase D2) with the recordings bundled, on Free: no setting — THIRTY’s voice is Premium
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Spoken guidance (V2 Phase D2) with the recordings bundled, on Premium: on by default, and turning it off is remembered
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Hierarchy North Star order: header → Premium card → Preferences → Data & privacy → About → Restore purchases, with Restore as the last section
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Hierarchy Delete Circle history uses the errorText role; Copy as text does not
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Hierarchy both data actions are disabled with no history
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Billing-state matrix initializing: checking only — no acquisition CTA, no restore
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Billing-state matrix inactive + offer: the store's own localized price, never a hardcoded one
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Billing-state matrix inactive + offer still loading: no price text yet, CTA present
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Billing-state matrix inactive + no offer: a plain note, no price
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Billing-state matrix active: status and manage, no acquisition, no price, and the offer is never fetched
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Billing-state matrix unavailable: truthful status, no acquisition CTA, restore still offered
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Billing footer restore goes through EntitlementNotifier: a restored purchase flips the Premium card to active
+SUCCESS  test/features/settings/presentation/you_c1_test.dart :: Billing footer the manage URL is fetched once, not on every rebuild
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Personal row "Personal" sits after the header and before THIRTY Premium
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Personal row no name: "Your name" / "Add your name"
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Personal row a stored name shows the actual value
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Personal row no avatar, no account icon, at least 48dp tall
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Editor tapping the row opens the editor: title, supporting copy, labelled empty field, Save disabled, no Remove
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Editor prefilled with the existing name, with Remove name
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Editor Save stores the name and updates You immediately
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Editor the keyboard Done action saves too
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Editor Remove name clears it and returns the row to "Add your name" — no confirmation, nothing else touched
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Editor Remove name is quiet, not destructive red
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Editor Cancel changes nothing, even after typing
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Editor whitespace: a blank field cannot be saved; surrounding spaces are trimmed
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Editor over 40 code points: explained, Save disabled, nothing saved or truncated
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Accessibility "Personal" is a header; the row is one button announcing its value
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Accessibility with a name: "Your name, Thomas"
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Accessibility the field has an explicit label; Save, Cancel and Remove name are buttons
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Responsive Pixel 7 at 200%, light: the row and the editor fit, with the keyboard up
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Responsive Pixel 7 at 200%, dark: the row and the editor fit, with the keyboard up
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Responsive 360×740, light: the row and the editor fit, with the keyboard up
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Responsive 360×740, dark: the row and the editor fit, with the keyboard up
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Responsive 360×740 at 200%, light: the row and the editor fit, with the keyboard up
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Responsive 360×740 at 200%, dark: the row and the editor fit, with the keyboard up
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Privacy the Circle export ("Copy as text") never includes the name
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Privacy no analytics event carries the name — through app start, opening You and saving a name
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: Privacy "Delete Circle history" keeps the name
+SUCCESS  test/features/settings/presentation/you_first_name_test.dart :: YouPersonalCard copy
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Header THIRTY wordmark, "You" and the exact subtitle — scrolling with the page, no pinned AppBar, no profile button
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Header the title and every section heading are semantic headers
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Header the band sits edge to edge between the subtitle and the Premium card: the art for the daypart, cover-fit (never stretched) at 2.6:1, and decorative only
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: You header art resolves each daypart through THIRTY's own daypart boundaries
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: You header art every asset is a bundled WebP of the declared size, and its own — never another page’s band or a World scene
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: You header art the composition-aware crop keeps the oak (about 73% across each panorama) inside the visible window
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: You header art at 8:00 You shows assets/you/you_header_morning_v1.webp
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: You header art at 14:00 You shows assets/you/you_header_day_v1.webp
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: You header art at 21:00 You shows assets/you/you_header_evening_v1.webp
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: You header art renders nothing without art
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: You header art dimmed slightly in dark mode, full strength in light
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Premium card inactive: the founder-approved body line
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Premium card active: the founder-approved body line
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Premium card unavailable: the founder-approved body line
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Premium card initializing also keeps the body line, with no CTA
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Preferences semantics the reminder row is one control: its label with its switch state, announced once
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Preferences semantics the analytics row is one control: title, explanation and switch state together; still opt-in and Free
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Preferences semantics the selected theme is exposed as selected, in a single-choice group, with a check — never colour alone
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Preferences semantics choosing Appearance on You persists it
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Data & privacy "Delete Circle history" deletes the journal only — the kept Circles, reminder, appearance, analytics consent and other preferences are kept
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: About THIRTY and the real ReleaseInfo version, one quiet node, no link or chevron
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Restore purchases a full-height (48dp) action, and its result is announced as a live region and brought on screen
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive Pixel 7, light, inactive: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive Pixel 7, light, active: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive Pixel 7, light, unavailable: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive Pixel 7, dark, inactive: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive Pixel 7, dark, active: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive Pixel 7, dark, unavailable: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive Pixel 7 at 200%, light, inactive: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive Pixel 7 at 200%, light, active: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive Pixel 7 at 200%, light, unavailable: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive Pixel 7 at 200%, dark, inactive: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive Pixel 7 at 200%, dark, active: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive Pixel 7 at 200%, dark, unavailable: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive 360×740, light, inactive: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive 360×740, light, active: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive 360×740, light, unavailable: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive 360×740, dark, inactive: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive 360×740, dark, active: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive 360×740, dark, unavailable: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive 360×740 at 200%, light, inactive: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive 360×740 at 200%, light, active: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive 360×740 at 200%, light, unavailable: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive 360×740 at 200%, dark, inactive: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive 360×740 at 200%, dark, active: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive 360×740 at 200%, dark, unavailable: no overflow, nothing truncated, Restore reachable at the end
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: Responsive dark mode: the destructive row keeps the dark AA errorText role
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: In the app shell Pixel 7: scrolled to the end, Restore and its explanation sit fully above the floating nav
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: In the app shell 360×740: scrolled to the end, Restore and its explanation sit fully above the floating nav
+SUCCESS  test/features/settings/presentation/you_north_star_test.dart :: In the app shell 360×740 at 200%: scrolled to the end, Restore and its explanation sit fully above the floating nav
+SUCCESS  test/features/b8/b8_delete_longitudinal_test.dart :: active at stage 3 after weeks of history: the place, the cycle, kept Circles and leave-outs stay; the evidence goes; the next days build only on what is new
+SUCCESS  test/features/b8/b8_delete_longitudinal_test.dart :: just before stage 5, with every stage answered "Very useful": after the delete, stage 5 is case A over unanswered stages — no "you found useful" claim survives
+SUCCESS  test/features/b8/b8_delete_longitudinal_test.dart :: an ended cycle with its review: the review and its Insight go, and are never rebuilt; the Plan stays ended at its place
+SUCCESS  test/features/b8/b8_delete_longitudinal_test.dart :: a Plan the user left: the Leave and its date survive; the review built from deleted evidence does not
+SUCCESS  test/features/b8/b8_delete_longitudinal_test.dart :: the gentler setting — an applied setting — survives Delete; its evidence does not
+SUCCESS  test/features/insights/insights_service_test.dart :: the Premium boundary (ADR-024 §13), through billing inactive: no new Insight, no application
+SUCCESS  test/features/insights/insights_service_test.dart :: the Premium boundary (ADR-024 §13), through billing unavailable: no new Insight, no application
+SUCCESS  test/features/insights/insights_service_test.dart :: the Premium boundary (ADR-024 §13), through billing initializing: no new Insight, no application
+SUCCESS  test/features/insights/insights_service_test.dart :: the Premium boundary (ADR-024 §13), through billing active (paid, grace, or cancelled but paid): assess and apply
+SUCCESS  test/features/insights/insights_service_test.dart :: the Premium boundary (ADR-024 §13), through billing lapsed: what was shown stays readable; nothing new, nothing applied — even by calling the service directly
+SUCCESS  test/features/insights/insights_service_test.dart :: applications — explicit, through their own domains, safe to repeat I1: the Plan starts through Plans; again → already so
+SUCCESS  test/features/insights/insights_service_test.dart :: applications — explicit, through their own domains, safe to repeat I1 resolves truthfully when the Plan was started some other way
+SUCCESS  test/features/insights/insights_service_test.dart :: applications — explicit, through their own domains, safe to repeat I3: the existing Leave it out, once; Put it back undoes it
+SUCCESS  test/features/insights/insights_service_test.dart :: applications — explicit, through their own domains, safe to repeat I3 "Keep it": a dismissal — no preference, no answer, no ranking evidence, no second exclusion
+SUCCESS  test/features/insights/insights_service_test.dart :: applications — explicit, through their own domains, safe to repeat I4: Keep, through the kept Circles keeps the most recent useful Circle once — never a routine
+SUCCESS  test/features/insights/insights_service_test.dart :: applications — explicit, through their own domains, safe to repeat I4: Keep, through the kept Circles 8 kept when shown → Nothing to change, nothing to apply
+SUCCESS  test/features/insights/insights_service_test.dart :: applications — explicit, through their own domains, safe to repeat I4: Keep, through the kept Circles room gone between showing and applying → the limit, nothing replaced
+SUCCESS  test/features/insights/insights_service_test.dart :: I2 — gentler, on the real composer applied by the user → the next matching Plan Circle is gentler; ordinary Today is unchanged
+SUCCESS  test/features/insights/insights_service_test.dart :: I2 — gentler, on the real composer a different need: ordinary composition, untouched
+SUCCESS  test/features/insights/insights_service_test.dart :: I2 — gentler, on the real composer never below ≈10, and Not this one today stays gentler
+SUCCESS  test/features/insights/insights_service_test.dart :: I2 — gentler, on the real composer turned off by the user; ends with the cycle
+SUCCESS  test/features/insights/insights_service_test.dart :: I2 — gentler, on the real composer lapsed: not applied
+SUCCESS  test/features/insights/insights_service_test.dart :: I2 — gentler, on the real composer without the setting, a Plan stage composes exactly as before
+SUCCESS  test/features/insights/insights_service_test.dart :: the journal keeps a replaced stage offer (I2's evidence) "Too much for today" on a stage Circle is recorded against the stage, whatever replaced it
+SUCCESS  test/features/insights/insights_service_test.dart :: the journal keeps a replaced stage offer (I2's evidence) an ordinary day writes nothing new: old JSON stays byte-identical
+SUCCESS  test/features/insights/insights_service_test.dart :: "Not now" (§11) a Plan review is not dismissed here: Plans owns it
+SUCCESS  test/features/insights/insights_service_test.dart :: "Not now" (§11) hides the same observation for 28 days; History and suggestions untouched
+SUCCESS  test/features/insights/insights_service_test.dart :: Delete history and export (contract, Delete / Export) Delete history: every snapshot goes; what the user applied, kept and their Plan's place stay
+SUCCESS  test/features/insights/insights_service_test.dart :: Delete history and export (contract, Delete / Export) the export carries the snapshots as shown — no profile
+SUCCESS  test/features/insights/insights_service_test.dart :: Delete history and export (contract, Delete / Export) a restart reads exactly what was stored
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: the surface opens the real page: title, header, calendar, no dashboard
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: the surface exactly one current ordinary Insight, with its evidence and one action
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: the surface too little evidence: no Insight, the truthful count
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Free: the calendar and History are theirs no History: an empty calendar, said plainly, and what Premium would do
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Free: the calendar and History are theirs populated: readable calendar and History; a recorded date opens its record; nothing Premium is generated
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Free: the calendar and History are theirs "See as a list" opens History; "See Premium" the existing offer
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Premium early life day 1: no History, no Insight
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Premium early life week 1 with a Plan under way: the count and the Plan's place
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Premium early life a genuine Plan review appears at once, and opens the canonical review in Plans
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: applications — through the service, no stale button I1: Start Making room
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: applications — through the service, no stale button I2: keep this Plan's Circles gentler
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: applications — through the service, no stale button I3: Leave it out, through the existing control; the dismissal is "Not now", never "Keep it"
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: applications — through the service, no stale button I4: both fractions, and Keep through the kept Circles
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: applications — through the service, no stale button I4 with no room by the time it is applied: the truthful limit, nothing replaced
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: applications — through the service, no stale button Nothing to change: calm, with no fake action
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: applications — through the service, no stale button I6: both periods with their counts, and the Plan for the recent need
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: "Not now" sets it aside through the service; nothing else changes; no other Insight takes its place
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: lapsed what was shown stays readable; nothing new, nothing to apply; the calendar is theirs
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: lapsed R5 (A2-05): a shown I4 keeps its Keep after a lapse — no "Not now", no paywall, the lapse line still true
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Earlier dated rows: a stale record readable and not actionable; four shown, the rest on request
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Earlier an earlier Plan review is dated by the day its cycle ended, not the day it was shown
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Delete Circle history the calendar clears, every snapshot goes, the current Insight withdraws; the Plan's place and kept Circles stay
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: accessibility and large text 160%: the evidence and the action are reachable, nothing overflows
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: accessibility and large text 200%: the evidence and the action are reachable, nothing overflows
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: accessibility and large text TalkBack reads the Insight, then its action, then Not now
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Plans: the gentler setting (I2) and earlier reviews active: the note shows, and "Use usual pacing" turns it off — never gated
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Plans: the gentler setting (I2) and earlier reviews inactive: the note shows, and "Use usual pacing" turns it off — never gated
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Plans: the gentler setting (I2) and earlier reviews a new cycle never shows it
+SUCCESS  test/features/insights/presentation/insights_page_test.dart :: Plans: the gentler setting (I2) and earlier reviews an earlier cycle's review, as a record: Keep, never "go through it again" from the past
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: Plan state (§6, through the notifier) 1–7: start, pause, carry on, another Plan, leave, again, repeat
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: Today precedence (§6) 8. a matching need: the stage steers today's Circle, and its journal record says so
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: Today precedence (§6) 9. another need: the ordinary Personal Guided Circle; the Plan is untouched
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: Today precedence (§6) 10. wait: the ordinary Circle, the place unchanged
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: Today precedence (§6) 11. set aside, then the next stage the same day
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: Today precedence (§6) 12. nothing left that honestly composes: the cycle ends at its review, today is the ordinary Circle
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: Today precedence (§6) 13. only an applicable Plan steers: not on Free, not paused, not ended
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: Today precedence (§6) 14. "Use it today" wins: the kept Circle runs; the Plan neither moves nor is set aside
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: guided: started and later closed (§6) 15–19. shown, started, closed, closed again, restarted
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: feedback (C5, §6) 20–21. "Not useful" on a stage Circle: the Plan moves on, nothing rests, the answer is the user's
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: "Not this one today" on a stage Circle (C4) 28. inside the stage first, as the same stage
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: "Not this one today" on a stage Circle (C4) 29. no Circle follows the stage: the ordinary Circle, and the stage waits
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: "Not this one today" on a stage Circle (C4) 30. nothing composes at all: Free's one activity
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: revisit, live (§6) 32–33. served on the next matching day; the place stays
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: lapse (§6, §13) 36–40. active → lapse → Free → resubscribe: the exact place, nothing retroactive
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: the entitlement, at the service boundary 47. without Premium, nothing runs a Plan
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: the entitlement, at the service boundary 48. a grace or cancelled-but-paid period is an active entitlement: Plans run
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: persistence 42–43. a store without Plans loads; a V1 Plan or a Phase D Path never becomes one
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: persistence an unreadable record is kept aside, never overwritten
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: export and delete (contract, Delete / Export) 44. the export carries each Plan's place, cycles and stage records
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: export and delete (contract, Delete / Export) 45–46. Delete history: the journal and the stage evidence go; the place and kept Circles stay
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: Delete history is written, not only shown: a restart reads the place without the evidence
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: B3 closure — the entitlement, through the real billing state active — a paid, grace or cancelled-but-paid period alike — runs the Plan: start, steer, move on
+SUCCESS  test/features/plans/circle_plan_today_test.dart :: B3 closure — the entitlement, through the real billing state inactive or expired — every direct call is refused, nothing steers or moves, and the saved Plan is untouched
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: read back as kept, whatever the catalogue does later 1. a Circle valid in today's catalogue reads as it was kept
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: read back as kept, whatever the catalogue does later 2. a part whose length was retuned since: kept at the length it was kept with — never dropped, never re-lengthened
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: read back as kept, whatever the catalogue does later 3. an element id since removed: the Circle stays — kept as stored, in its place, named, never guessed into another
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: read back as kept, whatever the catalogue does later 4. an element id since renamed: the Circle stays — kept as stored, in its place, named, never guessed into another
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: read back as kept, whatever the catalogue does later 5. words edited in the catalogue since: the Circle keeps the words it was kept with, on its page and when it runs; only parts whose words still match the recording are voiced
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: read back as kept, whatever the catalogue does later a Circle kept now saves the words each part has now
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: read back as kept, whatever the catalogue does later 7. a legacy Circle (kept before words were saved) reads beside a current one — shown with its elements' own words, never guessed into saved ones, and written back without inventing any
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: never dropped, never rewritten from the survivors 6. one damaged record beside seven good ones: all eight count, all eight show in Yours, and an eighth Circle can't be kept
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: never dropped, never rewritten from the survivors 8. renaming another Circle while one can't be read: that one is written back exactly as stored, in its place
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: never dropped, never rewritten from the survivors 9. removing another Circle while one can't be read: that one is written back exactly as stored, in its place
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: never dropped, never rewritten from the survivors fields a later build added are written back, not dropped
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: never dropped, never rewritten from the survivors 13. one THIRTY can't read is renamed or removed only by the user, and nothing else in it changes
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: never dropped, never rewritten from the survivors 11. export keeps every kept Circle as stored — one THIRTY can't read, and a whole record set aside as unreadable
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: use: owned whatever Premium's state; never past a safety gate 12. inactive: a kept Circle — one with a retuned length too — runs as kept, at its own length, and restarts so
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: use: owned whatever Premium's state; never past a safety gate 12. active: a kept Circle — one with a retuned length too — runs as kept, at its own length, and restarts so
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: use: owned whatever Premium's state; never past a safety gate 12. unavailable: a kept Circle — one with a retuned length too — runs as kept, at its own length, and restarts so
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: use: owned whatever Premium's state; never past a safety gate 15. a part THIRTY no longer offers (retired, or awaiting the safety review): the Circle stays, readable and theirs, but isn't run — and its page says so truthfully
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: use: owned whatever Premium's state; never past a safety gate 16. nothing awaiting the safety review is unlocked — in any build, saved words or not; a record THIRTY can't read is never run
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: use: owned whatever Premium's state; never past a safety gate a safety correction to an element's words supersedes saved words from before it; the saved record itself is unchanged
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: a kept part whose saved words differ from the recording: the whole Circle runs on screen, unvoiced — matching parts too
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: Yours shows every kept Circle, truthfully a Circle THIRTY can't read stays in the list and opens to a calm note — rename and remove, no way to run it
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: Yours shows every kept Circle, truthfully a kept Circle with a part no longer offered: its page says so — never that the user asked for it — and offers no Use it today
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: Yours shows every kept Circle, truthfully at 2× text the note for a Circle THIRTY can't read reads in full
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: Yours shows every kept Circle, truthfully Copy as text exports kept Circles as stored, one THIRTY can't read included
+SUCCESS  test/features/personal_circle/r4_kept_ownership_test.dart :: a kept Circle composed into today restores its own lengths after a restart, but a Circle THIRTY composed still needs today's
+SUCCESS  test/core/qa/qa_phase_c_scenarios_test.dart :: A–C · Open: fresh, its time reached, and four minutes in
+SUCCESS  test/core/qa/qa_phase_c_scenarios_test.dart :: D–G · Guided: step 1, the middle, paused, its time reached
+SUCCESS  test/core/qa/qa_phase_c_scenarios_test.dart :: H · Paced opens on the internal bench, never on Today; B6's scenarios open on the Insights tab; every other scenario on Today
+SUCCESS  test/core/qa/qa_phase_c_scenarios_test.dart :: I–K · closed: no answer, "Very useful", "Not useful"
+SUCCESS  test/core/qa/qa_phase_c_scenarios_test.dart :: L–O · memory: mixed, resting, "Don't suggest", a lifted rest
+SUCCESS  test/core/qa/qa_phase_c_scenarios_test.dart :: P · nothing fits More Energy at ≈ 10, and the time is preset to it
+SUCCESS  test/core/qa/qa_phase_c_scenarios_test.dart :: Q–R · history with preferences, to delete or to reset
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 200% text: fully reachable, nothing cut or broken mid-word 320pt, light: "Delete your Circle history?"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 200% text: fully reachable, nothing cut or broken mid-word 320pt, light: "Close this Circle?"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 200% text: fully reachable, nothing cut or broken mid-word 320pt, light: "Allow Alarms & reminders"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 200% text: fully reachable, nothing cut or broken mid-word 320pt, dark: "Delete your Circle history?"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 200% text: fully reachable, nothing cut or broken mid-word 320pt, dark: "Close this Circle?"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 200% text: fully reachable, nothing cut or broken mid-word 320pt, dark: "Allow Alarms & reminders"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 200% text: fully reachable, nothing cut or broken mid-word 360pt, light: "Delete your Circle history?"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 200% text: fully reachable, nothing cut or broken mid-word 360pt, light: "Close this Circle?"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 200% text: fully reachable, nothing cut or broken mid-word 360pt, light: "Allow Alarms & reminders"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 200% text: fully reachable, nothing cut or broken mid-word 360pt, dark: "Delete your Circle history?"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 200% text: fully reachable, nothing cut or broken mid-word 360pt, dark: "Close this Circle?"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 200% text: fully reachable, nothing cut or broken mid-word 360pt, dark: "Allow Alarms & reminders"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 100% text: laid out exactly as before C5 360pt, light: "Delete your Circle history?"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 100% text: laid out exactly as before C5 360pt, light: "Close this Circle?"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 100% text: laid out exactly as before C5 360pt, light: "Allow Alarms & reminders"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 100% text: laid out exactly as before C5 360pt, dark: "Delete your Circle history?"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 100% text: laid out exactly as before C5 360pt, dark: "Close this Circle?"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: 100% text: laid out exactly as before C5 360pt, dark: "Allow Alarms & reminders"
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: behaviour cancel pops false
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: behaviour confirm pops true
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: behaviour a barrier tap pops null
+SUCCESS  test/core/widgets/thirty_confirm_dialog_test.dart :: behaviour destructive confirm uses errorText; plain confirm does not

@@ -1,0 +1,562 @@
+--- a/lib/features/home/application/suggestion_preferences.dart
++++ b/lib/features/home/application/suggestion_preferences.dart
+@@ -1,4 +1,5 @@
+ import 'dart:convert';
++import 'dart:typed_data';
+ 
+ import 'package:flutter_riverpod/flutter_riverpod.dart';
+ import 'package:shared_preferences/shared_preferences.dart';
+@@ -461,6 +462,8 @@
+       _storedUnreadable = false;
+       if (ref.mounted) {
+         state = next;
++        // L-1 Option B: the record THIRTY couldn't read is gone with it.
++        ref.read(unreadableSuggestionPreferencesProvider.notifier)._replaced();
+         ref
+             .read(storeSaveFailuresProvider.notifier)
+             .saved(UserStore.suggestionPreferences);
+@@ -613,3 +616,75 @@
+     NotifierProvider<SuggestionPreferencesNotifier, SuggestionPreferences>(
+       SuggestionPreferencesNotifier.new,
+     );
++
++/// L-1 Option B (founder decision, 2026-11-11): the stored Suggestion
++/// Preferences record when THIRTY can't read it as a whole
++/// ([SuggestionPreferences.tryRead]) — a newer THIRTY's record, damaged
++/// text, a list field that isn't a list, or a value that isn't text —
++/// exactly as the store gave it. Never interpreted and never written: kept
++/// by Delete Circle history (which can't check it for links to the History
++/// it deletes), shown as unreadable on the memory page, exported as stored
++/// ([toExport]), and removed only by the user's own Reset.
++class UnreadableSuggestionPreferences {
++  const UnreadableSuggestionPreferences(this.stored);
++
++  /// The value as the store's API gives it: text, a bool, an int, a double
++  /// or a list of text.
++  final Object stored;
++
++  /// Its export form (`suggestionPreferencesStored`): its type and the
++  /// value, lossless — text and a list of text as they are; an int in
++  /// decimal text, so no reader loses digits; a double as its IEEE-754
++  /// binary64 bits in 16 hexadecimal digits, so -0.0, NaN and the
++  /// infinities survive. Throws [UnsupportedError] for any other value, so
++  /// an export never silently leaves it out.
++  Map<String, Object> toExport() => switch (stored) {
++    final String v => {'type': 'string', 'value': v},
++    final bool v => {'type': 'bool', 'value': v},
++    final int v => {'type': 'int', 'value': '$v'},
++    final double v => {'type': 'double', 'ieee754Hex': _ieee754Hex(v)},
++    final List<Object?> v when v.every((item) => item is String) => {
++      'type': 'stringList',
++      'value': List<Object?>.of(v),
++    },
++    _ => throw UnsupportedError(
++      'a stored ${stored.runtimeType} has no export form',
++    ),
++  };
++
++  static String _ieee754Hex(double v) {
++    final bits = ByteData(8)..setFloat64(0, v);
++    return [
++      for (var i = 0; i < 8; i++)
++        bits.getUint8(i).toRadixString(16).padLeft(2, '0'),
++    ].join();
++  }
++}
++
++/// L-1 Option B: whether the stored preferences record is one THIRTY can't
++/// read as a whole, and which — read from the store, so it is right after
++/// every start; `null` when it is readable or absent. Becomes `null` only
++/// when the store has confirmed a write over it — Reset, the user's own
++/// erasure ([SuggestionPreferencesNotifier.reset]); a Reset that is refused
++/// or uncertain leaves it as it is.
++class UnreadableSuggestionPreferencesNotifier
++    extends Notifier<UnreadableSuggestionPreferences?> {
++  @override
++  UnreadableSuggestionPreferences? build() {
++    final raw = ref
++        .watch(sharedPreferencesProvider)
++        .get(suggestionPreferencesKey);
++    if (raw == null || SuggestionPreferences.tryRead(raw) != null) return null;
++    return UnreadableSuggestionPreferences(
++      raw is List ? List<Object?>.unmodifiable(raw) : raw,
++    );
++  }
++
++  void _replaced() => state = null;
++}
++
++final unreadableSuggestionPreferencesProvider =
++    NotifierProvider<
++      UnreadableSuggestionPreferencesNotifier,
++      UnreadableSuggestionPreferences?
++    >(UnreadableSuggestionPreferencesNotifier.new);
+--- a/lib/features/home/application/circle_journal.dart
++++ b/lib/features/home/application/circle_journal.dart
+@@ -1131,8 +1131,15 @@
+   /// THIRTY can't read is in [keptCircles] exactly as it is, and each whole
+   /// kept-Circle record THIRTY can't read is beside them, as its stored text
+   /// ([keptCirclesUnreadable]) — never left out.
++  ///
++  /// L-1 Option B (founder decision, 2026-11-11): a Suggestion Preferences
++  /// record THIRTY can't read as a whole is exported exactly as stored,
++  /// typed ([suggestionPreferencesStored],
++  /// `UnreadableSuggestionPreferences.toExport`) — never left out, never
++  /// stood in for by an empty record.
+   String exportAsJson({
+     Map<String, Object?>? suggestionPreferences,
++    Map<String, Object?>? suggestionPreferencesStored,
+     List<Object?>? keptCircles,
+     List<String>? keptCirclesUnreadable,
+     Map<String, Object?>? circlePlans,
+@@ -1155,6 +1162,7 @@
+         'journalStored': storedRaw,
+       if (preserved.isNotEmpty) 'journalPreserved': preserved,
+       'suggestionPreferences': ?suggestionPreferences,
++      'suggestionPreferencesStored': ?suggestionPreferencesStored,
+       'keptCircles': ?keptCircles,
+       'keptCirclesUnreadable': ?keptCirclesUnreadable,
+       'circlePlans': ?circlePlans,
+--- a/lib/features/home/presentation/widgets/journal_data_controls.dart
++++ b/lib/features/home/presentation/widgets/journal_data_controls.dart
+@@ -34,10 +34,6 @@
+     // Audit remediation R8 (Astra R7-A06): History THIRTY can't read is
+     // still the user's to export and delete — never only what it reads.
+     final hasEntries = journal.holdsHistory;
+-    final preferences = ref.watch(suggestionPreferencesProvider);
+-    final kept = ref.watch(keptCirclesProvider);
+-    final plans = ref.watch(circlePlansProvider);
+-    final insights = ref.watch(insightsProvider);
+ 
+     // Paired buttons share one height: if large text wraps one label onto
+     // a second line, both grow together (IntrinsicHeight + stretch). At
+@@ -50,20 +46,8 @@
+             child: ThirtyButton(
+               label: 'Copy as text',
+               variant: ThirtyButtonVariant.secondary,
+-              onPressed:
+-                  hasEntries ||
+-                      !preferences.isEmpty ||
+-                      !kept.isEmpty ||
+-                      plans.plans.isNotEmpty ||
+-                      !insights.isEmpty
+-                  ? () => exportToClipboard(
+-                      context,
+-                      journal,
+-                      preferences: preferences,
+-                      kept: kept,
+-                      plans: plans,
+-                      insights: insights,
+-                    )
++              onPressed: canCopyAsText(ref)
++                  ? () => copyAsText(context, ref)
+                   : null,
+             ),
+           ),
+@@ -82,41 +66,84 @@
+     );
+   }
+ 
++  /// Whether "Copy as text" has anything of the user's to copy — watched,
++  /// for a control's build. L-1 Option B: a preferences record THIRTY can't
++  /// read counts, even when it is the only thing stored.
++  static bool canCopyAsText(WidgetRef ref) =>
++      ref.watch(circleJournalRepositoryProvider).holdsHistory ||
++      !ref.watch(suggestionPreferencesProvider).isEmpty ||
++      ref.watch(unreadableSuggestionPreferencesProvider) != null ||
++      !ref.watch(keptCirclesProvider).isEmpty ||
++      ref.watch(circlePlansProvider).plans.isNotEmpty ||
++      !ref.watch(insightsProvider).isEmpty;
++
++  /// "Copy as text" from History, You's "Your data" and the memory page:
++  /// [exportToClipboard] with everything as it stands when tapped (L-1
++  /// Option B) — the readable preferences and a record THIRTY can't read
++  /// are read together, so one confirmed Reset never leaves the old record
++  /// in a later copy.
++  static Future<void> copyAsText(BuildContext context, WidgetRef ref) =>
++      exportToClipboard(
++        context,
++        ref.read(circleJournalRepositoryProvider),
++        preferences: ref.read(suggestionPreferencesProvider),
++        storedPreferences: ref.read(unreadableSuggestionPreferencesProvider),
++        kept: ref.read(keptCirclesProvider),
++        plans: ref.read(circlePlansProvider),
++        insights: ref.read(insightsProvider),
++      );
++
+   /// Copies the journal as text — with the user's suggestion preferences
+   /// beside it (V2 Phase C), when there are any — and confirms with a
+   /// SnackBar. Shared with You's own "Your data" rows (`settings_page.dart`),
+   /// which present the same actions stacked; this widget's own side-by-side
+   /// layout (Circle history) is unchanged.
++  ///
++  /// L-1 Option B: a preferences record THIRTY can't read as a whole
++  /// ([storedPreferences]) is copied exactly as stored. A copy that can't be
++  /// made — the export can't be written, or the clipboard refuses it — says
++  /// so; it is never announced as copied.
+   static Future<void> exportToClipboard(
+     BuildContext context,
+     CircleJournalRepository journal, {
+     SuggestionPreferences preferences = SuggestionPreferences.empty,
++    UnreadableSuggestionPreferences? storedPreferences,
+     KeptCircles kept = KeptCircles.empty,
+     CirclePlansState plans = CirclePlansState.empty,
+     InsightsState insights = InsightsState.empty,
+   }) async {
+-    await Clipboard.setData(
+-      ClipboardData(
+-        text: journal.exportAsJson(
+-          suggestionPreferences: preferences.isEmpty
+-              ? null
+-              : preferences.toJson(),
+-          // The Circles the user kept — never a derived score — as stored,
+-          // one THIRTY can't read included, each in its place (R4).
+-          keptCircles: kept.isEmpty
+-              ? null
+-              : keptCirclesRecord(kept.kept, retained: kept.retained)['kept']
+-                    as List<Object?>,
+-          keptCirclesUnreadable: kept.unreadable.isEmpty
+-              ? null
+-              : [for (final store in kept.unreadable) store.raw],
+-          // Each Circle Plan's place, cycles and stage records (B3).
+-          circlePlans: plans.plans.isEmpty ? null : plans.toJson(),
+-          // The Insights THIRTY showed, as shown (B5) — no profile.
+-          insights: insights.isEmpty ? null : insights.toJson(),
++    try {
++      await Clipboard.setData(
++        ClipboardData(
++          text: journal.exportAsJson(
++            suggestionPreferences: preferences.isEmpty
++                ? null
++                : preferences.toJson(),
++            suggestionPreferencesStored: storedPreferences?.toExport(),
++            // The Circles the user kept — never a derived score — as
++            // stored, one THIRTY can't read included, each in its place
++            // (R4).
++            keptCircles: kept.isEmpty
++                ? null
++                : keptCirclesRecord(kept.kept, retained: kept.retained)['kept']
++                      as List<Object?>,
++            keptCirclesUnreadable: kept.unreadable.isEmpty
++                ? null
++                : [for (final store in kept.unreadable) store.raw],
++            // Each Circle Plan's place, cycles and stage records (B3).
++            circlePlans: plans.plans.isEmpty ? null : plans.toJson(),
++            // The Insights THIRTY showed, as shown (B5) — no profile.
++            insights: insights.isEmpty ? null : insights.toJson(),
++          ),
+         ),
+-      ),
+-    );
++      );
++    } catch (_) {
++      if (!context.mounted) return;
++      ScaffoldMessenger.of(context).showSnackBar(
++        const SnackBar(content: Text(UnreadablePreferencesCopy.copyFailed)),
++      );
++      return;
++    }
+     if (!context.mounted) return;
+     ScaffoldMessenger.of(context).showSnackBar(
+       const SnackBar(content: Text('Copied your Circle history as text.')),
+@@ -134,24 +161,28 @@
+   /// A Circle Plan keeps its place; its stage evidence and reviews go with
+   /// the journal (contract, Delete / Export), and so does every Insight
+   /// snapshot — each is derived from it.
++  ///
++  /// L-1 Option B (founder decision, 2026-11-11): when the stored
++  /// suggestion preferences are a record THIRTY can't read as a whole, the
++  /// confirmation says they can't be checked for links to this history and
++  /// will be kept unchanged; and a Delete that succeeded says the History
++  /// was deleted but that record couldn't be checked — never shown after a
++  /// Delete that didn't start or didn't finish.
+   static Future<void> confirmAndClear(
+     BuildContext context,
+     CircleJournalRepository journal,
+     WidgetRef ref,
+   ) async {
++    final unreadable =
++        ref.read(unreadableSuggestionPreferencesProvider) != null;
+     final confirmed = await showDialog<bool>(
+       context: context,
+       barrierLabel: 'Keep my history',
+-      builder: (_) => const ThirtyConfirmDialog(
++      builder: (_) => ThirtyConfirmDialog(
+         title: 'Delete your Circle history?',
+-        body:
+-            'This permanently deletes every recorded Circle on this device, '
+-            'and everything THIRTY has learned from them, Insights and Plan '
+-            'reviews included. Your kept Circles, each Plan’s place and '
+-            'your suggestion preferences are kept — you can change those '
+-            'yourself. It cannot be undone, and nothing is '
+-            'stored anywhere else to restore it from. If you shared usage '
+-            'data, what was already sent isn’t deleted.',
++        body: unreadable
++            ? deleteConfirmBodyWithUnreadablePreferences
++            : deleteConfirmBody,
+         cancelLabel: 'Keep my history',
+         confirmLabel: 'Delete permanently',
+         destructive: true,
+@@ -164,6 +195,21 @@
+     // can't be finished now, the user is told so — never that it was done.
+     try {
+       await ref.read(circleHistoryDeletionProvider).delete();
++      // L-1 Option B: done — every known History store is deleted and
++      // confirmed. A preferences record THIRTY can't read was kept as
++      // stored, unchecked: said so, not claimed.
++      if (!context.mounted ||
++          ref.read(unreadableSuggestionPreferencesProvider) == null) {
++        return;
++      }
++      await showDialog<void>(
++        context: context,
++        barrierLabel: 'Close',
++        builder: (_) => const ThirtyNoticeDialog(
++          title: UnreadablePreferencesCopy.deletedTitle,
++          body: UnreadablePreferencesCopy.deletedBody,
++        ),
++      );
+     } on HistoryDeletionNotStarted {
+       // Audit remediation R8: nothing was deleted — never "will finish".
+       if (!context.mounted) return;
+@@ -195,6 +241,67 @@
+       );
+ }
+ 
++/// The Delete Circle history confirmation (contract, Delete / Export).
++const deleteConfirmBody =
++    'This permanently deletes every recorded Circle on this device, '
++    'and everything THIRTY has learned from them, Insights and Plan '
++    'reviews included. Your kept Circles, each Plan’s place and '
++    'your suggestion preferences are kept — you can change those '
++    'yourself. It cannot be undone, and nothing is '
++    'stored anywhere else to restore it from. If you shared usage '
++    'data, what was already sent isn’t deleted.';
++
++/// [deleteConfirmBody] when the stored suggestion preferences are a record THIRTY
++/// can't read as a whole (L-1 Option B, founder decision 2026-11-11): the
++/// same words, and one sentence more.
++const deleteConfirmBodyWithUnreadablePreferences =
++    'This permanently deletes every recorded Circle on this device, '
++    'and everything THIRTY has learned from them, Insights and Plan '
++    'reviews included. Your kept Circles, each Plan’s place and '
++    'your suggestion preferences are kept — you can change those '
++    'yourself. Some saved suggestion preferences can’t be read, so THIRTY '
++    'can’t check them for links to this history; they’ll be kept '
++    'unchanged. It cannot be undone, and nothing is '
++    'stored anywhere else to restore it from. If you shared usage '
++    'data, what was already sent isn’t deleted.';
++
++/// L-1 Option B (founder decision, 2026-11-11): the words about a stored
++/// suggestion preferences record THIRTY can't read as a whole, in one place
++/// (English; listed for the six-language localization work).
++abstract final class UnreadablePreferencesCopy {
++  /// After a Delete Circle history that succeeded (founder copy direction).
++  static const deletedTitle = 'Some saved preferences couldn’t be checked';
++
++  /// See [deletedTitle] (founder copy direction).
++  static const deletedBody =
++      'Your Circle history was deleted, but THIRTY couldn’t read some saved '
++      'suggestion preferences to check whether they contain links to that '
++      'history.\n\n'
++      'Your preferences have been kept unchanged. You can export them or '
++      'remove them using Reset suggestion preferences.';
++
++  /// What THIRTY remembers, for as long as the record is stored. It never
++  /// says a Delete happened: the record may predate any.
++  static const memoryNotice =
++      'Some saved suggestion preferences couldn’t be read. They’re kept '
++      'unchanged and may include links to earlier history that THIRTY '
++      'can’t check. You can copy your data before choosing to reset them.';
++
++  /// Reset's own warning for that record (founder copy direction).
++  static const resetTitle = 'Reset unreadable suggestion preferences?';
++
++  /// See [resetTitle] (founder copy direction).
++  static const resetBody =
++      'THIRTY can’t read all your saved suggestion preferences. Reset will '
++      'permanently remove that saved record, including choices THIRTY can’t '
++      'currently show or restore.\n\n'
++      'You can copy your saved data first from Your data. Your Circle history '
++      'and answers won’t be deleted by this reset.';
++
++  /// "Copy as text" that couldn't be made — never "Copied".
++  static const copyFailed = 'Couldn’t copy your data. Please try again.';
++}
++
+ /// Shown when Delete Circle history couldn't be finished (founder copy,
+ /// audit remediation R3). The deletion stays recorded and is finished on the
+ /// next start.
+--- a/lib/features/settings/presentation/widgets/you_data_card.dart
++++ b/lib/features/settings/presentation/widgets/you_data_card.dart
+@@ -4,11 +4,7 @@
+ import '../../../../core/analytics/analytics_consent.dart';
+ import '../../../../core/theme/design_tokens.dart';
+ import '../../../home/application/circle_journal.dart';
+-import '../../../home/application/suggestion_preferences.dart';
+ import '../../../home/presentation/widgets/journal_data_controls.dart';
+-import '../../../insights/application/insights_provider.dart';
+-import '../../../personal_circle/application/kept_circles_provider.dart';
+-import '../../../plans/application/circle_plans_provider.dart';
+ import 'you_group_card.dart';
+ 
+ /// You's "Data & privacy" group: "Share usage data" (analytics
+@@ -51,10 +47,6 @@
+     // Audit remediation R8 (Astra R7-A06): History THIRTY can't read is
+     // still the user's to export and delete — never only what it reads.
+     final hasEntries = journal.holdsHistory;
+-    final preferences = ref.watch(suggestionPreferencesProvider);
+-    final kept = ref.watch(keptCirclesProvider);
+-    final plans = ref.watch(circlePlansProvider);
+-    final insights = ref.watch(insightsProvider);
+ 
+     return YouGroupCard(
+       children: [
+@@ -65,20 +57,10 @@
+         YouActionRow(
+           label: 'Copy as text',
+           icon: Icons.content_copy_outlined,
+-          onTap:
+-              hasEntries ||
+-                  !preferences.isEmpty ||
+-                  !kept.isEmpty ||
+-                  plans.plans.isNotEmpty ||
+-                  !insights.isEmpty
+-              ? () => JournalDataControls.exportToClipboard(
+-                  context,
+-                  journal,
+-                  preferences: preferences,
+-                  kept: kept,
+-                  plans: plans,
+-                  insights: insights,
+-                )
++          // L-1 Option B: the same Copy as History's — a preferences record
++          // THIRTY can't read included, even when it is all there is.
++          onTap: JournalDataControls.canCopyAsText(ref)
++              ? () => JournalDataControls.copyAsText(context, ref)
+               : null,
+         ),
+         YouActionRow(
+--- a/lib/features/home/presentation/memory_page.dart
++++ b/lib/features/home/presentation/memory_page.dart
+@@ -17,6 +17,7 @@
+ import '../domain/memory_overview.dart';
+ import '../domain/recommendation_engine.dart';
+ import 'widgets/circle_journal_entry_card.dart';
++import 'widgets/journal_data_controls.dart';
+ import 'widgets/time_window_choice.dart';
+ 
+ /// "What THIRTY remembers" (V2 Phase C, ADR-021) — the Free memory page:
+@@ -62,6 +63,9 @@
+     final colors = Theme.of(context).extension<AppColors>()!;
+     final entries = ref.watch(circleJournalRepositoryProvider).readAll();
+     final preferences = ref.watch(suggestionPreferencesProvider);
++    // L-1 Option B: a stored record THIRTY can't read as a whole.
++    final unreadable =
++        ref.watch(unreadableSuggestionPreferencesProvider) != null;
+     final need = _need ??= _initialNeed(entries);
+     final memory = needMemoryOf(
+       today: ref.watch(nowProvider),
+@@ -110,8 +114,16 @@
+                 ],
+               ),
+             ],
+-            // Its own control, shown only while there is something to reset.
+-            if (!preferences.isEmpty) ...[
++            // L-1 Option B (founder decision, 2026-11-11): said for as long
++            // as it is stored — after any restart — with Copy as text before
++            // any Reset.
++            if (unreadable) ...[
++              const SizedBox(height: AppSpacing.section),
++              const _UnreadablePreferences(),
++            ],
++            // Its own control, shown only while there is something to reset
++            // — a record THIRTY can't read included (L-1 Option B).
++            if (!preferences.isEmpty || unreadable) ...[
+               const SizedBox(height: AppSpacing.section),
+               const _ResetPreferences(),
+             ],
+@@ -724,8 +736,34 @@
+   }
+ }
+ 
++/// L-1 Option B (founder decision, 2026-11-11): the stored suggestion
++/// preferences are a record THIRTY can't read as a whole. Said from what is
++/// stored, never from what happened: a Delete may or may not have run since
++/// it was written. "Copy as text" is the one shared with History and You.
++class _UnreadablePreferences extends ConsumerWidget {
++  const _UnreadablePreferences();
++
++  @override
++  Widget build(BuildContext context, WidgetRef ref) => Column(
++    crossAxisAlignment: CrossAxisAlignment.stretch,
++    children: [
++      Text(
++        UnreadablePreferencesCopy.memoryNotice,
++        style: Theme.of(context).textTheme.bodyMedium,
++      ),
++      const SizedBox(height: AppSpacing.m),
++      ThirtyButton(
++        label: 'Copy as text',
++        variant: ThirtyButtonVariant.secondary,
++        onPressed: () => JournalDataControls.copyAsText(context, ref),
++      ),
++    ],
++  );
++}
++
+ /// "Reset suggestion preferences": clears every "Don't suggest", lifted rest
+-/// and left-out part. Circle history and its answers stay.
++/// and left-out part. Circle history and its answers stay. L-1 Option B: a
++/// record THIRTY can't read as a whole too, after its own warning.
+ class _ResetPreferences extends ConsumerWidget {
+   const _ResetPreferences();
+ 
+@@ -735,15 +773,22 @@
+   Widget build(BuildContext context, WidgetRef ref) {
+     final colors = Theme.of(context).extension<AppColors>()!;
+     Future<void> reset() async {
++      // L-1 Option B: a record THIRTY can't read has its own warning.
++      final unreadable =
++          ref.read(unreadableSuggestionPreferencesProvider) != null;
+       final confirmed = await showDialog<bool>(
+         context: context,
+         barrierLabel: 'Keep them',
+-        builder: (_) => const ThirtyConfirmDialog(
+-          title: 'Reset suggestion preferences?',
+-          body:
+-              'THIRTY will forget which activities you asked it not to '
+-              'suggest, any rests you lifted, and any parts you left out of '
+-              'your Circles. Your Circle history and your answers stay.',
++        builder: (_) => ThirtyConfirmDialog(
++          title: unreadable
++              ? UnreadablePreferencesCopy.resetTitle
++              : 'Reset suggestion preferences?',
++          body: unreadable
++              ? UnreadablePreferencesCopy.resetBody
++              : 'THIRTY will forget which activities you asked it not to '
++                    'suggest, any rests you lifted, and any parts you left '
++                    'out of your Circles. Your Circle history and your '
++                    'answers stay.',
+           cancelLabel: 'Keep them',
+           confirmLabel: 'Reset',
+           destructive: true,
+--- a/docs/product/PRODUCT_V2_CONTRACT.md
++++ b/docs/product/PRODUCT_V2_CONTRACT.md
+@@ -303,6 +303,16 @@
+ - History THIRTY can't read can still be exported as stored and deleted. This covers History that is damaged, written by a newer THIRTY, kept only as a preserved copy, or holding records this build can't read.
+ - A save of the user's own kept Circles, Plans or Insights that the store doesn't confirm is never shown as saved. The user is told: "This change couldn’t be saved." / "Please try again."
+ 
++*Amendment 2026-11-11 (L-1 Option B; founder decision of 11 November 2026). A narrow exception, for suggestion preferences THIRTY can't read as a whole:*
++- **Scope.** Only a stored Suggestion Preferences record THIRTY can't interpret as a whole: a newer schema, damaged text, a list field that isn't a list, or a stored value that isn't text. Readable preferences, including one with individual items THIRTY can't read, keep the full contract: Delete Circle history removes every Insight attribution from them, or fails and stays pending.
++- **Preserved, never interpreted.** Such a record is kept exactly as stored. Nothing is removed from it, nothing in it is guessed at, and it is never rewritten into the current schema.
++- **Qualified completion.** Delete Circle history deletes every known History store with its full guarantees, as above. It may then complete although the record can't be checked for links to that History. The user is told so: the History was deleted, the record was kept unchanged, and it can be exported or reset. This is never presented as a verified removal of attribution THIRTY couldn't read.
++- **No retry loop.** The start-up completion of an interrupted Delete never waits on, retries or fails over a record that can't be read. Being unreadable never leaves a Delete pending, and never stops a new Circle.
++- **Always visible.** What THIRTY remembers says so for as long as such a record is stored, from the stored record itself, after any restart. It never claims a Delete took place.
++- **Export.** Copy as text carries the record as stored, under `suggestionPreferencesStored`, with its type: text and lists of text as they are, an int in decimal text, a double as its IEEE-754 bits. This holds even when it is the only thing stored. A copy that can't be made is never announced as copied.
++- **Reset.** The user's own Reset suggestion preferences stays a separate, explicit, destructive action. It is offered for such a record, with its own warning, and with Copy as text before it. The record goes only once the store confirms its removal.
++- No other guarantee in this contract is waived, and no other user data is affected.
++
+ ---
+ 
+ ## Circle V2 contract

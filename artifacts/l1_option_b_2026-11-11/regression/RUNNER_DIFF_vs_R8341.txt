@@ -1,0 +1,15 @@
+1c1,2
+< """(R8.3.4.1 continuity, 2026-11-11: copied unchanged from artifacts/r8_3_4_final_action_identity_closure_2026-11-10/regression/run_batches.py except OUT.)
+---
+> """(L-1 Option B, 2026-11-11: copied unchanged from artifacts/r8_3_4_1_delete_outcome_continuity_2026-11-11/regression/run_batches.py except OUT.)
+> (R8.3.4.1 continuity, 2026-11-11: copied unchanged from artifacts/r8_3_4_final_action_identity_closure_2026-11-10/regression/run_batches.py except OUT.)
+68c69
+< OUT = os.path.join('artifacts', 'r8_3_4_1_delete_outcome_continuity_2026-11-11', 'regression')
+---
+> OUT = os.path.join('artifacts', 'l1_option_b_2026-11-11', 'regression')
+1a2
+> # L-1 Option B (2026-11-11): copied unchanged from the R8.3.4.1 continuity driver except OUT.
+21c22
+< OUT=artifacts/r8_3_4_1_delete_outcome_continuity_2026-11-11/regression
+---
+> OUT=artifacts/l1_option_b_2026-11-11/regression

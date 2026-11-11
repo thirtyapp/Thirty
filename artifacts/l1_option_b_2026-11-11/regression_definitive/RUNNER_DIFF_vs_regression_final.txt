@@ -1,0 +1,15 @@
+1c1,2
+< """(L-1 Option B final, after founder D-1/D-2, 2026-11-11: copied unchanged from artifacts/l1_option_b_2026-11-11/regression/run_batches.py except OUT.)
+---
+> """(L-1 Option B definitive, after LF normalization of two L-1 test files, 2026-11-11: copied unchanged from artifacts/l1_option_b_2026-11-11/regression_final/run_batches.py except OUT.)
+> (L-1 Option B final, after founder D-1/D-2, 2026-11-11: copied unchanged from artifacts/l1_option_b_2026-11-11/regression/run_batches.py except OUT.)
+70c71
+< OUT = os.path.join('artifacts', 'l1_option_b_2026-11-11', 'regression_final')
+---
+> OUT = os.path.join('artifacts', 'l1_option_b_2026-11-11', 'regression_definitive')
+1a2
+> # L-1 Option B definitive (after LF normalization, 2026-11-11): copied unchanged from the regression_final driver except OUT.
+23c24
+< OUT=artifacts/l1_option_b_2026-11-11/regression_final
+---
+> OUT=artifacts/l1_option_b_2026-11-11/regression_definitive

@@ -1,0 +1,8 @@
+# Required results, read from the raw reporter logs of regression_definitive (authoritative)
+features/b8/b8_live_copy_guard_test.dart: {'success': 11}
+features/b8/b8_review_pack_test.dart: {'success': 1}
+features/b8/b8_product_simulation_test.dart: {'success': 6}
+features/personal_circle/personal_circle_simulation_test.dart: {'success': 13}
+features/l1/l1_delete_recovery_test.dart: {'success': 17}
+features/l1/l1_option_b_ui_test.dart: {'success': 71}
+features/r834/r8341_delete_outcome_continuity_test.dart: {'success': 32}

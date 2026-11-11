@@ -1131,8 +1131,15 @@ class CircleJournalRepository {
   /// THIRTY can't read is in [keptCircles] exactly as it is, and each whole
   /// kept-Circle record THIRTY can't read is beside them, as its stored text
   /// ([keptCirclesUnreadable]) — never left out.
+  ///
+  /// L-1 Option B (founder decision, 2026-11-11): a Suggestion Preferences
+  /// record THIRTY can't read as a whole is exported exactly as stored,
+  /// typed ([suggestionPreferencesStored],
+  /// `UnreadableSuggestionPreferences.toExport`) — never left out, never
+  /// stood in for by an empty record.
   String exportAsJson({
     Map<String, Object?>? suggestionPreferences,
+    Map<String, Object?>? suggestionPreferencesStored,
     List<Object?>? keptCircles,
     List<String>? keptCirclesUnreadable,
     Map<String, Object?>? circlePlans,
@@ -1155,6 +1162,7 @@ class CircleJournalRepository {
         'journalStored': storedRaw,
       if (preserved.isNotEmpty) 'journalPreserved': preserved,
       'suggestionPreferences': ?suggestionPreferences,
+      'suggestionPreferencesStored': ?suggestionPreferencesStored,
       'keptCircles': ?keptCircles,
       'keptCirclesUnreadable': ?keptCirclesUnreadable,
       'circlePlans': ?circlePlans,

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -461,6 +462,8 @@ class SuggestionPreferencesNotifier extends Notifier<SuggestionPreferences> {
       _storedUnreadable = false;
       if (ref.mounted) {
         state = next;
+        // L-1 Option B: the record THIRTY couldn't read is gone with it.
+        ref.read(unreadableSuggestionPreferencesProvider.notifier)._replaced();
         ref
             .read(storeSaveFailuresProvider.notifier)
             .saved(UserStore.suggestionPreferences);
@@ -613,3 +616,75 @@ final suggestionPreferencesProvider =
     NotifierProvider<SuggestionPreferencesNotifier, SuggestionPreferences>(
       SuggestionPreferencesNotifier.new,
     );
+
+/// L-1 Option B (founder decision, 2026-11-11): the stored Suggestion
+/// Preferences record when THIRTY can't read it as a whole
+/// ([SuggestionPreferences.tryRead]) — a newer THIRTY's record, damaged
+/// text, a list field that isn't a list, or a value that isn't text —
+/// exactly as the store gave it. Never interpreted and never written: kept
+/// by Delete Circle history (which can't check it for links to the History
+/// it deletes), shown as unreadable on the memory page, exported as stored
+/// ([toExport]), and removed only by the user's own Reset.
+class UnreadableSuggestionPreferences {
+  const UnreadableSuggestionPreferences(this.stored);
+
+  /// The value as the store's API gives it: text, a bool, an int, a double
+  /// or a list of text.
+  final Object stored;
+
+  /// Its export form (`suggestionPreferencesStored`): its type and the
+  /// value, lossless — text and a list of text as they are; an int in
+  /// decimal text, so no reader loses digits; a double as its IEEE-754
+  /// binary64 bits in 16 hexadecimal digits, so -0.0, NaN and the
+  /// infinities survive. Throws [UnsupportedError] for any other value, so
+  /// an export never silently leaves it out.
+  Map<String, Object> toExport() => switch (stored) {
+    final String v => {'type': 'string', 'value': v},
+    final bool v => {'type': 'bool', 'value': v},
+    final int v => {'type': 'int', 'value': '$v'},
+    final double v => {'type': 'double', 'ieee754Hex': _ieee754Hex(v)},
+    final List<Object?> v when v.every((item) => item is String) => {
+      'type': 'stringList',
+      'value': List<Object?>.of(v),
+    },
+    _ => throw UnsupportedError(
+      'a stored ${stored.runtimeType} has no export form',
+    ),
+  };
+
+  static String _ieee754Hex(double v) {
+    final bits = ByteData(8)..setFloat64(0, v);
+    return [
+      for (var i = 0; i < 8; i++)
+        bits.getUint8(i).toRadixString(16).padLeft(2, '0'),
+    ].join();
+  }
+}
+
+/// L-1 Option B: whether the stored preferences record is one THIRTY can't
+/// read as a whole, and which — read from the store, so it is right after
+/// every start; `null` when it is readable or absent. Becomes `null` only
+/// when the store has confirmed a write over it — Reset, the user's own
+/// erasure ([SuggestionPreferencesNotifier.reset]); a Reset that is refused
+/// or uncertain leaves it as it is.
+class UnreadableSuggestionPreferencesNotifier
+    extends Notifier<UnreadableSuggestionPreferences?> {
+  @override
+  UnreadableSuggestionPreferences? build() {
+    final raw = ref
+        .watch(sharedPreferencesProvider)
+        .get(suggestionPreferencesKey);
+    if (raw == null || SuggestionPreferences.tryRead(raw) != null) return null;
+    return UnreadableSuggestionPreferences(
+      raw is List ? List<Object?>.unmodifiable(raw) : raw,
+    );
+  }
+
+  void _replaced() => state = null;
+}
+
+final unreadableSuggestionPreferencesProvider =
+    NotifierProvider<
+      UnreadableSuggestionPreferencesNotifier,
+      UnreadableSuggestionPreferences?
+    >(UnreadableSuggestionPreferencesNotifier.new);

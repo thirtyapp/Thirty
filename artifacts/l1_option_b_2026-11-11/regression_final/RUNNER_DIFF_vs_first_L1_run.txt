@@ -1,0 +1,15 @@
+1c1,2
+< """(L-1 Option B, 2026-11-11: copied unchanged from artifacts/r8_3_4_1_delete_outcome_continuity_2026-11-11/regression/run_batches.py except OUT.)
+---
+> """(L-1 Option B final, after founder D-1/D-2, 2026-11-11: copied unchanged from artifacts/l1_option_b_2026-11-11/regression/run_batches.py except OUT.)
+> (L-1 Option B, 2026-11-11: copied unchanged from artifacts/r8_3_4_1_delete_outcome_continuity_2026-11-11/regression/run_batches.py except OUT.)
+69c70
+< OUT = os.path.join('artifacts', 'l1_option_b_2026-11-11', 'regression')
+---
+> OUT = os.path.join('artifacts', 'l1_option_b_2026-11-11', 'regression_final')
+1a2
+> # L-1 Option B final (after founder D-1/D-2, 2026-11-11): copied unchanged from the first L-1 driver except OUT.
+22c23
+< OUT=artifacts/l1_option_b_2026-11-11/regression
+---
+> OUT=artifacts/l1_option_b_2026-11-11/regression_final

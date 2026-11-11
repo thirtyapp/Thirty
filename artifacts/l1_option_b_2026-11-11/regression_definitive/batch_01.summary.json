@@ -1,0 +1,179 @@
+{
+ "files": {
+  "test/core/analytics/analytics_consent_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/analytics/analytics_service_test.dart": {
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/analytics/tester_identity_provider_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/android_identity_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/app/r6b_day_rollover_test.dart": {
+   "passed": 7,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/app/r8_midnight_resume_test.dart": {
+   "passed": 9,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/app/thirty_app_test.dart": {
+   "passed": 3,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/branding/thirty_wordmark_view_test.dart": {
+   "passed": 5,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/config/release_info_test.dart": {
+   "passed": 1,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/config/revenue_cat_config_test.dart": {
+   "passed": 13,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/config/supabase_config_test.dart": {
+   "passed": 6,
+   "failed": 0,
+   "skipped": 0
+  },
+  "test/core/premium/entitlement_gateway_test.dart": {
+   "passed": 11,
+   "failed": 0,
+   "skipped": 0
+  }
+ },
+ "totals": {
+  "passed": 76,
+  "failed": 0,
+  "skipped": 0
+ },
+ "failures": [],
+ "done": true,
+ "doneSuccess": true,
+ "testNames": {
+  "test/core/analytics/analytics_consent_test.dart": [
+   "analyticsConsentProvider defaults to false \u2014 no prior consent decision means OFF",
+   "analyticsConsentProvider setConsent persists across a fresh provider read",
+   "analyticsConsentProvider restores a previously persisted true value",
+   "ConsentGatedAnalyticsService transmits nothing before explicit opt-in",
+   "ConsentGatedAnalyticsService transmits future events once consent is granted",
+   "ConsentGatedAnalyticsService stops transmitting once consent is withdrawn again",
+   "ConsentGatedAnalyticsService analyticsServiceProvider itself is consent-gated end to end \u2014 every real call site goes through this one provider, and the default OFF state never throws even though it never reaches Supabase"
+  ],
+  "test/core/analytics/analytics_service_test.dart": [
+   "SupabaseAnalyticsService track() never throws, even when Supabase has not been initialized \u2014 a dropped analytics event must never affect the product experience (ADR-004)",
+   "SupabaseAnalyticsService unavailable telemetry is a safe no-op: with supabaseAvailableProvider at its default false, track() resolves without ever needing Supabase.instance to have been initialized \u2014 this is a deliberate skip, not a caught crash"
+  ],
+  "test/core/analytics/tester_identity_provider_test.dart": [
+   "testerIdentityProvider a device with no prior Circle/First Breath evidence is classified POST_FIX_BATCH_1 \u2014 this is its first-ever observed exposure",
+   "testerIdentityProvider a device with pre-existing recommendation state is classified PRE_FIX \u2014 it already used THIRTY before Batch 1",
+   "testerIdentityProvider a device with pre-existing First Breath state alone is also classified PRE_FIX",
+   "testerIdentityProvider generates a stable, UUID-v4-shaped pseudonymous tester id",
+   "testerIdentityProvider persists the tester id so a fresh container restores the same one",
+   "testerIdentityProvider once a cohort is persisted, it is never re-derived \u2014 a later app update (new prior-usage evidence appearing) does not silently convert an already-classified tester"
+  ],
+  "test/core/android_identity_test.dart": [
+   "the Android display name is THIRTY, exactly",
+   "the adaptive icon layers the brand mark over its cream ground, with the micro mark as the themed (monochrome) layer",
+   "the launcher wordmark is the canonical wordmark path, verbatim, in Circle Sage",
+   "legacy launcher PNGs exist at every density and are no longer the Flutter template icon",
+   "the micro mark is a one-colour Circle: white for the notification small icon, a single tint colour for the themed icon",
+   "reminders use the micro mark as their small icon, and release resource shrinking keeps it"
+  ],
+  "test/core/app/r6b_day_rollover_test.dart": [
+   "yesterday's closed Circle on show: the first touch opens the new day, without a resume; a same-day touch changes nothing",
+   "the first touch is a tab: it still changes tab, and the new day opens",
+   "Start on yesterday's unstarted offer after midnight: nothing starts \u2014 the new day opens; today's Circle is then started deliberately (founder rule, R6 final)",
+   "a screen reader's Start (no touch) on yesterday's offer after midnight: nothing starts either",
+   "a restart after midnight with yesterday's unstarted offer stored: the new day, nothing started",
+   "nothing offered yet: the day is re-read as the touch begins, so the choice it makes is today's",
+   "a Circle running across midnight keeps its own day; closed after midnight, its reflection stays until answered; then the new day opens, and the Circle is recorded once, under its own day"
+  ],
+  "test/core/app/r8_midnight_resume_test.dart": [
+   "Astra R7-A08 / Claude F-1 \u2014 a Circle started before midnight backgrounded, resumed after midnight: still running, its own day; Close and the reflection work; recorded once, under that day; no new Circle starts by itself",
+   "Astra R7-A08 / Claude F-1 \u2014 a Circle started before midnight restarted after midnight: still running, its own day",
+   "Astra R7-A08 / Claude F-1 \u2014 a Circle started before midnight closed after midnight, its reflection not answered: a resume keeps the reflection on show",
+   "Astra R7-A08 / Claude F-1 \u2014 a Circle started before midnight closed on its own day: a resume after midnight opens the new day (unchanged)",
+   "Astra R7-A08 / Claude F-1 \u2014 a Circle started before midnight an offer never started: a resume after midnight opens the new day, and it can't be started (founder rule, unchanged)",
+   "Astra R7-A08 / Claude F-1 \u2014 a Circle started before midnight started yesterday morning, never closed: opened the next morning, it is not brought back as running \u2014 beyond the carry-over limit, the new day opens",
+   "Astra R7-A08 / Claude F-1 \u2014 a Circle started before midnight a Circle started two days before and never closed is not brought back as running",
+   "Claude F-2 \u2014 a choice after midnight with no touch screen reader, keyboard or switch: the Circle chosen is today's, and History says when it was really shown",
+   "Claude F-2 \u2014 a choice after midnight with no touch on an ordinary day, the time shown is the choice's own, not when the app came to the foreground"
+  ],
+  "test/core/app/thirty_app_test.dart": [
+   "ThirtyApp \u2014 Batch 1 daily-reset legibility + app-open instrumentation (Phase D/E) fires an appOpened event on cold start",
+   "ThirtyApp \u2014 Batch 1 daily-reset legibility + app-open instrumentation (Phase D/E) fires another appOpened event on every foreground resume",
+   "ThirtyApp \u2014 Batch 1 daily-reset legibility + app-open instrumentation (Phase D/E) a stale Circle/day state left over from before local midnight is re-evaluated the moment the app resumes, correctly clearing to a fresh day"
+  ],
+  "test/core/branding/thirty_wordmark_view_test.dart": [
+   "ThirtyWordmarkView renders without exceptions",
+   "ThirtyWordmarkView renders exactly one SvgPicture",
+   "ThirtyWordmarkView uses the approved wordmark asset",
+   "ThirtyWordmarkView preserves the SVG's own aspect ratio when given only a width, no height",
+   "ThirtyWordmarkView is decorative and carries no semantic content"
+  ],
+  "test/core/config/release_info_test.dart": [
+   "ReleaseInfo appVersion stays in sync with pubspec.yaml's own version \u2014 ReleaseInfo.appVersion is hand-maintained (no package_info_plus dependency), so nothing else catches the two drifting apart"
+  ],
+  "test/core/config/revenue_cat_config_test.dart": [
+   "RevenueCatConfig.isConfigured is false when both values are empty (the default, unset dart-define state under `flutter test`)",
+   "RevenueCatConfig.isConfigured is false when only the API key is present",
+   "RevenueCatConfig.isConfigured is false when only the entitlement id is present",
+   "RevenueCatConfig.isConfigured is false for whitespace-only values \u2014 never treated as present",
+   "RevenueCatConfig.isConfigured is true only once both values are non-blank",
+   "RevenueCatConfig.isConfigured fromEnvironment is unconfigured under flutter test \u2014 no real or placeholder identifier is ever compiled in",
+   "RevenueCatConfig.releaseProblems real-looking Google Play values are release-ready",
+   "RevenueCatConfig.releaseProblems missing or blank values block a release, each named",
+   "RevenueCatConfig.releaseProblems the example-file placeholders block a release",
+   "RevenueCatConfig.releaseProblems a key that is not a Google Play public SDK key (Test Store, Amazon, a secret key) blocks a release",
+   "RevenueCatConfig.releaseProblems problems name the setting but never echo its value",
+   "RevenueCatConfig.releaseProblems is stricter than isConfigured, which keeps its runtime meaning \u2014 debug may still run with Test Store values",
+   "RevenueCatConfig.releaseProblems the example placeholders match config/revenuecat.example.json"
+  ],
+  "test/core/config/supabase_config_test.dart": [
+   "SupabaseConfig.isConfigured is false when both values are empty (the default, unset dart-define state under `flutter test`)",
+   "SupabaseConfig.isConfigured is false when only the url is present",
+   "SupabaseConfig.isConfigured is false when only the publishableKey is present",
+   "SupabaseConfig.isConfigured is false for whitespace-only values \u2014 never treated as present",
+   "SupabaseConfig.isConfigured is true only once both values are non-blank",
+   "SupabaseConfig.isConfigured fromEnvironment is unconfigured under flutter test \u2014 no real or placeholder identifier is ever compiled in"
+  ],
+  "test/core/premium/entitlement_gateway_test.dart": [
+   "UnavailableEntitlementGateway initialize() resolves to unavailable, never throws",
+   "UnavailableEntitlementGateway monthlyOffer() is null \u2014 never a placeholder price",
+   "UnavailableEntitlementGateway purchaseMonthly() is unavailable, never fabricates a purchase",
+   "UnavailableEntitlementGateway restore() is unavailable, never fabricates recovered access",
+   "UnavailableEntitlementGateway managementUrl() is null \u2014 no hardcoded fallback URL",
+   "UnavailableEntitlementGateway statusUpdates never emits anything",
+   "RevenueCatEntitlementGateway purchase outcome mapping a pending Google Play payment is pending, not an error",
+   "RevenueCatEntitlementGateway purchase outcome mapping a closed purchase sheet stays an ordinary cancellation",
+   "RevenueCatEntitlementGateway purchase outcome mapping every other purchase error stays an error",
+   "RevenueCatEntitlementGateway purchase outcome mapping a completed purchase is only \"purchased\" once its entitlement is active; otherwise it is still confirming",
+   "entitlementGatewayProvider resolves to UnavailableEntitlementGateway when unconfigured \u2014 true under flutter test, since REVENUECAT_* dart-defines are never set there, and this must never reach purchases_flutter platform channels"
+  ]
+ },
+ "batch": 1,
+ "exit": 0,
+ "seconds": 14,
+ "command": "flutter test --concurrency=1 --reporter json test/core/analytics/analytics_consent_test.dart test/core/analytics/analytics_service_test.dart test/core/analytics/tester_identity_provider_test.dart test/core/android_identity_test.dart test/core/app/r6b_day_rollover_test.dart test/core/app/r8_midnight_resume_test.dart test/core/app/thirty_app_test.dart test/core/branding/thirty_wordmark_view_test.dart test/core/config/release_info_test.dart test/core/config/revenue_cat_config_test.dart test/core/config/supabase_config_test.dart test/core/premium/entitlement_gateway_test.dart",
+ "rawSha256": "1b7486fed9ac3d5f283a519e4e2ce267d73e3bc9bbe2c417a0bcd7217713d032"
+}

@@ -1,0 +1,13 @@
+# Changed paths, fixed tree vs exact d9369795 export (red tree without the L-1 tests), 2026-11-11T13:20:04+01:00
+Files red/docs/product/PRODUCT_V2_CONTRACT.md and fixed/docs/product/PRODUCT_V2_CONTRACT.md differ
+Files red/ios/Flutter/ephemeral/flutter_native_integration.env and fixed/ios/Flutter/ephemeral/flutter_native_integration.env differ
+Files red/ios/Flutter/flutter_export_environment.sh and fixed/ios/Flutter/flutter_export_environment.sh differ
+Files red/ios/Flutter/Generated.xcconfig and fixed/ios/Flutter/Generated.xcconfig differ
+Files red/lib/features/home/application/circle_journal.dart and fixed/lib/features/home/application/circle_journal.dart differ
+Files red/lib/features/home/application/suggestion_preferences.dart and fixed/lib/features/home/application/suggestion_preferences.dart differ
+Files red/lib/features/home/presentation/memory_page.dart and fixed/lib/features/home/presentation/memory_page.dart differ
+Files red/lib/features/home/presentation/widgets/journal_data_controls.dart and fixed/lib/features/home/presentation/widgets/journal_data_controls.dart differ
+Files red/lib/features/settings/presentation/widgets/you_data_card.dart and fixed/lib/features/settings/presentation/widgets/you_data_card.dart differ
+Files red/macos/Flutter/ephemeral/flutter_export_environment.sh and fixed/macos/Flutter/ephemeral/flutter_export_environment.sh differ
+Files red/macos/Flutter/ephemeral/flutter_native_integration.env and fixed/macos/Flutter/ephemeral/flutter_native_integration.env differ
+Files red/macos/Flutter/ephemeral/Flutter-Generated.xcconfig and fixed/macos/Flutter/ephemeral/Flutter-Generated.xcconfig differ
