@@ -8,6 +8,7 @@
 - It does **not** amend the product contract. Contract changes, including the six-language amendment and the draft ADRs, still need separate, explicit founder approval.
 - It does **not** authorize product development. Each workstream starts only on its own founder authorization.
 - Every founder decision in §7 stays **OPEN** until it is decided and recorded.
+- **Amended 2026-11-12 (founder decisions G-02: D-L-1, D-L-5 Part A, D-ON-3, D-V-3, Q-1):** decision records only, in §2 G-01, §2 G-02 and §7. Amendment 3 is now in the contract; ADR-025 is accepted within its scope; ADR-026 Part A is approved as principles and its Part B is on HOLD.
 - **Amended 2026-11-12 (founder decision D-SAF-1, review strategy only):** the SAF-1 reviewer dependency, the G-07 *Reviewer route* and the GDPR Art. 9 carry-forward to PRV-1 and MEA-1. No activity is cleared. The FROZEN contract is not amended.
 
 **Authority and scope:**
@@ -143,6 +144,7 @@
   | **D. Unknown keys** (SDK or third-party storage, keys not in the registry) | anything not classified A–C | **No**; origin is never guessed from presence |
 
   - **Rule:** welcome is suppressed **if and only if** at least one class A or class B key is present.
+  - **D-ON-3 (founder decision 2026-11-12):** a language preference alone never counts as existing-user evidence. Detection continues to use only the class A records and class B prior-use markers above; the language preference key is registered as non-evidence.
   - **One registry, guarded by tests.** The classification lives in one place. A guard test fails when any persisted-key constant declared in `lib/` is missing from the registry, so a future user-data key can't silently fall into class D.
   - **Where a key is ambiguous**, especially in class B, the real-bootstrap test below decides: any key that a clean install writes without a user action belongs in class C.
   - **The one write allowed.** On detecting an existing user, onboarding may write only its own progress flag (`onboarding_welcome_seen`), so that a later Delete of History can never bring the welcome back. Detection itself writes nothing. No user data is ever modified, rewritten or deleted, and first-name behaviour is unchanged.
@@ -192,6 +194,7 @@
 
 **Authority:**
 - **FOUNDER** direction (2026-11-03): English, French, Dutch, Spanish (es-ES), German and Italian, complete at the first commercial launch, with full Free/Premium parity and zero unapproved hard-coded user-facing text.
+- **Update 2026-11-12:** the corrected six-language amendment is now **Amendment 3** of the contract (D-L-1a), ADR-025 is accepted within its scope (D-L-1c) and ADR-026 Part A is approved as principles (D-L-5); ADR-027 and ADR-028 are not drafted or accepted. The paragraph below is the record as of 2026-11-11.
 - **Not yet FROZEN.** The draft amendment `artifacts/launch_six_language_2026-11-03/DECISION_AMENDMENT_2026-11-03_DRAFT.md` (founder working tree, untracked) is **not applied**. The draft ADRs **025 (localization architecture), 026 (language-safe persistence), 027 (multilingual audio) and 028 (analytics v2)** are described in `MULTILINGUAL_ARCHITECTURE_CORRECTION_AND_FIRST_GATE.md` §2 and **do not exist as accepted ADRs**.
 
 **Current state (IMPL / RECORD):**
@@ -655,14 +658,16 @@ Priority is not order; see §6.
 |---|---|---|
 | D-ON-1 | Approve the onboarding journey (§2 G-01), or amend it | Stage 2 |
 | D-ON-2 | Welcome copy; whether a privacy line appears (truthful wording) | Stage 2 |
-| D-L-1 | Apply the six-language contract amendment (from the 2026-11-03 draft) and approve the `flutter_localizations` + `intl` dependency | Stage 1 |
+| D-L-1 | Apply the six-language contract amendment (from the 2026-11-03 draft) and approve the `flutter_localizations` + `intl` dependency. **DECIDED 2026-11-12:** corrected Amendment 3 applied; `flutter_localizations` (SDK) + `intl: ^0.20.2`; ADR-025 accepted within its scope (G-02 package rev 2) | Stage 1 |
+| D-ON-3 | A language preference alone never counts as existing-user evidence. **DECIDED 2026-11-12** | Stage 2 |
+| Q-1 (G-02) | T2 requires approved native-quality spoken guidance in every launch language; missing voice packs only in clearly scoped T1 pilots. **DECIDED 2026-11-12** (Amendment 3, "Premium voice") | Stage 2 |
 | D-L-3 | Glossary: Circle untranslated or translated; the Plans term; address forms | Stage 3 |
 | D-L-4 | Native reviewers per language (who, budget) | Stage 3 |
-| D-L-5 | Accept ADR-026 (origin and locale metadata; legacy shown as saved) | Stage 1 |
+| D-L-5 | Accept ADR-026 (origin and locale metadata; legacy shown as saved). **DECIDED 2026-11-12 in part:** Part A (export-neutral, non-migrating principles) approved; Part B on HOLD: persisted `sourceLocale` (D-L-5c), journal schema 3 and export envelope, pending D-RL4 and an explicit export-format decision | Stage 1 |
 | D-CD-1 | Content depth for T2: accept as is, or require additions or SAF-1 outcomes first | before the copy freeze |
 | D-V-1 | Voice option A / B / C (recommended B) | Stage 2 |
 | D-V-2 | Persona model: same names with per-language renditions, or per-language names | Stage 3 |
-| D-V-3 | Mismatch and legacy rule (one spoken language per session; D-A (a)) | Stage 2 |
+| D-V-3 | Mismatch and legacy rule (one spoken language per session; D-A (a)). **DECIDED 2026-11-12:** no mismatched spoken language and no substitute voice; a legacy or unverified Circle is voiced only on a byte-exact match with the recordings of its established language, otherwise unvoiced (ADR-026 A-5) | Stage 2 |
 | D-V-4 | Credit budget, ceilings, pilot first | Stage 3 |
 | D-V-5 | Licence confirmation for new voices | Stage 3 |
 | D-M-1 | Event set, identity, retention, hosting (draft ADR-028) | Stage 1 |
