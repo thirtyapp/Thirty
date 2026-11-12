@@ -4,6 +4,7 @@
 /// was offered — never recomposed.
 library;
 
+import '../../../core/l10n/content_locale.dart';
 import '../../home/application/activity_catalog.dart';
 import '../../home/domain/recommendation_engine.dart';
 import '../../plans/domain/plan_stage_provenance.dart';
@@ -184,21 +185,37 @@ class ComposedSession {
   PartWording wordingAt(int position) =>
       partWordingFor(plan.parts[position], wording?[position]);
 
-  /// Whether THIRTY's voice may speak the part at [position]: its recorded
-  /// words are the element's own, so a kept part whose saved words differ
-  /// runs on screen and paced instead — the voice never says something else
-  /// than the screen shows.
-  bool voicedAt(int position) =>
-      !wordingUnverified &&
-      wordingAt(position) == PartWording.of(plan.parts[position].definition);
+  /// Whether THIRTY's voice may speak the part at [position], in English
+  /// ([voicedAtIn]).
+  bool voicedAt(int position) => voicedAtIn(position, ContentLocale.english);
 
-  /// Whether THIRTY's voice may speak this Circle at all (audit remediation
-  /// R6, founder decision 2026-11-03): only when every part is [voicedAt].
-  /// A kept Circle with any part whose saved words differ from the
-  /// recorded ones runs whole on screen and paced — never partly voiced.
-  bool get voiced {
+  /// Whether THIRTY's voice may speak this Circle at all, in English
+  /// ([voicedIn]).
+  bool get voiced => voicedIn(ContentLocale.english);
+
+  /// Whether THIRTY's voice may speak the part at [position] in [locale]:
+  /// [locale] has approved words for its element, and the words the part
+  /// runs with are exactly those ([elementWordingIn]) — so a kept part whose
+  /// saved words differ runs on screen and paced instead, and the voice
+  /// never says something else than the screen shows.
+  ///
+  /// The comparison is an audio-integrity check and nothing else (ADR-026
+  /// A-5): it only withholds the voice. It never tells a record's language
+  /// or owner, never translates, rewrites or normalises saved words, and a
+  /// language without approved words is never voiced through another's.
+  bool voicedAtIn(int position, ContentLocale locale) {
+    if (wordingUnverified) return false;
+    final recorded = elementWordingIn(plan.parts[position].definition, locale);
+    return recorded != null && wordingAt(position) == recorded;
+  }
+
+  /// Whether THIRTY's voice may speak this Circle at all in [locale] (audit
+  /// remediation R6, founder decision 2026-11-03): only when every part is
+  /// [voicedAtIn]. A kept Circle with any part whose saved words differ from
+  /// the recorded ones runs whole on screen and paced — never partly voiced.
+  bool voicedIn(ContentLocale locale) {
     for (var position = 0; position < plan.parts.length; position++) {
-      if (!voicedAt(position)) return false;
+      if (!voicedAtIn(position, locale)) return false;
     }
     return true;
   }

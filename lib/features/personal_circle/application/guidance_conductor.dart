@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n/content_locale.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../home/application/recommendation_provider.dart';
 import '../domain/circle_elements.dart';
@@ -109,7 +110,11 @@ class GuidanceConductor {
     final running = state.status == RecommendationStatus.started;
     // Audit remediation R6: a kept Circle any of whose saved words differ
     // from the recorded ones is never voiced — not one line of it.
-    final speaks = voice.available && composed != null && composed.voiced;
+    // ADR-025 §7: in this build's content language, never another's.
+    final speaks =
+        voice.available &&
+        composed != null &&
+        composed.voicedIn(currentContentLocale);
     if (composed == null || moment == null || !running || !speaks) {
       // Nothing is checked while silent, so a voice that comes back — turned
       // on again, or Premium resumed — takes a first look: it speaks from
@@ -181,13 +186,15 @@ class GuidanceConductor {
   }) {
     _playingVoice = voice;
     _endingSpoken = null;
+    // Every line in one content language ([currentContentLocale]).
+    final frame = spokenFrameIn(currentContentLocale);
     unawaited(
       voice.play([
-        if (opening) spokenOpening,
+        if (opening) ?frame?.opening,
         if (cue)
-          ...moment.finished
-              ? [spokenEnding]
-              : spokenCueFor(plan, moment.position),
+          ...?(moment.finished
+              ? [?frame?.ending]
+              : spokenCueIn(plan, moment.position, currentContentLocale)),
       ], deferToScreenReader: _inFront),
     );
   }
@@ -200,7 +207,7 @@ class GuidanceConductor {
     _closingSpoken = circle;
     unawaited(
       voice.play(
-        [spokenNextCircle],
+        [?spokenFrameIn(currentContentLocale)?.nextCircle],
         deferToScreenReader: _inFront,
         afterCurrent: _endingSpoken == circle,
       ),

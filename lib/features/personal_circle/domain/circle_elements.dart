@@ -35,6 +35,7 @@
 ///   is unchanged. An editorial change raises nothing.
 library;
 
+import '../../../core/l10n/content_locale.dart';
 import '../../home/application/activity_catalog.dart';
 
 /// A stable element identity. Stored in journal entries and kept Circles,
@@ -1025,6 +1026,14 @@ class PartWording {
   @override
   int get hashCode => Object.hash(name, instruction, safetyRevision);
 }
+
+/// [element]'s words in [locale] (ADR-025 §7.1): its name, its instruction
+/// and its safety revision — or `null` where [locale] has no approved
+/// content. English is the element's own fields ([PartWording.of]): there
+/// is no second English catalogue to drift from them. Nothing ever falls
+/// back to another language's words.
+PartWording? elementWordingIn(CircleElement element, ContentLocale locale) =>
+    locale == ContentLocale.english ? PartWording.of(element) : null;
 
 /// Whether [part]'s [saved] words have given way to words corrected for
 /// safety since it was kept ([partWordingFor]) — what the part says so for.

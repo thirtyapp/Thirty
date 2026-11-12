@@ -1,0 +1,1629 @@
+{
+ "elements": {
+  "phoneFaceDown": {
+   "name": "Phone face down",
+   "instruction": "Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Phone face down",
+    "instruction": "Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_phoneFaceDown",
+    "role": "part",
+    "script": "Phone face down. Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+    "file": "part_phoneFaceDown_312eb0f5.m4a"
+   }
+  },
+  "nameWhatsOn": {
+   "name": "Name what’s on",
+   "instruction": "In a few words, jot down what’s taking up the most room in your head right now.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Name what’s on",
+    "instruction": "In a few words, jot down what’s taking up the most room in your head right now.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_nameWhatsOn",
+    "role": "part",
+    "script": "Name what’s on. In a few words, jot down what’s taking up the most room in your head right now.",
+    "file": "part_nameWhatsOn_c2ce8f3b.m4a"
+   }
+  },
+  "openWindow": {
+   "name": "Open a window",
+   "instruction": "Open a window or a door, and take a moment to look outside before you begin.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Open a window",
+    "instruction": "Open a window or a door, and take a moment to look outside before you begin.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_openWindow",
+    "role": "part",
+    "script": "Open a window. Open a window or a door, and take a moment to look outside before you begin.",
+    "file": "part_openWindow_b52c68ca.m4a"
+   }
+  },
+  "standAndReach": {
+   "name": "Stand and reach",
+   "instruction": "Stand up and reach both arms overhead, only as high as is comfortable, then lower them slowly. Three or four times.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Stand and reach",
+    "instruction": "Stand up and reach both arms overhead, only as high as is comfortable, then lower them slowly. Three or four times.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_standAndReach",
+    "role": "part",
+    "script": "Stand and reach. Stand up and reach both arms overhead, only as high as is comfortable, then lower them slowly. Three or four times.",
+    "file": "part_standAndReach_1e75d975.m4a"
+   }
+  },
+  "songOn": {
+   "name": "Put a song on",
+   "instruction": "Put on a song you really like, and let it play while you start.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Put a song on",
+    "instruction": "Put on a song you really like, and let it play while you start.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_songOn",
+    "role": "part",
+    "script": "Put a song on. Put on a song you really like, and let it play while you start.",
+    "file": "part_songOn_6017657f.m4a"
+   }
+  },
+  "comfortableSpot": {
+   "name": "A comfortable spot",
+   "instruction": "Find somewhere comfortable to sit or lie, and let your shoulders drop.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "A comfortable spot",
+    "instruction": "Find somewhere comfortable to sit or lie, and let your shoulders drop.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_comfortableSpot",
+    "role": "part",
+    "script": "A comfortable spot. Find somewhere comfortable to sit or lie, and let your shoulders drop.",
+    "file": "part_comfortableSpot_d138bce1.m4a"
+   }
+  },
+  "lookAround": {
+   "name": "Look around",
+   "instruction": "Look slowly around you, and find three things you hadn’t noticed before.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Look around",
+    "instruction": "Look slowly around you, and find three things you hadn’t noticed before.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_lookAround",
+    "role": "part",
+    "script": "Look around. Look slowly around you, and find three things you hadn’t noticed before.",
+    "file": "part_lookAround_53849d95.m4a"
+   }
+  },
+  "moveToMusic": {
+   "name": "Move to music",
+   "instruction": "Put on songs with a bit of life in them, and move however feels good — sway, step, walk around the room.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Move to music",
+    "instruction": "Put on songs with a bit of life in them, and move however feels good — sway, step, walk around the room.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_moveToMusic",
+    "role": "part",
+    "script": "Move to music. Put on songs with a bit of life in them, and move however feels good — sway, step, walk around the room.",
+    "file": "part_moveToMusic_efb5ed3a.m4a"
+   }
+  },
+  "standingStretch": {
+   "name": "Standing stretch",
+   "instruction": "Reach up, bend to each side, roll your shoulders, twist gently, then march on the spot. Only as far as is comfortable.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Standing stretch",
+    "instruction": "Reach up, bend to each side, roll your shoulders, twist gently, then march on the spot. Only as far as is comfortable.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_standingStretch",
+    "role": "part",
+    "script": "Standing stretch. Reach up, bend to each side, roll your shoulders, twist gently, then march on the spot. Only as far as is comfortable.",
+    "file": "part_standingStretch_7ca4a0a2.m4a"
+   }
+  },
+  "activeJob": {
+   "name": "One active job",
+   "instruction": "One job that keeps you on your feet — sweeping, hoovering, carrying things — at a pace that feels comfortable.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "One active job",
+    "instruction": "One job that keeps you on your feet — sweeping, hoovering, carrying things — at a pace that feels comfortable.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_activeJob",
+    "role": "part",
+    "script": "One active job. One job that keeps you on your feet — sweeping, hoovering, carrying things — at a pace that feels comfortable.",
+    "file": "part_activeJob_5b1bb959.m4a"
+   }
+  },
+  "briskWalk": {
+   "name": "A brisk walk",
+   "instruction": "Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "A brisk walk",
+    "instruction": "Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_briskWalk",
+    "role": "part",
+    "script": "A brisk walk. Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+    "file": "part_briskWalk_e3125526.m4a"
+   }
+  },
+  "roundTheBlock": {
+   "name": "Round the block",
+   "instruction": "Step outside and walk once round the block, at whatever pace feels right today.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Round the block",
+    "instruction": "Step outside and walk once round the block, at whatever pace feels right today.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_roundTheBlock",
+    "role": "part",
+    "script": "Round the block. Step outside and walk once round the block, at whatever pace feels right today.",
+    "file": "part_roundTheBlock_b1fa45f9.m4a"
+   }
+  },
+  "quickClearUp": {
+   "name": "Quick clear-up",
+   "instruction": "Pick one room and put things back where they live. Don’t sort — just put away what’s out.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Quick clear-up",
+    "instruction": "Pick one room and put things back where they live. Don’t sort — just put away what’s out.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_quickClearUp",
+    "role": "part",
+    "script": "Quick clear-up. Pick one room and put things back where they live. Don’t sort — just put away what’s out.",
+    "file": "part_quickClearUp_2a4514d1.m4a"
+   }
+  },
+  "daylight": {
+   "name": "Some fresh air",
+   "instruction": "Step outside, or stand at an open door or window, for a few minutes. Look around and take in what’s there.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Some fresh air",
+    "instruction": "Step outside, or stand at an open door or window, for a few minutes. Look around and take in what’s there.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_daylight",
+    "role": "part",
+    "script": "Some fresh air. Step outside, or stand at an open door or window, for a few minutes. Look around and take in what’s there.",
+    "file": "part_daylight_bc82cf74.m4a"
+   }
+  },
+  "getItOut": {
+   "name": "Get it out",
+   "instruction": "Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Get it out",
+    "instruction": "Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_getItOut",
+    "role": "part",
+    "script": "Get it out. Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.",
+    "file": "part_getItOut_a239320e.m4a"
+   }
+  },
+  "clearCorner": {
+   "name": "Clear one corner",
+   "instruction": "One corner of a desk, one drawer or one shelf: take everything off, then put back only what belongs there.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Clear one corner",
+    "instruction": "One corner of a desk, one drawer or one shelf: take everything off, then put back only what belongs there.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_clearCorner",
+    "role": "part",
+    "script": "Clear one corner. One corner of a desk, one drawer or one shelf: take everything off, then put back only what belongs there.",
+    "file": "part_clearCorner_3f1dd71d.m4a"
+   }
+  },
+  "oneTask": {
+   "name": "One task, no switching",
+   "instruction": "Pick one task on your mind and put everything else out of sight. Stay with it until the time’s up — finished or not.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "One task, no switching",
+    "instruction": "Pick one task on your mind and put everything else out of sight. Stay with it until the time’s up — finished or not.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_oneTask",
+    "role": "part",
+    "script": "One task, no switching. Pick one task on your mind and put everything else out of sight. Stay with it until the time’s up — finished or not.",
+    "file": "part_oneTask_80701d4c.m4a"
+   }
+  },
+  "listenOne": {
+   "name": "Listen to one thing",
+   "instruction": "Put on one album, episode or recording, then put your phone face down. Nothing else to do but listen.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Listen to one thing",
+    "instruction": "Put on one album, episode or recording, then put your phone face down. Nothing else to do but listen.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_listenOne",
+    "role": "part",
+    "script": "Listen to one thing. Put on one album, episode or recording, then put your phone face down. Nothing else to do but listen.",
+    "file": "part_listenOne_afb9c607.m4a"
+   }
+  },
+  "readPages": {
+   "name": "Read a few pages",
+   "instruction": "Read what you’re reading, or anything nearby. If your mind wanders, reread the last line.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Read a few pages",
+    "instruction": "Read what you’re reading, or anything nearby. If your mind wanders, reread the last line.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_readPages",
+    "role": "part",
+    "script": "Read a few pages. Read what you’re reading, or anything nearby. If your mind wanders, reread the last line.",
+    "file": "part_readPages_16d663c3.m4a"
+   }
+  },
+  "phoneFreeWalk": {
+   "name": "Screen-free walk",
+   "instruction": "Silence your notifications and keep your phone in your pocket. Walk easily, and look around you rather than at a screen.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Screen-free walk",
+    "instruction": "Silence your notifications and keep your phone in your pocket. Walk easily, and look around you rather than at a screen.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_phoneFreeWalk",
+    "role": "part",
+    "script": "Screen-free walk. Silence your notifications and keep your phone in your pocket. Walk easily, and look around you rather than at a screen.",
+    "file": "part_phoneFreeWalk_9179d803.m4a"
+   }
+  },
+  "closeWhatsOpen": {
+   "name": "Set screens aside",
+   "instruction": "Minimise what you don’t need on your screens — nothing needs closing. Keep in view only what comes next.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Set screens aside",
+    "instruction": "Minimise what you don’t need on your screens — nothing needs closing. Keep in view only what comes next.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_closeWhatsOpen",
+    "role": "part",
+    "script": "Set screens aside. Minimise what you don’t need on your screens — nothing needs closing. Keep in view only what comes next.",
+    "file": "part_closeWhatsOpen_a811d003.m4a"
+   }
+  },
+  "lookFar": {
+   "name": "Look far away",
+   "instruction": "Let your eyes settle on the furthest thing you can comfortably see — through a window, or across the room.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Look far away",
+    "instruction": "Let your eyes settle on the furthest thing you can comfortably see — through a window, or across the room.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_lookFar",
+    "role": "part",
+    "script": "Look far away. Let your eyes settle on the furthest thing you can comfortably see — through a window, or across the room.",
+    "file": "part_lookFar_d2e2c311.m4a"
+   }
+  },
+  "warmDrink": {
+   "name": "A slow warm drink",
+   "instruction": "Make a warm drink you’d enjoy. Hold the cup in both hands, and drink it slowly, with your phone face down.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "A slow warm drink",
+    "instruction": "Make a warm drink you’d enjoy. Hold the cup in both hands, and drink it slowly, with your phone face down.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_warmDrink",
+    "role": "part",
+    "script": "A slow warm drink. Make a warm drink you’d enjoy. Hold the cup in both hands, and drink it slowly, with your phone face down.",
+    "file": "part_warmDrink_db4bc51f.m4a"
+   }
+  },
+  "gentleStretch": {
+   "name": "Gentle stretch",
+   "instruction": "Slowly: neck, shoulders, open the chest, a seated twist, then fold forward and come up slowly. Only what’s comfortable.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Gentle stretch",
+    "instruction": "Slowly: neck, shoulders, open the chest, a seated twist, then fold forward and come up slowly. Only what’s comfortable.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_gentleStretch",
+    "role": "part",
+    "script": "Gentle stretch. Slowly: neck, shoulders, open the chest, a seated twist, then fold forward and come up slowly. Only what’s comfortable.",
+    "file": "part_gentleStretch_052b8910.m4a"
+   }
+  },
+  "neckAndShoulders": {
+   "name": "Neck and shoulders",
+   "instruction": "Gently tip your head towards each shoulder. Then lift your shoulders to your ears and let them drop.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Neck and shoulders",
+    "instruction": "Gently tip your head towards each shoulder. Then lift your shoulders to your ears and let them drop.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_neckAndShoulders",
+    "role": "part",
+    "script": "Neck and shoulders. Gently tip your head towards each shoulder. Then lift your shoulders to your ears and let them drop.",
+    "file": "part_neckAndShoulders_4c3958ac.m4a"
+   }
+  },
+  "quietMusic": {
+   "name": "Quiet music",
+   "instruction": "Somewhere comfortable, put on something quiet. Close your eyes if you like, and let one song run into the next.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Quiet music",
+    "instruction": "Somewhere comfortable, put on something quiet. Close your eyes if you like, and let one song run into the next.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_quietMusic",
+    "role": "part",
+    "script": "Quiet music. Somewhere comfortable, put on something quiet. Close your eyes if you like, and let one song run into the next.",
+    "file": "part_quietMusic_c6fced49.m4a"
+   }
+  },
+  "easyWalk": {
+   "name": "Easy walk",
+   "instruction": "Step outside without picking a route. Walk slower than usual, and stop for anything that catches your eye.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Easy walk",
+    "instruction": "Step outside without picking a route. Walk slower than usual, and stop for anything that catches your eye.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_easyWalk",
+    "role": "part",
+    "script": "Easy walk. Step outside without picking a route. Walk slower than usual, and stop for anything that catches your eye.",
+    "file": "part_easyWalk_9be95142.m4a"
+   }
+  },
+  "sitOutside": {
+   "name": "Sit outside",
+   "instruction": "Find somewhere outside to sit, with your phone in your pocket. Listen to what you can hear, near and far.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Sit outside",
+    "instruction": "Find somewhere outside to sit, with your phone in your pocket. Listen to what you can hear, near and far.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_sitOutside",
+    "role": "part",
+    "script": "Sit outside. Find somewhere outside to sit, with your phone in your pocket. Listen to what you can hear, near and far.",
+    "file": "part_sitOutside_ba8e7ce2.m4a"
+   }
+  },
+  "tendOne": {
+   "name": "Tend to one thing",
+   "instruction": "Pick one small thing to look after — a plant, a bedside table, a shelf — and go slower than you would in a hurry.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Tend to one thing",
+    "instruction": "Pick one small thing to look after — a plant, a bedside table, a shelf — and go slower than you would in a hurry.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_tendOne",
+    "role": "part",
+    "script": "Tend to one thing. Pick one small thing to look after — a plant, a bedside table, a shelf — and go slower than you would in a hurry.",
+    "file": "part_tendOne_47f1e257.m4a"
+   }
+  },
+  "chooseOne": {
+   "name": "Choose one thing",
+   "instruction": "Look over what you wrote, and circle the one thing that matters most next.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Choose one thing",
+    "instruction": "Look over what you wrote, and circle the one thing that matters most next.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_chooseOne",
+    "role": "part",
+    "script": "Choose one thing. Look over what you wrote, and circle the one thing that matters most next.",
+    "file": "part_chooseOne_4b2d1044.m4a"
+   }
+  },
+  "firstStep": {
+   "name": "Write the first step",
+   "instruction": "For the thing you circled, write the very first small step — small enough to start with.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Write the first step",
+    "instruction": "For the thing you circled, write the very first small step — small enough to start with.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_firstStep",
+    "role": "part",
+    "script": "Write the first step. For the thing you circled, write the very first small step — small enough to start with.",
+    "file": "part_firstStep_84eb44d5.m4a"
+   }
+  },
+  "sitAMinute": {
+   "name": "Sit for a minute",
+   "instruction": "Sit still for a minute or two before you move on. There’s nothing to do.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Sit for a minute",
+    "instruction": "Sit still for a minute or two before you move on. There’s nothing to do.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_sitAMinute",
+    "role": "part",
+    "script": "Sit for a minute. Sit still for a minute or two before you move on. There’s nothing to do.",
+    "file": "part_sitAMinute_c80c3b07.m4a"
+   }
+  },
+  "putThingsBack": {
+   "name": "Put things back",
+   "instruction": "Put back anything that’s out of place nearby, and leave your space ready for later.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Put things back",
+    "instruction": "Put back anything that’s out of place nearby, and leave your space ready for later.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_putThingsBack",
+    "role": "part",
+    "script": "Put things back. Put back anything that’s out of place nearby, and leave your space ready for later.",
+    "file": "part_putThingsBack_68f00ead.m4a"
+   }
+  },
+  "glassOfWater": {
+   "name": "A glass of water",
+   "instruction": "Pour a glass of water and drink it before you carry on.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "A glass of water",
+    "instruction": "Pour a glass of water and drink it before you carry on.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_glassOfWater",
+    "role": "part",
+    "script": "A glass of water. Pour a glass of water and drink it before you carry on.",
+    "file": "part_glassOfWater_cd436c4b.m4a"
+   }
+  },
+  "shakeOut": {
+   "name": "Shake it out",
+   "instruction": "Shake out your hands and arms loosely, then let them rest.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Shake it out",
+    "instruction": "Shake out your hands and arms loosely, then let them rest.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_shakeOut",
+    "role": "part",
+    "script": "Shake it out. Shake out your hands and arms loosely, then let them rest.",
+    "file": "part_shakeOut_d58bb0f4.m4a"
+   }
+  },
+  "whatsNext": {
+   "name": "Choose what’s next",
+   "instruction": "Decide the one thing you’ll do next, and go to it.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Choose what’s next",
+    "instruction": "Decide the one thing you’ll do next, and go to it.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_whatsNext",
+    "role": "part",
+    "script": "Choose what’s next. Decide the one thing you’ll do next, and go to it.",
+    "file": "part_whatsNext_59b13e7d.m4a"
+   }
+  },
+  "noteOneThing": {
+   "name": "Note one thing",
+   "instruction": "Note down one small thing from today you’d like to remember.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "Note one thing",
+    "instruction": "Note down one small thing from today you’d like to remember.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_noteOneThing",
+    "role": "part",
+    "script": "Note one thing. Note down one small thing from today you’d like to remember.",
+    "file": "part_noteOneThing_721bafd4.m4a"
+   }
+  },
+  "oneLongReach": {
+   "name": "One long reach",
+   "instruction": "Finish with one long reach overhead, as far as is comfortable, then let your arms drop.",
+   "safetyRevision": 0,
+   "offerable": true,
+   "wording": {
+    "name": "One long reach",
+    "instruction": "Finish with one long reach overhead, as far as is comfortable, then let your arms drop.",
+    "safetyRevision": 0
+   },
+   "partClip": {
+    "id": "part_oneLongReach",
+    "role": "part",
+    "script": "One long reach. Finish with one long reach overhead, as far as is comfortable, then let your arms drop.",
+    "file": "part_oneLongReach_804e9b30.m4a"
+   }
+  }
+ },
+ "leads": [
+  {
+   "id": "lead_first",
+   "role": "lead",
+   "script": "First.",
+   "file": "lead_first_d97b30dd.m4a"
+  },
+  {
+   "id": "lead_next",
+   "role": "lead",
+   "script": "Next.",
+   "file": "lead_next_df1d69d2.m4a"
+  },
+  {
+   "id": "lead_last",
+   "role": "lead",
+   "script": "And last.",
+   "file": "lead_last_7663f978.m4a"
+  }
+ ],
+ "ending": {
+  "id": "close",
+  "role": "close",
+  "script": "That’s your Circle. Take a moment before you move on.",
+  "file": "close_3b06cf13.m4a"
+ },
+ "opening": {
+  "id": "opening",
+  "role": "opening",
+  "script": "Your Circle for today.",
+  "file": "opening_d1293026.m4a"
+ },
+ "nextCircle": {
+  "id": "next_circle",
+  "role": "nextCircle",
+  "script": "Your next Circle opens tomorrow.",
+  "file": "next_circle_3c38eb7b.m4a"
+ },
+ "framing": [
+  {
+   "id": "opening",
+   "role": "opening",
+   "script": "Your Circle for today.",
+   "file": "opening_d1293026.m4a"
+  },
+  {
+   "id": "next_circle",
+   "role": "nextCircle",
+   "script": "Your next Circle opens tomorrow.",
+   "file": "next_circle_3c38eb7b.m4a"
+  }
+ ],
+ "manifest": [
+  {
+   "id": "lead_first",
+   "role": "lead",
+   "script": "First.",
+   "file": "lead_first_d97b30dd.m4a"
+  },
+  {
+   "id": "lead_next",
+   "role": "lead",
+   "script": "Next.",
+   "file": "lead_next_df1d69d2.m4a"
+  },
+  {
+   "id": "lead_last",
+   "role": "lead",
+   "script": "And last.",
+   "file": "lead_last_7663f978.m4a"
+  },
+  {
+   "id": "part_phoneFaceDown",
+   "role": "part",
+   "script": "Phone face down. Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+   "file": "part_phoneFaceDown_312eb0f5.m4a"
+  },
+  {
+   "id": "part_nameWhatsOn",
+   "role": "part",
+   "script": "Name what’s on. In a few words, jot down what’s taking up the most room in your head right now.",
+   "file": "part_nameWhatsOn_c2ce8f3b.m4a"
+  },
+  {
+   "id": "part_openWindow",
+   "role": "part",
+   "script": "Open a window. Open a window or a door, and take a moment to look outside before you begin.",
+   "file": "part_openWindow_b52c68ca.m4a"
+  },
+  {
+   "id": "part_standAndReach",
+   "role": "part",
+   "script": "Stand and reach. Stand up and reach both arms overhead, only as high as is comfortable, then lower them slowly. Three or four times.",
+   "file": "part_standAndReach_1e75d975.m4a"
+  },
+  {
+   "id": "part_songOn",
+   "role": "part",
+   "script": "Put a song on. Put on a song you really like, and let it play while you start.",
+   "file": "part_songOn_6017657f.m4a"
+  },
+  {
+   "id": "part_comfortableSpot",
+   "role": "part",
+   "script": "A comfortable spot. Find somewhere comfortable to sit or lie, and let your shoulders drop.",
+   "file": "part_comfortableSpot_d138bce1.m4a"
+  },
+  {
+   "id": "part_lookAround",
+   "role": "part",
+   "script": "Look around. Look slowly around you, and find three things you hadn’t noticed before.",
+   "file": "part_lookAround_53849d95.m4a"
+  },
+  {
+   "id": "part_moveToMusic",
+   "role": "part",
+   "script": "Move to music. Put on songs with a bit of life in them, and move however feels good — sway, step, walk around the room.",
+   "file": "part_moveToMusic_efb5ed3a.m4a"
+  },
+  {
+   "id": "part_standingStretch",
+   "role": "part",
+   "script": "Standing stretch. Reach up, bend to each side, roll your shoulders, twist gently, then march on the spot. Only as far as is comfortable.",
+   "file": "part_standingStretch_7ca4a0a2.m4a"
+  },
+  {
+   "id": "part_activeJob",
+   "role": "part",
+   "script": "One active job. One job that keeps you on your feet — sweeping, hoovering, carrying things — at a pace that feels comfortable.",
+   "file": "part_activeJob_5b1bb959.m4a"
+  },
+  {
+   "id": "part_briskWalk",
+   "role": "part",
+   "script": "A brisk walk. Head out. Start easy, then walk briskly — at a pace you can still talk at. Turn back about halfway.",
+   "file": "part_briskWalk_e3125526.m4a"
+  },
+  {
+   "id": "part_roundTheBlock",
+   "role": "part",
+   "script": "Round the block. Step outside and walk once round the block, at whatever pace feels right today.",
+   "file": "part_roundTheBlock_b1fa45f9.m4a"
+  },
+  {
+   "id": "part_quickClearUp",
+   "role": "part",
+   "script": "Quick clear-up. Pick one room and put things back where they live. Don’t sort — just put away what’s out.",
+   "file": "part_quickClearUp_2a4514d1.m4a"
+  },
+  {
+   "id": "part_daylight",
+   "role": "part",
+   "script": "Some fresh air. Step outside, or stand at an open door or window, for a few minutes. Look around and take in what’s there.",
+   "file": "part_daylight_bc82cf74.m4a"
+  },
+  {
+   "id": "part_getItOut",
+   "role": "part",
+   "script": "Get it out. Write down everything on your mind, without sorting. When you run dry, ask what else is nagging at you.",
+   "file": "part_getItOut_a239320e.m4a"
+  },
+  {
+   "id": "part_clearCorner",
+   "role": "part",
+   "script": "Clear one corner. One corner of a desk, one drawer or one shelf: take everything off, then put back only what belongs there.",
+   "file": "part_clearCorner_3f1dd71d.m4a"
+  },
+  {
+   "id": "part_oneTask",
+   "role": "part",
+   "script": "One task, no switching. Pick one task on your mind and put everything else out of sight. Stay with it until the time’s up — finished or not.",
+   "file": "part_oneTask_80701d4c.m4a"
+  },
+  {
+   "id": "part_listenOne",
+   "role": "part",
+   "script": "Listen to one thing. Put on one album, episode or recording, then put your phone face down. Nothing else to do but listen.",
+   "file": "part_listenOne_afb9c607.m4a"
+  },
+  {
+   "id": "part_readPages",
+   "role": "part",
+   "script": "Read a few pages. Read what you’re reading, or anything nearby. If your mind wanders, reread the last line.",
+   "file": "part_readPages_16d663c3.m4a"
+  },
+  {
+   "id": "part_phoneFreeWalk",
+   "role": "part",
+   "script": "Screen-free walk. Silence your notifications and keep your phone in your pocket. Walk easily, and look around you rather than at a screen.",
+   "file": "part_phoneFreeWalk_9179d803.m4a"
+  },
+  {
+   "id": "part_closeWhatsOpen",
+   "role": "part",
+   "script": "Set screens aside. Minimise what you don’t need on your screens — nothing needs closing. Keep in view only what comes next.",
+   "file": "part_closeWhatsOpen_a811d003.m4a"
+  },
+  {
+   "id": "part_lookFar",
+   "role": "part",
+   "script": "Look far away. Let your eyes settle on the furthest thing you can comfortably see — through a window, or across the room.",
+   "file": "part_lookFar_d2e2c311.m4a"
+  },
+  {
+   "id": "part_warmDrink",
+   "role": "part",
+   "script": "A slow warm drink. Make a warm drink you’d enjoy. Hold the cup in both hands, and drink it slowly, with your phone face down.",
+   "file": "part_warmDrink_db4bc51f.m4a"
+  },
+  {
+   "id": "part_gentleStretch",
+   "role": "part",
+   "script": "Gentle stretch. Slowly: neck, shoulders, open the chest, a seated twist, then fold forward and come up slowly. Only what’s comfortable.",
+   "file": "part_gentleStretch_052b8910.m4a"
+  },
+  {
+   "id": "part_neckAndShoulders",
+   "role": "part",
+   "script": "Neck and shoulders. Gently tip your head towards each shoulder. Then lift your shoulders to your ears and let them drop.",
+   "file": "part_neckAndShoulders_4c3958ac.m4a"
+  },
+  {
+   "id": "part_quietMusic",
+   "role": "part",
+   "script": "Quiet music. Somewhere comfortable, put on something quiet. Close your eyes if you like, and let one song run into the next.",
+   "file": "part_quietMusic_c6fced49.m4a"
+  },
+  {
+   "id": "part_easyWalk",
+   "role": "part",
+   "script": "Easy walk. Step outside without picking a route. Walk slower than usual, and stop for anything that catches your eye.",
+   "file": "part_easyWalk_9be95142.m4a"
+  },
+  {
+   "id": "part_sitOutside",
+   "role": "part",
+   "script": "Sit outside. Find somewhere outside to sit, with your phone in your pocket. Listen to what you can hear, near and far.",
+   "file": "part_sitOutside_ba8e7ce2.m4a"
+  },
+  {
+   "id": "part_tendOne",
+   "role": "part",
+   "script": "Tend to one thing. Pick one small thing to look after — a plant, a bedside table, a shelf — and go slower than you would in a hurry.",
+   "file": "part_tendOne_47f1e257.m4a"
+  },
+  {
+   "id": "part_chooseOne",
+   "role": "part",
+   "script": "Choose one thing. Look over what you wrote, and circle the one thing that matters most next.",
+   "file": "part_chooseOne_4b2d1044.m4a"
+  },
+  {
+   "id": "part_firstStep",
+   "role": "part",
+   "script": "Write the first step. For the thing you circled, write the very first small step — small enough to start with.",
+   "file": "part_firstStep_84eb44d5.m4a"
+  },
+  {
+   "id": "part_sitAMinute",
+   "role": "part",
+   "script": "Sit for a minute. Sit still for a minute or two before you move on. There’s nothing to do.",
+   "file": "part_sitAMinute_c80c3b07.m4a"
+  },
+  {
+   "id": "part_putThingsBack",
+   "role": "part",
+   "script": "Put things back. Put back anything that’s out of place nearby, and leave your space ready for later.",
+   "file": "part_putThingsBack_68f00ead.m4a"
+  },
+  {
+   "id": "part_glassOfWater",
+   "role": "part",
+   "script": "A glass of water. Pour a glass of water and drink it before you carry on.",
+   "file": "part_glassOfWater_cd436c4b.m4a"
+  },
+  {
+   "id": "part_shakeOut",
+   "role": "part",
+   "script": "Shake it out. Shake out your hands and arms loosely, then let them rest.",
+   "file": "part_shakeOut_d58bb0f4.m4a"
+  },
+  {
+   "id": "part_whatsNext",
+   "role": "part",
+   "script": "Choose what’s next. Decide the one thing you’ll do next, and go to it.",
+   "file": "part_whatsNext_59b13e7d.m4a"
+  },
+  {
+   "id": "part_noteOneThing",
+   "role": "part",
+   "script": "Note one thing. Note down one small thing from today you’d like to remember.",
+   "file": "part_noteOneThing_721bafd4.m4a"
+  },
+  {
+   "id": "part_oneLongReach",
+   "role": "part",
+   "script": "One long reach. Finish with one long reach overhead, as far as is comfortable, then let your arms drop.",
+   "file": "part_oneLongReach_804e9b30.m4a"
+  },
+  {
+   "id": "close",
+   "role": "close",
+   "script": "That’s your Circle. Take a moment before you move on.",
+   "file": "close_3b06cf13.m4a"
+  }
+ ],
+ "voices": {
+  "locke": {
+   "id": "voice_locke_v1",
+   "label": "Locke",
+   "assetDir": "assets/audio/guidance/voice_locke_v1",
+   "preview": {
+    "id": "preview",
+    "role": "preview",
+    "script": "Hi, I’m Locke. I’ll tell you when each part of your Circle begins, so you can put the screen down.",
+    "file": "preview_32b96972.m4a"
+   },
+   "assets": [
+    "assets/audio/guidance/voice_locke_v1/lead_first_d97b30dd.m4a",
+    "assets/audio/guidance/voice_locke_v1/lead_next_df1d69d2.m4a",
+    "assets/audio/guidance/voice_locke_v1/lead_last_7663f978.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_phoneFaceDown_312eb0f5.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_nameWhatsOn_c2ce8f3b.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_openWindow_b52c68ca.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_standAndReach_1e75d975.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_songOn_6017657f.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_comfortableSpot_d138bce1.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_lookAround_53849d95.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_moveToMusic_efb5ed3a.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_standingStretch_7ca4a0a2.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_activeJob_5b1bb959.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_briskWalk_e3125526.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_roundTheBlock_b1fa45f9.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_quickClearUp_2a4514d1.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_daylight_bc82cf74.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_getItOut_a239320e.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_clearCorner_3f1dd71d.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_oneTask_80701d4c.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_listenOne_afb9c607.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_readPages_16d663c3.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_phoneFreeWalk_9179d803.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_closeWhatsOpen_a811d003.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_lookFar_d2e2c311.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_warmDrink_db4bc51f.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_gentleStretch_052b8910.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_neckAndShoulders_4c3958ac.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_quietMusic_c6fced49.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_easyWalk_9be95142.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_sitOutside_ba8e7ce2.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_tendOne_47f1e257.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_chooseOne_4b2d1044.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_firstStep_84eb44d5.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_sitAMinute_c80c3b07.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_putThingsBack_68f00ead.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_glassOfWater_cd436c4b.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_shakeOut_d58bb0f4.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_whatsNext_59b13e7d.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_noteOneThing_721bafd4.m4a",
+    "assets/audio/guidance/voice_locke_v1/part_oneLongReach_804e9b30.m4a",
+    "assets/audio/guidance/voice_locke_v1/close_3b06cf13.m4a",
+    "assets/audio/guidance/voice_locke_v1/preview_32b96972.m4a",
+    "assets/audio/guidance/voice_locke_v1/opening_d1293026.m4a",
+    "assets/audio/guidance/voice_locke_v1/next_circle_3c38eb7b.m4a"
+   ]
+  },
+  "heather": {
+   "id": "voice_heather_v1",
+   "label": "Heather",
+   "assetDir": "assets/audio/guidance/voice_heather_v1",
+   "preview": {
+    "id": "preview",
+    "role": "preview",
+    "script": "Hi, I’m Heather. I’ll tell you when each part of your Circle begins, so you can put the screen down.",
+    "file": "preview_0c38bd4b.m4a"
+   },
+   "assets": [
+    "assets/audio/guidance/voice_heather_v1/lead_first_d97b30dd.m4a",
+    "assets/audio/guidance/voice_heather_v1/lead_next_df1d69d2.m4a",
+    "assets/audio/guidance/voice_heather_v1/lead_last_7663f978.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_phoneFaceDown_312eb0f5.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_nameWhatsOn_c2ce8f3b.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_openWindow_b52c68ca.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_standAndReach_1e75d975.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_songOn_6017657f.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_comfortableSpot_d138bce1.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_lookAround_53849d95.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_moveToMusic_efb5ed3a.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_standingStretch_7ca4a0a2.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_activeJob_5b1bb959.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_briskWalk_e3125526.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_roundTheBlock_b1fa45f9.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_quickClearUp_2a4514d1.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_daylight_bc82cf74.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_getItOut_a239320e.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_clearCorner_3f1dd71d.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_oneTask_80701d4c.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_listenOne_afb9c607.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_readPages_16d663c3.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_phoneFreeWalk_9179d803.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_closeWhatsOpen_a811d003.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_lookFar_d2e2c311.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_warmDrink_db4bc51f.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_gentleStretch_052b8910.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_neckAndShoulders_4c3958ac.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_quietMusic_c6fced49.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_easyWalk_9be95142.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_sitOutside_ba8e7ce2.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_tendOne_47f1e257.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_chooseOne_4b2d1044.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_firstStep_84eb44d5.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_sitAMinute_c80c3b07.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_putThingsBack_68f00ead.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_glassOfWater_cd436c4b.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_shakeOut_d58bb0f4.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_whatsNext_59b13e7d.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_noteOneThing_721bafd4.m4a",
+    "assets/audio/guidance/voice_heather_v1/part_oneLongReach_804e9b30.m4a",
+    "assets/audio/guidance/voice_heather_v1/close_3b06cf13.m4a",
+    "assets/audio/guidance/voice_heather_v1/preview_0c38bd4b.m4a",
+    "assets/audio/guidance/voice_heather_v1/opening_d1293026.m4a",
+    "assets/audio/guidance/voice_heather_v1/next_circle_3c38eb7b.m4a"
+   ]
+  },
+  "milo": {
+   "id": "voice_milo_v1",
+   "label": "Milo",
+   "assetDir": "assets/audio/guidance/voice_milo_v1",
+   "preview": {
+    "id": "preview",
+    "role": "preview",
+    "script": "Hi, I’m Milo. I’ll tell you when each part of your Circle begins, so you can put the screen down.",
+    "file": "preview_e94d4123.m4a"
+   },
+   "assets": [
+    "assets/audio/guidance/voice_milo_v1/lead_first_d97b30dd.m4a",
+    "assets/audio/guidance/voice_milo_v1/lead_next_df1d69d2.m4a",
+    "assets/audio/guidance/voice_milo_v1/lead_last_7663f978.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_phoneFaceDown_312eb0f5.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_nameWhatsOn_c2ce8f3b.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_openWindow_b52c68ca.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_standAndReach_1e75d975.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_songOn_6017657f.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_comfortableSpot_d138bce1.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_lookAround_53849d95.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_moveToMusic_efb5ed3a.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_standingStretch_7ca4a0a2.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_activeJob_5b1bb959.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_briskWalk_e3125526.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_roundTheBlock_b1fa45f9.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_quickClearUp_2a4514d1.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_daylight_bc82cf74.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_getItOut_a239320e.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_clearCorner_3f1dd71d.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_oneTask_80701d4c.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_listenOne_afb9c607.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_readPages_16d663c3.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_phoneFreeWalk_9179d803.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_closeWhatsOpen_a811d003.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_lookFar_d2e2c311.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_warmDrink_db4bc51f.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_gentleStretch_052b8910.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_neckAndShoulders_4c3958ac.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_quietMusic_c6fced49.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_easyWalk_9be95142.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_sitOutside_ba8e7ce2.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_tendOne_47f1e257.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_chooseOne_4b2d1044.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_firstStep_84eb44d5.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_sitAMinute_c80c3b07.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_putThingsBack_68f00ead.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_glassOfWater_cd436c4b.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_shakeOut_d58bb0f4.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_whatsNext_59b13e7d.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_noteOneThing_721bafd4.m4a",
+    "assets/audio/guidance/voice_milo_v1/part_oneLongReach_804e9b30.m4a",
+    "assets/audio/guidance/voice_milo_v1/close_3b06cf13.m4a",
+    "assets/audio/guidance/voice_milo_v1/preview_e94d4123.m4a",
+    "assets/audio/guidance/voice_milo_v1/opening_d1293026.m4a",
+    "assets/audio/guidance/voice_milo_v1/next_circle_3c38eb7b.m4a"
+   ]
+  },
+  "brittney": {
+   "id": "voice_brittney_v1",
+   "label": "Brittney",
+   "assetDir": "assets/audio/guidance/voice_brittney_v1",
+   "preview": {
+    "id": "preview",
+    "role": "preview",
+    "script": "Hi, I’m Brittney. I’ll tell you when each part of your Circle begins, so you can put the screen down.",
+    "file": "preview_4146d39d.m4a"
+   },
+   "assets": [
+    "assets/audio/guidance/voice_brittney_v1/lead_first_d97b30dd.m4a",
+    "assets/audio/guidance/voice_brittney_v1/lead_next_df1d69d2.m4a",
+    "assets/audio/guidance/voice_brittney_v1/lead_last_7663f978.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_phoneFaceDown_312eb0f5.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_nameWhatsOn_c2ce8f3b.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_openWindow_b52c68ca.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_standAndReach_1e75d975.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_songOn_6017657f.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_comfortableSpot_d138bce1.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_lookAround_53849d95.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_moveToMusic_efb5ed3a.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_standingStretch_7ca4a0a2.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_activeJob_5b1bb959.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_briskWalk_e3125526.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_roundTheBlock_b1fa45f9.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_quickClearUp_2a4514d1.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_daylight_bc82cf74.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_getItOut_a239320e.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_clearCorner_3f1dd71d.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_oneTask_80701d4c.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_listenOne_afb9c607.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_readPages_16d663c3.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_phoneFreeWalk_9179d803.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_closeWhatsOpen_a811d003.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_lookFar_d2e2c311.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_warmDrink_db4bc51f.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_gentleStretch_052b8910.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_neckAndShoulders_4c3958ac.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_quietMusic_c6fced49.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_easyWalk_9be95142.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_sitOutside_ba8e7ce2.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_tendOne_47f1e257.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_chooseOne_4b2d1044.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_firstStep_84eb44d5.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_sitAMinute_c80c3b07.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_putThingsBack_68f00ead.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_glassOfWater_cd436c4b.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_shakeOut_d58bb0f4.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_whatsNext_59b13e7d.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_noteOneThing_721bafd4.m4a",
+    "assets/audio/guidance/voice_brittney_v1/part_oneLongReach_804e9b30.m4a",
+    "assets/audio/guidance/voice_brittney_v1/close_3b06cf13.m4a",
+    "assets/audio/guidance/voice_brittney_v1/preview_4146d39d.m4a",
+    "assets/audio/guidance/voice_brittney_v1/opening_d1293026.m4a",
+    "assets/audio/guidance/voice_brittney_v1/next_circle_3c38eb7b.m4a"
+   ]
+  }
+ },
+ "complete": {
+  "frozenSet": [
+   "brittney",
+   "heather",
+   "locke",
+   "milo"
+  ],
+  "emptySet": [],
+  "without_locke_firstManifestClip": [
+   "brittney",
+   "heather",
+   "milo"
+  ],
+  "without_locke_lastManifestClip": [
+   "brittney",
+   "heather",
+   "milo"
+  ],
+  "without_locke_preview": [
+   "brittney",
+   "heather",
+   "milo"
+  ],
+  "without_locke_framing": [
+   "brittney",
+   "heather",
+   "locke",
+   "milo"
+  ],
+  "without_heather_firstManifestClip": [
+   "brittney",
+   "locke",
+   "milo"
+  ],
+  "without_heather_lastManifestClip": [
+   "brittney",
+   "locke",
+   "milo"
+  ],
+  "without_heather_preview": [
+   "brittney",
+   "locke",
+   "milo"
+  ],
+  "without_heather_framing": [
+   "brittney",
+   "heather",
+   "locke",
+   "milo"
+  ],
+  "without_milo_firstManifestClip": [
+   "brittney",
+   "heather",
+   "locke"
+  ],
+  "without_milo_lastManifestClip": [
+   "brittney",
+   "heather",
+   "locke"
+  ],
+  "without_milo_preview": [
+   "brittney",
+   "heather",
+   "locke"
+  ],
+  "without_milo_framing": [
+   "brittney",
+   "heather",
+   "locke",
+   "milo"
+  ],
+  "without_brittney_firstManifestClip": [
+   "heather",
+   "locke",
+   "milo"
+  ],
+  "without_brittney_lastManifestClip": [
+   "heather",
+   "locke",
+   "milo"
+  ],
+  "without_brittney_preview": [
+   "heather",
+   "locke",
+   "milo"
+  ],
+  "without_brittney_framing": [
+   "brittney",
+   "heather",
+   "locke",
+   "milo"
+  ]
+ },
+ "cues": {
+  "parts1": [
+   [
+    {
+     "id": "lead_first",
+     "role": "lead",
+     "script": "First.",
+     "file": "lead_first_d97b30dd.m4a"
+    },
+    {
+     "id": "part_phoneFaceDown",
+     "role": "part",
+     "script": "Phone face down. Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+     "file": "part_phoneFaceDown_312eb0f5.m4a"
+    }
+   ]
+  ],
+  "parts2": [
+   [
+    {
+     "id": "lead_first",
+     "role": "lead",
+     "script": "First.",
+     "file": "lead_first_d97b30dd.m4a"
+    },
+    {
+     "id": "part_phoneFaceDown",
+     "role": "part",
+     "script": "Phone face down. Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+     "file": "part_phoneFaceDown_312eb0f5.m4a"
+    }
+   ],
+   [
+    {
+     "id": "lead_last",
+     "role": "lead",
+     "script": "And last.",
+     "file": "lead_last_7663f978.m4a"
+    },
+    {
+     "id": "part_nameWhatsOn",
+     "role": "part",
+     "script": "Name what’s on. In a few words, jot down what’s taking up the most room in your head right now.",
+     "file": "part_nameWhatsOn_c2ce8f3b.m4a"
+    }
+   ]
+  ],
+  "parts3": [
+   [
+    {
+     "id": "lead_first",
+     "role": "lead",
+     "script": "First.",
+     "file": "lead_first_d97b30dd.m4a"
+    },
+    {
+     "id": "part_phoneFaceDown",
+     "role": "part",
+     "script": "Phone face down. Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+     "file": "part_phoneFaceDown_312eb0f5.m4a"
+    }
+   ],
+   [
+    {
+     "id": "lead_next",
+     "role": "lead",
+     "script": "Next.",
+     "file": "lead_next_df1d69d2.m4a"
+    },
+    {
+     "id": "part_nameWhatsOn",
+     "role": "part",
+     "script": "Name what’s on. In a few words, jot down what’s taking up the most room in your head right now.",
+     "file": "part_nameWhatsOn_c2ce8f3b.m4a"
+    }
+   ],
+   [
+    {
+     "id": "lead_last",
+     "role": "lead",
+     "script": "And last.",
+     "file": "lead_last_7663f978.m4a"
+    },
+    {
+     "id": "part_openWindow",
+     "role": "part",
+     "script": "Open a window. Open a window or a door, and take a moment to look outside before you begin.",
+     "file": "part_openWindow_b52c68ca.m4a"
+    }
+   ]
+  ],
+  "parts5": [
+   [
+    {
+     "id": "lead_first",
+     "role": "lead",
+     "script": "First.",
+     "file": "lead_first_d97b30dd.m4a"
+    },
+    {
+     "id": "part_phoneFaceDown",
+     "role": "part",
+     "script": "Phone face down. Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+     "file": "part_phoneFaceDown_312eb0f5.m4a"
+    }
+   ],
+   [
+    {
+     "id": "lead_next",
+     "role": "lead",
+     "script": "Next.",
+     "file": "lead_next_df1d69d2.m4a"
+    },
+    {
+     "id": "part_nameWhatsOn",
+     "role": "part",
+     "script": "Name what’s on. In a few words, jot down what’s taking up the most room in your head right now.",
+     "file": "part_nameWhatsOn_c2ce8f3b.m4a"
+    }
+   ],
+   [
+    {
+     "id": "lead_next",
+     "role": "lead",
+     "script": "Next.",
+     "file": "lead_next_df1d69d2.m4a"
+    },
+    {
+     "id": "part_openWindow",
+     "role": "part",
+     "script": "Open a window. Open a window or a door, and take a moment to look outside before you begin.",
+     "file": "part_openWindow_b52c68ca.m4a"
+    }
+   ],
+   [
+    {
+     "id": "lead_next",
+     "role": "lead",
+     "script": "Next.",
+     "file": "lead_next_df1d69d2.m4a"
+    },
+    {
+     "id": "part_standAndReach",
+     "role": "part",
+     "script": "Stand and reach. Stand up and reach both arms overhead, only as high as is comfortable, then lower them slowly. Three or four times.",
+     "file": "part_standAndReach_1e75d975.m4a"
+    }
+   ],
+   [
+    {
+     "id": "lead_last",
+     "role": "lead",
+     "script": "And last.",
+     "file": "lead_last_7663f978.m4a"
+    },
+    {
+     "id": "part_songOn",
+     "role": "part",
+     "script": "Put a song on. Put on a song you really like, and let it play while you start.",
+     "file": "part_songOn_6017657f.m4a"
+    }
+   ]
+  ]
+ },
+ "voiced": {
+  "composed": {
+   "voiced": true,
+   "voicedAt": [
+    true,
+    true,
+    true
+   ],
+   "wordingAt": [
+    {
+     "name": "Phone face down",
+     "instruction": "Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+     "safetyRevision": 0
+    },
+    {
+     "name": "Name what’s on",
+     "instruction": "In a few words, jot down what’s taking up the most room in your head right now.",
+     "safetyRevision": 0
+    },
+    {
+     "name": "Open a window",
+     "instruction": "Open a window or a door, and take a moment to look outside before you begin.",
+     "safetyRevision": 0
+    }
+   ],
+   "partNote": [
+    null,
+    null,
+    null
+   ]
+  },
+  "keptExactWords": {
+   "voiced": true,
+   "voicedAt": [
+    true,
+    true,
+    true
+   ],
+   "wordingAt": [
+    {
+     "name": "Phone face down",
+     "instruction": "Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+     "safetyRevision": 0
+    },
+    {
+     "name": "Name what’s on",
+     "instruction": "In a few words, jot down what’s taking up the most room in your head right now.",
+     "safetyRevision": 0
+    },
+    {
+     "name": "Open a window",
+     "instruction": "Open a window or a door, and take a moment to look outside before you begin.",
+     "safetyRevision": 0
+    }
+   ],
+   "partNote": [
+    null,
+    null,
+    null
+   ]
+  },
+  "keptWithoutWords": {
+   "voiced": true,
+   "voicedAt": [
+    true,
+    true,
+    true
+   ],
+   "wordingAt": [
+    {
+     "name": "Phone face down",
+     "instruction": "Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+     "safetyRevision": 0
+    },
+    {
+     "name": "Name what’s on",
+     "instruction": "In a few words, jot down what’s taking up the most room in your head right now.",
+     "safetyRevision": 0
+    },
+    {
+     "name": "Open a window",
+     "instruction": "Open a window or a door, and take a moment to look outside before you begin.",
+     "safetyRevision": 0
+    }
+   ],
+   "partNote": [
+    null,
+    null,
+    null
+   ]
+  },
+  "keptOneDifferingPart": {
+   "voiced": false,
+   "voicedAt": [
+    true,
+    false,
+    true
+   ],
+   "wordingAt": [
+    {
+     "name": "Phone face down",
+     "instruction": "Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+     "safetyRevision": 0
+    },
+    {
+     "name": "Name what’s on",
+     "instruction": "In a few words, jot down what’s taking up the most room in your head right now. (edited)",
+     "safetyRevision": 0
+    },
+    {
+     "name": "Open a window",
+     "instruction": "Open a window or a door, and take a moment to look outside before you begin.",
+     "safetyRevision": 0
+    }
+   ],
+   "partNote": [
+    "Spoken guidance isn’t available for this saved Circle. You can still follow each part.",
+    "Spoken guidance isn’t available for this saved Circle. You can still follow each part.",
+    "Spoken guidance isn’t available for this saved Circle. You can still follow each part."
+   ]
+  },
+  "keptSafetyRevisedPart": {
+   "voiced": true,
+   "voicedAt": [
+    true,
+    true,
+    true
+   ],
+   "wordingAt": [
+    {
+     "name": "Phone face down",
+     "instruction": "Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+     "safetyRevision": 0
+    },
+    {
+     "name": "Name what’s on",
+     "instruction": "In a few words, jot down what’s taking up the most room in your head right now.",
+     "safetyRevision": 0
+    },
+    {
+     "name": "Open a window",
+     "instruction": "Open a window or a door, and take a moment to look outside before you begin.",
+     "safetyRevision": 0
+    }
+   ],
+   "partNote": [
+    null,
+    null,
+    "This part has updated guidance for safety. Your saved Circle is unchanged."
+   ]
+  },
+  "keptUnverifiedWords": {
+   "voiced": false,
+   "voicedAt": [
+    false,
+    false,
+    false
+   ],
+   "wordingAt": [
+    {
+     "name": "Phone face down",
+     "instruction": "Silence your notifications, then keep your phone face down or in your pocket unless a part asks you to use it.",
+     "safetyRevision": 0
+    },
+    {
+     "name": "Name what’s on",
+     "instruction": "In a few words, jot down what’s taking up the most room in your head right now.",
+     "safetyRevision": 0
+    },
+    {
+     "name": "Open a window",
+     "instruction": "Open a window or a door, and take a moment to look outside before you begin.",
+     "safetyRevision": 0
+    }
+   ],
+   "partNote": [
+    "Some saved instructions are unavailable. THIRTY is showing the current instructions, which may differ from what you saved. Spoken guidance isn’t available for this Circle.",
+    "Some saved instructions are unavailable. THIRTY is showing the current instructions, which may differ from what you saved. Spoken guidance isn’t available for this Circle.",
+    "Some saved instructions are unavailable. THIRTY is showing the current instructions, which may differ from what you saved. Spoken guidance isn’t available for this Circle."
+   ]
+  }
+ }
+}

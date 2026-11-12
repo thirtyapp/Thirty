@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/l10n/content_locale.dart';
 import '../../../../core/providers/theme_mode_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_confirm_dialog.dart';
@@ -116,9 +117,15 @@ class _SpokenGuidanceRow extends ConsumerWidget {
               label: Text(SpokenGuidanceCopy.preview(speaking.label)),
               // An explicit request to hear the voice: it plays even with
               // a screen reader on.
-              onPressed: () => ref.read(guidanceAudioPlayerProvider).play([
-                spokenPreviewFor(speaking).assetFor(speaking),
-              ]),
+              // Its own recording in this build's content language only.
+              onPressed: () {
+                final clip = spokenPreviewIn(speaking, currentContentLocale);
+                final asset = clip == null
+                    ? null
+                    : spokenAssetIn(clip, speaking);
+                if (asset == null) return;
+                ref.read(guidanceAudioPlayerProvider).play([asset]);
+              },
             ),
           ),
       ],

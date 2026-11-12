@@ -17,6 +17,10 @@ library;
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
+import '../../../core/l10n/content_locale.dart';
+
 import 'circle_elements.dart';
 import 'composed_session.dart';
 
@@ -99,10 +103,24 @@ enum SpokenClipRole {
 
 /// One recording: what to say, and where it is bundled.
 class SpokenClip {
-  SpokenClip._(this.id, this.role, String script)
-    // The screen keeps short words together with non-breaking spaces; a
+  SpokenClip._(
+    this.id,
+    this.role,
+    String script, [
+    this.locale = ContentLocale.english,
+  ]) // The screen keeps short words together with non-breaking spaces; a
     // speaker reads plain words.
     : script = script.replaceAll(' ', ' ');
+
+  /// A clip in any [locale], for tests of the language rules only: no
+  /// production path makes a clip without approved words.
+  @visibleForTesting
+  SpokenClip.forTesting(
+    String id,
+    SpokenClipRole role,
+    String script,
+    ContentLocale locale,
+  ) : this._(id, role, script, locale);
 
   /// A stable name: `lead_next`, `part_getItOut`, `close`.
   final String id;
@@ -111,19 +129,30 @@ class SpokenClip {
   /// Exactly what the speaker says — the words on the screen.
   final String script;
 
+  /// The language [script] is in (ADR-025 §7). A clip is played only in
+  /// that language's rendition of a voice ([spokenAssetIn]).
+  final ContentLocale locale;
+
   /// The recording's file name: its [id] and a fingerprint of its
   /// [script] — the same in each voice's folder.
   String get file => '${id}_${_fingerprint(script)}.m4a';
 
-  /// This clip as recorded in [voice].
-  String assetFor(ThirtyVoice voice) => '${voice.assetDir}/$file';
+  /// This English clip as recorded in [voice]'s English rendition — the
+  /// frozen layout. For a clip in any language, [spokenAssetIn].
+  String assetFor(ThirtyVoice voice) {
+    assert(locale == ContentLocale.english, 'use spokenAssetIn');
+    return '${voice.assetDir}/$file';
+  }
 
   @override
   bool operator ==(Object other) =>
-      other is SpokenClip && other.id == id && other.script == script;
+      other is SpokenClip &&
+      other.id == id &&
+      other.script == script &&
+      other.locale == locale;
 
   @override
-  int get hashCode => Object.hash(id, script);
+  int get hashCode => Object.hash(id, script, locale);
 
   @override
   String toString() => '$id: $script';
@@ -170,25 +199,18 @@ final spokenNextCircle = SpokenClip._(
 /// The Circle's spoken opening and closing lines. Not part of
 /// [spokenGuidanceManifest]: a voice without them still guides every part,
 /// and a line that can't be played is skipped, never an error.
-List<SpokenClip> get spokenFramingClips => [spokenOpening, spokenNextCircle];
+List<SpokenClip> get spokenFramingClips =>
+    spokenFramingClipsIn(ContentLocale.english)!;
 
-/// [element]'s own clip: its name, then its instruction.
-SpokenClip partClip(CircleElement element) => SpokenClip._(
-  'part_${element.id.name}',
-  SpokenClipRole.part,
-  '${element.name}. ${element.instruction}',
-);
+/// [element]'s own clip, in English: its name, then its instruction
+/// ([partClipIn]).
+SpokenClip partClip(CircleElement element) =>
+    partClipIn(element, ContentLocale.english)!;
 
-/// What the voice plays when part [position] of [plan] begins: where it
-/// sits — first, next, or last — then the part itself.
-List<SpokenClip> spokenCueFor(CirclePlan plan, int position) {
-  final lead = position == 0
-      ? leadFirst
-      : position == plan.parts.length - 1
-      ? leadLast
-      : leadNext;
-  return [lead, partClip(plan.parts[position].definition)];
-}
+/// What the voice plays when part [position] of [plan] begins, in English
+/// ([spokenCueIn]).
+List<SpokenClip> spokenCueFor(CirclePlan plan, int position) =>
+    spokenCueIn(plan, position, ContentLocale.english)!;
 
 /// What [voice]'s preview plays: the voice saying its name and what it
 /// does — its own recording, never one of a Circle's activities (founder,
@@ -200,14 +222,130 @@ SpokenClip spokenPreviewFor(ThirtyVoice voice) => SpokenClip._(
       'begins, so you can put the screen down.',
 );
 
-/// Every clip a release can play — the complete recording list: the three
-/// leads, one clip for each offerable element, and the close. A voice is
-/// available only when every one of them is bundled in its folder.
-List<SpokenClip> get spokenGuidanceManifest => [
-  leadFirst,
-  leadNext,
-  leadLast,
-  for (final element in elementLibrary.values)
-    if (isElementOfferable(element)) partClip(element),
-  spokenEnding,
-];
+/// Every English clip a release can play — the complete recording list
+/// ([spokenGuidanceManifestIn]).
+List<SpokenClip> get spokenGuidanceManifest =>
+    spokenGuidanceManifestIn(ContentLocale.english)!;
+
+// The language-aware interface (ADR-025 §7; L-CONTENT-AUDIO). Each answer is
+// for one content language and is `null` (or empty) where that language has
+// no approved words or recordings — never another language's. English is
+// the only content language with approved words and recordings.
+
+/// THIRTY's voices with a founder-approved rendition in [locale]: all four
+/// in English (founder approval 2026-10-17; the frozen pack). None in any
+/// other language until one is approved (D-V-1…D-V-5).
+Set<ThirtyVoice> approvedRenditionsIn(ContentLocale locale) =>
+    locale == ContentLocale.english ? ThirtyVoice.values.toSet() : const {};
+
+/// The folder of [voice]'s rendition in [locale], or `null` where there is
+/// none. English keeps its frozen layout (`<spokenGuidanceAssetDir>/<id>`);
+/// another language's layout is ADR-027's to decide.
+String? renditionAssetDirIn(ThirtyVoice voice, ContentLocale locale) =>
+    locale == ContentLocale.english &&
+        approvedRenditionsIn(locale).contains(voice)
+    ? voice.assetDir
+    : null;
+
+/// Where [clip] is recorded in [voice]: in the rendition of [clip]'s own
+/// language — or `null` where [voice] has none in it. Never a recording in
+/// another language.
+String? spokenAssetIn(SpokenClip clip, ThirtyVoice voice) {
+  final dir = renditionAssetDirIn(voice, clip.locale);
+  return dir == null ? null : '$dir/${clip.file}';
+}
+
+/// Whether [clips] are all in one language: the only kind of sequence
+/// THIRTY's voice plays. A session never mixes languages.
+bool spokenInOneLanguage(Iterable<SpokenClip> clips) =>
+    {for (final clip in clips) clip.locale}.length <= 1;
+
+/// [element]'s clip in [locale]: its name, then its instruction, in that
+/// language's approved words ([elementWordingIn]) — or `null` where there
+/// are none.
+SpokenClip? partClipIn(CircleElement element, ContentLocale locale) {
+  final words = elementWordingIn(element, locale);
+  if (words == null) return null;
+  return SpokenClip._(
+    'part_${element.id.name}',
+    SpokenClipRole.part,
+    _partScript(words),
+    locale,
+  );
+}
+
+/// A part's spoken words: the element's name, then its instruction — the
+/// same template as before L-CONTENT-AUDIO, so every English script and
+/// fingerprint is unchanged.
+String _partScript(PartWording element) =>
+    '${element.name}. ${element.instruction}';
+
+/// The lines around a Circle's parts in [locale] — the three leads, the
+/// ending, and the framing lines — or `null` where [locale] has no approved
+/// spoken words.
+({
+  SpokenClip first,
+  SpokenClip next,
+  SpokenClip last,
+  SpokenClip ending,
+  SpokenClip opening,
+  SpokenClip nextCircle,
+})?
+spokenFrameIn(ContentLocale locale) => locale == ContentLocale.english
+    ? (
+        first: leadFirst,
+        next: leadNext,
+        last: leadLast,
+        ending: spokenEnding,
+        opening: spokenOpening,
+        nextCircle: spokenNextCircle,
+      )
+    : null;
+
+/// What the voice plays when part [position] of [plan] begins, in [locale]:
+/// where it sits — first, next, or last — then the part itself. `null` when
+/// [locale] lacks any of it: never a sequence partly in another language.
+List<SpokenClip>? spokenCueIn(
+  CirclePlan plan,
+  int position,
+  ContentLocale locale,
+) {
+  final frame = spokenFrameIn(locale);
+  final part = partClipIn(plan.parts[position].definition, locale);
+  if (frame == null || part == null) return null;
+  final lead = position == 0
+      ? frame.first
+      : position == plan.parts.length - 1
+      ? frame.last
+      : frame.next;
+  return [lead, part];
+}
+
+/// [voice]'s preview in [locale], or `null` where [locale] has no approved
+/// spoken words.
+SpokenClip? spokenPreviewIn(ThirtyVoice voice, ContentLocale locale) =>
+    locale == ContentLocale.english ? spokenPreviewFor(voice) : null;
+
+/// The framing lines in [locale] ([spokenFramingClips]), or `null`.
+List<SpokenClip>? spokenFramingClipsIn(ContentLocale locale) =>
+    switch (spokenFrameIn(locale)) {
+      final frame? => [frame.opening, frame.nextCircle],
+      null => null,
+    };
+
+/// The complete recording list in [locale]: the three leads, one clip for
+/// each offerable element, and the close. A voice is available only when
+/// every one of them is bundled in its rendition. `null` when [locale] has
+/// no approved words for any of them.
+List<SpokenClip>? spokenGuidanceManifestIn(ContentLocale locale) {
+  final frame = spokenFrameIn(locale);
+  if (frame == null) return null;
+  final parts = <SpokenClip>[];
+  for (final element in elementLibrary.values) {
+    if (!isElementOfferable(element)) continue;
+    final clip = partClipIn(element, locale);
+    if (clip == null) return null;
+    parts.add(clip);
+  }
+  return [frame.first, frame.next, frame.last, ...parts, frame.ending];
+}

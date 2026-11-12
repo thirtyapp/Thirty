@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n/content_locale.dart';
 import '../../../core/premium/premium_access.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 import '../domain/spoken_cues.dart';
@@ -66,16 +67,24 @@ class BundledGuidanceVoice implements GuidanceVoice {
   @override
   bool get available => true;
 
+  /// Plays [clips] only when they are all in one language and every one is
+  /// recorded in [voice]'s rendition of it ([spokenAssetIn]); otherwise
+  /// says nothing — never a mixed-language sequence, never a clip borrowed
+  /// from another language (ADR-025 §7).
   @override
   Future<void> play(
     List<SpokenClip> clips, {
     bool deferToScreenReader = false,
     bool afterCurrent = false,
-  }) => player.play(
-    [for (final clip in clips) clip.assetFor(voice)],
-    deferToScreenReader: deferToScreenReader,
-    afterCurrent: afterCurrent,
-  );
+  }) async {
+    final assets = [for (final clip in clips) spokenAssetIn(clip, voice)];
+    if (!spokenInOneLanguage(clips) || assets.contains(null)) return;
+    await player.play(
+      [for (final asset in assets) asset!],
+      deferToScreenReader: deferToScreenReader,
+      afterCurrent: afterCurrent,
+    );
+  }
 
   @override
   Future<void> stop() => player.stop();
@@ -134,20 +143,43 @@ class PlatformGuidanceAudioPlayer implements GuidanceAudioPlayer {
 /// later.
 Future<Set<ThirtyVoice>> bundledGuidanceVoices(AssetBundle bundle) async {
   final manifest = await AssetManifest.loadFromAssetBundle(bundle);
-  return completeGuidanceVoices(manifest.listAssets().toSet());
+  return completeGuidanceVoicesIn(
+    manifest.listAssets().toSet(),
+    currentContentLocale,
+  );
 }
 
 /// The voices with every clip of [spokenGuidanceManifest], and their own
 /// preview, among [assets]. A clip recorded for an older script has another
 /// file name, so it never counts.
-Set<ThirtyVoice> completeGuidanceVoices(Set<String> assets) => {
-  for (final voice in ThirtyVoice.values)
-    if ([
-      ...spokenGuidanceManifest,
-      spokenPreviewFor(voice),
-    ].every((clip) => assets.contains(clip.assetFor(voice))))
-      voice,
-};
+Set<ThirtyVoice> completeGuidanceVoices(Set<String> assets) =>
+    completeGuidanceVoicesIn(assets, ContentLocale.english);
+
+/// The voices with a founder-approved rendition in [locale] whose every
+/// clip of [locale]'s manifest, and its own preview, is among [assets]
+/// (ADR-025 §7.3). Empty where [locale] has no approved words or no
+/// approved rendition: a language without its own complete recordings has
+/// no voice — it never borrows another language's.
+Set<ThirtyVoice> completeGuidanceVoicesIn(
+  Set<String> assets,
+  ContentLocale locale,
+) {
+  final manifest = spokenGuidanceManifestIn(locale);
+  if (manifest == null) return const {};
+  bool recorded(SpokenClip? clip, ThirtyVoice voice) {
+    final asset = clip == null ? null : spokenAssetIn(clip, voice);
+    return asset != null && assets.contains(asset);
+  }
+
+  return {
+    for (final voice in approvedRenditionsIn(locale))
+      if ([
+        ...manifest,
+        spokenPreviewIn(voice, locale),
+      ].every((clip) => recorded(clip, voice)))
+        voice,
+  };
+}
 
 /// The voices this build bundles. Overridden at start-up with
 /// [bundledGuidanceVoices]; none wherever it isn't (S25 finding: an
