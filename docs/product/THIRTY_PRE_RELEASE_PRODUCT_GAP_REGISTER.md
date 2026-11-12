@@ -8,6 +8,7 @@
 - It does **not** amend the product contract. Contract changes, including the six-language amendment and the draft ADRs, still need separate, explicit founder approval.
 - It does **not** authorize product development. Each workstream starts only on its own founder authorization.
 - Every founder decision in §7 stays **OPEN** until it is decided and recorded.
+- **Amended 2026-11-12 (founder decision D-SAF-1, review strategy only):** the SAF-1 reviewer dependency, the G-07 *Reviewer route* and the GDPR Art. 9 carry-forward to PRV-1 and MEA-1. No activity is cleared. The FROZEN contract is not amended.
 
 **Authority and scope:**
 - This is the canonical *planning* register for what THIRTY still needs before a full-product Google Play pre-release and a commercial launch.
@@ -419,6 +420,35 @@ The full table is §4. Statuses there are verified against the records; old acce
   - **The same standard applies to the live comparables.** If a live activity carries the same risk as a gated one, the two are treated the same, in whichever direction the evidence points.
   - Breathing content stays inside the existing contract limits: no long or brisk breathing (the retired Standing breath reset is not revived), and no medical claims.
 - **Relation to SAF-1:** SAF-1 is the FROZEN, contract-required review (Safety gate). G-07 sets its scope and standard. It does not replace SAF-1, and **it authorizes no ungating**.
+- **Reviewer route (D-SAF-1, founder-approved 2026-11-12; review strategy only):**
+  - **Default:** a documented internal safety assessment per item. It is AI-assisted analysis with cited evidence, reviewed, decided and signed by the founder. It supports a founder decision. It is **not** a clinical certification and does not establish legal compliance.
+  - **Escalation to appropriate outside expertise** (clinical, regulatory or legal) is required, and recorded in the item's record, when any of these applies:
+    1. applicable regulation, a store policy or a binding agreement requires it;
+    2. a specifically identified clinical uncertainty, in particular any imposed breathing rhythm, pattern or hold (Paced): its parameters come from a qualified external clinician;
+    3. insufficient evidence: a credible hazard of serious injury that the internal record cannot bound with cited evidence, unless the item stays gated;
+    4. wording or claims that approach a medical purpose;
+    5. a residual risk the founder does not accept.
+  - **Approval status stays separate:**
+    - the review **strategy** is approved;
+    - proposed activity **designs** (for example Counted breathing as Open) are proposals only;
+    - every activity's **clearance** (D-SAF-2) stays OPEN until its own completed record and a separate founder approval.
+  - **Activity directions (2026-11-12; not clearances):**
+    - Movement snack proceeds toward internal review.
+    - Stairs or a slope stays gated, and no external review is commissioned.
+    - An Open redesign of Counted breathing, without an imposed rhythm, is to be investigated. No implementation is authorized.
+    - Slow breathing pause stays gated.
+    - The Standing breath reset stays retired.
+    - Whether Paced is available at commercial launch stays **OPEN**.
+  - **Regulatory position (provisional, not a statement of compliance):**
+    - THIRTY is treated as a non-medical wellbeing app, subject to claim verification across all channels.
+    - The GPSR duties (internal risk analysis, technical file) are applied conservatively while their application to stand-alone software, and Belgian law, remain uncertain.
+    - Google Play health declarations, privacy disclosures and disclaimers are prepared under PRV-1 and PRV-2.
+  - **Unchanged by this route:**
+    - the Condition for clearance below;
+    - verification of every external build;
+    - content decisions before the English copy freeze;
+    - the FROZEN Safety gate;
+    - the existing data-integrity, saved-Circle (safety revision) and spoken-guidance (voice eligibility) safeguards.
 - **Condition for clearance:** an activity may appear in **any external build** (T2 included) only once:
   1. an appropriate safety review has been **completed** and supports the clearance; and
   2. the founder has **approved** it.
@@ -494,6 +524,7 @@ The full table is §4. Statuses there are verified against the records; old acce
 - the founder approves the event set, identity, retention and hosting;
 - V2 funnel events are implemented consent-gated: onboarding completion, first Circle closed, offer viewed, purchase and restore outcome, Plan and Insight events, voice events;
 - nothing is sent before opt-in, and no Circle content, user text or health inference is ever sent;
+- the founder decides whether the consented fields (the chosen need `intention`; the attempt and usefulness `response`) are data concerning health under GDPR Art. 9. This was carried from G-07 on 2026-11-12 and is **open**. The legal basis, the privacy policy and Data Safety follow that decision;
 - the privacy policy and Data Safety match the code exactly.
 
 **Why before T2:** the release gate requires closed-test evidence, including feedback response rate and early retention. Without MEA-1, T2 can't produce that evidence.
@@ -506,7 +537,7 @@ The full table is §4. Statuses there are verified against the records; old acce
 |---|---|---|---|---|---|---|
 | BIL-1 | Real Google Play + RevenueCat billing: products, purchase, restore, cancel and lapse on a signed build | **OPEN.** No configuration in the tree; a release build is impossible without it (by design) | ADR-017; tracker Phase E | needed for a billing pilot | **required** | required |
 | BIL-2 | Subscription lifecycle: grace, account hold, refund, resubscribe, phone change | **OPEN** | tracker Phase E; security review | — | required for testers' real cases | **required** |
-| PRV-1 | Privacy policy, GDPR basis, support contact, in-app links | **OPEN.** None exists (`you_about_card.dart`) | tracker Phase E | — | **required** | required |
+| PRV-1 | Privacy policy, GDPR basis (including the GDPR Art. 9 classification carried from G-07; see MEA-1), support contact, in-app links | **OPEN.** None exists (`you_about_card.dart`) | tracker Phase E | — | **required** | required |
 | PRV-2 | Play Data Safety + foreground-service declaration (`FOREGROUND_SERVICE_MEDIA_PLAYBACK`, with video evidence) | **OPEN** | tracker Phase E | — | **required** (Play Console enforces declarations before a release can roll out; confirm per track) | required |
 | MEA-1 | Consent-gated V2 measurement + A2-06 server side | **OPEN** (the in-app copy is done) | tracker Phase E; §3 | — | **required** | required |
 | SAF-1 | Safety review of live breathing and exertion content, and of any gated activity proposed (with the G-07 proportionality standard) | **OPEN.** Gated content stays gated until cleared | FROZEN Safety gate; release gate | — | **clearance decisions that affect launch content: completed review + founder approval before the English copy freeze** (so before T2); uncleared content stays gated; each external build verified against the review | formal record **required** (documents the review and verification; never substitutes for them) |
@@ -552,10 +583,10 @@ Priority is not order; see §6.
 | PRV-1/2 | Privacy policy, support, Data Safety, foreground-service declaration | none | tracker Phase E | P0 | trust, store compliance | MEA-1 definition | published URLs; console forms match the code | **D-P-1** controller and support channel | yes | T2 |
 | DEV-1 (T2) | Signed release-candidate device pass | partial | tracker | P0 | quality | all P0 build items | S25 + one other device: TalkBack, 200 %, kill, offline, background voice | — | at the end | T2 |
 | SEC-1 | Premium security & migration review (T2 subset: QA-override removal, APK tampering) | not started | tracker | P0 subset / P1 full | revenue protection | BIL-1 | review report; findings fixed or accepted | — | yes | T2 subset; T3 |
-| SAF-1 | Safety review: the content-affecting clearance decisions | not started | FROZEN | **P0** (before the copy freeze) | safety, trust; depth, retention | an external reviewer; G-07 standard | each activity cleared, cleared with wording, kept gated or retired; founder-approved | **D-SAF-1** reviewer and scope; **D-SAF-2** per-activity outcomes | **start first** | T2 (via the copy freeze) |
+| SAF-1 | Safety review: the content-affecting clearance decisions | not started | FROZEN | **P0** (before the copy freeze) | safety, trust; depth, retention | the D-SAF-1 reviewer route (internal by default; outside expertise on a G-07 escalation trigger); G-07 standard | each activity cleared, cleared with wording, kept gated or retired; founder-approved | **D-SAF-1** reviewer and scope; **D-SAF-2** per-activity outcomes | **start first** | T2 (via the copy freeze) |
 | SAF-1 (verify) | Each external build's content, gating and safety wording = what the review cleared | — | FROZEN Safety gate | P0 | safety | the decisions above | verified per external build (T1 pilots outside the team, T2) | — | per build | T2 |
 | SAF-1 (record) | Formal release-gate record of the review and its verification; documents them, never substitutes for them | — | release gate | P1 | release assurance | the review and verification | signed record | — | yes | T3 |
-| G-07 | Safety proportionality review (standard for SAF-1; the founder's concern about disproportionate restriction) | proposed | founder (2026-11-11) | **P0** | avoids over- and under-restriction; depth | — | per-activity risk assessment of the 4 gated activities against their live comparables, one standard; no ungating without SAF-1 | **D-SAF-1, D-SAF-2** | yes | T2 (via the copy freeze) |
+| G-07 | Safety proportionality review (standard for SAF-1; the founder's concern about disproportionate restriction) | review strategy approved 2026-11-12 (D-SAF-1); preliminary analyses completed; formal per-activity clearance reviews pending; no activity cleared | founder (2026-11-11; 2026-11-12) | **P0** | avoids over- and under-restriction; depth | — | per-activity risk assessment of the 4 gated activities against their live comparables, one standard; no ungating without SAF-1 | **D-SAF-1, D-SAF-2** | yes | T2 (via the copy freeze) |
 | A2-07 | Backup and transfer | not decided | tracker | P1 | data trust | SIG-1, signed release | per tracker gate | **D-B** | yes | T3 |
 | RL-4 | Timestamp disposition | accepted limitation | R8.1 record | P1 (decide early: affects export) | edge-case correctness | — | decision recorded; implemented if option 1 | **D-RL4** | yes | T3 |
 | BIL-2 | Full lifecycle | not proven | tracker | P1 | revenue, support | BIL-1 | evidence per case | — | yes | T3 |
@@ -636,7 +667,7 @@ Priority is not order; see §6.
 | D-V-5 | Licence confirmation for new voices | Stage 3 |
 | D-M-1 | Event set, identity, retention, hosting (draft ADR-028) | Stage 1 |
 | D-P-1 | Data controller details, support channel, privacy policy owner | Stage 1 |
-| D-SAF-1 | Safety reviewer and scope, including the G-07 proportionality standard | Stage 1 |
+| D-SAF-1 | Safety reviewer and scope, including the G-07 proportionality standard. **DECIDED 2026-11-12:** the risk-based review strategy (G-07 *Reviewer route*); scope as G-07; no clearance | Stage 1 |
 | D-SAF-2 | Per-activity clearance outcome (clear / clear with wording / keep gated / retire) for the 4 gated activities and their live comparables | **before the English copy freeze** (Stage 2) |
 | D-RL4 | RL-4 option 1 (UTC or offset + versioned export) or option 2 (accept) | Stage 1 (it affects the export format) |
 | D-B | A2-07 backup and transfer behaviour | Stage 5 |
