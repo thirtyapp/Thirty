@@ -53,7 +53,7 @@ import 'widgets/you_premium_card.dart';
 ///
 /// **North Star convergence** (founder-approved order): the scrolling
 /// header in the Plans / Insights language — the THIRTY wordmark, "You" in
-/// the editorial serif, [subtitle], the You band ([youHeaderArt]) — with no
+/// the editorial serif, the subtitle, the You band ([youHeaderArt]) — with no
 /// profile button, since on You it would only open the page it is on. Then
 /// "Personal" ([YouPersonalCard] — the optional first name, local only),
 /// the THIRTY Premium card ([YouPremiumCard]), "Preferences"
@@ -63,9 +63,6 @@ import 'widgets/you_premium_card.dart';
 /// never competing with the Premium proposition.
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
-
-  static const title = 'You';
-  static const subtitle = 'Your space in THIRTY.';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -91,7 +88,7 @@ class SettingsPage extends ConsumerWidget {
                   Semantics(
                     header: true,
                     child: Text(
-                      title,
+                      context.l10n.youPageTitle,
                       style: AppTypography.editorialDisplay(
                         colors,
                       ).copyWith(fontSize: 34, height: 1.05),
@@ -99,7 +96,7 @@ class SettingsPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    subtitle,
+                    context.l10n.youPageSubtitle,
                     style: textTheme.bodyLarge?.copyWith(
                       color: colors.textSecondary,
                     ),
@@ -115,17 +112,17 @@ class SettingsPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const YouSectionHeading('Personal'),
+                  YouSectionHeading(context.l10n.youPersonalSectionTitle),
                   const SizedBox(height: AppSpacing.s),
                   const YouPersonalCard(),
                   const SizedBox(height: AppSpacing.section),
                   const YouPremiumCard(),
                   const SizedBox(height: AppSpacing.section),
-                  const YouSectionHeading('Preferences'),
+                  YouSectionHeading(context.l10n.youPreferencesSectionTitle),
                   const SizedBox(height: AppSpacing.s),
                   const YouPreferencesCard(),
                   const SizedBox(height: AppSpacing.section),
-                  const YouSectionHeading('Data & privacy'),
+                  YouSectionHeading(context.l10n.youDataPrivacySectionTitle),
                   const SizedBox(height: AppSpacing.s),
                   const YouDataCard(),
                   const SizedBox(height: AppSpacing.section),

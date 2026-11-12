@@ -183,7 +183,7 @@ void main() {
       expect(top(find.text('Personal')), greaterThan(top(find.text('You'))));
       expect(
         top(find.text('Personal')),
-        greaterThan(top(find.text(SettingsPage.subtitle))),
+        greaterThan(top(find.text('Your space in THIRTY.'))),
       );
       expect(top(_row), greaterThan(top(find.text('Personal'))));
       expect(top(find.text('THIRTY Premium')), greaterThan(top(_row)));

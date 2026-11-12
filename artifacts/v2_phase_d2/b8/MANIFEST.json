@@ -2,13 +2,13 @@
   "artifact": "CONTENT_REVIEW_PACK.md",
   "kind": "REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY",
   "canonicalAuthority": false,
-  "generatedAtUtc": "2026-11-12T17:20:01.528575Z",
-  "gitHead": "6f82ebffddac2b6d2e0bd40fe1cc1a21b30e9b40",
+  "generatedAtUtc": "2026-11-12T22:10:07.724230Z",
+  "gitHead": "8b9b4f5871cc196cdfe60320f1450d4c8b6d9fcf",
   "workingTree": "intentionally uncommitted (B0–B8 for founder review); the pack reflects the working tree, not HEAD",
   "generator": "test/features/b8/b8_review_pack_test.dart",
   "extractor": "test/features/b8/support/live_copy.dart",
   "productionFilesScanned": 162,
-  "copyStringsExtracted": 674,
+  "copyStringsExtracted": 669,
   "sourceFilesInPack": [
     "lib/core/routing/app_shell.dart",
     "lib/features/home/domain/recommendation_engine.dart",
@@ -51,7 +51,6 @@
     "lib/features/reminder/application/reminder_provider.dart",
     "lib/features/reminder/presentation/widgets/reminder_invitation_card.dart",
     "lib/features/settings/presentation/first_name_question_page.dart",
-    "lib/features/settings/presentation/settings_page.dart",
     "lib/features/settings/presentation/widgets/first_name_editor.dart",
     "lib/features/settings/presentation/widgets/theme_mode_choice.dart",
     "lib/features/settings/presentation/widgets/you_data_card.dart",
@@ -62,12 +61,17 @@
   "catalogueFilesInPack": [
     "lib/l10n/arb/app_en.arb"
   ],
-  "catalogueMessagesListed": 3,
+  "catalogueMessagesListed": 8,
   "catalogueKeys": [
     "brandName",
     "youAboutSectionTitle",
-    "youAboutVersion"
+    "youAboutVersion",
+    "youPageTitle",
+    "youPageSubtitle",
+    "youPersonalSectionTitle",
+    "youPreferencesSectionTitle",
+    "youDataPrivacySectionTitle"
   ],
-  "contentHashFnv64": "-185056cac96ef4b4",
+  "contentHashFnv64": "0-c7edd8fd4ced15",
   "founderFlags": 4
 }

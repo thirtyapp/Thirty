@@ -189,8 +189,7 @@ void main() {
 
       expect(find.byType(ThirtyWordmarkView), findsOneWidget);
       expect(find.bySemanticsLabel('THIRTY'), findsOneWidget);
-      expect(find.text(SettingsPage.title), findsOneWidget);
-      expect(SettingsPage.title, 'You');
+      expect(find.text('You'), findsOneWidget);
       expect(find.text('Your space in THIRTY.'), findsOneWidget);
       expect(find.byType(AppBar), findsNothing);
       expect(find.byType(HomeProfileButton), findsNothing);
@@ -239,7 +238,9 @@ void main() {
       expect(size.width / size.height, closeTo(2.6, 0.01));
       expect(
         tester.getTopLeft(band).dy,
-        greaterThan(tester.getBottomLeft(find.text(SettingsPage.subtitle)).dy),
+        greaterThan(
+          tester.getBottomLeft(find.text('Your space in THIRTY.')).dy,
+        ),
       );
       expect(
         tester.getBottomLeft(band).dy,

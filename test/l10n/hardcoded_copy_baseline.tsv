@@ -1051,11 +1051,6 @@ copy	lib/features/reminder/presentation/widgets/reminder_invitation_card.dart	1	
 copy	lib/features/settings/presentation/first_name_question_page.dart	1	Skip for now
 copy	lib/features/settings/presentation/first_name_question_page.dart	1	What should we call you?
 copy	lib/features/settings/presentation/first_name_question_page.dart	1	Your first name stays on this device and helps THIRTY feel a little more personal.
-copy	lib/features/settings/presentation/settings_page.dart	1	Data & privacy
-copy	lib/features/settings/presentation/settings_page.dart	1	Personal
-copy	lib/features/settings/presentation/settings_page.dart	1	Preferences
-copy	lib/features/settings/presentation/settings_page.dart	1	You
-copy	lib/features/settings/presentation/settings_page.dart	1	Your space in THIRTY.
 copy	lib/features/settings/presentation/widgets/first_name_editor.dart	1	First name
 copy	lib/features/settings/presentation/widgets/first_name_editor.dart	1	Remove name
 copy	lib/features/settings/presentation/widgets/first_name_editor.dart	1	Save

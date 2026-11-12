@@ -71,6 +71,49 @@ void main() {
       expect(section, contains('  - Placeholders: `{version}` (type: String)'));
     });
 
+    test('Batch 2 is visible: the You page heading, subtitle and the '
+        'Personal, Preferences and Data & privacy headings, each with its '
+        'source and description, after Batch 1 and with no placeholder', () {
+      const batch2 = <String, String>{
+        'youPageTitle': 'You',
+        'youPageSubtitle': 'Your space in THIRTY.',
+        'youPersonalSectionTitle': 'Personal',
+        'youPreferencesSectionTitle': 'Preferences',
+        'youDataPrivacySectionTitle': 'Data & privacy',
+      };
+      final section = sectionI(realBody);
+      final byKey = {for (final m in real.messages) m.key: m};
+      var previous = section.indexOf('- **`youAboutVersion`**: ');
+      expect(previous, isNonNegative, reason: 'Batch 1 still listed');
+      for (final MapEntry(:key, :value) in batch2.entries) {
+        final at = section.indexOf('- **`$key`**: $value\n');
+        expect(at, greaterThan(previous), reason: '$key, in catalogue order');
+        previous = at;
+        final next = section.indexOf('\n- **`', at + 1);
+        final entry = section.substring(at, next < 0 ? null : next);
+        expect(entry, contains('  - Source: `$englishCatalogue`'));
+        expect(
+          entry,
+          contains('  - Description: ${byKey[key]!.description}'),
+          reason: key,
+        );
+        expect(byKey[key]!.description, startsWith('You tab: '));
+        expect(byKey[key]!.placeholders, isEmpty, reason: key);
+        expect(entry, isNot(contains('Placeholders:')), reason: key);
+      }
+      final manifest =
+          jsonDecode(
+                File(
+                  'artifacts/v2_phase_d2/b8/MANIFEST.json',
+                ).readAsStringSync(),
+              )
+              as Map<String, Object?>;
+      expect(
+        manifest['catalogueKeys'],
+        containsAllInOrder(['youAboutVersion', ...batch2.keys]),
+      );
+    });
+
     test('the Dart-derived review is unchanged: every surface string is '
         'still listed, and the catalogue adds only section I', () {
       for (final s in real.strings) {

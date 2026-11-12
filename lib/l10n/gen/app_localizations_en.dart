@@ -18,4 +18,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String youAboutVersion(String version) {
     return 'Version $version';
   }
+
+  @override
+  String get youPageTitle => 'You';
+
+  @override
+  String get youPageSubtitle => 'Your space in THIRTY.';
+
+  @override
+  String get youPersonalSectionTitle => 'Personal';
+
+  @override
+  String get youPreferencesSectionTitle => 'Preferences';
+
+  @override
+  String get youDataPrivacySectionTitle => 'Data & privacy';
 }

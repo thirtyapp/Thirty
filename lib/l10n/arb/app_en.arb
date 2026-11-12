@@ -16,5 +16,25 @@
         "type": "String"
       }
     }
+  },
+  "youPageTitle": "You",
+  "@youPageTitle": {
+    "description": "You tab: the page's main heading, shown in the editorial serif under the THIRTY wordmark at the top of the page and announced as a heading. It names the tab (the same word as the tab's name in the bottom navigation): the person's own space in the app, not an account or profile."
+  },
+  "youPageSubtitle": "Your space in THIRTY.",
+  "@youPageSubtitle": {
+    "description": "You tab: the one-line subtitle directly under the page heading. A calm description of the page as the person's own space in the app (their experience, preferences and data), not an account. THIRTY is the product name (see brandName) and is never translated. Ends with a full stop."
+  },
+  "youPersonalSectionTitle": "Personal",
+  "@youPersonalSectionTitle": {
+    "description": "You tab: the heading of the Personal section, above the card with what is the person's own and stays on this device: their optional first name, what THIRTY remembers, the Circles they kept and their Circle history. A short section heading, announced as a heading."
+  },
+  "youPreferencesSectionTitle": "Preferences",
+  "@youPreferencesSectionTitle": {
+    "description": "You tab: the heading of the Preferences section, above the card with the app's settings: the daily reminder, appearance (theme) and, in builds that include it, spoken guidance. A short section heading, announced as a heading."
+  },
+  "youDataPrivacySectionTitle": "Data & privacy",
+  "@youDataPrivacySectionTitle": {
+    "description": "You tab: the heading of the Data & privacy section, above the card with the privacy and data controls: the usage-data choice, copying the Circle history as text, and deleting the Circle history. A short section heading, announced as a heading; the ampersand is part of the heading."
   }
 }

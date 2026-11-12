@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-12T17:20:01.528575Z from the working tree at HEAD `6f82ebffddac2b6d2e0bd40fe1cc1a21b30e9b40` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-12T22:10:07.724230Z from the working tree at HEAD `8b9b4f5871cc196cdfe60320f1450d4c8b6d9fcf` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -788,7 +788,7 @@ Voices: Locke, Heather, Milo, Brittney
 - Today
 - Plans
 - Insights
-- You *(×2)*
+- You
 
 **`features/home/presentation/memory_page.dart`**
 
@@ -913,13 +913,6 @@ Voices: Locke, Heather, Milo, Brittney
 - Your first name stays on this device and helps THIRTY feel a little more personal.
 - Continue *(×2)*
 - Skip for now
-
-**`features/settings/presentation/settings_page.dart`**
-
-- Your space in THIRTY.
-- Personal
-- Preferences
-- Data & privacy
 
 **`features/settings/presentation/widgets/first_name_editor.dart`**
 
@@ -1111,3 +1104,18 @@ Every user-facing message in `lib/l10n/arb/app_en.arb`, in catalogue order — i
   - Source: `lib/l10n/arb/app_en.arb`
   - Description: You tab, About card: the line under the product name that shows which build is running. {version} is the app's version string exactly as the build reports it (digits, dots and a plus sign, e.g. major.minor.patch+build): inserted verbatim, never translated, reformatted or padded.
   - Placeholders: `{version}` (type: String)
+- **`youPageTitle`**: You
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab: the page's main heading, shown in the editorial serif under the THIRTY wordmark at the top of the page and announced as a heading. It names the tab (the same word as the tab's name in the bottom navigation): the person's own space in the app, not an account or profile.
+- **`youPageSubtitle`**: Your space in THIRTY.
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab: the one-line subtitle directly under the page heading. A calm description of the page as the person's own space in the app (their experience, preferences and data), not an account. THIRTY is the product name (see brandName) and is never translated. Ends with a full stop.
+- **`youPersonalSectionTitle`**: Personal
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab: the heading of the Personal section, above the card with what is the person's own and stays on this device: their optional first name, what THIRTY remembers, the Circles they kept and their Circle history. A short section heading, announced as a heading.
+- **`youPreferencesSectionTitle`**: Preferences
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab: the heading of the Preferences section, above the card with the app's settings: the daily reminder, appearance (theme) and, in builds that include it, spoken guidance. A short section heading, announced as a heading.
+- **`youDataPrivacySectionTitle`**: Data & privacy
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab: the heading of the Data & privacy section, above the card with the privacy and data controls: the usage-data choice, copying the Circle history as text, and deleting the Circle history. A short section heading, announced as a heading; the ampersand is part of the heading.
