@@ -1051,7 +1051,6 @@ copy	lib/features/reminder/presentation/widgets/reminder_invitation_card.dart	1	
 copy	lib/features/settings/presentation/first_name_question_page.dart	1	Skip for now
 copy	lib/features/settings/presentation/first_name_question_page.dart	1	What should we call you?
 copy	lib/features/settings/presentation/first_name_question_page.dart	1	Your first name stays on this device and helps THIRTY feel a little more personal.
-copy	lib/features/settings/presentation/settings_page.dart	1	About
 copy	lib/features/settings/presentation/settings_page.dart	1	Data & privacy
 copy	lib/features/settings/presentation/settings_page.dart	1	Personal
 copy	lib/features/settings/presentation/settings_page.dart	1	Preferences
@@ -1067,8 +1066,6 @@ copy	lib/features/settings/presentation/widgets/first_name_editor.dart	2	Cancel
 copy	lib/features/settings/presentation/widgets/theme_mode_choice.dart	1	Dark
 copy	lib/features/settings/presentation/widgets/theme_mode_choice.dart	1	Light
 copy	lib/features/settings/presentation/widgets/theme_mode_choice.dart	1	System
-copy	lib/features/settings/presentation/widgets/you_about_card.dart	1	THIRTY
-copy	lib/features/settings/presentation/widgets/you_about_card.dart	1	Version ${ReleaseInfo.appVersion}
 copy	lib/features/settings/presentation/widgets/you_data_card.dart	1	Off by default. It helps us understand what to improve. When on, THIRTY sends a few facts about your use: when you open the app, which need and activity it suggests, when you start and close a Circle, and your “Did you try it?” and “Was it useful?” answers — each with the date and time, the app version, a test-group label and a random ID made on this phone. Never your name, anything you type, or your History as a whole. Turning this off stops sending; what was already sent isn’t deleted.
 copy	lib/features/settings/presentation/widgets/you_data_card.dart	1	Share usage data
 copy	lib/features/settings/presentation/widgets/you_personal_card.dart	1	$kept Circles you kept

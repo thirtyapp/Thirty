@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:thirty/core/l10n/thirty_locales.dart';
 import 'package:thirty/core/premium/entitlement_gateway.dart';
 import 'package:thirty/core/premium/entitlement_status.dart';
 import 'package:thirty/core/premium/premium_access.dart';
@@ -117,6 +118,9 @@ Future<void> _pump(
       container: container,
       child: MaterialApp(
         theme: theme ?? AppTheme.light,
+        localizationsDelegates: thirtyLocalizationsDelegates,
+        supportedLocales: thirtyReleaseLocales,
+        localeListResolutionCallback: thirtyLocaleListResolution,
         home: Builder(
           builder: (context) => MediaQuery(
             data: MediaQuery.of(

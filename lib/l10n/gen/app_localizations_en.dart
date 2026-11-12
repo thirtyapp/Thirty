@@ -10,4 +10,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get brandName => 'THIRTY';
+
+  @override
+  String get youAboutSectionTitle => 'About';
+
+  @override
+  String youAboutVersion(String version) {
+    return 'Version $version';
+  }
 }

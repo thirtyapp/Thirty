@@ -2,6 +2,19 @@
   "@@locale": "en",
   "brandName": "THIRTY",
   "@brandName": {
-    "description": "The product name, used as the app title (MaterialApp.onGenerateTitle). A brand: never translated in any language."
+    "description": "The product name: the app title (MaterialApp.onGenerateTitle) and the name shown in the You tab's About card. A brand: never translated in any language."
+  },
+  "youAboutSectionTitle": "About",
+  "@youAboutSectionTitle": {
+    "description": "You tab: the heading of the About section, above the informational card that shows the product name and the running version. A short section heading; the section has no links or actions."
+  },
+  "youAboutVersion": "Version {version}",
+  "@youAboutVersion": {
+    "description": "You tab, About card: the line under the product name that shows which build is running. {version} is the app's version string exactly as the build reports it (digits, dots and a plus sign, e.g. major.minor.patch+build): inserted verbatim, never translated, reformatted or padded.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
   }
 }

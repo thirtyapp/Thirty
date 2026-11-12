@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-11T13:11:11.914908Z from the working tree at HEAD `d9369795a92aa24505c475fa1417d03132300c4a` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-12T16:29:42.534962Z from the working tree at HEAD `28827e7316c8c90beee62cc5359a28e0aca40378` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -920,7 +920,6 @@ Voices: Locke, Heather, Milo, Brittney
 - Personal
 - Preferences
 - Data & privacy
-- About
 
 **`features/settings/presentation/widgets/first_name_editor.dart`**
 

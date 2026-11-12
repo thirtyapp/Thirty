@@ -94,11 +94,23 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
-  /// The product name, used as the app title (MaterialApp.onGenerateTitle). A brand: never translated in any language.
+  /// The product name: the app title (MaterialApp.onGenerateTitle) and the name shown in the You tab's About card. A brand: never translated in any language.
   ///
   /// In en, this message translates to:
   /// **'THIRTY'**
   String get brandName;
+
+  /// You tab: the heading of the About section, above the informational card that shows the product name and the running version. A short section heading; the section has no links or actions.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get youAboutSectionTitle;
+
+  /// You tab, About card: the line under the product name that shows which build is running. {version} is the app's version string exactly as the build reports it (digits, dots and a plus sign, e.g. major.minor.patch+build): inserted verbatim, never translated, reformatted or padded.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String youAboutVersion(String version);
 }
 
 class _AppLocalizationsDelegate

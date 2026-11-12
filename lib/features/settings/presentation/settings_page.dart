@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/branding/thirty_wordmark_view.dart';
+import '../../../core/l10n/thirty_locales.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../premium/presentation/widgets/premium_restore_footer.dart';
@@ -109,30 +110,30 @@ class SettingsPage extends ConsumerWidget {
             const SizedBox(height: AppSpacing.s),
             YouHeaderArt(art: youHeaderArt, now: now),
             const SizedBox(height: AppSpacing.l),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.page),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  YouSectionHeading('Personal'),
-                  SizedBox(height: AppSpacing.s),
-                  YouPersonalCard(),
-                  SizedBox(height: AppSpacing.section),
-                  YouPremiumCard(),
-                  SizedBox(height: AppSpacing.section),
-                  YouSectionHeading('Preferences'),
-                  SizedBox(height: AppSpacing.s),
-                  YouPreferencesCard(),
-                  SizedBox(height: AppSpacing.section),
-                  YouSectionHeading('Data & privacy'),
-                  SizedBox(height: AppSpacing.s),
-                  YouDataCard(),
-                  SizedBox(height: AppSpacing.section),
-                  YouSectionHeading('About'),
-                  SizedBox(height: AppSpacing.s),
-                  YouAboutCard(),
-                  SizedBox(height: AppSpacing.l),
-                  PremiumRestoreFooter(),
+                  const YouSectionHeading('Personal'),
+                  const SizedBox(height: AppSpacing.s),
+                  const YouPersonalCard(),
+                  const SizedBox(height: AppSpacing.section),
+                  const YouPremiumCard(),
+                  const SizedBox(height: AppSpacing.section),
+                  const YouSectionHeading('Preferences'),
+                  const SizedBox(height: AppSpacing.s),
+                  const YouPreferencesCard(),
+                  const SizedBox(height: AppSpacing.section),
+                  const YouSectionHeading('Data & privacy'),
+                  const SizedBox(height: AppSpacing.s),
+                  const YouDataCard(),
+                  const SizedBox(height: AppSpacing.section),
+                  YouSectionHeading(context.l10n.youAboutSectionTitle),
+                  const SizedBox(height: AppSpacing.s),
+                  const YouAboutCard(),
+                  const SizedBox(height: AppSpacing.l),
+                  const PremiumRestoreFooter(),
                 ],
               ),
             ),

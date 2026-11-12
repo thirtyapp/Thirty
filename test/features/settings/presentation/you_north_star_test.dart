@@ -12,6 +12,7 @@ import 'package:thirty/core/analytics/analytics_consent.dart';
 import 'package:thirty/core/app/thirty_app.dart';
 import 'package:thirty/core/branding/thirty_wordmark_view.dart';
 import 'package:thirty/core/config/release_info.dart';
+import 'package:thirty/core/l10n/thirty_locales.dart';
 import 'package:thirty/core/premium/entitlement_gateway.dart';
 import 'package:thirty/core/premium/entitlement_status.dart';
 import 'package:thirty/core/premium/premium_access.dart';
@@ -136,6 +137,9 @@ Future<(ProviderContainer, SharedPreferences)> _pump(
       container: container,
       child: MaterialApp(
         theme: theme ?? AppTheme.light,
+        localizationsDelegates: thirtyLocalizationsDelegates,
+        supportedLocales: thirtyReleaseLocales,
+        localeListResolutionCallback: thirtyLocaleListResolution,
         home: Builder(
           builder: (context) => MediaQuery(
             data: MediaQuery.of(
@@ -389,7 +393,13 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: MaterialApp(theme: AppTheme.light, home: const SettingsPage()),
+          child: MaterialApp(
+            theme: AppTheme.light,
+            localizationsDelegates: thirtyLocalizationsDelegates,
+            supportedLocales: thirtyReleaseLocales,
+            localeListResolutionCallback: thirtyLocaleListResolution,
+            home: const SettingsPage(),
+          ),
         ),
       );
       await tester.pump();
@@ -517,7 +527,9 @@ void main() {
 
       expect(find.text('About'), findsOneWidget);
       expect(find.text('Version ${ReleaseInfo.appVersion}'), findsOneWidget);
-      final node = tester.getSemantics(find.text(YouAboutCard.versionLabel));
+      final node = tester.getSemantics(
+        find.text('Version ${ReleaseInfo.appVersion}'),
+      );
       expect(node.label, contains('THIRTY'));
       expect(node.label, contains(ReleaseInfo.appVersion));
       expect(node, isNot(isSemantics(hasTapAction: true)));

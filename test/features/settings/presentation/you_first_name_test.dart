@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thirty/core/analytics/analytics_event_type.dart';
 import 'package:thirty/core/analytics/analytics_service.dart';
 import 'package:thirty/core/app/thirty_app.dart';
+import 'package:thirty/core/l10n/thirty_locales.dart';
 import 'package:thirty/core/premium/entitlement_gateway.dart';
 import 'package:thirty/core/premium/entitlement_status.dart';
 import 'package:thirty/core/premium/premium_access.dart';
@@ -124,6 +125,9 @@ Future<(ProviderContainer, SharedPreferences)> _pump(
       container: container,
       child: MaterialApp(
         theme: theme ?? AppTheme.light,
+        localizationsDelegates: thirtyLocalizationsDelegates,
+        supportedLocales: thirtyReleaseLocales,
+        localeListResolutionCallback: thirtyLocaleListResolution,
         home: Builder(
           builder: (context) => MediaQuery(
             data: MediaQuery.of(

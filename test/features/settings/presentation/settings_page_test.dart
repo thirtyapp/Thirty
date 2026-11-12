@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:thirty/core/analytics/analytics_consent.dart';
+import 'package:thirty/core/l10n/thirty_locales.dart';
 import 'package:thirty/core/premium/entitlement_gateway.dart';
 import 'package:thirty/core/premium/entitlement_status.dart';
 import 'package:thirty/core/premium/premium_access.dart';
@@ -115,7 +116,13 @@ Future<(Widget, ProviderContainer)> _wrap({
   await container.read(entitlementStatusProvider.notifier).initialize();
   final widget = UncontrolledProviderScope(
     container: container,
-    child: MaterialApp(theme: AppTheme.light, home: const SettingsPage()),
+    child: MaterialApp(
+      theme: AppTheme.light,
+      localizationsDelegates: thirtyLocalizationsDelegates,
+      supportedLocales: thirtyReleaseLocales,
+      localeListResolutionCallback: thirtyLocaleListResolution,
+      home: const SettingsPage(),
+    ),
   );
   return (widget, container);
 }

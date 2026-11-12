@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:thirty/features/personal_circle/application/guidance_voice.dart';
 import 'package:thirty/features/personal_circle/domain/spoken_cues.dart';
+import 'package:thirty/core/config/release_info.dart';
+import 'package:thirty/core/l10n/thirty_locales.dart';
 import 'package:thirty/core/premium/entitlement_gateway.dart';
 import 'package:thirty/core/premium/entitlement_status.dart';
 import 'package:thirty/core/premium/premium_access.dart';
@@ -18,7 +20,6 @@ import 'package:thirty/core/theme/design_tokens.dart';
 import 'package:thirty/features/home/application/activity_catalog.dart';
 import 'package:thirty/features/home/application/circle_journal.dart';
 import 'package:thirty/features/settings/presentation/settings_page.dart';
-import 'package:thirty/features/settings/presentation/widgets/you_about_card.dart';
 
 /// Phase C1 — You: approved commercial hierarchy and billing-state matrix.
 
@@ -130,7 +131,13 @@ Future<ProviderContainer> _pump(
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: MaterialApp(theme: AppTheme.light, home: const SettingsPage()),
+      child: MaterialApp(
+        theme: AppTheme.light,
+        localizationsDelegates: thirtyLocalizationsDelegates,
+        supportedLocales: thirtyReleaseLocales,
+        localeListResolutionCallback: thirtyLocaleListResolution,
+        home: const SettingsPage(),
+      ),
     ),
   );
   await tester.pump();
@@ -206,7 +213,7 @@ void main() {
         'Copy as text',
         'Delete Circle history',
         'About',
-        YouAboutCard.versionLabel,
+        'Version ${ReleaseInfo.appVersion}',
         'Restore purchases',
         'Restores Premium access only. Your Circle history stays on this '
             'device.',
@@ -223,7 +230,7 @@ void main() {
       // & privacy and About all sit between them.
       expect(
         _top(tester, 'Restore purchases'),
-        greaterThan(_top(tester, YouAboutCard.versionLabel)),
+        greaterThan(_top(tester, 'Version ${ReleaseInfo.appVersion}')),
       );
 
       // Nothing on the page sits below Restore's explanation.
