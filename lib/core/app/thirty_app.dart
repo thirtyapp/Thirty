@@ -8,6 +8,7 @@ import '../../features/home/application/recommendation_provider.dart';
 import '../../features/reminder/application/reminder_provider.dart';
 import '../analytics/analytics_event_type.dart';
 import '../analytics/analytics_service.dart';
+import '../l10n/thirty_locales.dart';
 import '../premium/premium_access.dart';
 import '../providers/clock_provider.dart';
 import '../providers/theme_mode_provider.dart';
@@ -144,7 +145,12 @@ class _ThirtyAppState extends ConsumerState<ThirtyApp>
       onPointerDown: _onPointerDown,
       onPointerUp: _onPointerUp,
       child: MaterialApp.router(
-        title: 'THIRTY',
+        onGenerateTitle: (context) => context.l10n.brandName,
+        // ADR-025 (L-INF): English only — every device language resolves to
+        // English ([thirtyReleaseLocales]); the words are unchanged.
+        localizationsDelegates: thirtyLocalizationsDelegates,
+        supportedLocales: thirtyReleaseLocales,
+        localeListResolutionCallback: thirtyLocaleListResolution,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,

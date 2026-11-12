@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "brandName": "THIRTY",
+  "@brandName": {
+    "description": "The product name, used as the app title (MaterialApp.onGenerateTitle). A brand: never translated in any language."
+  }
+}
