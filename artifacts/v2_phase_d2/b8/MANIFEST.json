@@ -2,8 +2,8 @@
   "artifact": "CONTENT_REVIEW_PACK.md",
   "kind": "REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY",
   "canonicalAuthority": false,
-  "generatedAtUtc": "2026-11-12T16:29:42.534962Z",
-  "gitHead": "28827e7316c8c90beee62cc5359a28e0aca40378",
+  "generatedAtUtc": "2026-11-12T17:20:01.528575Z",
+  "gitHead": "6f82ebffddac2b6d2e0bd40fe1cc1a21b30e9b40",
   "workingTree": "intentionally uncommitted (B0–B8 for founder review); the pack reflects the working tree, not HEAD",
   "generator": "test/features/b8/b8_review_pack_test.dart",
   "extractor": "test/features/b8/support/live_copy.dart",
@@ -59,6 +59,15 @@
     "lib/features/settings/presentation/widgets/you_preferences_card.dart",
     "lib/features/settings/presentation/widgets/you_premium_card.dart"
   ],
-  "contentHashFnv64": "0f40b5a914812a65",
+  "catalogueFilesInPack": [
+    "lib/l10n/arb/app_en.arb"
+  ],
+  "catalogueMessagesListed": 3,
+  "catalogueKeys": [
+    "brandName",
+    "youAboutSectionTitle",
+    "youAboutVersion"
+  ],
+  "contentHashFnv64": "-185056cac96ef4b4",
   "founderFlags": 4
 }

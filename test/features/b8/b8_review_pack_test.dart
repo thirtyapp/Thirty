@@ -26,8 +26,67 @@ import 'support/live_copy.dart';
 /// memory and fails if its content no longer matches the manifest — so any
 /// change to live copy shows up until the pack is regenerated and looked at.
 /// The pack is evidence, never a source of truth: production never reads it.
+///
+/// **Words in the English catalogue** (`lib/l10n/arb/app_en.arb`, ADR-025)
+/// are listed too, in section I: once copy moves out of Dart into the
+/// catalogue, the Dart scan no longer sees it, and without section I it
+/// would silently leave the founder's review. Every message is listed —
+/// key, English text, catalogue path, description and placeholders — in
+/// catalogue order, with no guessed screen ownership. Its words also feed
+/// the cross-surface views (F, and the apostrophe flag in H), which are
+/// about content, not ownership.
 const _export = bool.fromEnvironment('EXPORT_B8_PACK');
 const _dir = 'artifacts/v2_phase_d2/b8';
+
+/// THIRTY's English catalogue, the template every language follows.
+const englishCatalogue = 'lib/l10n/arb/app_en.arb';
+
+/// One user-facing message of a catalogue: its key, its English text and
+/// its `@key` metadata (description and placeholders). `@@locale` and the
+/// `@key` entries themselves are metadata, never copy.
+class CatalogueMessage {
+  const CatalogueMessage(
+    this.key,
+    this.text,
+    this.description,
+    this.placeholders,
+  );
+
+  final String key;
+  final String text;
+  final String? description;
+  final Map<String, Object?> placeholders;
+}
+
+/// Every message of the ARB file at [path], in file order.
+List<CatalogueMessage> catalogueMessages(String path) {
+  final raw = jsonDecode(File(path).readAsStringSync()) as Map<String, Object?>;
+  return [
+    for (final MapEntry(:key, :value) in raw.entries)
+      if (!key.startsWith('@'))
+        switch (raw['@$key']) {
+          final Map<String, Object?> meta => CatalogueMessage(
+            key,
+            '$value',
+            meta['description'] as String?,
+            (meta['placeholders'] as Map<String, Object?>?) ?? const {},
+          ),
+          _ => CatalogueMessage(key, '$value', null, const {}),
+        },
+  ];
+}
+
+/// One placeholder as the founder reads it: `{name}` and its attributes.
+String _placeholder(String name, Object? spec) {
+  final attributes = [
+    if (spec case final Map<String, Object?> m)
+      for (final k in m.keys.toList()..sort()) '$k: ${m[k]}',
+  ];
+  return '`{$name}` (${attributes.isEmpty ? 'no type' : attributes.join(', ')})';
+}
+
+/// A catalogue text on one Markdown line.
+String _oneLine(String s) => s.replaceAll('\r', '').replaceAll('\n', r'\n');
 
 /// Where each surface's words live.
 const surfaces = <(String, String, List<String>)>[
@@ -102,7 +161,8 @@ String fnv64(String s) {
 String _norm(String s) => s.replaceAll("'", '’').trim();
 
 class Pack {
-  Pack() {
+  Pack({this.catalogue = englishCatalogue}) {
+    messages = catalogueMessages(catalogue);
     final files = productionFiles();
     for (final f in files) {
       // Only files a surface owns: the World catalogue's art direction and
@@ -113,6 +173,10 @@ class Pack {
       }
     }
   }
+
+  /// The catalogue listed in section I.
+  final String catalogue;
+  late final List<CatalogueMessage> messages;
 
   final strings = <LiveString>[];
   final flags = <String>[];
@@ -244,6 +308,8 @@ class Pack {
     for (final t in {
       for (final s in strings)
         if (_lapse.hasMatch(s.text)) s.text,
+      for (final m in messages)
+        if (_lapse.hasMatch(m.text)) m.text,
     }) {
       line('- $t');
     }
@@ -266,7 +332,36 @@ class Pack {
     }
     line();
     _founderFlags();
+    _catalogue();
     return body.toString();
+  }
+
+  /// Section I: every message of the English catalogue, in catalogue order.
+  void _catalogue() {
+    line();
+    line('## I. English catalogue (ARB)');
+    line();
+    line(
+      'Every user-facing message in `$catalogue`, in catalogue order — '
+      'including words that moved there from Dart. Screen ownership is not '
+      'inferred.',
+    );
+    line();
+    if (messages.isEmpty) {
+      line('NONE');
+      return;
+    }
+    for (final m in messages) {
+      line('- **`${m.key}`**: ${_oneLine(m.text)}');
+      line('  - Source: `$catalogue`');
+      line('  - Description: ${_oneLine(m.description ?? '(none)')}');
+      if (m.placeholders.isNotEmpty) {
+        line(
+          '  - Placeholders: '
+          '${[for (final MapEntry(:key, :value) in m.placeholders.entries) _placeholder(key, value)].join('; ')}',
+        );
+      }
+    }
   }
 
   /// Only concrete items: copy that differs from frozen authority, thin
@@ -339,8 +434,12 @@ class Pack {
     final straight = {
       for (final s in strings)
         if (RegExp(r"[A-Za-z]'[A-Za-z]").hasMatch(s.text)) s.text,
+      for (final m in messages)
+        if (RegExp(r"[A-Za-z]'[A-Za-z]").hasMatch(m.text)) m.text,
     };
-    final curly = strings.where((s) => s.text.contains('’')).length;
+    final curly =
+        strings.where((s) => s.text.contains('’')).length +
+        messages.where((m) => m.text.contains('’')).length;
     if (straight.isNotEmpty && curly > 0) {
       final examples = straight.take(6).map((t) => '“$t”').join(', ');
       flags.add(
@@ -377,6 +476,7 @@ void main() {
       '## F. Lapse',
       '## G. Accessibility',
       '## H. Founder flags',
+      '## I. English catalogue (ARB)',
     ]) {
       expect(body, contains(heading));
     }
@@ -411,6 +511,9 @@ void main() {
           'productionFilesScanned': files.length,
           'copyStringsExtracted': pack.strings.length,
           'sourceFilesInPack': pack.sources.toList()..sort(),
+          'catalogueFilesInPack': [englishCatalogue],
+          'catalogueMessagesListed': pack.messages.length,
+          'catalogueKeys': [for (final m in pack.messages) m.key],
           'contentHashFnv64': hash,
           'founderFlags': pack.flags.length,
         }),
@@ -427,6 +530,20 @@ void main() {
           'it with --dart-define=EXPORT_B8_PACK=true and review the diff',
     );
     expect(manifest['copyStringsExtracted'], pack.strings.length);
+    expect(
+      manifest['productionFilesScanned'],
+      productionFiles().length,
+      reason: 'the production Dart inventory changed — regenerate the pack',
+    );
+    expect(manifest['catalogueFilesInPack'], [englishCatalogue]);
+    expect(
+      manifest['catalogueKeys'],
+      [for (final m in pack.messages) m.key],
+      reason:
+          'a catalogue message was added, removed or reordered — regenerate '
+          'the pack and review section I',
+    );
+    expect(manifest['catalogueMessagesListed'], pack.messages.length);
     expect(manifest['canonicalAuthority'], false);
     expect(
       File('$_dir/CONTENT_REVIEW_PACK.md').readAsStringSync(),

@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-12T16:29:42.534962Z from the working tree at HEAD `28827e7316c8c90beee62cc5359a28e0aca40378` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-12T17:20:01.528575Z from the working tree at HEAD `6f82ebffddac2b6d2e0bd40fe1cc1a21b30e9b40` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -1096,3 +1096,18 @@ Voices: Locke, Heather, Milo, Brittney
 - Thin: moreEnergy at ≈30 has 19 materially distinct sessions and 7 main pieces (ADR-024 §10 known risk).
 - “Your routine” is still shown for History records from retired routines (development devices only; ADR-024 §3 keeps such records readable).
 - Apostrophes are mixed: 9 live strings use a straight one (e.g. “Nothing recorded yet. Your Circle history will appear here once you've had a few days with THIRTY.”, “You won't be able to reopen it until tomorrow.”, “You won't be able to reopen it.”, “Begin today's Circle”, “Today's Circle”, “Your Circle is here when you're ready.”) while 98 use ’.
+
+## I. English catalogue (ARB)
+
+Every user-facing message in `lib/l10n/arb/app_en.arb`, in catalogue order — including words that moved there from Dart. Screen ownership is not inferred.
+
+- **`brandName`**: THIRTY
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: The product name: the app title (MaterialApp.onGenerateTitle) and the name shown in the You tab's About card. A brand: never translated in any language.
+- **`youAboutSectionTitle`**: About
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab: the heading of the About section, above the informational card that shows the product name and the running version. A short section heading; the section has no links or actions.
+- **`youAboutVersion`**: Version {version}
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab, About card: the line under the product name that shows which build is running. {version} is the app's version string exactly as the build reports it (digits, dots and a plus sign, e.g. major.minor.patch+build): inserted verbatim, never translated, reformatted or padded.
+  - Placeholders: `{version}` (type: String)
