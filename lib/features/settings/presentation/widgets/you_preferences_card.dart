@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/l10n/content_locale.dart';
+import '../../../../core/l10n/thirty_locales.dart';
 import '../../../../core/providers/theme_mode_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/thirty_confirm_dialog.dart';
@@ -58,7 +59,7 @@ class _AppearanceRow extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const YouRowTitle('Appearance'),
+        YouRowTitle(context.l10n.youAppearanceTitle),
         const SizedBox(height: AppSpacing.xs),
         ThemeModeChoice(
           value: themeMode,

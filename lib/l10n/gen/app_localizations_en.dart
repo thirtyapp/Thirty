@@ -45,4 +45,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get youPersonalHistoryDetail => 'Every Circle, as it happened';
+
+  @override
+  String get youAppearanceTitle => 'Appearance';
+
+  @override
+  String get themeModeSystem => 'System';
+
+  @override
+  String get themeModeLight => 'Light';
+
+  @override
+  String get themeModeDark => 'Dark';
 }

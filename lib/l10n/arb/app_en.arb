@@ -52,5 +52,21 @@
   "youPersonalHistoryDetail": "Every Circle, as it happened",
   "@youPersonalHistoryDetail": {
     "description": "You tab, Personal section: the supporting line under youPersonalHistoryTitle, saying what the Circle history holds: each of the person's Circles, recorded as it happened. Shown in smaller secondary text under youPersonalHistoryTitle; a screen reader reads it after the title and a comma, as part of the row's one label. It describes the row and is not a separate instruction or hint."
+  },
+  "youAppearanceTitle": "Appearance",
+  "@youAppearanceTitle": {
+    "description": "You tab, Preferences section: the title of the appearance row, shown above the choice of theme (themeModeSystem, themeModeLight, themeModeDark). A short row title."
+  },
+  "themeModeSystem": "System",
+  "@themeModeSystem": {
+    "description": "You tab, appearance row: the theme choice that follows the device's own light or dark setting. One of the three theme choices under youAppearanceTitle, always in the order themeModeSystem, themeModeLight, themeModeDark. The three share one row as a segmented control when every label fits its third of the width on one line; otherwise they stack as three rows. A screen reader reads this word as the choice's label, with its selected state, inside the group announced as Theme. A single short word."
+  },
+  "themeModeLight": "Light",
+  "@themeModeLight": {
+    "description": "You tab, appearance row: the theme choice that always shows THIRTY in its light colours. One of the three theme choices under youAppearanceTitle, always in the order themeModeSystem, themeModeLight, themeModeDark. The three share one row as a segmented control when every label fits its third of the width on one line; otherwise they stack as three rows. A screen reader reads this word as the choice's label, with its selected state, inside the group announced as Theme. A single short word."
+  },
+  "themeModeDark": "Dark",
+  "@themeModeDark": {
+    "description": "You tab, appearance row: the theme choice that always shows THIRTY in its dark colours. One of the three theme choices under youAppearanceTitle, always in the order themeModeSystem, themeModeLight, themeModeDark. The three share one row as a segmented control when every label fits its third of the width on one line; otherwise they stack as three rows. A screen reader reads this word as the choice's label, with its selected state, inside the group announced as Theme. A single short word."
   }
 }

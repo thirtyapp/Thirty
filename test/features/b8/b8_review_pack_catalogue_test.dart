@@ -144,7 +144,9 @@ void main() {
         expect(byKey[key]!.placeholders, isEmpty, reason: key);
         expect(entry, isNot(contains('Placeholders:')), reason: key);
       }
-      expect(real.messages, hasLength(12));
+      // Batch 3 ends the accepted twelve; only Batch 4's four follow (next
+      // test).
+      expect(real.messages, hasLength(16));
       // The one catalogue message that adds to H's curly-apostrophe count.
       expect(
         [
@@ -164,7 +166,7 @@ void main() {
         manifest['catalogueKeys'],
         containsAllInOrder(['youDataPrivacySectionTitle', ...batch3.keys]),
       );
-      expect(manifest['catalogueMessagesListed'], 12);
+      expect(manifest['catalogueMessagesListed'], 16);
       // Only the card's own Dart copy left the review; the same words in
       // other files are still listed where they live.
       final d = realBody.substring(
@@ -192,6 +194,115 @@ void main() {
         realBody.indexOf('## D. You'),
       );
       expect(c, contains('- Your Circles\n'));
+    });
+
+    test('Batch 4 is visible: the You Appearance title and the three theme '
+        'labels, each with its source and description, after Batch 3 and '
+        'with no placeholder; the Theme group label stays in the '
+        'Dart-derived review, in D and in G', () {
+      const batch4 = <String, String>{
+        'youAppearanceTitle': 'Appearance',
+        'themeModeSystem': 'System',
+        'themeModeLight': 'Light',
+        'themeModeDark': 'Dark',
+      };
+      const accepted = [
+        'brandName',
+        'youAboutSectionTitle',
+        'youAboutVersion',
+        'youPageTitle',
+        'youPageSubtitle',
+        'youPersonalSectionTitle',
+        'youPreferencesSectionTitle',
+        'youDataPrivacySectionTitle',
+        'youPersonalMemoryTitle',
+        'youPersonalMemoryDetail',
+        'youPersonalHistoryTitle',
+        'youPersonalHistoryDetail',
+      ];
+      final section = sectionI(realBody);
+      final byKey = {for (final m in real.messages) m.key: m};
+      var previous = section.indexOf('- **`youPersonalHistoryDetail`**: ');
+      expect(previous, isNonNegative, reason: 'Batch 3 still listed');
+      for (final MapEntry(:key, :value) in batch4.entries) {
+        final at = section.indexOf('- **`$key`**: $value\n');
+        expect(at, greaterThan(previous), reason: '$key, in catalogue order');
+        previous = at;
+        final next = section.indexOf('\n- **`', at + 1);
+        final entry = section.substring(at, next < 0 ? null : next);
+        expect(entry, contains('  - Source: `$englishCatalogue`'));
+        expect(
+          entry,
+          contains('  - Description: ${byKey[key]!.description}'),
+          reason: key,
+        );
+        expect(byKey[key]!.text, value, reason: key);
+        expect(byKey[key]!.description, startsWith('You tab, '));
+        // Each names the other half of the row: the title its choices, each
+        // choice its title.
+        expect(
+          byKey[key]!.description,
+          contains(
+            key == 'youAppearanceTitle'
+                ? 'themeModeSystem'
+                : 'youAppearanceTitle',
+          ),
+          reason: key,
+        );
+        expect(byKey[key]!.placeholders, isEmpty, reason: key);
+        expect(entry, isNot(contains('Placeholders:')), reason: key);
+      }
+      for (final key in batch4.keys.skip(1)) {
+        expect(byKey[key]!.description, contains('Theme'), reason: key);
+      }
+      expect(
+        [for (final m in real.messages) m.key],
+        [...accepted, ...batch4.keys],
+      );
+      // Batch 4 adds no apostrophe of either kind, so H is unchanged.
+      for (final value in batch4.values) {
+        expect(value, isNot(contains('’')));
+        expect(value, isNot(contains("'")));
+      }
+      final manifest =
+          jsonDecode(
+                File(
+                  'artifacts/v2_phase_d2/b8/MANIFEST.json',
+                ).readAsStringSync(),
+              )
+              as Map<String, Object?>;
+      expect(manifest['catalogueKeys'], [...accepted, ...batch4.keys]);
+      expect(manifest['catalogueMessagesListed'], 16);
+      expect(manifest['founderFlags'], 4);
+      // Only the four words left the Dart-derived review; the theme
+      // selector's group label and the card's other copy stay listed.
+      final d = realBody.substring(
+        realBody.indexOf('## D. You'),
+        realBody.indexOf('## E. '),
+      );
+      String block(String file) {
+        final from = d.substring(d.indexOf('**`$file`**'));
+        return from.substring(0, from.indexOf('\n**`', 1));
+      }
+
+      final choice = block(
+        'features/settings/presentation/widgets/theme_mode_choice.dart',
+      );
+      expect(choice, contains('- Theme\n'));
+      for (final value in ['System', 'Light', 'Dark']) {
+        expect(choice, isNot(contains('- $value\n')), reason: value);
+      }
+      final card = block(
+        'features/settings/presentation/widgets/you_preferences_card.dart',
+      );
+      expect(card, isNot(contains('- Appearance\n')));
+      expect(card, contains('- Daily reminder\n'));
+      expect(card, contains('- Change time\n'));
+      final g = realBody.substring(
+        realBody.indexOf('## G. '),
+        realBody.indexOf('## H. '),
+      );
+      expect(g, contains('\n- Theme\n'));
     });
 
     test('the Dart-derived review is unchanged: every surface string is '

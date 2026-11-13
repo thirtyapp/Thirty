@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-13T10:30:34.601343Z from the working tree at HEAD `bc1732f8de23baf6b38f0f6ba9456188e3066f4d` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-13T15:24:10.408890Z from the working tree at HEAD `1081407008a6546d23c77f6e3f260eb8aa018617` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -924,9 +924,6 @@ Voices: Locke, Heather, Milo, Brittney
 
 **`features/settings/presentation/widgets/theme_mode_choice.dart`**
 
-- System
-- Light
-- Dark
 - Theme
 
 **`features/settings/presentation/widgets/you_data_card.dart`**
@@ -944,7 +941,6 @@ Voices: Locke, Heather, Milo, Brittney
 
 **`features/settings/presentation/widgets/you_preferences_card.dart`**
 
-- Appearance
 - Not now *(×2)*
 - Allow Alarms & reminders
 - Android needs "Alarms & reminders" access so THIRTY can deliver your Circle reminder at the time you choose.
@@ -1128,3 +1124,15 @@ Every user-facing message in `lib/l10n/arb/app_en.arb`, in catalogue order — i
 - **`youPersonalHistoryDetail`**: Every Circle, as it happened
   - Source: `lib/l10n/arb/app_en.arb`
   - Description: You tab, Personal section: the supporting line under youPersonalHistoryTitle, saying what the Circle history holds: each of the person's Circles, recorded as it happened. Shown in smaller secondary text under youPersonalHistoryTitle; a screen reader reads it after the title and a comma, as part of the row's one label. It describes the row and is not a separate instruction or hint.
+- **`youAppearanceTitle`**: Appearance
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab, Preferences section: the title of the appearance row, shown above the choice of theme (themeModeSystem, themeModeLight, themeModeDark). A short row title.
+- **`themeModeSystem`**: System
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab, appearance row: the theme choice that follows the device's own light or dark setting. One of the three theme choices under youAppearanceTitle, always in the order themeModeSystem, themeModeLight, themeModeDark. The three share one row as a segmented control when every label fits its third of the width on one line; otherwise they stack as three rows. A screen reader reads this word as the choice's label, with its selected state, inside the group announced as Theme. A single short word.
+- **`themeModeLight`**: Light
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab, appearance row: the theme choice that always shows THIRTY in its light colours. One of the three theme choices under youAppearanceTitle, always in the order themeModeSystem, themeModeLight, themeModeDark. The three share one row as a segmented control when every label fits its third of the width on one line; otherwise they stack as three rows. A screen reader reads this word as the choice's label, with its selected state, inside the group announced as Theme. A single short word.
+- **`themeModeDark`**: Dark
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab, appearance row: the theme choice that always shows THIRTY in its dark colours. One of the three theme choices under youAppearanceTitle, always in the order themeModeSystem, themeModeLight, themeModeDark. The three share one row as a segmented control when every label fits its third of the width on one line; otherwise they stack as three rows. A screen reader reads this word as the choice's label, with its selected state, inside the group announced as Theme. A single short word.

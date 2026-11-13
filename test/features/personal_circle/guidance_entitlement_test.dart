@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:thirty/core/l10n/thirty_locales.dart';
 import 'package:thirty/core/premium/premium_access.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
@@ -194,7 +195,13 @@ Future<_Rig> _pump(
           size: const Size(412, 1400),
           accessibleNavigation: screenReader,
         ),
-        child: MaterialApp(theme: AppTheme.light, home: home),
+        child: MaterialApp(
+          theme: AppTheme.light,
+          localizationsDelegates: thirtyLocalizationsDelegates,
+          supportedLocales: thirtyReleaseLocales,
+          localeListResolutionCallback: thirtyLocaleListResolution,
+          home: home,
+        ),
       ),
     ),
   );

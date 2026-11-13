@@ -165,6 +165,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Every Circle, as it happened'**
   String get youPersonalHistoryDetail;
+
+  /// You tab, Preferences section: the title of the appearance row, shown above the choice of theme (themeModeSystem, themeModeLight, themeModeDark). A short row title.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get youAppearanceTitle;
+
+  /// You tab, appearance row: the theme choice that follows the device's own light or dark setting. One of the three theme choices under youAppearanceTitle, always in the order themeModeSystem, themeModeLight, themeModeDark. The three share one row as a segmented control when every label fits its third of the width on one line; otherwise they stack as three rows. A screen reader reads this word as the choice's label, with its selected state, inside the group announced as Theme. A single short word.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeModeSystem;
+
+  /// You tab, appearance row: the theme choice that always shows THIRTY in its light colours. One of the three theme choices under youAppearanceTitle, always in the order themeModeSystem, themeModeLight, themeModeDark. The three share one row as a segmented control when every label fits its third of the width on one line; otherwise they stack as three rows. A screen reader reads this word as the choice's label, with its selected state, inside the group announced as Theme. A single short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeModeLight;
+
+  /// You tab, appearance row: the theme choice that always shows THIRTY in its dark colours. One of the three theme choices under youAppearanceTitle, always in the order themeModeSystem, themeModeLight, themeModeDark. The three share one row as a segmented control when every label fits its third of the width on one line; otherwise they stack as three rows. A screen reader reads this word as the choice's label, with its selected state, inside the group announced as Theme. A single short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeModeDark;
 }
 
 class _AppLocalizationsDelegate

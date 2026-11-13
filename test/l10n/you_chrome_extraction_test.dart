@@ -62,7 +62,8 @@ void main() {
           if (!k.startsWith('@')) k,
       ];
       // The original eight, exactly and first; only Batch 3's four
-      // authorized keys may follow (you_personal_rows_extraction_test.dart).
+      // authorized keys (you_personal_rows_extraction_test.dart), then
+      // Batch 4's four (you_appearance_extraction_test.dart), may follow.
       expect(keys.take(8).toList(), [
         'brandName',
         'youAboutSectionTitle',
@@ -74,6 +75,10 @@ void main() {
         'youPersonalMemoryDetail',
         'youPersonalHistoryTitle',
         'youPersonalHistoryDetail',
+        'youAppearanceTitle',
+        'themeModeSystem',
+        'themeModeLight',
+        'themeModeDark',
       ]);
       final c = arb();
       expect(c['brandName'], 'THIRTY');

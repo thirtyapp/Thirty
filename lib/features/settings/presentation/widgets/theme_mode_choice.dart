@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/l10n/thirty_locales.dart';
 import '../../../../core/theme/design_tokens.dart';
 
 /// The System / Light / Dark choice (Phase C1): a [SegmentedButton] when
@@ -17,19 +18,28 @@ class ThemeModeChoice extends StatelessWidget {
   final ThemeMode value;
   final ValueChanged<ThemeMode> onChanged;
 
-  static const _choices = [
-    (ThemeMode.system, 'System'),
-    (ThemeMode.light, 'Light'),
-    (ThemeMode.dark, 'Dark'),
-  ];
+  /// The three choices in their fixed order, worded from the app's
+  /// catalogue for [context]. The same words are measured and shown.
+  static List<(ThemeMode, String)> _choices(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      (ThemeMode.system, l10n.themeModeSystem),
+      (ThemeMode.light, l10n.themeModeLight),
+      (ThemeMode.dark, l10n.themeModeDark),
+    ];
+  }
 
   // Material 3 SegmentedButton geometry around each label: 12pt side
   // padding, an 18pt selected check plus its 8pt gap, and the 1pt border.
   static const _segmentChrome = 12.0 * 2 + 18 + 8 + 2;
 
-  static bool _segmentsFit(BuildContext context, double width) {
-    final segmentWidth = width / _choices.length;
-    for (final (_, label) in _choices) {
+  static bool _segmentsFit(
+    BuildContext context,
+    double width,
+    List<(ThemeMode, String)> choices,
+  ) {
+    final segmentWidth = width / choices.length;
+    for (final (_, label) in choices) {
       final painter = TextPainter(
         text: TextSpan(
           text: label,
@@ -48,15 +58,16 @@ class ThemeModeChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final choices = _choices(context);
     return Semantics(
       container: true,
       label: 'Theme',
       child: LayoutBuilder(
         builder: (context, constraints) {
-          if (_segmentsFit(context, constraints.maxWidth)) {
+          if (_segmentsFit(context, constraints.maxWidth, choices)) {
             return SegmentedButton<ThemeMode>(
               segments: [
-                for (final (mode, label) in _choices)
+                for (final (mode, label) in choices)
                   ButtonSegment(value: mode, label: Text(label)),
               ],
               selected: {value},
@@ -66,7 +77,7 @@ class ThemeModeChoice extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final (mode, label) in _choices)
+              for (final (mode, label) in choices)
                 _ChoiceRow(
                   label: label,
                   selected: mode == value,

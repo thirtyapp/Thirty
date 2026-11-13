@@ -84,15 +84,24 @@ void main() {
       );
     });
 
-    test('is exactly twelve messages: Batch 1 and 2 unchanged and first, '
-        'then the four in row order', () {
+    test('starts with exactly twelve messages: Batch 1 and 2 unchanged and '
+        'first, then the four in row order; only Batch 4 follows', () {
       final c = arb();
       final keys = [
         for (final k in c.keys)
           if (!k.startsWith('@')) k,
       ];
-      expect(keys, [...earlier.keys, ...batch3.keys]);
-      expect(keys, hasLength(12));
+      // The accepted twelve, exactly and first; only Batch 4's four
+      // authorized keys may follow (you_appearance_extraction_test.dart).
+      expect(keys.take(12).toList(), [...earlier.keys, ...batch3.keys]);
+      expect(keys.take(12).toList(), hasLength(12));
+      expect(keys.skip(12).toList(), [
+        'youAppearanceTitle',
+        'themeModeSystem',
+        'themeModeLight',
+        'themeModeDark',
+      ]);
+      expect(keys, hasLength(16));
       for (final MapEntry(:key, :value) in earlier.entries) {
         expect(c[key], value, reason: key);
       }
