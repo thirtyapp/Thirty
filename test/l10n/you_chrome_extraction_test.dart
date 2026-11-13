@@ -61,11 +61,19 @@ void main() {
         for (final k in arb().keys)
           if (!k.startsWith('@')) k,
       ];
-      expect(keys, [
+      // The original eight, exactly and first; only Batch 3's four
+      // authorized keys may follow (you_personal_rows_extraction_test.dart).
+      expect(keys.take(8).toList(), [
         'brandName',
         'youAboutSectionTitle',
         'youAboutVersion',
         ...batch2.keys,
+      ]);
+      expect(keys.skip(8).toList(), [
+        'youPersonalMemoryTitle',
+        'youPersonalMemoryDetail',
+        'youPersonalHistoryTitle',
+        'youPersonalHistoryDetail',
       ]);
       final c = arb();
       expect(c['brandName'], 'THIRTY');

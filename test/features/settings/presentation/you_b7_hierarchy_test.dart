@@ -81,9 +81,9 @@ void main() {
       final order = [
         'Personal',
         YouPersonalCard.rowTitle,
-        YouPersonalCard.memoryTitle,
+        'What THIRTY remembers',
         YouPersonalCard.yoursTitle,
-        YouPersonalCard.historyTitle,
+        'Your Circles',
         'THIRTY Premium',
         YouPremiumCard.body,
         paid ? 'Premium is active' : 'Pricing isn’t available right now.',

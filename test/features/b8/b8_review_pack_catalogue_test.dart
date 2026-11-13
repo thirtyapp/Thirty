@@ -114,6 +114,86 @@ void main() {
       );
     });
 
+    test('Batch 3 is visible: the You Memory and History rows, each with '
+        'its source and description, after Batch 2 and with no '
+        'placeholder; the same words elsewhere stay in the Dart-derived '
+        'review', () {
+      const batch3 = <String, String>{
+        'youPersonalMemoryTitle': 'What THIRTY remembers',
+        'youPersonalMemoryDetail': 'What you’ve told it, need by need',
+        'youPersonalHistoryTitle': 'Your Circles',
+        'youPersonalHistoryDetail': 'Every Circle, as it happened',
+      };
+      final section = sectionI(realBody);
+      final byKey = {for (final m in real.messages) m.key: m};
+      var previous = section.indexOf('- **`youDataPrivacySectionTitle`**: ');
+      expect(previous, isNonNegative, reason: 'Batch 2 still listed');
+      for (final MapEntry(:key, :value) in batch3.entries) {
+        final at = section.indexOf('- **`$key`**: $value\n');
+        expect(at, greaterThan(previous), reason: '$key, in catalogue order');
+        previous = at;
+        final next = section.indexOf('\n- **`', at + 1);
+        final entry = section.substring(at, next < 0 ? null : next);
+        expect(entry, contains('  - Source: `$englishCatalogue`'));
+        expect(
+          entry,
+          contains('  - Description: ${byKey[key]!.description}'),
+          reason: key,
+        );
+        expect(byKey[key]!.description, startsWith('You tab, Personal '));
+        expect(byKey[key]!.placeholders, isEmpty, reason: key);
+        expect(entry, isNot(contains('Placeholders:')), reason: key);
+      }
+      expect(real.messages, hasLength(12));
+      // The one catalogue message that adds to H's curly-apostrophe count.
+      expect(
+        [
+          for (final m in real.messages)
+            if (m.text.contains('’')) m.key,
+        ],
+        ['youPersonalMemoryDetail'],
+      );
+      final manifest =
+          jsonDecode(
+                File(
+                  'artifacts/v2_phase_d2/b8/MANIFEST.json',
+                ).readAsStringSync(),
+              )
+              as Map<String, Object?>;
+      expect(
+        manifest['catalogueKeys'],
+        containsAllInOrder(['youDataPrivacySectionTitle', ...batch3.keys]),
+      );
+      expect(manifest['catalogueMessagesListed'], 12);
+      // Only the card's own Dart copy left the review; the same words in
+      // other files are still listed where they live.
+      final d = realBody.substring(
+        realBody.indexOf('## D. You'),
+        realBody.indexOf('## E. '),
+      );
+      final card = d.substring(
+        d.indexOf(
+          '**`features/settings/presentation/widgets/'
+          'you_personal_card.dart`**',
+        ),
+      );
+      final cardBlock = card.substring(0, card.indexOf('\n**`', 1));
+      for (final value in batch3.values) {
+        expect(cardBlock, isNot(contains('- $value\n')), reason: value);
+      }
+      expect(cardBlock, contains('- Add your name\n'));
+      expect(cardBlock, contains('- Circles you keep appear here\n'));
+      final memoryPage = d.substring(
+        d.indexOf('**`features/home/presentation/memory_page.dart`**'),
+      );
+      expect(memoryPage, contains('- What THIRTY remembers\n'));
+      final c = realBody.substring(
+        realBody.indexOf('## C. Insights'),
+        realBody.indexOf('## D. You'),
+      );
+      expect(c, contains('- Your Circles\n'));
+    });
+
     test('the Dart-derived review is unchanged: every surface string is '
         'still listed, and the catalogue adds only section I', () {
       for (final s in real.strings) {
@@ -125,7 +205,32 @@ void main() {
       final empty = File('${dir.path}/app_en.arb')
         ..writeAsStringSync(jsonEncode({'@@locale': 'en'}));
       final without = Pack(catalogue: empty.path).build();
-      expect(beforeI(realBody), beforeI(without));
+      // By design H's mixed-apostrophes flag also counts catalogue messages
+      // that use ’ (see "a lapse line or a straight apostrophe in the
+      // catalogue reaches the cross-surface views" below). So only that one
+      // number may differ, by exactly the catalogue's messages using ’;
+      // everything else before I stays byte for byte.
+      final curlyFlag = RegExp(
+        r'^(- Apostrophes are mixed: .* while )(\d+)( use ’\.)$',
+        multiLine: true,
+      );
+      RegExpMatch flagIn(String body) {
+        final flags = curlyFlag.allMatches(beforeI(body)).toList();
+        expect(flags, hasLength(1), reason: 'the flag, exactly once');
+        return flags.single;
+      }
+
+      String normalized(String body) => beforeI(
+        body,
+      ).replaceFirstMapped(curlyFlag, (m) => '${m[1]}<count>${m[3]}');
+      final curlyInCatalogue = real.messages
+          .where((m) => m.text.contains('’'))
+          .length;
+      expect(
+        int.parse(flagIn(realBody)[2]!),
+        int.parse(flagIn(without)[2]!) + curlyInCatalogue,
+      );
+      expect(normalized(realBody), normalized(without));
       expect(sectionI(without), contains('NONE'));
     });
 

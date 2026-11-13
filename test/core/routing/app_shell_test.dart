@@ -126,8 +126,8 @@ void main() {
     await pumpApp(tester);
     await tester.tap(navDestination('You'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text(YouPersonalCard.historyTitle));
-    await tester.tap(find.text(YouPersonalCard.historyTitle));
+    await tester.ensureVisible(find.text('Your Circles'));
+    await tester.tap(find.text('Your Circles'));
     await tester.pumpAndSettle();
     expect(find.byType(CircleHistoryPage), findsOneWidget);
   });

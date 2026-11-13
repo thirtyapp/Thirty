@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:thirty/core/l10n/thirty_locales.dart';
 import 'package:thirty/core/providers/clock_provider.dart';
 import 'package:thirty/core/routing/app_router.dart';
 import 'package:thirty/core/providers/shared_preferences_provider.dart';
@@ -473,6 +474,9 @@ void main() {
           overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
           child: MaterialApp.router(
             theme: AppTheme.light,
+            localizationsDelegates: thirtyLocalizationsDelegates,
+            supportedLocales: thirtyReleaseLocales,
+            localeListResolutionCallback: thirtyLocaleListResolution,
             routerConfig: router,
           ),
         ),
@@ -481,14 +485,12 @@ void main() {
       expect(
         tester.getSemantics(find.byKey(const ValueKey('you.memory'))),
         matchesSemantics(
-          label:
-              '${YouPersonalCard.memoryTitle}, '
-              '${YouPersonalCard.memoryDetail}',
+          label: 'What THIRTY remembers, What you’ve told it, need by need',
           isButton: true,
           hasTapAction: true,
         ),
       );
-      await tester.tap(find.text(YouPersonalCard.memoryTitle));
+      await tester.tap(find.text('What THIRTY remembers'));
       await tester.pumpAndSettle();
       expect(find.text('memory page'), findsOneWidget);
       semantics.dispose();

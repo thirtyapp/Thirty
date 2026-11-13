@@ -33,4 +33,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get youDataPrivacySectionTitle => 'Data & privacy';
+
+  @override
+  String get youPersonalMemoryTitle => 'What THIRTY remembers';
+
+  @override
+  String get youPersonalMemoryDetail => 'What you’ve told it, need by need';
+
+  @override
+  String get youPersonalHistoryTitle => 'Your Circles';
+
+  @override
+  String get youPersonalHistoryDetail => 'Every Circle, as it happened';
 }

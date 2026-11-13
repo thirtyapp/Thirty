@@ -141,6 +141,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Data & privacy'**
   String get youDataPrivacySectionTitle;
+
+  /// You tab, Personal section: the title of the row that opens the What THIRTY remembers page, where the person sees what they have told THIRTY after their Circles, need by need. The row is one button: a screen reader reads this title, a comma and the line under it (youPersonalMemoryDetail) together as one label. The same words also name that page and appear elsewhere in the app; this key is only the row on You. THIRTY is the product name (see brandName) and is never translated.
+  ///
+  /// In en, this message translates to:
+  /// **'What THIRTY remembers'**
+  String get youPersonalMemoryTitle;
+
+  /// You tab, Personal section: the supporting line under youPersonalMemoryTitle, saying what that page holds: what the person has told THIRTY ("it"), grouped need by need. Shown in smaller secondary text under youPersonalMemoryTitle; a screen reader reads it after the title and a comma, as part of the row's one label. It describes the row and is not a separate instruction or hint. Uses a typographic apostrophe (’).
+  ///
+  /// In en, this message translates to:
+  /// **'What you’ve told it, need by need'**
+  String get youPersonalMemoryDetail;
+
+  /// You tab, Personal section: the title of the row that opens the person's Circle history, the dated record of their Circles kept on this device. The row is one button: a screen reader reads this title, a comma and the line under it (youPersonalHistoryDetail) together as one label. It is not the Yours row (the Circles the person chose to keep) and not the Insights heading that uses the same words; this key is only the row on You.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Circles'**
+  String get youPersonalHistoryTitle;
+
+  /// You tab, Personal section: the supporting line under youPersonalHistoryTitle, saying what the Circle history holds: each of the person's Circles, recorded as it happened. Shown in smaller secondary text under youPersonalHistoryTitle; a screen reader reads it after the title and a comma, as part of the row's one label. It describes the row and is not a separate instruction or hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Every Circle, as it happened'**
+  String get youPersonalHistoryDetail;
 }
 
 class _AppLocalizationsDelegate

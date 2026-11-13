@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/l10n/thirty_locales.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../personal_circle/application/kept_circles_provider.dart';
 import '../../../personal_circle/presentation/yours_page.dart';
@@ -19,10 +20,6 @@ class YouPersonalCard extends ConsumerWidget {
 
   static const rowTitle = 'Your name';
   static const addPrompt = 'Add your name';
-  static const memoryTitle = 'What THIRTY remembers';
-  static const memoryDetail = 'What you’ve told it, need by need';
-  static const historyTitle = 'Your Circles';
-  static const historyDetail = 'Every Circle, as it happened';
   static const yoursTitle = YoursPage.title;
 
   /// "3 Circles you kept" — what Yours holds, plainly.
@@ -36,6 +33,7 @@ class YouPersonalCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
+    final l10n = context.l10n;
     final name = ref.watch(firstNameProvider);
     final detail = name ?? addPrompt;
     final kept = ref.watch(keptCirclesProvider).count;
@@ -87,8 +85,8 @@ class YouPersonalCard extends ConsumerWidget {
         ),
         _LinkRow(
           key: const ValueKey('you.memory'),
-          title: memoryTitle,
-          detail: memoryDetail,
+          title: l10n.youPersonalMemoryTitle,
+          detail: l10n.youPersonalMemoryDetail,
           icon: Icons.auto_stories_outlined,
           location: '/memory',
         ),
@@ -102,8 +100,8 @@ class YouPersonalCard extends ConsumerWidget {
         // V2 Phase D: history, which Insights used to host.
         _LinkRow(
           key: const ValueKey('you.history'),
-          title: historyTitle,
-          detail: historyDetail,
+          title: l10n.youPersonalHistoryTitle,
+          detail: l10n.youPersonalHistoryDetail,
           icon: Icons.history_rounded,
           location: '/history',
         ),

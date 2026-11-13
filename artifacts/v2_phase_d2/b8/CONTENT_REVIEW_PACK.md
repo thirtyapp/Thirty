@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-12T22:10:07.724230Z from the working tree at HEAD `8b9b4f5871cc196cdfe60320f1450d4c8b6d9fcf` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-13T10:30:34.601343Z from the working tree at HEAD `bc1732f8de23baf6b38f0f6ba9456188e3066f4d` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -792,7 +792,7 @@ Voices: Locke, Heather, Milo, Brittney
 
 **`features/home/presentation/memory_page.dart`**
 
-- What THIRTY remembers *(×2)*
+- What THIRTY remembers
 - Only what you’ve told THIRTY after a Circle, need by need. It’s what THIRTY goes by when it chooses.
 - Left out of your Circles
 - Useful before
@@ -938,9 +938,6 @@ Voices: Locke, Heather, Milo, Brittney
 **`features/settings/presentation/widgets/you_personal_card.dart`**
 
 - Add your name
-- What you’ve told it, need by need
-- Your Circles
-- Every Circle, as it happened
 - Circles you keep appear here
 - 1 Circle you kept
 - $kept Circles you kept
@@ -1119,3 +1116,15 @@ Every user-facing message in `lib/l10n/arb/app_en.arb`, in catalogue order — i
 - **`youDataPrivacySectionTitle`**: Data & privacy
   - Source: `lib/l10n/arb/app_en.arb`
   - Description: You tab: the heading of the Data & privacy section, above the card with the privacy and data controls: the usage-data choice, copying the Circle history as text, and deleting the Circle history. A short section heading, announced as a heading; the ampersand is part of the heading.
+- **`youPersonalMemoryTitle`**: What THIRTY remembers
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab, Personal section: the title of the row that opens the What THIRTY remembers page, where the person sees what they have told THIRTY after their Circles, need by need. The row is one button: a screen reader reads this title, a comma and the line under it (youPersonalMemoryDetail) together as one label. The same words also name that page and appear elsewhere in the app; this key is only the row on You. THIRTY is the product name (see brandName) and is never translated.
+- **`youPersonalMemoryDetail`**: What you’ve told it, need by need
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab, Personal section: the supporting line under youPersonalMemoryTitle, saying what that page holds: what the person has told THIRTY ("it"), grouped need by need. Shown in smaller secondary text under youPersonalMemoryTitle; a screen reader reads it after the title and a comma, as part of the row's one label. It describes the row and is not a separate instruction or hint. Uses a typographic apostrophe (’).
+- **`youPersonalHistoryTitle`**: Your Circles
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab, Personal section: the title of the row that opens the person's Circle history, the dated record of their Circles kept on this device. The row is one button: a screen reader reads this title, a comma and the line under it (youPersonalHistoryDetail) together as one label. It is not the Yours row (the Circles the person chose to keep) and not the Insights heading that uses the same words; this key is only the row on You.
+- **`youPersonalHistoryDetail`**: Every Circle, as it happened
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab, Personal section: the supporting line under youPersonalHistoryTitle, saying what the Circle history holds: each of the person's Circles, recorded as it happened. Shown in smaller secondary text under youPersonalHistoryTitle; a screen reader reads it after the title and a comma, as part of the row's one label. It describes the row and is not a separate instruction or hint.
