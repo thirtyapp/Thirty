@@ -189,6 +189,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dark'**
   String get themeModeDark;
+
+  /// You tab, Personal section: the title of the first-name row, shown above the line under it: the person's saved first name when they have saved one (it is optional), otherwise the prompt youPersonalNameAddPrompt. The row is one button that opens the first-name editor: a screen reader reads this title, a comma and the line shown under it (the saved first name or youPersonalNameAddPrompt) together as one label. It labels the person's name and is never the name itself. The first-name editor has its own separate title with the same words; this key is only the row on You. A short row title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get youPersonalNameTitle;
+
+  /// You tab, Personal section: the supporting prompt under youPersonalNameTitle, shown only when no first name has been saved; once the person saves a first name, it is replaced by their name exactly as they entered it. Shown in smaller accent-coloured text under youPersonalNameTitle; a screen reader reads it after the title and a comma, as part of the row's one label, and it is never announced on its own. It invites the person to add their optional first name: it is not the person's stored first name, is never saved as one and never appears in stored data.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your name'**
+  String get youPersonalNameAddPrompt;
 }
 
 class _AppLocalizationsDelegate

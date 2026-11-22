@@ -18,8 +18,6 @@ import 'you_group_card.dart';
 class YouPersonalCard extends ConsumerWidget {
   const YouPersonalCard({super.key});
 
-  static const rowTitle = 'Your name';
-  static const addPrompt = 'Add your name';
   static const yoursTitle = YoursPage.title;
 
   /// "3 Circles you kept" — what Yours holds, plainly.
@@ -34,6 +32,8 @@ class YouPersonalCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final colors = theme.extension<AppColors>()!;
     final l10n = context.l10n;
+    final rowTitle = l10n.youPersonalNameTitle;
+    final addPrompt = l10n.youPersonalNameAddPrompt;
     final name = ref.watch(firstNameProvider);
     final detail = name ?? addPrompt;
     final kept = ref.watch(keptCirclesProvider).count;
@@ -62,7 +62,7 @@ class YouPersonalCard extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const YouRowTitle(rowTitle),
+                            YouRowTitle(rowTitle),
                             const SizedBox(height: 2),
                             if (name == null)
                               Text(

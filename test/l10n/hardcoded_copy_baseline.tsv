@@ -1062,9 +1062,7 @@ copy	lib/features/settings/presentation/widgets/you_data_card.dart	1	Off by defa
 copy	lib/features/settings/presentation/widgets/you_data_card.dart	1	Share usage data
 copy	lib/features/settings/presentation/widgets/you_personal_card.dart	1	$kept Circles you kept
 copy	lib/features/settings/presentation/widgets/you_personal_card.dart	1	1 Circle you kept
-copy	lib/features/settings/presentation/widgets/you_personal_card.dart	1	Add your name
 copy	lib/features/settings/presentation/widgets/you_personal_card.dart	1	Circles you keep appear here
-copy	lib/features/settings/presentation/widgets/you_personal_card.dart	1	Your name
 copy	lib/features/settings/presentation/widgets/you_preferences_card.dart	1	Allow Alarms & reminders
 copy	lib/features/settings/presentation/widgets/you_preferences_card.dart	1	Allow access
 copy	lib/features/settings/presentation/widgets/you_preferences_card.dart	1	Android access is needed to deliver this reminder reliably.

@@ -80,7 +80,7 @@ void main() {
 
       final order = [
         'Personal',
-        YouPersonalCard.rowTitle,
+        'Your name',
         'What THIRTY remembers',
         YouPersonalCard.yoursTitle,
         'Your Circles',

@@ -2,13 +2,13 @@
   "artifact": "CONTENT_REVIEW_PACK.md",
   "kind": "REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY",
   "canonicalAuthority": false,
-  "generatedAtUtc": "2026-11-13T15:24:10.408890Z",
-  "gitHead": "1081407008a6546d23c77f6e3f260eb8aa018617",
+  "generatedAtUtc": "2026-11-22T16:41:29.369906Z",
+  "gitHead": "e56e56e6c4e649ffa8e612ca12bc8defae0722a1",
   "workingTree": "intentionally uncommitted (B0–B8 for founder review); the pack reflects the working tree, not HEAD",
   "generator": "test/features/b8/b8_review_pack_test.dart",
   "extractor": "test/features/b8/support/live_copy.dart",
   "productionFilesScanned": 162,
-  "copyStringsExtracted": 661,
+  "copyStringsExtracted": 659,
   "sourceFilesInPack": [
     "lib/core/routing/app_shell.dart",
     "lib/features/home/domain/recommendation_engine.dart",
@@ -61,7 +61,7 @@
   "catalogueFilesInPack": [
     "lib/l10n/arb/app_en.arb"
   ],
-  "catalogueMessagesListed": 16,
+  "catalogueMessagesListed": 18,
   "catalogueKeys": [
     "brandName",
     "youAboutSectionTitle",
@@ -78,8 +78,10 @@
     "youAppearanceTitle",
     "themeModeSystem",
     "themeModeLight",
-    "themeModeDark"
+    "themeModeDark",
+    "youPersonalNameTitle",
+    "youPersonalNameAddPrompt"
   ],
-  "contentHashFnv64": "7dd4f17bac549285",
+  "contentHashFnv64": "0b533026c00e5696",
   "founderFlags": 4
 }

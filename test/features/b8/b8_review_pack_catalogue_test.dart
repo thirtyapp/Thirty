@@ -144,9 +144,9 @@ void main() {
         expect(byKey[key]!.placeholders, isEmpty, reason: key);
         expect(entry, isNot(contains('Placeholders:')), reason: key);
       }
-      // Batch 3 ends the accepted twelve; only Batch 4's four follow (next
-      // test).
-      expect(real.messages, hasLength(16));
+      // Batch 3 ends the accepted twelve; only Batch 4's four, then Batch
+      // 5's two, follow (next tests).
+      expect(real.messages, hasLength(18));
       // The one catalogue message that adds to H's curly-apostrophe count.
       expect(
         [
@@ -166,7 +166,7 @@ void main() {
         manifest['catalogueKeys'],
         containsAllInOrder(['youDataPrivacySectionTitle', ...batch3.keys]),
       );
-      expect(manifest['catalogueMessagesListed'], 16);
+      expect(manifest['catalogueMessagesListed'], 18);
       // Only the card's own Dart copy left the review; the same words in
       // other files are still listed where they live.
       final d = realBody.substring(
@@ -183,7 +183,9 @@ void main() {
       for (final value in batch3.values) {
         expect(cardBlock, isNot(contains('- $value\n')), reason: value);
       }
-      expect(cardBlock, contains('- Add your name\n'));
+      // The name row's prompt left with Batch 5 (its test below); the
+      // card's Yours copy is still listed.
+      expect(cardBlock, isNot(contains('- Add your name\n')));
       expect(cardBlock, contains('- Circles you keep appear here\n'));
       final memoryPage = d.substring(
         d.indexOf('**`features/home/presentation/memory_page.dart`**'),
@@ -255,9 +257,11 @@ void main() {
       for (final key in batch4.keys.skip(1)) {
         expect(byKey[key]!.description, contains('Theme'), reason: key);
       }
+      // Only Batch 5's two follow (next test).
+      const batch5 = ['youPersonalNameTitle', 'youPersonalNameAddPrompt'];
       expect(
         [for (final m in real.messages) m.key],
-        [...accepted, ...batch4.keys],
+        [...accepted, ...batch4.keys, ...batch5],
       );
       // Batch 4 adds no apostrophe of either kind, so H is unchanged.
       for (final value in batch4.values) {
@@ -271,8 +275,12 @@ void main() {
                 ).readAsStringSync(),
               )
               as Map<String, Object?>;
-      expect(manifest['catalogueKeys'], [...accepted, ...batch4.keys]);
-      expect(manifest['catalogueMessagesListed'], 16);
+      expect(manifest['catalogueKeys'], [
+        ...accepted,
+        ...batch4.keys,
+        ...batch5,
+      ]);
+      expect(manifest['catalogueMessagesListed'], 18);
       expect(manifest['founderFlags'], 4);
       // Only the four words left the Dart-derived review; the theme
       // selector's group label and the card's other copy stay listed.
@@ -303,6 +311,119 @@ void main() {
         realBody.indexOf('## H. '),
       );
       expect(g, contains('\n- Theme\n'));
+    });
+
+    test('Batch 5 is visible: the You name row title and its add-name '
+        'prompt, each with its source and description, after Batch 4 and '
+        'with no placeholder; the first-name editor keeps its own "Your '
+        'name" in the Dart-derived review', () {
+      const batch5 = <String, String>{
+        'youPersonalNameTitle': 'Your name',
+        'youPersonalNameAddPrompt': 'Add your name',
+      };
+      const accepted = [
+        'brandName',
+        'youAboutSectionTitle',
+        'youAboutVersion',
+        'youPageTitle',
+        'youPageSubtitle',
+        'youPersonalSectionTitle',
+        'youPreferencesSectionTitle',
+        'youDataPrivacySectionTitle',
+        'youPersonalMemoryTitle',
+        'youPersonalMemoryDetail',
+        'youPersonalHistoryTitle',
+        'youPersonalHistoryDetail',
+        'youAppearanceTitle',
+        'themeModeSystem',
+        'themeModeLight',
+        'themeModeDark',
+      ];
+      final section = sectionI(realBody);
+      final byKey = {for (final m in real.messages) m.key: m};
+      var previous = section.indexOf('- **`themeModeDark`**: ');
+      expect(previous, isNonNegative, reason: 'Batch 4 still listed');
+      for (final MapEntry(:key, :value) in batch5.entries) {
+        final at = section.indexOf('- **`$key`**: $value\n');
+        expect(at, greaterThan(previous), reason: '$key, in catalogue order');
+        previous = at;
+        final next = section.indexOf('\n- **`', at + 1);
+        final entry = section.substring(at, next < 0 ? null : next);
+        expect(entry, contains('  - Source: `$englishCatalogue`'));
+        expect(
+          entry,
+          contains('  - Description: ${byKey[key]!.description}'),
+          reason: key,
+        );
+        expect(byKey[key]!.text, value, reason: key);
+        expect(
+          byKey[key]!.description,
+          startsWith('You tab, Personal section: '),
+        );
+        expect(byKey[key]!.description!.length, greaterThan(200));
+        expect(byKey[key]!.placeholders, isEmpty, reason: key);
+        expect(entry, isNot(contains('Placeholders:')), reason: key);
+      }
+      expect(
+        byKey['youPersonalNameTitle']!.description,
+        contains('youPersonalNameAddPrompt'),
+      );
+      expect(
+        byKey['youPersonalNameAddPrompt']!.description,
+        contains('youPersonalNameTitle'),
+      );
+      expect(real.messages, hasLength(18));
+      expect(
+        [for (final m in real.messages) m.key],
+        [...accepted, ...batch5.keys],
+      );
+      // Batch 5 adds no apostrophe of either kind, so H is unchanged.
+      for (final value in batch5.values) {
+        expect(value, isNot(contains('’')));
+        expect(value, isNot(contains("'")));
+      }
+      final manifest =
+          jsonDecode(
+                File(
+                  'artifacts/v2_phase_d2/b8/MANIFEST.json',
+                ).readAsStringSync(),
+              )
+              as Map<String, Object?>;
+      expect(manifest['catalogueKeys'], [...accepted, ...batch5.keys]);
+      expect(manifest['catalogueMessagesListed'], 18);
+      expect(manifest['founderFlags'], 4);
+      // Only the card's two words left the Dart-derived review: its Yours
+      // copy stays listed, and the first-name editor's own title, with the
+      // same words, is still listed where it lives (now once: the card's
+      // copy no longer counts towards it).
+      final d = realBody.substring(
+        realBody.indexOf('## D. You'),
+        realBody.indexOf('## E. '),
+      );
+      String block(String file) {
+        final from = d.substring(d.indexOf('**`$file`**'));
+        return from.substring(0, from.indexOf('\n**`', 1));
+      }
+
+      final card = block(
+        'features/settings/presentation/widgets/you_personal_card.dart',
+      );
+      expect(card, isNot(contains('- Your name')));
+      expect(card, isNot(contains('- Add your name')));
+      expect(card, contains('- Circles you keep appear here\n'));
+      expect(card, contains('- 1 Circle you kept\n'));
+      expect(card, contains(r'- $kept Circles you kept'));
+      final editor = block(
+        'features/settings/presentation/widgets/first_name_editor.dart',
+      );
+      expect(editor, contains('\n- Your name\n'));
+      expect(
+        editor,
+        contains('- Used only to make THIRTY feel a little more personal.\n'),
+      );
+      expect(editor, contains('- First name\n'));
+      expect(editor, contains('- Remove name\n'));
+      expect(d, isNot(contains('- Add your name')));
     });
 
     test('the Dart-derived review is unchanged: every surface string is '

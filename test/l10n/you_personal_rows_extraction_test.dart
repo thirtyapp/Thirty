@@ -85,14 +85,16 @@ void main() {
     });
 
     test('starts with exactly twelve messages: Batch 1 and 2 unchanged and '
-        'first, then the four in row order; only Batch 4 follows', () {
+        'first, then the four in row order; only Batch 4, then Batch 5, '
+        'follow', () {
       final c = arb();
       final keys = [
         for (final k in c.keys)
           if (!k.startsWith('@')) k,
       ];
       // The accepted twelve, exactly and first; only Batch 4's four
-      // authorized keys may follow (you_appearance_extraction_test.dart).
+      // authorized keys (you_appearance_extraction_test.dart), then Batch
+      // 5's two (you_name_row_extraction_test.dart), may follow.
       expect(keys.take(12).toList(), [...earlier.keys, ...batch3.keys]);
       expect(keys.take(12).toList(), hasLength(12));
       expect(keys.skip(12).toList(), [
@@ -100,8 +102,11 @@ void main() {
         'themeModeSystem',
         'themeModeLight',
         'themeModeDark',
+        'youPersonalNameTitle',
+        'youPersonalNameAddPrompt',
       ]);
-      expect(keys, hasLength(16));
+      expect(keys.take(16).toList(), hasLength(16));
+      expect(keys, hasLength(18));
       for (final MapEntry(:key, :value) in earlier.entries) {
         expect(c[key], value, reason: key);
       }
@@ -272,10 +277,25 @@ void main() {
       expect(code, isNot(contains('lookupAppLocalizations')));
       expect(code, isNot(contains('AppLocalizationsEn')));
       expect(code, isNot(contains("Locale('en')")));
-      // Out of scope, unchanged: the name row and Yours.
-      expect(code, contains("static const rowTitle = 'Your name';"));
-      expect(code, contains("static const addPrompt = 'Add your name';"));
+      // The name row moved to the catalogue in Batch 5
+      // (you_name_row_extraction_test.dart): its old constants are gone and
+      // its two words are read once each, through the same context.l10n.
+      expect(code, isNot(contains('static const rowTitle')));
+      expect(code, isNot(contains('static const addPrompt')));
+      expect(code, isNot(contains("'Your name'")));
+      expect(code, isNot(contains("'Add your name'")));
+      for (final key in ['youPersonalNameTitle', 'youPersonalNameAddPrompt']) {
+        expect(
+          RegExp('\\bl10n\\.$key\\b').allMatches(code),
+          hasLength(1),
+          reason: key,
+        );
+      }
+      // Out of scope, unchanged: Yours, and the two rows' composed labels.
       expect(code, contains('static const yoursTitle = YoursPage.title;'));
+      expect(code, contains('title: yoursTitle,'));
+      expect(code, contains('detail: yoursDetail(kept),'));
+      expect(code, contains("label: '\$title, \$detail',"));
     });
   });
 

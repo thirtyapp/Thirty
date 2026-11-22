@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-13T15:24:10.408890Z from the working tree at HEAD `1081407008a6546d23c77f6e3f260eb8aa018617` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-22T16:41:29.369906Z from the working tree at HEAD `e56e56e6c4e649ffa8e612ca12bc8defae0722a1` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -916,7 +916,7 @@ Voices: Locke, Heather, Milo, Brittney
 
 **`features/settings/presentation/widgets/first_name_editor.dart`**
 
-- Your name *(×2)*
+- Your name
 - Used only to make THIRTY feel a little more personal.
 - First name
 - Use $maxFirstNameLength characters or fewer.
@@ -934,7 +934,6 @@ Voices: Locke, Heather, Milo, Brittney
 
 **`features/settings/presentation/widgets/you_personal_card.dart`**
 
-- Add your name
 - Circles you keep appear here
 - 1 Circle you kept
 - $kept Circles you kept
@@ -1136,3 +1135,9 @@ Every user-facing message in `lib/l10n/arb/app_en.arb`, in catalogue order — i
 - **`themeModeDark`**: Dark
   - Source: `lib/l10n/arb/app_en.arb`
   - Description: You tab, appearance row: the theme choice that always shows THIRTY in its dark colours. One of the three theme choices under youAppearanceTitle, always in the order themeModeSystem, themeModeLight, themeModeDark. The three share one row as a segmented control when every label fits its third of the width on one line; otherwise they stack as three rows. A screen reader reads this word as the choice's label, with its selected state, inside the group announced as Theme. A single short word.
+- **`youPersonalNameTitle`**: Your name
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab, Personal section: the title of the first-name row, shown above the line under it: the person's saved first name when they have saved one (it is optional), otherwise the prompt youPersonalNameAddPrompt. The row is one button that opens the first-name editor: a screen reader reads this title, a comma and the line shown under it (the saved first name or youPersonalNameAddPrompt) together as one label. It labels the person's name and is never the name itself. The first-name editor has its own separate title with the same words; this key is only the row on You. A short row title.
+- **`youPersonalNameAddPrompt`**: Add your name
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: You tab, Personal section: the supporting prompt under youPersonalNameTitle, shown only when no first name has been saved; once the person saves a first name, it is replaced by their name exactly as they entered it. Shown in smaller accent-coloured text under youPersonalNameTitle; a screen reader reads it after the title and a comma, as part of the row's one label, and it is never announced on its own. It invites the person to add their optional first name: it is not the person's stored first name, is never saved as one and never appears in stored data.

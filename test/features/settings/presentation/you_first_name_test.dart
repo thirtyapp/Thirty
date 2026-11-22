@@ -548,8 +548,20 @@ void main() {
     });
   });
 
-  test('YouPersonalCard copy', () {
-    expect(YouPersonalCard.rowTitle, 'Your name');
-    expect(YouPersonalCard.addPrompt, 'Add your name');
+  testWidgets('YouPersonalCard copy: the name row reads the English '
+      'catalogue (G-02 Batch 5) and shows it in the card', (tester) async {
+    final en = thirtyLocalizationsFor(const Locale('en'));
+    expect(en.youPersonalNameTitle, 'Your name');
+    expect(en.youPersonalNameAddPrompt, 'Add your name');
+    await _pump(tester);
+    final card = find.byType(YouPersonalCard);
+    expect(
+      find.descendant(of: card, matching: find.text('Your name')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: card, matching: find.text('Add your name')),
+      findsOneWidget,
+    );
   });
 }

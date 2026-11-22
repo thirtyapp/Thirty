@@ -57,4 +57,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeModeDark => 'Dark';
+
+  @override
+  String get youPersonalNameTitle => 'Your name';
+
+  @override
+  String get youPersonalNameAddPrompt => 'Add your name';
 }
