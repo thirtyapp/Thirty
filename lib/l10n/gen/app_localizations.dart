@@ -201,6 +201,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add your name'**
   String get youPersonalNameAddPrompt;
+
+  /// First-name editor (the dialog that opens from the Your name row on You): the dialog's title. It is shown at the top of the dialog, above firstNameEditorSupporting and the one editable first-name field, which has its own separate label. It names what the dialog lets the person edit, their optional first name; it is never the name itself and never contains what the person types. A screen reader reads it as the dialog's title. In English it has the same words as youPersonalNameTitle, the title of the Personal name row on You, but it is a different key with its own owner: translate it as the title of this dialog. A short title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get firstNameEditorTitle;
+
+  /// First-name editor (the dialog that opens from the Your name row on You): the supporting line shown immediately below the dialog's title, firstNameEditorTitle, and above the first-name field. It explains, calmly and without technical words, why THIRTY optionally uses a first name: only to make the app feel a little more personal. It must not suggest an account, an online profile or sign-in, or that the name is sent to or stored on a server. It is always shown while the dialog is open and never changes with what the person types: it is not a validation or error message. THIRTY is the product name and stays as it is.
+  ///
+  /// In en, this message translates to:
+  /// **'Used only to make THIRTY feel a little more personal.'**
+  String get firstNameEditorSupporting;
 }
 
 class _AppLocalizationsDelegate

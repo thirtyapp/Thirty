@@ -63,4 +63,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get youPersonalNameAddPrompt => 'Add your name';
+
+  @override
+  String get firstNameEditorTitle => 'Your name';
+
+  @override
+  String get firstNameEditorSupporting =>
+      'Used only to make THIRTY feel a little more personal.';
 }

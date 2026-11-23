@@ -26,7 +26,9 @@ import 'package:thirty/l10n/gen/app_localizations_en.dart';
 /// button, its single composed spoken label (`'$rowTitle, $detail'`), its
 /// saved-name fallback and the first-name editor it opens. The person's
 /// saved first name is user data: it is shown as stored and never comes
-/// from the catalogue. The first-name editor keeps its own, separate copy.
+/// from the catalogue. The first-name editor keeps its own, separate copy
+/// (since Batch 6, its own keys: `firstNameEditorTitle` and
+/// `firstNameEditorSupporting`, never the row's).
 /// The whole page stays pinned against the baseline by the frozen
 /// `you_about_en_golden_test.dart` (whole-page semantics tree).
 void main() {
@@ -92,16 +94,23 @@ void main() {
       }
     });
 
-    test('is exactly eighteen messages: the accepted sixteen unchanged and '
-        'first, then the two in row order', () {
+    test('starts with exactly eighteen messages: the accepted sixteen '
+        'unchanged and first, then the two in row order; only Batch 6 '
+        'follows', () {
       final c = arb();
       final keys = [
         for (final k in c.keys)
           if (!k.startsWith('@')) k,
       ];
       expect(keys.take(16).toList(), accepted.keys.toList());
-      expect(keys.skip(16).toList(), batch5.keys.toList());
-      expect(keys, hasLength(18));
+      expect(keys.skip(16).take(2).toList(), batch5.keys.toList());
+      // Only Batch 6's two authorized keys, the first-name editor's own,
+      // follow (you_first_name_editor_extraction_test.dart).
+      expect(keys.skip(18).toList(), [
+        'firstNameEditorTitle',
+        'firstNameEditorSupporting',
+      ]);
+      expect(keys, hasLength(20));
       for (final MapEntry(:key, :value) in accepted.entries) {
         expect(c[key], value, reason: key);
       }
@@ -300,26 +309,100 @@ void main() {
       expect(code, contains("label: '\$title, \$detail',"));
     });
 
-    test('the first-name editor and the first-use question keep their own '
-        'copy and do not use the row’s keys', () {
+    test('the first-name editor reads its own two keys (Batch 6), never the '
+        'row’s; it keeps the rest of its copy, its storage and its '
+        'validation', () {
       final editor = File(editorOwner).readAsStringSync();
-      expect(editor, contains("static const title = 'Your name';"));
-      expect(editor, contains('title: const Text(FirstNameEditor.title),'));
+      // The old Dart-owned title and supporting line are gone.
+      expect(editor, isNot(contains('static const title')));
+      expect(editor, isNot(contains('static const supporting')));
+      expect(editor, isNot(contains('FirstNameEditor.title')));
+      expect(editor, isNot(contains('FirstNameEditor.supporting')));
+      expect(editor, isNot(contains("'Your name'")));
+      expect(
+        editor,
+        isNot(
+          contains("'Used only to make THIRTY feel a little more personal.'"),
+        ),
+      );
+      // Its own keys, read once each from the widget's context.
+      expect(
+        RegExp(r'final l10n = context\.l10n;').allMatches(editor),
+        hasLength(1),
+      );
+      expect(editor, contains('title: Text(l10n.firstNameEditorTitle),'));
+      expect(
+        RegExp(r'\bl10n\.firstNameEditorSupporting,').allMatches(editor),
+        hasLength(1),
+      );
+      // Never the row's keys, even though the English title is the same.
+      expect(editor, isNot(contains('youPersonalName')));
+      // The rest of the editor is unchanged and out of this batch.
+      expect(editor, contains("static const fieldLabel = 'First name';"));
       expect(
         editor,
         contains(
-          "static const supporting =\n"
-          "      'Used only to make THIRTY feel a little more personal.';",
+          "static const tooLongMessage = "
+          "'Use \$maxFirstNameLength characters or fewer.';",
         ),
       );
-      expect(editor, contains("static const fieldLabel = 'First name';"));
+      expect(editor, contains('labelText: FirstNameEditor.fieldLabel,'));
+      expect(
+        editor,
+        contains(
+          'errorText: _tooLong ? FirstNameEditor.tooLongMessage : null,',
+        ),
+      );
       expect(editor, contains("child: const Text('Remove name'),"));
+      expect(editor, contains("child: const Text('Cancel'),"));
+      expect(editor, contains("child: const Text('Save'),"));
       expect(editor, contains("barrierLabel: 'Cancel',"));
-      for (final file in [editorOwner, questionOwner]) {
-        final text = File(file).readAsStringSync();
-        expect(text, isNot(contains('youPersonalName')), reason: file);
-        expect(text, isNot(contains('l10n')), reason: file);
+      expect(editor, contains('builder: (_) => const FirstNameEditor(),'));
+      // Storage and validation contracts.
+      expect(
+        editor,
+        contains('late final String? _existing = ref.read(firstNameProvider);'),
+      );
+      expect(
+        editor,
+        contains('bool get _tooLong => !firstNameFits(_controller.text);'),
+      );
+      expect(
+        editor,
+        contains(
+          'bool get _canSave => '
+          'trimmedFirstName(_controller.text) != null && !_tooLong;',
+        ),
+      );
+      expect(
+        editor,
+        contains(
+          'await ref.read(firstNameProvider.notifier)'
+          '.setFirstName(_controller.text);',
+        ),
+      );
+      expect(
+        editor,
+        contains('await ref.read(firstNameProvider.notifier).clear();'),
+      );
+    });
+
+    test('the row keeps its own two keys, and the first-use question keeps '
+        'its own copy: neither the row’s keys nor the editor’s', () {
+      for (final key in batch5.keys) {
+        expect(
+          RegExp('\\bl10n\\.$key\\b').allMatches(code),
+          hasLength(1),
+          reason: key,
+        );
       }
+      expect(code, isNot(contains('firstNameEditor')));
+      final question = File(questionOwner).readAsStringSync();
+      expect(question, isNot(contains('youPersonalName')));
+      expect(question, isNot(contains('firstNameEditorTitle')));
+      expect(question, isNot(contains('firstNameEditorSupporting')));
+      expect(question, isNot(contains('l10n')));
+      expect(question, contains('labelText: FirstNameEditor.fieldLabel,'));
     });
   });
 
@@ -436,8 +519,8 @@ void main() {
       expect(dialog, findsOneWidget);
       Finder inDialog(String text) =>
           find.descendant(of: dialog, matching: find.text(text));
-      expect(inDialog(FirstNameEditor.title), findsOneWidget);
-      expect(FirstNameEditor.title, 'Your name');
+      // The baseline English, written out here, independent of production.
+      expect(inDialog('Your name'), findsOneWidget);
       expect(
         inDialog('Used only to make THIRTY feel a little more personal.'),
         findsOneWidget,

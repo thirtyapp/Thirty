@@ -64,7 +64,8 @@ void main() {
       // The original eight, exactly and first; only Batch 3's four
       // authorized keys (you_personal_rows_extraction_test.dart), then
       // Batch 4's four (you_appearance_extraction_test.dart), then Batch
-      // 5's two (you_name_row_extraction_test.dart), may follow.
+      // 5's two (you_name_row_extraction_test.dart), then Batch 6's two
+      // (you_first_name_editor_extraction_test.dart), may follow.
       expect(keys.take(8).toList(), [
         'brandName',
         'youAboutSectionTitle',
@@ -82,6 +83,8 @@ void main() {
         'themeModeDark',
         'youPersonalNameTitle',
         'youPersonalNameAddPrompt',
+        'firstNameEditorTitle',
+        'firstNameEditorSupporting',
       ]);
       final c = arb();
       expect(c['brandName'], 'THIRTY');

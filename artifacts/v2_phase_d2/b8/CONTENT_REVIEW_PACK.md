@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-22T16:41:29.369906Z from the working tree at HEAD `e56e56e6c4e649ffa8e612ca12bc8defae0722a1` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-23T17:09:43.751318Z from the working tree at HEAD `57c234ced513ad27b03d49cd15ad36ceabed0d58` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -916,8 +916,6 @@ Voices: Locke, Heather, Milo, Brittney
 
 **`features/settings/presentation/widgets/first_name_editor.dart`**
 
-- Your name
-- Used only to make THIRTY feel a little more personal.
 - First name
 - Use $maxFirstNameLength characters or fewer.
 - Remove name
@@ -1141,3 +1139,9 @@ Every user-facing message in `lib/l10n/arb/app_en.arb`, in catalogue order — i
 - **`youPersonalNameAddPrompt`**: Add your name
   - Source: `lib/l10n/arb/app_en.arb`
   - Description: You tab, Personal section: the supporting prompt under youPersonalNameTitle, shown only when no first name has been saved; once the person saves a first name, it is replaced by their name exactly as they entered it. Shown in smaller accent-coloured text under youPersonalNameTitle; a screen reader reads it after the title and a comma, as part of the row's one label, and it is never announced on its own. It invites the person to add their optional first name: it is not the person's stored first name, is never saved as one and never appears in stored data.
+- **`firstNameEditorTitle`**: Your name
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: First-name editor (the dialog that opens from the Your name row on You): the dialog's title. It is shown at the top of the dialog, above firstNameEditorSupporting and the one editable first-name field, which has its own separate label. It names what the dialog lets the person edit, their optional first name; it is never the name itself and never contains what the person types. A screen reader reads it as the dialog's title. In English it has the same words as youPersonalNameTitle, the title of the Personal name row on You, but it is a different key with its own owner: translate it as the title of this dialog. A short title.
+- **`firstNameEditorSupporting`**: Used only to make THIRTY feel a little more personal.
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: First-name editor (the dialog that opens from the Your name row on You): the supporting line shown immediately below the dialog's title, firstNameEditorTitle, and above the first-name field. It explains, calmly and without technical words, why THIRTY optionally uses a first name: only to make the app feel a little more personal. It must not suggest an account, an online profile or sign-in, or that the name is sent to or stored on a server. It is always shown while the dialog is open and never changes with what the person types: it is not a validation or error message. THIRTY is the product name and stays as it is.

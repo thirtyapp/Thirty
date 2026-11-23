@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/l10n/thirty_locales.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../application/first_name_provider.dart';
 
@@ -24,9 +25,6 @@ Future<void> showFirstNameEditor(BuildContext context) => showDialog<void>(
 class FirstNameEditor extends ConsumerStatefulWidget {
   const FirstNameEditor({super.key});
 
-  static const title = 'Your name';
-  static const supporting =
-      'Used only to make THIRTY feel a little more personal.';
   static const fieldLabel = 'First name';
   static const tooLongMessage = 'Use $maxFirstNameLength characters or fewer.';
 
@@ -63,6 +61,7 @@ class _FirstNameEditorState extends ConsumerState<FirstNameEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final textTheme = Theme.of(context).textTheme;
     final colors = Theme.of(context).extension<AppColors>()!;
     final largeText =
@@ -77,13 +76,13 @@ class _FirstNameEditorState extends ConsumerState<FirstNameEditor> {
             )
           : null,
       actionsOverflowButtonSpacing: largeText ? AppSpacing.s : null,
-      title: const Text(FirstNameEditor.title),
+      title: Text(l10n.firstNameEditorTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            FirstNameEditor.supporting,
+            l10n.firstNameEditorSupporting,
             style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.m),

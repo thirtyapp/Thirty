@@ -90,22 +90,25 @@ void main() {
     });
 
     test('starts with exactly sixteen messages: the accepted twelve '
-        'unchanged and first, then the four in order; only Batch 5 '
-        'follows', () {
+        'unchanged and first, then the four in order; only Batch 5, then '
+        'Batch 6, follow', () {
       final c = arb();
       final keys = [
         for (final k in c.keys)
           if (!k.startsWith('@')) k,
       ];
       // The accepted sixteen, exactly and first; only Batch 5's two
-      // authorized keys may follow (you_name_row_extraction_test.dart).
+      // authorized keys (you_name_row_extraction_test.dart), then Batch 6's
+      // two (you_first_name_editor_extraction_test.dart), may follow.
       expect(keys.take(16).toList(), [...accepted.keys, ...batch4.keys]);
       expect(keys.take(16).toList(), hasLength(16));
       expect(keys.skip(16).toList(), [
         'youPersonalNameTitle',
         'youPersonalNameAddPrompt',
+        'firstNameEditorTitle',
+        'firstNameEditorSupporting',
       ]);
-      expect(keys, hasLength(18));
+      expect(keys, hasLength(20));
       for (final MapEntry(:key, :value) in accepted.entries) {
         expect(c[key], value, reason: key);
       }
