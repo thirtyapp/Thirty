@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-23T17:09:43.751318Z from the working tree at HEAD `57c234ced513ad27b03d49cd15ad36ceabed0d58` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-23T19:39:41.984525Z from the working tree at HEAD `da19082d6b30b6f05a70e18192b74851f9ec249e` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -882,7 +882,7 @@ Voices: Locke, Heather, Milo, Brittney
 - THIRTY never offers a kept Circle unasked. It stays yours, with or without Premium.
 - Rename *(×4)*
 - Cancel *(×4)*
-- Save *(×2)*
+- Save
 - It leaves Yours. Days you used it stay in your history.
 - They’re yours
 
@@ -918,7 +918,6 @@ Voices: Locke, Heather, Milo, Brittney
 
 - First name
 - Use $maxFirstNameLength characters or fewer.
-- Remove name
 
 **`features/settings/presentation/widgets/theme_mode_choice.dart`**
 
@@ -1145,3 +1144,9 @@ Every user-facing message in `lib/l10n/arb/app_en.arb`, in catalogue order — i
 - **`firstNameEditorSupporting`**: Used only to make THIRTY feel a little more personal.
   - Source: `lib/l10n/arb/app_en.arb`
   - Description: First-name editor (the dialog that opens from the Your name row on You): the supporting line shown immediately below the dialog's title, firstNameEditorTitle, and above the first-name field. It explains, calmly and without technical words, why THIRTY optionally uses a first name: only to make the app feel a little more personal. It must not suggest an account, an online profile or sign-in, or that the name is sent to or stored on a server. It is always shown while the dialog is open and never changes with what the person types: it is not a validation or error message. THIRTY is the product name and stays as it is.
+- **`firstNameEditorRemoveNameAction`**: Remove name
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: First-name editor (the dialog that opens from the Your name row on You): the label of the quiet text button shown under the first-name field. It is displayed only when a first name already exists, that is when one is already saved on this device. Tapping it clears that optional first name stored on the device, and nothing else: it does not delete Circle history, kept Circles or any other preference. It is intentionally a quiet, non-destructive-looking preference action, never shown in a warning colour, and it has no destructive confirmation dialog: the person can add a name again at any time. It is different from the broader data-deletion actions elsewhere in THIRTY, such as deleting Circle history, and must not be translated like them. It must not be confused with youPersonalNameAddPrompt, the Personal name-row prompt that invites the person to add a name. A short button label; a screen reader reads it as a button.
+- **`firstNameEditorSaveAction`**: Save
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: First-name editor (the dialog that opens from the Your name row on You): the label of the action that saves the edited optional first name. It appears inside the first-name editor dialog, as its last action, after Cancel. The action is disabled when the entered value is blank (or only spaces) or otherwise invalid, such as longer than the allowed length, and enabled only for a valid name. Saving uses the existing name-storage behaviour: the name stays on this device, exactly as typed once trimmed; the keyboard Done key saves the same way. It is not the first-use onboarding action, which is separately labelled Continue. It is a short button label, not a status message or a confirmation that something was saved, and it should remain understandable whether the button is enabled or disabled, without any change to what the button does. A screen reader reads it as a button.

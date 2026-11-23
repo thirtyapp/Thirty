@@ -145,8 +145,9 @@ void main() {
         expect(entry, isNot(contains('Placeholders:')), reason: key);
       }
       // Batch 3 ends the accepted twelve; only Batch 4's four, then Batch
-      // 5's two, then Batch 6's two, follow (next tests).
-      expect(real.messages, hasLength(20));
+      // 5's two, then Batch 6's two, then Batch 7's two, follow (next
+      // tests).
+      expect(real.messages, hasLength(22));
       // The one catalogue message that adds to H's curly-apostrophe count.
       expect(
         [
@@ -166,7 +167,7 @@ void main() {
         manifest['catalogueKeys'],
         containsAllInOrder(['youDataPrivacySectionTitle', ...batch3.keys]),
       );
-      expect(manifest['catalogueMessagesListed'], 20);
+      expect(manifest['catalogueMessagesListed'], 22);
       // Only the card's own Dart copy left the review; the same words in
       // other files are still listed where they live.
       final d = realBody.substring(
@@ -257,12 +258,17 @@ void main() {
       for (final key in batch4.keys.skip(1)) {
         expect(byKey[key]!.description, contains('Theme'), reason: key);
       }
-      // Only Batch 5's two, then Batch 6's two, follow (next tests).
+      // Only Batch 5's two, then Batch 6's two, then Batch 7's two, follow
+      // (next tests).
       const batch5 = ['youPersonalNameTitle', 'youPersonalNameAddPrompt'];
       const batch6 = ['firstNameEditorTitle', 'firstNameEditorSupporting'];
+      const batch7 = [
+        'firstNameEditorRemoveNameAction',
+        'firstNameEditorSaveAction',
+      ];
       expect(
         [for (final m in real.messages) m.key],
-        [...accepted, ...batch4.keys, ...batch5, ...batch6],
+        [...accepted, ...batch4.keys, ...batch5, ...batch6, ...batch7],
       );
       // Batch 4 adds no apostrophe of either kind, so H is unchanged.
       for (final value in batch4.values) {
@@ -281,8 +287,9 @@ void main() {
         ...batch4.keys,
         ...batch5,
         ...batch6,
+        ...batch7,
       ]);
-      expect(manifest['catalogueMessagesListed'], 20);
+      expect(manifest['catalogueMessagesListed'], 22);
       expect(manifest['founderFlags'], 4);
       // Only the four words left the Dart-derived review; the theme
       // selector's group label and the card's other copy stay listed.
@@ -374,12 +381,17 @@ void main() {
         byKey['youPersonalNameAddPrompt']!.description,
         contains('youPersonalNameTitle'),
       );
-      // Only Batch 6's two, the first-name editor's own, follow (next test).
+      // Only Batch 6's two, then Batch 7's two, the first-name editor's own,
+      // follow (next tests).
       const batch6 = ['firstNameEditorTitle', 'firstNameEditorSupporting'];
-      expect(real.messages, hasLength(20));
+      const batch7 = [
+        'firstNameEditorRemoveNameAction',
+        'firstNameEditorSaveAction',
+      ];
+      expect(real.messages, hasLength(22));
       expect(
         [for (final m in real.messages) m.key],
-        [...accepted, ...batch5.keys, ...batch6],
+        [...accepted, ...batch5.keys, ...batch6, ...batch7],
       );
       // Batch 5 adds no apostrophe of either kind, so H is unchanged.
       for (final value in batch5.values) {
@@ -397,13 +409,14 @@ void main() {
         ...accepted,
         ...batch5.keys,
         ...batch6,
+        ...batch7,
       ]);
-      expect(manifest['catalogueMessagesListed'], 20);
+      expect(manifest['catalogueMessagesListed'], 22);
       expect(manifest['founderFlags'], 4);
       // Only the card's two words left the Dart-derived review: its Yours
       // copy stays listed. The first-name editor's own title and supporting
-      // line left with Batch 6 (next test); its remaining copy is still
-      // listed where it lives.
+      // line left with Batch 6, and its Remove name with Batch 7 (next
+      // tests); its remaining copy is still listed where it lives.
       final d = realBody.substring(
         realBody.indexOf('## D. You'),
         realBody.indexOf('## E. '),
@@ -425,7 +438,7 @@ void main() {
         'features/settings/presentation/widgets/first_name_editor.dart',
       );
       expect(editor, contains('- First name\n'));
-      expect(editor, contains('- Remove name\n'));
+      expect(editor, isNot(contains('- Remove name\n')));
       expect(d, isNot(contains('- Add your name')));
     });
 
@@ -438,6 +451,11 @@ void main() {
         'firstNameEditorSupporting':
             'Used only to make THIRTY feel a little more personal.',
       };
+      // Only Batch 7's two, the editor's actions, follow (next test).
+      const batch7 = [
+        'firstNameEditorRemoveNameAction',
+        'firstNameEditorSaveAction',
+      ];
       const accepted = [
         'brandName',
         'youAboutSectionTitle',
@@ -494,10 +512,10 @@ void main() {
         byKey['firstNameEditorSupporting']!.description,
         contains('firstNameEditorTitle'),
       );
-      expect(real.messages, hasLength(20));
+      expect(real.messages, hasLength(22));
       expect(
         [for (final m in real.messages) m.key],
-        [...accepted, ...batch6.keys],
+        [...accepted, ...batch6.keys, ...batch7],
       );
       // Batch 6 adds no apostrophe of either kind, so H is unchanged.
       for (final value in batch6.values) {
@@ -511,12 +529,17 @@ void main() {
                 ).readAsStringSync(),
               )
               as Map<String, Object?>;
-      expect(manifest['catalogueKeys'], [...accepted, ...batch6.keys]);
-      expect(manifest['catalogueMessagesListed'], 20);
+      expect(manifest['catalogueKeys'], [
+        ...accepted,
+        ...batch6.keys,
+        ...batch7,
+      ]);
+      expect(manifest['catalogueMessagesListed'], 22);
       expect(manifest['founderFlags'], 4);
       // Only the editor's two words left the Dart-derived review; its field
-      // label, its length message and "Remove name" stay listed, and the
-      // first-use question's own copy is unchanged.
+      // label and its length message stay listed ("Remove name" left with
+      // Batch 7, next test), and the first-use question's own copy is
+      // unchanged.
       final d = realBody.substring(
         realBody.indexOf('## D. You'),
         realBody.indexOf('## E. '),
@@ -539,7 +562,7 @@ void main() {
         editor,
         contains(r'- Use $maxFirstNameLength characters or fewer.'),
       );
-      expect(editor, contains('- Remove name\n'));
+      expect(editor, isNot(contains('- Remove name\n')));
       final question = block(
         'features/settings/presentation/first_name_question_page.dart',
       );
@@ -556,6 +579,148 @@ void main() {
         'features/settings/presentation/widgets/you_personal_card.dart',
       );
       expect(card, isNot(contains('- Your name')));
+      expect(card, isNot(contains('- Add your name')));
+      expect(card, contains('- Circles you keep appear here\n'));
+    });
+
+    test('Batch 7 is visible: the first-name editor’s Remove name and Save '
+        'actions, each with its source and description, after Batch 6 and '
+        'with no placeholder; they leave the Dart-derived review, the kept '
+        'Circle’s own Save and Cancel stay listed, and the editor’s other '
+        'copy stays listed', () {
+      const batch7 = <String, String>{
+        'firstNameEditorRemoveNameAction': 'Remove name',
+        'firstNameEditorSaveAction': 'Save',
+      };
+      const accepted = [
+        'brandName',
+        'youAboutSectionTitle',
+        'youAboutVersion',
+        'youPageTitle',
+        'youPageSubtitle',
+        'youPersonalSectionTitle',
+        'youPreferencesSectionTitle',
+        'youDataPrivacySectionTitle',
+        'youPersonalMemoryTitle',
+        'youPersonalMemoryDetail',
+        'youPersonalHistoryTitle',
+        'youPersonalHistoryDetail',
+        'youAppearanceTitle',
+        'themeModeSystem',
+        'themeModeLight',
+        'themeModeDark',
+        'youPersonalNameTitle',
+        'youPersonalNameAddPrompt',
+        'firstNameEditorTitle',
+        'firstNameEditorSupporting',
+      ];
+      final section = sectionI(realBody);
+      final byKey = {for (final m in real.messages) m.key: m};
+      var previous = section.indexOf('- **`firstNameEditorSupporting`**: ');
+      expect(previous, isNonNegative, reason: 'Batch 6 still listed');
+      for (final MapEntry(:key, :value) in batch7.entries) {
+        final at = section.indexOf('- **`$key`**: $value\n');
+        expect(at, greaterThan(previous), reason: '$key, in catalogue order');
+        previous = at;
+        final next = section.indexOf('\n- **`', at + 1);
+        final entry = section.substring(at, next < 0 ? null : next);
+        expect(entry, contains('  - Source: `$englishCatalogue`'));
+        expect(
+          entry,
+          contains('  - Description: ${byKey[key]!.description}'),
+          reason: key,
+        );
+        expect(byKey[key]!.text, value, reason: key);
+        expect(byKey[key]!.description, startsWith('First-name editor '));
+        expect(byKey[key]!.description!.length, greaterThan(200));
+        expect(byKey[key]!.placeholders, isEmpty, reason: key);
+        expect(entry, isNot(contains('Placeholders:')), reason: key);
+      }
+      // Save is the catalogue's last entry.
+      expect(
+        section.indexOf('\n- **`', previous + 1),
+        -1,
+        reason: 'nothing follows Batch 7',
+      );
+      // Each says what it is not: Remove name is neither a data deletion
+      // nor the row's prompt; Save is neither onboarding's Continue nor a
+      // status message.
+      final remove = byKey['firstNameEditorRemoveNameAction']!.description!;
+      expect(remove, contains('only when a first name already exists'));
+      expect(remove, contains('does not delete Circle history'));
+      expect(remove, contains('no destructive confirmation dialog'));
+      expect(remove, contains('youPersonalNameAddPrompt'));
+      final save = byKey['firstNameEditorSaveAction']!.description!;
+      expect(save, contains('disabled when the entered value is blank'));
+      expect(save, contains('separately labelled Continue'));
+      expect(save, contains('not a status message'));
+      expect(real.messages, hasLength(22));
+      expect(
+        [for (final m in real.messages) m.key],
+        [...accepted, ...batch7.keys],
+      );
+      // Batch 7 adds no apostrophe of either kind, so H is unchanged.
+      for (final value in batch7.values) {
+        expect(value, isNot(contains('’')));
+        expect(value, isNot(contains("'")));
+      }
+      final manifest =
+          jsonDecode(
+                File(
+                  'artifacts/v2_phase_d2/b8/MANIFEST.json',
+                ).readAsStringSync(),
+              )
+              as Map<String, Object?>;
+      expect(manifest['catalogueKeys'], [...accepted, ...batch7.keys]);
+      expect(manifest['catalogueMessagesListed'], 22);
+      expect(manifest['founderFlags'], 4);
+      final d = realBody.substring(
+        realBody.indexOf('## D. You'),
+        realBody.indexOf('## E. '),
+      );
+      String block(String file) {
+        final from = d.substring(d.indexOf('**`$file`**'));
+        return from.substring(0, from.indexOf('\n**`', 1));
+      }
+
+      // The editor's Remove name left the Dart-derived review; its field
+      // label and length message stay listed.
+      final editor = block(
+        'features/settings/presentation/widgets/first_name_editor.dart',
+      );
+      expect(editor, isNot(contains('- Remove name')));
+      expect(d, isNot(contains('- Remove name')));
+      expect(editor, contains('- First name\n'));
+      expect(
+        editor,
+        contains(r'- Use $maxFirstNameLength characters or fewer.'),
+      );
+      // D lists each text once, under the first file using it, with its
+      // count in the section. The editor's Save was counted in the kept
+      // Circle page's "Save (×2)"; only the kept Circle's own Save is left.
+      // Cancel is not extracted: the editor's button and barrier still
+      // count in "Cancel (×4)".
+      final kept = block(
+        'features/personal_circle/presentation/kept_circle_page.dart',
+      );
+      expect(kept, contains('\n- Save\n'));
+      expect(kept, isNot(contains('- Save *(×')));
+      expect(kept, contains('\n- Cancel *(×4)*\n'));
+      expect(
+        d.split('\n').where((l) => l == '- Save' || l.startsWith('- Save *(')),
+        hasLength(1),
+      );
+      // The first-use question's own copy, Continue included, is unchanged.
+      final question = block(
+        'features/settings/presentation/first_name_question_page.dart',
+      );
+      expect(question, contains('- What should we call you?\n'));
+      expect(question, contains('- Continue *(×2)*\n'));
+      expect(question, contains('- Skip for now\n'));
+      // The name row's Batch 5 copy stays out of D.
+      final card = block(
+        'features/settings/presentation/widgets/you_personal_card.dart',
+      );
       expect(card, isNot(contains('- Add your name')));
       expect(card, contains('- Circles you keep appear here\n'));
     });

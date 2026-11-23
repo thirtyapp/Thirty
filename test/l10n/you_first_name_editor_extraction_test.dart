@@ -28,10 +28,12 @@ import '../features/b8/b8_review_pack_test.dart' show fnv64;
 /// and say exactly what they said before. The Personal name row keeps its
 /// own Batch 5 key, `youPersonalNameTitle`, which has the same English
 /// words but a different owner. The editor's field label, length message,
-/// buttons, barrier label, storage and validation are unchanged and out of
-/// this batch; so is the first-use question. The person's first name is user
-/// data: it is never in the catalogue, never translated, and shown and
-/// stored exactly as entered (trimmed).
+/// Cancel button, barrier label, storage and validation are unchanged and
+/// out of this batch; so is the first-use question. (Its Remove name and
+/// Save labels moved to their own keys in Batch 7:
+/// you_first_name_editor_actions_extraction_test.dart.) The person's first
+/// name is user data: it is never in the catalogue, never translated, and
+/// shown and stored exactly as entered (trimmed).
 void main() {
   const arbPath = 'lib/l10n/arb/app_en.arb';
   const editorOwner =
@@ -95,16 +97,22 @@ void main() {
       }
     });
 
-    test('is exactly twenty messages: the accepted eighteen unchanged and '
-        'first, then the two in dialog order', () {
+    test('is exactly twenty-two messages: the accepted eighteen unchanged '
+        'and first, then the two in dialog order; only Batch 7 follows', () {
       final c = arb();
       final keys = [
         for (final k in c.keys)
           if (!k.startsWith('@')) k,
       ];
       expect(keys.take(18).toList(), accepted.keys.toList());
-      expect(keys.skip(18).toList(), batch6.keys.toList());
-      expect(keys, hasLength(20));
+      expect(keys.skip(18).take(2).toList(), batch6.keys.toList());
+      // Only Batch 7's two authorized keys, the editor's Remove name and
+      // Save labels, follow (you_first_name_editor_actions_extraction_test).
+      expect(keys.skip(20).toList(), [
+        'firstNameEditorRemoveNameAction',
+        'firstNameEditorSaveAction',
+      ]);
+      expect(keys, hasLength(22));
       for (final MapEntry(:key, :value) in accepted.entries) {
         expect(c[key], value, reason: key);
       }
@@ -294,10 +302,16 @@ void main() {
           '          ),',
         ),
       );
-      // Only those two catalogue reads, and never the row's keys.
+      // Only those two catalogue reads for the header, then Batch 7's two
+      // action labels (once each, in that order), and never the row's keys.
       expect(
-        RegExp(r'\bl10n\.(\w+)').allMatches(editor).map((m) => m[1]).toSet(),
-        {'firstNameEditorTitle', 'firstNameEditorSupporting'},
+        RegExp(r'\bl10n\.(\w+)').allMatches(editor).map((m) => m[1]).toList(),
+        [
+          'firstNameEditorTitle',
+          'firstNameEditorSupporting',
+          'firstNameEditorRemoveNameAction',
+          'firstNameEditorSaveAction',
+        ],
       );
       expect(editor, isNot(contains('youPersonalName')));
       expect(editor, isNot(contains('lookupAppLocalizations')));
@@ -343,17 +357,23 @@ void main() {
         'onSubmitted: (_) => _save(),',
         'if (_existing != null) ...[',
         'minimumSize: const Size(0, 48),',
-        "child: const Text('Remove name'),",
+        // Since Batch 7 the Remove name and Save labels come from their
+        // own keys; their buttons, conditions and callbacks are unchanged.
+        'onPressed: _remove,',
+        'child: Text(l10n.firstNameEditorRemoveNameAction),',
         "child: const Text('Cancel'),",
         'onPressed: _canSave ? _save : null,',
-        "child: const Text('Save'),",
+        'child: Text(l10n.firstNameEditorSaveAction),',
       ]) {
         expect(editor, contains(line), reason: line);
       }
+      // No English fallback for the two actions.
+      expect(editor, isNot(contains("'Remove name'")));
+      expect(editor, isNot(contains("'Save'")));
       // Button order: Cancel, then Save.
       expect(
         editor.indexOf("const Text('Cancel')"),
-        lessThan(editor.indexOf("const Text('Save')")),
+        lessThan(editor.indexOf('Text(l10n.firstNameEditorSaveAction)')),
       );
     });
 

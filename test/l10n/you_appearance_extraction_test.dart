@@ -91,7 +91,7 @@ void main() {
 
     test('starts with exactly sixteen messages: the accepted twelve '
         'unchanged and first, then the four in order; only Batch 5, then '
-        'Batch 6, follow', () {
+        'Batch 6, then Batch 7, follow', () {
       final c = arb();
       final keys = [
         for (final k in c.keys)
@@ -99,7 +99,9 @@ void main() {
       ];
       // The accepted sixteen, exactly and first; only Batch 5's two
       // authorized keys (you_name_row_extraction_test.dart), then Batch 6's
-      // two (you_first_name_editor_extraction_test.dart), may follow.
+      // two (you_first_name_editor_extraction_test.dart), then Batch 7's
+      // two (you_first_name_editor_actions_extraction_test.dart), may
+      // follow.
       expect(keys.take(16).toList(), [...accepted.keys, ...batch4.keys]);
       expect(keys.take(16).toList(), hasLength(16));
       expect(keys.skip(16).toList(), [
@@ -107,8 +109,10 @@ void main() {
         'youPersonalNameAddPrompt',
         'firstNameEditorTitle',
         'firstNameEditorSupporting',
+        'firstNameEditorRemoveNameAction',
+        'firstNameEditorSaveAction',
       ]);
-      expect(keys, hasLength(20));
+      expect(keys, hasLength(22));
       for (final MapEntry(:key, :value) in accepted.entries) {
         expect(c[key], value, reason: key);
       }

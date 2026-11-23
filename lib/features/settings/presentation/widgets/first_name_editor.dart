@@ -108,7 +108,7 @@ class _FirstNameEditorState extends ConsumerState<FirstNameEditor> {
                 minimumSize: const Size(0, 48),
                 alignment: AlignmentDirectional.centerStart,
               ),
-              child: const Text('Remove name'),
+              child: Text(l10n.firstNameEditorRemoveNameAction),
             ),
           ],
         ],
@@ -120,7 +120,7 @@ class _FirstNameEditorState extends ConsumerState<FirstNameEditor> {
         ),
         TextButton(
           onPressed: _canSave ? _save : null,
-          child: const Text('Save'),
+          child: Text(l10n.firstNameEditorSaveAction),
         ),
       ],
     );

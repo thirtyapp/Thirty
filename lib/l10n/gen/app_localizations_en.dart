@@ -70,4 +70,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get firstNameEditorSupporting =>
       'Used only to make THIRTY feel a little more personal.';
+
+  @override
+  String get firstNameEditorRemoveNameAction => 'Remove name';
+
+  @override
+  String get firstNameEditorSaveAction => 'Save';
 }

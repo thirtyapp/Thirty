@@ -213,6 +213,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Used only to make THIRTY feel a little more personal.'**
   String get firstNameEditorSupporting;
+
+  /// First-name editor (the dialog that opens from the Your name row on You): the label of the quiet text button shown under the first-name field. It is displayed only when a first name already exists, that is when one is already saved on this device. Tapping it clears that optional first name stored on the device, and nothing else: it does not delete Circle history, kept Circles or any other preference. It is intentionally a quiet, non-destructive-looking preference action, never shown in a warning colour, and it has no destructive confirmation dialog: the person can add a name again at any time. It is different from the broader data-deletion actions elsewhere in THIRTY, such as deleting Circle history, and must not be translated like them. It must not be confused with youPersonalNameAddPrompt, the Personal name-row prompt that invites the person to add a name. A short button label; a screen reader reads it as a button.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove name'**
+  String get firstNameEditorRemoveNameAction;
+
+  /// First-name editor (the dialog that opens from the Your name row on You): the label of the action that saves the edited optional first name. It appears inside the first-name editor dialog, as its last action, after Cancel. The action is disabled when the entered value is blank (or only spaces) or otherwise invalid, such as longer than the allowed length, and enabled only for a valid name. Saving uses the existing name-storage behaviour: the name stays on this device, exactly as typed once trimmed; the keyboard Done key saves the same way. It is not the first-use onboarding action, which is separately labelled Continue. It is a short button label, not a status message or a confirmation that something was saved, and it should remain understandable whether the button is enabled or disabled, without any change to what the button does. A screen reader reads it as a button.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get firstNameEditorSaveAction;
 }
 
 class _AppLocalizationsDelegate
