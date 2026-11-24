@@ -9,7 +9,7 @@ import '../../application/first_name_provider.dart';
 Future<void> showFirstNameEditor(BuildContext context) => showDialog<void>(
   context: context,
   // TalkBack names the backdrop by what it does.
-  barrierLabel: 'Cancel',
+  barrierLabel: context.l10n.firstNameEditorDismissBarrierLabel,
   builder: (_) => const FirstNameEditor(),
 );
 
@@ -116,7 +116,7 @@ class _FirstNameEditorState extends ConsumerState<FirstNameEditor> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.firstNameEditorCancelAction),
         ),
         TextButton(
           onPressed: _canSave ? _save : null,

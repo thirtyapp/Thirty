@@ -2,13 +2,13 @@
   "artifact": "CONTENT_REVIEW_PACK.md",
   "kind": "REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY",
   "canonicalAuthority": false,
-  "generatedAtUtc": "2026-11-23T19:39:41.984525Z",
-  "gitHead": "da19082d6b30b6f05a70e18192b74851f9ec249e",
+  "generatedAtUtc": "2026-11-24T06:16:45.124825Z",
+  "gitHead": "b1dea377c88b69991af714073eaaef936f885a22",
   "workingTree": "intentionally uncommitted (B0–B8 for founder review); the pack reflects the working tree, not HEAD",
   "generator": "test/features/b8/b8_review_pack_test.dart",
   "extractor": "test/features/b8/support/live_copy.dart",
   "productionFilesScanned": 162,
-  "copyStringsExtracted": 655,
+  "copyStringsExtracted": 653,
   "sourceFilesInPack": [
     "lib/core/routing/app_shell.dart",
     "lib/features/home/domain/recommendation_engine.dart",
@@ -61,7 +61,7 @@
   "catalogueFilesInPack": [
     "lib/l10n/arb/app_en.arb"
   ],
-  "catalogueMessagesListed": 22,
+  "catalogueMessagesListed": 24,
   "catalogueKeys": [
     "brandName",
     "youAboutSectionTitle",
@@ -84,8 +84,10 @@
     "firstNameEditorTitle",
     "firstNameEditorSupporting",
     "firstNameEditorRemoveNameAction",
-    "firstNameEditorSaveAction"
+    "firstNameEditorSaveAction",
+    "firstNameEditorCancelAction",
+    "firstNameEditorDismissBarrierLabel"
   ],
-  "contentHashFnv64": "510bcee7cd9cabd7",
+  "contentHashFnv64": "-48a7694535d34450",
   "founderFlags": 4
 }

@@ -76,4 +76,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get firstNameEditorSaveAction => 'Save';
+
+  @override
+  String get firstNameEditorCancelAction => 'Cancel';
+
+  @override
+  String get firstNameEditorDismissBarrierLabel => 'Cancel';
 }

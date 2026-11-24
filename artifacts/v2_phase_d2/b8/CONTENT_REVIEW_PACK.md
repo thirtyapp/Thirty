@@ -1,6 +1,6 @@
 # THIRTY — D2 content review pack (B8)
 
-> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-23T19:39:41.984525Z from the working tree at HEAD `da19082d6b30b6f05a70e18192b74851f9ec249e` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
+> **REVIEW ARTIFACT — DERIVED FROM CURRENT PRODUCTION COPY.** Not canonical authority: the product contract, ADR-024 and the code are. Generated 2026-11-24T06:16:45.124825Z from the working tree at HEAD `b1dea377c88b69991af714073eaaef936f885a22` (intentionally uncommitted B0–B8 work). Manifest: `MANIFEST.json`.
 
 ## A. Today
 
@@ -881,7 +881,7 @@ Voices: Locke, Heather, Milo, Brittney
 - It’s yours *(×2)*
 - THIRTY never offers a kept Circle unasked. It stays yours, with or without Premium.
 - Rename *(×4)*
-- Cancel *(×4)*
+- Cancel *(×2)*
 - Save
 - It leaves Yours. Days you used it stay in your history.
 - They’re yours
@@ -1150,3 +1150,9 @@ Every user-facing message in `lib/l10n/arb/app_en.arb`, in catalogue order — i
 - **`firstNameEditorSaveAction`**: Save
   - Source: `lib/l10n/arb/app_en.arb`
   - Description: First-name editor (the dialog that opens from the Your name row on You): the label of the action that saves the edited optional first name. It appears inside the first-name editor dialog, as its last action, after Cancel. The action is disabled when the entered value is blank (or only spaces) or otherwise invalid, such as longer than the allowed length, and enabled only for a valid name. Saving uses the existing name-storage behaviour: the name stays on this device, exactly as typed once trimmed; the keyboard Done key saves the same way. It is not the first-use onboarding action, which is separately labelled Continue. It is a short button label, not a status message or a confirmation that something was saved, and it should remain understandable whether the button is enabled or disabled, without any change to what the button does. A screen reader reads it as a button.
+- **`firstNameEditorCancelAction`**: Cancel
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: First-name editor (the dialog that opens from the Your name row on You): the label of the visible Cancel button in the actions of the dialog. It belongs only to this dialog and is placed before Save in the dialog actions. Tapping it closes the dialog without saving any edits: it does not remove or change the first name already stored on this device. It stays available when Save is disabled, for example while the field is blank or the name is too long. A short action label; a screen reader announces it as a button. It is not the accessibility label of the dialog background (the barrier), which has its own key, firstNameEditorDismissBarrierLabel. The two English strings currently match, but they must remain independently translatable.
+- **`firstNameEditorDismissBarrierLabel`**: Cancel
+  - Source: `lib/l10n/arb/app_en.arb`
+  - Description: First-name editor (the dialog that opens from the Your name row on You): the accessibility label of the modal dialog barrier, the dimmed background outside the visible content of the dialog. It is an accessibility label, not an additional visible button, and it is never shown as text. It describes the action of dismissing the modal dialog: tapping or activating the barrier closes the editor without saving any edits. It must not suggest deleting, removing or clearing the stored name. A screen reader encounters it as a separate dismissal target, after the content and actions of the dialog. It is separate from the visible Cancel button, which uses firstNameEditorCancelAction. The translation should describe the dismiss function of the barrier, even if a future language uses different wording from the visible button.

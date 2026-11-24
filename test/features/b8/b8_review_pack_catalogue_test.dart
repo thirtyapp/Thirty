@@ -145,9 +145,9 @@ void main() {
         expect(entry, isNot(contains('Placeholders:')), reason: key);
       }
       // Batch 3 ends the accepted twelve; only Batch 4's four, then Batch
-      // 5's two, then Batch 6's two, then Batch 7's two, follow (next
-      // tests).
-      expect(real.messages, hasLength(22));
+      // 5's two, then Batch 6's two, then Batch 7's two, then Batch 8's
+      // two, follow (next tests).
+      expect(real.messages, hasLength(24));
       // The one catalogue message that adds to H's curly-apostrophe count.
       expect(
         [
@@ -167,7 +167,7 @@ void main() {
         manifest['catalogueKeys'],
         containsAllInOrder(['youDataPrivacySectionTitle', ...batch3.keys]),
       );
-      expect(manifest['catalogueMessagesListed'], 22);
+      expect(manifest['catalogueMessagesListed'], 24);
       // Only the card's own Dart copy left the review; the same words in
       // other files are still listed where they live.
       final d = realBody.substring(
@@ -258,17 +258,28 @@ void main() {
       for (final key in batch4.keys.skip(1)) {
         expect(byKey[key]!.description, contains('Theme'), reason: key);
       }
-      // Only Batch 5's two, then Batch 6's two, then Batch 7's two, follow
-      // (next tests).
+      // Only Batch 5's two, then Batch 6's two, then Batch 7's two, then
+      // Batch 8's two, follow (next tests).
       const batch5 = ['youPersonalNameTitle', 'youPersonalNameAddPrompt'];
       const batch6 = ['firstNameEditorTitle', 'firstNameEditorSupporting'];
       const batch7 = [
         'firstNameEditorRemoveNameAction',
         'firstNameEditorSaveAction',
       ];
+      const batch8 = [
+        'firstNameEditorCancelAction',
+        'firstNameEditorDismissBarrierLabel',
+      ];
       expect(
         [for (final m in real.messages) m.key],
-        [...accepted, ...batch4.keys, ...batch5, ...batch6, ...batch7],
+        [
+          ...accepted,
+          ...batch4.keys,
+          ...batch5,
+          ...batch6,
+          ...batch7,
+          ...batch8,
+        ],
       );
       // Batch 4 adds no apostrophe of either kind, so H is unchanged.
       for (final value in batch4.values) {
@@ -288,8 +299,9 @@ void main() {
         ...batch5,
         ...batch6,
         ...batch7,
+        ...batch8,
       ]);
-      expect(manifest['catalogueMessagesListed'], 22);
+      expect(manifest['catalogueMessagesListed'], 24);
       expect(manifest['founderFlags'], 4);
       // Only the four words left the Dart-derived review; the theme
       // selector's group label and the card's other copy stay listed.
@@ -381,17 +393,21 @@ void main() {
         byKey['youPersonalNameAddPrompt']!.description,
         contains('youPersonalNameTitle'),
       );
-      // Only Batch 6's two, then Batch 7's two, the first-name editor's own,
-      // follow (next tests).
+      // Only Batch 6's two, then Batch 7's two, then Batch 8's two, the
+      // first-name editor's own, follow (next tests).
       const batch6 = ['firstNameEditorTitle', 'firstNameEditorSupporting'];
       const batch7 = [
         'firstNameEditorRemoveNameAction',
         'firstNameEditorSaveAction',
       ];
-      expect(real.messages, hasLength(22));
+      const batch8 = [
+        'firstNameEditorCancelAction',
+        'firstNameEditorDismissBarrierLabel',
+      ];
+      expect(real.messages, hasLength(24));
       expect(
         [for (final m in real.messages) m.key],
-        [...accepted, ...batch5.keys, ...batch6, ...batch7],
+        [...accepted, ...batch5.keys, ...batch6, ...batch7, ...batch8],
       );
       // Batch 5 adds no apostrophe of either kind, so H is unchanged.
       for (final value in batch5.values) {
@@ -410,8 +426,9 @@ void main() {
         ...batch5.keys,
         ...batch6,
         ...batch7,
+        ...batch8,
       ]);
-      expect(manifest['catalogueMessagesListed'], 22);
+      expect(manifest['catalogueMessagesListed'], 24);
       expect(manifest['founderFlags'], 4);
       // Only the card's two words left the Dart-derived review: its Yours
       // copy stays listed. The first-name editor's own title and supporting
@@ -451,10 +468,15 @@ void main() {
         'firstNameEditorSupporting':
             'Used only to make THIRTY feel a little more personal.',
       };
-      // Only Batch 7's two, the editor's actions, follow (next test).
+      // Only Batch 7's two, the editor's actions, then Batch 8's two, its
+      // Cancel button and barrier label, follow (next tests).
       const batch7 = [
         'firstNameEditorRemoveNameAction',
         'firstNameEditorSaveAction',
+      ];
+      const batch8 = [
+        'firstNameEditorCancelAction',
+        'firstNameEditorDismissBarrierLabel',
       ];
       const accepted = [
         'brandName',
@@ -512,10 +534,10 @@ void main() {
         byKey['firstNameEditorSupporting']!.description,
         contains('firstNameEditorTitle'),
       );
-      expect(real.messages, hasLength(22));
+      expect(real.messages, hasLength(24));
       expect(
         [for (final m in real.messages) m.key],
-        [...accepted, ...batch6.keys, ...batch7],
+        [...accepted, ...batch6.keys, ...batch7, ...batch8],
       );
       // Batch 6 adds no apostrophe of either kind, so H is unchanged.
       for (final value in batch6.values) {
@@ -533,8 +555,9 @@ void main() {
         ...accepted,
         ...batch6.keys,
         ...batch7,
+        ...batch8,
       ]);
-      expect(manifest['catalogueMessagesListed'], 22);
+      expect(manifest['catalogueMessagesListed'], 24);
       expect(manifest['founderFlags'], 4);
       // Only the editor's two words left the Dart-derived review; its field
       // label and its length message stay listed ("Remove name" left with
@@ -592,6 +615,10 @@ void main() {
         'firstNameEditorRemoveNameAction': 'Remove name',
         'firstNameEditorSaveAction': 'Save',
       };
+      const batch8 = [
+        'firstNameEditorCancelAction',
+        'firstNameEditorDismissBarrierLabel',
+      ];
       const accepted = [
         'brandName',
         'youAboutSectionTitle',
@@ -636,11 +663,11 @@ void main() {
         expect(byKey[key]!.placeholders, isEmpty, reason: key);
         expect(entry, isNot(contains('Placeholders:')), reason: key);
       }
-      // Save is the catalogue's last entry.
+      // Only Batch 8's two follow Save (next test).
       expect(
         section.indexOf('\n- **`', previous + 1),
-        -1,
-        reason: 'nothing follows Batch 7',
+        section.indexOf('\n- **`firstNameEditorCancelAction`**: '),
+        reason: 'Batch 8 follows Batch 7',
       );
       // Each says what it is not: Remove name is neither a data deletion
       // nor the row's prompt; Save is neither onboarding's Continue nor a
@@ -654,10 +681,10 @@ void main() {
       expect(save, contains('disabled when the entered value is blank'));
       expect(save, contains('separately labelled Continue'));
       expect(save, contains('not a status message'));
-      expect(real.messages, hasLength(22));
+      expect(real.messages, hasLength(24));
       expect(
         [for (final m in real.messages) m.key],
-        [...accepted, ...batch7.keys],
+        [...accepted, ...batch7.keys, ...batch8],
       );
       // Batch 7 adds no apostrophe of either kind, so H is unchanged.
       for (final value in batch7.values) {
@@ -671,8 +698,12 @@ void main() {
                 ).readAsStringSync(),
               )
               as Map<String, Object?>;
-      expect(manifest['catalogueKeys'], [...accepted, ...batch7.keys]);
-      expect(manifest['catalogueMessagesListed'], 22);
+      expect(manifest['catalogueKeys'], [
+        ...accepted,
+        ...batch7.keys,
+        ...batch8,
+      ]);
+      expect(manifest['catalogueMessagesListed'], 24);
       expect(manifest['founderFlags'], 4);
       final d = realBody.substring(
         realBody.indexOf('## D. You'),
@@ -698,14 +729,15 @@ void main() {
       // D lists each text once, under the first file using it, with its
       // count in the section. The editor's Save was counted in the kept
       // Circle page's "Save (×2)"; only the kept Circle's own Save is left.
-      // Cancel is not extracted: the editor's button and barrier still
-      // count in "Cancel (×4)".
+      // Since Batch 8 the editor's Cancel button and barrier are in the
+      // catalogue too, so only the kept Circle's own two count in
+      // "Cancel (×2)" (the Batch 8 test below).
       final kept = block(
         'features/personal_circle/presentation/kept_circle_page.dart',
       );
       expect(kept, contains('\n- Save\n'));
       expect(kept, isNot(contains('- Save *(×')));
-      expect(kept, contains('\n- Cancel *(×4)*\n'));
+      expect(kept, contains('\n- Cancel *(×2)*\n'));
       expect(
         d.split('\n').where((l) => l == '- Save' || l.startsWith('- Save *(')),
         hasLength(1),
@@ -723,6 +755,154 @@ void main() {
       );
       expect(card, isNot(contains('- Add your name')));
       expect(card, contains('- Circles you keep appear here\n'));
+    });
+
+    test('Batch 8 is visible: the first-name editor’s Cancel button and its '
+        'barrier label, two keys with the same English, each with its source '
+        'and description, after Batch 7 and with no placeholder; they leave '
+        'the Dart-derived review, and only the kept Circle’s own two Cancel '
+        'stay listed', () {
+      const batch8 = <String, String>{
+        'firstNameEditorCancelAction': 'Cancel',
+        'firstNameEditorDismissBarrierLabel': 'Cancel',
+      };
+      const accepted = [
+        'brandName',
+        'youAboutSectionTitle',
+        'youAboutVersion',
+        'youPageTitle',
+        'youPageSubtitle',
+        'youPersonalSectionTitle',
+        'youPreferencesSectionTitle',
+        'youDataPrivacySectionTitle',
+        'youPersonalMemoryTitle',
+        'youPersonalMemoryDetail',
+        'youPersonalHistoryTitle',
+        'youPersonalHistoryDetail',
+        'youAppearanceTitle',
+        'themeModeSystem',
+        'themeModeLight',
+        'themeModeDark',
+        'youPersonalNameTitle',
+        'youPersonalNameAddPrompt',
+        'firstNameEditorTitle',
+        'firstNameEditorSupporting',
+        'firstNameEditorRemoveNameAction',
+        'firstNameEditorSaveAction',
+      ];
+      final section = sectionI(realBody);
+      final byKey = {for (final m in real.messages) m.key: m};
+      var previous = section.indexOf('- **`firstNameEditorSaveAction`**: ');
+      expect(previous, isNonNegative, reason: 'Batch 7 still listed');
+      for (final MapEntry(:key, :value) in batch8.entries) {
+        final at = section.indexOf('- **`$key`**: $value\n');
+        expect(at, greaterThan(previous), reason: '$key, in catalogue order');
+        previous = at;
+        final next = section.indexOf('\n- **`', at + 1);
+        final entry = section.substring(at, next < 0 ? null : next);
+        expect(entry, contains('  - Source: `$englishCatalogue`'));
+        expect(
+          entry,
+          contains('  - Description: ${byKey[key]!.description}'),
+          reason: key,
+        );
+        expect(byKey[key]!.text, value, reason: key);
+        expect(byKey[key]!.description, startsWith('First-name editor '));
+        expect(byKey[key]!.description!.length, greaterThan(200));
+        expect(byKey[key]!.placeholders, isEmpty, reason: key);
+        expect(entry, isNot(contains('Placeholders:')), reason: key);
+      }
+      // The barrier label is the catalogue's last entry.
+      expect(
+        section.indexOf('\n- **`', previous + 1),
+        -1,
+        reason: 'nothing follows Batch 8',
+      );
+      // Each names the other, and says which one it is: the visible button,
+      // or the barrier's accessibility label that dismisses.
+      final button = byKey['firstNameEditorCancelAction']!.description!;
+      expect(button, contains('visible Cancel button'));
+      expect(button, contains('placed before Save'));
+      expect(button, contains('firstNameEditorDismissBarrierLabel'));
+      expect(button, contains('must remain independently translatable'));
+      final barrier = byKey['firstNameEditorDismissBarrierLabel']!.description!;
+      expect(barrier, contains('modal dialog barrier'));
+      expect(barrier, contains('not an additional visible button'));
+      expect(barrier, contains('without saving any edits'));
+      expect(barrier, contains('firstNameEditorCancelAction'));
+      expect(real.messages, hasLength(24));
+      expect(
+        [for (final m in real.messages) m.key],
+        [...accepted, ...batch8.keys],
+      );
+      // Batch 8 adds no apostrophe of either kind, so H is unchanged.
+      for (final value in batch8.values) {
+        expect(value, isNot(contains('’')));
+        expect(value, isNot(contains("'")));
+      }
+      final manifest =
+          jsonDecode(
+                File(
+                  'artifacts/v2_phase_d2/b8/MANIFEST.json',
+                ).readAsStringSync(),
+              )
+              as Map<String, Object?>;
+      expect(manifest['catalogueKeys'], [...accepted, ...batch8.keys]);
+      expect(manifest['catalogueMessagesListed'], 24);
+      expect(manifest['founderFlags'], 4);
+      final d = realBody.substring(
+        realBody.indexOf('## D. You'),
+        realBody.indexOf('## E. '),
+      );
+      String block(String file) {
+        final from = d.substring(d.indexOf('**`$file`**'));
+        return from.substring(0, from.indexOf('\n**`', 1));
+      }
+
+      // D lists each text once, under the first file using it, with its
+      // count in the section. The editor's Cancel button and barrier label
+      // were counted in the kept Circle page's "Cancel (×4)"; only the kept
+      // Circle's own button and barrier are left, "Cancel (×2)", in the same
+      // place. Nothing else lists Cancel in D.
+      final kept = block(
+        'features/personal_circle/presentation/kept_circle_page.dart',
+      );
+      expect(kept, contains('\n- Rename *(×4)*\n- Cancel *(×2)*\n- Save\n'));
+      expect(kept, isNot(contains('- Cancel *(×4)*')));
+      expect(
+        d
+            .split('\n')
+            .where((l) => l == '- Cancel' || l.startsWith('- Cancel *(')),
+        ['- Cancel *(×2)*'],
+      );
+      // The editor's block keeps its two remaining Dart-derived texts, and
+      // no Cancel.
+      final editor = block(
+        'features/settings/presentation/widgets/first_name_editor.dart',
+      );
+      expect(
+        editor,
+        '**`features/settings/presentation/widgets/first_name_editor.dart`**'
+        '\n\n- First name\n- Use \$maxFirstNameLength characters or fewer.\n',
+      );
+      // The first-use question's own copy is unchanged.
+      final question = block(
+        'features/settings/presentation/first_name_question_page.dart',
+      );
+      expect(question, contains('- What should we call you?\n'));
+      expect(question, contains('- Continue *(×2)*\n'));
+      expect(question, contains('- Skip for now\n'));
+      // F and G still list Cancel once: the kept Circle's own text and
+      // barrier label remain, and the catalogue's two identical values do
+      // not add a line.
+      String between(String from, String to) =>
+          realBody.substring(realBody.indexOf(from), realBody.indexOf(to));
+      for (final s in [
+        between('## F. ', '## G. '),
+        between('## G. ', '## H. '),
+      ]) {
+        expect(s.split('\n').where((l) => l == '- Cancel'), hasLength(1));
+      }
     });
 
     test('the Dart-derived review is unchanged: every surface string is '

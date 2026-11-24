@@ -1053,7 +1053,6 @@ copy	lib/features/settings/presentation/first_name_question_page.dart	1	What sho
 copy	lib/features/settings/presentation/first_name_question_page.dart	1	Your first name stays on this device and helps THIRTY feel a little more personal.
 copy	lib/features/settings/presentation/widgets/first_name_editor.dart	1	First name
 copy	lib/features/settings/presentation/widgets/first_name_editor.dart	1	Use $maxFirstNameLength characters or fewer.
-copy	lib/features/settings/presentation/widgets/first_name_editor.dart	2	Cancel
 copy	lib/features/settings/presentation/widgets/you_data_card.dart	1	Off by default. It helps us understand what to improve. When on, THIRTY sends a few facts about your use: when you open the app, which need and activity it suggests, when you start and close a Circle, and your “Did you try it?” and “Was it useful?” answers — each with the date and time, the app version, a test-group label and a random ID made on this phone. Never your name, anything you type, or your History as a whole. Turning this off stops sending; what was already sent isn’t deleted.
 copy	lib/features/settings/presentation/widgets/you_data_card.dart	1	Share usage data
 copy	lib/features/settings/presentation/widgets/you_personal_card.dart	1	$kept Circles you kept

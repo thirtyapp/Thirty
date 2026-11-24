@@ -65,8 +65,9 @@ void main() {
       // authorized keys (you_personal_rows_extraction_test.dart), then
       // Batch 4's four (you_appearance_extraction_test.dart), then Batch
       // 5's two (you_name_row_extraction_test.dart), then Batch 6's two
-      // (you_first_name_editor_extraction_test.dart), then Batch 7's two
-      // (you_first_name_editor_actions_extraction_test.dart), may follow.
+      // (you_first_name_editor_extraction_test.dart), then Batch 7's two,
+      // then Batch 8's two (both in
+      // you_first_name_editor_actions_extraction_test.dart), may follow.
       expect(keys.take(8).toList(), [
         'brandName',
         'youAboutSectionTitle',
@@ -88,6 +89,8 @@ void main() {
         'firstNameEditorSupporting',
         'firstNameEditorRemoveNameAction',
         'firstNameEditorSaveAction',
+        'firstNameEditorCancelAction',
+        'firstNameEditorDismissBarrierLabel',
       ]);
       final c = arb();
       expect(c['brandName'], 'THIRTY');

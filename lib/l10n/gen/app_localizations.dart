@@ -225,6 +225,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get firstNameEditorSaveAction;
+
+  /// First-name editor (the dialog that opens from the Your name row on You): the label of the visible Cancel button in the actions of the dialog. It belongs only to this dialog and is placed before Save in the dialog actions. Tapping it closes the dialog without saving any edits: it does not remove or change the first name already stored on this device. It stays available when Save is disabled, for example while the field is blank or the name is too long. A short action label; a screen reader announces it as a button. It is not the accessibility label of the dialog background (the barrier), which has its own key, firstNameEditorDismissBarrierLabel. The two English strings currently match, but they must remain independently translatable.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get firstNameEditorCancelAction;
+
+  /// First-name editor (the dialog that opens from the Your name row on You): the accessibility label of the modal dialog barrier, the dimmed background outside the visible content of the dialog. It is an accessibility label, not an additional visible button, and it is never shown as text. It describes the action of dismissing the modal dialog: tapping or activating the barrier closes the editor without saving any edits. It must not suggest deleting, removing or clearing the stored name. A screen reader encounters it as a separate dismissal target, after the content and actions of the dialog. It is separate from the visible Cancel button, which uses firstNameEditorCancelAction. The translation should describe the dismiss function of the barrier, even if a future language uses different wording from the visible button.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get firstNameEditorDismissBarrierLabel;
 }
 
 class _AppLocalizationsDelegate

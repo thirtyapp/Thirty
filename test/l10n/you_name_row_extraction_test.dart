@@ -28,9 +28,10 @@ import 'package:thirty/l10n/gen/app_localizations_en.dart';
 /// saved first name is user data: it is shown as stored and never comes
 /// from the catalogue. The first-name editor keeps its own, separate copy
 /// (since Batch 6, its own keys: `firstNameEditorTitle` and
-/// `firstNameEditorSupporting`, and since Batch 7
-/// `firstNameEditorRemoveNameAction` and `firstNameEditorSaveAction`;
-/// never the row's).
+/// `firstNameEditorSupporting`, since Batch 7
+/// `firstNameEditorRemoveNameAction` and `firstNameEditorSaveAction`,
+/// and since Batch 8 `firstNameEditorCancelAction` and
+/// `firstNameEditorDismissBarrierLabel`; never the row's).
 /// The whole page stays pinned against the baseline by the frozen
 /// `you_about_en_golden_test.dart` (whole-page semantics tree).
 void main() {
@@ -98,7 +99,7 @@ void main() {
 
     test('starts with exactly eighteen messages: the accepted sixteen '
         'unchanged and first, then the two in row order; only Batch 6, '
-        'then Batch 7, follow', () {
+        'then Batch 7, then Batch 8, follow', () {
       final c = arb();
       final keys = [
         for (final k in c.keys)
@@ -107,16 +108,18 @@ void main() {
       expect(keys.take(16).toList(), accepted.keys.toList());
       expect(keys.skip(16).take(2).toList(), batch5.keys.toList());
       // Only Batch 6's two authorized keys, the first-name editor's own
-      // (you_first_name_editor_extraction_test.dart), then Batch 7's two,
-      // also the editor's own
+      // (you_first_name_editor_extraction_test.dart), then Batch 7's two
+      // and Batch 8's two, also the editor's own
       // (you_first_name_editor_actions_extraction_test.dart), follow.
       expect(keys.skip(18).toList(), [
         'firstNameEditorTitle',
         'firstNameEditorSupporting',
         'firstNameEditorRemoveNameAction',
         'firstNameEditorSaveAction',
+        'firstNameEditorCancelAction',
+        'firstNameEditorDismissBarrierLabel',
       ]);
-      expect(keys, hasLength(22));
+      expect(keys, hasLength(24));
       for (final MapEntry(:key, :value) in accepted.entries) {
         expect(c[key], value, reason: key);
       }
@@ -359,17 +362,27 @@ void main() {
           'errorText: _tooLong ? FirstNameEditor.tooLongMessage : null,',
         ),
       );
-      // Since Batch 7 its Remove name and Save labels are its own keys too,
-      // never the row's; Cancel and the barrier label stay as they were.
+      // Since Batch 7 its Remove name and Save labels, and since Batch 8
+      // its Cancel button and barrier label, are its own keys too, never
+      // the row's.
       expect(
         editor,
         contains('child: Text(l10n.firstNameEditorRemoveNameAction),'),
       );
-      expect(editor, contains("child: const Text('Cancel'),"));
+      expect(
+        editor,
+        contains('child: Text(l10n.firstNameEditorCancelAction),'),
+      );
       expect(editor, contains('child: Text(l10n.firstNameEditorSaveAction),'));
       expect(editor, isNot(contains("const Text('Remove name')")));
       expect(editor, isNot(contains("const Text('Save')")));
-      expect(editor, contains("barrierLabel: 'Cancel',"));
+      expect(
+        editor,
+        contains(
+          'barrierLabel: context.l10n.firstNameEditorDismissBarrierLabel,',
+        ),
+      );
+      expect(editor, isNot(contains("'Cancel'")));
       expect(editor, contains('builder: (_) => const FirstNameEditor(),'));
       // Storage and validation contracts.
       expect(

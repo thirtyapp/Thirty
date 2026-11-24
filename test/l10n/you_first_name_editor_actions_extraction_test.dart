@@ -29,10 +29,20 @@ import '../features/b8/b8_review_pack_test.dart' show fnv64;
 /// The buttons themselves are unchanged: Remove name is still shown only
 /// for a saved name, is still quiet and unconfirmed, and still clears only
 /// the name; Save is still enabled only for a valid name and still stores
-/// it trimmed under the same key. "Cancel", the barrier label, the field
-/// label, the length message, the first-use question and the Personal name
-/// row are out of this batch and unchanged. The person's first name is user
-/// data: never in the catalogue, never translated.
+/// it trimmed under the same key. The field label, the length message, the
+/// first-use question and the Personal name row are out of this batch and
+/// unchanged. The person's first name is user data: never in the catalogue,
+/// never translated.
+///
+/// G-02 / L-CNT-EN / Batch 8 (the first-name editor's Cancel semantics),
+/// in the same file: the visible "Cancel" button and the dialog barrier's
+/// spoken "Cancel" are two copy owners with two keys,
+/// `firstNameEditorCancelAction` and `firstNameEditorDismissBarrierLabel`.
+/// Their English is the same, so a marked catalogue gives each its own
+/// `[fixture]` words: the button shows and is read as its own, the barrier
+/// is read as its own, and neither can borrow, swap or hard-code the other.
+/// Both still close the editor without saving; the kept Circle page's own
+/// Cancel is a third owner and keeps its English literal.
 void main() {
   const arbPath = 'lib/l10n/arb/app_en.arb';
   const editorOwner =
@@ -50,8 +60,16 @@ void main() {
     'firstNameEditorRemoveNameAction': 'Remove name',
     'firstNameEditorSaveAction': 'Save',
   };
+
+  /// Batch 8's two keys, in order, with their baseline English (the same
+  /// words, two owners), written out here independently of production.
+  const batch8 = <String, String>{
+    'firstNameEditorCancelAction': 'Cancel',
+    'firstNameEditorDismissBarrierLabel': 'Cancel',
+  };
   const removeName = 'Remove name';
   const save = 'Save';
+  const cancel = 'Cancel';
   const title = 'Your name';
   const supporting = 'Used only to make THIRTY feel a little more personal.';
 
@@ -85,9 +103,18 @@ void main() {
   /// 1–6 changes it.
   const acceptedFingerprint = '25be0f3d13827e2e';
 
+  /// FNV-1a/64 of the accepted twenty-two (Batches 1–7) with their metadata,
+  /// computed the same way, as accepted at b1dea377. The hash's top bit is
+  /// set, so the project's `fnv64` (a 64-bit Dart int) prints it signed:
+  /// this is the unsigned value 0x99657005976253cc.
+  const accepted22Fingerprint = '-669a8ffa689dac34';
+
   String valueOf(AppLocalizations l, String key) => switch (key) {
     'firstNameEditorRemoveNameAction' => l.firstNameEditorRemoveNameAction,
     'firstNameEditorSaveAction' => l.firstNameEditorSaveAction,
+    'firstNameEditorCancelAction' => l.firstNameEditorCancelAction,
+    'firstNameEditorDismissBarrierLabel' =>
+      l.firstNameEditorDismissBarrierLabel,
     _ => throw ArgumentError(key),
   };
 
@@ -99,21 +126,45 @@ void main() {
       }
     });
 
-    test('is exactly twenty-two messages: the accepted twenty unchanged and '
-        'first, then Remove name, then Save', () {
+    test('Batch 8: holds the Cancel button and the barrier label, both '
+        '"Cancel", under two keys', () {
+      final c = arb();
+      for (final MapEntry(:key, :value) in batch8.entries) {
+        expect(c[key], value, reason: key);
+        expect(c[key], cancel, reason: key);
+      }
+      // Two owners, two keys: no generic or shared Cancel key exists.
+      expect(
+        [
+          for (final k in c.keys)
+            if (!k.startsWith('@') && k.toLowerCase().contains('cancel')) k,
+        ],
+        ['firstNameEditorCancelAction'],
+      );
+      expect([
+        for (final k in c.keys)
+          if (!k.startsWith('@') && c[k] == cancel) k,
+      ], batch8.keys.toList());
+    });
+
+    test('is exactly twenty-four messages: the accepted twenty unchanged and '
+        'first, then Remove name, then Save, then Batch 8’s Cancel button, '
+        'then its barrier label', () {
       final c = arb();
       final keys = [
         for (final k in c.keys)
           if (!k.startsWith('@')) k,
       ];
       expect(keys.take(20).toList(), accepted.keys.toList());
-      expect(keys.skip(20).toList(), batch7.keys.toList());
-      expect(keys, hasLength(22));
+      expect(keys.skip(20).take(2).toList(), batch7.keys.toList());
+      expect(keys.skip(22).toList(), batch8.keys.toList());
+      expect(keys, hasLength(24));
       for (final MapEntry(:key, :value) in accepted.entries) {
         expect(c[key], value, reason: key);
       }
       expect(c['@@locale'], 'en');
-      // The raw file still ends with Batch 6, then the two, in that order.
+      // The raw file still ends with Batch 6, then Batch 7's two, then
+      // Batch 8's two, in that order.
       final raw = File(arbPath).readAsStringSync();
       expect(
         raw.indexOf('"firstNameEditorSupporting"'),
@@ -122,6 +173,14 @@ void main() {
       expect(
         raw.indexOf('"firstNameEditorRemoveNameAction"'),
         lessThan(raw.indexOf('"firstNameEditorSaveAction"')),
+      );
+      expect(
+        raw.indexOf('"firstNameEditorSaveAction"'),
+        lessThan(raw.indexOf('"firstNameEditorCancelAction"')),
+      );
+      expect(
+        raw.indexOf('"firstNameEditorCancelAction"'),
+        lessThan(raw.indexOf('"firstNameEditorDismissBarrierLabel"')),
       );
     });
 
@@ -132,6 +191,16 @@ void main() {
         for (final key in accepted.keys) [key, c[key], c['@$key']],
       ];
       expect(fnv64(jsonEncode(accepted20)), acceptedFingerprint);
+    });
+
+    test('Batch 8 keeps the accepted twenty-two (Batch 7 included) byte for '
+        'byte: keys, values, descriptions and placeholders', () {
+      final c = arb();
+      final accepted22 = [
+        for (final key in [...accepted.keys, ...batch7.keys])
+          [key, c[key], c['@$key']],
+      ];
+      expect(fnv64(jsonEncode(accepted22)), accepted22Fingerprint);
     });
 
     String description(String key) =>
@@ -190,10 +259,64 @@ void main() {
       expect(s, contains('understandable whether the button is enabled or'));
     });
 
+    test('Batch 8 describes the Cancel button: its dialog, its place before '
+        'Save, that it saves nothing and removes nothing, that it stays '
+        'available, and that the barrier is a separate key', () {
+      final c = description('firstNameEditorCancelAction');
+      expect(c.length, greaterThan(200));
+      expect(
+        c,
+        startsWith(
+          'First-name editor (the dialog that opens from the Your name row '
+          'on You): ',
+        ),
+      );
+      expect(c, contains('visible Cancel button'));
+      expect(c, contains('belongs only to this dialog'));
+      expect(c, contains('placed before Save in the dialog actions'));
+      expect(c, contains('closes the dialog without saving any edits'));
+      expect(c, contains('does not remove or change the first name'));
+      expect(c, contains('stays available when Save is disabled'));
+      expect(c, contains('A short action label'));
+      expect(c, contains('announces it as a button'));
+      expect(c, contains('It is not the accessibility label of the dialog'));
+      expect(c, contains('firstNameEditorDismissBarrierLabel'));
+      expect(c, contains('must remain independently translatable'));
+    });
+
+    test('Batch 8 describes the barrier label: the modal barrier outside the '
+        'content, an accessibility label and no visible button, a dismissal '
+        'that saves and clears nothing, read after the dialog, and separate '
+        'from the visible Cancel', () {
+      final b = description('firstNameEditorDismissBarrierLabel');
+      expect(b.length, greaterThan(200));
+      expect(
+        b,
+        startsWith(
+          'First-name editor (the dialog that opens from the Your name row '
+          'on You): ',
+        ),
+      );
+      expect(b, contains('accessibility label of the modal dialog barrier'));
+      expect(b, contains('outside the visible content of the dialog'));
+      expect(b, contains('not an additional visible button'));
+      expect(b, contains('the action of dismissing the modal dialog'));
+      expect(b, contains('closes the editor without saving any edits'));
+      expect(
+        b,
+        contains('must not suggest deleting, removing or clearing the stored'),
+      );
+      expect(b, contains('separate dismissal target'));
+      expect(b, contains('after the content and actions of the dialog'));
+      expect(b, contains('separate from the visible Cancel button'));
+      expect(b, contains('firstNameEditorCancelAction'));
+      expect(b, contains('describe the dismiss function of the barrier'));
+    });
+
     test('declares no placeholder, and no value uses ICU syntax or an '
         'apostrophe; no description quotes a stored name', () {
       final c = arb();
-      for (final MapEntry(:key, :value) in batch7.entries) {
+      for (final MapEntry(:key, :value) in {...batch7, ...batch8}.entries) {
         final meta = c['@$key']! as Map<String, Object?>;
         expect(meta.keys, ['description'], reason: key);
         expect(value, isNot(matches(RegExp(r"[{}'’]"))), reason: key);
@@ -225,7 +348,7 @@ void main() {
     test('gives the baseline labels, the same as the ARB', () {
       expect(en, isA<AppLocalizationsEn>());
       final c = arb();
-      for (final MapEntry(:key, :value) in batch7.entries) {
+      for (final MapEntry(:key, :value) in {...batch7, ...batch8}.entries) {
         expect(valueOf(en, key), value, reason: key);
         expect(valueOf(en, key), c[key], reason: '$key matches the ARB');
       }
@@ -238,7 +361,7 @@ void main() {
       final english = File(
         'lib/l10n/gen/app_localizations_en.dart',
       ).readAsStringSync();
-      for (final MapEntry(:key, :value) in batch7.entries) {
+      for (final MapEntry(:key, :value) in {...batch7, ...batch8}.entries) {
         expect(generated, contains('String get $key;'), reason: key);
         expect(
           english,
@@ -259,7 +382,7 @@ void main() {
       for (final locale in _deviceLocales) {
         final l = thirtyLocalizationsFor(locale);
         expect(l, isA<AppLocalizationsEn>(), reason: '$locale');
-        for (final MapEntry(:key, :value) in batch7.entries) {
+        for (final MapEntry(:key, :value) in {...batch7, ...batch8}.entries) {
           expect(valueOf(l, key), value, reason: '$locale $key');
         }
         expect(
@@ -288,7 +411,7 @@ void main() {
         RegExp(r'final l10n = context\.l10n;').allMatches(editor),
         hasLength(1),
       );
-      for (final key in batch7.keys) {
+      for (final key in [...batch7.keys, ...batch8.keys]) {
         expect(
           RegExp('\\bl10n\\.$key\\b').allMatches(editor),
           hasLength(1),
@@ -300,7 +423,21 @@ void main() {
         contains('child: Text(l10n.firstNameEditorRemoveNameAction),'),
       );
       expect(editor, contains('child: Text(l10n.firstNameEditorSaveAction),'));
-      for (final value in batch7.values) {
+      // Batch 8: the button reads its own key through the widget's l10n; the
+      // barrier reads its own key from the caller's context, the only
+      // context showFirstNameEditor has.
+      expect(
+        editor,
+        contains('child: Text(l10n.firstNameEditorCancelAction),'),
+      );
+      expect(
+        editor,
+        contains(
+          '  barrierLabel: context.l10n.firstNameEditorDismissBarrierLabel,\n',
+        ),
+      );
+      expect(RegExp(r'\bcontext\.l10n\b').allMatches(editor), hasLength(2));
+      for (final value in [...batch7.values, ...batch8.values]) {
         expect(editor, isNot(contains("'$value'")), reason: value);
         expect(editor, isNot(contains('"$value"')), reason: value);
       }
@@ -352,14 +489,15 @@ void main() {
     });
 
     test('Save keeps its enablement and its callback, and Cancel then Save '
-        'stay the dialog’s two actions; only Save’s label changed', () {
+        'stay the dialog’s two actions; only their labels changed (Save in '
+        'Batch 7, Cancel in Batch 8), and Cancel still only closes', () {
       expect(
         editor,
         contains(
           '      actions: [\n'
           '        TextButton(\n'
           '          onPressed: () => Navigator.of(context).pop(),\n'
-          "          child: const Text('Cancel'),\n"
+          '          child: Text(l10n.firstNameEditorCancelAction),\n'
           '        ),\n'
           '        TextButton(\n'
           '          onPressed: _canSave ? _save : null,\n'
@@ -389,12 +527,50 @@ void main() {
       expect(editor, contains('onSubmitted: (_) => _save(),'));
     });
 
-    test('Cancel, the barrier label, the header, the field label and the '
-        'length message are unchanged and out of this batch', () {
+    test('Batch 8: the dialog route is unchanged; only its barrier label’s '
+        'source changed, read from the caller’s context, with the same '
+        'default dismissal', () {
+      expect(
+        editor,
+        contains(
+          'Future<void> showFirstNameEditor(BuildContext context) => '
+          'showDialog<void>(\n'
+          '  context: context,\n'
+          '  barrierLabel: context.l10n.firstNameEditorDismissBarrierLabel,\n'
+          '  builder: (_) => const FirstNameEditor(),\n'
+          ');\n',
+        ),
+      );
+      // The comment that explains the label is still there (code() drops
+      // comments, so read the raw file).
+      expect(
+        File(editorOwner).readAsStringSync(),
+        contains(
+          '  // TalkBack names the backdrop by what it does.\n'
+          '  barrierLabel: context.l10n.firstNameEditorDismissBarrierLabel,\n',
+        ),
+      );
+      // Default barrier behaviour: dismissible, default colour, default
+      // route settings; nothing forced to English.
+      for (final absent in [
+        'barrierDismissible',
+        'barrierColor',
+        'useRootNavigator',
+        'routeSettings',
+        'useSafeArea',
+        'traversalEdgeBehavior',
+      ]) {
+        expect(editor, isNot(contains(absent)), reason: absent);
+      }
+      expect(RegExp(r'showDialog\b').allMatches(editor), hasLength(1));
+    });
+
+    test('the header, the field label and the length message are unchanged '
+        'and out of this batch; no Cancel literal is left', () {
       for (final line in [
         'Future<void> showFirstNameEditor(BuildContext context) => '
             'showDialog<void>(',
-        "  barrierLabel: 'Cancel',",
+        '  barrierLabel: context.l10n.firstNameEditorDismissBarrierLabel,',
         'builder: (_) => const FirstNameEditor(),',
         "static const fieldLabel = 'First name';",
         "static const tooLongMessage = 'Use \$maxFirstNameLength characters "
@@ -412,7 +588,8 @@ void main() {
       ]) {
         expect(editor, contains(line), reason: line);
       }
-      expect(RegExp("'Cancel'").allMatches(editor), hasLength(2));
+      expect(RegExp("'Cancel'").allMatches(editor), isEmpty);
+      expect(RegExp('"Cancel"').allMatches(editor), isEmpty);
       expect(editor, isNot(contains('l10n.cancel')));
     });
 
@@ -439,6 +616,40 @@ void main() {
         code('lib/features/personal_circle/presentation/kept_circle_page.dart'),
         contains("child: const Text('Save'),"),
       );
+    });
+
+    test('Batch 8: only the editor reads the two Cancel keys, each exactly '
+        'once in all of lib; the row, the first-use question and the kept '
+        'Circle page read neither, and the kept Circle keeps its own '
+        'English Cancel', () {
+      for (final key in batch8.keys) {
+        final readers = <String, int>{
+          for (final f in Directory('lib').listSync(recursive: true))
+            if (f is File &&
+                f.path.endsWith('.dart') &&
+                !f.path.replaceAll(r'\', '/').startsWith('lib/l10n/gen/') &&
+                f.readAsStringSync().contains(key))
+              f.path.replaceAll(r'\', '/'): RegExp(
+                '\\b$key\\b',
+              ).allMatches(f.readAsStringSync()).length,
+        };
+        expect(readers, {editorOwner: 1}, reason: key);
+      }
+      const keptOwner =
+          'lib/features/personal_circle/presentation/kept_circle_page.dart';
+      for (final other in [rowOwner, questionOwner, keptOwner]) {
+        final source = code(other);
+        expect(source, isNot(contains('firstNameEditor')), reason: other);
+        for (final key in batch8.keys) {
+          expect(source, isNot(contains(key)), reason: '$other $key');
+        }
+      }
+      // The kept Circle page is a third Cancel owner: its button and its
+      // barrier keep their English literals, out of this batch.
+      final kept = code(keptOwner);
+      expect(kept, contains("barrierLabel: 'Cancel',"));
+      expect(kept, contains("child: const Text('Cancel'),"));
+      expect(RegExp("'Cancel'").allMatches(kept), hasLength(2));
     });
   });
 
@@ -712,6 +923,54 @@ void main() {
       expect(container.read(firstNameProvider), 'Alex');
       expect(others(prefs), before);
     });
+
+    testWidgets('Batch 8: Cancel stays enabled, and still only closes, while '
+        'Save is disabled (blank, spaces, too long)', (tester) async {
+      for (final text in ['', '   ', 'a' * (maxFirstNameLength + 1)]) {
+        final (container, prefs) = await _pumpEditor(
+          tester,
+          prefsValues: {...otherPrefs, firstNameKey: 'Alex'},
+        );
+        await tester.enterText(find.byType(TextField), text);
+        await tester.pump();
+        expect(_button(tester, save).onPressed, isNull, reason: '"$text"');
+        expect(_button(tester, cancel).onPressed, isNotNull, reason: '"$text"');
+        await tester.tap(find.text(cancel));
+        await tester.pumpAndSettle();
+        expect(find.byType(FirstNameEditor), findsNothing, reason: '"$text"');
+        expect(prefs.getString(firstNameKey), 'Alex', reason: '"$text"');
+        expect(container.read(firstNameProvider), 'Alex');
+        await tester.pumpWidget(const SizedBox());
+      }
+    });
+
+    testWidgets('Batch 8: tapping the barrier, outside the dialog, closes '
+        'without saving the edit or changing anything, and never clears the '
+        'name', (tester) async {
+      final (container, prefs) = await _pumpEditor(
+        tester,
+        prefsValues: {...otherPrefs, firstNameKey: 'Alex'},
+      );
+      final before = others(prefs);
+      await tester.enterText(find.byType(TextField), 'Bob');
+      await tester.pump();
+      // The dialog's surface, its Material, does not cover the tapped point.
+      final surface = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(AlertDialog),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      expect(surface.contains(const Offset(4, 4)), isFalse);
+      await tester.tapAt(const Offset(4, 4));
+      await tester.pumpAndSettle();
+      expect(find.byType(FirstNameEditor), findsNothing);
+      expect(prefs.getString(firstNameKey), 'Alex');
+      expect(container.read(firstNameProvider), 'Alex');
+      expect(others(prefs), before);
+    });
   });
 
   group('accessibility is unchanged', () {
@@ -760,6 +1019,18 @@ void main() {
             reason: action,
           );
         }
+        // Batch 8: the barrier is its own node, outside the dialog, read as
+        // "Cancel" once, with tap and dismiss and no button role; the
+        // visible Cancel is the only "Cancel" text.
+        expect(labels.where((l) => l == cancel), hasLength(2));
+        expect(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.text(cancel),
+          ),
+          findsOneWidget,
+        );
+        _expectBarrier(tester, cancel);
         await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
         await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
         semantics.dispose();
@@ -795,20 +1066,7 @@ void main() {
           hasTapAction: false,
         ),
       );
-      final barrier = find
-          .bySemanticsLabel('Cancel')
-          .evaluate()
-          .where(
-            (e) => find
-                .ancestor(
-                  of: find.byWidget(e.widget),
-                  matching: find.byType(AlertDialog),
-                )
-                .evaluate()
-                .isEmpty,
-          );
-      expect(barrier, hasLength(1));
-      final node = tester.getSemantics(find.byWidget(barrier.single.widget));
+      final node = _expectBarrier(tester, 'Cancel');
       node.owner!.performAction(node.id, SemanticsAction.tap);
       await tester.pumpAndSettle();
       expect(find.byType(FirstNameEditor), findsNothing);
@@ -849,16 +1107,16 @@ void main() {
         title,
         supporting,
         'First name',
-        'Cancel',
+        _cancelFixture,
         _saveFixture,
-        'Cancel',
+        _barrierFixture,
       ]);
       semantics.dispose();
     });
 
     testWidgets('a saved name: each action shows and is read as its own '
-        'key’s words, on its own button; Cancel and the barrier keep their '
-        'English', (tester) async {
+        'key’s words, on its own button; since Batch 8 Cancel and the '
+        'barrier are read as their own two keys’ words too', (tester) async {
       final semantics = tester.ensureSemantics();
       await _pumpEditor(
         tester,
@@ -872,7 +1130,8 @@ void main() {
       expect(inDialog(_saveFixture), findsOneWidget);
       expect(inDialog(removeName), findsNothing);
       expect(inDialog(save), findsNothing);
-      expect(inDialog('Cancel'), findsOneWidget);
+      expect(inDialog(_cancelFixture), findsOneWidget);
+      expect(find.text(cancel), findsNothing);
       // Save is the dialog's last action; Remove name is the quiet button in
       // its content, under the field.
       final alert = tester.widget<AlertDialog>(dialog);
@@ -894,11 +1153,11 @@ void main() {
         supporting,
         'First name',
         _removeFixture,
-        'Cancel',
+        _cancelFixture,
         _saveFixture,
-        'Cancel',
+        _barrierFixture,
       ]);
-      for (final label in [_removeFixture, _saveFixture]) {
+      for (final label in [_removeFixture, _cancelFixture, _saveFixture]) {
         expect(
           tester.getSemantics(
             find.ancestor(
@@ -949,6 +1208,148 @@ void main() {
       expect(container.read(firstNameProvider), 'Zoë');
     });
 
+    testWidgets('Batch 8: the visible Cancel is the first action, shows and '
+        'is read as its own key’s words, is enabled, and is never the '
+        'barrier’s words', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await _pumpEditor(
+        tester,
+        delegates: _markedDelegates,
+        prefsValues: {firstNameKey: 'Alex'},
+      );
+      final dialog = find.byType(AlertDialog);
+      final actions = tester
+          .widget<AlertDialog>(dialog)
+          .actions!
+          .cast<TextButton>();
+      expect(actions, hasLength(2));
+      expect((actions.first.child! as Text).data, _cancelFixture);
+      expect(actions.first.onPressed, isNotNull);
+      expect(
+        find.descendant(of: dialog, matching: find.text(_cancelFixture)),
+        findsOneWidget,
+      );
+      // The barrier's words are never shown as text, anywhere.
+      expect(find.text(_barrierFixture), findsNothing);
+      expect(find.text(cancel), findsNothing);
+      expect(
+        tester.getSemantics(
+          find.ancestor(
+            of: find.text(_cancelFixture),
+            matching: find.byType(TextButton),
+          ),
+        ),
+        isSemantics(
+          label: _cancelFixture,
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasTapAction: true,
+          hasFocusAction: true,
+        ),
+      );
+      final labels = _labelsInTraversalOrder(
+        tester.getSemantics(find.text(title)),
+      );
+      expect(labels.where((l) => l == _cancelFixture), hasLength(1));
+      expect(labels.where((l) => l == _barrierFixture), hasLength(1));
+      expect(labels, isNot(contains(cancel)));
+      semantics.dispose();
+    });
+
+    testWidgets('Batch 8: the barrier is read as its own key’s words, on its '
+        'own node outside the dialog, read last, with tap and dismiss, and '
+        'never the button’s words', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await _pumpEditor(tester, delegates: _markedDelegates);
+      final node = _expectBarrier(tester, _barrierFixture);
+      expect(node.label, _barrierFixture);
+      expect(node.label, isNot(_cancelFixture));
+      // The button's words are not on any node outside the dialog.
+      expect(
+        find
+            .bySemanticsLabel(_cancelFixture)
+            .evaluate()
+            .where(
+              (e) => find
+                  .ancestor(
+                    of: find.byWidget(e.widget),
+                    matching: find.byType(AlertDialog),
+                  )
+                  .evaluate()
+                  .isEmpty,
+            ),
+        isEmpty,
+      );
+      semantics.dispose();
+    });
+
+    testWidgets('Batch 8: the marked Cancel still closes without saving the '
+        'edit, and without clearing the name', (tester) async {
+      final (container, prefs) = await _pumpEditor(
+        tester,
+        delegates: _markedDelegates,
+        prefsValues: {firstNameKey: 'Alex', 'theme_mode_v1': 'dark'},
+      );
+      await tester.enterText(find.byType(TextField), 'Bob');
+      await tester.pump();
+      await tester.tap(find.text(_cancelFixture));
+      await tester.pumpAndSettle();
+      expect(find.byType(FirstNameEditor), findsNothing);
+      expect(prefs.getString(firstNameKey), 'Alex');
+      expect(container.read(firstNameProvider), 'Alex');
+      expect(prefs.getString('theme_mode_v1'), 'dark');
+    });
+
+    for (final action in [SemanticsAction.dismiss, SemanticsAction.tap]) {
+      testWidgets('Batch 8: activating the marked barrier (${action.name}) '
+          'closes without saving the edit, and without clearing the name', (
+        tester,
+      ) async {
+        final semantics = tester.ensureSemantics();
+        final (container, prefs) = await _pumpEditor(
+          tester,
+          delegates: _markedDelegates,
+          prefsValues: {firstNameKey: 'Alex', 'theme_mode_v1': 'dark'},
+        );
+        await tester.enterText(find.byType(TextField), 'Bob');
+        await tester.pump();
+        final node = _expectBarrier(tester, _barrierFixture);
+        node.owner!.performAction(node.id, action);
+        await tester.pumpAndSettle();
+        expect(find.byType(FirstNameEditor), findsNothing);
+        expect(prefs.getString(firstNameKey), 'Alex');
+        expect(container.read(firstNameProvider), 'Alex');
+        expect(prefs.getString('theme_mode_v1'), 'dark');
+        semantics.dispose();
+      });
+    }
+
+    testWidgets('Batch 8: at 2.0x with no saved name, the two Cancel owners '
+        'keep their own words and places; touch targets still pass', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await _pumpEditor(tester, delegates: _markedDelegates, textScale: 2.0);
+      expect(tester.takeException(), isNull);
+      expect(_labelsInTraversalOrder(tester.getSemantics(find.text(title))), [
+        'Alert',
+        title,
+        supporting,
+        'First name',
+        _cancelFixture,
+        _saveFixture,
+        _barrierFixture,
+      ]);
+      expect(_button(tester, _cancelFixture).onPressed, isNotNull);
+      expect(_button(tester, _saveFixture).onPressed, isNull);
+      _expectBarrier(tester, _barrierFixture);
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      semantics.dispose();
+    });
+
     testWidgets('opened from the Personal name row: the editor shows the '
         'marked actions; the row itself shows neither', (tester) async {
       await _pumpCard(tester, delegates: _markedDelegates);
@@ -959,6 +1360,28 @@ void main() {
       expect(find.text(_saveFixture), findsOneWidget);
       expect(find.text(_removeFixture), findsNothing);
       expect(find.text(save), findsNothing);
+      // Batch 8: opened from the row, the editor's Cancel is still its own.
+      expect(find.text(_cancelFixture), findsOneWidget);
+      expect(find.text(cancel), findsNothing);
+    });
+
+    testWidgets('Batch 8: opened from the Personal name row, the barrier is '
+        'read as its own key’s words, from the row’s own context', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await _pumpCard(tester, delegates: _markedDelegates);
+      await tester.tap(find.byKey(const ValueKey('you.name')));
+      await tester.pumpAndSettle();
+      // Under the router the barrier is read first, before the dialog, in
+      // English too and before Batch 8 (evidence: card_traversal_*.txt);
+      // only its words changed owner.
+      final node = _expectBarrier(tester, _barrierFixture, last: false);
+      final labels = _labelsInTraversalOrder(node);
+      expect(labels.where((l) => l == _barrierFixture), hasLength(1));
+      expect(labels.where((l) => l == _cancelFixture), hasLength(1));
+      expect(labels, isNot(contains(cancel)));
+      semantics.dispose();
     });
 
     testWidgets('the first-use question reads neither key: its Continue and '
@@ -987,15 +1410,23 @@ const _deviceLocales = [
 
 const _removeFixture = '[fixture] remove action';
 const _saveFixture = '[fixture] save action';
+const _cancelFixture = '[fixture] cancel button';
+const _barrierFixture = '[fixture] dismiss barrier';
 
-/// THIRTY's English catalogue with the editor's two action labels replaced
-/// by distinct `[fixture]` markers — not product copy. A button reading the
-/// other's key, or keeping an English literal, shows the wrong words.
+/// THIRTY's English catalogue with the editor's two action labels (Batch 7)
+/// and its Cancel button and barrier label (Batch 8) replaced by distinct
+/// `[fixture]` markers — not product copy. A button or barrier reading
+/// another's key, or keeping an English literal, shows or speaks the wrong
+/// words.
 class _Marked extends AppLocalizationsEn {
   @override
   String get firstNameEditorRemoveNameAction => _removeFixture;
   @override
   String get firstNameEditorSaveAction => _saveFixture;
+  @override
+  String get firstNameEditorCancelAction => _cancelFixture;
+  @override
+  String get firstNameEditorDismissBarrierLabel => _barrierFixture;
 }
 
 class _MarkedDelegate extends LocalizationsDelegate<AppLocalizations> {
@@ -1014,6 +1445,79 @@ const _markedDelegates = <LocalizationsDelegate<Object?>>[
   GlobalWidgetsLocalizations.delegate,
   GlobalCupertinoLocalizations.delegate,
 ];
+
+/// The dialog barrier's own semantics node, found by [label]: exactly one
+/// node with that label whose widget is outside the AlertDialog and inside
+/// the route's ModalBarrier. It is not a button, covers the screen, offers
+/// tap and dismiss, and is read [last] (under a plain host page) or first
+/// (under a router, as You hosts it: the recorded b1dea377 order).
+SemanticsNode _expectBarrier(
+  WidgetTester tester,
+  String label, {
+  bool last = true,
+}) {
+  final outside = find
+      .bySemanticsLabel(label)
+      .evaluate()
+      .where(
+        (e) => find
+            .ancestor(
+              of: find.byWidget(e.widget),
+              matching: find.byType(AlertDialog),
+            )
+            .evaluate()
+            .isEmpty,
+      )
+      .toList();
+  expect(outside, hasLength(1), reason: 'one "$label" outside the dialog');
+  final widget = find.byWidget(outside.single.widget);
+  // The route wraps its ModalBarrier in the Semantics that sorts it last,
+  // so the labelled node's widget is the barrier's wrapper (or inside it).
+  // (Under a router, the page route's own, unlabelled barrier can also be
+  // in range, so this asks for at least one.)
+  expect(
+    find
+            .ancestor(of: widget, matching: find.byType(ModalBarrier))
+            .evaluate()
+            .length +
+        find
+            .descendant(of: widget, matching: find.byType(ModalBarrier))
+            .evaluate()
+            .length,
+    greaterThanOrEqualTo(1),
+    reason: '"$label" is the modal barrier’s',
+  );
+  final node = tester.getSemantics(widget);
+  expect(
+    node,
+    isSemantics(
+      label: label,
+      isButton: false,
+      hasTapAction: true,
+      hasDismissAction: true,
+    ),
+  );
+  final data = node.getSemanticsData();
+  expect(data.hasAction(SemanticsAction.tap), isTrue);
+  expect(data.hasAction(SemanticsAction.dismiss), isTrue);
+  final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+  expect(node.rect.size, screen, reason: 'the barrier covers the screen');
+  final labels = _labelsInTraversalOrder(node);
+  expect(
+    last ? labels.last : labels.first,
+    label,
+    reason: last ? 'the barrier is read last' : 'the barrier is read first',
+  );
+  expect(labels.where((l) => l == label).length, lessThanOrEqualTo(2));
+  // The barrier's node is not inside the dialog's semantics subtree.
+  final dialogNode = tester.getSemantics(find.byType(FirstNameEditor));
+  var parent = node.parent;
+  while (parent != null) {
+    expect(parent, isNot(same(dialogNode)), reason: 'outside the dialog');
+    parent = parent.parent;
+  }
+  return node;
+}
 
 TextButton _button(WidgetTester tester, String label) => tester.widget(
   find.ancestor(of: find.text(label), matching: find.byType(TextButton)),

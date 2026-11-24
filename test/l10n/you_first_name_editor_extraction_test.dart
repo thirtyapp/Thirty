@@ -30,7 +30,8 @@ import '../features/b8/b8_review_pack_test.dart' show fnv64;
 /// words but a different owner. The editor's field label, length message,
 /// Cancel button, barrier label, storage and validation are unchanged and
 /// out of this batch; so is the first-use question. (Its Remove name and
-/// Save labels moved to their own keys in Batch 7:
+/// Save labels moved to their own keys in Batch 7, and its Cancel button
+/// and barrier label to two more in Batch 8:
 /// you_first_name_editor_actions_extraction_test.dart.) The person's first
 /// name is user data: it is never in the catalogue, never translated, and
 /// shown and stored exactly as entered (trimmed).
@@ -97,8 +98,9 @@ void main() {
       }
     });
 
-    test('is exactly twenty-two messages: the accepted eighteen unchanged '
-        'and first, then the two in dialog order; only Batch 7 follows', () {
+    test('is exactly twenty-four messages: the accepted eighteen unchanged '
+        'and first, then the two in dialog order; only Batch 7, then Batch '
+        '8, follow', () {
       final c = arb();
       final keys = [
         for (final k in c.keys)
@@ -107,12 +109,15 @@ void main() {
       expect(keys.take(18).toList(), accepted.keys.toList());
       expect(keys.skip(18).take(2).toList(), batch6.keys.toList());
       // Only Batch 7's two authorized keys, the editor's Remove name and
-      // Save labels, follow (you_first_name_editor_actions_extraction_test).
+      // Save labels, then Batch 8's two, its Cancel button and its barrier
+      // label, follow (you_first_name_editor_actions_extraction_test).
       expect(keys.skip(20).toList(), [
         'firstNameEditorRemoveNameAction',
         'firstNameEditorSaveAction',
+        'firstNameEditorCancelAction',
+        'firstNameEditorDismissBarrierLabel',
       ]);
-      expect(keys, hasLength(22));
+      expect(keys, hasLength(24));
       for (final MapEntry(:key, :value) in accepted.entries) {
         expect(c[key], value, reason: key);
       }
@@ -302,14 +307,18 @@ void main() {
           '          ),',
         ),
       );
-      // Only those two catalogue reads for the header, then Batch 7's two
-      // action labels (once each, in that order), and never the row's keys.
+      // Batch 8's barrier label comes first (showFirstNameEditor reads it
+      // from the caller's context); then only those two catalogue reads for
+      // the header, then Batch 7's Remove name, Batch 8's Cancel and Batch
+      // 7's Save (once each, in that order), and never the row's keys.
       expect(
         RegExp(r'\bl10n\.(\w+)').allMatches(editor).map((m) => m[1]).toList(),
         [
+          'firstNameEditorDismissBarrierLabel',
           'firstNameEditorTitle',
           'firstNameEditorSupporting',
           'firstNameEditorRemoveNameAction',
+          'firstNameEditorCancelAction',
           'firstNameEditorSaveAction',
         ],
       );
@@ -330,7 +339,9 @@ void main() {
       for (final line in [
         'Future<void> showFirstNameEditor(BuildContext context) => '
             'showDialog<void>(',
-        "barrierLabel: 'Cancel',",
+        // Since Batch 8 the barrier label and the Cancel label come from
+        // their own keys; the dialog and the button are unchanged.
+        'barrierLabel: context.l10n.firstNameEditorDismissBarrierLabel,',
         'builder: (_) => const FirstNameEditor(),',
         'const FirstNameEditor({super.key});',
         "static const fieldLabel = 'First name';",
@@ -361,18 +372,19 @@ void main() {
         // own keys; their buttons, conditions and callbacks are unchanged.
         'onPressed: _remove,',
         'child: Text(l10n.firstNameEditorRemoveNameAction),',
-        "child: const Text('Cancel'),",
+        'child: Text(l10n.firstNameEditorCancelAction),',
         'onPressed: _canSave ? _save : null,',
         'child: Text(l10n.firstNameEditorSaveAction),',
       ]) {
         expect(editor, contains(line), reason: line);
       }
-      // No English fallback for the two actions.
+      // No English fallback for the actions or the barrier.
       expect(editor, isNot(contains("'Remove name'")));
       expect(editor, isNot(contains("'Save'")));
+      expect(editor, isNot(contains("'Cancel'")));
       // Button order: Cancel, then Save.
       expect(
-        editor.indexOf("const Text('Cancel')"),
+        editor.indexOf('Text(l10n.firstNameEditorCancelAction)'),
         lessThan(editor.indexOf('Text(l10n.firstNameEditorSaveAction)')),
       );
     });
