@@ -11,6 +11,92 @@
 
 Where any older THIRTY document conflicts with this contract, **this contract is authoritative** (see [Authority](#authority)).
 
+> **Amendment 4 — English-first initial release and deferred multilingual expansion (founder decision 2026-11-24).**
+>
+> The founder approved an English-first release strategy. It changes the order of delivery. It does **not** reduce the approved product's completeness, safety, quality or commercial obligations. This amendment is the operative rule. The decision record [THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md](THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md) holds the rationale and traceability; it adds no rule and does not compete with this text. Approval of this amendment is not implementation.
+>
+> - **Precedence (narrow).** Amendment 4 supersedes Amendment 3 **only** on these six points:
+>   1. the number of languages required at the initial T2 pre-release;
+>   2. the number of languages required at the initial T3 public release;
+>   3. when non-English Premium voice production is scheduled for the first release;
+>   4. when non-English store listings are scheduled for the first release;
+>   5. the first-release per-locale gating of the five deferred languages;
+>   6. the language switching and non-English rollout sequencing derived from them.
+>
+>   **Every other principle of Amendment 3 stays binding**, for English now and for each further language when it is activated. That includes: English as the canonical source; what "complete" means (native review; machine translation never qualifies); per-locale gates; full Free/Premium parity with truthful copy; choosing a language is Free; the Premium voice rules (exactly one spoken language per Circle, no clip that differs from the screen, no recording replaced by another language's, the frozen English pack); zero unapproved hard-coded user-facing text; the fallback rules; locale-independent identities and immutable stored records; "Circle" under evaluation; local-first with no runtime machine translation or generated speech.
+>
+>   Amendment 3 stays in this contract exactly as decided on 2026-11-12; it is not withdrawn. ADR-025 and ADR-026 are **not** superseded as a whole. Only ADR-025's T2/T3 release-locale set is a superseded initial-rollout requirement, as its dated note says.
+> - **Initial release language: English (`en`).** It is the complete language of the initial T2 and T3.
+>   - Only English is enabled at runtime.
+>   - A device set to any other language starts and works normally in English, through the existing fallback (ADR-026 gate G-5C).
+>   - This amendment introduces no language selector.
+>   - Whenever further languages are authorized, choosing a language is Free and never Premium.
+> - **Test tiers.** The existing taxonomy stays; there is **no T4**.
+>   - **T0, engineering testing:** automated tests, developer builds, emulator, QA and device smoke tests. Passing T0 is never, on its own, evidence of release readiness.
+>   - **T1, controlled pilots:** bounded signed tests of a specific feature or condition. A billing, onboarding or other pilot is **never** a substitute for the complete product's T2.
+>   - **T2, full-product Google Play pre-release:** a complete approved **English** release candidate, carrying the full Free and Premium contract, tested through Google Play's appropriate closed-testing process. Every applicable T2 gate stays mandatory: functional, safety, privacy, billing, accessibility, English audio, consent, analytics, security and device verification.
+>   - **T3, first public commercial release:** the English product, only after:
+>     - successful T2 evidence;
+>     - every remaining commercial and release gate;
+>     - a successful final independent release audit (AUD-1, on the English release candidate);
+>     - explicit founder authorization.
+>   - **Future language updates (`L-UPD`):** a separately governed post-launch rollout stream, **not a test tier**. Each language has its own release brief, gates, implementation approval and final acceptance.
+> - **Nothing is removed from the launch product.** English-first keeps:
+>   - Free: the core Circle experience, user-owned kept Circles, History and the calendar, export and Delete, Memory and the existing accessibility;
+>   - Premium: the Personal Guided Circle, the three Circle Plans, the six evidence-aware Insight families and the approved Premium voice guidance (the 180 bundled English files: the frozen 172 plus 8 framing files);
+>   - lapse and resume with retained ownership;
+>   - local-first behaviour, no mandatory account, and no runtime generative guidance or machine translation.
+>
+>   Premium deepens the experience and never gates user-owned data.
+> - **No release gate is waived.** All of these stay as they are:
+>   - genuine onboarding; first-session quality; the CD-1 content-depth decision;
+>   - SAF-1 and G-07 safety review and clearance;
+>   - real billing and restore; the subscription lifecycle; truthful Premium offers;
+>   - privacy policy, Data Safety, consent-gated measurement and security;
+>   - signed-device validation; backup and device transfer (A2-07); release signing; store readiness;
+>   - the independent final audit and explicit founder approval.
+>
+>   The initial release must be commercially complete, not merely technically executable.
+> - **English obligations.** The release-blocking English obligations are:
+>   - complete approved English user-facing copy, a T2 obligation;
+>   - the English Premium guidance, a T2 obligation;
+>   - the English store listing, a T3 obligation.
+>
+>   Extracting part of the English copy is not completion.
+> - **Deferred, not cancelled: French (`fr`), Dutch (`nl`), European Spanish (`es-ES`), German (`de`) and Italian (`it`).**
+>   - No delivery order, guaranteed release date, target country list, translation vendor, fixed voice count, budget or launch price is set.
+>   - Their sequencing depends on separately approved evidence: product, demand, quality and economics.
+> - **Before any further language is activated or shipped,** all of the following are required:
+>   - complete approved locale-specific user-facing copy;
+>   - full Free/Premium feature parity;
+>   - native linguistic review;
+>   - accessibility and layout verification;
+>   - correct date, time and ICU behaviour;
+>   - commercially truthful subscriptions and offers;
+>   - approved native-quality Premium spoken guidance in that language;
+>   - voice script and on-screen language that match;
+>   - no cross-language voice substitution;
+>   - correct licensing and production manifests;
+>   - legacy English records preserved as saved;
+>   - safe locale identity and persistent records, including ADR-026 Part B / D-L-5c where required and gate G-5C;
+>   - D-L-8 and the other applicable localization decisions;
+>   - a separate founder rollout authorization.
+>
+>   A missing voice pack never makes a language commercially complete. Unvoiced Premium is **not** an equivalent alternative to the approved spoken guidance. A clearly scoped T1 pilot may run without voices, as Amendment 3 permits. Any material relaxation of per-language Premium parity needs a later, explicit amendment to this contract.
+> - **December 2026** is a planning target only. It is not:
+>   - a guaranteed public-release date;
+>   - an approved store publication date;
+>   - a waiver of missing gates;
+>   - evidence of readiness.
+>
+>   If the gates cannot be met in December, quality is kept and publication waits.
+> - **Unchanged holds.** This amendment changes no code, test, journal schema, export format or persisted record. These all stay as they are:
+>   - ADR-026 Part B (D-L-5c) on HOLD; gate G-5C active (no non-English release set against a real store);
+>   - D-L-6 to D-L-9 pending, including D-L-8 (OPEN);
+>   - ADR-027 not drafted;
+>   - public launch PAUSED.
+> - **Future opportunities** are indexed, without any authorization, in [THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md](../strategy/THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md). That index never adds to or removes from this contract.
+
 > **Amendment 3 — Six launch languages (founder decision 2026-11-12; direction first given 2026-11-03).** This amendment adds requirements and removes none. Where it conflicts with an earlier statement that the first release ships in one language — including "One initial platform/language" in the Monetization Freeze (`RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md`, release-maintenance row) — **Amendment 3 wins from 2026-11-12**; the earlier text is kept as it was decided. It is to be realised by ADR-025 (localization architecture), ADR-026 (language-safe persistence) and ADR-027 (multilingual guidance audio). Each is *Proposed* until the founder accepts it; none is accepted at the date of this amendment. Approval of this amendment is not implementation.
 >
 > - **Languages.** THIRTY's full-product pre-release (T2) and its commercial launch (T3) are complete in **English (en), French (fr), Dutch (nl), European Spanish (es-ES), German (de) and Italian (it)**. English is the canonical source of approved content.

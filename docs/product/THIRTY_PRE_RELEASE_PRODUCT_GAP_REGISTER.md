@@ -10,6 +10,11 @@
 - Every founder decision in §7 stays **OPEN** until it is decided and recorded.
 - **Amended 2026-11-12 (founder decisions G-02: D-L-1, D-L-5 Part A, D-ON-3, D-V-3, Q-1):** decision records only, in §2 G-01, §2 G-02 and §7. Amendment 3 is now in the contract; ADR-025 is accepted within its scope; ADR-026 Part A is approved as principles and its Part B is on HOLD.
 - **Amended 2026-11-12 (founder decision D-SAF-1, review strategy only):** the SAF-1 reviewer dependency, the G-07 *Reviewer route* and the GDPR Art. 9 carry-forward to PRV-1 and MEA-1. No activity is cleared. The FROZEN contract is not amended.
+- **Amended 2026-11-24 (founder decision: English-first initial release; [V2 Contract Amendment 4](PRODUCT_V2_CONTRACT.md#status)).**
+  - **Sections changed:** §1, G-01 (language step and acceptance 6), G-02, G-03, G-04 R-d, G-05, CD-1, G-07 timing, §4 STO-1, the new §4a (release-gate reconciliation), §5, §6 and §7 now plan an **English** T2/T3.
+  - **The five other languages** (fr, nl, es-ES, de, it) are deferred to separately governed language updates (`L-UPD`). They are not cancelled, and they are indexed in the [Future Opportunities Register](../strategy/THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md) (LANG-01…07).
+  - **Not changed:** no non-language gate is removed or demoted. The 2026-11-12 decision records stay exactly as they were recorded, each with a dated Amendment 4 note beside it.
+  - **Rationale:** [THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md](THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md).
 
 **Authority and scope:**
 - This is the canonical *planning* register for what THIRTY still needs before a full-product Google Play pre-release and a commercial launch.
@@ -28,6 +33,7 @@
 | Phase E | HOLD |
 | Commercial release | NOT AUTHORIZED |
 | Deployment | NONE |
+| English-first amendment baseline (2026-11-24) | `d8cd676518f5713e1c5417382a71eed892ff640b` (tree `f308b8516db850f8e28d1d72cbbc3c3fe317f29e`), G-02 Batch 8, pushed. The English ARB catalogue holds **24 messages**, which is **not** complete English extraction. The status lines above stay as verified at `c83543d5`; the live status is in the tracker |
 
 **Evidence labels:**
 
@@ -45,25 +51,30 @@
 
 ## 1. Product objective and testing sequence (FOUNDER)
 
-1. Build the complete pre-release product, Free and Premium.
-2. Complete genuine onboarding.
-3. Complete all six launch languages: English, French, Dutch, Spanish (es-ES), German, Italian.
-4. Complete the approved multilingual Premium voice experience.
-5. Prepare the commercial systems, safety, privacy and measurement.
-6. Test the **complete** product through Google Play.
-7. Resolve the release blockers that testing demonstrates.
-8. Launch only on explicit founder authorization.
+**Operative objective (amended 2026-11-24, Amendment 4: English-first):**
 
-**Test tiers.** These names are used throughout; only T2 is the full-product pre-release.
+1. Complete the approved Free/Premium product.
+2. Complete genuine onboarding.
+3. Complete English user-facing localization and English audio acceptance.
+4. Prove billing, safety, privacy, measurement and commercial readiness.
+5. Test the complete **English** product through Google Play (T2).
+6. Resolve the findings that testing demonstrates.
+7. Launch (T3) only after the final founder-approved release gates.
+8. Add further languages through separately validated updates (`L-UPD`).
+
+*Record, 2026-11-11 (superseded 2026-11-24 on language scheduling only):* items 3 and 4 previously read "Complete all six launch languages: English, French, Dutch, Spanish (es-ES), German, Italian" and "Complete the approved multilingual Premium voice experience". Every other item is carried into the list above.
+
+**Test tiers.** These names are used throughout; only T2 is the full-product pre-release. There is no T4.
 
 | Tier | What it is | Who | What it may contain | What it is *not* |
 |---|---|---|---|---|
 | **T0: engineering tests** | Automated tests, emulator, QA and debug builds, S25 device checks | engineering, founder | anything, including work in progress | never evidence of product readiness on its own |
-| **T1: controlled pilot builds** | Signed builds for a bounded purpose (e.g. one language end to end, the onboarding flow, billing in the internal track with licence testers) | founder and named reviewers only | a subset of the product | **never a pre-release**, never "complete product" testing |
-| **T2: full-product Play pre-release** | Google Play closed testing of the release candidate | external testers | all six languages, onboarding, the approved voice experience, real billing, measurement, privacy | not a public launch |
-| **T3: commercial launch** | Production release | public | T2's release candidate after its blockers are resolved | — |
+| **T1: controlled pilot builds** | Signed builds for a bounded purpose (e.g. the onboarding flow, billing in the internal track with licence testers; a future-language pilot only under `L-UPD` and never against a real store while G-5C stands) | founder and named reviewers only | a subset of the product | **never a pre-release**, never "complete product" testing, never a substitute for T2 |
+| **T2: full-product Play pre-release** | Google Play closed testing of the complete release candidate | external testers | the complete approved **English** Free and Premium product: onboarding, English copy, the approved English voice experience, real billing, measurement, privacy, safety, accessibility, signed-device verification | not a public launch; not a feature pilot |
+| **T3: commercial launch** | Production release | public | T2's English release candidate after its blockers are resolved, every remaining commercial and release gate, AUD-1 and explicit founder authorization | not an automatic continuation of a successful T2 |
+| *`L-UPD`: a future language update* | *A separately governed post-launch stream, **not a test tier***. Each language has its own release brief, gates, implementation approval and final acceptance (Amendment 4) | — | one or more of fr, nl, es-ES, de, it, each complete and natively reviewed, with approved native-quality voices | never shipped as partial or unvoiced Premium |
 
-**Rule:** a two-language or partial build is never labelled a pre-release or complete-product test.
+**Rule:** a build that is partial in product scope is never labelled a pre-release or complete-product test. An English-only build is a T2 candidate only when it carries the complete approved product. *(Record, 2026-11-11: the rule read "a two-language or partial build is never labelled a pre-release or complete-product test"; the two-language case now belongs to `L-UPD`.)*
 
 ---
 
@@ -84,7 +95,7 @@
 **What is missing (IMPL):**
 - what THIRTY does, and what a Circle is;
 - first-time guidance for Start, Pause and Close;
-- a language choice;
+- a language choice *(from 2026-11-24 this is future scope, `L-UPD`: the initial release is English-only)*;
 - an onboarding visual language;
 - defined behaviour for existing, reinstalling and returning users beyond the name flag.
 
@@ -110,6 +121,7 @@
 | 6 | **Premium introduction** (existing): the one invitation on a later day, plus the calm previews in Plans and Insights | optional | open the offer or ignore it | existing | Premium | existing |
 
 - **Language (step 1):** detected from the system locale. An unsupported locale falls back to English, and the user can change the language at any time in You → Preferences. Language is never a separate required screen.
+  - *Amendment 4 (2026-11-24):* at T2/T3 only English is enabled. The welcome therefore shows **no** language control, and no language setting exists (ADR-026 G-5C). The language control in step 1 and its stored override apply only once a further language is activated under `L-UPD`. Everything else in this journey is unchanged.
 - **Interruption and restart:**
   - a kill before step 1 completes shows the welcome again;
   - after step 1, the name question;
@@ -188,11 +200,35 @@
 3. Existing-user fixtures never see the welcome.
 4. Zero bytes change in the user stores during onboarding.
 5. TalkBack and 200 % text pass on the S25.
-6. All copy is approved in all six languages.
+6. All onboarding copy is approved in **English** for T2 (Amendment 4), and in each further language before that language's `L-UPD` release. *(Record, 2026-11-11: "All copy is approved in all six languages.")*
 
-### G-02: All six launch languages
+### G-02: Launch copy coverage — English for T2/T3; five languages deferred to `L-UPD`
 
-**Authority:**
+*Heading until 2026-11-24: "G-02: All six launch languages".*
+
+**Operative scope (Amendment 4, 2026-11-24):**
+- **Mandatory for T2 (English):**
+  - English launch copy coverage of every user-facing surface;
+  - English ARB extraction and review;
+  - English accessibility copy (labels, hints, tooltips, announcements);
+  - English notification and native (Android) copy;
+  - English source-content coverage (activities, elements, Plans and StageBriefs, Insights, offer and billing, errors and recovery, the L-1 texts, privacy);
+  - the **English copy freeze**, which is also the English voice-script freeze.
+
+  The release requirement of **zero unapproved hard-coded user-facing text** (Amendment 3, still binding) applies to the English release.
+- **Status at `d8cd6765` (2026-11-24):**
+  - The English ARB catalogue holds **24 messages**, from G-02 English Batches 1–8, all on the You surfaces.
+  - This is **not** complete English extraction. The G-HC hard-coded copy baseline still lists the remaining literals, and English extraction remains open.
+  - Batch 9 is not started and not authorized.
+- **Deferred to `L-UPD` (not cancelled):**
+  - French, Dutch, European Spanish, German and Italian localization (L-CNT, L-QA per language);
+  - the language choice (L-SEL);
+  - per-language glossary decisions (D-L-3) and reviewers (D-L-4);
+  - each language's per-locale gate.
+
+  The workstreams and rules below stay recorded for that future work. The future languages are indexed as LANG-01…07 in the [Future Opportunities Register](../strategy/THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md).
+
+**Authority (record as of 2026-11-11 and 2026-11-12; language scheduling superseded by Amendment 4 on 2026-11-24):**
 - **FOUNDER** direction (2026-11-03): English, French, Dutch, Spanish (es-ES), German and Italian, complete at the first commercial launch, with full Free/Premium parity and zero unapproved hard-coded user-facing text.
 - **Update 2026-11-12:** the corrected six-language amendment is now **Amendment 3** of the contract (D-L-1a), ADR-025 is accepted within its scope (D-L-1c) and ADR-026 Part A is approved as principles (D-L-5); ADR-027 and ADR-028 are not drafted or accepted. The paragraph below is the record as of 2026-11-11.
 - **Not yet FROZEN.** The draft amendment `artifacts/launch_six_language_2026-11-03/DECISION_AMENDMENT_2026-11-03_DRAFT.md` (founder working tree, untracked) is **not applied**. The draft ADRs **025 (localization architecture), 026 (language-safe persistence), 027 (multilingual audio) and 028 (analytics v2)** are described in `MULTILINGUAL_ARCHITECTURE_CORRECTION_AND_FIRST_GATE.md` §2 and **do not exist as accepted ADRs**.
@@ -220,6 +256,17 @@
 | L-CNT | Content localization: all UI, activity and element content, Plans and StageBriefs, Insights, offer and billing, errors and recovery, L-1 texts, privacy, accessibility labels, notifications | complete per locale |
 | L-QA | Human review: a six-language glossary; native review per language (tone per Brand Book, address forms vous/je/tú/du/tu); health-claim and safety-wording review; layout QA at 200 % text for German, French and Dutch length | a native reviewer signs off each language, then the founder approves |
 
+**Where each workstream now belongs (Amendment 4, 2026-11-24):**
+
+| ID | Initial English T2/T3 | Each future language (`L-UPD`) |
+|---|---|---|
+| L-INF | **T2.** The English slice is implemented (L-INF); the remaining guards apply before the English copy freeze (ADR-025 §6) | G-SRC and per-key review status, once a non-English catalogue exists |
+| L-SEL | not built; no language control at T2/T3 | **required** before the first further language ships |
+| L-ID | English-only records under G-5C. Locale-independent IDs, which already hold, stay binding | persisted language identity: D-L-5c, ADR-026 Part B, before any non-English build against a real store |
+| L-LEG | the legacy rule is binding but trivially met: every record is English | **required:** legacy English shown as saved in every language |
+| L-CNT | **T2: English content coverage** (above) | the full content per language |
+| L-QA | **T2: English copy review** (Brand Book tone, health-claim and safety wording) | the glossary, native review and layout QA per language |
+
 **Frozen behaviour localization must not change:**
 - activity, element, Plan, stage, Insight and voice IDs;
 - kept-Circle ownership and the immutable wording snapshot (R4/R6);
@@ -230,12 +277,29 @@
 
 **Active Circle during a language switch (PROPOSED):** the running Circle keeps its language until Close, and the switch applies from the next screen. There is never a mixed-language spoken session.
 
-**Glossary decisions still open:**
+**Glossary decisions still open** *(Amendment 4: decided per language at its `L-UPD`; not needed for the English release)*:
 - whether to keep "Circle" untranslated (under evaluation; pronunciation risk in es-ES and it), or use Cercle / Kring / Círculo / Kreis / Cerchio;
 - Plans in Italian (*Piano / Piani* recommended over *Percorsi*);
 - the lockup tagline and slogan per language.
 
-### G-03: Multilingual Premium voice strategy
+### G-03: Premium voice — English guidance for T2/T3; per-language voices at `L-UPD`
+
+*Heading until 2026-11-24: "G-03: Multilingual Premium voice strategy".*
+
+**Operative scope (Amendment 4, 2026-11-24):**
+- **T2 critical path (English):**
+  - The approved English pack, **172 production files + 8 framing files = 180**, keeps its identity and scope unchanged (G-AUDIO-EN).
+  - Also on the critical path:
+    - English guidance quality verification on the release candidate;
+    - voice consistency;
+    - commercially truthful offer and You copy that never promises an unavailable voice.
+- **Moved to each language's own release decision (`L-UPD`):** production and native review of the voice packs for French, Dutch, European Spanish, German and Italian.
+- **Decisions:**
+  - Options A/B/C and the recommendation of B below are **not approved**; nor is any persona model.
+  - D-V-1, D-V-2, D-V-4 and D-V-5 stay OPEN as future decisions.
+  - D-V-3's accepted rule stays binding: no mismatched spoken language and no substitute voice.
+  - **Q-1** stays the historical six-language release rule (2026-11-12). Amendment 4 changes the initial release **scheduling**, not native-quality parity. Each further language needs approved native-quality spoken guidance before it ships.
+- **Not authorized:** any audio production, pilot or spending.
 
 **Authority and fixed rules:**
 - **FROZEN:**
@@ -294,6 +358,7 @@
 - **Mismatch rule (PROPOSED).** A voiced session speaks exactly one language: the language of the words on screen.
   - A legacy English kept Circle is voiced in English, only where the fingerprints match (2026-11-03 option D-A (a)). Otherwise it runs unvoiced with the existing R6 line.
   - A language with no approved voice shows Premium as unvoiced in that language, and the offer must say so.
+  - *Clarification (Amendment 4, 2026-11-24):* this truthful unvoiced state is permitted **only** in a clearly scoped T1 pilot (Amendment 3, "Premium voice"). It never qualifies a language for commercial release. A language ships only with approved native-quality guidance, unless a later explicit contract amendment says otherwise.
 - **Not authorized:** no audio production, pilot or spending.
 
 ### G-04: First value, retention and Free/Premium viability
@@ -327,7 +392,7 @@
   | R-a | Premium can't be experienced before paying (no trial or sample), while the offer is the only sales surface | conversion |
   | R-b | Understanding (Insights) needs weeks of evidence; B8 simulations show 24–42 of 53 weeks without a new Insight | early perceived value |
   | R-c | Content depth (see CD-1) limits month-2 variety, especially More Energy | retention, churn |
-  | R-d | Guidance loses value in languages without approved voices | conversion outside English |
+  | R-d | Guidance loses value in languages without approved voices *(Amendment 4: from 2026-11-24 a post-launch risk per language; the English release has its approved voices)* | conversion outside English |
   | R-e | Monthly only | cash flow; no annual commitment option |
 - **Must stay Free:** ownership (kept Circles, History, Export, Delete), Memory, accessibility, reminders, basic trust. Moving any of these would break frozen rules and user trust.
 - **No boundary change is recommended.** The levers are commercial hypotheses: trial or introductory offer, annual plan, regional pricing (D-C-1 to D-C-3). They are decided in Phase E on evidence.
@@ -338,7 +403,7 @@
 |---|---|
 | Variable | Play service fee on subscriptions (verify the current rate); RevenueCat free up to US$2.5k monthly tracked revenue, then 1 % (RECORD, 2026-11-03) |
 | Fixed | Play developer account; telemetry and dashboard hosting (Supabase plan, about US$25/month Pro, RECORD 2026-11-03, to verify); privacy and legal pages |
-| One-off | voice production (G-03); translation and native review (G-02); safety review (SAF-1) |
+| One-off | safety review (SAF-1); English copy review; per deferred language at its `L-UPD`: voice production (G-03), translation and native review (G-02) |
 | Recurring upkeep | translation and voice regeneration for every content change, multiplied by languages × voices |
 
 ### G-05: UX and design completeness
@@ -353,7 +418,7 @@
 | Gap | Class |
 |---|---|
 | No onboarding visual language (G-01) | missing essential state |
-| Six-language layout: pill buttons, letter-spaced caps ("TODAY · 20 MIN"), the lockup tagline, the offer bullet points | genuine UX risk |
+| Six-language layout: pill buttons, letter-spaced caps ("TODAY · 20 MIN"), the lockup tagline, the offer bullet points *(Amendment 4: English layout at 200 % text stays a T2 check under DEV-1; the longer-language risk, German, French and Dutch, moves to each language's `L-UPD`)* | genuine UX risk |
 | No in-app privacy policy or support links (`you_about_card.dart`: they "appear only once real") | missing essential state |
 | Slogan and tagline: Brand Book "Your healthiest 30 minutes." vs lockup "A brighter you in small steps"; Phase E slogan decision open | founder decision |
 | L-1 surfaces have had no visual, TalkBack or device review | gap in validation evidence |
@@ -390,8 +455,8 @@ The full table is §4. Statuses there are verified against the records; old acce
 - **Structurally adequate:** no stalls, the safety gate holds, variety holds within the limits measured.
 - **Perceived adequacy is unproven:** first-session variety, repeat value over weeks, and month-2 value, especially for More Energy at ≈10 and ≈20 and Clearer Head at ≈10.
 - **The biggest single lever is SAF-1.** The safety review decides whether the four gated activities (two energy, two Paced) can be offered. **This register does not authorize ungating anything.**
-- **The second lever** is the contract's OPTIONAL additions (Daylight minutes, Screen-break reset, Reach out to someone). Each needs authoring, founder approval and translation into six languages.
-- **Ordering consequence:** any content added after translation and voice production multiplies cost. **The content-depth decision must come before the copy freeze for translation and voice scripts.**
+- **The second lever** is the contract's OPTIONAL additions (Daylight minutes, Screen-break reset, Reach out to someone). Each needs authoring and founder approval, plus English copy review and, where voiced, English voice scripts. *(Amendment 4: translation into each deferred language happens at its `L-UPD`. Until 2026-11-24 this read "translation into six languages".)*
+- **Ordering consequence:** any content added after the voice production and copy freeze multiplies cost: English recordings now, and every later language. **The content-depth decision must come before the English copy freeze, which is also the voice-script freeze.** This rule is unchanged by Amendment 4.
 
 **Gate:**
 - **Decision D-CD-1, before the copy freeze:** accept the current depth for T2, or require more (via SAF-1 and/or optional additions).
@@ -460,6 +525,7 @@ The full table is §4. Statuses there are verified against the records; old acce
 - **Timing (founder, 2026-11-11):** **every decision that changes launch content is made before the English copy freeze, and therefore before the translation and audio freezes.**
   - A cleared activity changes catalogue content, composer elements, voice scripts and translations.
   - Clearing it after the freeze would force retranslation and new recordings in six languages, so these decisions are **not** deferred until after the T2 pre-release.
+  - *Amendment 4 (2026-11-24):* at T2/T3 the freeze covers the English copy and the four English voices, and every later language multiplies the cost again. **The timing rule is unchanged:** decisions that change launch content are still made before the English copy freeze.
 - **Verification, before every external build:** each external build is checked against the review: the shipped content, the gating status and the safety wording must be exactly what the review cleared.
 - **The release record:** the formal SAF-1 record for the release gate may be completed later. It documents the review and verification above and **never substitutes for them**.
 - **Out of bounds:** future specialist apps (G-08) are **not** a reason to tighten or loosen the current app's gates, nor to add advanced content to it.
@@ -500,6 +566,7 @@ The full table is §4. Statuses there are verified against the records; old acce
 - **Canonical home (single source of truth):** the founder-approved [THIRTY_PRODUCT_FAMILY_STRATEGY.md](../strategy/THIRTY_PRODUCT_FAMILY_STRATEGY.md) (v1.1, 2026-10-07) and [THIRTY_FUTURE_RITUAL_PRODUCTS_AND_MERCHANDISE.md](../strategy/THIRTY_FUTURE_RITUAL_PRODUCTS_AND_MERCHANDISE.md) (non-binding). They already hold this direction: brand architecture, the Fit / Meditation / Yoga candidates, a cross-product pass, technical reuse, the standalone-product gate and sequencing.
   - New ecosystem decisions (for example the "THIRTY Pass" name, the KEYBRACE OS discontinuation note, KEYBRACE as an umbrella brand) go there as dated additions, with founder approval.
   - This register only points to them.
+  - *(Added 2026-11-24)* The **central index** of these and the other deferred ideas (FAM-01…05, ECO-01…05, the richer-flagship CORE items and the unratified IDEA items) is the [Future Opportunities Register](../strategy/THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md). It authorizes nothing and never pulls an idea into launch scope.
 
 ---
 
@@ -550,7 +617,7 @@ The full table is §4. Statuses there are verified against the records; old acce
 | DEV-1 | Signed-build device validation: S25 TalkBack, 200 % text, process kill, real storage, offline, performance and start-up, background voice | **PARTIAL.** D2-era S25 and TalkBack PASS (B4/B6/B7/B9-A); R8.x and L-1 automated or simulated only | tracker; `artifacts/l1_option_b_2026-11-11/LIMITATIONS_L1.md` | smoke | **required** on the T2 candidate | full matrix **required** |
 | SIG-1 | Release signing and Play App Signing | `android/key.properties` present locally; enrolment **UNKNOWN** | `android/app/build.gradle.kts` | required for the Play tracks | required | required |
 | AUD-1 | Final independent release audit, bounded to the release candidate | **NOT STARTED** | tracker release gate | — | — | **required** |
-| STO-1 | Store listing in six languages, screenshots, ASO, slogan; no "AI" positioning | **OPEN** | tracker Phase E; release gate | — | a minimal closed-test listing | **required** |
+| STO-1 | Store listing in **English** (Amendment 4; until 2026-11-24 "in six languages"), screenshots, ASO, slogan; no "AI" positioning. Each further language's listing belongs to its `L-UPD` | **OPEN** | tracker Phase E; release gate; Amendment 4 | — | a minimal closed-test listing | **required** (English) |
 | GOV-1 | The tracker reflects R8.1 → L-1 and this register | **OPEN.** The tracker log ends at R8 (2026-11-04) | CLAUDE.md §0 | required | required | required |
 
 **Not reopened (accepted or resolved):**
@@ -560,6 +627,46 @@ The full table is §4. Statuses there are verified against the records; old acce
 - the D2 audio findings (resolved 2026-11-02);
 - More Energy WEAK *as a D2 closure item*. It is reconsidered here only as a launch-acceptance question (CD-1).
 
+### 4a. Release-gate reconciliation for English-first (Amendment 4, 2026-11-24)
+
+**Rule:**
+- Only the genuinely language-specific obligations for the five deferred languages leave the initial release's critical path.
+- Every shared functionality, safety, billing, privacy, security, content-quality and commercial gate keeps the same or a stronger requirement.
+- **No gate is cleared by this amendment.**
+
+This table is a reconciliation aid. It does not replace §4 or §5.
+
+| Gate | Before (status and tier at `d8cd6765`, before Amendment 4) | After Amendment 4 | Deferred? | Why | Authority | Remaining condition |
+|---|---|---|---|---|---|---|
+| G-01 genuine onboarding | OPEN; T2 (P0) | OPEN; **T2** (P0), English copy | No | shared functionality | onboarding-principles; ADR-006/007; §2 G-01 | D-ON-1/2; acceptance 1–6 |
+| G-02 English copy | OPEN (24 ARB messages; extraction incomplete); T2 within six languages | OPEN; **T2**: complete English copy, zero unapproved hard-coded text | No | English is the launch language | Amendment 3 (no hard-coded text, still binding); Amendment 4 | English extraction, review and copy freeze |
+| G-02 fr / nl / es-ES / de / it | OPEN; T2 (P0) | **`L-UPD`**, one per language | **Yes** | language-specific | Amendment 4 | each language's own release brief and gates |
+| G-03 English guidance | 180 files FROZEN; T2 | **T2**: the 180 files unchanged; quality verification and truthful offer | No | English Premium value | Amendment 1/2; G-AUDIO-EN | release-candidate verification |
+| G-03 other voices | undecided; T2 (P0) | **`L-UPD`**, per language; native-quality is mandatory | **Yes** (schedule only) | language-specific | Amendment 4 (parity kept) | D-V-1/2/4/5; listening QA |
+| G-04 Free/Premium value | OPEN (risks R-a…R-e); T2/T3 | unchanged; R-d becomes post-launch per language | No | shared | §2 G-04; Amendment 2 | founder release review gates (tracker) |
+| G-05 UX and design | OPEN; T2 | unchanged; longer-language layout moves to `L-UPD` | Partly (longer-language layout only) | language-specific part only | §2 G-05 | DEV-1 visual pass |
+| G-06 technical/commercial | OPEN; §4 | unchanged | No | shared | §4 | as in §4 |
+| CD-1 content depth | OPEN decision; before the copy freeze (T2 prerequisite) | unchanged: **before the English copy freeze** | No | shared | §2 CD-1 | D-CD-1 |
+| SAF-1 safety | OPEN; clearances before the copy freeze; verification per external build; record T3 | unchanged | No | shared safety | FROZEN Safety gate | D-SAF-2; completed reviews |
+| G-07 proportional review | strategy approved; reviews pending | unchanged; mandatory | No | shared safety | §2 G-07 | per-activity records |
+| BIL-1 real billing | OPEN; T2 | unchanged; **T2** | No | shared commercial | ADR-017 | Play + RevenueCat on a signed build |
+| BIL-2 lifecycle | OPEN; T3 | unchanged; **T3** | No | shared commercial | tracker Phase E | evidence per case |
+| MEA-1 measurement | OPEN; T2 | unchanged; **T2** | No | shared | §3 | D-M-1; GDPR Art. 9 decision |
+| PRV-1 / PRV-2 | OPEN; T2 | unchanged; **T2** (English policy, support and declarations) | No | shared compliance | tracker Phase E | D-P-1; console forms |
+| SEC-1 | NOT STARTED; T2 subset, T3 full | unchanged | No | shared security | tracker 2026-11-01 | review report |
+| DEV-1 | PARTIAL; T2 candidate, T3 full matrix | unchanged | No | shared quality | tracker | signed-candidate device pass |
+| S-12 | **NOT RUN** (the L-INF slice's Samsung S25 physical smoke; defined in the G-02 decision package, file 09, outside the tree) | unchanged: **NOT RUN**, outstanding | No | device evidence | L-INF slice record | physical S25 run |
+| SIG-1 | enrolment UNKNOWN; T1/T2/T3 | unchanged | No | shared | `build.gradle.kts` | Play App Signing enrolment |
+| A2-07 backup/transfer | OPEN; T3 | unchanged; **T3**: decision, configuration, verification | No | shared data trust | tracker release gate | D-B; signed-release tests |
+| D-RL4 / RL-4 | HOLD; decision before T3 | unchanged: **HOLD** | No | shared data correctness | R8.1 record | founder option 1 or 2 |
+| STO-1 | OPEN; six-language listing at T3 | **English** listing at T3; each other language at its `L-UPD` | Partly (non-English listings) | language-specific part only | Amendment 4 | D-S (English wording) |
+| AUD-1 | NOT STARTED; T3 (six-language candidate) | **T3**, on the English release candidate | No | release assurance | release gate; Amendment 4 | positive bounded audit on one SHA |
+| GOV-1 | OPEN (§4) | unchanged; this amendment updates the tracker, and independent acceptance is pending | No | governance | CLAUDE.md §0 | acceptance |
+| G-5C | ACTIVE (no non-English release set against a real store) | **ACTIVE**, unchanged | No (it is the safeguard for `L-UPD`) | data safety | ADR-026 | D-L-5c decided and B-0 built |
+| D-L-5c / ADR-026 Part B | HOLD | **HOLD**, unchanged | No | data safety | ADR-026 | founder decision plus export-format decision |
+| D-L-8 | OPEN | **OPEN**, unchanged; needed before the first non-English build | No | multilingual audio continuity | ADR-025 §7.4 | founder decision |
+| D-L-6 / D-L-7 / D-L-9 | pending | pending, unchanged | No | localization decisions | ADR-025 | founder decisions |
+
 ---
 
 ## 5. Prioritized register
@@ -567,6 +674,7 @@ The full table is §4. Statuses there are verified against the records; old acce
 - **P0** = blocks the T2 full-product Play pre-release.
 - **P1** = blocks the T3 commercial launch only.
 - **P2** = may follow launch.
+- *(Amendment 4, 2026-11-24)* **`L-UPD`** is a **destination**, not a priority. It marks work that belongs to a future language's own release decision and never blocks the English T2 or T3. The P0/P1/P2 framework is unchanged.
 
 Priority is not order; see §6.
 
@@ -575,12 +683,13 @@ Priority is not order; see §6.
 | GOV-1 | Tracker and register reconciled | tracker stale after R8 | CLAUDE.md §0 | P0 | planning integrity | approval of this register | tracker states the live baseline and links the register | approve | yes | T2 |
 | CD-1 | Content-depth acceptance | 16 live; Paced absent; More Energy WEAK | contract Catalogue (optional additions); founder | P0 (decision) | first-session and month-2 value / retention, churn | SAF-1 scope; before the copy freeze | decision recorded; any additions approved and in the catalogue before translation | **D-CD-1** | yes | T2 (decision) |
 | G-01 | Onboarding journey | name question only | onboarding-principles; ADR-006/007; founder | P0 | activation, trust / conversion funnel | D-ON-1/2; L-INF for copy | §2 G-01 acceptance 1–6 | **D-ON-1, D-ON-2** | design yes; build after L-INF | T2 |
-| L-INF | Localization infrastructure | none | founder (amendment pending) | P0 | prerequisite for all localized copy | D-L-1, dependency approval | guard green; fallback; locale formats | **D-L-1** | yes, first | T2 |
-| L-SEL | Language choice + switching | none | founder | P0 | language trust | L-INF | 0 stored bytes change across six switches | — | yes | T2 |
-| L-ID / L-LEG | Locale-aware identity + legacy rule | not implemented | draft ADR-026 | P0 | data integrity / trust | ADR-026 acceptance; RL-4 decision (export format) | legacy fixtures unchanged in six locales | **D-L-5** (accept ADR-026) | yes | T2 |
-| L-CNT + L-QA | Content in fr, nl, es-ES, de, it + native review | none | founder | P0 | reach, conversion in five markets | content freeze (CD-1, G-01 copy); glossary | native and founder sign-off per language; layout pass | **D-L-3** glossary, **D-L-4** reviewers | per language in parallel | T2 |
-| G-03a | Voice strategy + truthful offer and settings copy per language | undecided | founder; FROZEN voice rules | P0 | Premium value / conversion | D-V-1…5 | offer and You never promise an unavailable voice | **D-V-1…5** | yes | T2 |
-| G-03b | Voice pilots → production → listening QA → S25 | none | founder | P0 (for the chosen languages) | Premium value | G-03a; voice-script freeze; budget | listening PASS per rendition; manifest integrity; no mixed-language session | budget approval per batch | per language | T2 |
+| L-INF | Localization infrastructure | English slice implemented (L-INF, 2026-11-12); further guards before the English copy freeze | founder; ADR-025 | P0 | prerequisite for all localized copy | D-L-1 (decided) | guard green; fallback; locale formats | — | yes, first | T2 |
+| L-EN | **English copy coverage** *(row added 2026-11-24)*: extraction of every user-facing literal into the English ARB, English accessibility, notification and native copy, English copy review, English copy freeze | 24 ARB messages at `d8cd6765`; extraction incomplete; Batch 9 not authorized | Amendment 3 (no hard-coded text); Amendment 4 | **P0** | launch quality; the freeze that gates voice scripts | L-INF; CD-1; SAF-1 content decisions; G-01 copy | zero unapproved hard-coded user-facing text (guards global fail); English copy approved | content decisions before the freeze | per surface | T2 |
+| L-SEL | Language choice + switching | none | founder | **`L-UPD`** *(was P0, T2, until 2026-11-24)* | language trust | L-INF | 0 stored bytes change across switches | — | — | the first further language |
+| L-ID / L-LEG | Locale-aware identity + legacy rule | not implemented. English-only records under G-5C; locale-independent IDs already hold | ADR-026 (Part A approved; Part B HOLD) | **`L-UPD`** gate before any non-English build against a real store *(was P0, T2, until 2026-11-24)* | data integrity / trust | D-L-5c; RL-4 decision (export format) | legacy fixtures unchanged in every activated locale | **D-L-5c** | yes | the first further language |
+| L-CNT + L-QA | Content in fr, nl, es-ES, de, it + native review | none | founder; Amendment 4 | **`L-UPD`**, per language *(was P0, T2, until 2026-11-24)* | reach, conversion in further markets | English copy freeze; glossary | native and founder sign-off per language; layout pass | **D-L-3** glossary, **D-L-4** reviewers | per language | that language's release |
+| G-03a (EN) | Truthful offer and settings copy for the **English** voices *(split 2026-11-24)* | offer exists; copy rules to verify | FROZEN voice rules | **P0** | Premium value / conversion | — | offer and You never promise an unavailable voice; English voices only | — | yes | T2 |
+| G-03a / G-03b (other languages) | Voice strategy per language; pilots → production → listening QA → S25 | undecided; none | founder; Amendment 4 (native-quality parity kept) | **`L-UPD`**, per language *(was P0, T2, until 2026-11-24)* | Premium value in that language | that language's copy freeze; budget | listening PASS per rendition; manifest integrity; no mixed-language session | **D-V-1, D-V-2, D-V-4, D-V-5**; budget per batch | per language | that language's release |
 | BIL-1 | Real billing in the Play tracks | not configured | ADR-017 | P0 | revenue path | Play Console + RevenueCat setup (founder); SIG-1 | purchase, restore, cancel and lapse proven on a signed build | **D-C-1** price and cadence for the test products | yes | T2 |
 | MEA-1 | Consent-gated V2 measurement + A2-06 server side | six V1 events; V2 not built | tracker Phase E | P0 | founder decisions on evidence | **D-M-1** | §3 gate | **D-M-1** | yes | T2 |
 | PRV-1/2 | Privacy policy, support, Data Safety, foreground-service declaration | none | tracker Phase E | P0 | trust, store compliance | MEA-1 definition | published URLs; console forms match the code | **D-P-1** controller and support channel | yes | T2 |
@@ -593,7 +702,7 @@ Priority is not order; see §6.
 | A2-07 | Backup and transfer | not decided | tracker | P1 | data trust | SIG-1, signed release | per tracker gate | **D-B** | yes | T3 |
 | RL-4 | Timestamp disposition | accepted limitation | R8.1 record | P1 (decide early: affects export) | edge-case correctness | — | decision recorded; implemented if option 1 | **D-RL4** | yes | T3 |
 | BIL-2 | Full lifecycle | not proven | tracker | P1 | revenue, support | BIL-1 | evidence per case | — | yes | T3 |
-| STO-1 | Six-language listing, slogan, ASO | none | tracker | P1 | acquisition | G-02 copy; **D-S** | listing approved per language | **D-S** | yes | T3 |
+| STO-1 | **English** listing, slogan, ASO *(until 2026-11-24: six-language listing; each other language's listing is `L-UPD`)* | none | tracker; Amendment 4 | P1 | acquisition | English copy; **D-S** (English wording) | English listing approved | **D-S** | yes | T3 |
 | DEV-1 (T3) | Full device matrix + performance | partial | tracker | P1 | quality | T2 fixes | recorded evidence | — | — | T3 |
 | AUD-1 | Final release audit | not started | tracker | P1 | release assurance | all T3 items | positive bounded audit on one SHA | launch | last | T3 |
 | COM-1 | Trial, annual, regional pricing | not decided | commercial hypotheses | P1 if decided, else P2 | conversion and cash | BIL-1, MEA-1 | decision recorded | **D-C-2, D-C-3** | yes | T3 if adopted |
@@ -609,10 +718,62 @@ Priority is not order; see §6.
 | **Open founder decisions** | §7 |
 | **Post-launch product hypotheses** | COM-1 (if not adopted before T3); CNT-2; MEASUREMENT-driven tuning (TUNABLE parameters) |
 | **Long-term ecosystem strategy** | G-08, held in `docs/strategy/` |
+| **Deferred language scope (`L-UPD`)** *(added 2026-11-24)* | fr, nl, es-ES, de and it: L-SEL, L-ID/L-LEG beyond English, L-CNT, L-QA, the G-03 voices and the non-English STO-1 listings. Indexed as LANG-01…07 in the [Future Opportunities Register](../strategy/THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md) |
 
 ---
 
 ## 6. Dependency-aware roadmap
+
+### 6.1 English-first roadmap (operative from 2026-11-24, Amendment 4)
+
+No stage has a date, and no current blocker is implied to be resolved. Founder decision ownership is as in §7.
+
+**Stage 0: governance and mandatory founder decisions.** Not code.
+- Amendment 4 recorded. Its independent acceptance is pending.
+- Decide D-ON-1/2, D-CD-1, D-SAF-2, D-M-1, D-P-1, D-RL4, D-C-1 and D-S (English wording).
+
+**Stage 1: foundations, in parallel:**
+
+| Track | Contents |
+|---|---|
+| Safety and content | SAF-1 with the G-07 standard, **started first**; the CD-1 outcome (any approved additions authored); the onboarding copy |
+| English localization | English extraction behind the guards (L-EN), with no behaviour change; the remaining ADR-025 §6 guards |
+| Commercial (founder) | Play Console, RevenueCat products, licence testers, SIG-1 enrolment; privacy policy and support drafting |
+| Measurement | MEA-1 design → implementation |
+
+**Stage 2: the complete English Free/Premium release candidate:**
+- G-01 onboarding on localized English strings;
+- G-03a (EN) truthful offer and settings copy;
+- BIL-1 proven in a **T1 billing pilot** (internal track, licence testers). A pilot is never a substitute for T2;
+- the **English copy freeze**, which is also the English voice-script freeze, after the content-affecting SAF-1/CD-1 decisions;
+- PRV-1/2 published and declared; the SEC-1 T2 subset.
+
+**Stage 3: signed device and Play validation:**
+- DEV-1 on the signed English candidate (S25 plus one other device);
+- the S-12 physical S25 smoke;
+- English guidance verification (180 files).
+
+**→ T2: complete English closed pre-release** on Google Play. Collect evidence through MEA-1 and fix the blockers it demonstrates.
+
+**Stage 4: the remaining commercial release gates:**
+- the SAF-1 formal release record;
+- A2-07;
+- SEC-1 full;
+- D-RL4 decided, and implemented if option 1;
+- BIL-2;
+- STO-1 (English);
+- DEV-1 full;
+- AUD-1 on the English release candidate.
+
+**→ T3: founder-authorized English public release.** Explicit founder authorization only. December 2026 is a planning target, not a date.
+
+**Post-launch:**
+- separately scoped language updates (`L-UPD`): one release brief per language, with its own gates, native review, native-quality voices, G-5C / D-L-5c / D-L-8 resolved first, and its own founder authorization;
+- evidence-gated growth (the [Future Opportunities Register](../strategy/THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md); G-08).
+
+### 6.2 Six-language roadmap (record, 2026-11-11; superseded 2026-11-24 for the initial release)
+
+This roadmap is kept unchanged as history. It is not operative.
 
 **Stage 0: decisions and governance.** Not code.
 - Approve this register (GOV-1).
@@ -650,26 +811,37 @@ Priority is not order; see §6.
 
 **→ T3: commercial launch,** on explicit founder authorization only.
 
+*(End of the 2026-11-11 record.)*
+
 ---
 
 ## 7. Founder decision register
 
+**How to read this register after 2026-11-24:**
+- **Decided on 2026-11-12:** D-L-1, D-L-5 (Part A), D-ON-3, D-V-3, Q-1 and D-SAF-1. They stay recorded as decided, with their original meaning.
+- **Changed on 2026-11-24:** D-EN-1 (Amendment 4) changes only the initial release's language scheduling.
+- **Still operative:** every 2026-11-12 rule except Q-1's six-language T2 scope. Q-1's native-quality rule now applies to each further language before it ships.
+- **Postponed to each language's `L-UPD`:** D-L-3, D-L-4, D-V-1, D-V-2, D-V-4, D-V-5 and the non-English part of D-S.
+- **Still open:** every decision not marked DECIDED.
+
 | ID | Decision | Needed before |
 |---|---|---|
+| D-EN-1 | **English-first initial release.** T2 and T3 are complete in English. French, Dutch, European Spanish, German and Italian are deferred, not cancelled, to separately governed language updates (`L-UPD`), with no order, date, country list, vendor, voice count, budget or price set. No non-language gate is changed. **DECIDED 2026-11-24** (V2 Contract Amendment 4; [decision record](THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md)) | — |
 | D-ON-1 | Approve the onboarding journey (§2 G-01), or amend it | Stage 2 |
 | D-ON-2 | Welcome copy; whether a privacy line appears (truthful wording) | Stage 2 |
 | D-L-1 | Apply the six-language contract amendment (from the 2026-11-03 draft) and approve the `flutter_localizations` + `intl` dependency. **DECIDED 2026-11-12:** corrected Amendment 3 applied; `flutter_localizations` (SDK) + `intl: ^0.20.2`; ADR-025 accepted within its scope (G-02 package rev 2) | Stage 1 |
 | D-ON-3 | A language preference alone never counts as existing-user evidence. **DECIDED 2026-11-12** | Stage 2 |
-| Q-1 (G-02) | T2 requires approved native-quality spoken guidance in every launch language; missing voice packs only in clearly scoped T1 pilots. **DECIDED 2026-11-12** (Amendment 3, "Premium voice") | Stage 2 |
-| D-L-3 | Glossary: Circle untranslated or translated; the Plans term; address forms | Stage 3 |
-| D-L-4 | Native reviewers per language (who, budget) | Stage 3 |
-| D-L-5 | Accept ADR-026 (origin and locale metadata; legacy shown as saved). **DECIDED 2026-11-12 in part:** Part A (export-neutral, non-migrating principles) approved; Part B on HOLD: persisted `sourceLocale` (D-L-5c), journal schema 3 and export envelope, pending D-RL4 and an explicit export-format decision | Stage 1 |
+| Q-1 (G-02) | T2 requires approved native-quality spoken guidance in every launch language; missing voice packs only in clearly scoped T1 pilots. **DECIDED 2026-11-12** (Amendment 3, "Premium voice"). *Amendment 4 (2026-11-24): the initial T2/T3 launch language is English, which has its approved voices. Q-1's native-quality rule is not relaxed: it applies to each further language before that language ships (`L-UPD`).* | Stage 2 |
+| D-L-3 | Glossary: Circle untranslated or translated; the Plans term; address forms | Stage 3 *(from 2026-11-24: that language's `L-UPD`)* |
+| D-L-4 | Native reviewers per language (who, budget) | Stage 3 *(from 2026-11-24: that language's `L-UPD`)* |
+| D-L-5 | Accept ADR-026 (origin and locale metadata; legacy shown as saved). **DECIDED 2026-11-12 in part:** Part A (export-neutral, non-migrating principles) approved; Part B on HOLD: persisted `sourceLocale` (D-L-5c), journal schema 3 and export envelope, pending D-RL4 and an explicit export-format decision. *Unchanged by Amendment 4: Part B HOLD; G-5C active.* | Stage 1 *(D-L-5c: before any non-English build against a real store)* |
+| D-L-6 … D-L-9 | ADR-025 sub-decisions: Spanish outside Spain (D-L-6), date style (D-L-7), the running-Circle language (D-L-8, **OPEN**), Android `LocaleManager` mirroring (D-L-9). Pending *(row added 2026-11-24; the decisions themselves are unchanged)* | D-L-7: before date extraction. D-L-6, D-L-8, D-L-9: before the first further language (`L-UPD`) |
 | D-CD-1 | Content depth for T2: accept as is, or require additions or SAF-1 outcomes first | before the copy freeze |
-| D-V-1 | Voice option A / B / C (recommended B) | Stage 2 |
-| D-V-2 | Persona model: same names with per-language renditions, or per-language names | Stage 3 |
+| D-V-1 | Voice option A / B / C (recommended B; **not approved**) | Stage 2 *(from 2026-11-24: the first further language's `L-UPD`; the English voices are fixed)* |
+| D-V-2 | Persona model: same names with per-language renditions, or per-language names | Stage 3 *(from 2026-11-24: `L-UPD`)* |
 | D-V-3 | Mismatch and legacy rule (one spoken language per session; D-A (a)). **DECIDED 2026-11-12:** no mismatched spoken language and no substitute voice; a legacy or unverified Circle is voiced only on a byte-exact match with the recordings of its established language, otherwise unvoiced (ADR-026 A-5) | Stage 2 |
-| D-V-4 | Credit budget, ceilings, pilot first | Stage 3 |
-| D-V-5 | Licence confirmation for new voices | Stage 3 |
+| D-V-4 | Credit budget, ceilings, pilot first | Stage 3 *(from 2026-11-24: `L-UPD`)* |
+| D-V-5 | Licence confirmation for new voices | Stage 3 *(from 2026-11-24: `L-UPD`)* |
 | D-M-1 | Event set, identity, retention, hosting (draft ADR-028) | Stage 1 |
 | D-P-1 | Data controller details, support channel, privacy policy owner | Stage 1 |
 | D-SAF-1 | Safety reviewer and scope, including the G-07 proportionality standard. **DECIDED 2026-11-12:** the risk-based review strategy (G-07 *Reviewer route*); scope as G-07; no clearance | Stage 1 |
@@ -678,7 +850,7 @@ Priority is not order; see §6.
 | D-B | A2-07 backup and transfer behaviour | Stage 5 |
 | D-C-1 | Price and cadence for the test products | BIL-1 |
 | D-C-2 / D-C-3 | Trial or introductory offer; annual; regional pricing | before T3 |
-| D-S | Slogan and tagline across languages. The Brand Book holds the flagship slogan; the Product Family Strategy §D defers specialist-app slogans | STO-1 |
+| D-S | Slogan and tagline across languages. The Brand Book holds the flagship slogan; the Product Family Strategy §D defers specialist-app slogans. *Split by Amendment 4 (2026-11-24):* **D-S (EN)**, the approved English store wording, slogan and tagline, is needed for STO-1 at T3. **D-S (locale)**, each language's local slogan, terminology and glossary (with D-L-3), is decided when that language is scoped (`L-UPD`) | STO-1 (EN); `L-UPD` (locale) |
 
 *Not a current decision:* G-08 ecosystem steps. They are taken after launch evidence, in `docs/strategy/`.
 
@@ -696,7 +868,8 @@ Priority is not order; see §6.
 ## 9. Sources
 
 **Contract and governance:**
-- [PRODUCT_V2_CONTRACT.md](PRODUCT_V2_CONTRACT.md): Status, Amendments 1–2, Free / Premium / after lapse, Catalogue status, Safety gate, Navigation contract, Frozen vs tunable vs commercial hypotheses.
+- [PRODUCT_V2_CONTRACT.md](PRODUCT_V2_CONTRACT.md): Status, Amendments 1–4, Free / Premium / after lapse, Catalogue status, Safety gate, Navigation contract, Frozen vs tunable vs commercial hypotheses.
+- *(Added 2026-11-24)* [THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md](THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md) (the decision record for Amendment 4); [adr/ADR-025-localization-architecture.md](adr/ADR-025-localization-architecture.md) (its dated rollout note); [adr/ADR-026-language-safe-persistence.md](adr/ADR-026-language-safe-persistence.md) (G-5C; Part B HOLD); [../strategy/THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md](../strategy/THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md) (the deferred-opportunity index).
 - [THIRTY_V2_DELIVERY_TRACKER.md](THIRTY_V2_DELIVERY_TRACKER.md): Current state, Phase E, Release gate, log 2026-10-20 (B8/B9), 2026-11-01 (security review), 2026-11-03 (R6, R6b, A2-06), 2026-11-04 (R8).
 - [ADR-023](adr/ADR-023-v2-recurring-premium-personal-guided-circle.md), [ADR-024](adr/ADR-024-v2-circle-plans-insights-and-four-tab-product.md), [ADR-006](adr/ADR-006-no-account-before-first-value.md), [ADR-007](adr/ADR-007-premium-never-blocks-the-core-loop.md).
 - [onboarding-principles.md](onboarding-principles.md), [PHASE_E_VOICE_USAGE_MEASUREMENT.md](PHASE_E_VOICE_USAGE_MEASUREMENT.md).

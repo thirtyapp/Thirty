@@ -4,6 +4,16 @@
 >
 > [PRODUCT_V2_CONTRACT.md](PRODUCT_V2_CONTRACT.md) is the authoritative product specification and overrides every document listed below where they conflict (including VISION.md's precedence rule below). Implementation status lives only in [THIRTY_V2_DELIVERY_TRACKER.md](THIRTY_V2_DELIVERY_TRACKER.md). PREMIUM_STRATEGY.md, RECURRING_PREMIUM_ARCHITECTURE_AND_MONETIZATION_FREEZE.md, recommendation-mvp-v0.md and ADR-001/012–016 are superseded or partially superseded for V2 — see their headers.
 
+> **Release en planning (navigatie, sinds 2026-11-24).** Deze links leggen zelf niets vast; elk document heeft zijn eigen rol.
+>
+> | Document | Rol |
+> |---|---|
+> | [PRODUCT_V2_CONTRACT.md — Amendment 4](PRODUCT_V2_CONTRACT.md#status) | **Bindend:** de eerste T2/T3 is alleen Engels; vijf talen volgen later via aparte language updates |
+> | [THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md](THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md) | Besluitdossier: motivering en herleidbaarheid; geen eigen regel |
+> | [THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md](THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md) | Planning: gaps, release-gates, open founderbesluiten |
+> | [THIRTY_V2_DELIVERY_TRACKER.md](THIRTY_V2_DELIVERY_TRACKER.md) | Status |
+> | [THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md](../strategy/THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md) | Index van uitgestelde talen en toekomstige ideeën; autoriseert niets |
+
 Dit is de productkennisbasis van THIRTY: waarom aanbevelingen worden gedaan zoals ze worden gedaan, wie de eerste gebruiker is, en welke onboarding-beslissingen zijn vastgesteld. Dit document is uitsluitend **navigatie** — het bevat zelf geen productbeslissingen.
 
 ## Leeswijzer

@@ -6,12 +6,15 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
 
 | | |
 |---|---|
-| **PRODUCT V2 CONTRACT** | FROZEN (2026-10-08); Amendment 1 (2026-10-11); **Amendment 2 — architecture and content freeze APPROVED (2026-10-17)** |
+| **PRODUCT V2 CONTRACT** | FROZEN (2026-10-08); Amendment 1 (2026-10-11); **Amendment 2 — architecture and content freeze APPROVED (2026-10-17)**; Amendment 3, six launch languages (2026-11-12); **Amendment 4, English-first initial release (founder decision 2026-11-24)**: it supersedes Amendment 3 only on the initial T2/T3 language scheduling (log 2026-11-24) |
 | **TARGET IA** | Today \| Plans \| Insights \| You — built as the final four-tab shell since B7 (2026-10-20) |
-| **PUBLIC LAUNCH** | PAUSED |
+| **PUBLIC LAUNCH** | PAUSED / NOT AUTHORIZED |
+| **CURRENT GITHUB BASELINE (2026-11-24)** | `d8cd676518f5713e1c5417382a71eed892ff640b` (tree `f308b8516db850f8e28d1d72cbbc3c3fe317f29e`) on `step5-billing-integration`. This was the remote head at the start of the English-first governance implementation.<br>**G-02 English Batch 8** was independently accepted, then pushed as exactly one fast-forward commit (parent `b1dea377`) and independently verified on the remote (2026-11-24).<br>The English ARB catalogue holds **24 messages**. English copy extraction is **not** complete. **G-02 Batch 9: NOT STARTED, NOT AUTHORIZED.**<br>S-12 (S25 physical smoke): **NOT RUN**.<br>The commits between `c83543d5` and `d8cd6765` are listed in the log (2026-11-24). Phase E HOLD; commercial release NOT AUTHORIZED; deployment NONE |
+| **LAUNCH LANGUAGE (Amendment 4, 2026-11-24)** | **English** is the complete language of the initial T2 and T3.<br>French, Dutch, European Spanish, German and Italian are **deferred, not cancelled**: separately governed language updates (`L-UPD`), with no order or date.<br>The effective app language is English on every device (ADR-026 gate G-5C).<br>ADR-025 is accepted (its six-language T2/T3 rollout set is superseded; see its dated note). ADR-026 Part A is approved; **Part B (D-L-5c) is on HOLD**. ADR-027 is not drafted. **D-L-8 OPEN.**<br>Rationale: [decision record](THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md); planning: [gap register §1, §4a, §6.1](THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md) |
+| **FUTURE OPPORTUNITIES** | Indexed, without authorization, in [THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md](../strategy/THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md): 30 entries (LANG, CORE, FAM, ECO, IDEA). This is not a backlog and not a release requirement |
 | **CURRENT ACCEPTED BASELINE (2026-11-11)** | `c83543d5f40294c76532a4710b748d893320d245` on `step5-billing-integration` (L-1 Option B; parent `d9369795`). **R8 engineering baseline FROZEN at `d9369795a92aa24505c475fa1417d03132300c4a`** (founder). **L-1: ENGINEERING ACCEPTED**, with a documented independent-runtime limitation (founder, 2026-11-11). Phase E HOLD; commercial release NOT AUTHORIZED; deployment NONE. Rounds R8.1 → L-1: log 2026-11-11 |
-| **PRE-RELEASE PRODUCT GAP REGISTER** | APPROVED by the founder (2026-11-11) as planning authority only: [THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md](THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md). It lists the remaining product and release gaps: onboarding, six languages, multilingual voice, content depth, Free/Premium viability, UX, and release gates. Planning only: it amends no contract and authorizes no development, and its founder decisions stay OPEN until decided. Status stays here |
-| **SIX-LANGUAGE LAUNCH** | Amendment 3 (2026-11-12). ADR-025/026/027 Proposed. Not implemented. First engineering slice: L-INF (infrastructure only), authorized by the founder on 2026-11-12; implemented in a separate local commit, not pushed, awaiting independent acceptance verification. The effective app language stays English (ADR-026 gate G-5C). |
+| **PRE-RELEASE PRODUCT GAP REGISTER** | APPROVED by the founder (2026-11-11) as planning authority only: [THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md](THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md). It lists the remaining product and release gaps: onboarding, six languages, multilingual voice, content depth, Free/Premium viability, UX, and release gates. Planning only: it amends no contract and authorizes no development, and its founder decisions stay OPEN until decided. Status stays here. *Amended 2026-11-24 for English-first:* English copy and English voice stay on the T2 critical path; the five other languages go to `L-UPD`; no non-language gate changes |
+| **SIX-LANGUAGE LAUNCH** *(status as recorded on 2026-11-12; initial-release scheduling superseded by Amendment 4 on 2026-11-24; see LAUNCH LANGUAGE)* | Amendment 3 (2026-11-12). ADR-025/026/027 Proposed. Not implemented. First engineering slice: L-INF (infrastructure only), authorized by the founder on 2026-11-12; implemented in a separate local commit, not pushed, awaiting independent acceptance verification. The effective app language stays English (ADR-026 gate G-5C). |
 | **CURRENT IMPLEMENTATION PHASE** | PHASE D2 — PASS — COMPLETE (2026-10-21; batches B0–B9 closed in the single D2 closure commit `8bfd42c`). The two independent post-D2 audits of that commit **returned on 2026-10-21** (see POST-D2 AUDITS). The joint audit remediation follows batch by batch on founder approval: R1–R4.1 implemented and verified, R5 and R6 accepted at implementation and test level (2026-11-03; not audit closure), R7 final regression PASS on the exact commit tree (2026-11-04); all of this since `8bfd42c` is in one R7 remediation commit on `step5-billing-integration`, whose SHA is recorded outside the commit (see JOINT AUDIT REMEDIATION). F02/F03 framing lines accepted 2026-11-01. Phase E on hold. *Update 2026-11-11: R8 and R8.1 → R8.3.4.1 and L-1 followed on the same branch; the current baseline is the CURRENT ACCEPTED BASELINE row (log 2026-11-11).* |
 | **D2** | PASS — COMPLETE (2026-10-21; closure commit `8bfd42c`; ADR-023 Accepted, ADR-024 Accepted). The post-D2 audits of that commit returned on 2026-10-21: Audit #1 CONDITIONAL, Audit #2 FAIL (see POST-D2 AUDITS). |
 | **PRODUCTION AUDIO** | PASS — FROZEN: 4 voices (Locke, Heather, Milo, Brittney) × 43 files = 172. One file corrected 2026-10-18 after B4 QA (Locke `part_songOn`); the other 171 are byte-identical. Three Heather files corrected 2026-11-02 (seed 32, FOUNDER LISTENING PASS: `close`, `part_closeWhatsOpen`, `part_activeJob`); the other 169 are byte-identical to the 2026-10-18 state (`heather_seed32_integration_2026-11-02/`). Six more Heather files corrected 2026-11-02 in the final quality round (FOUNDER LISTENING PASS: `part_shakeOut` s34, `part_noteOneThing` s31 with the 2026-10-17 −1.8 dB static trim, `part_briskWalk`, `part_lookAround`, `part_roundTheBlock`, `part_sitOutside` s32); the other 166 are byte-identical; S25 PASS at real levels (`heather_final_integration_2026-11-02/`). Heather audio-quality correction round **CLOSED** |
@@ -419,6 +422,8 @@ Status only. What is being built is defined in [PRODUCT_V2_CONTRACT.md](PRODUCT_
 ---
 
 ## Release gate
+
+*(Amendment 4, 2026-11-24)* The launch language of this gate is **English**. No gate below is removed, relaxed or cleared by that decision. Each further language later passes its own per-locale gate (`L-UPD`) before it ships. The before/after reconciliation is in the gap register §4a.
 
 Public launch requires **all** of the following:
 
@@ -1034,3 +1039,48 @@ Public launch requires **all** of the following:
     - **Authority:** it is the canonical planning register only. It changes no contract (contract changes need separate, explicit approval), it authorizes no product development, and its implementation and commercial founder decisions remain OPEN.
 - **2026-11-12** — **Amendment 3 recorded (founder decision): six launch languages** (en, fr, nl, es-ES, de, it) with full Free/Premium parity, per-locale gates, zero unapproved hard-coded user-facing text, English fallback only for unsupported device languages, and a founder-approved native-quality voice experience in every launch language for T2/T3 (counts and personas: D-V-1…5). ADR-025/026/027 *Proposed*, none accepted. Nothing implemented. Phase E HOLD; commercial release NOT AUTHORIZED; deployment NONE. Evidence: `THIRTY_G02_SIX_LANGUAGE_DECISION_GATE_2026-11-12/` (outside the tree).
   - **Also decided the same day (G-02 package rev 2):** D-L-1b dependencies `flutter_localizations` (SDK) + `intl: ^0.20.2`; D-L-1c ADR-025 accepted within its stated scope; D-L-5 Part A of ADR-026 approved as principles, Part B (persisted `sourceLocale` = D-L-5c, journal schema 3, export envelope, D-RL4) on HOLD; D-ON-3 (a language preference alone never counts as existing-user evidence); D-V-3 (no mismatched spoken language, no substitute voice); Q-1 (T2 requires approved native-quality spoken guidance in every launch language). Still OPEN: D-V-1, D-V-2, D-V-4, D-V-5, D-L-6…D-L-9, G-01 implementation, SAF-1 clearances.
+- **2026-11-24** — **Founder decision: English-first initial T2/T3 release; five languages preserved for subsequent updates.** Documentation only. Phase E HOLD; public launch PAUSED / NOT AUTHORIZED; commercial release NOT AUTHORIZED; deployment NONE.
+  - **Decision:** [V2 Contract Amendment 4](PRODUCT_V2_CONTRACT.md#status) supersedes Amendment 3 **only** on six points:
+    - the number of languages at the initial T2 and at the initial T3;
+    - the first-release scheduling of non-English voice production and of non-English store listings;
+    - first-release per-locale gating for the five deferred languages;
+    - the derived switching and rollout sequencing.
+
+    Every other Amendment 3 principle stays binding, and Amendment 3 stays in the contract as decided.
+  - **Language scope:**
+    - English is the complete language of T2 and T3.
+    - French, Dutch, European Spanish, German and Italian are deferred, not cancelled, to separately governed language updates (`L-UPD`), with no order, date, country list, vendor, voice count, budget or price.
+    - Before a further language ships, it needs complete approved copy, full Free/Premium parity, native review, approved native-quality Premium voices, persistence safety (G-5C / D-L-5c / D-L-8) and its own founder authorization.
+  - **Test tiers:** T0–T3 are unchanged in meaning, and there is no T4. T2 is the complete English Free/Premium product on Google Play closed testing. A T1 pilot never substitutes for it.
+  - **Records:**
+    - the decision record [THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md](THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md);
+    - the [Pre-Release Gap Register](THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md): §1, §4a release-gate reconciliation, §5, §6.1 English-first roadmap, §7 D-EN-1;
+    - the dated rollout note in [ADR-025](adr/ADR-025-localization-architecture.md);
+    - the [Future Opportunities Register](../strategy/THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md) (30 indexed entries; no authorization).
+  - **Baseline at the start of this implementation:** `d8cd676518f5713e1c5417382a71eed892ff640b` (tree `f308b851`), the remote head of `step5-billing-integration`.
+    - The commits since the last accepted baseline recorded here (`c83543d5`) are ancestors of it on `origin`, oldest first:
+      - `ea315b9b`, gap register approval;
+      - `b62984bc`, G-07 review strategy;
+      - `5bb8491b`, G-02 six-language decisions;
+      - `064af36c`, L-INF;
+      - `28827e73`, content-locale and audio interface;
+      - `6f82ebff` and `8b9b4f58`, G-02 English Batch 1 and its B8 coverage fix;
+      - `bc1732f8`, `10814070`, `e56e56e6`, `57c234ce`, `da19082d`, `b1dea377` and `d8cd6765`, Batches 2–8.
+    - Each round's acceptance evidence is kept outside the tree.
+    - **Batch 8** was independently accepted, pushed as exactly one fast-forward commit and independently verified on the remote (2026-11-24).
+    - The English ARB catalogue holds **24 messages**. **English copy extraction is not complete**; G-02 Batch 9 is NOT STARTED and NOT AUTHORIZED.
+  - **Supersession notice for earlier entries.** These entries are unchanged and remain accurate history:
+    - 2026-11-11: "Google Play pre-release testing happens only on the complete six-language product";
+    - 2026-11-12: Amendment 3 and Q-1.
+
+    From 2026-11-24, the complete product tested at T2 is the **English** product, and Q-1's native-quality rule applies to each further language before it ships.
+  - **Unchanged (no gate is cleared by this decision):**
+    - S-12 S25 physical smoke NOT RUN;
+    - ADR-026 Part B and D-L-5c HOLD; G-5C active; non-English runtime languages DISABLED;
+    - D-RL4 HOLD; D-L-8 OPEN; G-01 OPEN;
+    - SAF-1, G-07, CD-1, BIL-1/2, MEA-1, PRV-1/2, SEC-1, DEV-1, SIG-1, A2-07, STO-1 (English) and AUD-1 as in the gap register §4a;
+    - Google Play publication NOT AUTHORIZED.
+  - **Status of this change:**
+    - recorded in one local documentation commit on top of `d8cd6765`;
+    - independent acceptance and any push are **pending** and need their own founder authorization;
+    - no application code, test, asset or configuration changed.

@@ -20,6 +20,31 @@ Regels voor toekomstige sessies:
 - Werk alleen aan de fase die de delivery tracker als actief aanwijst.
 - Raadpleeg vóór pre-release- of launchplanning het **[pre-release product gap register](docs/product/THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md)**: daar staan de resterende productgaten, de testvolgorde (eerst het complete product) en de open founderbesluiten. Het is een planningsdocument: het wijzigt het contract niet, en de status blijft in de tracker. Langetermijnplannen voor een productfamilie (G-08) staan in [docs/strategy/THIRTY_PRODUCT_FAMILY_STRATEGY.md](docs/strategy/THIRTY_PRODUCT_FAMILY_STRATEGY.md) en vallen buiten de huidige scope.
 
+### Releasetaal, planning en toekomstige kansen (sinds 2026-11-24)
+
+Raadpleeg bij elke release-, scope- of planningsvraag:
+
+- **[PRODUCT_V2_CONTRACT.md](docs/product/PRODUCT_V2_CONTRACT.md), Amendment 4** — de bindende regel: de eerste T2 en T3 zijn **alleen Engels**.
+  - Frans, Nederlands, Europees Spaans, Duits en Italiaans zijn uitgesteld, niet geschrapt.
+  - Amendment 3 blijft gelden, behalve op de punten die Amendment 4 noemt.
+- **[THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md](docs/product/THIRTY_ENGLISH_FIRST_RELEASE_SCOPE_AMENDMENT_2026-11-24.md)** — het besluitdossier: motivering en herleidbaarheid, geen eigen regel.
+- **[THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md](docs/product/THIRTY_PRE_RELEASE_PRODUCT_GAP_REGISTER.md)** — de planning: resterende gaps, release-gates en open founderbesluiten.
+- **[THIRTY_V2_DELIVERY_TRACKER.md](docs/product/THIRTY_V2_DELIVERY_TRACKER.md)** — de status.
+- **[THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md](docs/strategy/THIRTY_FUTURE_OPPORTUNITIES_REGISTER.md)** — de index van uitgestelde talen en toekomstige ideeën.
+  - Waar nodig verwijst die naar [THIRTY_PRODUCT_FAMILY_STRATEGY.md](docs/strategy/THIRTY_PRODUCT_FAMILY_STRATEGY.md) en [THIRTY_FUTURE_RITUAL_PRODUCTS_AND_MERCHANDISE.md](docs/strategy/THIRTY_FUTURE_RITUAL_PRODUCTS_AND_MERCHANDISE.md).
+
+Regels:
+
+- Het Future Opportunities Register **autoriseert geen implementatie**. Elk idee vraagt een eigen, begrensd founderbesluit.
+- Historische of gesupersedeerde ideeën (bijvoorbeeld de V1-Coach) gaan nooit boven het live V2-contract.
+- Een uitgestelde feature of taal wordt **nooit stilzwijgend geschrapt**. Een afgewezen idee wordt gearchiveerd met zijn ID en een reden.
+- Een geregistreerd toekomstig idee wordt **nooit stilzwijgend in de launch-scope getrokken**.
+- Een nieuwe taal komt er alleen via een eigen, apart goedgekeurde language update (`L-UPD`), met de bestaande veiligheidsgates:
+  - native review;
+  - goedgekeurde native-quality stemmen;
+  - ADR-026 Part B / D-L-5c en gate G-5C;
+  - D-L-8.
+
 ## 1. Product in het kort
 
 - **Naam:** THIRTY

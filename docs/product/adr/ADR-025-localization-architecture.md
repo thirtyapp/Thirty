@@ -7,6 +7,31 @@
 - **Decision record:** the G-02 decision package `THIRTY_G02_SIX_LANGUAGE_DECISION_GATE_2026-11-12/` (rev 2, outside the tree).
 - **Baseline:** `b62984bc47c476647d3eb9c5d72434ab759fd64b`. Line references are to that tree.
 
+> **Dated rollout note — V2 Contract Amendment 4 (founder decision 2026-11-24).** This note is supplemental. The accepted text below is unchanged, and this ADR is **not** superseded.
+>
+> - **What changed:**
+>   - The original six-language initial rollout was approved under [Amendment 3](../PRODUCT_V2_CONTRACT.md#status) (2026-11-12).
+>   - [Amendment 4](../PRODUCT_V2_CONTRACT.md#status) makes the initial T2 and T3 release set **English only**.
+>   - French, Dutch, European Spanish, German and Italian remain future expansion scope, through separately governed language updates (`L-UPD`).
+> - **What is superseded:** §3.1's "T2/T3: `en,fr,nl,es,de,it`" is a superseded *initial-rollout* requirement. The title's "(six launch languages)" is the original name of this decision.
+>   - For the initial T2 and T3, the release-locale set is `en`.
+>   - Each further locale joins the release set only when its own L-UPD release is authorized.
+> - **What still applies:** the architecture in §1–§8 stays the intended foundation, in particular:
+>   - one ARB per language;
+>   - stable, id-based keys and revision keys;
+>   - resolution and the two distinct fallbacks;
+>   - date and number formatting;
+>   - the guards;
+>   - the content-locale and audio interface.
+>
+>   Per-locale completeness (G-KEYS, G-SRC, review status), language safety and future locale handling all apply when each additional locale is activated.
+> - **What is unchanged:**
+>   - [ADR-026](ADR-026-language-safe-persistence.md) Part B (D-L-5c) on HOLD;
+>   - gate G-5C (English-only runtime) and the "English-only runtime" paragraph of the acceptance scope below;
+>   - D-L-6, D-L-7, D-L-8 and D-L-9, which stay **pending**.
+>
+>   No code-generation rule, message-key contract, date-handling or locale-formatting rule is changed by this note.
+
 ## Context
 
 THIRTY has **no localization infrastructure** at `b62984bc`:
